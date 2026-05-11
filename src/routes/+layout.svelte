@@ -5,7 +5,11 @@
 	import { onMount } from 'svelte';
 	import { t } from '$lib/i18n/index.js';
 	import { hasDatabaseFile } from '$lib/native/database-file.js';
-	import { loadLocalePreference, loadTypographyPreference } from '$lib/services/preferences.service.js';
+	import {
+		adjustTypographyFontSize,
+		loadLocalePreference,
+		loadTypographyPreference
+	} from '$lib/services/preferences.service.js';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import Search from '@lucide/svelte/icons/search';
@@ -22,6 +26,7 @@
 	] as const;
 
 	const showBackButton = $derived(page.url.pathname !== '/');
+	let adjustingTypographyShortcut = false;
 
 	function isActive(href: string) {
 		const path = page.url.pathname;
@@ -48,8 +53,51 @@
 		}
 	}
 
+	function getTypographyShortcutStep(event: KeyboardEvent): -1 | 1 | null {
+		if (!event.ctrlKey || event.metaKey || event.altKey) return null;
+
+		if (event.key === '+' || event.key === '=' || event.code === 'NumpadAdd') {
+			return 1;
+		}
+
+		if (event.key === '-' || event.key === '_' || event.code === 'NumpadSubtract') {
+			return -1;
+		}
+
+		return null;
+	}
+
+	async function applyTypographyShortcut(step: -1 | 1): Promise<void> {
+		if (adjustingTypographyShortcut) return;
+
+		adjustingTypographyShortcut = true;
+
+		try {
+			await adjustTypographyFontSize(step);
+		} catch {
+			// Shortcut can fire before the local database exists during initial setup.
+		} finally {
+			adjustingTypographyShortcut = false;
+		}
+	}
+
+	function handleTypographyShortcut(event: KeyboardEvent) {
+		if (event.defaultPrevented || event.repeat) return;
+
+		const step = getTypographyShortcutStep(event);
+		if (step === null) return;
+
+		event.preventDefault();
+		void applyTypographyShortcut(step);
+	}
+
 	onMount(() => {
 		void loadDatabasePreferences();
+		window.addEventListener('keydown', handleTypographyShortcut);
+
+		return () => {
+			window.removeEventListener('keydown', handleTypographyShortcut);
+		};
 	});
 </script>
 

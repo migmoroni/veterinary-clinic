@@ -47,14 +47,23 @@ export const fontSizeOptions = [
 	rootSize: string;
 }>;
 
+export const CUSTOM_FONT_SIZE_ID = 'custom' as const;
+
+export const CUSTOM_FONT_SIZE_MIN_PX = 12;
+export const CUSTOM_FONT_SIZE_MAX_PX = 24;
+export const CUSTOM_FONT_SIZE_STEP_PX = 1;
+export const DEFAULT_CUSTOM_ROOT_SIZE_PX = 16;
+
 export const fontSourceOptions = ['bundled', 'system'] as const;
 
 export type BundledFontId = (typeof bundledFontOptions)[number]['id'];
-export type FontSizeId = (typeof fontSizeOptions)[number]['id'];
+export type PresetFontSizeId = (typeof fontSizeOptions)[number]['id'];
+export type FontSizeId = PresetFontSizeId | typeof CUSTOM_FONT_SIZE_ID;
 export type FontSource = (typeof fontSourceOptions)[number];
 
 export interface TypographyPreferences {
 	fontSize: FontSizeId;
+	customRootSizePx: number;
 	fontSource: FontSource;
 	bundledFont: BundledFontId;
 	systemFontFamily: string;
@@ -63,6 +72,7 @@ export interface TypographyPreferences {
 
 export const DEFAULT_TYPOGRAPHY_PREFERENCES: TypographyPreferences = {
 	fontSize: 'default',
+	customRootSizePx: DEFAULT_CUSTOM_ROOT_SIZE_PX,
 	fontSource: 'bundled',
 	bundledFont: 'atkinson',
 	systemFontFamily: '',
@@ -74,6 +84,8 @@ export function isBundledFontId(value: unknown): value is BundledFontId {
 }
 
 export function isFontSizeId(value: unknown): value is FontSizeId {
+	if (value === CUSTOM_FONT_SIZE_ID) return true;
+
 	return typeof value === 'string' && fontSizeOptions.some((option) => option.id === value);
 }
 
@@ -93,6 +105,24 @@ export function sanitizeSystemFontDirectory(value: unknown): string {
 	return value.replace(/[\0\n\r]/g, '').trim().slice(0, 500);
 }
 
+export function normalizeCustomRootSizePx(value: unknown): number {
+	const numericValue = typeof value === 'number' ? value : Number(value);
+	if (!Number.isFinite(numericValue)) return DEFAULT_CUSTOM_ROOT_SIZE_PX;
+
+	const clamped = Math.min(CUSTOM_FONT_SIZE_MAX_PX, Math.max(CUSTOM_FONT_SIZE_MIN_PX, numericValue));
+	const stepped = Math.round(clamped / CUSTOM_FONT_SIZE_STEP_PX) * CUSTOM_FONT_SIZE_STEP_PX;
+
+	return Number(stepped.toFixed(2));
+}
+
+export function stepCustomRootSizePx(value: number, step: number): number {
+	const source = normalizeCustomRootSizePx(value);
+	const normalizedStep = Number.isFinite(step) ? Math.trunc(step) : 0;
+	if (normalizedStep === 0) return source;
+
+	return normalizeCustomRootSizePx(source + normalizedStep);
+}
+
 export function normalizeTypographyPreferences(value: unknown): TypographyPreferences {
 	const candidate = value && typeof value === 'object' ? (value as Partial<TypographyPreferences>) : {};
 
@@ -100,6 +130,7 @@ export function normalizeTypographyPreferences(value: unknown): TypographyPrefer
 		fontSize: isFontSizeId(candidate.fontSize)
 			? candidate.fontSize
 			: DEFAULT_TYPOGRAPHY_PREFERENCES.fontSize,
+		customRootSizePx: normalizeCustomRootSizePx(candidate.customRootSizePx),
 		fontSource: isFontSource(candidate.fontSource)
 			? candidate.fontSource
 			: DEFAULT_TYPOGRAPHY_PREFERENCES.fontSource,
@@ -119,7 +150,29 @@ export function getFontSizeOption(value: FontSizeId) {
 	return fontSizeOptions.find((option) => option.id === value) ?? fontSizeOptions[1];
 }
 
+export function stepFontSize(value: FontSizeId, step: number): FontSizeId {
+	if (value === CUSTOM_FONT_SIZE_ID) return CUSTOM_FONT_SIZE_ID;
+
+	const fallbackIndex = Math.max(
+		fontSizeOptions.findIndex((option) => option.id === DEFAULT_TYPOGRAPHY_PREFERENCES.fontSize),
+		0
+	);
+	const currentIndex = fontSizeOptions.findIndex((option) => option.id === value);
+	const sourceIndex = currentIndex >= 0 ? currentIndex : fallbackIndex;
+	const normalizedStep = Number.isFinite(step) ? Math.trunc(step) : 0;
+	const targetIndex = Math.min(
+		fontSizeOptions.length - 1,
+		Math.max(0, sourceIndex + normalizedStep)
+	);
+
+	return fontSizeOptions[targetIndex].id;
+}
+
 export function getTypographyRootSize(preferences: TypographyPreferences): string {
+	if (preferences.fontSize === CUSTOM_FONT_SIZE_ID) {
+		return `${normalizeCustomRootSizePx(preferences.customRootSizePx)}px`;
+	}
+
 	return getFontSizeOption(preferences.fontSize).rootSize;
 }
 

@@ -1,11 +1,17 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import {
+		CUSTOM_FONT_SIZE_ID,
+		CUSTOM_FONT_SIZE_MAX_PX,
+		CUSTOM_FONT_SIZE_MIN_PX,
+		CUSTOM_FONT_SIZE_STEP_PX,
 		DEFAULT_TYPOGRAPHY_PREFERENCES,
 		bundledFontOptions,
 		fontSizeOptions,
+		getFontSizeOption,
 		getBundledFontOption,
 		getTypographyFontFamily,
+		normalizeCustomRootSizePx,
 		sanitizeSystemFontDirectory,
 		sanitizeSystemFontFamily,
 		type BundledFontId,
@@ -16,6 +22,7 @@
 	import { getLocale, localeOptions, setLocale, t, type Locale, type TranslationKey } from '$lib/i18n/index.js';
 	import { listSystemFonts } from '$lib/native/system-fonts.js';
 	import {
+		applyTypographyPreference,
 		loadLocalePreference,
 		loadTypographyPreference,
 		saveLocalePreference,
@@ -36,6 +43,13 @@
 	let statusKey = $state<TranslationKey | null>(null);
 	let error = $state<string | null>(null);
 	let previewStyle = $derived(`font-family: ${getTypographyFontFamily(typography)};`);
+	let currentRootSizePx = $derived.by(() => {
+		if (typography.fontSize === CUSTOM_FONT_SIZE_ID) {
+			return normalizeCustomRootSizePx(typography.customRootSizePx);
+		}
+
+		return normalizeCustomRootSizePx(Number.parseFloat(getFontSizeOption(typography.fontSize).rootSize));
+	});
 	let systemFontChoices = $derived.by(() => {
 		const values = new Set(systemFontOptions);
 		if (typography.systemFontFamily) values.add(typography.systemFontFamily);
@@ -93,7 +107,30 @@
 	}
 
 	async function changeFontSize(fontSize: FontSizeId) {
+		const rootSizeBeforeChange = currentRootSizePx;
 		typography.fontSize = fontSize;
+		if (fontSize === CUSTOM_FONT_SIZE_ID) {
+			typography.customRootSizePx = rootSizeBeforeChange;
+		} else {
+			typography.customRootSizePx = normalizeCustomRootSizePx(
+				Number.parseFloat(getFontSizeOption(fontSize).rootSize)
+			);
+		}
+		await saveTypography();
+	}
+
+	function updateCustomFontSize(value: string): void {
+		typography.customRootSizePx = normalizeCustomRootSizePx(value);
+		typography.fontSize = CUSTOM_FONT_SIZE_ID;
+	}
+
+	function previewCustomFontSize(event: Event): void {
+		updateCustomFontSize((event.currentTarget as HTMLInputElement).value);
+		applyTypographyPreference(typography);
+	}
+
+	async function saveCustomFontSize(event: Event) {
+		updateCustomFontSize((event.currentTarget as HTMLInputElement).value);
 		await saveTypography();
 	}
 
@@ -219,7 +256,7 @@
 
 				<div class="mt-5">
 					<p class="text-sm font-medium">{t('preferences.fontSizeLabel')}</p>
-					<div class="mt-2 grid gap-2 sm:grid-cols-5">
+					<div class="mt-2 grid gap-2 sm:grid-cols-6">
 						{#each fontSizeOptions as option}
 							<button
 								type="button"
@@ -233,6 +270,41 @@
 								{t(option.labelKey)}
 							</button>
 						{/each}
+						<button
+							type="button"
+							class="min-h-10 rounded-md border px-3 py-2 text-sm font-medium transition-colors {typography.fontSize === CUSTOM_FONT_SIZE_ID
+								? 'border-primary bg-primary text-primary-foreground'
+								: 'border-border bg-background text-foreground hover:bg-accent'}"
+							aria-pressed={typography.fontSize === CUSTOM_FONT_SIZE_ID}
+							disabled={saving}
+							onclick={() => void changeFontSize(CUSTOM_FONT_SIZE_ID)}
+						>
+							{t('preferences.fontSize.custom')}
+						</button>
+					</div>
+
+					<div class="mt-3 rounded-md border border-border bg-background p-3">
+						<div class="flex flex-wrap items-center justify-between gap-2 text-sm">
+							<label for="custom-font-size" class="font-medium">{t('preferences.customFontSizeLabel')}</label>
+							<p class="font-semibold">{currentRootSizePx}px</p>
+						</div>
+						<input
+							id="custom-font-size"
+							type="range"
+							class="mt-3 h-2 w-full cursor-pointer appearance-none rounded-lg bg-muted accent-primary disabled:opacity-60"
+							min={String(CUSTOM_FONT_SIZE_MIN_PX)}
+							max={String(CUSTOM_FONT_SIZE_MAX_PX)}
+							step={String(CUSTOM_FONT_SIZE_STEP_PX)}
+							value={String(currentRootSizePx)}
+							disabled={saving}
+							oninput={previewCustomFontSize}
+							onchange={saveCustomFontSize}
+						/>
+						<div class="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+							<span>{CUSTOM_FONT_SIZE_MIN_PX}px</span>
+							<span>{CUSTOM_FONT_SIZE_MAX_PX}px</span>
+						</div>
+						<p class="mt-2 text-xs leading-5 text-muted-foreground">{t('preferences.customFontSizeHelp')}</p>
 					</div>
 				</div>
 

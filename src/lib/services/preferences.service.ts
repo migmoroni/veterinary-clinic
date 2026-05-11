@@ -1,9 +1,12 @@
 import { DEFAULT_LOCALE, getLocale, isLocale, setLocale, type Locale } from '$lib/i18n/index.js';
 import {
+	CUSTOM_FONT_SIZE_ID,
 	DEFAULT_TYPOGRAPHY_PREFERENCES,
 	getTypographyFontFamily,
 	getTypographyRootSize,
 	normalizeTypographyPreferences,
+	stepCustomRootSizePx,
+	stepFontSize,
 	type TypographyPreferences
 } from '$lib/domain/preferences/typography.js';
 import { getSetting, setSetting } from '$lib/persistence/repositories/settings.repository.js';
@@ -61,6 +64,43 @@ export async function saveTypographyPreference(
 	applyTypographyPreference(normalized);
 	await setSetting(TYPOGRAPHY_SETTING_KEY, JSON.stringify(normalized));
 	return normalized;
+}
+
+export async function adjustTypographyFontSize(step: number): Promise<TypographyPreferences> {
+	const current = parseTypographySetting(await getSetting(TYPOGRAPHY_SETTING_KEY));
+	const normalizedStep = Number.isFinite(step) ? Math.trunc(step) : 0;
+
+	if (normalizedStep === 0) {
+		applyTypographyPreference(current);
+		return current;
+	}
+
+	if (current.fontSize === CUSTOM_FONT_SIZE_ID) {
+		const nextCustomRootSizePx = stepCustomRootSizePx(current.customRootSizePx, normalizedStep);
+
+		if (nextCustomRootSizePx === current.customRootSizePx) {
+			applyTypographyPreference(current);
+			return current;
+		}
+
+		return saveTypographyPreference({
+			...current,
+			fontSize: CUSTOM_FONT_SIZE_ID,
+			customRootSizePx: nextCustomRootSizePx
+		});
+	}
+
+	const nextFontSize = stepFontSize(current.fontSize, normalizedStep);
+
+	if (nextFontSize === current.fontSize) {
+		applyTypographyPreference(current);
+		return current;
+	}
+
+	return saveTypographyPreference({
+		...current,
+		fontSize: nextFontSize
+	});
 }
 
 export async function loadRecordAutoSavePreference(): Promise<boolean> {
