@@ -10,6 +10,7 @@ import type { VaccineAnalyticsOverview } from '$lib/persistence/repositories/vac
 import type { VaccineHistoryPoint } from '$lib/domain/vaccine/analytics.js';
 import { loadLocalePreference } from './preferences.service.js';
 import { importDatabase } from './backup.service.js';
+import { shouldResetOverviewLastRecordOnce } from './client-state.service.js';
 import { loadVaccineAnalyticsOverview, loadVaccineHistory } from './vaccine-analytics.service.js';
 
 
@@ -52,7 +53,11 @@ export async function loadDashboard(): Promise<ClinicDashboard> {
 		loadVaccineAnalyticsOverview(),
 		loadVaccineHistory({ period: 'month', vaccinePresetId: null })
 	]);
-	return { record, counts, vaccines: { ...vaccineOverview, history: vaccineHistory } };
+	return {
+		record: shouldResetOverviewLastRecordOnce() ? null : record,
+		counts,
+		vaccines: { ...vaccineOverview, history: vaccineHistory }
+	};
 }
 
 export async function searchEverywhere(query: string): Promise<SearchResult[]> {

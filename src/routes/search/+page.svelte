@@ -4,6 +4,7 @@
 	import type { OwnerContact } from '$lib/domain/owner/owner.js';
 	import type { SearchResult, SearchResultKind } from '$lib/persistence/repositories/search.repository.js';
 	import { t } from '$lib/i18n/index.js';
+	import { RECENT_SEARCH_STORAGE_KEY } from '$lib/services/client-state.service.js';
 	import { loadOwnerContactsByOwnerIds, searchEverywhere } from '$lib/services/clinic.service.js';
 	import ClipboardPenLine from '@lucide/svelte/icons/clipboard-pen-line';
 	import Phone from '@lucide/svelte/icons/phone';
@@ -11,7 +12,6 @@
 	import Search from '@lucide/svelte/icons/search';
 	import User from '@lucide/svelte/icons/user';
 
-	const recentSearchStorageKey = 'veterinary-clinic:recent-search-results';
 	const recentSearchLimit = 15;
 
 	let query = $state('');
@@ -62,7 +62,7 @@
 		if (typeof localStorage === 'undefined') return;
 
 		try {
-			const parsed = JSON.parse(localStorage.getItem(recentSearchStorageKey) ?? '[]');
+			const parsed = JSON.parse(localStorage.getItem(RECENT_SEARCH_STORAGE_KEY) ?? '[]');
 			const baseResults: SearchResult[] = Array.isArray(parsed) ? parsed.slice(0, recentSearchLimit) : [];
 			recentResults = await hydrateRecentOwnerContacts(baseResults);
 		} catch {
@@ -72,7 +72,7 @@
 
 	function saveRecentResults(nextResults: SearchResult[]) {
 		if (typeof localStorage === 'undefined') return;
-		localStorage.setItem(recentSearchStorageKey, JSON.stringify(nextResults.slice(0, recentSearchLimit)));
+		localStorage.setItem(RECENT_SEARCH_STORAGE_KEY, JSON.stringify(nextResults.slice(0, recentSearchLimit)));
 	}
 
 	function rememberResult(result: SearchResult) {

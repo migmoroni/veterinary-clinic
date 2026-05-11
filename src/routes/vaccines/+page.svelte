@@ -573,8 +573,8 @@
 									</div>
 								</div>
 								<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-									<a href={`/owners/${item.ownerId}`} class="inline-flex h-9 w-full items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent sm:w-auto">
-										{t('actions.openOwner')}
+									<a href={`/owners/${item.ownerId}/pets/${item.petId}`} class="inline-flex h-9 w-full items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent sm:w-auto">
+										{t('actions.openPet')}
 									</a>
 									<button
 										class="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50 sm:w-auto"

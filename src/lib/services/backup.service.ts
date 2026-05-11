@@ -9,6 +9,7 @@ import {
 	removeAppConfigFile,
 	replaceDatabaseWithAppConfigFile
 } from '$lib/native/database-file.js';
+import { clearClientStateAfterDatabaseImport } from './client-state.service.js';
 
 interface TableColumnRow {
 	name: string;
@@ -80,6 +81,7 @@ export async function importDatabase(title: string): Promise<{ importedPath: str
 		await getDatabase();
 		await addBackupHistory(selectedPath, 'import');
 		if (safetyBackupName) await addBackupHistory(safetyBackupName, 'pre_import_backup');
+		clearClientStateAfterDatabaseImport();
 		return { importedPath: selectedPath, safetyBackupName: safetyBackupName ?? '' };
 	} catch (error) {
 		await removeAppConfigFile(tempName);
