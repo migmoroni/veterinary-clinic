@@ -16,7 +16,9 @@ export interface OwnerContactInput {
 export interface Owner {
 	id: number;
 	name: string;
-	address: string | null;
+	street: string | null;
+	streetNumber: string | null;
+	addressComplement: string | null;
 	neighborhood: string | null;
 	city: string | null;
 	postalCode: string | null;
@@ -30,7 +32,9 @@ export interface Owner {
 
 export interface OwnerInput {
 	name: string;
-	address: string;
+	street: string;
+	streetNumber: string;
+	addressComplement: string;
 	neighborhood: string;
 	city: string;
 	postalCode: string;

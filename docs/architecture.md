@@ -16,7 +16,7 @@ Implemented workflows:
 
 - Owner, pet, and medical record CRUD with profile/detail routes. Medical records store an attendance period with `admitted_at` and optional `discharged_at` instead of a single appointment date.
 - Owners store one or more phone contacts in `owner_contacts`; each contact is typed as `phone` or `mobile` instead of using fixed phone columns on `owners`.
-- ViaCEP lookup in owner forms to fill address, neighborhood, city, state, and postal code.
+- ViaCEP lookup in owner forms to fill street, neighborhood, city, state, and postal code; owner addresses are stored as `street`, `street_number`, and `address_complement`.
 - Pet vaccination records based on required vaccine presets. A vaccination stores `vaccine_preset_id` as the stable reference and `vaccine_name` as a snapshot for display/history. Due-date tracking uses a single `validity_ignored_at` marker: the application code marks older equal applications when a booster is saved, and the same marker can be set manually when a different replacement vaccine should stop an old due-date alert.
 - Soft delete for owners, pets, and medical records with a 90-day purge window.
 - Trash restore, permanent delete, and expired-item purge actions.

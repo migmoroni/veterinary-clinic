@@ -19,7 +19,9 @@ async function createCurrentSchema(database: Database): Promise<void> {
 		CREATE TABLE IF NOT EXISTS owners (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT NOT NULL,
-			address TEXT,
+			street TEXT,
+			street_number TEXT,
+			address_complement TEXT,
 			neighborhood TEXT,
 			city TEXT,
 			state TEXT,

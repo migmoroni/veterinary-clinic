@@ -9,7 +9,17 @@
 	import Save from '@lucide/svelte/icons/save';
 
 	function emptyOwnerForm(): OwnerInput {
-		return { name: '', address: '', neighborhood: '', city: '', postalCode: '', contacts: [{ kind: 'mobile', value: '' }], state: '' };
+		return {
+			name: '',
+			street: '',
+			streetNumber: '',
+			addressComplement: '',
+			neighborhood: '',
+			city: '',
+			postalCode: '',
+			contacts: [{ kind: 'mobile', value: '' }],
+			state: ''
+		};
 	}
 
 	let form = $state<OwnerInput>(emptyOwnerForm());
@@ -24,17 +34,17 @@
 		error = null;
 
 		try {
-			const address = await lookupCep(form.postalCode);
-			if (!address) {
+			const cepAddress = await lookupCep(form.postalCode);
+			if (!cepAddress) {
 				statusKey = 'status.cepNotFound';
 				return;
 			}
 
-			form.postalCode = address.postalCode;
-			form.address = address.address;
-			form.neighborhood = address.neighborhood;
-			form.city = address.city;
-			form.state = address.state;
+			form.postalCode = cepAddress.postalCode;
+			form.street = cepAddress.street;
+			form.neighborhood = cepAddress.neighborhood;
+			form.city = cepAddress.city;
+			form.state = cepAddress.state;
 			statusKey = 'status.cepFound';
 		} catch (exception) {
 			statusKey = exception instanceof Error && exception.message === 'cep_invalid' ? 'status.cepInvalid' : 'status.cepUnavailable';
@@ -93,8 +103,18 @@
 			</label>
 
 			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
-				<span>{t('owner.address')}</span>
-				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.address} />
+				<span>{t('owner.street')}</span>
+				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.street} />
+			</label>
+
+			<label class="flex flex-col gap-1 text-sm font-medium">
+				<span>{t('owner.streetNumber')}</span>
+				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.streetNumber} />
+			</label>
+
+			<label class="flex flex-col gap-1 text-sm font-medium">
+				<span>{t('owner.addressComplement')}</span>
+				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.addressComplement} />
 			</label>
 
 			<label class="flex flex-col gap-1 text-sm font-medium">

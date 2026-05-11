@@ -3,7 +3,7 @@ import path from 'path';
 import { parse } from 'csv-parse/sync';
 import Database from 'better-sqlite3';
 const projectDir = process.cwd();
-const db = new Database(path.resolve(projectDir, 'veterinary_clinic.db'));
+const db = new Database(path.resolve(projectDir, 'build/veterinary_clinic.db'));
 db.pragma('foreign_keys = ON');
 db.exec(`
   DROP TABLE IF EXISTS pet_vaccinations;
@@ -18,7 +18,9 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS owners (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    address TEXT,
+    street TEXT,
+    street_number TEXT,
+    address_complement TEXT,
     neighborhood TEXT,
     city TEXT,
     state TEXT,
@@ -123,8 +125,8 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_deleted_at ON pet_vaccinations(deleted_at);
 `);
 const insertOwner = db.prepare(`
-  INSERT INTO owners (name, address, neighborhood, city, postal_code)
-  VALUES (@name, @address, @neighborhood, @city, @postalCode)
+  INSERT INTO owners (name, street, street_number, address_complement, neighborhood, city, postal_code)
+  VALUES (@name, @street, @streetNumber, @addressComplement, @neighborhood, @city, @postalCode)
 `);
 const insertOwnerContact = db.prepare(`
   INSERT OR IGNORE INTO owner_contacts (owner_id, kind, value, sort_order, updated_at)
@@ -237,6 +239,47 @@ const dateHeaderPattern = /(^|\n)\s*(\d{1,2}\s*\/\s*\d{1,2}\s*\/\s*(?:\d{2}|\d{4
 const nullable = (value) => {
     const trimmed = value?.trim() ?? '';
     return trimmed.length > 0 ? trimmed : null;
+};
+const parseLegacyAddress = (value) => {
+    const raw = (value ?? '').replace(/\s+/g, ' ').trim();
+    if (!raw) {
+        return { street: null, streetNumber: null, addressComplement: null };
+    }
+    const splitByComma = raw.split(',');
+    const streetPart = splitByComma[0]?.trim() ?? '';
+    const remainderPart = splitByComma.slice(1).join(',').trim();
+    const parseRemainder = (remainder) => {
+        const cleaned = remainder.replace(/^[-\s,]+/, '').trim();
+        if (!cleaned)
+            return { streetNumber: null, addressComplement: null };
+        const numberMatch = cleaned.match(/^((?:\d+[A-Za-z]?|\d+[A-Za-z]?\/\d+|s\/?n))\b\s*(.*)$/i);
+        if (!numberMatch) {
+            return { streetNumber: null, addressComplement: nullable(cleaned) };
+        }
+        const number = numberMatch[1].toUpperCase();
+        const complement = numberMatch[2].replace(/^[-\s,]+/, '').trim();
+        return {
+            streetNumber: nullable(number),
+            addressComplement: nullable(complement)
+        };
+    };
+    if (streetPart) {
+        const parsed = parseRemainder(remainderPart);
+        return {
+            street: nullable(streetPart),
+            streetNumber: parsed.streetNumber,
+            addressComplement: parsed.addressComplement
+        };
+    }
+    const fallback = raw.match(/^(.*?)(?:\s+(\d+[A-Za-z]?|\d+[A-Za-z]?\/\d+|s\/?n))?(?:\s*[-,/]\s*(.*))?$/i);
+    if (!fallback) {
+        return { street: nullable(raw), streetNumber: null, addressComplement: null };
+    }
+    return {
+        street: nullable(fallback[1]),
+        streetNumber: nullable(fallback[2]?.toUpperCase()),
+        addressComplement: nullable(fallback[3])
+    };
 };
 const insertContactFromSource = (report, ownerId, kind, rawValue, sortOrder) => {
     const value = nullable(rawValue);
@@ -505,7 +548,7 @@ const ignoreVaccinationValidity = (report, id) => {
     report.vaccinationsIgnoredForValidity += result.changes;
 };
 const processarMigracao = () => {
-    const csvFilePath = path.resolve(projectDir, 'old-clinic.csv');
+    const csvFilePath = path.resolve(projectDir, 'dist/old-clinic.csv');
     const rows = parse(fs.readFileSync(csvFilePath, 'utf8'), {
         columns: true,
         skip_empty_lines: true,
@@ -534,9 +577,12 @@ const processarMigracao = () => {
                 report.ownersReused += 1;
             }
             else {
+                const parsedAddress = parseLegacyAddress(row['ENDEREÇO']);
                 const res = insertOwner.run({
                     name: ownerName,
-                    address: nullable(row['ENDEREÇO']),
+                    street: parsedAddress.street,
+                    streetNumber: parsedAddress.streetNumber,
+                    addressComplement: parsedAddress.addressComplement,
                     neighborhood: nullable(row['BAIRRO']),
                     city: nullable(row['CIDADE']),
                     postalCode: nullable(row['CEP'])

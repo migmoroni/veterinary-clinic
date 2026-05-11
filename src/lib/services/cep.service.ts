@@ -1,6 +1,6 @@
 export interface CepAddress {
 	postalCode: string;
-	address: string;
+	street: string;
 	neighborhood: string;
 	city: string;
 	state: string;
@@ -31,7 +31,7 @@ export async function lookupCep(value: string): Promise<CepAddress | null> {
 
 	return {
 		postalCode: data.cep ?? value,
-		address: data.logradouro ?? '',
+		street: data.logradouro ?? '',
 		neighborhood: data.bairro ?? '',
 		city: data.localidade ?? '',
 		state: data.uf ?? ''

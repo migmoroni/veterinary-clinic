@@ -60,6 +60,12 @@ interface DuplicatePetCandidate {
   codes: string[];
 }
 
+interface ParsedLegacyAddress {
+  street: string | null;
+  streetNumber: string | null;
+  addressComplement: string | null;
+}
+
 interface ImportReport {
   sourceRows: number;
   sourceNumericCodes: number;
@@ -103,7 +109,9 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS owners (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    address TEXT,
+    street TEXT,
+    street_number TEXT,
+    address_complement TEXT,
     neighborhood TEXT,
     city TEXT,
     state TEXT,
@@ -209,8 +217,8 @@ db.exec(`
 `);
 
 const insertOwner = db.prepare(`
-  INSERT INTO owners (name, address, neighborhood, city, postal_code)
-  VALUES (@name, @address, @neighborhood, @city, @postalCode)
+  INSERT INTO owners (name, street, street_number, address_complement, neighborhood, city, postal_code)
+  VALUES (@name, @street, @streetNumber, @addressComplement, @neighborhood, @city, @postalCode)
 `);
 
 const insertOwnerContact = db.prepare(`
@@ -342,6 +350,54 @@ const dateHeaderPattern = /(^|\n)\s*(\d{1,2}\s*\/\s*\d{1,2}\s*\/\s*(?:\d{2}|\d{4
 const nullable = (value: string | undefined): string | null => {
   const trimmed = value?.trim() ?? '';
   return trimmed.length > 0 ? trimmed : null;
+};
+
+const parseLegacyAddress = (value: string | undefined): ParsedLegacyAddress => {
+  const raw = (value ?? '').replace(/\s+/g, ' ').trim();
+  if (!raw) {
+    return { street: null, streetNumber: null, addressComplement: null };
+  }
+
+  const splitByComma = raw.split(',');
+  const streetPart = splitByComma[0]?.trim() ?? '';
+  const remainderPart = splitByComma.slice(1).join(',').trim();
+
+  const parseRemainder = (remainder: string): Pick<ParsedLegacyAddress, 'streetNumber' | 'addressComplement'> => {
+    const cleaned = remainder.replace(/^[-\s,]+/, '').trim();
+    if (!cleaned) return { streetNumber: null, addressComplement: null };
+
+    const numberMatch = cleaned.match(/^((?:\d+[A-Za-z]?|\d+[A-Za-z]?\/\d+|s\/?n))\b\s*(.*)$/i);
+    if (!numberMatch) {
+      return { streetNumber: null, addressComplement: nullable(cleaned) };
+    }
+
+    const number = numberMatch[1].toUpperCase();
+    const complement = numberMatch[2].replace(/^[-\s,]+/, '').trim();
+    return {
+      streetNumber: nullable(number),
+      addressComplement: nullable(complement)
+    };
+  };
+
+  if (streetPart) {
+    const parsed = parseRemainder(remainderPart);
+    return {
+      street: nullable(streetPart),
+      streetNumber: parsed.streetNumber,
+      addressComplement: parsed.addressComplement
+    };
+  }
+
+  const fallback = raw.match(/^(.*?)(?:\s+(\d+[A-Za-z]?|\d+[A-Za-z]?\/\d+|s\/?n))?(?:\s*[-,/]\s*(.*))?$/i);
+  if (!fallback) {
+    return { street: nullable(raw), streetNumber: null, addressComplement: null };
+  }
+
+  return {
+    street: nullable(fallback[1]),
+    streetNumber: nullable(fallback[2]?.toUpperCase()),
+    addressComplement: nullable(fallback[3])
+  };
 };
 
 const insertContactFromSource = (report: ImportReport, ownerId: number | bigint, kind: OwnerContactKind, rawValue: string | undefined, sortOrder: number) => {
@@ -671,9 +727,12 @@ const processarMigracao = () => {
         ownerId = ownersCache.get(ownerName)!;
         report.ownersReused += 1;
       } else {
+        const parsedAddress = parseLegacyAddress(row['ENDEREÇO']);
         const res = insertOwner.run({
           name: ownerName,
-          address: nullable(row['ENDEREÇO']),
+          street: parsedAddress.street,
+          streetNumber: parsedAddress.streetNumber,
+          addressComplement: parsedAddress.addressComplement,
           neighborhood: nullable(row['BAIRRO']),
           city: nullable(row['CIDADE']),
           postalCode: nullable(row['CEP'])

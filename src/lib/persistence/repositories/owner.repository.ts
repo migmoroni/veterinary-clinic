@@ -5,7 +5,9 @@ import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.j
 interface OwnerRow {
 	id: number;
 	name: string;
-	address: string | null;
+	street: string | null;
+	street_number: string | null;
+	address_complement: string | null;
 	neighborhood: string | null;
 	city: string | null;
 	postal_code: string | null;
@@ -63,7 +65,9 @@ function mapOwner(row: OwnerRow, contacts: OwnerContact[] = []): Owner {
 	return {
 		id: row.id,
 		name: row.name,
-		address: row.address,
+		street: row.street,
+		streetNumber: row.street_number,
+		addressComplement: row.address_complement,
 		neighborhood: row.neighborhood,
 		city: row.city,
 		postalCode: row.postal_code,
@@ -141,7 +145,7 @@ export async function listOwners(query = ''): Promise<Owner[]> {
 			: '';
 
 	const rows = await selectMany<OwnerRow>(
-		`SELECT id, name, address, neighborhood, city, postal_code, state,
+		`SELECT id, name, street, street_number, address_complement, neighborhood, city, postal_code, state,
 			created_at, updated_at, deleted_at, purge_after
 		 FROM owners
 		 WHERE deleted_at IS NULL ${filter}
@@ -155,7 +159,7 @@ export async function listOwners(query = ''): Promise<Owner[]> {
 
 export async function getOwner(id: number, includeDeleted = false): Promise<Owner | null> {
 	const rows = await selectMany<OwnerRow>(
-		`SELECT id, name, address, neighborhood, city, postal_code, state,
+		`SELECT id, name, street, street_number, address_complement, neighborhood, city, postal_code, state,
 			created_at, updated_at, deleted_at, purge_after
 		 FROM owners
 		 WHERE id = $1 ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
@@ -169,11 +173,23 @@ export async function getOwner(id: number, includeDeleted = false): Promise<Owne
 
 export async function createOwner(input: OwnerInput): Promise<Owner> {
 	const result = await execute(
-		`INSERT INTO owners (name, address, neighborhood, city, postal_code, state, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)`,
+		`INSERT INTO owners (
+			name,
+			street,
+			street_number,
+			address_complement,
+			neighborhood,
+			city,
+			postal_code,
+			state,
+			updated_at
+		)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
 		[
 			input.name.trim(),
-			nullable(input.address),
+			nullable(input.street),
+			nullable(input.streetNumber),
+			nullable(input.addressComplement),
 			nullable(input.neighborhood),
 			nullable(input.city),
 			nullable(input.postalCode),
@@ -193,17 +209,21 @@ export async function updateOwner(id: number, input: OwnerInput): Promise<Owner>
 	await execute(
 		`UPDATE owners
 		 SET name = $2,
-			address = $3,
-			neighborhood = $4,
-			city = $5,
-			postal_code = $6,
-			state = $7,
+			street = $3,
+			street_number = $4,
+			address_complement = $5,
+			neighborhood = $6,
+			city = $7,
+			postal_code = $8,
+			state = $9,
 			updated_at = CURRENT_TIMESTAMP
 		 WHERE id = $1 AND deleted_at IS NULL`,
 		[
 			id,
 			input.name.trim(),
-			nullable(input.address),
+			nullable(input.street),
+			nullable(input.streetNumber),
+			nullable(input.addressComplement),
 			nullable(input.neighborhood),
 			nullable(input.city),
 			nullable(input.postalCode),
