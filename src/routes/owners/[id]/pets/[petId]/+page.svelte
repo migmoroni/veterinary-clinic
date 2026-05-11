@@ -561,7 +561,7 @@
 </section>
 
 {#if avatarDialogOpen}
-	<PetAvatarEditorDialog initialAvatarBytes={form.avatarBytes} onApply={applyAvatar} onRemove={removeAvatar} onClose={closeAvatarDialog} />
+	<PetAvatarEditorDialog initialAvatarBytes={form.avatarBytes} onApply={applyAvatar} onRemove={removeAvatar} onClose={closeAvatarDialog}/>
 {/if}
 
 <UnsavedChangesDialog
