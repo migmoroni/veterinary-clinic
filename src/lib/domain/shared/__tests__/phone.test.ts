@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { formatPhoneForWhatsApp, getPhoneCallUrl, getWhatsAppUrl } from '../phone.js';
+import { formatPhoneForInput, formatPhoneForWhatsApp, getPhoneCallUrl, getWhatsAppUrl } from '../phone.js';
+
+describe('phone input mask', () => {
+	it('formats brazilian numbers without country code', () => {
+		expect(formatPhoneForInput('16999998888')).toBe('(16) 99999-8888');
+		expect(formatPhoneForInput('1633334444')).toBe('(16) 3333-4444');
+	});
+
+	it('formats brazilian numbers with explicit country code', () => {
+		expect(formatPhoneForInput('+55 16 99999-8888')).toBe('+55 (16) 99999-8888');
+		expect(formatPhoneForInput('55')).toBe('+55');
+	});
+});
 
 describe('phone helpers', () => {
 	it('normalizes Brazilian mobile numbers with the country code', () => {

@@ -1,4 +1,4 @@
-import type { Owner, OwnerContact, OwnerContactInput, OwnerContactKind, OwnerInput } from '$lib/domain/owner/owner.js';
+import { DEFAULT_OWNER_COUNTRY, type Owner, type OwnerContact, type OwnerContactInput, type OwnerContactKind, type OwnerInput } from '$lib/domain/owner/owner.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
 
@@ -10,6 +10,7 @@ interface OwnerRow {
 	address_complement: string | null;
 	neighborhood: string | null;
 	city: string | null;
+	country: string | null;
 	postal_code: string | null;
 	state: string | null;
 	created_at: string | null;
@@ -34,6 +35,11 @@ function nullable(value: string | null | undefined): string | null {
 
 function normalizeContactKind(value: string | null | undefined): OwnerContactKind {
 	return value === 'phone' ? 'phone' : 'mobile';
+}
+
+function normalizeCountry(value: string | null | undefined): string {
+	const trimmed = value?.trim() ?? '';
+	return trimmed.length > 0 ? trimmed : DEFAULT_OWNER_COUNTRY;
 }
 
 function normalizeContacts(contacts: OwnerContactInput[]): OwnerContactInput[] {
@@ -70,6 +76,7 @@ function mapOwner(row: OwnerRow, contacts: OwnerContact[] = []): Owner {
 		addressComplement: row.address_complement,
 		neighborhood: row.neighborhood,
 		city: row.city,
+		country: row.country,
 		postalCode: row.postal_code,
 		contacts,
 		state: row.state,
@@ -145,7 +152,7 @@ export async function listOwners(query = ''): Promise<Owner[]> {
 			: '';
 
 	const rows = await selectMany<OwnerRow>(
-		`SELECT id, name, street, street_number, address_complement, neighborhood, city, postal_code, state,
+		`SELECT id, name, street, street_number, address_complement, neighborhood, city, country, postal_code, state,
 			created_at, updated_at, deleted_at, purge_after
 		 FROM owners
 		 WHERE deleted_at IS NULL ${filter}
@@ -159,7 +166,7 @@ export async function listOwners(query = ''): Promise<Owner[]> {
 
 export async function getOwner(id: number, includeDeleted = false): Promise<Owner | null> {
 	const rows = await selectMany<OwnerRow>(
-		`SELECT id, name, street, street_number, address_complement, neighborhood, city, postal_code, state,
+		`SELECT id, name, street, street_number, address_complement, neighborhood, city, country, postal_code, state,
 			created_at, updated_at, deleted_at, purge_after
 		 FROM owners
 		 WHERE id = $1 ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
@@ -180,11 +187,12 @@ export async function createOwner(input: OwnerInput): Promise<Owner> {
 			address_complement,
 			neighborhood,
 			city,
+			country,
 			postal_code,
 			state,
 			updated_at
 		)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)`,
 		[
 			input.name.trim(),
 			nullable(input.street),
@@ -192,6 +200,7 @@ export async function createOwner(input: OwnerInput): Promise<Owner> {
 			nullable(input.addressComplement),
 			nullable(input.neighborhood),
 			nullable(input.city),
+			normalizeCountry(input.country),
 			nullable(input.postalCode),
 			nullable(input.state)?.toUpperCase() ?? null
 		]
@@ -214,8 +223,9 @@ export async function updateOwner(id: number, input: OwnerInput): Promise<Owner>
 			address_complement = $5,
 			neighborhood = $6,
 			city = $7,
-			postal_code = $8,
-			state = $9,
+			country = $8,
+			postal_code = $9,
+			state = $10,
 			updated_at = CURRENT_TIMESTAMP
 		 WHERE id = $1 AND deleted_at IS NULL`,
 		[
@@ -226,6 +236,7 @@ export async function updateOwner(id: number, input: OwnerInput): Promise<Owner>
 			nullable(input.addressComplement),
 			nullable(input.neighborhood),
 			nullable(input.city),
+			normalizeCountry(input.country),
 			nullable(input.postalCode),
 			nullable(input.state)?.toUpperCase() ?? null
 		]

@@ -115,6 +115,7 @@ db.exec(`
     neighborhood TEXT,
     city TEXT,
     state TEXT,
+    country TEXT NOT NULL DEFAULT 'Brazil',
     postal_code TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
@@ -217,8 +218,8 @@ db.exec(`
 `);
 
 const insertOwner = db.prepare(`
-  INSERT INTO owners (name, street, street_number, address_complement, neighborhood, city, postal_code)
-  VALUES (@name, @street, @streetNumber, @addressComplement, @neighborhood, @city, @postalCode)
+  INSERT INTO owners (name, street, street_number, address_complement, neighborhood, city, country, postal_code)
+  VALUES (@name, @street, @streetNumber, @addressComplement, @neighborhood, @city, @country, @postalCode)
 `);
 
 const insertOwnerContact = db.prepare(`
@@ -735,6 +736,7 @@ const processarMigracao = () => {
           addressComplement: parsedAddress.addressComplement,
           neighborhood: nullable(row['BAIRRO']),
           city: nullable(row['CIDADE']),
+          country: 'Brazil',
           postalCode: nullable(row['CEP'])
         });
         ownerId = res.lastInsertRowid;

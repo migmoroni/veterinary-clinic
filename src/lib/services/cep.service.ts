@@ -15,11 +15,26 @@ interface ViaCepResponse {
 	erro?: boolean;
 }
 
+function normalizeCountry(value: string): string {
+	return value
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.toLowerCase()
+		.replace(/[^a-z]/g, '');
+}
+
+export function isCountrySupportedForCepLookup(country: string): boolean {
+	const normalized = normalizeCountry(country.trim());
+	return normalized.length === 0 || normalized === 'br' || normalized === 'brasil' || normalized === 'brazil';
+}
+
 export function normalizeCep(value: string): string {
 	return value.replace(/\D/g, '');
 }
 
-export async function lookupCep(value: string): Promise<CepAddress | null> {
+export async function lookupCep(value: string, country: string): Promise<CepAddress | null> {
+	if (!isCountrySupportedForCepLookup(country)) throw new Error('cep_country_unsupported');
+
 	const cep = normalizeCep(value);
 	if (cep.length !== 8) throw new Error('cep_invalid');
 

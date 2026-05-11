@@ -24,6 +24,7 @@ db.exec(`
     neighborhood TEXT,
     city TEXT,
     state TEXT,
+    country TEXT NOT NULL DEFAULT 'Brazil',
     postal_code TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
@@ -125,8 +126,8 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_deleted_at ON pet_vaccinations(deleted_at);
 `);
 const insertOwner = db.prepare(`
-  INSERT INTO owners (name, street, street_number, address_complement, neighborhood, city, postal_code)
-  VALUES (@name, @street, @streetNumber, @addressComplement, @neighborhood, @city, @postalCode)
+  INSERT INTO owners (name, street, street_number, address_complement, neighborhood, city, country, postal_code)
+  VALUES (@name, @street, @streetNumber, @addressComplement, @neighborhood, @city, @country, @postalCode)
 `);
 const insertOwnerContact = db.prepare(`
   INSERT OR IGNORE INTO owner_contacts (owner_id, kind, value, sort_order, updated_at)
@@ -585,6 +586,7 @@ const processarMigracao = () => {
                     addressComplement: parsedAddress.addressComplement,
                     neighborhood: nullable(row['BAIRRO']),
                     city: nullable(row['CIDADE']),
+                    country: 'Brazil',
                     postalCode: nullable(row['CEP'])
                 });
                 ownerId = res.lastInsertRowid;

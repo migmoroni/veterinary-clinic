@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import OwnerContactsField from '$lib/components/owner/OwnerContactsField.svelte';
-	import type { OwnerInput } from '$lib/domain/owner/owner.js';
+	import { DEFAULT_OWNER_COUNTRY, type OwnerInput } from '$lib/domain/owner/owner.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
-	import { lookupCep } from '$lib/services/cep.service.js';
+	import { isCountrySupportedForCepLookup, lookupCep } from '$lib/services/cep.service.js';
 	import { saveNewOwner } from '$lib/services/owner.service.js';
 	import Search from '@lucide/svelte/icons/search';
 	import Save from '@lucide/svelte/icons/save';
@@ -16,6 +16,7 @@
 			addressComplement: '',
 			neighborhood: '',
 			city: '',
+			country: DEFAULT_OWNER_COUNTRY,
 			postalCode: '',
 			contacts: [{ kind: 'mobile', value: '' }],
 			state: ''
@@ -34,7 +35,7 @@
 		error = null;
 
 		try {
-			const cepAddress = await lookupCep(form.postalCode);
+			const cepAddress = await lookupCep(form.postalCode, form.country);
 			if (!cepAddress) {
 				statusKey = 'status.cepNotFound';
 				return;
@@ -47,7 +48,13 @@
 			form.state = cepAddress.state;
 			statusKey = 'status.cepFound';
 		} catch (exception) {
-			statusKey = exception instanceof Error && exception.message === 'cep_invalid' ? 'status.cepInvalid' : 'status.cepUnavailable';
+			if (exception instanceof Error && exception.message === 'cep_invalid') {
+				statusKey = 'status.cepInvalid';
+			} else if (exception instanceof Error && exception.message === 'cep_country_unsupported') {
+				statusKey = 'status.cepCountryUnsupported';
+			} else {
+				statusKey = 'status.cepUnavailable';
+			}
 		} finally {
 			cepLoading = false;
 		}
@@ -80,51 +87,60 @@
 	</header>
 
 	<form class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5" onsubmit={submit}>
-		<div class="grid gap-4 sm:grid-cols-2">
-			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
+		<div class="grid gap-4 sm:grid-cols-5">
+			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-5">
 				<span>{t('owner.name')}</span>
 				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.name} required />
 			</label>
 
-			<label class="flex flex-col gap-1 text-sm font-medium">
+			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
+				<span>{t('owner.country')}</span>
+				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.country} />
+			</label>
+
+			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-3">
 				<span>{t('owner.postalCode')}</span>
 				<span class="flex gap-2">
 					<input class="h-10 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.postalCode} />
-					<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={cepLoading} onclick={() => void fillAddressFromCep()} aria-label={t('actions.searchCep')}>
+					<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={cepLoading || !isCountrySupportedForCepLookup(form.country)} onclick={() => void fillAddressFromCep()} aria-label={t('actions.searchCep')}>
 						<Search class="size-4" />
 						{t('actions.searchCep')}
 					</button>
 				</span>
 			</label>
 
-			<label class="flex flex-col gap-1 text-sm font-medium">
-				<span>{t('owner.state')}</span>
-				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.state} />
-			</label>
+			{#if !isCountrySupportedForCepLookup(form.country)}
+				<p class="text-xs text-muted-foreground sm:col-span-2">{t('status.cepCountryUnsupported')}</p>
+			{/if}
 
-			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
+			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-3">
 				<span>{t('owner.street')}</span>
 				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.street} />
 			</label>
 
-			<label class="flex flex-col gap-1 text-sm font-medium">
+			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-1">
 				<span>{t('owner.streetNumber')}</span>
 				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.streetNumber} />
 			</label>
 
-			<label class="flex flex-col gap-1 text-sm font-medium">
+			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-1">
 				<span>{t('owner.addressComplement')}</span>
 				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.addressComplement} />
 			</label>
 
-			<label class="flex flex-col gap-1 text-sm font-medium">
+			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
 				<span>{t('owner.neighborhood')}</span>
 				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.neighborhood} />
 			</label>
 
-			<label class="flex flex-col gap-1 text-sm font-medium">
+			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
 				<span>{t('owner.city')}</span>
 				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.city} />
+			</label>
+
+			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-1">
+				<span>{t('owner.state')}</span>
+				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.state} />
 			</label>
 
 

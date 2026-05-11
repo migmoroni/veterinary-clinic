@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { OwnerContactInput, OwnerContactKind } from '$lib/domain/owner/owner.js';
+	import { formatPhoneForInput } from '$lib/domain/shared/phone.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -22,15 +23,20 @@
 
 	function updateContactKind(index: number, kind: string) {
 		const nextKind: OwnerContactKind = kind === 'phone' ? 'phone' : 'mobile';
-		contacts = contacts.map((contact, contactIndex) => (contactIndex === index ? { ...contact, kind: nextKind } : contact));
+		contacts = contacts.map((contact, contactIndex) =>
+			contactIndex === index ? { ...contact, kind: nextKind, value: formatPhoneForInput(contact.value) } : contact
+		);
 	}
 
 	function updateContactValue(index: number, value: string) {
-		contacts = contacts.map((contact, contactIndex) => (contactIndex === index ? { ...contact, value } : contact));
+		contacts = contacts.map((contact, contactIndex) => {
+			if (contactIndex !== index) return contact;
+			return { ...contact, value: formatPhoneForInput(value) };
+		});
 	}
 </script>
 
-<div class="sm:col-span-2 rounded-md border border-border bg-background p-3">
+<div class="sm:col-span-5 rounded-md border border-border bg-background p-3">
 	<div class="flex items-center justify-between gap-3">
 		<h4 class="text-sm font-semibold">{t('owner.contacts')}</h4>
 		<button
@@ -65,6 +71,9 @@
 				<label class="flex flex-col gap-1 text-sm font-medium">
 					<span class="sr-only">{t('owner.contactValue')}</span>
 					<input
+						type="tel"
+						inputmode="tel"
+						autocomplete="tel"
 						class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
 						value={contact.value}
 						oninput={(event) => updateContactValue(index, event.currentTarget.value)}

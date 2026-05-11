@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { beforeNavigate, goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
 	import PetTaxonomyPicker from '$lib/components/pet/PetTaxonomyPicker.svelte';
 	import VaccinationPanel from '$lib/components/pet/VaccinationPanel.svelte';
+	import UnsavedChangesDialog from '$lib/components/records/UnsavedChangesDialog.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
 	import type { MedicalRecord } from '$lib/domain/medical-record/medical-record.js';
 	import type { Pet, PetInput, PetSex } from '$lib/domain/pet/pet.js';
@@ -28,8 +29,22 @@
 		return { name: pet.name, birthDate: formatDateForInput(pet.birthDate), species: pet.species, breed: pet.breed, sex: pet.sex ?? '' };
 	}
 
+	function snapshotForm(input: PetForm): string {
+		return JSON.stringify({
+			name: input.name ?? '',
+			birthDate: input.birthDate ?? '',
+			species: input.species ?? null,
+			breed: input.breed ?? null,
+			sex: input.sex ?? ''
+		});
+	}
+
 	function toInput(): PetInput {
 		return { ...form, birthDate: normalizeDateInput(form.birthDate), breed: form.species ? form.breed : null, sex: form.sex === '' ? null : form.sex };
+	}
+
+	function hrefFromUrl(url: URL): string {
+		return `${url.pathname}${url.search}${url.hash}`;
 	}
 
 	function errorMessage(exception: unknown): string {
@@ -72,9 +87,19 @@
 	let loading = $state(true);
 	let saving = $state(false);
 	let deleting = $state(false);
+	let editing = $state(false);
 	let deleteDialogOpen = $state(false);
+	let unsavedDialogOpen = $state(false);
+	let pendingNavigationHref = $state<string | null>(null);
+	let pendingCancelEdit = $state(false);
+	let savedSnapshot = $state('');
 	let statusKey = $state<TranslationKey | null>(null);
 	let error = $state<string | null>(null);
+	let allowNavigation = false;
+
+	const currentSnapshot = $derived(snapshotForm(form));
+	const hasUnsavedChanges = $derived(editing && Boolean(profile) && !loading && currentSnapshot !== savedSnapshot);
+
 	const petAgeText = $derived.by(() => {
 		const age = computeAgeFromBirthDate(form.birthDate);
 		if (!age) return t('pet.ageNotInformed');
@@ -88,7 +113,10 @@
 
 		try {
 			profile = await loadPetProfile(petId);
-			form = toForm(profile.pet);
+			const loadedForm = toForm(profile.pet);
+			form = loadedForm;
+			savedSnapshot = snapshotForm(loadedForm);
+			editing = false;
 		} catch (exception) {
 			error = errorMessage(exception);
 		} finally {
@@ -96,29 +124,130 @@
 		}
 	}
 
-	async function submitPet(event: SubmitEvent) {
+	function startEditing() {
+		if (!profile) return;
+		const nextForm = toForm(profile.pet);
+		form = nextForm;
+		savedSnapshot = snapshotForm(nextForm);
+		statusKey = null;
+		error = null;
+		editing = true;
+	}
+
+	function requestCancelEditing() {
+		if (!editing || !profile) return;
+
+		if (!hasUnsavedChanges) {
+			const nextForm = toForm(profile.pet);
+			form = nextForm;
+			savedSnapshot = snapshotForm(nextForm);
+			statusKey = null;
+			editing = false;
+			return;
+		}
+
+		pendingNavigationHref = null;
+		pendingCancelEdit = true;
+		unsavedDialogOpen = true;
+	}
+
+	function resetUnsavedState() {
+		unsavedDialogOpen = false;
+		pendingNavigationHref = null;
+		pendingCancelEdit = false;
+	}
+
+	async function navigateToHref(href: string) {
+		allowNavigation = true;
+		try {
+			await goto(href);
+		} finally {
+			allowNavigation = false;
+		}
+	}
+
+	function handleBeforeUnload(event: BeforeUnloadEvent) {
+		if (!hasUnsavedChanges) return;
 		event.preventDefault();
+		event.returnValue = '';
+	}
+
+	async function saveCurrentPet(showStatus: boolean): Promise<boolean> {
+		if (!profile) return false;
+
 		saving = true;
 		error = null;
 
 		try {
 			const pet = await savePet(petId, toInput());
-			profile = profile ? { ...profile, pet } : profile;
-			statusKey = 'status.saved';
+			profile = { ...profile, pet };
+
+			const nextForm = toForm(pet);
+			form = nextForm;
+			savedSnapshot = snapshotForm(nextForm);
+			editing = false;
+
+			if (showStatus) statusKey = 'status.saved';
+			return true;
 		} catch (exception) {
 			error = errorMessage(exception);
+			return false;
 		} finally {
 			saving = false;
 		}
 	}
 
+	async function submitPet(event: SubmitEvent) {
+		event.preventDefault();
+		if (!editing) return;
+		await saveCurrentPet(true);
+	}
+
+	async function confirmSaveAndLeave() {
+		const href = pendingNavigationHref;
+		const cancelEdit = pendingCancelEdit;
+
+		const saved = await saveCurrentPet(false);
+		if (!saved) {
+			resetUnsavedState();
+			return;
+		}
+
+		resetUnsavedState();
+		if (cancelEdit || !href) return;
+		await navigateToHref(href);
+	}
+
+	async function discardAndLeave() {
+		const href = pendingNavigationHref;
+		const cancelEdit = pendingCancelEdit;
+
+		if (cancelEdit && profile) {
+			const nextForm = toForm(profile.pet);
+			form = nextForm;
+			savedSnapshot = snapshotForm(nextForm);
+			statusKey = null;
+			editing = false;
+		}
+
+		resetUnsavedState();
+		if (!href) return;
+		await navigateToHref(href);
+	}
+
+	function cancelLeave() {
+		resetUnsavedState();
+	}
+
 	async function createRecord() {
+		if (editing) return;
+
 		saving = true;
 		error = null;
 
 		try {
 			const record = await saveNewRecord(petId, { title: '', description: '', admittedAt: '', dischargedAt: '' });
-			await goto(`/records/${record.id}`);
+			await navigateToHref(`/records/${record.id}`);
 		} catch (exception) {
 			error = errorMessage(exception);
 		} finally {
@@ -141,7 +270,7 @@
 		try {
 			await removePet(petId);
 			deleteDialogOpen = false;
-			await goto(`/owners/${ownerId}`);
+			await navigateToHref(`/owners/${ownerId}`);
 		} catch (exception) {
 			error = errorMessage(exception);
 		} finally {
@@ -149,8 +278,28 @@
 		}
 	}
 
+	beforeNavigate((navigation) => {
+		if (allowNavigation || loading || !profile || !hasUnsavedChanges) return;
+		if (!navigation.to?.url) {
+			navigation.cancel();
+			return;
+		}
+
+		const href = hrefFromUrl(navigation.to.url);
+		navigation.cancel();
+		pendingCancelEdit = false;
+		pendingNavigationHref = href;
+		unsavedDialogOpen = true;
+	});
+
+	$effect(() => {
+		if (hasUnsavedChanges) statusKey = null;
+	});
+
 	onMount(() => {
 		void load();
+		window.addEventListener('beforeunload', handleBeforeUnload);
+		return () => window.removeEventListener('beforeunload', handleBeforeUnload);
 	});
 </script>
 
@@ -186,16 +335,33 @@
 	{:else if profile}
 		<div class="flex flex-col gap-5">
 			<form class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5" onsubmit={submitPet}>
-				<h3 class="text-base font-semibold">{t('pet.editSection')}</h3>
+				<div class="flex flex-wrap items-center justify-between gap-2">
+					<h3 class="text-base font-semibold">{t('pet.editSection')}</h3>
+					{#if editing}
+						<button type="button" class="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} onclick={requestCancelEditing}>
+							{t('actions.cancel')}
+						</button>
+					{:else}
+						<button type="button" class="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 text-sm font-medium hover:bg-accent" onclick={startEditing}>
+							{t('actions.edit')}
+						</button>
+					{/if}
+				</div>
 				<div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 					<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2 lg:col-span-1">
 						<span>{t('pet.name')}</span>
-						<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.name} required />
+						<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.name} disabled={!editing} required />
 					</label>
 
 					<label class="flex flex-col gap-1 text-sm font-medium">
 						<span>{t('pet.birthDate')}</span>
-						<DateField bind:value={form.birthDate} ariaLabel={t('pet.birthDate')} />
+						{#if editing}
+							<DateField bind:value={form.birthDate} ariaLabel={t('pet.birthDate')} />
+						{:else}
+							<div class="flex h-10 items-center rounded-md border border-input bg-muted/40 px-3 text-sm text-muted-foreground" aria-label={t('pet.birthDate')}>
+								{formatDateForDisplay(form.birthDate, i18n.locale) || t('common.notInformed')}
+							</div>
+						{/if}
 					</label>
 
 					<div class="flex flex-col gap-1 text-sm font-medium">
@@ -206,7 +372,7 @@
 					</div>
 
 					<div class="sm:col-span-2 lg:col-span-3">
-						<PetTaxonomyPicker bind:species={form.species} bind:breed={form.breed} bind:sex={form.sex} disabled={saving} />
+						<PetTaxonomyPicker bind:species={form.species} bind:breed={form.breed} bind:sex={form.sex} disabled={saving || !editing} />
 					</div>
 				</div>
 
@@ -214,10 +380,18 @@
 					<p class="mt-4 rounded-md bg-muted p-3 text-sm text-muted-foreground">{t(statusKey)}</p>
 				{/if}
 
-				<button type="submit" class="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={saving}>
-					<Save class="size-4" />
-					{t('actions.updatePet')}
-				</button>
+				{#if editing}
+					<div class="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center">
+						<button type="submit" class="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={saving}>
+							<Save class="size-4" />
+							{saving ? t('record.saving') : t('actions.updatePet')}
+						</button>
+
+						{#if hasUnsavedChanges}
+							<span class="text-xs font-medium text-muted-foreground">{t('record.unsavedChanges')}</span>
+						{/if}
+					</div>
+				{/if}
 			</form>
 
 			<div class="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1 lg:hidden" role="tablist" aria-label={t('pet.profileSections')}>
@@ -250,7 +424,7 @@
 				<section class="{activePanel === 'records' ? 'block' : 'hidden'} rounded-md border border-border bg-card p-4 shadow-sm sm:p-5 lg:block" role="tabpanel">
 					<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 						<h3 class="text-base font-semibold">{t('pet.recordsSection')}</h3>
-						<button type="button" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={saving} onclick={() => void createRecord()}>
+						<button type="button" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={saving || editing} onclick={() => void createRecord()}>
 							<ClipboardPenLine class="size-4" />
 							{t('actions.createRecord')}
 						</button>
@@ -274,5 +448,15 @@
 		</div>
 	{/if}
 </section>
+
+<UnsavedChangesDialog
+	open={unsavedDialogOpen}
+	saving={saving}
+	titleKey="pet.unsavedDialogTitle"
+	descriptionKey="pet.unsavedDialogDescription"
+	onSave={() => void confirmSaveAndLeave()}
+	onDiscard={() => void discardAndLeave()}
+	onCancel={cancelLeave}
+/>
 
 <TrashRemovalDialog open={deleteDialogOpen} messageKey="pet.deleteConfirm" confirming={deleting} onConfirm={() => void confirmDeletePet()} onCancel={() => (deleteDialogOpen = false)} />

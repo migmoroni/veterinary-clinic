@@ -1,5 +1,7 @@
 export type OwnerContactKind = 'phone' | 'mobile';
 
+export const DEFAULT_OWNER_COUNTRY = 'Brazil';
+
 export interface OwnerContact {
 	id: number;
 	kind: OwnerContactKind;
@@ -21,6 +23,7 @@ export interface Owner {
 	addressComplement: string | null;
 	neighborhood: string | null;
 	city: string | null;
+	country: string | null;
 	postalCode: string | null;
 	contacts: OwnerContact[];
 	state: string | null;
@@ -37,6 +40,7 @@ export interface OwnerInput {
 	addressComplement: string;
 	neighborhood: string;
 	city: string;
+	country: string;
 	postalCode: string;
 	contacts: OwnerContactInput[];
 	state: string;
