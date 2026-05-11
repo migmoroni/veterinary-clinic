@@ -1,0 +1,59 @@
+import { describe, expect, it } from 'vitest';
+import type { VaccineStatusItem } from '../analytics.js';
+import { getVaccineStatus, buildVaccineStatus, historyBucket, isPlausibleVaccineAppliedAt, matchesVaccineDueFilter } from '../analytics.js';
+
+function statusItem(daysUntilDue: number, dueAt = '2026-05-08'): VaccineStatusItem {
+	return {
+		ownerId: 1,
+		ownerName: 'Owner',
+		ownerContacts: [],
+		petId: 1,
+		petName: 'Pet',
+		vaccinePresetId: 1,
+		vaccineName: 'Vaccine',
+		appliedAt: '2025-05-08',
+		dueAt,
+		daysUntilDue,
+		status: getVaccineStatus(daysUntilDue)
+	};
+}
+
+describe('vaccine analytics helpers', () => {
+	const now = new Date(2026, 4, 8);
+
+	it('ignores future vaccine application dates', () => {
+		expect(isPlausibleVaccineAppliedAt('2026-05-08', now)).toBe(true);
+		expect(isPlausibleVaccineAppliedAt('2026-05-09', now)).toBe(false);
+		expect(isPlausibleVaccineAppliedAt('5018-10-01', now)).toBe(false);
+	});
+
+	it('does not build status for future applications', () => {
+		expect(buildVaccineStatus('5018-10-01', 12, now)).toBeNull();
+	});
+
+	it('does not create history buckets for impossible future years', () => {
+		expect(historyBucket('5018-10-01', 'month')).toBeNull();
+	});
+
+	it('separates due, expired, and overdue vaccine windows', () => {
+		expect(getVaccineStatus(31)).toBe('current');
+		expect(getVaccineStatus(30)).toBe('dueSoon');
+		expect(getVaccineStatus(16)).toBe('dueSoon');
+		expect(getVaccineStatus(15)).toBe('dueVerySoon');
+		expect(getVaccineStatus(0)).toBe('dueVerySoon');
+		expect(getVaccineStatus(-1)).toBe('expired');
+		expect(getVaccineStatus(-14)).toBe('expired');
+		expect(getVaccineStatus(-15)).toBe('overdue');
+		expect(getVaccineStatus(-16)).toBe('overdue');
+	});
+
+	it('filters due dates inside the selected analysis period', () => {
+		const filter = { mode: 'period', status: 'current', startDate: '2026-05-01', endDate: '2026-05-31' } as const;
+
+		expect(matchesVaccineDueFilter(statusItem(0, '2026-05-01'), filter)).toBe(true);
+		expect(matchesVaccineDueFilter(statusItem(0, '2026-05-08'), filter)).toBe(true);
+		expect(matchesVaccineDueFilter(statusItem(0, '2026-05-31'), filter)).toBe(true);
+		expect(matchesVaccineDueFilter(statusItem(0, '2026-04-30'), filter)).toBe(false);
+		expect(matchesVaccineDueFilter(statusItem(0, '2026-06-01'), filter)).toBe(false);
+	});
+});

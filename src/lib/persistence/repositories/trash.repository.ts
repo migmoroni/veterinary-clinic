@@ -1,0 +1,221 @@
+import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
+
+export type TrashKind = 'owner' | 'pet' | 'record' | 'vaccination';
+
+export interface TrashItem {
+	kind: TrashKind;
+	id: number;
+	title: string;
+	subtitle: string;
+	deletedAt: string | null;
+	purgeAfter: string | null;
+}
+
+interface TrashRow {
+	kind: TrashKind;
+	id: number;
+	title: string;
+	subtitle: string | null;
+	deleted_at: string | null;
+	purge_after: string | null;
+}
+
+function mapTrashItem(row: TrashRow): TrashItem {
+	return {
+		kind: row.kind,
+		id: row.id,
+		title: row.title,
+		subtitle: row.subtitle ?? '',
+		deletedAt: row.deleted_at,
+		purgeAfter: row.purge_after
+	};
+}
+
+export async function listTrashItems(): Promise<TrashItem[]> {
+	const rows = await selectMany<TrashRow>(
+		`SELECT 'owner' AS kind,
+			id,
+			name AS title,
+			COALESCE((
+				SELECT owner_contacts.value
+				FROM owner_contacts
+				WHERE owner_contacts.owner_id = owners.id
+				ORDER BY owner_contacts.sort_order, owner_contacts.id
+				LIMIT 1
+			), city, '') AS subtitle,
+			deleted_at,
+			purge_after
+		 FROM owners
+		 WHERE deleted_at IS NOT NULL
+
+		 UNION ALL
+
+		 SELECT 'pet' AS kind,
+			pets.id,
+			pets.name AS title,
+			COALESCE(owners.name, '') AS subtitle,
+			pets.deleted_at,
+			pets.purge_after
+		 FROM pets
+		 LEFT JOIN owners ON owners.id = pets.owner_id
+		 WHERE pets.deleted_at IS NOT NULL
+
+		 UNION ALL
+
+		 SELECT 'vaccination' AS kind,
+			pet_vaccinations.id,
+			pet_vaccinations.vaccine_name AS title,
+			COALESCE(
+				pets.name || ' · ' || owners.name || ' · ' || pet_vaccinations.applied_at,
+				pets.name || ' · ' || pet_vaccinations.applied_at,
+				owners.name || ' · ' || pet_vaccinations.applied_at,
+				pet_vaccinations.applied_at,
+				''
+			) AS subtitle,
+			pet_vaccinations.deleted_at,
+			pet_vaccinations.purge_after
+		 FROM pet_vaccinations
+		 LEFT JOIN pets ON pets.id = pet_vaccinations.pet_id
+		 LEFT JOIN owners ON owners.id = pets.owner_id
+		 WHERE pet_vaccinations.deleted_at IS NOT NULL
+
+		 UNION ALL
+
+		 SELECT 'record' AS kind,
+			medical_records.id,
+			COALESCE(medical_records.title, 'Prontuario ' || medical_records.id) AS title,
+			COALESCE(pets.name || ' · ' || owners.name, '') AS subtitle,
+			medical_records.deleted_at,
+			medical_records.purge_after
+		 FROM medical_records
+		 LEFT JOIN pets ON pets.id = medical_records.pet_id
+		 LEFT JOIN owners ON owners.id = pets.owner_id
+		 WHERE medical_records.deleted_at IS NOT NULL
+
+		 ORDER BY deleted_at DESC`
+	);
+
+	return rows.map(mapTrashItem);
+}
+
+export async function restoreTrashItem(kind: TrashKind, id: number): Promise<void> {
+	if (kind === 'owner') {
+		await execute('UPDATE owners SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
+		await execute('UPDATE pets SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE owner_id = $1', [id]);
+		await execute(
+			`UPDATE medical_records
+			 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
+			 WHERE pet_id IN (SELECT id FROM pets WHERE owner_id = $1)`,
+			[id]
+		);
+		await execute(
+			`UPDATE pet_vaccinations
+			 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
+			 WHERE pet_id IN (SELECT id FROM pets WHERE owner_id = $1)`,
+			[id]
+		);
+		return;
+	}
+
+	if (kind === 'pet') {
+		await execute(
+			`UPDATE owners
+			 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
+			 WHERE id = (SELECT owner_id FROM pets WHERE id = $1)`,
+			[id]
+		);
+		await execute('UPDATE pets SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
+		await execute('UPDATE medical_records SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE pet_id = $1', [id]);
+		await execute('UPDATE pet_vaccinations SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE pet_id = $1', [id]);
+		return;
+	}
+
+	if (kind === 'record') {
+		await execute(
+			`UPDATE owners
+			 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
+			 WHERE id = (
+				SELECT pets.owner_id FROM pets JOIN medical_records ON medical_records.pet_id = pets.id WHERE medical_records.id = $1
+			)`,
+			[id]
+		);
+		await execute(
+			`UPDATE pets
+			 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
+			 WHERE id = (SELECT pet_id FROM medical_records WHERE id = $1)`,
+			[id]
+		);
+		await execute('UPDATE medical_records SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
+		return;
+	}
+
+	await execute(
+		`UPDATE owners
+		 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
+		 WHERE id = (
+			SELECT pets.owner_id FROM pets JOIN pet_vaccinations ON pet_vaccinations.pet_id = pets.id WHERE pet_vaccinations.id = $1
+		)`,
+		[id]
+	);
+	await execute(
+		`UPDATE pets
+		 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
+		 WHERE id = (SELECT pet_id FROM pet_vaccinations WHERE id = $1)`,
+		[id]
+	);
+	await execute('UPDATE pet_vaccinations SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
+}
+
+export async function hardDeleteTrashItem(kind: TrashKind, id: number): Promise<void> {
+	if (kind === 'owner') {
+		await execute('DELETE FROM pet_vaccinations WHERE pet_id IN (SELECT id FROM pets WHERE owner_id = $1)', [id]);
+		await execute('DELETE FROM medical_records WHERE pet_id IN (SELECT id FROM pets WHERE owner_id = $1)', [id]);
+		await execute('DELETE FROM pets WHERE owner_id = $1', [id]);
+		await execute('DELETE FROM owners WHERE id = $1', [id]);
+		return;
+	}
+
+	if (kind === 'pet') {
+		await execute('DELETE FROM pet_vaccinations WHERE pet_id = $1', [id]);
+		await execute('DELETE FROM medical_records WHERE pet_id = $1', [id]);
+		await execute('DELETE FROM pets WHERE id = $1', [id]);
+		return;
+	}
+
+	if (kind === 'record') {
+		await execute('DELETE FROM medical_records WHERE id = $1', [id]);
+		return;
+	}
+
+	await execute('DELETE FROM pet_vaccinations WHERE id = $1', [id]);
+}
+
+export async function purgeExpiredTrash(now = new Date().toISOString()): Promise<void> {
+	await execute(
+		`DELETE FROM pet_vaccinations
+		 WHERE deleted_at IS NOT NULL
+			AND (
+				purge_after <= $1
+				OR pet_id IN (SELECT id FROM pets WHERE deleted_at IS NOT NULL AND purge_after <= $1)
+				OR pet_id IN (SELECT pets.id FROM pets JOIN owners ON owners.id = pets.owner_id WHERE owners.deleted_at IS NOT NULL AND owners.purge_after <= $1)
+			)`,
+		[now]
+	);
+	await execute(
+		`DELETE FROM medical_records
+		 WHERE deleted_at IS NOT NULL
+			AND (
+				purge_after <= $1
+				OR pet_id IN (SELECT id FROM pets WHERE deleted_at IS NOT NULL AND purge_after <= $1)
+				OR pet_id IN (SELECT pets.id FROM pets JOIN owners ON owners.id = pets.owner_id WHERE owners.deleted_at IS NOT NULL AND owners.purge_after <= $1)
+			)`,
+		[now]
+	);
+	await execute(
+		`DELETE FROM pets
+		 WHERE deleted_at IS NOT NULL
+			AND (purge_after <= $1 OR owner_id IN (SELECT id FROM owners WHERE deleted_at IS NOT NULL AND purge_after <= $1))`,
+		[now]
+	);
+	await execute('DELETE FROM owners WHERE deleted_at IS NOT NULL AND purge_after <= $1', [now]);
+}

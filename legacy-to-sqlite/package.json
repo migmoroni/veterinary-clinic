@@ -1,0 +1,12 @@
+{
+  "type": "module",
+  "dependencies": {
+    "better-sqlite3": "^12.9.0",
+    "csv-parse": "^6.2.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  }
+}
