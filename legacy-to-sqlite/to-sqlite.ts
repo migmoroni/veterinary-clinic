@@ -143,6 +143,7 @@ db.exec(`
     species TEXT CHECK(species IN ('canine', 'feline')),
     breed TEXT,
     sex TEXT CHECK(sex IN ('M', 'F')),
+    avatar_blob BLOB,
     updated_at TEXT,
     deleted_at TEXT,
     purge_after TEXT,

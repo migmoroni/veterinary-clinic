@@ -11,6 +11,7 @@ interface PetRow {
 	species: PetSpecies | null;
 	breed: PetBreed | null;
 	sex: PetSex;
+	avatar_blob: unknown | null;
 	updated_at: string | null;
 	deleted_at: string | null;
 	purge_after: string | null;
@@ -19,6 +20,35 @@ interface PetRow {
 function nullable(value: string | null | undefined): string | null {
 	const trimmed = value?.trim() ?? '';
 	return trimmed.length > 0 ? trimmed : null;
+}
+
+function normalizeAvatarBytes(value: unknown): Uint8Array | null {
+	if (value == null) return null;
+
+	if (value instanceof Uint8Array) return value;
+	if (value instanceof ArrayBuffer) return new Uint8Array(value);
+
+	if (Array.isArray(value)) {
+		const bytes = value.filter((item): item is number => typeof item === 'number' && Number.isFinite(item) && item >= 0 && item <= 255);
+		return Uint8Array.from(bytes.map((item) => item & 0xff));
+	}
+
+	if (typeof value === 'object' && value && 'data' in value) {
+		const data = (value as { data?: unknown }).data;
+		if (Array.isArray(data)) {
+			const bytes = data.filter((item): item is number => typeof item === 'number' && Number.isFinite(item) && item >= 0 && item <= 255);
+			return Uint8Array.from(bytes.map((item) => item & 0xff));
+		}
+	}
+
+	return null;
+}
+
+function avatarBytesToSqlLiteral(value: Uint8Array | null | undefined): string {
+	if (!value || value.length === 0) return 'NULL';
+
+	const hex = Array.from(value, (byte) => byte.toString(16).padStart(2, '0')).join('');
+	return `X'${hex}'`;
 }
 
 function mapPet(row: PetRow): Pet {
@@ -30,6 +60,7 @@ function mapPet(row: PetRow): Pet {
 		species: row.species,
 		breed: row.breed,
 		sex: row.sex,
+		avatarBytes: normalizeAvatarBytes(row.avatar_blob),
 		updatedAt: row.updated_at,
 		deletedAt: row.deleted_at,
 		purgeAfter: row.purge_after
@@ -45,7 +76,7 @@ function normalizeTaxonomy(input: PetInput): { species: PetSpecies | null; breed
 
 export async function listPetsByOwner(ownerId: number, includeDeleted = false): Promise<Pet[]> {
 	const rows = await selectMany<PetRow>(
-		`SELECT id, owner_id, name, birth_date, species, breed, sex, updated_at, deleted_at, purge_after
+		`SELECT id, owner_id, name, birth_date, species, breed, sex, avatar_blob, updated_at, deleted_at, purge_after
 		 FROM pets
 		 WHERE owner_id = $1 ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
 		 ORDER BY name COLLATE NOCASE`,
@@ -57,7 +88,7 @@ export async function listPetsByOwner(ownerId: number, includeDeleted = false): 
 
 export async function getPet(id: number, includeDeleted = false): Promise<Pet | null> {
 	const rows = await selectMany<PetRow>(
-		`SELECT id, owner_id, name, birth_date, species, breed, sex, updated_at, deleted_at, purge_after
+		`SELECT id, owner_id, name, birth_date, species, breed, sex, avatar_blob, updated_at, deleted_at, purge_after
 		 FROM pets
 		 WHERE id = $1 ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
 		 LIMIT 1`,
@@ -69,9 +100,10 @@ export async function getPet(id: number, includeDeleted = false): Promise<Pet | 
 
 export async function createPet(ownerId: number, input: PetInput): Promise<Pet> {
 	const taxonomy = normalizeTaxonomy(input);
+	const avatarSqlLiteral = avatarBytesToSqlLiteral(input.avatarBytes);
 	const result = await execute(
-		`INSERT INTO pets (owner_id, name, birth_date, species, breed, sex, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)`,
+		`INSERT INTO pets (owner_id, name, birth_date, species, breed, sex, avatar_blob, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, ${avatarSqlLiteral}, CURRENT_TIMESTAMP)`,
 		[ownerId, input.name.trim(), nullable(input.birthDate), taxonomy.species, taxonomy.breed, input.sex]
 	);
 
@@ -82,6 +114,7 @@ export async function createPet(ownerId: number, input: PetInput): Promise<Pet> 
 
 export async function updatePet(id: number, input: PetInput): Promise<Pet> {
 	const taxonomy = normalizeTaxonomy(input);
+	const avatarSqlLiteral = avatarBytesToSqlLiteral(input.avatarBytes);
 	await execute(
 		`UPDATE pets
 		 SET name = $2,
@@ -89,6 +122,7 @@ export async function updatePet(id: number, input: PetInput): Promise<Pet> {
 			species = $4,
 			breed = $5,
 			sex = $6,
+			avatar_blob = ${avatarSqlLiteral},
 			updated_at = CURRENT_TIMESTAMP
 		 WHERE id = $1 AND deleted_at IS NULL`,
 		[id, input.name.trim(), nullable(input.birthDate), taxonomy.species, taxonomy.breed, input.sex]

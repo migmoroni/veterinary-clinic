@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
+	import PetAvatarEditorDialog from '$lib/components/pet/PetAvatarEditorDialog.svelte';
 	import PetTaxonomyPicker from '$lib/components/pet/PetTaxonomyPicker.svelte';
 	import VaccinationPanel from '$lib/components/pet/VaccinationPanel.svelte';
 	import UnsavedChangesDialog from '$lib/components/records/UnsavedChangesDialog.svelte';
@@ -17,16 +18,43 @@
 	import { loadPetProfile, removePet, savePet } from '$lib/services/pet.service.js';
 	import { saveNewRecord } from '$lib/services/record.service.js';
 	import ClipboardPenLine from '@lucide/svelte/icons/clipboard-pen-line';
+	import PawPrint from '@lucide/svelte/icons/paw-print';
 	import Syringe from '@lucide/svelte/icons/syringe';
 	import UserRound from '@lucide/svelte/icons/user-round';
 	import Save from '@lucide/svelte/icons/save';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
-	type PetForm = Omit<PetInput, 'sex'> & { sex: '' | Exclude<PetSex, null> };
+	type PetForm = Omit<PetInput, 'sex' | 'avatarBytes'> & { sex: '' | Exclude<PetSex, null>; avatarBytes: Uint8Array | null };
 	type PetPanel = 'records' | 'vaccines';
 
+	function bytesToArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+		const buffer = new ArrayBuffer(bytes.byteLength);
+		new Uint8Array(buffer).set(bytes);
+		return buffer;
+	}
+
+	function avatarSnapshotValue(bytes: Uint8Array | null | undefined): string {
+		if (!bytes || bytes.length === 0) return 'none';
+
+		let hash = 2166136261;
+		const step = Math.max(1, Math.floor(bytes.length / 128));
+		for (let index = 0; index < bytes.length; index += step) {
+			hash ^= bytes[index];
+			hash = Math.imul(hash, 16777619);
+		}
+
+		return `${bytes.length}:${hash >>> 0}`;
+	}
+
 	function toForm(pet: Pet): PetForm {
-		return { name: pet.name, birthDate: formatDateForInput(pet.birthDate), species: pet.species, breed: pet.breed, sex: pet.sex ?? '' };
+		return {
+			name: pet.name,
+			birthDate: formatDateForInput(pet.birthDate),
+			species: pet.species,
+			breed: pet.breed,
+			sex: pet.sex ?? '',
+			avatarBytes: pet.avatarBytes
+		};
 	}
 
 	function snapshotForm(input: PetForm): string {
@@ -35,12 +63,19 @@
 			birthDate: input.birthDate ?? '',
 			species: input.species ?? null,
 			breed: input.breed ?? null,
-			sex: input.sex ?? ''
+			sex: input.sex ?? '',
+			avatar: avatarSnapshotValue(input.avatarBytes)
 		});
 	}
 
 	function toInput(): PetInput {
-		return { ...form, birthDate: normalizeDateInput(form.birthDate), breed: form.species ? form.breed : null, sex: form.sex === '' ? null : form.sex };
+		return {
+			...form,
+			birthDate: normalizeDateInput(form.birthDate),
+			breed: form.species ? form.breed : null,
+			sex: form.sex === '' ? null : form.sex,
+			avatarBytes: form.avatarBytes
+		};
 	}
 
 	function hrefFromUrl(url: URL): string {
@@ -82,12 +117,14 @@
 	const ownerId = $derived(Number(page.params.id));
 	const petId = $derived(Number(page.params.petId));
 	let profile = $state<PetProfile | null>(null);
-	let form = $state<PetForm>({ name: '', birthDate: '', species: null, breed: null, sex: '' });
+	let form = $state<PetForm>({ name: '', birthDate: '', species: null, breed: null, sex: '', avatarBytes: null });
 	let activePanel = $state<PetPanel>('records');
 	let loading = $state(true);
 	let saving = $state(false);
 	let deleting = $state(false);
 	let editing = $state(false);
+	let avatarDialogOpen = $state(false);
+	let avatarPreviewUrl = $state<string | null>(null);
 	let deleteDialogOpen = $state(false);
 	let unsavedDialogOpen = $state(false);
 	let pendingNavigationHref = $state<string | null>(null);
@@ -95,6 +132,7 @@
 	let savedSnapshot = $state('');
 	let statusKey = $state<TranslationKey | null>(null);
 	let error = $state<string | null>(null);
+	let avatarPreviewObjectUrl: string | null = null;
 	let allowNavigation = false;
 
 	const currentSnapshot = $derived(snapshotForm(form));
@@ -155,6 +193,43 @@
 		unsavedDialogOpen = false;
 		pendingNavigationHref = null;
 		pendingCancelEdit = false;
+	}
+
+	function clearAvatarPreview() {
+		if (avatarPreviewObjectUrl && typeof URL !== 'undefined') {
+			URL.revokeObjectURL(avatarPreviewObjectUrl);
+		}
+		avatarPreviewObjectUrl = null;
+		avatarPreviewUrl = null;
+	}
+
+	function updateAvatarPreview(bytes: Uint8Array | null) {
+		clearAvatarPreview();
+		if (!bytes || bytes.length === 0 || typeof URL === 'undefined' || typeof Blob === 'undefined') return;
+
+		avatarPreviewObjectUrl = URL.createObjectURL(new Blob([bytesToArrayBuffer(bytes)], { type: 'image/png' }));
+		avatarPreviewUrl = avatarPreviewObjectUrl;
+	}
+
+	function openAvatarDialog() {
+		if (!editing || saving) return;
+		avatarDialogOpen = true;
+	}
+
+	function closeAvatarDialog() {
+		avatarDialogOpen = false;
+	}
+
+	function applyAvatar(bytes: Uint8Array) {
+		form = { ...form, avatarBytes: bytes };
+		statusKey = null;
+		avatarDialogOpen = false;
+	}
+
+	function removeAvatar() {
+		form = { ...form, avatarBytes: null };
+		statusKey = null;
+		avatarDialogOpen = false;
 	}
 
 	async function navigateToHref(href: string) {
@@ -296,10 +371,17 @@
 		if (hasUnsavedChanges) statusKey = null;
 	});
 
+	$effect(() => {
+		updateAvatarPreview(form.avatarBytes);
+	});
+
 	onMount(() => {
 		void load();
 		window.addEventListener('beforeunload', handleBeforeUnload);
-		return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+		return () => {
+			window.removeEventListener('beforeunload', handleBeforeUnload);
+			clearAvatarPreview();
+		};
 	});
 </script>
 
@@ -345,6 +427,35 @@
 						<button type="button" class="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 text-sm font-medium hover:bg-accent" onclick={startEditing}>
 							{t('actions.edit')}
 						</button>
+					{/if}
+				</div>
+				<div class="mt-4 flex flex-col gap-3 rounded-md border border-border bg-background/50 p-3 sm:flex-row sm:items-center sm:justify-between">
+					<div class="flex min-w-0 items-center gap-3">
+						<div class="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
+							{#if avatarPreviewUrl}
+								<img src={avatarPreviewUrl} alt={t('pet.avatarAlt')} class="h-full w-full object-cover" />
+							{:else}
+								<PawPrint class="size-8 text-muted-foreground" aria-hidden="true" />
+							{/if}
+						</div>
+
+						<div class="min-w-0">
+							<p class="text-sm font-semibold">{t('pet.avatarLabel')}</p>
+							<p class="text-xs text-muted-foreground">{t('pet.avatarHint')}</p>
+						</div>
+					</div>
+
+					{#if editing}
+						<div class="flex flex-wrap gap-2">
+							<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} onclick={openAvatarDialog}>
+								{t('pet.avatarEdit')}
+							</button>
+							{#if form.avatarBytes}
+								<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={removeAvatar}>
+									{t('pet.avatarRemove')}
+								</button>
+							{/if}
+						</div>
 					{/if}
 				</div>
 				<div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -405,7 +516,7 @@
 					<Syringe class="size-4" />
 					<span class="truncate">{t('vaccine.sectionTitle')}</span>
 				</button>
-                <button
+				<button
 					class="inline-flex h-10 items-center justify-center gap-2 rounded-sm px-3 text-sm font-medium transition-colors {activePanel === 'records' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}"
 					type="button"
 					role="tab"
@@ -418,7 +529,7 @@
 			</div>
 
 			<div class="grid gap-5 lg:grid-cols-2 lg:items-start">
-                <section class="{activePanel === 'vaccines' ? 'block' : 'hidden'} lg:block" role="tabpanel">
+				<section class="{activePanel === 'vaccines' ? 'block' : 'hidden'} lg:block" role="tabpanel">
 					<VaccinationPanel petId={petId} vaccinations={profile.vaccinations} presets={profile.vaccinePresets} />
 				</section>
 				<section class="{activePanel === 'records' ? 'block' : 'hidden'} rounded-md border border-border bg-card p-4 shadow-sm sm:p-5 lg:block" role="tabpanel">
@@ -448,6 +559,10 @@
 		</div>
 	{/if}
 </section>
+
+{#if avatarDialogOpen}
+	<PetAvatarEditorDialog initialAvatarBytes={form.avatarBytes} onApply={applyAvatar} onRemove={removeAvatar} onClose={closeAvatarDialog} />
+{/if}
 
 <UnsavedChangesDialog
 	open={unsavedDialogOpen}

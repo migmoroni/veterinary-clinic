@@ -12,6 +12,7 @@ export interface Pet {
 	species: PetSpecies | null;
 	breed: PetBreed | null;
 	sex: PetSex;
+	avatarBytes: Uint8Array | null;
 	updatedAt: string | null;
 	deletedAt: string | null;
 	purgeAfter: string | null;
@@ -23,4 +24,5 @@ export interface PetInput {
 	species: PetSpecies | null;
 	breed: PetBreed | null;
 	sex: PetSex;
+	avatarBytes?: Uint8Array | null;
 }
