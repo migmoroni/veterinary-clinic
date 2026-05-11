@@ -59,6 +59,10 @@
 		return `owner.contactKind.${kind}` as TranslationKey;
 	}
 
+	function canOpenWhatsApp(kind: OwnerContactKind): boolean {
+		return kind == 'mobile';
+	}
+
 	const ownerId = $derived(Number(page.params.id));
 	let profile = $state<OwnerProfile | null>(null);
 	let form = $state<OwnerInput>({
@@ -428,15 +432,17 @@
 											<p class="mt-1 text-xs text-muted-foreground">{t(contactKindLabelKey(contact.kind))}</p>
 										</div>
 
-										<div class="grid grid-cols-2 gap-2 sm:flex sm:justify-end">
+										<div class="grid gap-2 sm:flex sm:justify-end {canOpenWhatsApp(contact.kind) ? 'grid-cols-2' : 'grid-cols-1'}">
 											<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.call')}: ${contact.value}`} onclick={() => void callContact(contact.value)}>
 												<PhoneCall class="size-4" />
 												{t('owner.call')}
 											</button>
-											<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.messageWhatsApp')}: ${contact.value}`} onclick={() => void messageContact(contact.value)}>
-												<MessageCircle class="size-4" />
-												{t('owner.messageWhatsApp')}
-											</button>
+											{#if canOpenWhatsApp(contact.kind)}
+												<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.messageWhatsApp')}: ${contact.value}`} onclick={() => void messageContact(contact.value)}>
+													<MessageCircle class="size-4" />
+													{t('owner.messageWhatsApp')}
+												</button>
+											{/if}
 										</div>
 									</article>
 								{:else}
