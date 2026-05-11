@@ -1,4 +1,6 @@
 import { selectMany } from '$lib/persistence/sqlite/client.js';
+import type { OwnerContact } from '$lib/domain/owner/owner.js';
+import { listOwnerContactsByOwnerIds } from './owner.repository.js';
 
 export type SearchResultKind = 'owner' | 'pet' | 'record';
 
@@ -11,6 +13,7 @@ export interface SearchResult {
 	href: string;
 	title: string;
 	subtitle: string;
+	ownerContacts?: OwnerContact[];
 }
 
 interface SearchResultRow {
@@ -104,6 +107,9 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 		[term]
 	);
 
+	const ownerIds = rows.filter((row) => row.kind === 'owner').map((row) => row.id);
+	const contactsByOwnerId = await listOwnerContactsByOwnerIds(ownerIds);
+
 	return rows.map((row) => ({
 		kind: row.kind,
 		id: row.id,
@@ -112,6 +118,7 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 		petId: row.pet_id,
 		href: resultHref(row),
 		title: row.title,
-		subtitle: row.subtitle
+		subtitle: row.subtitle,
+		ownerContacts: row.kind === 'owner' ? (contactsByOwnerId.get(row.id) ?? []) : []
 	}));
 }

@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import OwnerContactDialog from '$lib/components/owner/OwnerContactDialog.svelte';
+	import type { OwnerContact } from '$lib/domain/owner/owner.js';
 	import type { SearchResult, SearchResultKind } from '$lib/persistence/repositories/search.repository.js';
 	import { t } from '$lib/i18n/index.js';
-	import { searchEverywhere } from '$lib/services/clinic.service.js';
+	import { loadOwnerContactsByOwnerIds, searchEverywhere } from '$lib/services/clinic.service.js';
 	import ClipboardPenLine from '@lucide/svelte/icons/clipboard-pen-line';
+	import Phone from '@lucide/svelte/icons/phone';
 	import PawPrint from '@lucide/svelte/icons/paw-print';
 	import Search from '@lucide/svelte/icons/search';
 	import User from '@lucide/svelte/icons/user';
@@ -15,6 +18,9 @@
 	let results = $state<SearchResult[]>([]);
 	let recentResults = $state<SearchResult[]>([]);
 	let error = $state<string | null>(null);
+	let contactDialogOpen = $state(false);
+	let contactDialogOwnerName = $state('');
+	let contactDialogContacts = $state<OwnerContact[]>([]);
 
 	const showRecentResults = $derived(query.trim().length === 0 && recentResults.length > 0);
 	const visibleResults = $derived(showRecentResults ? recentResults : results);
@@ -37,12 +43,28 @@
 		}
 	}
 
-	function loadRecentResults() {
+	async function hydrateRecentOwnerContacts(baseResults: SearchResult[]): Promise<SearchResult[]> {
+		const ownerIds = baseResults.filter((result) => result.kind === 'owner').map((result) => result.id);
+		if (ownerIds.length === 0) return baseResults;
+
+		try {
+			const contactsByOwnerId = await loadOwnerContactsByOwnerIds(ownerIds);
+			return baseResults.map((result) => {
+				if (result.kind !== 'owner') return result;
+				return { ...result, ownerContacts: contactsByOwnerId.get(result.id) ?? result.ownerContacts ?? [] };
+			});
+		} catch {
+			return baseResults;
+		}
+	}
+
+	async function loadRecentResults() {
 		if (typeof localStorage === 'undefined') return;
 
 		try {
 			const parsed = JSON.parse(localStorage.getItem(recentSearchStorageKey) ?? '[]');
-			recentResults = Array.isArray(parsed) ? parsed.slice(0, recentSearchLimit) : [];
+			const baseResults: SearchResult[] = Array.isArray(parsed) ? parsed.slice(0, recentSearchLimit) : [];
+			recentResults = await hydrateRecentOwnerContacts(baseResults);
 		} catch {
 			recentResults = [];
 		}
@@ -60,8 +82,24 @@
 		saveRecentResults(nextResults);
 	}
 
+	function ownerContactsFor(result: SearchResult): OwnerContact[] {
+		if (result.kind !== 'owner') return [];
+		return (result.ownerContacts ?? []).filter((contact) => contact.value.trim().length > 0);
+	}
+
+	function openOwnerContact(result: SearchResult) {
+		if (result.kind !== 'owner') return;
+
+		const contacts = ownerContactsFor(result);
+		if (contacts.length === 0) return;
+
+		contactDialogOwnerName = result.title;
+		contactDialogContacts = contacts;
+		contactDialogOpen = true;
+	}
+
 	onMount(() => {
-		loadRecentResults();
+		void loadRecentResults();
 	});
 </script>
 
@@ -97,19 +135,41 @@
 
 	<div class="grid gap-2">
 		{#each visibleResults as result (resultKey(result))}
-			<a href={result.href} class="flex items-start gap-3 rounded-md border border-border bg-card p-3 shadow-sm hover:bg-accent" onclick={() => rememberResult(result)}>
-				{#if result.kind === 'owner'}
-					<User class="mt-0.5 size-4 shrink-0 text-primary" />
-				{:else if result.kind === 'pet'}
-					<PawPrint class="mt-0.5 size-4 shrink-0 text-primary" />
-				{:else}
-					<ClipboardPenLine class="mt-0.5 size-4 shrink-0 text-primary" />
-				{/if}
-				<span class="min-w-0 flex-1">
-					<span class="block truncate text-sm font-medium">{result.title}</span>
-					<span class="block truncate text-xs text-muted-foreground">{kindLabel(result.kind)} · {result.subtitle}</span>
-				</span>
-			</a>
+			{#if result.kind === 'owner'}
+				<article class="flex items-start gap-2 rounded-md border border-border bg-card p-3 shadow-sm hover:bg-accent">
+					<a href={result.href} class="flex min-w-0 flex-1 items-start gap-3" onclick={() => rememberResult(result)}>
+						<User class="mt-0.5 size-4 shrink-0 text-primary" />
+						<span class="min-w-0 flex-1">
+							<span class="block truncate text-sm font-medium">{result.title}</span>
+							<span class="block truncate text-xs text-muted-foreground">{kindLabel(result.kind)} · {result.subtitle}</span>
+						</span>
+					</a>
+
+					{#if ownerContactsFor(result).length > 0}
+						<button
+							type="button"
+							class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-accent"
+							onclick={() => openOwnerContact(result)}
+							aria-label={`${t('owner.contact')}: ${result.title}`}
+						>
+							<Phone class="size-4" />
+							{t('owner.contact')}
+						</button>
+					{/if}
+				</article>
+			{:else}
+				<a href={result.href} class="flex items-start gap-3 rounded-md border border-border bg-card p-3 shadow-sm hover:bg-accent" onclick={() => rememberResult(result)}>
+					{#if result.kind === 'pet'}
+						<PawPrint class="mt-0.5 size-4 shrink-0 text-primary" />
+					{:else}
+						<ClipboardPenLine class="mt-0.5 size-4 shrink-0 text-primary" />
+					{/if}
+					<span class="min-w-0 flex-1">
+						<span class="block truncate text-sm font-medium">{result.title}</span>
+						<span class="block truncate text-xs text-muted-foreground">{kindLabel(result.kind)} · {result.subtitle}</span>
+					</span>
+				</a>
+			{/if}
 		{:else}
 			{#if query.trim().length > 1}
 				<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('search.empty')}</p>
@@ -117,3 +177,5 @@
 		{/each}
 	</div>
 </section>
+
+<OwnerContactDialog bind:open={contactDialogOpen} ownerName={contactDialogOwnerName} contacts={contactDialogContacts} />
