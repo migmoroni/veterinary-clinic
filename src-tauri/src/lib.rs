@@ -4,8 +4,8 @@ use tauri::Manager;
 use webkit2gtk::glib::object::Cast;
 #[cfg(target_os = "linux")]
 use webkit2gtk::{
-  DeviceInfoPermissionRequest, PermissionRequestExt, SettingsExt, UserMediaPermissionRequest,
-  WebViewExt,
+  DeviceInfoPermissionRequest, HardwareAccelerationPolicy, PermissionRequestExt, SettingsExt,
+  UserMediaPermissionRequest, WebViewExt,
 };
 
 #[cfg(target_os = "linux")]
@@ -17,6 +17,7 @@ fn configure_linux_media_capture<R: tauri::Runtime>(webview_window: &tauri::Webv
       settings.set_enable_media(true);
       settings.set_enable_webrtc(true);
       settings.set_enable_media_stream(true);
+      settings.set_hardware_acceleration_policy(HardwareAccelerationPolicy::Always);
     }
 
     inner.connect_permission_request(|_, request| {

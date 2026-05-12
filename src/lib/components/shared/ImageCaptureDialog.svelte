@@ -37,6 +37,12 @@
 	];
 
 	type CameraDevice = { deviceId: string; label: string };
+	type VideoFrameCallbackMetadata = { width?: number; height?: number; presentedFrames?: number };
+	type VideoFrameCallback = (now: number, metadata: VideoFrameCallbackMetadata) => void;
+	type VideoFrameElement = HTMLVideoElement & {
+		requestVideoFrameCallback?: (callback: VideoFrameCallback) => number;
+		cancelVideoFrameCallback?: (handle: number) => void;
+	};
 	type ImageCaptureDialogLabels = {
 		title: TranslationKey;
 		description: TranslationKey;
@@ -232,51 +238,26 @@
 		}
 	}
 
-	function hasRenderableCameraFrame(video: HTMLVideoElement): boolean {
-		if (video.readyState < 2 || video.videoWidth <= 0 || video.videoHeight <= 0) return false;
-
-		try {
-			const canvas = document.createElement('canvas');
-			canvas.width = 32;
-			canvas.height = 18;
-
-			const context = canvas.getContext('2d', { willReadFrequently: true });
-			if (!context) return true;
-
-			context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-			const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
-			let brightest = 0;
-			let darkest = 255;
-			let litPixels = 0;
-
-			for (let index = 0; index < pixels.length; index += 4) {
-				const brightness = (pixels[index] + pixels[index + 1] + pixels[index + 2]) / 3;
-				brightest = Math.max(brightest, brightness);
-				darkest = Math.min(darkest, brightness);
-
-				if (brightness > 8) {
-					litPixels += 1;
-				}
-			}
-
-			return litPixels > 0 || brightest - darkest > 6;
-		} catch {
-			return true;
-		}
+	function hasDecodedCameraFrame(video: HTMLVideoElement): boolean {
+		return video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && video.videoWidth > 0 && video.videoHeight > 0;
 	}
 
 	function waitForCameraVideo(video: HTMLVideoElement, timeoutMs = 5000): Promise<boolean> {
-		if (hasRenderableCameraFrame(video)) return Promise.resolve(true);
+		if (hasDecodedCameraFrame(video)) return Promise.resolve(true);
 
 		return new Promise((resolve) => {
+			const frameVideo = video as VideoFrameElement;
 			let settled = false;
 			let timeoutId: number;
 			let animationFrameId: number | null = null;
+			let videoFrameCallbackId: number | null = null;
 
 			const cleanup = () => {
 				video.removeEventListener('loadedmetadata', onReady);
+				video.removeEventListener('loadeddata', onReady);
 				video.removeEventListener('canplay', onReady);
+				video.removeEventListener('playing', onReady);
+				if (videoFrameCallbackId !== null) frameVideo.cancelVideoFrameCallback?.(videoFrameCallbackId);
 				if (animationFrameId !== null) window.cancelAnimationFrame(animationFrameId);
 				window.clearTimeout(timeoutId);
 			};
@@ -289,22 +270,32 @@
 			};
 
 			const onReady = () => {
-				if (hasRenderableCameraFrame(video)) finish(true);
+				if (hasDecodedCameraFrame(video)) finish(true);
 			};
 
-			const checkFrame = () => {
-				if (hasRenderableCameraFrame(video)) {
+			const onVideoFrame: VideoFrameCallback = () => finish(hasDecodedCameraFrame(video));
+
+			const checkFrameMetadata = () => {
+				if (hasDecodedCameraFrame(video)) {
 					finish(true);
 					return;
 				}
 
-				animationFrameId = window.requestAnimationFrame(checkFrame);
+				animationFrameId = window.requestAnimationFrame(checkFrameMetadata);
 			};
 
 			video.addEventListener('loadedmetadata', onReady);
+			video.addEventListener('loadeddata', onReady);
 			video.addEventListener('canplay', onReady);
-			animationFrameId = window.requestAnimationFrame(checkFrame);
-			timeoutId = window.setTimeout(() => finish(hasRenderableCameraFrame(video)), timeoutMs);
+			video.addEventListener('playing', onReady);
+
+			if (frameVideo.requestVideoFrameCallback) {
+				videoFrameCallbackId = frameVideo.requestVideoFrameCallback(onVideoFrame);
+			} else {
+				animationFrameId = window.requestAnimationFrame(checkFrameMetadata);
+			}
+
+			timeoutId = window.setTimeout(() => finish(hasDecodedCameraFrame(video)), timeoutMs);
 		});
 	}
 
