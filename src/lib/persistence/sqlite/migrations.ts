@@ -39,7 +39,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 		CREATE TABLE IF NOT EXISTS owner_contacts (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			owner_id INTEGER NOT NULL,
-			kind TEXT NOT NULL CHECK(kind IN ('phone', 'mobile')),
+			kind TEXT NOT NULL CHECK(kind IN ('phone', 'mobile', 'email')),
 			value TEXT NOT NULL,
 			sort_order INTEGER NOT NULL DEFAULT 0,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,

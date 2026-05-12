@@ -1,5 +1,6 @@
 import { DEFAULT_OWNER_COUNTRY, type Owner, type OwnerContact, type OwnerContactInput, type OwnerContactKind, type OwnerInput } from '$lib/domain/owner/owner.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
+import { formatEmailForInput } from '$lib/domain/shared/email.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
 
@@ -43,7 +44,15 @@ function avatarBytesToSqlLiteral(value: Uint8Array | null | undefined): string {
 }
 
 function normalizeContactKind(value: string | null | undefined): OwnerContactKind {
+	if (value === 'email') return 'email';
 	return value === 'phone' ? 'phone' : 'mobile';
+}
+
+function normalizeContactValue(kind: OwnerContactKind, value: string | null | undefined): string | null {
+	const trimmed = nullable(value);
+	if (!trimmed) return null;
+
+	return kind === 'email' ? nullable(formatEmailForInput(trimmed)) : trimmed;
 }
 
 function normalizeCountry(value: string | null | undefined): string {
@@ -55,10 +64,10 @@ function normalizeContacts(contacts: OwnerContactInput[]): OwnerContactInput[] {
 	const unique = new Map<string, OwnerContactInput>();
 
 	for (const contact of contacts) {
-		const value = nullable(contact.value);
+		const kind = normalizeContactKind(contact.kind);
+		const value = normalizeContactValue(kind, contact.value);
 		if (!value) continue;
 
-		const kind = normalizeContactKind(contact.kind);
 		const key = `${kind}:${value}`;
 		if (!unique.has(key)) unique.set(key, { kind, value });
 	}

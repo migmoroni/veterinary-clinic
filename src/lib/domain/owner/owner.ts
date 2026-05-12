@@ -1,4 +1,4 @@
-export type OwnerContactKind = 'phone' | 'mobile';
+export type OwnerContactKind = 'phone' | 'mobile' | 'email';
 
 export const DEFAULT_OWNER_COUNTRY = 'Brazil';
 

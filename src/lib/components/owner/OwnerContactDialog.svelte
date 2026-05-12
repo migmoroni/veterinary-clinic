@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { OwnerContact, OwnerContactKind } from '$lib/domain/owner/owner.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
-	import { openPhoneCallForPhone, openWhatsAppForPhone } from '$lib/services/contact.service.js';
+	import { openEmailForEmail, openPhoneCallForPhone, openWhatsAppForPhone } from '$lib/services/contact.service.js';
+	import Mail from '@lucide/svelte/icons/mail';
 	import MessageCircle from '@lucide/svelte/icons/message-circle';
 	import PhoneCall from '@lucide/svelte/icons/phone-call';
 	import X from '@lucide/svelte/icons/x';
@@ -26,6 +27,10 @@
 		return kind == 'mobile';
 	}
 
+	function isEmailContact(kind: OwnerContactKind): boolean {
+		return kind === 'email';
+	}
+
 	function closeDialog() {
 		open = false;
 	}
@@ -41,6 +46,11 @@
 
 	async function messageContact(value: string) {
 		await openWhatsAppForPhone(value);
+		closeDialog();
+	}
+
+	async function emailContact(value: string) {
+		await openEmailForEmail(value);
 		closeDialog();
 	}
 </script>
@@ -72,10 +82,17 @@
 								</div>
 
 								<div class="grid gap-2 sm:flex sm:justify-end {canOpenWhatsApp(contact.kind) ? 'grid-cols-2' : 'grid-cols-1'}">
-									<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.call')}: ${contact.value}`} onclick={() => void callContact(contact.value)}>
-										<PhoneCall class="size-4" />
-										{t('owner.call')}
-									</button>
+									{#if isEmailContact(contact.kind)}
+										<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.email')}: ${contact.value}`} onclick={() => void emailContact(contact.value)}>
+											<Mail class="size-4" />
+											{t('owner.email')}
+										</button>
+									{:else}
+										<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.call')}: ${contact.value}`} onclick={() => void callContact(contact.value)}>
+											<PhoneCall class="size-4" />
+											{t('owner.call')}
+										</button>
+									{/if}
 									{#if canOpenWhatsApp(contact.kind)}
 										<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.messageWhatsApp')}: ${contact.value}`} onclick={() => void messageContact(contact.value)}>
 											<MessageCircle class="size-4" />

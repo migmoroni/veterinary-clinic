@@ -13,9 +13,10 @@
 	import { getPetBreedOption, getPetSpeciesOption } from '$lib/domain/pet/taxonomy.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import { isCountrySupportedForCepLookup, lookupCep } from '$lib/services/cep.service.js';
-	import { openPhoneCallForPhone, openWhatsAppForPhone } from '$lib/services/contact.service.js';
+	import { openEmailForEmail, openPhoneCallForPhone, openWhatsAppForPhone } from '$lib/services/contact.service.js';
 	import type { OwnerProfile } from '$lib/services/owner.service.js';
 	import { loadOwnerProfile, removeOwner, saveOwner } from '$lib/services/owner.service.js';
+	import Mail from '@lucide/svelte/icons/mail';
 	import MessageCircle from '@lucide/svelte/icons/message-circle';
 	import PawPrint from '@lucide/svelte/icons/paw-print';
 	import PhoneCall from '@lucide/svelte/icons/phone-call';
@@ -81,6 +82,10 @@ type OwnerForm = OwnerInput & { avatarBytes: Uint8Array | null };
 
 	function canOpenWhatsApp(kind: OwnerContactKind): boolean {
 		return kind == 'mobile';
+	}
+
+	function isEmailContact(kind: OwnerContactKind): boolean {
+		return kind === 'email';
 	}
 
 	const ownerId = $derived(Number(page.params.id));
@@ -318,6 +323,10 @@ type OwnerForm = OwnerInput & { avatarBytes: Uint8Array | null };
 		await openWhatsAppForPhone(value);
 	}
 
+	async function emailContact(value: string) {
+		await openEmailForEmail(value);
+	}
+
 	function requestDeleteOwner() {
 		deleteDialogOpen = true;
 	}
@@ -495,10 +504,17 @@ type OwnerForm = OwnerInput & { avatarBytes: Uint8Array | null };
 										</div>
 
 										<div class="flex flex-wrap gap-2">
-											<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.call')}: ${contact.value}`} onclick={() => void callContact(contact.value)}>
-												<PhoneCall class="size-4" />
-												{t('owner.call')}
-											</button>
+											{#if isEmailContact(contact.kind)}
+												<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.email')}: ${contact.value}`} onclick={() => void emailContact(contact.value)}>
+													<Mail class="size-4" />
+													{t('owner.email')}
+												</button>
+											{:else}
+												<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.call')}: ${contact.value}`} onclick={() => void callContact(contact.value)}>
+													<PhoneCall class="size-4" />
+													{t('owner.call')}
+												</button>
+											{/if}
 											{#if canOpenWhatsApp(contact.kind)}
 												<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.messageWhatsApp')}: ${contact.value}`} onclick={() => void messageContact(contact.value)}>
 													<MessageCircle class="size-4 text-[#25D366] sm:text-[#25D366]" />

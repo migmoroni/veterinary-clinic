@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { OwnerContactInput, OwnerContactKind } from '$lib/domain/owner/owner.js';
+	import { formatEmailForInput } from '$lib/domain/shared/email.js';
 	import { formatPhoneForInput } from '$lib/domain/shared/phone.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -8,7 +9,7 @@
 
 	let { contacts = $bindable<OwnerContactInput[]>([]) }: { contacts?: OwnerContactInput[] } = $props();
 
-	const contactKinds: OwnerContactKind[] = ['mobile', 'phone'];
+	const contactKinds: OwnerContactKind[] = ['mobile', 'phone', 'email'];
 
 	function kindLabelKey(kind: OwnerContactKind): TranslationKey {
 		return `owner.contactKind.${kind}` as TranslationKey;
@@ -18,21 +19,31 @@
 		contacts = [...contacts, { kind: 'mobile', value: '' }];
 	}
 
+	function normalizeContactKind(kind: string): OwnerContactKind {
+		if (kind === 'phone') return 'phone';
+		if (kind === 'email') return 'email';
+		return 'mobile';
+	}
+
+	function formatContactValue(kind: OwnerContactKind, value: string): string {
+		return kind === 'email' ? formatEmailForInput(value) : formatPhoneForInput(value);
+	}
+
 	function removeContact(index: number) {
 		contacts = contacts.filter((_, contactIndex) => contactIndex !== index);
 	}
 
 	function updateContactKind(index: number, kind: string) {
-		const nextKind: OwnerContactKind = kind === 'phone' ? 'phone' : 'mobile';
+		const nextKind = normalizeContactKind(kind);
 		contacts = contacts.map((contact, contactIndex) =>
-			contactIndex === index ? { ...contact, kind: nextKind, value: formatPhoneForInput(contact.value) } : contact
+			contactIndex === index ? { ...contact, kind: nextKind, value: formatContactValue(nextKind, contact.value) } : contact
 		);
 	}
 
 	function updateContactValue(index: number, value: string) {
 		contacts = contacts.map((contact, contactIndex) => {
 			if (contactIndex !== index) return contact;
-			return { ...contact, value: formatPhoneForInput(value) };
+			return { ...contact, value: formatContactValue(contact.kind, value) };
 		});
 	}
 </script>
@@ -68,9 +79,9 @@
 				<label class="flex flex-col gap-1 text-sm font-medium m-0">
 					<span class="sr-only">{t('owner.contactValue')}</span>
 					<input
-						type="tel"
-						inputmode="tel"
-						autocomplete="tel"
+						type={contact.kind === 'email' ? 'email' : 'tel'}
+						inputmode={contact.kind === 'email' ? 'email' : 'tel'}
+						autocomplete={contact.kind === 'email' ? 'email' : 'tel'}
 						class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
 						value={contact.value}
 						oninput={(event) => updateContactValue(index, event.currentTarget.value)}

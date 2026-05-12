@@ -4,7 +4,7 @@ import { parse } from 'csv-parse/sync';
 import Database from 'better-sqlite3';
 
 type CsvRow = Record<string, string | undefined>;
-type OwnerContactKind = 'phone' | 'mobile';
+type OwnerContactKind = 'phone' | 'mobile' | 'email';
 type PetSex = 'M' | 'F' | null;
 type PetSpecies = 'canine' | 'feline';
 
@@ -127,7 +127,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS owner_contacts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     owner_id INTEGER NOT NULL,
-    kind TEXT NOT NULL CHECK(kind IN ('phone', 'mobile')),
+    kind TEXT NOT NULL CHECK(kind IN ('phone', 'mobile', 'email')),
     value TEXT NOT NULL,
     sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -508,8 +508,8 @@ const printImportReport = (report: ImportReport) => {
   if (report.skippedRows.length > 10) console.log(`  - ... mais ${report.skippedRows.length - 10} linhas puladas`);
   console.log(`- Tutores criados: ${report.ownersCreated}`);
   console.log(`- Linhas que reaproveitaram tutor pelo mesmo nome: ${report.ownersReused}`);
-  console.log(`- Telefones convertidos para owner_contacts: ${report.ownerContactsCreated}`);
-  console.log(`- Telefones duplicados ignorados: ${report.ownerContactsReused}`);
+  console.log(`- Contatos convertidos para owner_contacts: ${report.ownerContactsCreated}`);
+  console.log(`- Contatos duplicados ignorados: ${report.ownerContactsReused}`);
   console.log('- Pets deduplicados/mesclados: 0 (o conversor cria um pet por linha válida)');
   console.log(`- Possíveis pets duplicados detectados por tutor + nome: ${duplicateCandidates.length} grupos, ${duplicateRows} linhas`);
   for (const candidate of duplicateCandidates.slice(0, 10)) {
