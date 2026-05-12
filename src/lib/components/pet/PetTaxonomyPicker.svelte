@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import Select from '$lib/components/ui/Select.svelte';
 	import { getPetBreedOption, getPetBreedOptions, getPetSpeciesOption, petSpeciesOptions, type PetBreed, type PetSpecies } from '$lib/domain/pet/taxonomy.js';
 	import { i18n, t } from '$lib/i18n/index.js';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
@@ -112,22 +113,30 @@
 			</span>
 		</button>
 
-		<label class="relative {summaryClass(Boolean(sex))}">
-			<select bind:value={sex} {disabled} class="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed" aria-label={t('pet.sex')}>
-				<option value="">{t('pet.sexUnknown')}</option>
-				<option value="M">{t('pet.sexMale')}</option>
-				<option value="F">{t('pet.sexFemale')}</option>
-			</select>
-			<span class="flex size-10 shrink-0 items-center justify-center rounded-md border border-border bg-muted text-muted-foreground">
-				<span class="text-sm font-bold">{sex === 'M' ? '♂' : sex === 'F' ? '♀' : '?'}</span>
-			</span>
-			<span class="min-w-0 pointer-events-none">
-				<span class="block truncate text-xs font-semibold uppercase text-muted-foreground">{t('pet.sex')}</span>
-				<span class="block truncate text-sm font-medium">
-					{sex === 'M' ? t('pet.sexMale') : sex === 'F' ? t('pet.sexFemale') : t('pet.sexUnknown')}
-				</span>
-			</span>
-		</label>
+		<Select 
+			bind:value={sex}
+			options={[
+				{ value: '', label: t('pet.sexUnknown') },
+				{ value: 'M', label: t('pet.sexMale') },
+				{ value: 'F', label: t('pet.sexFemale') },
+			]}
+			{disabled}
+			ariaLabel={t('pet.sex')}
+		>
+			{#snippet trigger()}
+				<div class={summaryClass(Boolean(sex))}>
+					<span class="flex size-10 shrink-0 items-center justify-center rounded-md border border-border bg-muted text-muted-foreground">
+						<span class="text-sm font-bold">{sex === 'M' ? '♂' : sex === 'F' ? '♀' : '?'}</span>
+					</span>
+					<span class="min-w-0 pointer-events-none">
+						<span class="block truncate text-xs font-semibold uppercase text-muted-foreground">{t('pet.sex')}</span>
+						<span class="block truncate text-sm font-medium">
+							{sex === 'M' ? t('pet.sexMale') : sex === 'F' ? t('pet.sexFemale') : t('pet.sexUnknown')}
+						</span>
+					</span>
+				</div>
+			{/snippet}
+		</Select>
 	</div>
 
 	{#if open}

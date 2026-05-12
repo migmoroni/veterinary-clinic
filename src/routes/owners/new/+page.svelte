@@ -112,25 +112,20 @@
 	</header>
 
 	<form class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5" onsubmit={submit}>
-		<div class="mb-4 flex flex-col gap-3 rounded-md border border-border bg-background/50 p-3 sm:flex-row sm:items-center sm:justify-between">
-			<div class="flex min-w-0 items-center gap-3">
-				<OwnerAvatar avatarBytes={form.avatarBytes} ownerName={form.name} className="size-20" iconClass="size-8 text-muted-foreground" />
-
-				<div class="min-w-0">
-					<p class="text-sm font-semibold">{t('owner.avatarLabel')}</p>
-					<p class="text-xs text-muted-foreground">{t('owner.avatarHint')}</p>
-				</div>
-			</div>
-
-			<div class="flex flex-wrap gap-2">
-				<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} onclick={openAvatarDialog}>
-					{t('owner.avatarEdit')}
-				</button>
-				{#if form.avatarBytes}
-					<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={removeAvatar}>
-						{t('owner.avatarRemove')}
+		<div class="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+			<OwnerAvatar avatarBytes={form.avatarBytes} ownerName={form.name} className="size-24 border border-border shadow-sm" iconClass="size-10 text-muted-foreground" />
+			<div class="flex flex-col gap-1.5 min-w-0">
+				<p class="text-sm font-semibold">{t('owner.avatarLabel')}</p>
+				<div class="flex flex-wrap gap-2">
+					<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} onclick={openAvatarDialog}>
+						{t('owner.avatarEdit')}
 					</button>
-				{/if}
+					{#if form.avatarBytes}
+						<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={removeAvatar}>
+							{t('owner.avatarRemove')}
+						</button>
+					{/if}
+				</div>
 			</div>
 		</div>
 

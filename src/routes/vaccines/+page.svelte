@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
+	import Select from '$lib/components/ui/Select.svelte';
 	import OwnerContactDialog from '$lib/components/owner/OwnerContactDialog.svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
@@ -478,10 +479,15 @@
 			<div class="mt-4 grid gap-3 rounded-md border border-border bg-background p-3 lg:grid-cols-[14rem_minmax(0,1fr)]">
 				<div class="space-y-1">
 					<label class="text-sm font-medium" for="due-filter-mode">{t('vaccine.analytics.filterMode')}</label>
-					<select id="due-filter-mode" class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={dueFilterMode} onchange={(event) => selectDueFilterMode(event.currentTarget.value)}>
-						<option value="preset">{t('vaccine.analytics.filterMode.preset')}</option>
-						<option value="period">{t('vaccine.analytics.filterMode.period')}</option>
-					</select>
+					<Select
+						id="due-filter-mode"
+						value={dueFilterMode}
+						options={[
+							{ value: 'preset', label: t('vaccine.analytics.filterMode.preset') },
+							{ value: 'period', label: t('vaccine.analytics.filterMode.period') }
+						]}
+						onchange={(value) => selectDueFilterMode(value as string)}
+					/>
 				</div>
 
 				{#if dueFilterMode === 'preset'}
@@ -543,10 +549,16 @@
 					<div class="flex flex-col gap-2 sm:items-end">
 						<label class="text-sm font-medium" for="status-order">{t('vaccine.analytics.order')}</label>
 						<div class="flex items-center gap-2">
-							<select id="status-order" class="h-9 rounded-md border border-input bg-background px-3 text-sm" value={statusOrder} onchange={(event) => selectStatusOrder(event.currentTarget.value)}>
-								<option value="recent">{t('vaccine.analytics.order.recent')}</option>
-								<option value="old">{t('vaccine.analytics.order.old')}</option>
-							</select>
+							<Select
+								id="status-order"
+								class="h-9 w-40"
+								value={statusOrder}
+								options={[
+									{ value: 'recent', label: t('vaccine.analytics.order.recent') },
+									{ value: 'old', label: t('vaccine.analytics.order.old') }
+								]}
+								onchange={(value) => selectStatusOrder(value as string)}
+							/>
 							<span class="rounded-md bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">{items.length}</span>
 						</div>
 					</div>
@@ -625,32 +637,45 @@
 						{/each}
 					</div>
 
-					<label class="block text-sm font-medium" for="history-vaccine">{t('vaccine.analytics.vaccineFilter')}</label>
-					<select id="history-vaccine" class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm disabled:opacity-60" value={vaccinePresetId ?? ''} disabled={presetsLoading || historyLoading} onchange={(event) => selectPreset(event.currentTarget.value)}>
-						<option value="">{t('vaccine.analytics.allVaccines')}</option>
-						{#each presets as preset}
-							<option value={preset.id}>{preset.name}</option>
-						{/each}
-					</select>
-
-					<label class="block text-sm font-medium" for="history-order">{t('vaccine.analytics.order')}</label>
-					<select id="history-order" class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={historyOrder} onchange={(event) => selectHistoryOrder(event.currentTarget.value)}>
-						<option value="recent">{t('vaccine.analytics.order.recent')}</option>
-						<option value="old">{t('vaccine.analytics.order.old')}</option>
-					</select>
-				</div>
-
-				<div class="min-w-0">
-					{#if historyLoading || presetsLoading}
-						<div class="space-y-3">
-							{#each Array(8) as _}
-								<div class="h-9 animate-pulse rounded-md bg-muted"></div>
-							{/each}
+						<div class="space-y-1">
+							<label class="block text-sm font-medium" for="history-vaccine">{t('vaccine.analytics.vaccineFilter')}</label>
+							<Select
+								id="history-vaccine"
+								value={vaccinePresetId ?? ''}
+								disabled={presetsLoading || historyLoading}
+								options={[
+									{ value: '', label: t('vaccine.analytics.allVaccines') },
+									...presets.map((preset) => ({ value: preset.id, label: preset.name }))
+								]}
+								onchange={(value) => selectPreset(value as string)}
+							/>
 						</div>
-					{:else if history.length === 0}
-						<p class="rounded-md border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">{t('vaccine.analytics.emptyHistory')}</p>
-					{:else}
-						<div class="max-h-128 space-y-3 overflow-auto pr-1">
+
+						<div class="space-y-1">
+							<label class="block text-sm font-medium" for="history-order">{t('vaccine.analytics.order')}</label>
+							<Select
+								id="history-order"
+								value={historyOrder}
+								options={[
+									{ value: 'recent', label: t('vaccine.analytics.order.recent') },
+									{ value: 'old', label: t('vaccine.analytics.order.old') }
+								]}
+								onchange={(value) => selectHistoryOrder(value as string)}
+							/>
+						</div>
+						</div>
+
+						<div class="min-w-0">
+							{#if historyLoading || presetsLoading}
+								<div class="space-y-3">
+									{#each Array(8) as _}
+										<div class="h-9 animate-pulse rounded-md bg-muted"></div>
+									{/each}
+								</div>
+							{:else if sortedHistory.length === 0}
+								<p class="rounded-md border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">{t('vaccine.analytics.emptyHistory')}</p>
+							{:else}
+								<div class="max-h-128 space-y-3 overflow-auto pr-1">
 							{#each sortedHistory as point}
 								<div class="grid grid-cols-[4.75rem_minmax(0,1fr)_2.25rem] items-center gap-3 text-sm sm:grid-cols-[5.5rem_minmax(0,1fr)_2.5rem]">
 									<span class="truncate text-muted-foreground">{point.label}</span>

@@ -406,26 +406,21 @@ type OwnerForm = OwnerInput & { avatarBytes: Uint8Array | null };
 					{/if}
 				</div>
 
-				<div class="mt-4 flex flex-col gap-3 rounded-md border border-border bg-background/50 p-3 sm:flex-row sm:items-center sm:justify-between">
-					<div class="flex min-w-0 items-center gap-3">
-						<OwnerAvatar avatarBytes={form.avatarBytes} ownerName={form.name} className="size-20" iconClass="size-8 text-muted-foreground" />
-
-						<div class="min-w-0">
-							<p class="text-sm font-semibold">{t('owner.avatarLabel')}</p>
-							<p class="text-xs text-muted-foreground">{t('owner.avatarHint')}</p>
-						</div>
-					</div>
-
+				<div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+					<OwnerAvatar avatarBytes={form.avatarBytes} ownerName={form.name} className="size-24 border border-border shadow-sm" iconClass="size-10 text-muted-foreground" />
 					{#if editing}
-						<div class="flex flex-wrap gap-2">
-							<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} onclick={openAvatarDialog}>
-								{t('owner.avatarEdit')}
-							</button>
-							{#if form.avatarBytes}
-								<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={removeAvatar}>
-									{t('owner.avatarRemove')}
+						<div class="flex flex-col gap-1.5 min-w-0">
+							<p class="text-sm font-semibold">{t('owner.avatarLabel')}</p>
+							<div class="flex flex-wrap gap-2">
+								<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} onclick={openAvatarDialog}>
+									{t('owner.avatarEdit')}
 								</button>
-							{/if}
+								{#if form.avatarBytes}
+									<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={removeAvatar}>
+										{t('owner.avatarRemove')}
+									</button>
+								{/if}
+							</div>
 						</div>
 					{/if}
 				</div>
@@ -489,31 +484,31 @@ type OwnerForm = OwnerInput & { avatarBytes: Uint8Array | null };
 					{#if editing}
 						<OwnerContactsField bind:contacts={form.contacts} />
 					{:else}
-						<div class="sm:col-span-5 rounded-md border border-border bg-background p-3">
+						<div class="sm:col-span-5 pt-2">
 							<h4 class="text-sm font-semibold">{t('owner.contacts')}</h4>
-							<div class="mt-3 flex flex-col gap-2">
+							<div class="mt-4 flex flex-col gap-3">
 								{#each visibleContacts as contact}
-									<article class="grid gap-3 rounded-md border border-border bg-background p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+									<article class="flex flex-col gap-3 rounded-md border border-border bg-background/50 p-3 sm:flex-row sm:items-center sm:justify-between">
 										<div class="min-w-0">
 											<p class="truncate text-sm font-semibold">{contact.value}</p>
 											<p class="mt-1 text-xs text-muted-foreground">{t(contactKindLabelKey(contact.kind))}</p>
 										</div>
 
-										<div class="grid gap-2 sm:flex sm:justify-end {canOpenWhatsApp(contact.kind) ? 'grid-cols-2' : 'grid-cols-1'}">
+										<div class="flex flex-wrap gap-2">
 											<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.call')}: ${contact.value}`} onclick={() => void callContact(contact.value)}>
 												<PhoneCall class="size-4" />
 												{t('owner.call')}
 											</button>
 											{#if canOpenWhatsApp(contact.kind)}
 												<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.messageWhatsApp')}: ${contact.value}`} onclick={() => void messageContact(contact.value)}>
-													<MessageCircle class="size-4" />
+													<MessageCircle class="size-4 text-[#25D366] sm:text-[#25D366]" />
 													{t('owner.messageWhatsApp')}
 												</button>
 											{/if}
 										</div>
 									</article>
 								{:else}
-									<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('owner.noContacts')}</p>
+									<p class="text-sm text-muted-foreground">{t('owner.noContacts')}</p>
 								{/each}
 							</div>
 						</div>

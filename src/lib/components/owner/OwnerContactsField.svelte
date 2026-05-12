@@ -4,6 +4,7 @@
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Select from '$lib/components/ui/Select.svelte';
 
 	let { contacts = $bindable<OwnerContactInput[]>([]) }: { contacts?: OwnerContactInput[] } = $props();
 
@@ -36,12 +37,12 @@
 	}
 </script>
 
-<div class="sm:col-span-5 rounded-md border border-border bg-background p-3">
-	<div class="flex items-center justify-between gap-3">
+<div class="sm:col-span-5 pt-2">
+	<div class="flex flex-wrap items-center justify-between gap-3">
 		<h4 class="text-sm font-semibold">{t('owner.contacts')}</h4>
 		<button
 			type="button"
-			class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent"
+			class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring/30"
 			aria-label={t('owner.addContact')}
 			title={t('owner.addContact')}
 			onclick={addContact}
@@ -51,24 +52,20 @@
 		</button>
 	</div>
 
-	<div class="mt-3 flex flex-col gap-2">
+	<div class="mt-4 flex flex-col gap-3">
 		{#each contacts as contact, index}
-			<div class="grid gap-2 rounded-md border border-border bg-background p-2 sm:grid-cols-[10rem_minmax(0,1fr)_2.5rem]">
-				<label class="flex flex-col gap-1 text-sm font-medium">
+			<div class="grid gap-2 rounded-md border border-border bg-background/50 p-2 sm:grid-cols-[10rem_minmax(0,1fr)_2.5rem] items-center">
+				<div class="flex flex-col gap-1 text-sm font-medium m-0">
 					<span class="sr-only">{t('owner.contactType')}</span>
-					<select
-						class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
+					<Select
 						value={contact.kind}
-						onchange={(event) => updateContactKind(index, event.currentTarget.value)}
-						aria-label={t('owner.contactType')}
-					>
-						{#each contactKinds as kind}
-							<option value={kind}>{t(kindLabelKey(kind))}</option>
-						{/each}
-					</select>
-				</label>
+						options={contactKinds.map(kind => ({ value: kind, label: t(kindLabelKey(kind)) }))}
+						ariaLabel={t('owner.contactType')}
+						onchange={(value) => updateContactKind(index, value)}
+					/>
+				</div>
 
-				<label class="flex flex-col gap-1 text-sm font-medium">
+				<label class="flex flex-col gap-1 text-sm font-medium m-0">
 					<span class="sr-only">{t('owner.contactValue')}</span>
 					<input
 						type="tel"
@@ -84,7 +81,7 @@
 
 				<button
 					type="button"
-					class="flex size-10 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+					class="flex size-10 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus:outline-none focus:ring-2 focus:ring-ring/30"
 					aria-label={t('owner.removeContact')}
 					title={t('owner.removeContact')}
 					onclick={() => removeContact(index)}
@@ -93,7 +90,7 @@
 				</button>
 			</div>
 		{:else}
-			<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('owner.noContacts')}</p>
+			<p class="text-sm text-muted-foreground">{t('owner.noContacts')}</p>
 		{/each}
 	</div>
 </div>

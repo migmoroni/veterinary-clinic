@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import Select from '$lib/components/ui/Select.svelte';
 	import {
 		CUSTOM_FONT_SIZE_ID,
 		CUSTOM_FONT_SIZE_MAX_PX,
@@ -73,8 +74,8 @@
 		}
 	}
 
-	async function changeLocale(event: Event) {
-		const locale = (event.currentTarget as HTMLSelectElement).value as Locale;
+	async function changeLocale(localeStr: string) {
+		const locale = localeStr as Locale;
 		selectedLocale = locale;
 		setLocale(locale);
 		saving = true;
@@ -142,16 +143,14 @@
 		}
 	}
 
-	async function changeBundledFont(event: Event) {
-		typography.bundledFont = (event.currentTarget as HTMLSelectElement).value as BundledFontId;
+	async function changeBundledFont(value: string) {
+		typography.bundledFont = value as BundledFontId;
 		typography.fontSource = 'bundled';
 		await saveTypography();
 	}
 
-	async function changeSystemFont(event: Event) {
-		typography.systemFontFamily = sanitizeSystemFontFamily(
-			(event.currentTarget as HTMLSelectElement).value
-		);
+	async function changeSystemFont(value: string) {
+		typography.systemFontFamily = sanitizeSystemFontFamily(value);
 		typography.fontSource = 'system';
 		await saveTypography();
 	}
@@ -233,11 +232,7 @@
 
 				<label class="mt-4 flex max-w-sm flex-col gap-1 text-sm font-medium">
 					<span>{t('preferences.languageLabel')}</span>
-					<select class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={selectedLocale} disabled={saving} onchange={changeLocale}>
-						{#each localeOptions as option}
-							<option value={option.value}>{t(option.labelKey)}</option>
-						{/each}
-					</select>
+					<Select bind:value={selectedLocale} disabled={saving} options={localeOptions.map((opt) => ({ value: opt.value, label: t(opt.labelKey) }))} onchange={changeLocale} />
 				</label>
 
 				<p class="mt-3 text-sm text-muted-foreground">{t('preferences.currentLanguage')}: {t(`locale.${selectedLocale}` as TranslationKey)}</p>
@@ -346,11 +341,13 @@
 					<div class="mt-5 max-w-xl">
 					<label class="min-w-0 text-sm font-medium">
 						<span>{t('preferences.bundledFontLabel')}</span>
-						<select class="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={typography.bundledFont} disabled={saving} onchange={changeBundledFont}>
-							{#each bundledFontOptions as option}
-								<option value={option.id}>{t(option.labelKey)}</option>
-							{/each}
-						</select>
+						<Select 
+							class="mt-1" 
+							bind:value={typography.bundledFont} 
+							disabled={saving} 
+							options={bundledFontOptions.map((opt) => ({ value: opt.id, label: t(opt.labelKey) }))} 
+							onchange={changeBundledFont} 
+						/>
 						<p class="mt-2 text-xs leading-5 text-muted-foreground">
 							{t('preferences.fontLicenseLabel')}: {getBundledFontOption(typography.bundledFont).license}
 						</p>
@@ -360,18 +357,17 @@
 					<div class="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
 						<label class="min-w-0 text-sm font-medium" for="system-font-family">
 							<span>{t('preferences.systemFontLabel')}</span>
-							<select
+							<Select
 								id="system-font-family"
-								class="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
+								class="mt-1"
 								bind:value={typography.systemFontFamily}
 								disabled={saving || loadingSystemFonts}
+								options={[
+									{ value: '', label: t('preferences.systemFontDefault') },
+									...systemFontChoices.map((font) => ({ value: font, label: font }))
+								]}
 								onchange={changeSystemFont}
-							>
-								<option value="">{t('preferences.systemFontDefault')}</option>
-								{#each systemFontChoices as font}
-									<option value={font}>{font}</option>
-								{/each}
-							</select>
+							/>
 						</label>
 
 						<div class="flex items-end gap-2">

@@ -14,6 +14,7 @@
 	import Syringe from '@lucide/svelte/icons/syringe';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import X from '@lucide/svelte/icons/x';
+	import Select from '$lib/components/ui/Select.svelte';
 
 	type SelectedVaccine = VaccinePreset;
 
@@ -222,20 +223,26 @@
 				<DateField bind:value={appliedAt} ariaLabel={t('vaccine.appliedAt')} />
 			</label>
 
-			<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-				<span>{t('vaccine.name')}</span>
+			<div class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+				<label for={`vaccine-preset-${petId}`}>{t('vaccine.name')}</label>
 				<div class="flex min-w-0 gap-2">
-					<input class="h-10 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" list={`vaccine-presets-${petId}`} bind:value={vaccineName} placeholder={t('vaccine.namePlaceholder')} />
-					<datalist id={`vaccine-presets-${petId}`}>
-						{#each currentPresets as preset}
-							<option value={preset.name}>{validityLabel(preset)}</option>
-						{/each}
-					</datalist>
+				<Select
+					id={`vaccine-preset-${petId}`}
+					bind:value={vaccineName}
+					options={[
+						{ value: '', label: t('vaccine.namePlaceholder') },
+						...currentPresets.map((preset) => ({
+							value: preset.name,
+							label: `${preset.name} (${validityLabel(preset)})`
+						}))
+					]}
+					class="flex-1"
+				/>
 					<button type="button" class="inline-flex size-10 shrink-0 items-center justify-center rounded-md border border-border bg-background hover:bg-accent disabled:opacity-50" aria-label={t('vaccine.addToDay')} title={t('vaccine.addToDay')} disabled={saving || !canAddVaccineName()} onclick={addVaccineName}>
 						<Plus class="size-4" />
 					</button>
 				</div>
-			</label>
+			</div>
 		</div>
 
 		{#if selectedVaccines.length > 0}
