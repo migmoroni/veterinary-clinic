@@ -6,7 +6,7 @@ On first launch, the app asks whether to import an existing compatible SQLite da
 
 SQLite access goes through `tauri-plugin-sql`; the app does not depend on `rusqlite` directly.
 
-The app uses a current canonical SQLite schema and intentionally keeps `PRAGMA user_version` at `0` while pre-launch. Legacy database adaptation is handled by `ods-to-sqlite`, which generates a compatible `veterinary_clinic.db` before import.
+The app uses a current canonical SQLite schema and intentionally keeps `PRAGMA user_version` at `0` while pre-launch. Legacy database adaptation is handled by `legacy-to-sqlite`, which generates a compatible `veterinary_clinic.db` before import.
 
 ## Stack
 
@@ -18,6 +18,8 @@ The app uses a current canonical SQLite schema and intentionally keeps `PRAGMA u
 - Runtime SQLite database at `veterinary_clinic.db` in the Tauri app config directory
 
 ## Development
+
+For the current Linux development environment on Debian 13, see [docs/development-debian13.md](docs/development-debian13.md).
 
 ```sh
 npm install
@@ -36,12 +38,12 @@ npm run build
 ## Legacy import converter
 
 ```sh
-cd ods-to-sqlite
+cd legacy-to-sqlite
 npx tsc to-sqlite.ts --ignoreConfig
 node to-sqlite.js
 ```
 
-The converter reads `old-clinic.csv` and writes a compatible `veterinary_clinic.db` using the app's current schema. Legacy `TELEFONE` values become `owner_contacts.kind = 'phone'`, and `CELULAR` values become `owner_contacts.kind = 'mobile'`. Medical record periods are derived from dated entries in the legacy record text: the earliest valid date becomes `admitted_at`, and the latest valid date becomes `discharged_at` when there is more than one dated entry. When the same pet has repeated applications of the same vaccine preset, older applications are marked with `validity_ignored_at` so only the latest one contributes to due-date alerts and vaccine status analytics.
+The converter reads `legacy-to-sqlite/dist/old-clinic.csv` and writes `legacy-to-sqlite/build/veterinary_clinic.db` using the app's current schema. Legacy `TELEFONE` values become `owner_contacts.kind = 'phone'`, and `CELULAR` values become `owner_contacts.kind = 'mobile'`. Medical record periods are derived from dated entries in the legacy record text: the earliest valid date becomes `admitted_at`, and the latest valid date becomes `discharged_at` when there is more than one dated entry. When the same pet has repeated applications of the same vaccine preset, older applications are marked with `validity_ignored_at` so only the latest one contributes to due-date alerts and vaccine status analytics.
 
 ## Desktop bundles
 

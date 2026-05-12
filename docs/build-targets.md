@@ -18,7 +18,7 @@ npm run build
 When changing the canonical SQLite schema or import rules, also rebuild the legacy converter:
 
 ```sh
-cd ods-to-sqlite
+cd legacy-to-sqlite
 npx tsc to-sqlite.ts --ignoreConfig
 ```
 
