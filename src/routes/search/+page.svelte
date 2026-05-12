@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import OwnerContactDialog from '$lib/components/owner/OwnerContactDialog.svelte';
+	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import type { OwnerContact } from '$lib/domain/owner/owner.js';
 	import type { SearchResult, SearchResultKind } from '$lib/persistence/repositories/search.repository.js';
 	import { t } from '$lib/i18n/index.js';
 	import { RECENT_SEARCH_STORAGE_KEY } from '$lib/services/client-state.service.js';
-	import { loadOwnerContactsByOwnerIds, searchEverywhere } from '$lib/services/clinic.service.js';
+	import { loadOwnerContactsByOwnerIds, loadPetAvatarsByPetIds, searchEverywhere } from '$lib/services/clinic.service.js';
 	import ClipboardPenLine from '@lucide/svelte/icons/clipboard-pen-line';
 	import Phone from '@lucide/svelte/icons/phone';
-	import PawPrint from '@lucide/svelte/icons/paw-print';
 	import Search from '@lucide/svelte/icons/search';
 	import User from '@lucide/svelte/icons/user';
 
@@ -43,19 +43,25 @@
 		}
 	}
 
-	async function hydrateRecentOwnerContacts(baseResults: SearchResult[]): Promise<SearchResult[]> {
-		const ownerIds = baseResults.filter((result) => result.kind === 'owner').map((result) => result.id);
-		if (ownerIds.length === 0) return baseResults;
+	function persistableSearchResult(result: SearchResult): SearchResult {
+		const { petAvatarBytes: _petAvatarBytes, ...persistableResult } = result;
+		return persistableResult;
+	}
 
-		try {
-			const contactsByOwnerId = await loadOwnerContactsByOwnerIds(ownerIds);
-			return baseResults.map((result) => {
-				if (result.kind !== 'owner') return result;
-				return { ...result, ownerContacts: contactsByOwnerId.get(result.id) ?? result.ownerContacts ?? [] };
-			});
-		} catch {
-			return baseResults;
-		}
+	async function hydrateRecentResults(baseResults: SearchResult[]): Promise<SearchResult[]> {
+		const ownerIds = baseResults.filter((result) => result.kind === 'owner').map((result) => result.id);
+		const petIds = baseResults.filter((result) => result.kind === 'pet').map((result) => result.id);
+		if (ownerIds.length === 0 && petIds.length === 0) return baseResults;
+
+		const [contactsResult, avatarsResult] = await Promise.allSettled([loadOwnerContactsByOwnerIds(ownerIds), loadPetAvatarsByPetIds(petIds)]);
+		const contactsByOwnerId = contactsResult.status === 'fulfilled' ? contactsResult.value : new Map<number, OwnerContact[]>();
+		const avatarBytesByPetId = avatarsResult.status === 'fulfilled' ? avatarsResult.value : new Map<number, Uint8Array | null>();
+
+		return baseResults.map((result) => {
+			if (result.kind === 'owner') return { ...result, ownerContacts: contactsByOwnerId.get(result.id) ?? result.ownerContacts ?? [] };
+			if (result.kind === 'pet') return { ...result, petAvatarBytes: avatarBytesByPetId.get(result.id) ?? null };
+			return result;
+		});
 	}
 
 	async function loadRecentResults() {
@@ -64,7 +70,7 @@
 		try {
 			const parsed = JSON.parse(localStorage.getItem(RECENT_SEARCH_STORAGE_KEY) ?? '[]');
 			const baseResults: SearchResult[] = Array.isArray(parsed) ? parsed.slice(0, recentSearchLimit) : [];
-			recentResults = await hydrateRecentOwnerContacts(baseResults);
+			recentResults = await hydrateRecentResults(baseResults);
 		} catch {
 			recentResults = [];
 		}
@@ -72,7 +78,7 @@
 
 	function saveRecentResults(nextResults: SearchResult[]) {
 		if (typeof localStorage === 'undefined') return;
-		localStorage.setItem(RECENT_SEARCH_STORAGE_KEY, JSON.stringify(nextResults.slice(0, recentSearchLimit)));
+		localStorage.setItem(RECENT_SEARCH_STORAGE_KEY, JSON.stringify(nextResults.slice(0, recentSearchLimit).map(persistableSearchResult)));
 	}
 
 	function rememberResult(result: SearchResult) {
@@ -160,7 +166,7 @@
 			{:else}
 				<a href={result.href} class="flex items-start gap-3 rounded-md border border-border bg-card p-3 shadow-sm hover:bg-accent" onclick={() => rememberResult(result)}>
 					{#if result.kind === 'pet'}
-						<PawPrint class="mt-0.5 size-4 shrink-0 text-primary" />
+						<PetAvatar avatarBytes={result.petAvatarBytes} petName={result.title} className="mt-0.5 size-10" iconClass="size-5 text-primary" />
 					{:else}
 						<ClipboardPenLine class="mt-0.5 size-4 shrink-0 text-primary" />
 					{/if}

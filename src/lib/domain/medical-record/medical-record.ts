@@ -12,6 +12,7 @@ export interface MedicalRecord {
 	purgeAfter: string | null;
 }
 
+
 export interface CurrentRecordSummary {
 	id: number;
 	title: string;
@@ -35,6 +36,7 @@ export interface MedicalRecordInput {
 export interface MedicalRecordDetails {
 	record: MedicalRecord;
 	petName: string;
+	petAvatarBytes: Uint8Array | null;
 	ownerId: number;
 	ownerName: string;
 }

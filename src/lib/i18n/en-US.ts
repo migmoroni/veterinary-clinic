@@ -141,6 +141,7 @@ export const enUs = {
 	'pet.vaccinesSection': 'Pet vaccines',
 	'pet.avatarLabel': 'Pet avatar',
 	'pet.avatarAlt': 'Pet avatar photo',
+	'pet.avatarPlaceholderAlt': 'Pet paw logo',
 	'pet.avatarHint': 'Square PNG up to 1 MB. Adjust the position before saving.',
 	'pet.avatarEdit': 'Edit avatar',
 	'pet.avatarApply': 'Apply avatar',

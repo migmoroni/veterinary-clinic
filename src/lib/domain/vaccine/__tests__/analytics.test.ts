@@ -9,6 +9,7 @@ function statusItem(daysUntilDue: number, dueAt = '2026-05-08'): VaccineStatusIt
 		ownerContacts: [],
 		petId: 1,
 		petName: 'Pet',
+		petAvatarBytes: null,
 		vaccinePresetId: 1,
 		vaccineName: 'Vaccine',
 		appliedAt: '2025-05-08',

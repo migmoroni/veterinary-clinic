@@ -141,6 +141,7 @@ export const esEs = {
 	'pet.vaccinesSection': 'Vacunas de la mascota',
 	'pet.avatarLabel': 'Avatar de la mascota',
 	'pet.avatarAlt': 'Foto del avatar de la mascota',
+	'pet.avatarPlaceholderAlt': 'Logo de la pata de la mascota',
 	'pet.avatarHint': 'PNG cuadrado de hasta 1 MB. Ajusta la posición antes de guardar.',
 	'pet.avatarEdit': 'Editar avatar',
 	'pet.avatarApply': 'Aplicar avatar',

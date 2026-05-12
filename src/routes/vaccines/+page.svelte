@@ -2,6 +2,7 @@
 	import { onMount, tick } from 'svelte';
 	import OwnerContactDialog from '$lib/components/owner/OwnerContactDialog.svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
+	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import type { OwnerContact } from '$lib/domain/owner/owner.js';
 	import type { TranslationKey } from '$lib/i18n/index.js';
 	import { i18n, t } from '$lib/i18n/index.js';
@@ -563,13 +564,16 @@
 					<div class="mt-4 divide-y divide-border rounded-md border border-border">
 						{#each visibleItems as item}
 							<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-4">
-								<div class="min-w-0">
-									<p class="wrap-break-word text-sm font-semibold">{item.petName} · {item.vaccineName}</p>
-									<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{item.ownerName}</p>
-									<div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs leading-5 text-muted-foreground">
-										<span>{t('vaccine.appliedAt')}: {formatDateForDisplay(item.appliedAt)}</span>
-										<span>{t('vaccine.analytics.dueAt')}: {formatDateForDisplay(item.dueAt)}</span>
-										<span>{daysText(item)}</span>
+								<div class="flex min-w-0 items-start gap-3">
+									<PetAvatar avatarBytes={item.petAvatarBytes} petName={item.petName} className="size-11" iconClass="size-5 text-primary" />
+									<div class="min-w-0">
+										<p class="wrap-break-word text-sm font-semibold">{item.petName} · {item.vaccineName}</p>
+										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{item.ownerName}</p>
+										<div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs leading-5 text-muted-foreground">
+											<span>{t('vaccine.appliedAt')}: {formatDateForDisplay(item.appliedAt)}</span>
+											<span>{t('vaccine.analytics.dueAt')}: {formatDateForDisplay(item.dueAt)}</span>
+											<span>{daysText(item)}</span>
+										</div>
 									</div>
 								</div>
 								<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">

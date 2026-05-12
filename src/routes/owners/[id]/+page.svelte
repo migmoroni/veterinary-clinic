@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import OwnerContactsField from '$lib/components/owner/OwnerContactsField.svelte';
+	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import UnsavedChangesDialog from '$lib/components/records/UnsavedChangesDialog.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
 	import { DEFAULT_OWNER_COUNTRY, type Owner, type OwnerContactKind, type OwnerInput } from '$lib/domain/owner/owner.js';
@@ -479,9 +480,12 @@
 
 				<div class="mt-4 flex flex-col gap-2">
 					{#each profile.pets as pet}
-						<a href={`/owners/${ownerId}/pets/${pet.id}`} class="rounded-md border border-border bg-background p-3 hover:bg-accent">
-							<span class="block truncate text-sm font-medium">{pet.name}</span>
-							<span class="block truncate text-xs text-muted-foreground">{petTaxonomyLabel(pet)}</span>
+						<a href={`/owners/${ownerId}/pets/${pet.id}`} class="flex items-center gap-3 rounded-md border border-border bg-background p-3 hover:bg-accent">
+							<PetAvatar avatarBytes={pet.avatarBytes} petName={pet.name} className="size-11" iconClass="size-5 text-primary" />
+							<span class="min-w-0 flex-1">
+								<span class="block truncate text-sm font-medium">{pet.name}</span>
+								<span class="block truncate text-xs text-muted-foreground">{petTaxonomyLabel(pet)}</span>
+							</span>
 						</a>
 					{:else}
 						<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('owner.emptyPets')}</p>

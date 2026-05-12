@@ -4,13 +4,13 @@
 	import { onMount } from 'svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
 	import UnsavedChangesDialog from '$lib/components/records/UnsavedChangesDialog.svelte';
+	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
 	import type { MedicalRecordDetails, MedicalRecordInput } from '$lib/domain/medical-record/medical-record.js';
 	import { formatDateForInput, normalizeDateInput } from '$lib/domain/shared/date-input.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import { loadRecordAutoSavePreference, saveRecordAutoSavePreference } from '$lib/services/preferences.service.js';
 	import { loadRecordDetails, removeRecord, saveRecord } from '$lib/services/record.service.js';
-	import PawPrint from '@lucide/svelte/icons/paw-print';
 	import Save from '@lucide/svelte/icons/save';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import UserRound from '@lucide/svelte/icons/user-round';
@@ -286,7 +286,7 @@
 					</a>
 
 					<a href={`/owners/${details.ownerId}/pets/${details.record.petId}`} aria-label={`${t('actions.openPet')}: ${details.petName}`} class="inline-flex max-w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">
-						<PawPrint class="size-4 shrink-0 text-primary" />
+						<PetAvatar avatarBytes={details.petAvatarBytes} petName={details.petName} className="size-6" iconClass="size-3.5 text-primary" />
 						<span class="shrink-0 text-xs font-semibold uppercase text-muted-foreground">{t('pet.contextLabel')}</span>
 						<span class="truncate text-primary">{details.petName}</span>
 					</a>

@@ -1,5 +1,6 @@
 import { selectMany } from '$lib/persistence/sqlite/client.js';
 import type { OwnerContact } from '$lib/domain/owner/owner.js';
+import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { listOwnerContactsByOwnerIds } from './owner.repository.js';
 
 export type SearchResultKind = 'owner' | 'pet' | 'record';
@@ -13,8 +14,10 @@ export interface SearchResult {
 	href: string;
 	title: string;
 	subtitle: string;
+	petAvatarBytes?: Uint8Array | null;
 	ownerContacts?: OwnerContact[];
 }
+
 
 interface SearchResultRow {
 	kind: SearchResultKind;
@@ -24,6 +27,7 @@ interface SearchResultRow {
 	pet_id: number | null;
 	title: string;
 	subtitle: string;
+	pet_avatar_blob: unknown | null;
 }
 
 function resultHref(row: SearchResultRow): string {
@@ -42,6 +46,7 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 			owners.id,
 			owners.id AS owner_id,
 			NULL AS pet_id,
+			NULL AS pet_avatar_blob,
 			(SELECT medical_records.id
 			 FROM pets
 			 JOIN medical_records ON medical_records.pet_id = pets.id
@@ -71,6 +76,7 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 			pets.id,
 			owners.id AS owner_id,
 			pets.id AS pet_id,
+			pets.avatar_blob AS pet_avatar_blob,
 			(SELECT medical_records.id
 			 FROM medical_records
 			 WHERE medical_records.pet_id = pets.id
@@ -91,6 +97,7 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 			medical_records.id,
 			owners.id AS owner_id,
 			pets.id AS pet_id,
+			pets.avatar_blob AS pet_avatar_blob,
 			medical_records.id AS record_id,
 			COALESCE(medical_records.title, 'Prontuario ' || medical_records.id) AS title,
 			pets.name || ' · ' || owners.name AS subtitle
@@ -119,6 +126,7 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 		href: resultHref(row),
 		title: row.title,
 		subtitle: row.subtitle,
+		petAvatarBytes: row.kind === 'pet' ? normalizeByteArray(row.pet_avatar_blob) : null,
 		ownerContacts: row.kind === 'owner' ? (contactsByOwnerId.get(row.id) ?? []) : []
 	}));
 }

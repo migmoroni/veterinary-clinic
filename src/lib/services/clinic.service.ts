@@ -4,6 +4,7 @@ import { hasDatabaseFile } from '$lib/native/database-file.js';
 import { createEmptyDatabase, getDatabase } from '$lib/persistence/sqlite/client.js';
 import { getLastEditedRecord } from '$lib/persistence/repositories/medical-record.repository.js';
 import { listOwnerContactsByOwnerIds } from '$lib/persistence/repositories/owner.repository.js';
+import { listPetAvatarBytesByIds } from '$lib/persistence/repositories/pet.repository.js';
 import { searchClinic, type SearchResult } from '$lib/persistence/repositories/search.repository.js';
 import { getClinicCounts } from '$lib/persistence/repositories/stats.repository.js';
 import type { VaccineAnalyticsOverview } from '$lib/persistence/repositories/vaccine-analytics.repository.js';
@@ -69,4 +70,8 @@ export async function loadOwnerContactsByOwnerIds(ownerIds: number[]): Promise<M
 	if (uniqueIds.length === 0) return new Map<number, OwnerContact[]>();
 
 	return listOwnerContactsByOwnerIds(uniqueIds);
+}
+
+export async function loadPetAvatarsByPetIds(petIds: number[]): Promise<Map<number, Uint8Array | null>> {
+	return listPetAvatarBytesByIds(petIds);
 }

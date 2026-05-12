@@ -23,6 +23,7 @@ export interface VaccineStatusItem {
 	ownerContacts: OwnerContact[];
 	petId: number;
 	petName: string;
+	petAvatarBytes: Uint8Array | null;
 	vaccinePresetId: number;
 	vaccineName: string;
 	appliedAt: string;

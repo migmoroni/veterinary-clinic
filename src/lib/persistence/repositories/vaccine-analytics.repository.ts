@@ -22,6 +22,7 @@ import {
 	todayIsoDate
 } from '$lib/domain/vaccine/analytics.js';
 import type { VaccinePreset } from '$lib/domain/vaccine/vaccine.js';
+import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { selectMany } from '$lib/persistence/sqlite/client.js';
 import { listOwnerContactsByOwnerIds } from './owner.repository.js';
 
@@ -29,6 +30,7 @@ interface LatestVaccinationRow {
 	id: number;
 	pet_id: number;
 	pet_name: string;
+	pet_avatar_blob: unknown | null;
 	owner_id: number;
 	owner_name: string;
 	owner_contacts: OwnerContact[];
@@ -116,6 +118,7 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationRow[]> {
 			pet_vaccinations.id,
 			pet_vaccinations.pet_id,
 			pets.name AS pet_name,
+			pets.avatar_blob AS pet_avatar_blob,
 			owners.id AS owner_id,
 			owners.name AS owner_name,
 			pet_vaccinations.applied_at,
@@ -155,6 +158,7 @@ function mapStatusItem(row: LatestVaccinationRow, now = new Date()): VaccineStat
 		ownerContacts: row.owner_contacts,
 		petId: row.pet_id,
 		petName: row.pet_name,
+		petAvatarBytes: normalizeByteArray(row.pet_avatar_blob),
 		vaccinePresetId: row.vaccine_preset_id,
 		vaccineName: row.vaccine_name,
 		appliedAt: row.applied_at,

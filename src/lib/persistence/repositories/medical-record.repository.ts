@@ -4,6 +4,7 @@ import type {
 	MedicalRecordDetails,
 	MedicalRecordInput
 } from '$lib/domain/medical-record/medical-record.js';
+import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
 import { listOwnerContacts } from './owner.repository.js';
@@ -22,6 +23,7 @@ interface MedicalRecordRow {
 
 interface MedicalRecordDetailsRow extends MedicalRecordRow {
 	pet_name: string;
+	pet_avatar_blob: unknown | null;
 	owner_id: number;
 	owner_name: string;
 }
@@ -116,6 +118,7 @@ export async function getMedicalRecordDetails(id: number, includeDeleted = false
 			medical_records.deleted_at,
 			medical_records.purge_after,
 			pets.name AS pet_name,
+			pets.avatar_blob AS pet_avatar_blob,
 			owners.id AS owner_id,
 			owners.name AS owner_name
 		 FROM medical_records
@@ -133,6 +136,7 @@ export async function getMedicalRecordDetails(id: number, includeDeleted = false
 	return {
 		record: mapMedicalRecord(row),
 		petName: row.pet_name,
+		petAvatarBytes: normalizeByteArray(row.pet_avatar_blob),
 		ownerId: row.owner_id,
 		ownerName: row.owner_name
 	};

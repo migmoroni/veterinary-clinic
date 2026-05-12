@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
+	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import PetAvatarEditorDialog from '$lib/components/pet/PetAvatarEditorDialog.svelte';
 	import PetTaxonomyPicker from '$lib/components/pet/PetTaxonomyPicker.svelte';
 	import VaccinationPanel from '$lib/components/pet/VaccinationPanel.svelte';
@@ -18,7 +19,6 @@
 	import { loadPetProfile, removePet, savePet } from '$lib/services/pet.service.js';
 	import { saveNewRecord } from '$lib/services/record.service.js';
 	import ClipboardPenLine from '@lucide/svelte/icons/clipboard-pen-line';
-	import PawPrint from '@lucide/svelte/icons/paw-print';
 	import Syringe from '@lucide/svelte/icons/syringe';
 	import UserRound from '@lucide/svelte/icons/user-round';
 	import Save from '@lucide/svelte/icons/save';
@@ -26,12 +26,6 @@
 
 	type PetForm = Omit<PetInput, 'sex' | 'avatarBytes'> & { sex: '' | Exclude<PetSex, null>; avatarBytes: Uint8Array | null };
 	type PetPanel = 'records' | 'vaccines';
-
-	function bytesToArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-		const buffer = new ArrayBuffer(bytes.byteLength);
-		new Uint8Array(buffer).set(bytes);
-		return buffer;
-	}
 
 	function avatarSnapshotValue(bytes: Uint8Array | null | undefined): string {
 		if (!bytes || bytes.length === 0) return 'none';
@@ -124,7 +118,6 @@
 	let deleting = $state(false);
 	let editing = $state(false);
 	let avatarDialogOpen = $state(false);
-	let avatarPreviewUrl = $state<string | null>(null);
 	let deleteDialogOpen = $state(false);
 	let unsavedDialogOpen = $state(false);
 	let pendingNavigationHref = $state<string | null>(null);
@@ -132,7 +125,6 @@
 	let savedSnapshot = $state('');
 	let statusKey = $state<TranslationKey | null>(null);
 	let error = $state<string | null>(null);
-	let avatarPreviewObjectUrl: string | null = null;
 	let allowNavigation = false;
 
 	const currentSnapshot = $derived(snapshotForm(form));
@@ -193,22 +185,6 @@
 		unsavedDialogOpen = false;
 		pendingNavigationHref = null;
 		pendingCancelEdit = false;
-	}
-
-	function clearAvatarPreview() {
-		if (avatarPreviewObjectUrl && typeof URL !== 'undefined') {
-			URL.revokeObjectURL(avatarPreviewObjectUrl);
-		}
-		avatarPreviewObjectUrl = null;
-		avatarPreviewUrl = null;
-	}
-
-	function updateAvatarPreview(bytes: Uint8Array | null) {
-		clearAvatarPreview();
-		if (!bytes || bytes.length === 0 || typeof URL === 'undefined' || typeof Blob === 'undefined') return;
-
-		avatarPreviewObjectUrl = URL.createObjectURL(new Blob([bytesToArrayBuffer(bytes)], { type: 'image/png' }));
-		avatarPreviewUrl = avatarPreviewObjectUrl;
 	}
 
 	function openAvatarDialog() {
@@ -371,17 +347,10 @@
 		if (hasUnsavedChanges) statusKey = null;
 	});
 
-	$effect(() => {
-		updateAvatarPreview(form.avatarBytes);
-	});
-
 	onMount(() => {
 		void load();
 		window.addEventListener('beforeunload', handleBeforeUnload);
-		return () => {
-			window.removeEventListener('beforeunload', handleBeforeUnload);
-			clearAvatarPreview();
-		};
+		return () => window.removeEventListener('beforeunload', handleBeforeUnload);
 	});
 </script>
 
@@ -431,13 +400,7 @@
 				</div>
 				<div class="mt-4 flex flex-col gap-3 rounded-md border border-border bg-background/50 p-3 sm:flex-row sm:items-center sm:justify-between">
 					<div class="flex min-w-0 items-center gap-3">
-						<div class="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
-							{#if avatarPreviewUrl}
-								<img src={avatarPreviewUrl} alt={t('pet.avatarAlt')} class="h-full w-full object-cover" />
-							{:else}
-								<PawPrint class="size-8 text-muted-foreground" aria-hidden="true" />
-							{/if}
-						</div>
+						<PetAvatar avatarBytes={form.avatarBytes} petName={form.name} className="size-20" iconClass="size-8 text-muted-foreground" />
 
 						<div class="min-w-0">
 							<p class="text-sm font-semibold">{t('pet.avatarLabel')}</p>

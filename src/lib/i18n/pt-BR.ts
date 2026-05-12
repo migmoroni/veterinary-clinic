@@ -139,6 +139,7 @@ export const ptBr = {
 	'pet.vaccinesSection': 'Vacinas do pet',
 	'pet.avatarLabel': 'Avatar do pet',
 	'pet.avatarAlt': 'Foto do avatar do pet',
+	'pet.avatarPlaceholderAlt': 'Logo da pata do pet',
 	'pet.avatarHint': 'PNG quadrado com até 1 MB. Ajuste a posição antes de salvar.',
 	'pet.avatarEdit': 'Editar avatar',
 	'pet.avatarApply': 'Aplicar avatar',

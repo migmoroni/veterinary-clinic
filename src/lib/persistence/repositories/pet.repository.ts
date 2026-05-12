@@ -1,5 +1,6 @@
 import type { Pet, PetBreed, PetInput, PetSex, PetSpecies } from '$lib/domain/pet/pet.js';
 import { isPetBreedForSpecies } from '$lib/domain/pet/taxonomy.js';
+import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
@@ -22,28 +23,6 @@ function nullable(value: string | null | undefined): string | null {
 	return trimmed.length > 0 ? trimmed : null;
 }
 
-function normalizeAvatarBytes(value: unknown): Uint8Array | null {
-	if (value == null) return null;
-
-	if (value instanceof Uint8Array) return value;
-	if (value instanceof ArrayBuffer) return new Uint8Array(value);
-
-	if (Array.isArray(value)) {
-		const bytes = value.filter((item): item is number => typeof item === 'number' && Number.isFinite(item) && item >= 0 && item <= 255);
-		return Uint8Array.from(bytes.map((item) => item & 0xff));
-	}
-
-	if (typeof value === 'object' && value && 'data' in value) {
-		const data = (value as { data?: unknown }).data;
-		if (Array.isArray(data)) {
-			const bytes = data.filter((item): item is number => typeof item === 'number' && Number.isFinite(item) && item >= 0 && item <= 255);
-			return Uint8Array.from(bytes.map((item) => item & 0xff));
-		}
-	}
-
-	return null;
-}
-
 function avatarBytesToSqlLiteral(value: Uint8Array | null | undefined): string {
 	if (!value || value.length === 0) return 'NULL';
 
@@ -60,7 +39,7 @@ function mapPet(row: PetRow): Pet {
 		species: row.species,
 		breed: row.breed,
 		sex: row.sex,
-		avatarBytes: normalizeAvatarBytes(row.avatar_blob),
+		avatarBytes: normalizeByteArray(row.avatar_blob),
 		updatedAt: row.updated_at,
 		deletedAt: row.deleted_at,
 		purgeAfter: row.purge_after
@@ -96,6 +75,21 @@ export async function getPet(id: number, includeDeleted = false): Promise<Pet | 
 	);
 
 	return rows[0] ? mapPet(rows[0]) : null;
+}
+
+export async function listPetAvatarBytesByIds(petIds: number[]): Promise<Map<number, Uint8Array | null>> {
+	const uniqueIds = [...new Set(petIds)].filter((id) => Number.isInteger(id) && id > 0);
+	if (uniqueIds.length === 0) return new Map<number, Uint8Array | null>();
+
+	const placeholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
+	const rows = await selectMany<{ id: number; avatar_blob: unknown | null }>(
+		`SELECT id, avatar_blob
+		 FROM pets
+		 WHERE id IN (${placeholders}) AND deleted_at IS NULL`,
+		uniqueIds
+	);
+
+	return new Map(rows.map((row) => [row.id, normalizeByteArray(row.avatar_blob)]));
 }
 
 export async function createPet(ownerId: number, input: PetInput): Promise<Pet> {
