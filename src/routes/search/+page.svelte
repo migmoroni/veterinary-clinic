@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import OwnerContactDialog from '$lib/components/owner/OwnerContactDialog.svelte';
+	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import type { OwnerContact } from '$lib/domain/owner/owner.js';
 	import type { SearchResult, SearchResultKind } from '$lib/persistence/repositories/search.repository.js';
 	import { t } from '$lib/i18n/index.js';
 	import { RECENT_SEARCH_STORAGE_KEY } from '$lib/services/client-state.service.js';
-	import { loadOwnerContactsByOwnerIds, loadPetAvatarsByPetIds, searchEverywhere } from '$lib/services/clinic.service.js';
+	import { loadOwnerAvatarsByOwnerIds, loadOwnerContactsByOwnerIds, loadPetAvatarsByPetIds, searchEverywhere } from '$lib/services/clinic.service.js';
 	import ClipboardPenLine from '@lucide/svelte/icons/clipboard-pen-line';
 	import Phone from '@lucide/svelte/icons/phone';
 	import Search from '@lucide/svelte/icons/search';
-	import User from '@lucide/svelte/icons/user';
 
 	const recentSearchLimit = 15;
 
@@ -44,7 +44,7 @@
 	}
 
 	function persistableSearchResult(result: SearchResult): SearchResult {
-		const { petAvatarBytes: _petAvatarBytes, ...persistableResult } = result;
+		const { ownerAvatarBytes: _ownerAvatarBytes, petAvatarBytes: _petAvatarBytes, ...persistableResult } = result;
 		return persistableResult;
 	}
 
@@ -53,12 +53,13 @@
 		const petIds = baseResults.filter((result) => result.kind === 'pet').map((result) => result.id);
 		if (ownerIds.length === 0 && petIds.length === 0) return baseResults;
 
-		const [contactsResult, avatarsResult] = await Promise.allSettled([loadOwnerContactsByOwnerIds(ownerIds), loadPetAvatarsByPetIds(petIds)]);
+		const [contactsResult, ownerAvatarsResult, petAvatarsResult] = await Promise.allSettled([loadOwnerContactsByOwnerIds(ownerIds), loadOwnerAvatarsByOwnerIds(ownerIds), loadPetAvatarsByPetIds(petIds)]);
 		const contactsByOwnerId = contactsResult.status === 'fulfilled' ? contactsResult.value : new Map<number, OwnerContact[]>();
-		const avatarBytesByPetId = avatarsResult.status === 'fulfilled' ? avatarsResult.value : new Map<number, Uint8Array | null>();
+		const avatarBytesByOwnerId = ownerAvatarsResult.status === 'fulfilled' ? ownerAvatarsResult.value : new Map<number, Uint8Array | null>();
+		const avatarBytesByPetId = petAvatarsResult.status === 'fulfilled' ? petAvatarsResult.value : new Map<number, Uint8Array | null>();
 
 		return baseResults.map((result) => {
-			if (result.kind === 'owner') return { ...result, ownerContacts: contactsByOwnerId.get(result.id) ?? result.ownerContacts ?? [] };
+			if (result.kind === 'owner') return { ...result, ownerAvatarBytes: avatarBytesByOwnerId.get(result.id) ?? null, ownerContacts: contactsByOwnerId.get(result.id) ?? result.ownerContacts ?? [] };
 			if (result.kind === 'pet') return { ...result, petAvatarBytes: avatarBytesByPetId.get(result.id) ?? null };
 			return result;
 		});
@@ -144,7 +145,7 @@
 			{#if result.kind === 'owner'}
 				<article class="flex items-start gap-2 rounded-md border border-border bg-card p-3 shadow-sm hover:bg-accent">
 					<a href={result.href} class="flex min-w-0 flex-1 items-start gap-3" onclick={() => rememberResult(result)}>
-						<User class="mt-0.5 size-4 shrink-0 text-primary" />
+						<OwnerAvatar avatarBytes={result.ownerAvatarBytes} ownerName={result.title} className="mt-0.5 size-10" iconClass="size-5 text-primary" />
 						<span class="min-w-0 flex-1">
 							<span class="block truncate text-sm font-medium">{result.title}</span>
 							<span class="block truncate text-xs text-muted-foreground">{kindLabel(result.kind)} · {result.subtitle}</span>

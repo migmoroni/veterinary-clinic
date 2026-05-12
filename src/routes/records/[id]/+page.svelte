@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
+	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import UnsavedChangesDialog from '$lib/components/records/UnsavedChangesDialog.svelte';
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
@@ -13,7 +14,6 @@
 	import { loadRecordDetails, removeRecord, saveRecord } from '$lib/services/record.service.js';
 	import Save from '@lucide/svelte/icons/save';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import UserRound from '@lucide/svelte/icons/user-round';
 
 	const recordId = $derived(Number(page.params.id));
 	let details = $state<MedicalRecordDetails | null>(null);
@@ -280,7 +280,7 @@
 			{#if details}
 				<div class="flex flex-wrap gap-2">
 					<a href={`/owners/${details.ownerId}`} aria-label={`${t('actions.openOwner')}: ${details.ownerName}`} class="inline-flex max-w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">
-						<UserRound class="size-4 shrink-0 text-primary" />
+						<OwnerAvatar avatarBytes={details.ownerAvatarBytes} ownerName={details.ownerName} className="size-6" iconClass="size-3.5 text-primary" />
 						<span class="shrink-0 text-xs font-semibold uppercase text-muted-foreground">{t('owner.contextLabel')}</span>
 						<span class="truncate text-primary">{details.ownerName}</span>
 					</a>

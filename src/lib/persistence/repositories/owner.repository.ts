@@ -1,10 +1,12 @@
 import { DEFAULT_OWNER_COUNTRY, type Owner, type OwnerContact, type OwnerContactInput, type OwnerContactKind, type OwnerInput } from '$lib/domain/owner/owner.js';
+import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
 
 interface OwnerRow {
 	id: number;
 	name: string;
+	avatar_blob: unknown | null;
 	street: string | null;
 	street_number: string | null;
 	address_complement: string | null;
@@ -31,6 +33,13 @@ interface OwnerContactRow {
 function nullable(value: string | null | undefined): string | null {
 	const trimmed = value?.trim() ?? '';
 	return trimmed.length > 0 ? trimmed : null;
+}
+
+function avatarBytesToSqlLiteral(value: Uint8Array | null | undefined): string {
+	if (!value || value.length === 0) return 'NULL';
+
+	const hex = Array.from(value, (byte) => byte.toString(16).padStart(2, '0')).join('');
+	return `X'${hex}'`;
 }
 
 function normalizeContactKind(value: string | null | undefined): OwnerContactKind {
@@ -71,6 +80,7 @@ function mapOwner(row: OwnerRow, contacts: OwnerContact[] = []): Owner {
 	return {
 		id: row.id,
 		name: row.name,
+		avatarBytes: normalizeByteArray(row.avatar_blob),
 		street: row.street,
 		streetNumber: row.street_number,
 		addressComplement: row.address_complement,
@@ -152,7 +162,7 @@ export async function listOwners(query = ''): Promise<Owner[]> {
 			: '';
 
 	const rows = await selectMany<OwnerRow>(
-		`SELECT id, name, street, street_number, address_complement, neighborhood, city, country, postal_code, state,
+		`SELECT id, name, avatar_blob, street, street_number, address_complement, neighborhood, city, country, postal_code, state,
 			created_at, updated_at, deleted_at, purge_after
 		 FROM owners
 		 WHERE deleted_at IS NULL ${filter}
@@ -166,7 +176,7 @@ export async function listOwners(query = ''): Promise<Owner[]> {
 
 export async function getOwner(id: number, includeDeleted = false): Promise<Owner | null> {
 	const rows = await selectMany<OwnerRow>(
-		`SELECT id, name, street, street_number, address_complement, neighborhood, city, country, postal_code, state,
+		`SELECT id, name, avatar_blob, street, street_number, address_complement, neighborhood, city, country, postal_code, state,
 			created_at, updated_at, deleted_at, purge_after
 		 FROM owners
 		 WHERE id = $1 ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
@@ -179,9 +189,11 @@ export async function getOwner(id: number, includeDeleted = false): Promise<Owne
 }
 
 export async function createOwner(input: OwnerInput): Promise<Owner> {
+	const avatarSqlLiteral = avatarBytesToSqlLiteral(input.avatarBytes);
 	const result = await execute(
 		`INSERT INTO owners (
 			name,
+			avatar_blob,
 			street,
 			street_number,
 			address_complement,
@@ -192,7 +204,7 @@ export async function createOwner(input: OwnerInput): Promise<Owner> {
 			state,
 			updated_at
 		)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)`,
+		 VALUES ($1, ${avatarSqlLiteral}, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)`,
 		[
 			input.name.trim(),
 			nullable(input.street),
@@ -215,9 +227,11 @@ export async function createOwner(input: OwnerInput): Promise<Owner> {
 }
 
 export async function updateOwner(id: number, input: OwnerInput): Promise<Owner> {
+	const avatarSqlLiteral = avatarBytesToSqlLiteral(input.avatarBytes);
 	await execute(
 		`UPDATE owners
 		 SET name = $2,
+			avatar_blob = ${avatarSqlLiteral},
 			street = $3,
 			street_number = $4,
 			address_complement = $5,
@@ -250,6 +264,21 @@ export async function updateOwner(id: number, input: OwnerInput): Promise<Owner>
 	const owner = await getOwner(id);
 	if (!owner) throw new Error('owner_not_found');
 	return owner;
+}
+
+export async function listOwnerAvatarBytesByIds(ownerIds: number[]): Promise<Map<number, Uint8Array | null>> {
+	const uniqueIds = [...new Set(ownerIds)].filter((id) => Number.isInteger(id) && id > 0);
+	if (uniqueIds.length === 0) return new Map<number, Uint8Array | null>();
+
+	const placeholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
+	const rows = await selectMany<{ id: number; avatar_blob: unknown | null }>(
+		`SELECT id, avatar_blob
+		 FROM owners
+		 WHERE id IN (${placeholders}) AND deleted_at IS NULL`,
+		uniqueIds
+	);
+
+	return new Map(rows.map((row) => [row.id, normalizeByteArray(row.avatar_blob)]));
 }
 
 export async function softDeleteOwner(id: number): Promise<void> {

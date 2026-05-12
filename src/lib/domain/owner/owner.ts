@@ -18,6 +18,7 @@ export interface OwnerContactInput {
 export interface Owner {
 	id: number;
 	name: string;
+	avatarBytes: Uint8Array | null;
 	street: string | null;
 	streetNumber: string | null;
 	addressComplement: string | null;
@@ -35,6 +36,7 @@ export interface Owner {
 
 export interface OwnerInput {
 	name: string;
+	avatarBytes?: Uint8Array | null;
 	street: string;
 	streetNumber: string;
 	addressComplement: string;

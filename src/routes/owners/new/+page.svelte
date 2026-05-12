@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
+	import OwnerAvatarEditorDialog from '$lib/components/owner/OwnerAvatarEditorDialog.svelte';
 	import OwnerContactsField from '$lib/components/owner/OwnerContactsField.svelte';
 	import { DEFAULT_OWNER_COUNTRY, type OwnerInput } from '$lib/domain/owner/owner.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
@@ -11,6 +13,7 @@
 	function emptyOwnerForm(): OwnerInput {
 		return {
 			name: '',
+			avatarBytes: null,
 			street: '',
 			streetNumber: '',
 			addressComplement: '',
@@ -26,8 +29,30 @@
 	let form = $state<OwnerInput>(emptyOwnerForm());
 	let saving = $state(false);
 	let cepLoading = $state(false);
+	let avatarDialogOpen = $state(false);
 	let statusKey = $state<TranslationKey | null>(null);
 	let error = $state<string | null>(null);
+
+	function openAvatarDialog() {
+		if (saving) return;
+		avatarDialogOpen = true;
+	}
+
+	function closeAvatarDialog() {
+		avatarDialogOpen = false;
+	}
+
+	function applyAvatar(bytes: Uint8Array) {
+		form = { ...form, avatarBytes: bytes };
+		statusKey = null;
+		avatarDialogOpen = false;
+	}
+
+	function removeAvatar() {
+		form = { ...form, avatarBytes: null };
+		statusKey = null;
+		avatarDialogOpen = false;
+	}
 
 	async function fillAddressFromCep() {
 		cepLoading = true;
@@ -87,6 +112,28 @@
 	</header>
 
 	<form class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5" onsubmit={submit}>
+		<div class="mb-4 flex flex-col gap-3 rounded-md border border-border bg-background/50 p-3 sm:flex-row sm:items-center sm:justify-between">
+			<div class="flex min-w-0 items-center gap-3">
+				<OwnerAvatar avatarBytes={form.avatarBytes} ownerName={form.name} className="size-20" iconClass="size-8 text-muted-foreground" />
+
+				<div class="min-w-0">
+					<p class="text-sm font-semibold">{t('owner.avatarLabel')}</p>
+					<p class="text-xs text-muted-foreground">{t('owner.avatarHint')}</p>
+				</div>
+			</div>
+
+			<div class="flex flex-wrap gap-2">
+				<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} onclick={openAvatarDialog}>
+					{t('owner.avatarEdit')}
+				</button>
+				{#if form.avatarBytes}
+					<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={removeAvatar}>
+						{t('owner.avatarRemove')}
+					</button>
+				{/if}
+			</div>
+		</div>
+
 		<div class="grid gap-4 sm:grid-cols-5">
 			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-5">
 				<span>{t('owner.name')}</span>
@@ -163,3 +210,7 @@
 		</div>
 	</form>
 </section>
+
+{#if avatarDialogOpen}
+	<OwnerAvatarEditorDialog initialAvatarBytes={form.avatarBytes} onApply={applyAvatar} onRemove={removeAvatar} onClose={closeAvatarDialog} />
+{/if}

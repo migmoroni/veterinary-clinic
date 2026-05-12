@@ -26,6 +26,7 @@ interface MedicalRecordDetailsRow extends MedicalRecordRow {
 	pet_avatar_blob: unknown | null;
 	owner_id: number;
 	owner_name: string;
+	owner_avatar_blob: unknown | null;
 }
 
 interface CurrentRecordRow {
@@ -120,7 +121,8 @@ export async function getMedicalRecordDetails(id: number, includeDeleted = false
 			pets.name AS pet_name,
 			pets.avatar_blob AS pet_avatar_blob,
 			owners.id AS owner_id,
-			owners.name AS owner_name
+			owners.name AS owner_name,
+			owners.avatar_blob AS owner_avatar_blob
 		 FROM medical_records
 		 JOIN pets ON pets.id = medical_records.pet_id
 		 JOIN owners ON owners.id = pets.owner_id
@@ -138,7 +140,8 @@ export async function getMedicalRecordDetails(id: number, includeDeleted = false
 		petName: row.pet_name,
 		petAvatarBytes: normalizeByteArray(row.pet_avatar_blob),
 		ownerId: row.owner_id,
-		ownerName: row.owner_name
+		ownerName: row.owner_name,
+		ownerAvatarBytes: normalizeByteArray(row.owner_avatar_blob)
 	};
 }
 

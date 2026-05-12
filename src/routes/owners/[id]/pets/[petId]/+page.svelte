@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
+	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import PetAvatarEditorDialog from '$lib/components/pet/PetAvatarEditorDialog.svelte';
 	import PetTaxonomyPicker from '$lib/components/pet/PetTaxonomyPicker.svelte';
@@ -20,7 +21,6 @@
 	import { saveNewRecord } from '$lib/services/record.service.js';
 	import ClipboardPenLine from '@lucide/svelte/icons/clipboard-pen-line';
 	import Syringe from '@lucide/svelte/icons/syringe';
-	import UserRound from '@lucide/svelte/icons/user-round';
 	import Save from '@lucide/svelte/icons/save';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
@@ -362,7 +362,7 @@
 	<header class="flex flex-col gap-3 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
 		<div class="min-w-0">
 			<a href={`/owners/${ownerId}`} aria-label={`${t('actions.openOwner')}: ${profile?.owner.name ?? t('owner.profileTitle')}`} class="inline-flex max-w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">
-				<UserRound class="size-4 shrink-0 text-primary" />
+				<OwnerAvatar avatarBytes={profile?.owner.avatarBytes ?? null} ownerName={profile?.owner.name ?? ''} className="size-6" iconClass="size-3.5 text-primary" />
 				<span class="shrink-0 text-xs font-semibold uppercase text-muted-foreground">{t('owner.contextLabel')}</span>
 				<span class="truncate text-primary">{profile?.owner.name ?? t('owner.profileTitle')}</span>
 			</a>

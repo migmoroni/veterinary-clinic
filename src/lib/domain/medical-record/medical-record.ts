@@ -13,6 +13,7 @@ export interface MedicalRecord {
 }
 
 
+
 export interface CurrentRecordSummary {
 	id: number;
 	title: string;
@@ -39,4 +40,5 @@ export interface MedicalRecordDetails {
 	petAvatarBytes: Uint8Array | null;
 	ownerId: number;
 	ownerName: string;
+	ownerAvatarBytes: Uint8Array | null;
 }

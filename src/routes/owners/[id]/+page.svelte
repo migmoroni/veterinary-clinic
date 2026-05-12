@@ -2,6 +2,8 @@
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
+	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
+	import OwnerAvatarEditorDialog from '$lib/components/owner/OwnerAvatarEditorDialog.svelte';
 	import OwnerContactsField from '$lib/components/owner/OwnerContactsField.svelte';
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import UnsavedChangesDialog from '$lib/components/records/UnsavedChangesDialog.svelte';
@@ -22,9 +24,25 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 
-	function toForm(owner: Owner): OwnerInput {
+type OwnerForm = OwnerInput & { avatarBytes: Uint8Array | null };
+
+	function avatarSnapshotValue(bytes: Uint8Array | null | undefined): string {
+		if (!bytes || bytes.length === 0) return 'none';
+
+		let hash = 2166136261;
+		const step = Math.max(1, Math.floor(bytes.length / 128));
+		for (let index = 0; index < bytes.length; index += step) {
+			hash ^= bytes[index];
+			hash = Math.imul(hash, 16777619);
+		}
+
+		return `${bytes.length}:${hash >>> 0}`;
+	}
+
+	function toForm(owner: Owner): OwnerForm {
 		return {
 			name: owner.name,
+			avatarBytes: owner.avatarBytes,
 			street: owner.street ?? '',
 			streetNumber: owner.streetNumber ?? '',
 			addressComplement: owner.addressComplement ?? '',
@@ -37,9 +55,10 @@
 		};
 	}
 
-	function snapshotForm(input: OwnerInput): string {
+	function snapshotForm(input: OwnerForm): string {
 		return JSON.stringify({
 			name: input.name ?? '',
+			avatar: avatarSnapshotValue(input.avatarBytes),
 			street: input.street ?? '',
 			streetNumber: input.streetNumber ?? '',
 			addressComplement: input.addressComplement ?? '',
@@ -66,8 +85,9 @@
 
 	const ownerId = $derived(Number(page.params.id));
 	let profile = $state<OwnerProfile | null>(null);
-	let form = $state<OwnerInput>({
+	let form = $state<OwnerForm>({
 		name: '',
+		avatarBytes: null,
 		street: '',
 		streetNumber: '',
 		addressComplement: '',
@@ -82,6 +102,7 @@
 	let saving = $state(false);
 	let deleting = $state(false);
 	let editing = $state(false);
+	let avatarDialogOpen = $state(false);
 	let deleteDialogOpen = $state(false);
 	let cepLoading = $state(false);
 	let unsavedDialogOpen = $state(false);
@@ -166,6 +187,27 @@
 		pendingNavigationHref = null;
 		pendingCancelEdit = true;
 		unsavedDialogOpen = true;
+	}
+
+	function openAvatarDialog() {
+		if (!editing || saving) return;
+		avatarDialogOpen = true;
+	}
+
+	function closeAvatarDialog() {
+		avatarDialogOpen = false;
+	}
+
+	function applyAvatar(bytes: Uint8Array) {
+		form = { ...form, avatarBytes: bytes };
+		statusKey = null;
+		avatarDialogOpen = false;
+	}
+
+	function removeAvatar() {
+		form = { ...form, avatarBytes: null };
+		statusKey = null;
+		avatarDialogOpen = false;
 	}
 
 	async function fillAddressFromCep() {
@@ -364,6 +406,30 @@
 					{/if}
 				</div>
 
+				<div class="mt-4 flex flex-col gap-3 rounded-md border border-border bg-background/50 p-3 sm:flex-row sm:items-center sm:justify-between">
+					<div class="flex min-w-0 items-center gap-3">
+						<OwnerAvatar avatarBytes={form.avatarBytes} ownerName={form.name} className="size-20" iconClass="size-8 text-muted-foreground" />
+
+						<div class="min-w-0">
+							<p class="text-sm font-semibold">{t('owner.avatarLabel')}</p>
+							<p class="text-xs text-muted-foreground">{t('owner.avatarHint')}</p>
+						</div>
+					</div>
+
+					{#if editing}
+						<div class="flex flex-wrap gap-2">
+							<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} onclick={openAvatarDialog}>
+								{t('owner.avatarEdit')}
+							</button>
+							{#if form.avatarBytes}
+								<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={removeAvatar}>
+									{t('owner.avatarRemove')}
+								</button>
+							{/if}
+						</div>
+					{/if}
+				</div>
+
 				<div class="mt-4 grid gap-4 sm:grid-cols-5">
 					<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-5">
 						<span>{t('owner.name')}</span>
@@ -507,3 +573,7 @@
 />
 
 <TrashRemovalDialog open={deleteDialogOpen} messageKey="owner.deleteConfirm" confirming={deleting} onConfirm={() => void confirmDeleteOwner()} onCancel={() => (deleteDialogOpen = false)} />
+
+{#if avatarDialogOpen}
+	<OwnerAvatarEditorDialog initialAvatarBytes={form.avatarBytes} onApply={applyAvatar} onRemove={removeAvatar} onClose={closeAvatarDialog} />
+{/if}

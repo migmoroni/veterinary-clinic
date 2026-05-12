@@ -14,6 +14,7 @@ export interface SearchResult {
 	href: string;
 	title: string;
 	subtitle: string;
+	ownerAvatarBytes?: Uint8Array | null;
 	petAvatarBytes?: Uint8Array | null;
 	ownerContacts?: OwnerContact[];
 }
@@ -25,6 +26,7 @@ interface SearchResultRow {
 	record_id: number | null;
 	owner_id: number | null;
 	pet_id: number | null;
+	owner_avatar_blob: unknown | null;
 	title: string;
 	subtitle: string;
 	pet_avatar_blob: unknown | null;
@@ -46,6 +48,7 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 			owners.id,
 			owners.id AS owner_id,
 			NULL AS pet_id,
+			owners.avatar_blob AS owner_avatar_blob,
 			NULL AS pet_avatar_blob,
 			(SELECT medical_records.id
 			 FROM pets
@@ -76,6 +79,7 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 			pets.id,
 			owners.id AS owner_id,
 			pets.id AS pet_id,
+			owners.avatar_blob AS owner_avatar_blob,
 			pets.avatar_blob AS pet_avatar_blob,
 			(SELECT medical_records.id
 			 FROM medical_records
@@ -97,6 +101,7 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 			medical_records.id,
 			owners.id AS owner_id,
 			pets.id AS pet_id,
+			owners.avatar_blob AS owner_avatar_blob,
 			pets.avatar_blob AS pet_avatar_blob,
 			medical_records.id AS record_id,
 			COALESCE(medical_records.title, 'Prontuario ' || medical_records.id) AS title,
@@ -126,6 +131,7 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 		href: resultHref(row),
 		title: row.title,
 		subtitle: row.subtitle,
+		ownerAvatarBytes: row.kind === 'owner' ? normalizeByteArray(row.owner_avatar_blob) : null,
 		petAvatarBytes: row.kind === 'pet' ? normalizeByteArray(row.pet_avatar_blob) : null,
 		ownerContacts: row.kind === 'owner' ? (contactsByOwnerId.get(row.id) ?? []) : []
 	}));
