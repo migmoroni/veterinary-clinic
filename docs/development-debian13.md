@@ -107,6 +107,14 @@ npm run tauri:dev
 
 Esse comando ja executa o frontend configurado em `src-tauri/tauri.conf.json` por meio de `beforeDevCommand: npm run dev`. Em geral, nao precisa iniciar `npm run dev` em outro terminal antes.
 
+Para remover o banco SQLite local de desenvolvimento, o armazenamento local do WebView e iniciar o Tauri em seguida:
+
+```sh
+npm run tauri:dev:new
+```
+
+Esse comando executa `scripts/new-state.mjs`, aguarda 1 segundo e entao chama o fluxo normal de `npm run tauri:dev`. A limpeza remove o banco de dados, de "~/.config/app.veterinary-clinic.local/veterinary_clinic.db" e tambem remove `localStorage`, cujo diretorio é "~/.local/share/app.veterinary-clinic.local/localstorage", incluindo a lista recente da busca.
+
 Para testar apenas a camada web no navegador, sem shell Tauri e sem todos os recursos nativos:
 
 ```sh
@@ -131,6 +139,7 @@ No Debian atual, o arquivo local aparece em:
 ```
 
 Na primeira execucao, o app pergunta se deve importar uma base SQLite compativel ou criar uma base vazia. Para reiniciar o estado local durante desenvolvimento, feche o app e remova ou renomeie esse arquivo.
+O atalho `npm run tauri:dev:new` faz essa limpeza automaticamente antes de iniciar o app em modo dev, incluindo armazenamento web como o historico recente da busca.
 
 ## Camera e video no Linux
 

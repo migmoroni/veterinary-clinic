@@ -14,6 +14,7 @@
 		"test:run": "vitest run",
 		"tauri": "tauri",
 		"tauri:dev": "tauri dev",
+		"tauri:dev:new": "node scripts/new-state.mjs && node -e \"setTimeout(() => process.exit(0), 1000)\" && npm run tauri:dev",
 		"tauri:build": "tauri build",
 		"tauri:appimage": "tauri build --bundles appimage",
 		"tauri:deb": "tauri build --bundles deb",

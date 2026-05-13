@@ -25,7 +25,10 @@ For the current Linux development environment on Debian 13, see [docs/developmen
 npm install
 npm run dev
 npm run tauri:dev
+npm run tauri:dev:new
 ```
+
+Use `npm run tauri:dev:new` to remove the local development SQLite state and WebView storage, wait one second, and then start the normal `tauri:dev` flow.
 
 ## Checks
 
