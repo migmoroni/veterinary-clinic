@@ -2,11 +2,10 @@ import type { Pet, PetBreed, PetInput, PetSex, PetSpecies } from '$lib/domain/pe
 import { isPetBreedForSpecies } from '$lib/domain/pet/taxonomy.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
-import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
+import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
 
 interface PetRow {
 	id: number;
-	owner_id: number;
 	name: string;
 	birth_date: string | null;
 	species: PetSpecies | null;
@@ -16,6 +15,11 @@ interface PetRow {
 	updated_at: string | null;
 	deleted_at: string | null;
 	purge_after: string | null;
+}
+
+interface PetOwnerRow {
+	pet_id: number;
+	owner_id: number;
 }
 
 function nullable(value: string | null | undefined): string | null {
@@ -30,10 +34,10 @@ function avatarBytesToSqlLiteral(value: Uint8Array | null | undefined): string {
 	return `X'${hex}'`;
 }
 
-function mapPet(row: PetRow): Pet {
+function mapPet(row: PetRow, ownerIds: number[] = []): Pet {
 	return {
 		id: row.id,
-		ownerId: row.owner_id,
+		ownerIds,
 		name: row.name,
 		birthDate: row.birth_date,
 		species: row.species,
@@ -46,6 +50,35 @@ function mapPet(row: PetRow): Pet {
 	};
 }
 
+async function listPetOwnerIdsByPetIds(petIds: number[], includeDeleted = false): Promise<Map<number, number[]>> {
+	const uniqueIds = [...new Set(petIds)].filter((id) => Number.isInteger(id) && id > 0);
+	const ownerIdsByPetId = new Map<number, number[]>();
+	if (uniqueIds.length === 0) return ownerIdsByPetId;
+
+	const placeholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
+	const rows = await selectMany<PetOwnerRow>(
+		`SELECT pet_owners.pet_id, pet_owners.owner_id
+		 FROM pet_owners
+		 JOIN owners ON owners.id = pet_owners.owner_id
+		 WHERE pet_owners.pet_id IN (${placeholders}) ${includeDeleted ? '' : 'AND owners.deleted_at IS NULL'}
+		 ORDER BY pet_owners.pet_id, pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id`,
+		uniqueIds
+	);
+
+	for (const row of rows) {
+		const ownerIds = ownerIdsByPetId.get(row.pet_id) ?? [];
+		ownerIds.push(row.owner_id);
+		ownerIdsByPetId.set(row.pet_id, ownerIds);
+	}
+
+	return ownerIdsByPetId;
+}
+
+async function mapPetsWithOwners(rows: PetRow[], includeDeleted = false): Promise<Pet[]> {
+	const ownerIdsByPetId = await listPetOwnerIdsByPetIds(rows.map((row) => row.id), includeDeleted);
+	return rows.map((row) => mapPet(row, ownerIdsByPetId.get(row.id) ?? []));
+}
+
 function normalizeTaxonomy(input: PetInput): { species: PetSpecies | null; breed: PetBreed | null } {
 	if (!input.species) return { species: null, breed: null };
 	if (input.breed && !isPetBreedForSpecies(input.species, input.breed)) throw new Error('pet_taxonomy_invalid');
@@ -55,26 +88,29 @@ function normalizeTaxonomy(input: PetInput): { species: PetSpecies | null; breed
 
 export async function listPetsByOwner(ownerId: number, includeDeleted = false): Promise<Pet[]> {
 	const rows = await selectMany<PetRow>(
-		`SELECT id, owner_id, name, birth_date, species, breed, sex, avatar_blob, updated_at, deleted_at, purge_after
+		`SELECT pets.id, pets.name, pets.birth_date, pets.species, pets.breed, pets.sex, pets.avatar_blob, pets.updated_at, pets.deleted_at, pets.purge_after
 		 FROM pets
-		 WHERE owner_id = $1 ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
-		 ORDER BY name COLLATE NOCASE`,
+		 JOIN pet_owners ON pet_owners.pet_id = pets.id
+		 WHERE pet_owners.owner_id = $1 ${includeDeleted ? '' : 'AND pets.deleted_at IS NULL'}
+		 ORDER BY pets.name COLLATE NOCASE`,
 		[ownerId]
 	);
 
-	return rows.map(mapPet);
+	return mapPetsWithOwners(rows, includeDeleted);
 }
 
 export async function getPet(id: number, includeDeleted = false): Promise<Pet | null> {
 	const rows = await selectMany<PetRow>(
-		`SELECT id, owner_id, name, birth_date, species, breed, sex, avatar_blob, updated_at, deleted_at, purge_after
+		`SELECT id, name, birth_date, species, breed, sex, avatar_blob, updated_at, deleted_at, purge_after
 		 FROM pets
 		 WHERE id = $1 ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
 		 LIMIT 1`,
 		[id]
 	);
 
-	return rows[0] ? mapPet(rows[0]) : null;
+	if (!rows[0]) return null;
+	const ownerIdsByPetId = await listPetOwnerIdsByPetIds([rows[0].id], includeDeleted);
+	return mapPet(rows[0], ownerIdsByPetId.get(rows[0].id) ?? []);
 }
 
 export async function listPetAvatarBytesByIds(petIds: number[]): Promise<Map<number, Uint8Array | null>> {
@@ -92,18 +128,62 @@ export async function listPetAvatarBytesByIds(petIds: number[]): Promise<Map<num
 	return new Map(rows.map((row) => [row.id, normalizeByteArray(row.avatar_blob)]));
 }
 
+export async function searchPetsForOwnerLink(ownerId: number, query: string): Promise<Pet[]> {
+	const normalized = query.trim();
+	if (normalized.length < 2) return [];
+
+	const term = `%${normalized}%`;
+	const rows = await selectMany<PetRow>(
+		`SELECT pets.id, pets.name, pets.birth_date, pets.species, pets.breed, pets.sex, pets.avatar_blob, pets.updated_at, pets.deleted_at, pets.purge_after
+		 FROM pets
+		 WHERE pets.deleted_at IS NULL
+			AND (pets.name LIKE $2 OR pets.species LIKE $2 OR pets.breed LIKE $2)
+			AND NOT EXISTS (
+				SELECT 1
+				FROM pet_owners
+				WHERE pet_owners.pet_id = pets.id AND pet_owners.owner_id = $1
+			)
+		 ORDER BY pets.name COLLATE NOCASE
+		 LIMIT 20`,
+		[ownerId, term]
+	);
+
+	return mapPetsWithOwners(rows);
+}
+
+export async function linkPetToOwner(ownerId: number, petId: number): Promise<Pet> {
+	const existing = await selectOne<{ id: number }>(
+		`SELECT pets.id
+		 FROM pets
+		 JOIN owners ON owners.id = $1
+		 WHERE pets.id = $2 AND pets.deleted_at IS NULL AND owners.deleted_at IS NULL
+		 LIMIT 1`,
+		[ownerId, petId]
+	);
+
+	if (!existing) throw new Error('pet_or_owner_not_found');
+
+	await execute(
+		`INSERT OR IGNORE INTO pet_owners (pet_id, owner_id, sort_order, updated_at)
+		 VALUES ($1, $2, COALESCE((SELECT MAX(sort_order) + 1 FROM pet_owners WHERE pet_id = $1), 0), CURRENT_TIMESTAMP)`,
+		[petId, ownerId]
+	);
+
+	const pet = await getPet(petId);
+	if (!pet) throw new Error('pet_not_found');
+	return pet;
+}
+
 export async function createPet(ownerId: number, input: PetInput): Promise<Pet> {
 	const taxonomy = normalizeTaxonomy(input);
 	const avatarSqlLiteral = avatarBytesToSqlLiteral(input.avatarBytes);
 	const result = await execute(
-		`INSERT INTO pets (owner_id, name, birth_date, species, breed, sex, avatar_blob, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, ${avatarSqlLiteral}, CURRENT_TIMESTAMP)`,
-		[ownerId, input.name.trim(), nullable(input.birthDate), taxonomy.species, taxonomy.breed, input.sex]
+		`INSERT INTO pets (name, birth_date, species, breed, sex, avatar_blob, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, ${avatarSqlLiteral}, CURRENT_TIMESTAMP)`,
+		[input.name.trim(), nullable(input.birthDate), taxonomy.species, taxonomy.breed, input.sex]
 	);
 
-	const pet = await getPet(Number(result.lastInsertId));
-	if (!pet) throw new Error('pet_create_failed');
-	return pet;
+	return linkPetToOwner(ownerId, Number(result.lastInsertId));
 }
 
 export async function updatePet(id: number, input: PetInput): Promise<Pet> {
@@ -153,12 +233,6 @@ export async function softDeletePet(id: number): Promise<void> {
 
 export async function restorePet(id: number): Promise<void> {
 	await execute(
-		`UPDATE owners
-		 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
-		 WHERE id = (SELECT owner_id FROM pets WHERE id = $1)`,
-		[id]
-	);
-	await execute(
 		`UPDATE pets
 		 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
 		 WHERE id = $1`,
@@ -181,5 +255,6 @@ export async function restorePet(id: number): Promise<void> {
 export async function hardDeletePet(id: number): Promise<void> {
 	await execute('DELETE FROM pet_vaccinations WHERE pet_id = $1', [id]);
 	await execute('DELETE FROM medical_records WHERE pet_id = $1', [id]);
+	await execute('DELETE FROM pet_owners WHERE pet_id = $1', [id]);
 	await execute('DELETE FROM pets WHERE id = $1', [id]);
 }

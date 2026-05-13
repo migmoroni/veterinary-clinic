@@ -52,7 +52,6 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS pets (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			owner_id INTEGER NOT NULL,
 			name TEXT NOT NULL,
 			birth_date TEXT,
 			species TEXT CHECK(species IN ('canine', 'feline')),
@@ -61,8 +60,21 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			avatar_blob BLOB,
 			updated_at TEXT,
 			deleted_at TEXT,
-			purge_after TEXT,
-			FOREIGN KEY (owner_id) REFERENCES owners(id)
+			purge_after TEXT
+		)
+	`);
+
+	await database.execute(`
+		CREATE TABLE IF NOT EXISTS pet_owners (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			pet_id INTEGER NOT NULL,
+			owner_id INTEGER NOT NULL,
+			sort_order INTEGER NOT NULL DEFAULT 0,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE,
+			FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE,
+			UNIQUE(pet_id, owner_id)
 		)
 	`);
 
@@ -130,7 +142,8 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owners_name ON owners(name)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_owner_id ON owner_contacts(owner_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_value ON owner_contacts(value)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pets_owner_id ON pets(owner_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_owners_pet_id ON pet_owners(pet_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_owners_owner_id ON pet_owners(owner_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pets_name ON pets(name)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pets_species ON pets(species)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pets_breed ON pets(breed)');

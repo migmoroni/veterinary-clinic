@@ -6,7 +6,7 @@ export type PetSex = 'M' | 'F' | null;
 
 export interface Pet {
 	id: number;
-	ownerId: number;
+	ownerIds: number[];
 	name: string;
 	birthDate: string | null;
 	species: PetSpecies | null;

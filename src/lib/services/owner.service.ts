@@ -1,7 +1,7 @@
 import type { Owner, OwnerInput } from '$lib/domain/owner/owner.js';
 import type { Pet } from '$lib/domain/pet/pet.js';
 import { createOwner, getOwner, listOwners, softDeleteOwner, updateOwner } from '$lib/persistence/repositories/owner.repository.js';
-import { listPetsByOwner } from '$lib/persistence/repositories/pet.repository.js';
+import { linkPetToOwner, listPetsByOwner } from '$lib/persistence/repositories/pet.repository.js';
 
 export interface OwnerProfile {
 	owner: Owner;
@@ -24,6 +24,10 @@ export async function saveNewOwner(input: OwnerInput): Promise<Owner> {
 
 export async function saveOwner(ownerId: number, input: OwnerInput): Promise<Owner> {
 	return updateOwner(ownerId, input);
+}
+
+export async function addPetToOwner(ownerId: number, petId: number): Promise<Pet> {
+	return linkPetToOwner(ownerId, petId);
 }
 
 export async function removeOwner(ownerId: number): Promise<void> {

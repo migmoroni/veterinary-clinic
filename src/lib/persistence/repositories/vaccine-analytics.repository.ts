@@ -31,8 +31,9 @@ interface LatestVaccinationRow {
 	pet_id: number;
 	pet_name: string;
 	pet_avatar_blob: unknown | null;
-	owner_id: number;
-	owner_name: string;
+	owner_id: number | null;
+	owner_ids: string | null;
+	owner_name: string | null;
 	owner_contacts: OwnerContact[];
 	applied_at: string;
 	vaccine_preset_id: number;
@@ -65,6 +66,38 @@ const statusOrder: Record<VaccineStatusKey, number> = {
 	expired: 3,
 	overdue: 4
 };
+
+const firstOwnerIdSql = `(SELECT owners.id
+	FROM pet_owners
+	JOIN owners ON owners.id = pet_owners.owner_id
+	WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+	ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
+	LIMIT 1)`;
+
+const ownerNamesSql = `(SELECT group_concat(name, ' · ')
+	FROM (
+		SELECT owners.name AS name
+		FROM pet_owners
+		JOIN owners ON owners.id = pet_owners.owner_id
+		WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+		ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
+	))`;
+
+const ownerIdsSql = `(SELECT group_concat(owner_id, ',')
+	FROM (
+		SELECT owners.id AS owner_id
+		FROM pet_owners
+		JOIN owners ON owners.id = pet_owners.owner_id
+		WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+		ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
+	))`;
+
+function parseOwnerIds(value: string | null | undefined): number[] {
+	return (value ?? '')
+		.split(',')
+		.map((item) => Number(item))
+		.filter((id) => Number.isInteger(id) && id > 0);
+}
 
 function mapPreset(row: VaccinePresetRow): VaccinePreset {
 	return {
@@ -119,20 +152,19 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationRow[]> {
 			pet_vaccinations.pet_id,
 			pets.name AS pet_name,
 			pets.avatar_blob AS pet_avatar_blob,
-			owners.id AS owner_id,
-			owners.name AS owner_name,
+			${firstOwnerIdSql} AS owner_id,
+			${ownerIdsSql} AS owner_ids,
+			${ownerNamesSql} AS owner_name,
 			pet_vaccinations.applied_at,
 			pet_vaccinations.vaccine_preset_id,
 			vaccine_presets.name AS vaccine_name,
 			vaccine_presets.validity_months
 		 FROM pet_vaccinations
 		 JOIN pets ON pets.id = pet_vaccinations.pet_id
-		 JOIN owners ON owners.id = pets.owner_id
 		 JOIN vaccine_presets ON vaccine_presets.id = pet_vaccinations.vaccine_preset_id
 		 WHERE pet_vaccinations.deleted_at IS NULL
 			AND pet_vaccinations.validity_ignored_at IS NULL
 			AND pets.deleted_at IS NULL
-			AND owners.deleted_at IS NULL
 		 ORDER BY pet_vaccinations.pet_id, pet_vaccinations.vaccine_preset_id, pet_vaccinations.applied_at DESC, pet_vaccinations.id DESC`
 	);
 
@@ -144,8 +176,19 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationRow[]> {
 	}
 
 	const latestRows = [...latest.values()];
-	const contactsByOwnerId = await listOwnerContactsByOwnerIds(latestRows.map((row) => row.owner_id));
-	return latestRows.map((row) => ({ ...row, owner_contacts: contactsByOwnerId.get(row.owner_id) ?? [] }));
+	const ownerIdsByRow = new Map<LatestVaccinationRow, number[]>();
+	const allOwnerIds: number[] = [];
+	for (const row of latestRows) {
+		const ownerIds = parseOwnerIds(row.owner_ids);
+		ownerIdsByRow.set(row, ownerIds);
+		allOwnerIds.push(...ownerIds);
+	}
+
+	const contactsByOwnerId = await listOwnerContactsByOwnerIds(allOwnerIds);
+	return latestRows.map((row) => ({
+		...row,
+		owner_contacts: (ownerIdsByRow.get(row) ?? []).flatMap((ownerId) => contactsByOwnerId.get(ownerId) ?? [])
+	}));
 }
 
 function mapStatusItem(row: LatestVaccinationRow, now = new Date()): VaccineStatusItem | null {
@@ -153,8 +196,8 @@ function mapStatusItem(row: LatestVaccinationRow, now = new Date()): VaccineStat
 	if (!status) return null;
 
 	return {
-		ownerId: row.owner_id,
-		ownerName: row.owner_name,
+		ownerId: row.owner_id ?? parseOwnerIds(row.owner_ids)[0] ?? 0,
+		ownerName: row.owner_name ?? '',
 		ownerContacts: row.owner_contacts,
 		petId: row.pet_id,
 		petName: row.pet_name,
@@ -205,10 +248,8 @@ export async function listVaccineHistory(filter: Partial<VaccineHistoryFilter>):
 		`SELECT pet_vaccinations.applied_at, pet_vaccinations.vaccine_preset_id
 		 FROM pet_vaccinations
 		 JOIN pets ON pets.id = pet_vaccinations.pet_id
-		 JOIN owners ON owners.id = pets.owner_id
 		 WHERE pet_vaccinations.deleted_at IS NULL
 			AND pets.deleted_at IS NULL
-			AND owners.deleted_at IS NULL
 			${vaccinePresetId ? 'AND pet_vaccinations.vaccine_preset_id = $1' : ''}
 		 ORDER BY pet_vaccinations.applied_at ASC`,
 		values

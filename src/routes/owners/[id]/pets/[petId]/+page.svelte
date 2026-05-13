@@ -108,7 +108,7 @@
 		return admittedAt || dischargedAt || t('common.notInformed');
 	}
 
-	const ownerId = $derived(Number(page.params.id));
+	const ownerId = $derived(Number(page.params.id ?? 0));
 	const petId = $derived(Number(page.params.petId));
 	let profile = $state<PetProfile | null>(null);
 	let form = $state<PetForm>({ name: '', birthDate: '', species: null, breed: null, sex: '', avatarBytes: null });
@@ -142,7 +142,7 @@
 		error = null;
 
 		try {
-			profile = await loadPetProfile(petId);
+			profile = await loadPetProfile(petId, ownerId > 0 ? ownerId : undefined);
 			const loadedForm = toForm(profile.pet);
 			form = loadedForm;
 			savedSnapshot = snapshotForm(loadedForm);
@@ -321,7 +321,7 @@
 		try {
 			await removePet(petId);
 			deleteDialogOpen = false;
-			await navigateToHref(`/owners/${ownerId}`);
+			await navigateToHref(ownerId > 0 ? `/owners/${ownerId}` : '/search');
 		} catch (exception) {
 			error = errorMessage(exception);
 		} finally {
@@ -361,11 +361,23 @@
 <section class="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
 	<header class="flex flex-col gap-3 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
 		<div class="min-w-0">
-			<a href={`/owners/${ownerId}`} aria-label={`${t('actions.openOwner')}: ${profile?.owner.name ?? t('owner.profileTitle')}`} class="inline-flex max-w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">
-				<OwnerAvatar avatarBytes={profile?.owner.avatarBytes ?? null} ownerName={profile?.owner.name ?? ''} className="size-6" iconClass="size-3.5 text-primary" />
-				<span class="shrink-0 text-xs font-semibold uppercase text-muted-foreground">{t('owner.contextLabel')}</span>
-				<span class="truncate text-primary">{profile?.owner.name ?? t('owner.profileTitle')}</span>
-			</a>
+			{#if profile}
+				<div class="flex flex-wrap gap-2">
+					{#each profile.owners as owner}
+						<a href={`/owners/${owner.id}`} aria-label={`${t('actions.openOwner')}: ${owner.name}`} class="inline-flex max-w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">
+							<OwnerAvatar avatarBytes={owner.avatarBytes} ownerName={owner.name} className="size-6" iconClass="size-3.5 text-primary" />
+							<span class="shrink-0 text-xs font-semibold uppercase text-muted-foreground">{t('owner.contextLabel')}</span>
+							<span class="truncate text-primary">{owner.name}</span>
+						</a>
+					{:else}
+						<span class="inline-flex max-w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-muted-foreground shadow-sm">
+							<OwnerAvatar avatarBytes={null} ownerName={t('owner.unassigned')} className="size-6" iconClass="size-3.5 text-primary" />
+							<span class="shrink-0 text-xs font-semibold uppercase">{t('owner.contextLabel')}</span>
+							<span class="truncate">{t('owner.unassigned')}</span>
+						</span>
+					{/each}
+				</div>
+			{/if}
 			<h2 class="mt-1 truncate text-2xl font-semibold sm:text-3xl">{profile?.pet.name ?? t('common.loading')}</h2>
 			{#if profile}
 				<p class="mt-1 text-sm text-muted-foreground">{sexLabel(profile.pet.sex)} · {taxonomyLabel(profile.pet)}</p>

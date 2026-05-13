@@ -78,9 +78,15 @@
 		const record = clinic.dashboard?.record;
 		if (!record) return;
 
-		contactDialogOwnerName = record.ownerName;
+		contactDialogOwnerName = record.ownerName || t('owner.unassigned');
 		contactDialogContacts = record.ownerContacts;
 		contactDialogOpen = true;
+	}
+
+	function currentRecordContextLabel(): string {
+		const record = clinic.dashboard?.record;
+		if (!record) return '';
+		return record.ownerName ? `${record.petName} · ${record.ownerName}` : record.petName;
 	}
 </script>
 
@@ -174,7 +180,7 @@
 					<div class="flex flex-col gap-1">
 						<h3 class="text-xl font-semibold">{clinic.dashboard.record.title}</h3>
 						<p class="text-sm text-muted-foreground">
-							{clinic.dashboard.record.petName} · {clinic.dashboard.record.ownerName}
+							{currentRecordContextLabel()}
 						</p>
 					</div>
 

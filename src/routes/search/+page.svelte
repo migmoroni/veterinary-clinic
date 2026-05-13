@@ -35,6 +35,11 @@
 		return `${result.kind}:${result.id}:${result.href}`;
 	}
 
+	function resultSubtitle(result: SearchResult): string {
+		if (result.kind === 'pet' && result.subtitle.trim().length === 0) return t('owner.unassigned');
+		return result.subtitle;
+	}
+
 	async function runSearch() {
 		try {
 			results = await searchEverywhere(query);
@@ -148,7 +153,7 @@
 						<OwnerAvatar avatarBytes={result.ownerAvatarBytes} ownerName={result.title} className="mt-0.5 size-10" iconClass="size-5 text-primary" />
 						<span class="min-w-0 flex-1">
 							<span class="block truncate text-sm font-medium">{result.title}</span>
-							<span class="block truncate text-xs text-muted-foreground">{kindLabel(result.kind)} · {result.subtitle}</span>
+							<span class="block truncate text-xs text-muted-foreground">{kindLabel(result.kind)} · {resultSubtitle(result)}</span>
 						</span>
 					</a>
 
@@ -173,7 +178,7 @@
 					{/if}
 					<span class="min-w-0 flex-1">
 						<span class="block truncate text-sm font-medium">{result.title}</span>
-						<span class="block truncate text-xs text-muted-foreground">{kindLabel(result.kind)} · {result.subtitle}</span>
+						<span class="block truncate text-xs text-muted-foreground">{kindLabel(result.kind)} · {resultSubtitle(result)}</span>
 					</span>
 				</a>
 			{/if}

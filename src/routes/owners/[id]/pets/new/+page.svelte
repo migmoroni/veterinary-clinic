@@ -3,21 +3,31 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
+	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import PetTaxonomyPicker from '$lib/components/pet/PetTaxonomyPicker.svelte';
-	import type { PetInput, PetSex } from '$lib/domain/pet/pet.js';
+	import type { Pet, PetInput, PetSex } from '$lib/domain/pet/pet.js';
+	import { getPetBreedOption, getPetSpeciesOption } from '$lib/domain/pet/taxonomy.js';
 	import { normalizeDateInput } from '$lib/domain/shared/date-input.js';
 	import { t } from '$lib/i18n/index.js';
 	import { loadOwnerProfile } from '$lib/services/owner.service.js';
-	import { saveNewPet } from '$lib/services/pet.service.js';
+	import { addExistingPetToOwner, saveNewPet, searchExistingPetsForOwner } from '$lib/services/pet.service.js';
+	import Link from '@lucide/svelte/icons/link';
 	import Save from '@lucide/svelte/icons/save';
+	import Search from '@lucide/svelte/icons/search';
 
 	type PetForm = Omit<PetInput, 'sex'> & { sex: '' | Exclude<PetSex, null> };
 
 	const ownerId = $derived(Number(page.params.id));
 	let ownerName = $state('');
 	let form = $state<PetForm>({ name: '', birthDate: '', species: null, breed: null, sex: '' });
+	let existingQuery = $state('');
+	let existingPets = $state<Pet[]>([]);
+	let searching = $state(false);
+	let linkingPetId = $state<number | null>(null);
 	let saving = $state(false);
 	let error = $state<string | null>(null);
+
+	const busy = $derived(saving || linkingPetId !== null);
 
 	async function load() {
 		try {
@@ -29,6 +39,13 @@
 
 	function toInput(): PetInput {
 		return { ...form, birthDate: normalizeDateInput(form.birthDate), breed: form.species ? form.breed : null, sex: form.sex === '' ? null : form.sex };
+	}
+
+	function petTaxonomyLabel(pet: Pet): string {
+		const species = getPetSpeciesOption(pet.species);
+		const breed = getPetBreedOption(pet.breed);
+		const parts = [species ? t(species.labelKey) : null, breed ? t(breed.labelKey) : null].filter(Boolean);
+		return parts.length > 0 ? parts.join(' · ') : t('common.notInformed');
 	}
 
 	function errorMessage(exception: unknown): string {
@@ -52,6 +69,39 @@
 		}
 	}
 
+	async function searchExistingPets() {
+		const query = existingQuery;
+		if (query.trim().length < 2) {
+			existingPets = [];
+			return;
+		}
+
+		searching = true;
+		error = null;
+		try {
+			const pets = await searchExistingPetsForOwner(ownerId, query);
+			if (existingQuery === query) existingPets = pets;
+		} catch (exception) {
+			error = errorMessage(exception);
+		} finally {
+			if (existingQuery === query) searching = false;
+		}
+	}
+
+	async function linkExistingPet(petId: number) {
+		linkingPetId = petId;
+		error = null;
+
+		try {
+			const pet = await addExistingPetToOwner(ownerId, petId);
+			await goto(`/owners/${ownerId}/pets/${pet.id}`);
+		} catch (exception) {
+			error = errorMessage(exception);
+		} finally {
+			linkingPetId = null;
+		}
+	}
+
 	onMount(() => {
 		void load();
 	});
@@ -71,7 +121,44 @@
 		<p class="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm">{error}</p>
 	{/if}
 
+	<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
+		<h3 class="text-base font-semibold">{t('pet.existingSection')}</h3>
+		<label class="mt-4 flex flex-col gap-2 text-sm font-medium">
+			<span>{t('pet.existingSearchLabel')}</span>
+			<span class="relative">
+				<Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+				<input class="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" placeholder={t('pet.existingSearchPlaceholder')} bind:value={existingQuery} disabled={busy} oninput={() => void searchExistingPets()} />
+			</span>
+		</label>
+
+		<div class="mt-4 flex flex-col gap-2">
+			{#each existingPets as pet}
+				<article class="flex flex-col gap-3 rounded-md border border-border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
+					<div class="flex min-w-0 items-center gap-3">
+						<PetAvatar avatarBytes={pet.avatarBytes} petName={pet.name} className="size-11" iconClass="size-5 text-primary" />
+						<span class="min-w-0">
+							<span class="block truncate text-sm font-medium">{pet.name}</span>
+							<span class="block truncate text-xs text-muted-foreground">{petTaxonomyLabel(pet)}</span>
+						</span>
+					</div>
+					<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={busy} onclick={() => void linkExistingPet(pet.id)}>
+						<Link class="size-4" />
+						{linkingPetId === pet.id ? t('common.loading') : t('pet.linkExisting')}
+					</button>
+				</article>
+			{:else}
+				{#if existingQuery.trim().length > 1 && !searching}
+					<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('pet.existingEmpty')}</p>
+				{/if}
+			{/each}
+			{#if searching}
+				<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('common.loading')}</p>
+			{/if}
+		</div>
+	</section>
+
 	<form class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5" onsubmit={submit}>
+		<h3 class="text-base font-semibold">{t('pet.createSection')}</h3>
 		<div class="grid gap-4 sm:grid-cols-2">
 			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
 				<span>{t('pet.name')}</span>
@@ -89,7 +176,7 @@
 			</div>
 		</div>
 
-		<button type="submit" class="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={saving}>
+		<button type="submit" class="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={busy}>
 			<Save class="size-4" />
 			{t('actions.createPet')}
 		</button>

@@ -11,6 +11,7 @@ db.exec(`
   DROP TABLE IF EXISTS backup_history;
   DROP TABLE IF EXISTS app_settings;
   DROP TABLE IF EXISTS medical_records;
+  DROP TABLE IF EXISTS pet_owners;
   DROP TABLE IF EXISTS pets;
   DROP TABLE IF EXISTS owner_contacts;
   DROP TABLE IF EXISTS owners;
@@ -47,7 +48,6 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS pets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    owner_id INTEGER NOT NULL,
     name TEXT NOT NULL,
     birth_date TEXT,
     species TEXT CHECK(species IN ('canine', 'feline')),
@@ -56,8 +56,19 @@ db.exec(`
     avatar_blob BLOB,
     updated_at TEXT,
     deleted_at TEXT,
-    purge_after TEXT,
-    FOREIGN KEY (owner_id) REFERENCES owners (id) ON DELETE CASCADE
+    purge_after TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS pet_owners (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pet_id INTEGER NOT NULL,
+    owner_id INTEGER NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT,
+    FOREIGN KEY (pet_id) REFERENCES pets (id) ON DELETE CASCADE,
+    FOREIGN KEY (owner_id) REFERENCES owners (id) ON DELETE CASCADE,
+    UNIQUE(pet_id, owner_id)
   );
 
   CREATE TABLE IF NOT EXISTS medical_records (
@@ -114,7 +125,8 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_owners_name ON owners(name);
   CREATE INDEX IF NOT EXISTS idx_owner_contacts_owner_id ON owner_contacts(owner_id);
   CREATE INDEX IF NOT EXISTS idx_owner_contacts_value ON owner_contacts(value);
-  CREATE INDEX IF NOT EXISTS idx_pets_owner_id ON pets(owner_id);
+  CREATE INDEX IF NOT EXISTS idx_pet_owners_pet_id ON pet_owners(pet_id);
+  CREATE INDEX IF NOT EXISTS idx_pet_owners_owner_id ON pet_owners(owner_id);
   CREATE INDEX IF NOT EXISTS idx_pets_name ON pets(name);
   CREATE INDEX IF NOT EXISTS idx_pets_species ON pets(species);
   CREATE INDEX IF NOT EXISTS idx_pets_breed ON pets(breed);
@@ -136,8 +148,12 @@ const insertOwnerContact = db.prepare(`
   VALUES (@ownerId, @kind, @value, @sortOrder, CURRENT_TIMESTAMP)
 `);
 const insertPet = db.prepare(`
-  INSERT INTO pets (owner_id, name, birth_date, species, breed, sex)
-  VALUES (@ownerId, @name, @birthDate, @species, @breed, @sex)
+  INSERT INTO pets (name, birth_date, species, breed, sex)
+  VALUES (@name, @birthDate, @species, @breed, @sex)
+`);
+const insertPetOwner = db.prepare(`
+  INSERT OR IGNORE INTO pet_owners (pet_id, owner_id, sort_order, updated_at)
+  VALUES (@petId, @ownerId, @sortOrder, CURRENT_TIMESTAMP)
 `);
 const insertMedicalRecord = db.prepare(`
   INSERT INTO medical_records (pet_id, description, admitted_at, discharged_at, updated_at)
@@ -412,6 +428,7 @@ const printDatabaseReport = () => {
     console.log(`- owners: ${countRows('owners')}`);
     console.log(`- owner_contacts: ${countRows('owner_contacts')}`);
     console.log(`- pets: ${countRows('pets')}`);
+    console.log(`- pet_owners: ${countRows('pet_owners')}`);
     console.log(`- medical_records: ${countRows('medical_records')}`);
     console.log(`- vaccine_presets: ${countRows('vaccine_presets')}`);
     console.log(`- pet_vaccinations: ${countRows('pet_vaccinations')}`);
@@ -600,13 +617,13 @@ const processarMigracao = () => {
             const sex = getSex(row);
             const taxonomy = getTaxonomy(row);
             const petRes = insertPet.run({
-                ownerId,
                 name: petName,
                 birthDate: normalizeDate(row['DATA NASCIMENTO']),
                 species: taxonomy.species,
                 breed: taxonomy.breed,
                 sex
             });
+            insertPetOwner.run({ petId: petRes.lastInsertRowid, ownerId, sortOrder: 0 });
             report.petsCreated += 1;
             const description = nullable(row['PRONTUÁRIO']);
             if (description) {

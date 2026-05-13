@@ -32,9 +32,33 @@ interface SearchResultRow {
 	pet_avatar_blob: unknown | null;
 }
 
+const firstOwnerIdSql = `(SELECT owners.id
+	FROM pet_owners
+	JOIN owners ON owners.id = pet_owners.owner_id
+	WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+	ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
+	LIMIT 1)`;
+
+const firstOwnerAvatarSql = `(SELECT owners.avatar_blob
+	FROM pet_owners
+	JOIN owners ON owners.id = pet_owners.owner_id
+	WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+	ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
+	LIMIT 1)`;
+
+const ownerNamesSql = `(SELECT group_concat(name, ' · ')
+	FROM (
+		SELECT owners.name AS name
+		FROM pet_owners
+		JOIN owners ON owners.id = pet_owners.owner_id
+		WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+		ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
+	))`;
+
 function resultHref(row: SearchResultRow): string {
 	if (row.kind === 'owner') return `/owners/${row.id}`;
 	if (row.kind === 'pet' && row.owner_id) return `/owners/${row.owner_id}/pets/${row.id}`;
+	if (row.kind === 'pet') return `/pets/${row.id}`;
 	return `/records/${row.record_id ?? row.id}`;
 }
 
@@ -52,8 +76,9 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 			NULL AS pet_avatar_blob,
 			(SELECT medical_records.id
 			 FROM pets
+			 JOIN pet_owners ON pet_owners.pet_id = pets.id
 			 JOIN medical_records ON medical_records.pet_id = pets.id
-			 WHERE pets.owner_id = owners.id
+			 WHERE pet_owners.owner_id = owners.id
 				AND pets.deleted_at IS NULL
 				AND medical_records.deleted_at IS NULL
 			 ORDER BY medical_records.updated_at DESC, medical_records.id DESC
@@ -77,9 +102,9 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 
 		 SELECT 'pet' AS kind,
 			pets.id,
-			owners.id AS owner_id,
+			${firstOwnerIdSql} AS owner_id,
 			pets.id AS pet_id,
-			owners.avatar_blob AS owner_avatar_blob,
+			${firstOwnerAvatarSql} AS owner_avatar_blob,
 			pets.avatar_blob AS pet_avatar_blob,
 			(SELECT medical_records.id
 			 FROM medical_records
@@ -88,30 +113,26 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 			 ORDER BY medical_records.updated_at DESC, medical_records.id DESC
 			 LIMIT 1) AS record_id,
 			pets.name AS title,
-			owners.name AS subtitle
+			COALESCE(${ownerNamesSql}, '') AS subtitle
 		 FROM pets
-		 JOIN owners ON owners.id = pets.owner_id
 		 WHERE pets.deleted_at IS NULL
-			AND owners.deleted_at IS NULL
 			AND (pets.name LIKE $1 OR pets.species LIKE $1 OR pets.breed LIKE $1)
 
 		 UNION ALL
 
 		 SELECT 'record' AS kind,
 			medical_records.id,
-			owners.id AS owner_id,
+			${firstOwnerIdSql} AS owner_id,
 			pets.id AS pet_id,
-			owners.avatar_blob AS owner_avatar_blob,
+			${firstOwnerAvatarSql} AS owner_avatar_blob,
 			pets.avatar_blob AS pet_avatar_blob,
 			medical_records.id AS record_id,
 			COALESCE(medical_records.title, 'Prontuario ' || medical_records.id) AS title,
-			pets.name || ' · ' || owners.name AS subtitle
+			COALESCE(pets.name || ' · ' || ${ownerNamesSql}, pets.name) AS subtitle
 		 FROM medical_records
 		 JOIN pets ON pets.id = medical_records.pet_id
-		 JOIN owners ON owners.id = pets.owner_id
 		 WHERE medical_records.deleted_at IS NULL
 			AND pets.deleted_at IS NULL
-			AND owners.deleted_at IS NULL
 			AND (medical_records.title LIKE $1 OR medical_records.description LIKE $1)
 
 		 ORDER BY kind, title

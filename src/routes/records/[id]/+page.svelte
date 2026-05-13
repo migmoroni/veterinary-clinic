@@ -66,6 +66,10 @@
 		return `${url.pathname}${url.search}${url.hash}`;
 	}
 
+	function petProfileHref(recordDetails: MedicalRecordDetails): string {
+		return recordDetails.ownerId > 0 ? `/owners/${recordDetails.ownerId}/pets/${recordDetails.record.petId}` : `/pets/${recordDetails.record.petId}`;
+	}
+
 	function errorMessage(exception: unknown): string {
 		if (exception instanceof Error && exception.message === 'date_invalid') return t('date.invalid');
 		if (exception instanceof Error && exception.message === 'record_period_invalid') return t('record.periodInvalid');
@@ -255,7 +259,7 @@
 		try {
 			await removeRecord(recordId);
 			deleteDialogOpen = false;
-			await navigateToHref(`/owners/${details.ownerId}/pets/${details.record.petId}`);
+			await navigateToHref(petProfileHref(details));
 		} catch (exception) {
 			error = errorMessage(exception);
 		} finally {
@@ -279,13 +283,21 @@
 		<div class="min-w-0">
 			{#if details}
 				<div class="flex flex-wrap gap-2">
-					<a href={`/owners/${details.ownerId}`} aria-label={`${t('actions.openOwner')}: ${details.ownerName}`} class="inline-flex max-w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">
-						<OwnerAvatar avatarBytes={details.ownerAvatarBytes} ownerName={details.ownerName} className="size-6" iconClass="size-3.5 text-primary" />
-						<span class="shrink-0 text-xs font-semibold uppercase text-muted-foreground">{t('owner.contextLabel')}</span>
-						<span class="truncate text-primary">{details.ownerName}</span>
-					</a>
+					{#each details.owners as owner}
+						<a href={`/owners/${owner.id}`} aria-label={`${t('actions.openOwner')}: ${owner.name}`} class="inline-flex max-w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">
+							<OwnerAvatar avatarBytes={owner.avatarBytes} ownerName={owner.name} className="size-6" iconClass="size-3.5 text-primary" />
+							<span class="shrink-0 text-xs font-semibold uppercase text-muted-foreground">{t('owner.contextLabel')}</span>
+							<span class="truncate text-primary">{owner.name}</span>
+						</a>
+					{:else}
+						<span class="inline-flex max-w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-muted-foreground shadow-sm">
+							<OwnerAvatar avatarBytes={null} ownerName={t('owner.unassigned')} className="size-6" iconClass="size-3.5 text-primary" />
+							<span class="shrink-0 text-xs font-semibold uppercase">{t('owner.contextLabel')}</span>
+							<span class="truncate">{t('owner.unassigned')}</span>
+						</span>
+					{/each}
 
-					<a href={`/owners/${details.ownerId}/pets/${details.record.petId}`} aria-label={`${t('actions.openPet')}: ${details.petName}`} class="inline-flex max-w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">
+					<a href={petProfileHref(details)} aria-label={`${t('actions.openPet')}: ${details.petName}`} class="inline-flex max-w-full items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">
 						<PetAvatar avatarBytes={details.petAvatarBytes} petName={details.petName} className="size-6" iconClass="size-3.5 text-primary" />
 						<span class="shrink-0 text-xs font-semibold uppercase text-muted-foreground">{t('pet.contextLabel')}</span>
 						<span class="truncate text-primary">{details.petName}</span>

@@ -290,28 +290,24 @@ export async function listOwnerAvatarBytesByIds(ownerIds: number[]): Promise<Map
 	return new Map(rows.map((row) => [row.id, normalizeByteArray(row.avatar_blob)]));
 }
 
+export async function listOwnersByPet(petId: number, includeDeleted = false): Promise<Owner[]> {
+	const rows = await selectMany<OwnerRow>(
+		`SELECT owners.id, owners.name, owners.avatar_blob, owners.street, owners.street_number, owners.address_complement, owners.neighborhood, owners.city, owners.country, owners.postal_code, owners.state,
+			owners.created_at, owners.updated_at, owners.deleted_at, owners.purge_after
+		 FROM owners
+		 JOIN pet_owners ON pet_owners.owner_id = owners.id
+		 WHERE pet_owners.pet_id = $1 ${includeDeleted ? '' : 'AND owners.deleted_at IS NULL'}
+		 ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id`,
+		[petId]
+	);
+
+	return mapOwnersWithContacts(rows);
+}
+
 export async function softDeleteOwner(id: number): Promise<void> {
 	const deletedAt = nowIso();
 	const purgeAfter = computePurgeAfter(deletedAt);
 
-	await execute(
-		`UPDATE pet_vaccinations
-		 SET deleted_at = $2, purge_after = $3, updated_at = CURRENT_TIMESTAMP
-		 WHERE pet_id IN (SELECT id FROM pets WHERE owner_id = $1) AND deleted_at IS NULL`,
-		[id, deletedAt, purgeAfter]
-	);
-	await execute(
-		`UPDATE medical_records
-		 SET deleted_at = $2, purge_after = $3, updated_at = CURRENT_TIMESTAMP
-		 WHERE pet_id IN (SELECT id FROM pets WHERE owner_id = $1) AND deleted_at IS NULL`,
-		[id, deletedAt, purgeAfter]
-	);
-	await execute(
-		`UPDATE pets
-		 SET deleted_at = $2, purge_after = $3, updated_at = CURRENT_TIMESTAMP
-		 WHERE owner_id = $1 AND deleted_at IS NULL`,
-		[id, deletedAt, purgeAfter]
-	);
 	await execute(
 		`UPDATE owners
 		 SET deleted_at = $2, purge_after = $3, updated_at = CURRENT_TIMESTAMP
@@ -327,29 +323,10 @@ export async function restoreOwner(id: number): Promise<void> {
 		 WHERE id = $1`,
 		[id]
 	);
-	await execute(
-		`UPDATE pets
-		 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
-		 WHERE owner_id = $1`,
-		[id]
-	);
-	await execute(
-		`UPDATE medical_records
-		 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
-		 WHERE pet_id IN (SELECT id FROM pets WHERE owner_id = $1)`,
-		[id]
-	);
-	await execute(
-		`UPDATE pet_vaccinations
-		 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
-		 WHERE pet_id IN (SELECT id FROM pets WHERE owner_id = $1)`,
-		[id]
-	);
 }
 
 export async function hardDeleteOwner(id: number): Promise<void> {
-	await execute('DELETE FROM pet_vaccinations WHERE pet_id IN (SELECT id FROM pets WHERE owner_id = $1)', [id]);
-	await execute('DELETE FROM medical_records WHERE pet_id IN (SELECT id FROM pets WHERE owner_id = $1)', [id]);
-	await execute('DELETE FROM pets WHERE owner_id = $1', [id]);
+	await execute('DELETE FROM pet_owners WHERE owner_id = $1', [id]);
+	await execute('DELETE FROM owner_contacts WHERE owner_id = $1', [id]);
 	await execute('DELETE FROM owners WHERE id = $1', [id]);
 }

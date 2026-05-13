@@ -7,7 +7,7 @@ import type {
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
-import { listOwnerContacts } from './owner.repository.js';
+import { listOwnerContactsByOwnerIds, listOwnersByPet } from './owner.repository.js';
 
 interface MedicalRecordRow {
 	id: number;
@@ -24,8 +24,8 @@ interface MedicalRecordRow {
 interface MedicalRecordDetailsRow extends MedicalRecordRow {
 	pet_name: string;
 	pet_avatar_blob: unknown | null;
-	owner_id: number;
-	owner_name: string;
+	owner_id: number | null;
+	owner_name: string | null;
 	owner_avatar_blob: unknown | null;
 }
 
@@ -37,9 +37,42 @@ interface CurrentRecordRow {
 	discharged_at: string | null;
 	pet_id: number;
 	pet_name: string;
-	owner_id: number;
-	owner_name: string;
+	owner_id: number | null;
+	owner_ids: string | null;
+	owner_name: string | null;
 }
+
+const firstOwnerIdSql = `(SELECT owners.id
+	FROM pet_owners
+	JOIN owners ON owners.id = pet_owners.owner_id
+	WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+	ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
+	LIMIT 1)`;
+
+const firstOwnerAvatarSql = `(SELECT owners.avatar_blob
+	FROM pet_owners
+	JOIN owners ON owners.id = pet_owners.owner_id
+	WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+	ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
+	LIMIT 1)`;
+
+const ownerNamesSql = `(SELECT group_concat(name, ' · ')
+	FROM (
+		SELECT owners.name AS name
+		FROM pet_owners
+		JOIN owners ON owners.id = pet_owners.owner_id
+		WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+		ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
+	))`;
+
+const ownerIdsSql = `(SELECT group_concat(owner_id, ',')
+	FROM (
+		SELECT owners.id AS owner_id
+		FROM pet_owners
+		JOIN owners ON owners.id = pet_owners.owner_id
+		WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+		ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
+	))`;
 
 function nullable(value: string | null | undefined): string | null {
 	const trimmed = value?.trim() ?? '';
@@ -48,6 +81,13 @@ function nullable(value: string | null | undefined): string | null {
 
 function fallbackTitle(id: number, title: string | null): string {
 	return title ?? `Prontuario ${id}`;
+}
+
+function parseOwnerIds(value: string | null | undefined): number[] {
+	return (value ?? '')
+		.split(',')
+		.map((item) => Number(item))
+		.filter((id) => Number.isInteger(id) && id > 0);
 }
 
 function assertValidPeriod(admittedAt: string | null, dischargedAt: string | null): void {
@@ -69,6 +109,10 @@ function mapMedicalRecord(row: MedicalRecordRow): MedicalRecord {
 }
 
 async function mapCurrentRecord(row: CurrentRecordRow): Promise<CurrentRecordSummary> {
+	const ownerIds = parseOwnerIds(row.owner_ids);
+	const contactsByOwnerId = await listOwnerContactsByOwnerIds(ownerIds);
+	const ownerContacts = ownerIds.flatMap((ownerId) => contactsByOwnerId.get(ownerId) ?? []);
+
 	return {
 		id: row.id,
 		title: fallbackTitle(row.id, row.title),
@@ -77,9 +121,9 @@ async function mapCurrentRecord(row: CurrentRecordRow): Promise<CurrentRecordSum
 		dischargedAt: row.discharged_at,
 		petId: row.pet_id,
 		petName: row.pet_name,
-		ownerId: row.owner_id,
-		ownerName: row.owner_name,
-		ownerContacts: await listOwnerContacts(row.owner_id)
+		ownerId: row.owner_id ?? ownerIds[0] ?? 0,
+		ownerName: row.owner_name ?? '',
+		ownerContacts
 	};
 }
 
@@ -120,28 +164,30 @@ export async function getMedicalRecordDetails(id: number, includeDeleted = false
 			medical_records.purge_after,
 			pets.name AS pet_name,
 			pets.avatar_blob AS pet_avatar_blob,
-			owners.id AS owner_id,
-			owners.name AS owner_name,
-			owners.avatar_blob AS owner_avatar_blob
+			${firstOwnerIdSql} AS owner_id,
+			${ownerNamesSql} AS owner_name,
+			${firstOwnerAvatarSql} AS owner_avatar_blob
 		 FROM medical_records
 		 JOIN pets ON pets.id = medical_records.pet_id
-		 JOIN owners ON owners.id = pets.owner_id
 		 WHERE medical_records.id = $1
-			${includeDeleted ? '' : 'AND medical_records.deleted_at IS NULL AND pets.deleted_at IS NULL AND owners.deleted_at IS NULL'}
+			${includeDeleted ? '' : 'AND medical_records.deleted_at IS NULL AND pets.deleted_at IS NULL'}
 		 LIMIT 1`,
 		[id]
 	);
 
 	const row = rows[0];
 	if (!row) return null;
+	const owners = await listOwnersByPet(row.pet_id, includeDeleted);
+	const primaryOwner = owners[0];
 
 	return {
 		record: mapMedicalRecord(row),
 		petName: row.pet_name,
 		petAvatarBytes: normalizeByteArray(row.pet_avatar_blob),
-		ownerId: row.owner_id,
-		ownerName: row.owner_name,
-		ownerAvatarBytes: normalizeByteArray(row.owner_avatar_blob)
+		owners,
+		ownerId: primaryOwner?.id ?? row.owner_id ?? 0,
+		ownerName: row.owner_name ?? primaryOwner?.name ?? '',
+		ownerAvatarBytes: primaryOwner?.avatarBytes ?? normalizeByteArray(row.owner_avatar_blob)
 	};
 }
 
@@ -221,14 +267,13 @@ export async function getLastEditedRecord(): Promise<CurrentRecordSummary | null
 			medical_records.discharged_at,
 			pets.id AS pet_id,
 			pets.name AS pet_name,
-			owners.id AS owner_id,
-			owners.name AS owner_name
+			${firstOwnerIdSql} AS owner_id,
+			${ownerIdsSql} AS owner_ids,
+			${ownerNamesSql} AS owner_name
 		 FROM medical_records
 		 JOIN pets ON pets.id = medical_records.pet_id
-		 JOIN owners ON owners.id = pets.owner_id
 		 WHERE medical_records.deleted_at IS NULL
 			AND pets.deleted_at IS NULL
-			AND owners.deleted_at IS NULL
 		 ORDER BY medical_records.updated_at DESC, medical_records.id DESC
 		 LIMIT 1`
 	);

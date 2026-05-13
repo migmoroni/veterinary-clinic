@@ -145,8 +145,16 @@
 			const appliedCompare = first.appliedAt.localeCompare(second.appliedAt);
 			if (appliedCompare !== 0) return appliedCompare * direction;
 
-			return first.ownerName.localeCompare(second.ownerName) || first.petName.localeCompare(second.petName) || first.vaccineName.localeCompare(second.vaccineName);
+			return ownerDisplayName(first).localeCompare(ownerDisplayName(second)) || first.petName.localeCompare(second.petName) || first.vaccineName.localeCompare(second.vaccineName);
 		});
+	}
+
+	function ownerDisplayName(item: VaccineStatusItem): string {
+		return item.ownerName || t('owner.unassigned');
+	}
+
+	function petProfileHref(item: VaccineStatusItem): string {
+		return item.ownerId > 0 ? `/owners/${item.ownerId}/pets/${item.petId}` : `/pets/${item.petId}`;
 	}
 
 	function sortHistoryPoints(source: HistoryPoint[], order: SortOrder): HistoryPoint[] {
@@ -399,7 +407,7 @@
 	}
 
 	function openContactDialog(item: VaccineStatusItem) {
-		contactDialogOwnerName = item.ownerName;
+		contactDialogOwnerName = ownerDisplayName(item);
 		contactDialogContacts = item.ownerContacts;
 		contactDialogOpen = true;
 	}
@@ -580,7 +588,7 @@
 									<PetAvatar avatarBytes={item.petAvatarBytes} petName={item.petName} className="size-11" iconClass="size-5 text-primary" />
 									<div class="min-w-0">
 										<p class="wrap-break-word text-sm font-semibold">{item.petName} · {item.vaccineName}</p>
-										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{item.ownerName}</p>
+										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{ownerDisplayName(item)}</p>
 										<div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs leading-5 text-muted-foreground">
 											<span>{t('vaccine.appliedAt')}: {formatDateForDisplay(item.appliedAt)}</span>
 											<span>{t('vaccine.analytics.dueAt')}: {formatDateForDisplay(item.dueAt)}</span>
@@ -589,7 +597,7 @@
 									</div>
 								</div>
 								<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-									<a href={`/owners/${item.ownerId}/pets/${item.petId}`} class="inline-flex h-9 w-full items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent sm:w-auto">
+									<a href={petProfileHref(item)} class="inline-flex h-9 w-full items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent sm:w-auto">
 										{t('actions.openPet')}
 									</a>
 									<button
@@ -597,7 +605,7 @@
 										type="button"
 										disabled={!hasContacts(item.ownerContacts)}
 										onclick={() => openContactDialog(item)}
-										aria-label={`${t('owner.contact')}: ${item.ownerName}`}
+										aria-label={`${t('owner.contact')}: ${ownerDisplayName(item)}`}
 									>
 										<Phone class="size-4" />
 										{t('owner.contact')}
