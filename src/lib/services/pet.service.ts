@@ -9,21 +9,19 @@ import { listVaccinationsByPet, listVaccinePresets } from '$lib/persistence/repo
 
 export interface PetProfile {
 	pet: Pet;
-	owner: Owner | null;
 	owners: Owner[];
 	records: MedicalRecord[];
 	vaccinations: PetVaccination[];
 	vaccinePresets: VaccinePreset[];
 }
 
-export async function loadPetProfile(petId: number, ownerId?: number): Promise<PetProfile> {
+export async function loadPetProfile(petId: number): Promise<PetProfile> {
 	const pet = await getPet(petId);
 	if (!pet) throw new Error('pet_not_found');
 
 	const [owners, records, vaccinations, vaccinePresets] = await Promise.all([listOwnersByPet(pet.id), listRecordsByPet(pet.id), listVaccinationsByPet(pet.id), listVaccinePresets()]);
-	const owner = owners.find((item) => item.id === ownerId) ?? owners[0] ?? null;
 
-	return { pet, owner, owners, records, vaccinations, vaccinePresets };
+	return { pet, owners, records, vaccinations, vaccinePresets };
 }
 
 export async function saveNewPet(ownerId: number, input: PetInput): Promise<Pet> {

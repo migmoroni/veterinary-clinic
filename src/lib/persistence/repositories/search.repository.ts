@@ -57,7 +57,6 @@ const ownerNamesSql = `(SELECT group_concat(name, ' · ')
 
 function resultHref(row: SearchResultRow): string {
 	if (row.kind === 'owner') return `/owners/${row.id}`;
-	if (row.kind === 'pet' && row.owner_id) return `/owners/${row.owner_id}/pets/${row.id}`;
 	if (row.kind === 'pet') return `/pets/${row.id}`;
 	return `/records/${row.record_id ?? row.id}`;
 }
@@ -136,7 +135,7 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 			AND (medical_records.title LIKE $1 OR medical_records.description LIKE $1)
 
 		 ORDER BY kind, title
-		 LIMIT 20`,
+		 LIMIT 40`,
 		[term]
 	);
 

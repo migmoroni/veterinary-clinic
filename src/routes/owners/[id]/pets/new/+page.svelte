@@ -61,7 +61,7 @@
 
 		try {
 			const pet = await saveNewPet(ownerId, toInput());
-			await goto(`/owners/${ownerId}/pets/${pet.id}`);
+			await goto(`/pets/${pet.id}`);
 		} catch (exception) {
 			error = errorMessage(exception);
 		} finally {
@@ -94,7 +94,7 @@
 
 		try {
 			const pet = await addExistingPetToOwner(ownerId, petId);
-			await goto(`/owners/${ownerId}/pets/${pet.id}`);
+			await goto(`/pets/${pet.id}`);
 		} catch (exception) {
 			error = errorMessage(exception);
 		} finally {

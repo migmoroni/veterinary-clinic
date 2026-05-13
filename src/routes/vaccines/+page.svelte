@@ -154,7 +154,7 @@
 	}
 
 	function petProfileHref(item: VaccineStatusItem): string {
-		return item.ownerId > 0 ? `/owners/${item.ownerId}/pets/${item.petId}` : `/pets/${item.petId}`;
+		return `/pets/${item.petId}`;
 	}
 
 	function sortHistoryPoints(source: HistoryPoint[], order: SortOrder): HistoryPoint[] {

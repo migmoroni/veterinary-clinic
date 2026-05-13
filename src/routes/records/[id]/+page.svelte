@@ -67,7 +67,7 @@
 	}
 
 	function petProfileHref(recordDetails: MedicalRecordDetails): string {
-		return recordDetails.ownerId > 0 ? `/owners/${recordDetails.ownerId}/pets/${recordDetails.record.petId}` : `/pets/${recordDetails.record.petId}`;
+		return `/pets/${recordDetails.record.petId}`;
 	}
 
 	function errorMessage(exception: unknown): string {

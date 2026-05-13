@@ -557,7 +557,7 @@ type OwnerForm = OwnerInput & { avatarBytes: Uint8Array | null };
 
 				<div class="mt-4 flex flex-col gap-2">
 					{#each profile.pets as pet}
-						<a href={`/owners/${ownerId}/pets/${pet.id}`} class="flex items-center gap-3 rounded-md border border-border bg-background p-3 hover:bg-accent">
+						<a href={`/pets/${pet.id}`} class="flex items-center gap-3 rounded-md border border-border bg-background p-3 hover:bg-accent">
 							<PetAvatar avatarBytes={pet.avatarBytes} petName={pet.name} className="size-11" iconClass="size-5 text-primary" />
 							<span class="min-w-0 flex-1">
 								<span class="block truncate text-sm font-medium">{pet.name}</span>
