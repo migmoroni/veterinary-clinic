@@ -448,23 +448,24 @@ const legacyAddressComplementHintPattern =
   /\b(?:ap|apto|apartamento|casa|fundos|frente|sala|bloco|quadra|lote|box|loja|sobrado|terreo|t[eé]rreo|galp[aã]o|barrac[aã]o|ch[aá]cara|s[ií]tio|fazenda|condom[ií]nio|edif[ií]cio|distrito|industrial|rodovia|km|alambique|engenho)\b/i;
 
 const formatLegacyBrazilPhone = (digits: string): string => {
-  const localDigits = digits.startsWith('55') && digits.length > 11 ? digits.slice(2) : digits;
-  const digitsWithAreaCode = localDigits.length === 8 || localDigits.length === 9 ? `16${localDigits}` : localDigits;
+  if (digits.length < 10 || digits.length > 11) return digits;
 
-  if (digitsWithAreaCode.length < 10 || digitsWithAreaCode.length > 11) return digits;
-
-  const areaCode = digitsWithAreaCode.slice(0, 2);
-  const number = digitsWithAreaCode.slice(2);
+  const areaCode = digits.slice(0, 2);
+  const number = digits.slice(2);
   const formattedNumber = number.length <= 8 ? `${number.slice(0, 4)}-${number.slice(4)}` : `${number.slice(0, 5)}-${number.slice(5)}`;
 
   return `(${areaCode}) ${formattedNumber}`;
 };
 
-const normalizeLegacyPhoneValue = (value: string | undefined): string | null => {
+const normalizeLegacyPhoneValue = (value: string | undefined, kind: Exclude<OwnerContactKind, 'email'>): string | null => {
   const digits = value?.replace(/\D/g, '') ?? '';
   if (!digits) return null;
 
-  return formatLegacyBrazilPhone(digits);
+  const localDigits = digits.startsWith('55') && digits.length > 11 ? digits.slice(2) : digits;
+  const digitsWithAreaCode = localDigits.length === 8 || localDigits.length === 9 ? `16${localDigits}` : localDigits;
+  const normalizedDigits = kind === 'mobile' && digitsWithAreaCode.length === 10 ? `${digitsWithAreaCode.slice(0, 2)}9${digitsWithAreaCode.slice(2)}` : digitsWithAreaCode;
+
+  return formatLegacyBrazilPhone(normalizedDigits);
 };
 
 const normalizeLegacyEmailValue = (value: string | undefined): string | null => {
@@ -519,7 +520,7 @@ const cleanLegacyPersonName = (value: string | undefined): string | null => {
 const getLegacyPhones = (value: string): LegacyOwnerContactInput[] => {
   const withoutCpf = value.replace(legacyDocumentFragmentPattern, ' ').replace(legacyEmailPattern, ' ');
   return [...withoutCpf.matchAll(legacyPhonePattern)]
-    .map((match) => normalizeLegacyPhoneValue(match[0]))
+    .map((match) => normalizeLegacyPhoneValue(match[0], 'mobile'))
     .filter((phone): phone is string => phone !== null)
     .map((value) => ({ kind: 'mobile', value }));
 };
@@ -716,7 +717,7 @@ const insertOwnerContactValue = (report: ImportReport, ownerId: number | bigint,
 };
 
 const insertContactFromSource = (report: ImportReport, ownerId: number | bigint, kind: OwnerContactKind, rawValue: string | undefined, sortOrder: number) => {
-  const value = kind === 'email' ? normalizeLegacyEmailValue(rawValue) : normalizeLegacyPhoneValue(rawValue);
+  const value = kind === 'email' ? normalizeLegacyEmailValue(rawValue) : normalizeLegacyPhoneValue(rawValue, kind);
   if (!value) return;
 
   insertOwnerContactValue(report, ownerId, kind, value, sortOrder);
