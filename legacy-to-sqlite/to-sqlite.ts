@@ -64,6 +64,8 @@ interface ParsedLegacyAddress {
   street: string | null;
   streetNumber: string | null;
   addressComplement: string | null;
+  ownerContacts: LegacyOwnerContactInput[];
+  additionalResponsibles: LegacyAdditionalResponsibleInput[];
 }
 
 interface LegacyOwnerContactInput {
@@ -78,6 +80,12 @@ interface LegacyAdditionalResponsibleInput {
 
 interface ParsedLegacyOwnerName {
   ownerName: string | null;
+  ownerContacts: LegacyOwnerContactInput[];
+  additionalResponsibles: LegacyAdditionalResponsibleInput[];
+}
+
+interface ParsedLegacyAdditionalResponsibles {
+  ownerContacts: LegacyOwnerContactInput[];
   additionalResponsibles: LegacyAdditionalResponsibleInput[];
 }
 
@@ -436,6 +444,8 @@ const legacyDocumentFragmentPattern = /\b(?:\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}
 const legacyEmailPattern = /\b[^\s@]+@[^\s@]+\.[^\s@]+\b/g;
 const legacyPhonePattern = /\b(?:\(?\d{2}\)?\s*)?(?:9\s*)?\d{4}[\s.-]*\d{4}\b/g;
 const legacyLargeSpacePattern = /\s{6,}/g;
+const legacyAddressComplementHintPattern =
+  /\b(?:ap|apto|apartamento|casa|fundos|frente|sala|bloco|quadra|lote|box|loja|sobrado|terreo|t[eé]rreo|galp[aã]o|barrac[aã]o|ch[aá]cara|s[ií]tio|fazenda|condom[ií]nio|edif[ií]cio|distrito|industrial|rodovia|km|alambique|engenho)\b/i;
 
 const formatLegacyBrazilPhone = (digits: string): string => {
   const localDigits = digits.startsWith('55') && digits.length > 11 ? digits.slice(2) : digits;
@@ -455,6 +465,16 @@ const normalizeLegacyPhoneValue = (value: string | undefined): string | null => 
   if (!digits) return null;
 
   return formatLegacyBrazilPhone(digits);
+};
+
+const normalizeLegacyEmailValue = (value: string | undefined): string | null => {
+  const email = (value ?? '').trim().replace(/\s+/g, '').toLowerCase();
+  return email.includes('@') ? email : null;
+};
+
+const pushLegacyContact = (contacts: LegacyOwnerContactInput[], contact: LegacyOwnerContactInput) => {
+  const key = `${contact.kind}:${contact.value}`;
+  if (!contacts.some((existing) => `${existing.kind}:${existing.value}` === key)) contacts.push(contact);
 };
 
 const isIgnoredLegacyNameNote = (value: string | undefined): boolean => {
@@ -504,6 +524,13 @@ const getLegacyPhones = (value: string): LegacyOwnerContactInput[] => {
     .map((value) => ({ kind: 'mobile', value }));
 };
 
+const getLegacyEmails = (value: string): LegacyOwnerContactInput[] => {
+  return [...value.matchAll(legacyEmailPattern)]
+    .map((match) => normalizeLegacyEmailValue(match[0]))
+    .filter((email): email is string => email !== null)
+    .map((value) => ({ kind: 'email', value }));
+};
+
 const pushLegacyAdditionalResponsible = (
   responsibles: LegacyAdditionalResponsibleInput[],
   ownerName: string,
@@ -526,16 +553,17 @@ const pushLegacyAdditionalResponsible = (
 };
 
 const parseLegacyAdditionalResponsibleSegment = (segment: string): LegacyAdditionalResponsibleInput | null => {
-  const contacts = getLegacyPhones(segment);
-  const name = cleanLegacyPersonName(segment.replace(legacyPhonePattern, ' '));
+  const contacts = [...getLegacyPhones(segment), ...getLegacyEmails(segment)];
+  const name = cleanLegacyPersonName(segment.replace(legacyPhonePattern, ' ').replace(legacyEmailPattern, ' '));
   if (!name) return contacts.length > 0 ? { name: '', contacts } : null;
 
   return { name, contacts };
 };
 
-const parseLegacyAdditionalResponsibles = (value: string, ownerName: string): LegacyAdditionalResponsibleInput[] => {
+const parseLegacyAdditionalResponsibles = (value: string, ownerName: string): ParsedLegacyAdditionalResponsibles => {
+  const ownerContacts: LegacyOwnerContactInput[] = [];
   const responsibles: LegacyAdditionalResponsibleInput[] = [];
-  const cleanedValue = value.replace(legacyDocumentFragmentPattern, ' ').replace(legacyEmailPattern, ' ').replace(/\b(?:CPF|CNPJ|RG)\b\s*:?\s*/gi, ' ');
+  const cleanedValue = value.replace(legacyDocumentFragmentPattern, ' ').replace(/\b(?:CPF|CNPJ|RG)\b\s*:?\s*/gi, ' ');
   const parts = cleanedValue
     .split(/\s*\/\s*|\n+/g)
     .flatMap((part) => part.split(legacyLargeSpacePattern))
@@ -554,6 +582,10 @@ const parseLegacyAdditionalResponsibles = (value: string, ownerName: string): Le
           const key = `${contact.kind}:${contact.value}`;
           if (!existingContacts.has(key)) previous.contacts.push(contact);
         }
+      } else {
+        for (const contact of parsed.contacts.filter((candidate) => candidate.kind === 'email')) {
+          pushLegacyContact(ownerContacts, contact);
+        }
       }
       continue;
     }
@@ -561,31 +593,76 @@ const parseLegacyAdditionalResponsibles = (value: string, ownerName: string): Le
     pushLegacyAdditionalResponsible(responsibles, ownerName, parsed.name, parsed.contacts);
   }
 
-  return responsibles;
+  return { ownerContacts, additionalResponsibles: responsibles };
 };
 
 const parseLegacyOwnerName = (value: string | undefined): ParsedLegacyOwnerName => {
   const raw = (value ?? '').replace(/\r\n?/g, '\n').trim();
-  if (!raw) return { ownerName: null, additionalResponsibles: [] };
+  if (!raw) return { ownerName: null, ownerContacts: [], additionalResponsibles: [] };
 
   const parts = raw
     .split(new RegExp(`${legacyLargeSpacePattern.source}|\\n+`, 'g'))
     .map((part) => part.trim())
     .filter(Boolean);
-  const ownerName = cleanLegacyPersonName(parts[0]?.replace(legacyPhonePattern, ' '));
-  if (!ownerName) return { ownerName: null, additionalResponsibles: [] };
+  const ownerSegment = parts[0] ?? '';
+  const ownerName = cleanLegacyPersonName(ownerSegment.replace(legacyPhonePattern, ' ').replace(legacyEmailPattern, ' '));
+  if (!ownerName) return { ownerName: null, ownerContacts: [], additionalResponsibles: [] };
 
-  const additionalText = parts.slice(1).join('\n');
+  const ownerContacts = getLegacyEmails(ownerSegment);
+  const parsedAdditional = parseLegacyAdditionalResponsibles(parts.slice(1).join('\n'), ownerName);
+  for (const contact of parsedAdditional.ownerContacts) pushLegacyContact(ownerContacts, contact);
+
   return {
     ownerName,
-    additionalResponsibles: parseLegacyAdditionalResponsibles(additionalText, ownerName)
+    ownerContacts,
+    additionalResponsibles: parsedAdditional.additionalResponsibles
   };
 };
 
-const parseLegacyAddress = (value: string | undefined): ParsedLegacyAddress => {
-  const raw = (value ?? '').replace(/\s+/g, ' ').trim();
+const isLikelyLegacyAddressComplement = (value: string): boolean => {
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  if (legacyAddressComplementHintPattern.test(trimmed)) return true;
+  if (/^[A-ZÀ-Ÿ0-9 .-]{2,12}$/.test(trimmed) && !new RegExp(legacyPhonePattern.source, 'i').test(trimmed) && !new RegExp(legacyDocumentFragmentPattern.source, 'i').test(trimmed)) return true;
+
+  return false;
+};
+
+const splitLegacyAddressOwnerText = (value: string | undefined): { addressText: string; ownerText: string } => {
+  const raw = (value ?? '').replace(/\r\n?/g, '\n').trim();
+  if (!raw) return { addressText: '', ownerText: '' };
+
+  const parts = raw
+    .split(legacyLargeSpacePattern)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (parts.length <= 1) return { addressText: raw, ownerText: '' };
+
+  const addressParts = [parts[0]];
+  const ownerParts: string[] = [];
+  for (const part of parts.slice(1)) {
+    if (isLikelyLegacyAddressComplement(part)) addressParts.push(part);
+    else ownerParts.push(part);
+  }
+
+  return {
+    addressText: addressParts.join(' '),
+    ownerText: ownerParts.join('\n')
+  };
+};
+
+const parseLegacyAddress = (value: string | undefined, ownerName: string): ParsedLegacyAddress => {
+  const splitAddress = splitLegacyAddressOwnerText(value);
+  const parsedOwnerText = parseLegacyAdditionalResponsibles(splitAddress.ownerText, ownerName);
+  const raw = splitAddress.addressText.replace(/\s+/g, ' ').trim();
+  const ownerFields = {
+    ownerContacts: parsedOwnerText.ownerContacts,
+    additionalResponsibles: parsedOwnerText.additionalResponsibles
+  };
+
   if (!raw) {
-    return { street: null, streetNumber: null, addressComplement: null };
+    return { street: null, streetNumber: null, addressComplement: null, ...ownerFields };
   }
 
   const splitByComma = raw.split(',');
@@ -614,29 +691,35 @@ const parseLegacyAddress = (value: string | undefined): ParsedLegacyAddress => {
     return {
       street: nullable(streetPart),
       streetNumber: parsed.streetNumber,
-      addressComplement: parsed.addressComplement
+      addressComplement: parsed.addressComplement,
+      ...ownerFields
     };
   }
 
   const fallback = raw.match(/^(.*?)(?:\s+(\d+[A-Za-z]?|\d+[A-Za-z]?\/\d+|s\/?n))?(?:\s*[-,/]\s*(.*))?$/i);
   if (!fallback) {
-    return { street: nullable(raw), streetNumber: null, addressComplement: null };
+    return { street: nullable(raw), streetNumber: null, addressComplement: null, ...ownerFields };
   }
 
   return {
     street: nullable(fallback[1]),
     streetNumber: nullable(fallback[2]?.toUpperCase()),
-    addressComplement: nullable(fallback[3])
+    addressComplement: nullable(fallback[3]),
+    ...ownerFields
   };
 };
 
-const insertContactFromSource = (report: ImportReport, ownerId: number | bigint, kind: OwnerContactKind, rawValue: string | undefined, sortOrder: number) => {
-  const value = kind === 'email' ? nullable(rawValue) : normalizeLegacyPhoneValue(rawValue);
-  if (!value) return;
-
+const insertOwnerContactValue = (report: ImportReport, ownerId: number | bigint, kind: OwnerContactKind, value: string, sortOrder: number) => {
   const result = insertOwnerContact.run({ ownerId, kind, value, sortOrder });
   if (result.changes > 0) report.ownerContactsCreated += 1;
   else report.ownerContactsReused += 1;
+};
+
+const insertContactFromSource = (report: ImportReport, ownerId: number | bigint, kind: OwnerContactKind, rawValue: string | undefined, sortOrder: number) => {
+  const value = kind === 'email' ? normalizeLegacyEmailValue(rawValue) : normalizeLegacyPhoneValue(rawValue);
+  if (!value) return;
+
+  insertOwnerContactValue(report, ownerId, kind, value, sortOrder);
 };
 
 const getAdditionalResponsibleSortOrder = (ownerId: number | bigint): number => {
@@ -992,13 +1075,13 @@ const processarMigracao = () => {
 
       trackPetDuplicateCandidate(report, row, ownerName, petName);
 
+      const parsedAddress = parseLegacyAddress(row['ENDEREÇO'], ownerName);
       let ownerId: number | bigint;
 
       if (ownersCache.has(ownerName)) {
         ownerId = ownersCache.get(ownerName)!;
         report.ownersReused += 1;
       } else {
-        const parsedAddress = parseLegacyAddress(row['ENDEREÇO']);
         const res = insertOwner.run({
           name: ownerName,
           street: parsedAddress.street,
@@ -1016,7 +1099,14 @@ const processarMigracao = () => {
 
       insertContactFromSource(report, ownerId, 'phone', row['TELEFONE'], 0);
       insertContactFromSource(report, ownerId, 'mobile', row['CELULAR'], 1);
+      for (const [contactIndex, contact] of parsedOwnerName.ownerContacts.entries()) {
+        insertOwnerContactValue(report, ownerId, contact.kind, contact.value, contactIndex + 2);
+      }
+      for (const [contactIndex, contact] of parsedAddress.ownerContacts.entries()) {
+        insertOwnerContactValue(report, ownerId, contact.kind, contact.value, contactIndex + parsedOwnerName.ownerContacts.length + 2);
+      }
       insertAdditionalResponsiblesFromSource(report, ownerId, parsedOwnerName.additionalResponsibles);
+      insertAdditionalResponsiblesFromSource(report, ownerId, parsedAddress.additionalResponsibles);
 
       const sex = getSex(row);
       const taxonomy = getTaxonomy(row);
