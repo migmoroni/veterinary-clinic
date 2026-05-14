@@ -120,6 +120,7 @@ export const enUs = {
 	'owner.addAdditionalResponsible': 'Add responsible person',
 	'owner.removeAdditionalResponsible': 'Remove responsible person',
 	'owner.noAdditionalResponsibles': 'No additional responsible people registered.',
+	'owner.additionalInformation': 'Additional information',
 	'owner.contactDialogTitle': 'Contact',
 	'owner.closeContactDialog': 'Close contact',
 	'owner.call': 'Call',

@@ -118,6 +118,7 @@ export const ptBr = {
 	'owner.addAdditionalResponsible': 'Adicionar responsável',
 	'owner.removeAdditionalResponsible': 'Remover responsável',
 	'owner.noAdditionalResponsibles': 'Nenhum responsável adicional cadastrado.',
+	'owner.additionalInformation': 'Informações adicionais',
 	'owner.contactDialogTitle': 'Contato',
 	'owner.closeContactDialog': 'Fechar contato',
 	'owner.call': 'Ligar',

@@ -112,6 +112,7 @@ const gnPyOverrides = {
 	'owner.addContact': 'Moĩ contacto',
 	'owner.removeContact': 'Mbogue contacto',
 	'owner.noContacts': 'Ndaipóri contacto oñemoĩva’ekue.',
+	'owner.additionalInformation': 'Marandu ambuéva',
 	'owner.contactDialogTitle': 'Contacto',
 	'owner.closeContactDialog': 'Mboty contacto',
 	'owner.call': 'Henói',

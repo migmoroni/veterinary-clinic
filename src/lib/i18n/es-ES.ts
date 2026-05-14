@@ -120,6 +120,7 @@ export const esEs = {
 	'owner.addAdditionalResponsible': 'Agregar responsable',
 	'owner.removeAdditionalResponsible': 'Quitar responsable',
 	'owner.noAdditionalResponsibles': 'No hay responsables adicionales registrados.',
+	'owner.additionalInformation': 'Información adicional',
 	'owner.contactDialogTitle': 'Contacto',
 	'owner.closeContactDialog': 'Cerrar contacto',
 	'owner.call': 'Llamar',

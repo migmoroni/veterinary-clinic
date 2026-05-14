@@ -24,6 +24,7 @@ interface OwnerRow {
 	city: string | null;
 	country: string | null;
 	postal_code: string | null;
+	additional_information: string | null;
 	state: string | null;
 	created_at: string | null;
 	updated_at: string | null;
@@ -150,6 +151,7 @@ function mapOwner(row: OwnerRow, contacts: OwnerContact[] = [], additionalRespon
 		city: row.city,
 		country: row.country,
 		postalCode: row.postal_code,
+		additionalInformation: row.additional_information,
 		contacts,
 		additionalResponsibles,
 		state: row.state,
@@ -302,7 +304,7 @@ export async function listOwners(query = ''): Promise<Owner[]> {
 	const values = normalized.length > 0 ? [`%${normalized}%`] : [];
 	const filter =
 		normalized.length > 0
-			? `AND (name LIKE $1 OR city LIKE $1 OR EXISTS (
+			? `AND (name LIKE $1 OR city LIKE $1 OR additional_information LIKE $1 OR EXISTS (
 				SELECT 1 FROM owner_contacts
 				WHERE owner_contacts.owner_id = owners.id AND (owner_contacts.value LIKE $1 OR owner_contacts.label LIKE $1)
 			) OR EXISTS (
@@ -316,7 +318,7 @@ export async function listOwners(query = ''): Promise<Owner[]> {
 			: '';
 
 	const rows = await selectMany<OwnerRow>(
-		`SELECT id, name, avatar_blob, street, street_number, address_complement, neighborhood, city, country, postal_code, state,
+		`SELECT id, name, avatar_blob, street, street_number, address_complement, neighborhood, city, country, postal_code, additional_information, state,
 			created_at, updated_at, deleted_at, purge_after
 		 FROM owners
 		 WHERE deleted_at IS NULL ${filter}
@@ -330,7 +332,7 @@ export async function listOwners(query = ''): Promise<Owner[]> {
 
 export async function getOwner(id: number, includeDeleted = false): Promise<Owner | null> {
 	const rows = await selectMany<OwnerRow>(
-		`SELECT id, name, avatar_blob, street, street_number, address_complement, neighborhood, city, country, postal_code, state,
+		`SELECT id, name, avatar_blob, street, street_number, address_complement, neighborhood, city, country, postal_code, additional_information, state,
 			created_at, updated_at, deleted_at, purge_after
 		 FROM owners
 		 WHERE id = $1 ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
@@ -356,10 +358,11 @@ export async function createOwner(input: OwnerInput): Promise<Owner> {
 			city,
 			country,
 			postal_code,
+			additional_information,
 			state,
 			updated_at
 		)
-		 VALUES ($1, ${avatarSqlLiteral}, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)`,
+		 VALUES ($1, ${avatarSqlLiteral}, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP)`,
 		[
 			input.name.trim(),
 			nullable(input.street),
@@ -369,6 +372,7 @@ export async function createOwner(input: OwnerInput): Promise<Owner> {
 			nullable(input.city),
 			normalizeCountry(input.country),
 			nullable(input.postalCode),
+			nullable(input.additionalInformation),
 			nullable(input.state)?.toUpperCase() ?? null
 		]
 	);
@@ -395,7 +399,8 @@ export async function updateOwner(id: number, input: OwnerInput): Promise<Owner>
 			city = $7,
 			country = $8,
 			postal_code = $9,
-			state = $10,
+			additional_information = $10,
+			state = $11,
 			updated_at = CURRENT_TIMESTAMP
 		 WHERE id = $1 AND deleted_at IS NULL`,
 		[
@@ -408,6 +413,7 @@ export async function updateOwner(id: number, input: OwnerInput): Promise<Owner>
 			nullable(input.city),
 			normalizeCountry(input.country),
 			nullable(input.postalCode),
+			nullable(input.additionalInformation),
 			nullable(input.state)?.toUpperCase() ?? null
 		]
 	);
@@ -440,7 +446,7 @@ export async function listOwnerAvatarBytesByIds(ownerIds: number[]): Promise<Map
 
 export async function listOwnersByPet(petId: number, includeDeleted = false): Promise<Owner[]> {
 	const rows = await selectMany<OwnerRow>(
-		`SELECT owners.id, owners.name, owners.avatar_blob, owners.street, owners.street_number, owners.address_complement, owners.neighborhood, owners.city, owners.country, owners.postal_code, owners.state,
+		`SELECT owners.id, owners.name, owners.avatar_blob, owners.street, owners.street_number, owners.address_complement, owners.neighborhood, owners.city, owners.country, owners.postal_code, owners.additional_information, owners.state,
 			owners.created_at, owners.updated_at, owners.deleted_at, owners.purge_after
 		 FROM owners
 		 JOIN pet_owners ON pet_owners.owner_id = owners.id

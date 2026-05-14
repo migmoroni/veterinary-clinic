@@ -98,10 +98,10 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 				WHERE owner_additional_responsibles.owner_id = owners.id
 				ORDER BY owner_additional_responsibles.sort_order, owner_additional_responsibles.id
 				LIMIT 1
-			), owners.city, '') AS subtitle
+			), owners.additional_information, owners.city, '') AS subtitle
 		 FROM owners
 		 WHERE owners.deleted_at IS NULL
-			AND (owners.name LIKE $1 OR EXISTS (
+			AND (owners.name LIKE $1 OR owners.additional_information LIKE $1 OR EXISTS (
 				SELECT 1 FROM owner_contacts
 				WHERE owner_contacts.owner_id = owners.id AND (owner_contacts.value LIKE $1 OR owner_contacts.label LIKE $1)
 			) OR EXISTS (

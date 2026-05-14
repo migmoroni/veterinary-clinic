@@ -22,6 +22,7 @@
 			city: '',
 			country: DEFAULT_OWNER_COUNTRY,
 			postalCode: '',
+			additionalInformation: '',
 			contacts: [],
 			additionalResponsibles: [],
 			state: ''
@@ -195,6 +196,11 @@
 
 			<OwnerContactsField bind:contacts={form.contacts} />
 			<OwnerAdditionalResponsiblesField bind:responsibles={form.additionalResponsibles} />
+
+			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-5">
+				<span>{t('owner.additionalInformation')}</span>
+				<textarea class="min-h-28 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.additionalInformation} aria-label={t('owner.additionalInformation')}></textarea>
+			</label>
 		</div>
 
 		{#if statusKey}

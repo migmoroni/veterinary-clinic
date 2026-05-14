@@ -41,6 +41,7 @@ export interface Owner {
 	city: string | null;
 	country: string | null;
 	postalCode: string | null;
+	additionalInformation: string | null;
 	contacts: OwnerContact[];
 	additionalResponsibles: OwnerAdditionalResponsible[];
 	state: string | null;
@@ -60,6 +61,7 @@ export interface OwnerInput {
 	city: string;
 	country: string;
 	postalCode: string;
+	additionalInformation: string;
 	contacts: OwnerContactInput[];
 	additionalResponsibles: OwnerAdditionalResponsibleInput[];
 	state: string;

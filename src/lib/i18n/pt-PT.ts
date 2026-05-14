@@ -83,6 +83,7 @@ const ptPtOverrides = {
 	'owner.addAdditionalResponsible': 'Adicionar responsável',
 	'owner.removeAdditionalResponsible': 'Remover responsável',
 	'owner.noAdditionalResponsibles': 'Nenhum responsável adicional registado.',
+	'owner.additionalInformation': 'Informações adicionais',
 	'owner.unsavedDialogTitle': 'Alterações não guardadas',
 	'owner.unsavedDialogDescription': 'Alterou este tutor. Guarde ou descarte as alterações antes de sair.',
 	'owner.contextLabel': 'Tutor',

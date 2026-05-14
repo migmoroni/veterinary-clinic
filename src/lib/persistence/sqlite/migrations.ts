@@ -28,6 +28,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			state TEXT,
 			country TEXT NOT NULL DEFAULT 'Brazil',
 			postal_code TEXT,
+			additional_information TEXT,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
 			deleted_at TEXT,
