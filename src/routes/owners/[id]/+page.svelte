@@ -9,7 +9,7 @@
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import UnsavedChangesDialog from '$lib/components/records/UnsavedChangesDialog.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
-	import { DEFAULT_OWNER_COUNTRY, type Owner, type OwnerContactKind, type OwnerInput } from '$lib/domain/owner/owner.js';
+	import { DEFAULT_OWNER_COUNTRY, type Owner, type OwnerContact, type OwnerContactKind, type OwnerInput } from '$lib/domain/owner/owner.js';
 	import type { Pet } from '$lib/domain/pet/pet.js';
 	import { getPetBreedOption, getPetSpeciesOption } from '$lib/domain/pet/taxonomy.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
@@ -52,10 +52,10 @@
 			city: owner.city ?? '',
 			country: owner.country ?? DEFAULT_OWNER_COUNTRY,
 			postalCode: owner.postalCode ?? '',
-			contacts: owner.contacts.length > 0 ? owner.contacts.map((contact) => ({ kind: contact.kind, value: contact.value })) : [{ kind: 'mobile', value: '' }],
+			contacts: owner.contacts.map((contact) => ({ kind: contact.kind, label: contact.label, value: contact.value })),
 			additionalResponsibles: owner.additionalResponsibles.map((responsible) => ({
 				name: responsible.name,
-				contacts: responsible.contacts.length > 0 ? responsible.contacts.map((contact) => ({ kind: contact.kind, value: contact.value })) : [{ kind: 'mobile', value: '' }]
+				contacts: responsible.contacts.map((contact) => ({ kind: contact.kind, label: contact.label, value: contact.value }))
 			})),
 			state: owner.state ?? ''
 		};
@@ -72,10 +72,10 @@
 			city: input.city ?? '',
 			country: input.country ?? '',
 			postalCode: input.postalCode ?? '',
-			contacts: input.contacts.map((contact) => ({ kind: contact.kind, value: contact.value.trim() })),
+			contacts: input.contacts.map((contact) => ({ kind: contact.kind, label: (contact.label ?? '').trim(), value: contact.value.trim() })),
 			additionalResponsibles: input.additionalResponsibles.map((responsible) => ({
 				name: responsible.name.trim(),
-				contacts: responsible.contacts.map((contact) => ({ kind: contact.kind, value: contact.value.trim() }))
+				contacts: responsible.contacts.map((contact) => ({ kind: contact.kind, label: (contact.label ?? '').trim(), value: contact.value.trim() }))
 			})),
 			state: input.state ?? ''
 		});
@@ -97,6 +97,24 @@
 		return kind === 'email';
 	}
 
+	function canCallContact(kind: OwnerContactKind): boolean {
+		return kind === 'phone' || kind === 'mobile';
+	}
+
+	function contactIsVisible(contact: OwnerContact | OwnerInput['contacts'][number]): boolean {
+		return contact.value.trim().length > 0 && (contact.kind !== 'other' || (contact.label ?? '').trim().length > 0);
+	}
+
+	function contactSubtitle(contact: OwnerContact | OwnerInput['contacts'][number]): string {
+		const label = (contact.label ?? '').trim();
+		return contact.kind === 'other' && label.length > 0 ? label : t(contactKindLabelKey(contact.kind));
+	}
+
+	function ownerErrorMessage(exception: unknown): string {
+		if (exception instanceof Error && exception.message === 'owner_contact_required') return t('owner.contactRequired');
+		return exception instanceof Error ? exception.message : String(exception);
+	}
+
 	const ownerId = $derived(Number(page.params.id));
 	let profile = $state<OwnerProfile | null>(null);
 	let form = $state<OwnerForm>({
@@ -109,7 +127,7 @@
 		city: '',
 		country: DEFAULT_OWNER_COUNTRY,
 		postalCode: '',
-		contacts: [{ kind: 'mobile', value: '' }],
+		contacts: [],
 		additionalResponsibles: [],
 		state: ''
 	});
@@ -130,7 +148,7 @@
 
 	const currentSnapshot = $derived(snapshotForm(form));
 	const hasUnsavedChanges = $derived(editing && Boolean(profile) && !loading && currentSnapshot !== savedSnapshot);
-	const visibleContacts = $derived((editing ? form.contacts : (profile?.owner.contacts ?? [])).filter((contact) => contact.value.trim().length > 0));
+	const visibleContacts = $derived((editing ? form.contacts : (profile?.owner.contacts ?? [])).filter((contact) => contactIsVisible(contact)));
 
 	function petTaxonomyLabel(pet: Pet): string {
 		const species = getPetSpeciesOption(pet.species);
@@ -276,7 +294,7 @@
 			if (showStatus) statusKey = 'status.saved';
 			return true;
 		} catch (exception) {
-			error = exception instanceof Error ? exception.message : String(exception);
+			error = ownerErrorMessage(exception);
 			return false;
 		} finally {
 			saving = false;
@@ -511,16 +529,17 @@
 									<article class="flex flex-col gap-3 rounded-md border border-border bg-background/50 p-3 sm:flex-row sm:items-center sm:justify-between">
 										<div class="min-w-0">
 											<p class="truncate text-sm font-semibold">{contact.value}</p>
-											<p class="mt-1 text-xs text-muted-foreground">{t(contactKindLabelKey(contact.kind))}</p>
+											<p class="mt-1 text-xs text-muted-foreground">{contactSubtitle(contact)}</p>
 										</div>
 
+										{#if isEmailContact(contact.kind) || canCallContact(contact.kind) || canOpenWhatsApp(contact.kind)}
 										<div class="flex flex-wrap gap-2">
 											{#if isEmailContact(contact.kind)}
 												<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.email')}: ${contact.value}`} onclick={() => void emailContact(contact.value)}>
 													<Mail class="size-4" />
 													{t('owner.email')}
 												</button>
-											{:else}
+											{:else if canCallContact(contact.kind)}
 												<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.call')}: ${contact.value}`} onclick={() => void callContact(contact.value)}>
 													<PhoneCall class="size-4" />
 													{t('owner.call')}
@@ -533,6 +552,7 @@
 												</button>
 											{/if}
 										</div>
+										{/if}
 									</article>
 								{:else}
 									<p class="text-sm text-muted-foreground">{t('owner.noContacts')}</p>
@@ -552,20 +572,21 @@
 											</div>
 
 											<div class="mt-3 flex flex-col gap-2">
-												{#each responsible.contacts.filter((contact) => contact.value.trim().length > 0) as contact}
+												{#each responsible.contacts.filter((contact) => contactIsVisible(contact)) as contact}
 													<div class="flex flex-col gap-3 rounded-md border border-border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
 														<div class="min-w-0">
 															<p class="truncate text-sm font-semibold">{contact.value}</p>
-															<p class="mt-1 text-xs text-muted-foreground">{t(contactKindLabelKey(contact.kind))}</p>
+															<p class="mt-1 text-xs text-muted-foreground">{contactSubtitle(contact)}</p>
 														</div>
 
+														{#if isEmailContact(contact.kind) || canCallContact(contact.kind) || canOpenWhatsApp(contact.kind)}
 														<div class="flex flex-wrap gap-2">
 															{#if isEmailContact(contact.kind)}
 																<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.email')}: ${contact.value}`} onclick={() => void emailContact(contact.value)}>
 																	<Mail class="size-4" />
 																	{t('owner.email')}
 																</button>
-															{:else}
+															{:else if canCallContact(contact.kind)}
 																<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.call')}: ${contact.value}`} onclick={() => void callContact(contact.value)}>
 																	<PhoneCall class="size-4" />
 																	{t('owner.call')}
@@ -578,6 +599,7 @@
 																</button>
 															{/if}
 														</div>
+														{/if}
 													</div>
 												{:else}
 													<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('owner.noContacts')}</p>

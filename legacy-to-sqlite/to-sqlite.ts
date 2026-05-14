@@ -4,7 +4,7 @@ import { parse } from 'csv-parse/sync';
 import Database from 'better-sqlite3';
 
 type CsvRow = Record<string, string | undefined>;
-type OwnerContactKind = 'phone' | 'mobile' | 'email';
+type OwnerContactKind = 'phone' | 'mobile' | 'email' | 'other';
 type PetSex = 'M' | 'F' | null;
 type PetSpecies = 'canine' | 'feline';
 
@@ -70,6 +70,7 @@ interface ParsedLegacyAddress {
 
 interface LegacyOwnerContactInput {
   kind: OwnerContactKind;
+  label?: string;
   value: string;
 }
 
@@ -157,13 +158,14 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS owner_contacts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     owner_id INTEGER NOT NULL,
-    kind TEXT NOT NULL CHECK(kind IN ('phone', 'mobile', 'email')),
+    kind TEXT NOT NULL CHECK(kind IN ('phone', 'mobile', 'email', 'other')),
+    label TEXT NOT NULL DEFAULT '',
     value TEXT NOT NULL,
     sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
     FOREIGN KEY (owner_id) REFERENCES owners (id) ON DELETE CASCADE,
-    UNIQUE(owner_id, kind, value)
+    UNIQUE(owner_id, kind, label, value)
   );
 
   CREATE TABLE IF NOT EXISTS owner_additional_responsibles (
@@ -179,13 +181,14 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS owner_additional_responsible_contacts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     responsible_id INTEGER NOT NULL,
-    kind TEXT NOT NULL CHECK(kind IN ('phone', 'mobile', 'email')),
+    kind TEXT NOT NULL CHECK(kind IN ('phone', 'mobile', 'email', 'other')),
+    label TEXT NOT NULL DEFAULT '',
     value TEXT NOT NULL,
     sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
     FOREIGN KEY (responsible_id) REFERENCES owner_additional_responsibles (id) ON DELETE CASCADE,
-    UNIQUE(responsible_id, kind, value)
+    UNIQUE(responsible_id, kind, label, value)
   );
 
   CREATE TABLE IF NOT EXISTS pets (
@@ -266,10 +269,12 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_owners_name ON owners(name);
   CREATE INDEX IF NOT EXISTS idx_owner_contacts_owner_id ON owner_contacts(owner_id);
+  CREATE INDEX IF NOT EXISTS idx_owner_contacts_label ON owner_contacts(label);
   CREATE INDEX IF NOT EXISTS idx_owner_contacts_value ON owner_contacts(value);
   CREATE INDEX IF NOT EXISTS idx_owner_additional_responsibles_owner_id ON owner_additional_responsibles(owner_id);
   CREATE INDEX IF NOT EXISTS idx_owner_additional_responsibles_name ON owner_additional_responsibles(name);
   CREATE INDEX IF NOT EXISTS idx_owner_additional_responsible_contacts_responsible_id ON owner_additional_responsible_contacts(responsible_id);
+  CREATE INDEX IF NOT EXISTS idx_owner_additional_responsible_contacts_label ON owner_additional_responsible_contacts(label);
   CREATE INDEX IF NOT EXISTS idx_owner_additional_responsible_contacts_value ON owner_additional_responsible_contacts(value);
   CREATE INDEX IF NOT EXISTS idx_pet_owners_pet_id ON pet_owners(pet_id);
   CREATE INDEX IF NOT EXISTS idx_pet_owners_owner_id ON pet_owners(owner_id);
@@ -292,8 +297,8 @@ const insertOwner = db.prepare(`
 `);
 
 const insertOwnerContact = db.prepare(`
-  INSERT OR IGNORE INTO owner_contacts (owner_id, kind, value, sort_order, updated_at)
-  VALUES (@ownerId, @kind, @value, @sortOrder, CURRENT_TIMESTAMP)
+  INSERT OR IGNORE INTO owner_contacts (owner_id, kind, label, value, sort_order, updated_at)
+  VALUES (@ownerId, @kind, @label, @value, @sortOrder, CURRENT_TIMESTAMP)
 `);
 
 const insertOwnerAdditionalResponsible = db.prepare(`
@@ -302,8 +307,8 @@ const insertOwnerAdditionalResponsible = db.prepare(`
 `);
 
 const insertOwnerAdditionalResponsibleContact = db.prepare(`
-  INSERT OR IGNORE INTO owner_additional_responsible_contacts (responsible_id, kind, value, sort_order, updated_at)
-  VALUES (@responsibleId, @kind, @value, @sortOrder, CURRENT_TIMESTAMP)
+  INSERT OR IGNORE INTO owner_additional_responsible_contacts (responsible_id, kind, label, value, sort_order, updated_at)
+  VALUES (@responsibleId, @kind, @label, @value, @sortOrder, CURRENT_TIMESTAMP)
 `);
 
 
@@ -485,8 +490,8 @@ const normalizeLegacyEmailValue = (value: string | undefined): string | null => 
 };
 
 const pushLegacyContact = (contacts: LegacyOwnerContactInput[], contact: LegacyOwnerContactInput) => {
-  const key = `${contact.kind}:${contact.value}`;
-  if (!contacts.some((existing) => `${existing.kind}:${existing.value}` === key)) contacts.push(contact);
+  const key = `${contact.kind}:${contact.label ?? ''}:${contact.value}`;
+  if (!contacts.some((existing) => `${existing.kind}:${existing.label ?? ''}:${existing.value}` === key)) contacts.push(contact);
 };
 
 const isIgnoredLegacyNameNote = (value: string | undefined): boolean => {
@@ -589,9 +594,9 @@ const parseLegacyAdditionalResponsibles = (value: string, ownerName: string): Pa
     if (!parsed.name) {
       const previous = responsibles[responsibles.length - 1];
       if (previous) {
-        const existingContacts = new Set(previous.contacts.map((contact) => `${contact.kind}:${contact.value}`));
+        const existingContacts = new Set(previous.contacts.map((contact) => `${contact.kind}:${contact.label ?? ''}:${contact.value}`));
         for (const contact of parsed.contacts) {
-          const key = `${contact.kind}:${contact.value}`;
+          const key = `${contact.kind}:${contact.label ?? ''}:${contact.value}`;
           if (!existingContacts.has(key)) previous.contacts.push(contact);
         }
       } else {
@@ -722,7 +727,7 @@ const parseLegacyAddress = (value: string | undefined, ownerName: string): Parse
 };
 
 const insertOwnerContactValue = (report: ImportReport, ownerId: number | bigint, kind: OwnerContactKind, value: string, sortOrder: number) => {
-  const result = insertOwnerContact.run({ ownerId, kind, value, sortOrder });
+  const result = insertOwnerContact.run({ ownerId, kind, label: '', value, sortOrder });
   if (result.changes > 0) report.ownerContactsCreated += 1;
   else report.ownerContactsReused += 1;
 };
@@ -756,7 +761,7 @@ const insertAdditionalResponsiblesFromSource = (report: ImportReport, ownerId: n
     }
 
     for (const [contactIndex, contact] of responsible.contacts.entries()) {
-      const result = insertOwnerAdditionalResponsibleContact.run({ responsibleId, kind: contact.kind, value: contact.value, sortOrder: contactIndex });
+      const result = insertOwnerAdditionalResponsibleContact.run({ responsibleId, kind: contact.kind, label: contact.label ?? '', value: contact.value, sortOrder: contactIndex });
       if (result.changes > 0) report.ownerAdditionalResponsibleContactsCreated += 1;
       else report.ownerAdditionalResponsibleContactsReused += 1;
     }

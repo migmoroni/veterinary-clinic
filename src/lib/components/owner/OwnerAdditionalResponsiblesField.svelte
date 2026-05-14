@@ -9,23 +9,25 @@
 
 	let { responsibles = $bindable<OwnerAdditionalResponsibleInput[]>([]) }: { responsibles?: OwnerAdditionalResponsibleInput[] } = $props();
 
-	const contactKinds: OwnerContactKind[] = ['mobile', 'phone', 'email'];
+	const contactKinds: OwnerContactKind[] = ['mobile', 'phone', 'email', 'other'];
 
 	function kindLabelKey(kind: OwnerContactKind): TranslationKey {
 		return `owner.contactKind.${kind}` as TranslationKey;
 	}
 
 	function emptyContact(): OwnerContactInput {
-		return { kind: 'mobile', value: '' };
+		return { kind: 'mobile', label: '', value: '' };
 	}
 
 	function normalizeContactKind(kind: string): OwnerContactKind {
+		if (kind === 'other') return 'other';
 		if (kind === 'phone') return 'phone';
 		if (kind === 'email') return 'email';
 		return 'mobile';
 	}
 
 	function formatContactValue(kind: OwnerContactKind, value: string): string {
+		if (kind === 'other') return value;
 		return kind === 'email' ? formatEmailForInput(value) : formatPhoneForInput(value);
 	}
 
@@ -59,8 +61,19 @@
 			return {
 				...responsible,
 				contacts: responsible.contacts.map((contact, currentContactIndex) =>
-					currentContactIndex === contactIndex ? { ...contact, kind: nextKind, value: formatContactValue(nextKind, contact.value) } : contact
+					currentContactIndex === contactIndex ? { ...contact, kind: nextKind, label: nextKind === 'other' ? (contact.label ?? '') : '', value: formatContactValue(nextKind, contact.value) } : contact
 				)
+			};
+		});
+	}
+
+	function updateContactLabel(responsibleIndex: number, contactIndex: number, label: string) {
+		responsibles = responsibles.map((responsible, index) => {
+			if (index !== responsibleIndex) return responsible;
+
+			return {
+				...responsible,
+				contacts: responsible.contacts.map((contact, currentContactIndex) => (currentContactIndex === contactIndex ? { ...contact, label } : contact))
 			};
 		});
 	}
@@ -138,7 +151,7 @@
 
 					<div class="mt-3 flex flex-col gap-2">
 						{#each responsible.contacts as contact, contactIndex}
-							<div class="grid gap-2 rounded-md border border-border bg-background p-2 sm:grid-cols-[10rem_minmax(0,1fr)_2.5rem] sm:items-center">
+							<div class="grid gap-2 rounded-md border border-border bg-background p-2 sm:items-center {contact.kind === 'other' ? 'sm:grid-cols-[10rem_minmax(0,1fr)_minmax(0,1fr)_2.5rem]' : 'sm:grid-cols-[10rem_minmax(0,1fr)_2.5rem]'}">
 								<div class="flex flex-col gap-1 text-sm font-medium">
 									<span class="sr-only">{t('owner.contactType')}</span>
 									<Select
@@ -149,19 +162,52 @@
 									/>
 								</div>
 
-								<label class="flex flex-col gap-1 text-sm font-medium">
-									<span class="sr-only">{t('owner.contactValue')}</span>
-									<input
-										type={contact.kind === 'email' ? 'email' : 'tel'}
-										inputmode={contact.kind === 'email' ? 'email' : 'tel'}
-										autocomplete={contact.kind === 'email' ? 'email' : 'tel'}
-										class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
-										value={contact.value}
-										oninput={(event) => updateContactValue(responsibleIndex, contactIndex, event.currentTarget.value)}
-										placeholder={t('owner.contactValue')}
-										aria-label={t('owner.contactValue')}
-									/>
-								</label>
+								{#if contact.kind === 'other'}
+									<label class="flex flex-col gap-1 text-sm font-medium">
+										<span class="sr-only">{t('owner.contactLabel')}</span>
+										<input
+											type="text"
+											inputmode="text"
+											autocomplete="off"
+											class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
+											value={contact.label ?? ''}
+											oninput={(event) => updateContactLabel(responsibleIndex, contactIndex, event.currentTarget.value)}
+											placeholder={t('owner.contactLabel')}
+											aria-label={t('owner.contactLabel')}
+											required
+										/>
+									</label>
+
+									<label class="flex flex-col gap-1 text-sm font-medium">
+										<span class="sr-only">{t('owner.contactOtherValue')}</span>
+										<input
+											type="text"
+											inputmode="text"
+											autocomplete="off"
+											class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
+											value={contact.value}
+											oninput={(event) => updateContactValue(responsibleIndex, contactIndex, event.currentTarget.value)}
+											placeholder={t('owner.contactOtherValue')}
+											aria-label={t('owner.contactOtherValue')}
+											required
+										/>
+									</label>
+								{:else}
+									<label class="flex flex-col gap-1 text-sm font-medium">
+										<span class="sr-only">{t('owner.contactValue')}</span>
+										<input
+											type={contact.kind === 'email' ? 'email' : 'tel'}
+											inputmode={contact.kind === 'email' ? 'email' : 'tel'}
+											autocomplete={contact.kind === 'email' ? 'email' : 'tel'}
+											class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
+											value={contact.value}
+											oninput={(event) => updateContactValue(responsibleIndex, contactIndex, event.currentTarget.value)}
+											placeholder={t('owner.contactValue')}
+											aria-label={t('owner.contactValue')}
+											required
+										/>
+									</label>
+								{/if}
 
 								<button
 									type="button"

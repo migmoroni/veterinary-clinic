@@ -84,7 +84,10 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 			 LIMIT 1) AS record_id,
 			owners.name AS title,
 			COALESCE((
-				SELECT owner_contacts.value
+				SELECT CASE
+					WHEN owner_contacts.kind = 'other' AND owner_contacts.label <> '' THEN owner_contacts.label || ': ' || owner_contacts.value
+					ELSE owner_contacts.value
+				END
 				FROM owner_contacts
 				WHERE owner_contacts.owner_id = owners.id
 				ORDER BY owner_contacts.sort_order, owner_contacts.id
@@ -100,14 +103,14 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 		 WHERE owners.deleted_at IS NULL
 			AND (owners.name LIKE $1 OR EXISTS (
 				SELECT 1 FROM owner_contacts
-				WHERE owner_contacts.owner_id = owners.id AND owner_contacts.value LIKE $1
+				WHERE owner_contacts.owner_id = owners.id AND (owner_contacts.value LIKE $1 OR owner_contacts.label LIKE $1)
 			) OR EXISTS (
 				SELECT 1 FROM owner_additional_responsibles
 				WHERE owner_additional_responsibles.owner_id = owners.id AND owner_additional_responsibles.name LIKE $1
 			) OR EXISTS (
 				SELECT 1 FROM owner_additional_responsibles
 				JOIN owner_additional_responsible_contacts ON owner_additional_responsible_contacts.responsible_id = owner_additional_responsibles.id
-				WHERE owner_additional_responsibles.owner_id = owners.id AND owner_additional_responsible_contacts.value LIKE $1
+				WHERE owner_additional_responsibles.owner_id = owners.id AND (owner_additional_responsible_contacts.value LIKE $1 OR owner_additional_responsible_contacts.label LIKE $1)
 			))
 
 		 UNION ALL

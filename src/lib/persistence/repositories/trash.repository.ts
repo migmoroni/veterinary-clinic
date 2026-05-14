@@ -46,7 +46,10 @@ export async function listTrashItems(): Promise<TrashItem[]> {
 			id,
 			name AS title,
 			COALESCE((
-				SELECT owner_contacts.value
+				SELECT CASE
+					WHEN owner_contacts.kind = 'other' AND owner_contacts.label <> '' THEN owner_contacts.label || ': ' || owner_contacts.value
+					ELSE owner_contacts.value
+				END
 				FROM owner_contacts
 				WHERE owner_contacts.owner_id = owners.id
 				ORDER BY owner_contacts.sort_order, owner_contacts.id

@@ -17,7 +17,7 @@
 		contacts?: OwnerContact[];
 	} = $props();
 
-	const availableContacts = $derived(contacts.filter((contact) => contact.value.trim().length > 0));
+	const availableContacts = $derived(contacts.filter((contact) => contact.value.trim().length > 0 && (contact.kind !== 'other' || (contact.label ?? '').trim().length > 0)));
 
 	function kindLabelKey(kind: OwnerContactKind): TranslationKey {
 		return `owner.contactKind.${kind}` as TranslationKey;
@@ -29,6 +29,15 @@
 
 	function isEmailContact(kind: OwnerContactKind): boolean {
 		return kind === 'email';
+	}
+
+	function canCallContact(kind: OwnerContactKind): boolean {
+		return kind === 'phone' || kind === 'mobile';
+	}
+
+	function contactSubtitle(contact: OwnerContact): string {
+		const label = (contact.label ?? '').trim();
+		return contact.kind === 'other' && label.length > 0 ? label : t(kindLabelKey(contact.kind));
 	}
 
 	function closeDialog() {
@@ -78,16 +87,17 @@
 							<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 								<div class="min-w-0">
 									<p class="truncate text-sm font-semibold">{contact.value}</p>
-									<p class="mt-1 text-xs text-muted-foreground">{t(kindLabelKey(contact.kind))}</p>
+									<p class="mt-1 text-xs text-muted-foreground">{contactSubtitle(contact)}</p>
 								</div>
 
+								{#if isEmailContact(contact.kind) || canCallContact(contact.kind) || canOpenWhatsApp(contact.kind)}
 								<div class="grid gap-2 sm:flex sm:justify-end {canOpenWhatsApp(contact.kind) ? 'grid-cols-2' : 'grid-cols-1'}">
 									{#if isEmailContact(contact.kind)}
 										<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.email')}: ${contact.value}`} onclick={() => void emailContact(contact.value)}>
 											<Mail class="size-4" />
 											{t('owner.email')}
 										</button>
-									{:else}
+									{:else if canCallContact(contact.kind)}
 										<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.call')}: ${contact.value}`} onclick={() => void callContact(contact.value)}>
 											<PhoneCall class="size-4" />
 											{t('owner.call')}
@@ -100,6 +110,7 @@
 										</button>
 									{/if}
 								</div>
+								{/if}
 							</article>
 						{/each}
 					</div>

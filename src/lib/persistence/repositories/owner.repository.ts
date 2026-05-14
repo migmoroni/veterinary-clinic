@@ -34,6 +34,7 @@ interface OwnerRow {
 interface ContactRow {
 	id: number;
 	kind: OwnerContactKind;
+	label: string;
 	value: string;
 	created_at: string | null;
 	updated_at: string | null;
@@ -68,8 +69,14 @@ function avatarBytesToSqlLiteral(value: Uint8Array | null | undefined): string {
 }
 
 function normalizeContactKind(value: string | null | undefined): OwnerContactKind {
+	if (value === 'other') return 'other';
 	if (value === 'email') return 'email';
 	return value === 'phone' ? 'phone' : 'mobile';
+}
+
+function normalizeContactLabel(kind: OwnerContactKind, value: string | null | undefined): string {
+	if (kind !== 'other') return '';
+	return nullable(value) ?? '';
 }
 
 function normalizeContactValue(kind: OwnerContactKind, value: string | null | undefined): string | null {
@@ -89,11 +96,13 @@ function normalizeContacts(contacts: OwnerContactInput[]): OwnerContactInput[] {
 
 	for (const contact of contacts) {
 		const kind = normalizeContactKind(contact.kind);
+		const label = normalizeContactLabel(kind, contact.label);
 		const value = normalizeContactValue(kind, contact.value);
-		if (!value) continue;
+		if (!value) throw new Error('owner_contact_required');
+		if (kind === 'other' && !label) throw new Error('owner_contact_required');
 
-		const key = `${kind}:${value}`;
-		if (!unique.has(key)) unique.set(key, { kind, value });
+		const key = `${kind}:${label}:${value}`;
+		if (!unique.has(key)) unique.set(key, { kind, label, value });
 	}
 
 	return [...unique.values()];
@@ -112,6 +121,7 @@ function mapContact(row: ContactRow): OwnerContact {
 	return {
 		id: row.id,
 		kind: normalizeContactKind(row.kind),
+		label: row.label ?? '',
 		value: row.value,
 		createdAt: row.created_at,
 		updatedAt: row.updated_at
@@ -152,7 +162,7 @@ function mapOwner(row: OwnerRow, contacts: OwnerContact[] = [], additionalRespon
 
 export async function listOwnerContacts(ownerId: number): Promise<OwnerContact[]> {
 	const rows = await selectMany<OwnerContactRow>(
-		`SELECT id, owner_id, kind, value, created_at, updated_at
+		`SELECT id, owner_id, kind, label, value, created_at, updated_at
 		 FROM owner_contacts
 		 WHERE owner_id = $1
 		 ORDER BY sort_order, id`,
@@ -169,7 +179,7 @@ export async function listOwnerContactsByOwnerIds(ownerIds: number[]): Promise<M
 
 	const placeholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
 	const rows = await selectMany<OwnerContactRow>(
-		`SELECT id, owner_id, kind, value, created_at, updated_at
+		`SELECT id, owner_id, kind, label, value, created_at, updated_at
 		 FROM owner_contacts
 		 WHERE owner_id IN (${placeholders})
 		 ORDER BY owner_id, sort_order, id`,
@@ -198,7 +208,7 @@ export async function listOwnerAdditionalResponsibleContactsByResponsibleIds(res
 
 	const placeholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
 	const rows = await selectMany<OwnerAdditionalResponsibleContactRow>(
-		`SELECT id, responsible_id, kind, value, created_at, updated_at
+		`SELECT id, responsible_id, kind, label, value, created_at, updated_at
 		 FROM owner_additional_responsible_contacts
 		 WHERE responsible_id IN (${placeholders})
 		 ORDER BY responsible_id, sort_order, id`,
@@ -257,9 +267,9 @@ async function replaceOwnerContacts(ownerId: number, contacts: OwnerContactInput
 	const normalizedContacts = normalizeContacts(contacts);
 	for (const [index, contact] of normalizedContacts.entries()) {
 		await execute(
-			`INSERT INTO owner_contacts (owner_id, kind, value, sort_order, updated_at)
-			 VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)`,
-			[ownerId, contact.kind, contact.value, index]
+			`INSERT INTO owner_contacts (owner_id, kind, label, value, sort_order, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`,
+			[ownerId, contact.kind, contact.label ?? '', contact.value, index]
 		);
 	}
 }
@@ -279,9 +289,9 @@ async function replaceOwnerAdditionalResponsibles(ownerId: number, responsibles:
 
 		for (const [contactIndex, contact] of responsible.contacts.entries()) {
 			await execute(
-				`INSERT OR IGNORE INTO owner_additional_responsible_contacts (responsible_id, kind, value, sort_order, updated_at)
-				 VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)`,
-				[responsibleId, contact.kind, contact.value, contactIndex]
+				`INSERT OR IGNORE INTO owner_additional_responsible_contacts (responsible_id, kind, label, value, sort_order, updated_at)
+				 VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`,
+				[responsibleId, contact.kind, contact.label ?? '', contact.value, contactIndex]
 			);
 		}
 	}
@@ -294,14 +304,14 @@ export async function listOwners(query = ''): Promise<Owner[]> {
 		normalized.length > 0
 			? `AND (name LIKE $1 OR city LIKE $1 OR EXISTS (
 				SELECT 1 FROM owner_contacts
-				WHERE owner_contacts.owner_id = owners.id AND owner_contacts.value LIKE $1
+				WHERE owner_contacts.owner_id = owners.id AND (owner_contacts.value LIKE $1 OR owner_contacts.label LIKE $1)
 			) OR EXISTS (
 				SELECT 1 FROM owner_additional_responsibles
 				WHERE owner_additional_responsibles.owner_id = owners.id AND owner_additional_responsibles.name LIKE $1
 			) OR EXISTS (
 				SELECT 1 FROM owner_additional_responsibles
 				JOIN owner_additional_responsible_contacts ON owner_additional_responsible_contacts.responsible_id = owner_additional_responsibles.id
-				WHERE owner_additional_responsibles.owner_id = owners.id AND owner_additional_responsible_contacts.value LIKE $1
+				WHERE owner_additional_responsibles.owner_id = owners.id AND (owner_additional_responsible_contacts.value LIKE $1 OR owner_additional_responsible_contacts.label LIKE $1)
 			))`
 			: '';
 

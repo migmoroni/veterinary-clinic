@@ -22,7 +22,7 @@
 			city: '',
 			country: DEFAULT_OWNER_COUNTRY,
 			postalCode: '',
-			contacts: [{ kind: 'mobile', value: '' }],
+			contacts: [],
 			additionalResponsibles: [],
 			state: ''
 		};
@@ -87,6 +87,11 @@
 		}
 	}
 
+	function ownerErrorMessage(exception: unknown): string {
+		if (exception instanceof Error && exception.message === 'owner_contact_required') return t('owner.contactRequired');
+		return exception instanceof Error ? exception.message : String(exception);
+	}
+
 	async function submit(event: SubmitEvent) {
 		event.preventDefault();
 		saving = true;
@@ -96,7 +101,7 @@
 			const owner = await saveNewOwner(form);
 			await goto(`/owners/${owner.id}`);
 		} catch (exception) {
-			error = exception instanceof Error ? exception.message : String(exception);
+			error = ownerErrorMessage(exception);
 		} finally {
 			saving = false;
 		}

@@ -1,10 +1,11 @@
-export type OwnerContactKind = 'phone' | 'mobile' | 'email';
+export type OwnerContactKind = 'phone' | 'mobile' | 'email' | 'other';
 
 export const DEFAULT_OWNER_COUNTRY = 'Brazil';
 
 export interface OwnerContact {
 	id: number;
 	kind: OwnerContactKind;
+	label: string;
 	value: string;
 	createdAt: string | null;
 	updatedAt: string | null;
@@ -12,6 +13,7 @@ export interface OwnerContact {
 
 export interface OwnerContactInput {
 	kind: OwnerContactKind;
+	label?: string;
 	value: string;
 }
 
