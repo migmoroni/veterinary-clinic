@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import OwnerContactDialog from '$lib/components/owner/OwnerContactDialog.svelte';
+	import type { DashboardAnalysisView } from '$lib/domain/dashboard/analytics.js';
 	import type { OwnerContact } from '$lib/domain/owner/owner.js';
-	import type { VaccineStatusKey } from '$lib/domain/vaccine/analytics.js';
 	import { clinic } from '$lib/stores/clinic.svelte.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
 	import Phone from '@lucide/svelte/icons/phone';
@@ -12,13 +12,13 @@
 	import Upload from '@lucide/svelte/icons/upload';
 	import Syringe from '@lucide/svelte/icons/syringe';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import PawPrint from '@lucide/svelte/icons/paw-print';
+	import UserPlus from '@lucide/svelte/icons/user-plus';
 
-	const vaccineCards: { status: VaccineStatusKey; labelKey: TranslationKey; detailKey: TranslationKey; barClass: string; textClass: string }[] = [
-		{ status: 'current', labelKey: 'vaccine.status.current', detailKey: 'vaccine.status.currentDetail', barClass: 'bg-emerald-600', textClass: 'text-emerald-700' },
-		{ status: 'dueSoon', labelKey: 'vaccine.status.dueSoon', detailKey: 'vaccine.status.dueSoonDetail', barClass: 'bg-sky-600', textClass: 'text-sky-700' },
-		{ status: 'dueVerySoon', labelKey: 'vaccine.status.dueVerySoon', detailKey: 'vaccine.status.dueVerySoonDetail', barClass: 'bg-amber-600', textClass: 'text-amber-700' },
-		{ status: 'expired', labelKey: 'vaccine.status.expired', detailKey: 'vaccine.status.expiredDetail', barClass: 'bg-orange-600', textClass: 'text-orange-700' },
-		{ status: 'overdue', labelKey: 'vaccine.status.overdue', detailKey: 'vaccine.status.overdueDetail', barClass: 'bg-destructive', textClass: 'text-destructive' }
+	const analysisCards: { view: Exclude<DashboardAnalysisView, 'general'>; titleKey: TranslationKey; descriptionKey: TranslationKey; metricKey: TranslationKey; icon: typeof Syringe }[] = [
+		{ view: 'vaccines', titleKey: 'analysis.card.vaccines.title', descriptionKey: 'analysis.card.vaccines.description', metricKey: 'analysis.trackedVaccineItems', icon: Syringe },
+		{ view: 'pets', titleKey: 'analysis.card.pets.title', descriptionKey: 'analysis.card.pets.description', metricKey: 'stats.pets', icon: PawPrint },
+		{ view: 'owners', titleKey: 'analysis.card.owners.title', descriptionKey: 'analysis.card.owners.description', metricKey: 'stats.owners', icon: UserPlus }
 	];
 
 	let setupStatusKey = $state<TranslationKey | null>(null);
@@ -42,36 +42,15 @@
 		void clinic.init();
 	});
 
-	function vaccineCount(status: VaccineStatusKey): number {
-		return clinic.dashboard?.vaccines.summary[status] ?? 0;
-	}
-
-	function vaccinePercent(status: VaccineStatusKey): number {
-		const total = clinic.dashboard?.vaccines.totalTracked ?? 0;
-		if (total <= 0) return 0;
-
-		const count = vaccineCount(status);
-		if (count <= 0) return 0;
-
-		const percent = (count / total) * 100;
-		const rounded = Math.round(percent * 10) / 10;
-		return rounded >= 0.1 ? rounded : 0.1;
-	}
-
-	function vaccinePercentLabel(status: VaccineStatusKey): string {
-		const total = clinic.dashboard?.vaccines.totalTracked ?? 0;
-		const count = vaccineCount(status);
-		if (total <= 0 || count <= 0) return '0';
-
-		const rawPercent = (count / total) * 100;
+	function metricFormatter(value: number): string {
 		const formatter = new Intl.NumberFormat(i18n.locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-		if (rawPercent < 0.1) return `< ${formatter.format(0.1)}`;
-		return formatter.format(Math.round(rawPercent * 10) / 10);
+		return Number.isInteger(value) ? new Intl.NumberFormat(i18n.locale).format(value) : formatter.format(value);
 	}
 
-	function vaccineHistoryWidth(count: number): number {
-		const max = (clinic.dashboard?.vaccines.history ?? []).reduce((current, point) => Math.max(current, point.count), 0);
-		return max > 0 ? Math.max(4, Math.round((count / max) * 100)) : 0;
+	function analysisCount(view: Exclude<DashboardAnalysisView, 'general'>): number {
+		if (view === 'vaccines') return clinic.dashboard?.vaccines.totalTracked ?? 0;
+		if (view === 'pets') return clinic.dashboard?.counts.pets ?? 0;
+		return clinic.dashboard?.counts.owners ?? 0;
 	}
 
 	function openCurrentRecordContact() {
@@ -218,66 +197,48 @@
 			{/if}
 	</section>
 
-    <section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
+	<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
 		<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 			<div class="min-w-0">
 				<div class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
 					<Syringe class="size-4" />
-					{t('overview.vaccines.title')}
+					{t('home.analysisTitle')}
 				</div>
-				<p class="mt-1 text-sm leading-6 text-muted-foreground">{t('overview.vaccines.description')}</p>
+				<p class="mt-1 text-sm leading-6 text-muted-foreground">{t('home.analysisDescription')}</p>
 			</div>
-			<a href="/vaccines" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={t('overview.vaccines.open')}>
-				{t('overview.vaccines.open')}
+			<a href="/dashboard?view=general" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={t('actions.openDashboard')}>
+				{t('analysis.view.general')}
 				<ArrowRight class="size-4" />
 			</a>
 		</div>
 
 		{#if clinic.loading}
-			<div class="mt-4 grid grid-cols-2 gap-3 xl:grid-cols-5">
-				{#each vaccineCards as _card}
-					<div class="h-28 animate-pulse rounded-md bg-muted"></div>
+			<div class="mt-4 grid gap-3 lg:grid-cols-3">
+				{#each analysisCards as _card}
+					<div class="h-36 animate-pulse rounded-md bg-muted"></div>
 				{/each}
 			</div>
 		{:else}
-			<div class="mt-4 grid grid-cols-2 gap-3 xl:grid-cols-5">
-				{#each vaccineCards as card}
-					<a href={`/vaccines?status=${card.status}`} class="flex h-full min-h-28 flex-col rounded-md border border-border bg-background p-3 hover:bg-accent" aria-label={`${t(card.labelKey)}: ${vaccineCount(card.status)}`}>
-						<span class="flex min-h-16 items-start justify-between gap-3">
-							<span class="min-w-0">
-								<span class="block text-sm font-medium">{t(card.labelKey)}</span>
-								<span class="mt-1 block min-h-10 text-xs leading-5 text-muted-foreground">{t(card.detailKey)}</span>
+			<div class="mt-4 grid gap-3 lg:grid-cols-3">
+				{#each analysisCards as card}
+					<a href={`/dashboard?view=${card.view}`} class="flex min-h-40 flex-col rounded-md border border-border bg-background p-4 hover:bg-accent" aria-label={`${t(card.titleKey)}: ${metricFormatter(analysisCount(card.view))}`}>
+						<span class="flex items-start justify-between gap-3">
+							<span class="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+								<card.icon class="size-5" />
 							</span>
-							<span class="text-2xl font-semibold {card.textClass}">{vaccineCount(card.status)}</span>
+							<span class="text-right">
+								<span class="block text-2xl font-semibold">{metricFormatter(analysisCount(card.view))}</span>
+								<span class="mt-1 block text-xs text-muted-foreground">{t(card.metricKey)}</span>
+							</span>
 						</span>
-						<span class="mt-auto block h-2 rounded-full bg-muted">
-							<span class="block h-2 rounded-full {card.barClass}" style={`width: ${vaccinePercent(card.status)}%`}></span>
+						<span class="mt-4 block text-base font-semibold">{t(card.titleKey)}</span>
+						<span class="mt-2 block text-sm leading-6 text-muted-foreground">{t(card.descriptionKey)}</span>
+						<span class="mt-auto inline-flex items-center gap-2 pt-4 text-sm font-medium text-primary">
+							{t('analysis.openView')}
+							<ArrowRight class="size-4" />
 						</span>
-						<span class="mt-2 block text-xs text-muted-foreground">{vaccinePercentLabel(card.status)}%</span>
 					</a>
 				{/each}
-			</div>
-
-			<div class="mt-5 border-t border-border pt-4">
-				<div class="flex items-center justify-between gap-3">
-					<h3 class="text-sm font-semibold">{t('overview.vaccines.historyTitle')}</h3>
-					<a href="/vaccines?period=month" class="text-sm font-medium text-primary hover:underline">{t('overview.vaccines.open')}</a>
-				</div>
-				{#if (clinic.dashboard?.vaccines.history.length ?? 0) === 0}
-					<p class="mt-3 rounded-md border border-dashed border-border px-4 py-5 text-center text-sm text-muted-foreground">{t('overview.vaccines.emptyHistory')}</p>
-				{:else}
-					<div class="mt-3 grid gap-2 lg:grid-cols-2">
-						{#each (clinic.dashboard?.vaccines.history ?? []).slice(-8) as point}
-							<div class="grid grid-cols-[5.5rem_minmax(0,1fr)_2.5rem] items-center gap-3 text-sm">
-								<span class="truncate text-muted-foreground">{point.label}</span>
-								<span class="h-2 rounded-full bg-muted">
-									<span class="block h-2 rounded-full bg-primary" style={`width: ${vaccineHistoryWidth(point.count)}%`}></span>
-								</span>
-								<span class="text-right font-medium">{point.count}</span>
-							</div>
-						{/each}
-					</div>
-				{/if}
 			</div>
 		{/if}
 	</section>

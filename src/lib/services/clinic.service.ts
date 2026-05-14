@@ -1,5 +1,6 @@
 import type { CurrentRecordSummary } from '$lib/domain/medical-record/medical-record.js';
 import type { OwnerContact } from '$lib/domain/owner/owner.js';
+import type { DashboardAnalytics } from '$lib/domain/dashboard/analytics.js';
 import { hasDatabaseFile } from '$lib/native/database-file.js';
 import { createEmptyDatabase, getDatabase } from '$lib/persistence/sqlite/client.js';
 import { getLastEditedRecord } from '$lib/persistence/repositories/medical-record.repository.js';
@@ -13,6 +14,7 @@ import { loadLocalePreference } from './preferences.service.js';
 import { importDatabase } from './backup.service.js';
 import { shouldResetOverviewLastRecordOnce } from './client-state.service.js';
 import { loadVaccineAnalyticsOverview, loadVaccineHistory } from './vaccine-analytics.service.js';
+import { loadDashboardAnalytics } from './dashboard-analytics.service.js';
 
 
 export interface ClinicVaccineDashboard extends VaccineAnalyticsOverview {
@@ -27,6 +29,7 @@ export interface ClinicDashboard {
 		records: number;
 	};
 	vaccines: ClinicVaccineDashboard;
+	analytics: DashboardAnalytics;
 }
 
 export async function initializeClinic(): Promise<void> {
@@ -48,16 +51,18 @@ export async function importClinicDatabase(title: string): Promise<boolean> {
 }
 
 export async function loadDashboard(): Promise<ClinicDashboard> {
-	const [record, counts, vaccineOverview, vaccineHistory] = await Promise.all([
+	const [record, counts, vaccineOverview, vaccineHistory, analytics] = await Promise.all([
 		getLastEditedRecord(),
 		getClinicCounts(),
 		loadVaccineAnalyticsOverview(),
-		loadVaccineHistory({ period: 'month', vaccinePresetId: null })
+		loadVaccineHistory({ period: 'month', vaccinePresetId: null }),
+		loadDashboardAnalytics()
 	]);
 	return {
 		record: shouldResetOverviewLastRecordOnce() ? null : record,
 		counts,
-		vaccines: { ...vaccineOverview, history: vaccineHistory }
+		vaccines: { ...vaccineOverview, history: vaccineHistory },
+		analytics
 	};
 }
 

@@ -30,7 +30,7 @@
 
 	function isActive(href: string) {
 		const path = page.url.pathname;
-		return href === '/' ? path === '/' : path.startsWith(href);
+		return href === '/' ? path === '/' || path === '/dashboard' : path.startsWith(href);
 	}
 
 	async function goBack() {
