@@ -442,7 +442,7 @@ const nullable = (value: string | undefined): string | null => {
 
 const legacyDocumentFragmentPattern = /\b(?:\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}|\d{2,3}\.?\d{3}\.?\d{3}(?:[-.]?\d{0,2})?)\b/g;
 const legacyEmailPattern = /\b[^\s@]+@[^\s@]+\.[^\s@]+\b/g;
-const legacyPhonePattern = /\b(?:\(?\d{2}\)?\s*)?(?:9\s*)?\d{4}[\s.-]*\d{4}\b/g;
+const legacyPhonePattern = /\b(?:\+?55\s*)?(?:\(?\d{2}\)?\s*)?(?:9\s*)?\d{4}[\s.-]*\d{4}\b/g;
 const legacyLargeSpacePattern = /\s{6,}/g;
 const legacyAddressComplementHintPattern =
   /\b(?:ap|apto|apartamento|casa|fundos|frente|sala|bloco|quadra|lote|box|loja|sobrado|terreo|t[eé]rreo|galp[aã]o|barrac[aã]o|ch[aá]cara|s[ií]tio|fazenda|condom[ií]nio|edif[ií]cio|distrito|industrial|rodovia|km|alambique|engenho)\b/i;
@@ -457,15 +457,26 @@ const formatLegacyBrazilPhone = (digits: string): string => {
   return `(${areaCode}) ${formattedNumber}`;
 };
 
+const formatLegacyBrazilPhoneWithCountryCode = (digits: string): string => {
+  const formatted = formatLegacyBrazilPhone(digits);
+  return formatted === digits ? `+55${digits}` : `+55 ${formatted}`;
+};
+
 const normalizeLegacyPhoneValue = (value: string | undefined, kind: Exclude<OwnerContactKind, 'email'>): string | null => {
-  const digits = value?.replace(/\D/g, '') ?? '';
+  const raw = value ?? '';
+  const hasInternationalPrefix = /^\s*(?:\+|00)/.test(raw);
+  const digits = raw.replace(/\D/g, '').replace(/^00/, '');
   if (!digits) return null;
 
-  const localDigits = digits.startsWith('55') && digits.length > 11 ? digits.slice(2) : digits;
-  const digitsWithAreaCode = localDigits.length === 8 || localDigits.length === 9 ? `16${localDigits}` : localDigits;
+  if (!digits.startsWith('55') && (hasInternationalPrefix || digits.length > 11)) return `+${digits}`;
+
+  if (digits.startsWith('55') && digits.length !== 12 && digits.length !== 13) return `+${digits}`;
+
+  const nationalDigits = digits.startsWith('55') ? digits.slice(2) : digits;
+  const digitsWithAreaCode = nationalDigits.length === 8 || nationalDigits.length === 9 ? `16${nationalDigits}` : nationalDigits;
   const normalizedDigits = kind === 'mobile' && digitsWithAreaCode.length === 10 ? `${digitsWithAreaCode.slice(0, 2)}9${digitsWithAreaCode.slice(2)}` : digitsWithAreaCode;
 
-  return formatLegacyBrazilPhone(normalizedDigits);
+  return formatLegacyBrazilPhoneWithCountryCode(normalizedDigits);
 };
 
 const normalizeLegacyEmailValue = (value: string | undefined): string | null => {
