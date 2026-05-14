@@ -1,4 +1,13 @@
-import { DEFAULT_OWNER_COUNTRY, type Owner, type OwnerContact, type OwnerContactInput, type OwnerContactKind, type OwnerInput } from '$lib/domain/owner/owner.js';
+import {
+	DEFAULT_OWNER_COUNTRY,
+	type Owner,
+	type OwnerAdditionalResponsible,
+	type OwnerAdditionalResponsibleInput,
+	type OwnerContact,
+	type OwnerContactInput,
+	type OwnerContactKind,
+	type OwnerInput
+} from '$lib/domain/owner/owner.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { formatEmailForInput } from '$lib/domain/shared/email.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
@@ -22,13 +31,28 @@ interface OwnerRow {
 	purge_after: string | null;
 }
 
-interface OwnerContactRow {
+interface ContactRow {
 	id: number;
-	owner_id: number;
 	kind: OwnerContactKind;
 	value: string;
 	created_at: string | null;
 	updated_at: string | null;
+}
+
+interface OwnerContactRow extends ContactRow {
+	owner_id: number;
+}
+
+interface OwnerAdditionalResponsibleRow {
+	id: number;
+	owner_id: number;
+	name: string;
+	created_at: string | null;
+	updated_at: string | null;
+}
+
+interface OwnerAdditionalResponsibleContactRow extends ContactRow {
+	responsible_id: number;
 }
 
 function nullable(value: string | null | undefined): string | null {
@@ -75,7 +99,16 @@ function normalizeContacts(contacts: OwnerContactInput[]): OwnerContactInput[] {
 	return [...unique.values()];
 }
 
-function mapOwnerContact(row: OwnerContactRow): OwnerContact {
+function normalizeAdditionalResponsibles(responsibles: OwnerAdditionalResponsibleInput[] = []): OwnerAdditionalResponsibleInput[] {
+	return responsibles
+		.map((responsible) => ({
+			name: nullable(responsible.name) ?? '',
+			contacts: normalizeContacts(responsible.contacts ?? [])
+		}))
+		.filter((responsible) => responsible.name.length > 0);
+}
+
+function mapContact(row: ContactRow): OwnerContact {
 	return {
 		id: row.id,
 		kind: normalizeContactKind(row.kind),
@@ -85,7 +118,17 @@ function mapOwnerContact(row: OwnerContactRow): OwnerContact {
 	};
 }
 
-function mapOwner(row: OwnerRow, contacts: OwnerContact[] = []): Owner {
+function mapAdditionalResponsible(row: OwnerAdditionalResponsibleRow, contacts: OwnerContact[] = []): OwnerAdditionalResponsible {
+	return {
+		id: row.id,
+		name: row.name,
+		contacts,
+		createdAt: row.created_at,
+		updatedAt: row.updated_at
+	};
+}
+
+function mapOwner(row: OwnerRow, contacts: OwnerContact[] = [], additionalResponsibles: OwnerAdditionalResponsible[] = []): Owner {
 	return {
 		id: row.id,
 		name: row.name,
@@ -98,6 +141,7 @@ function mapOwner(row: OwnerRow, contacts: OwnerContact[] = []): Owner {
 		country: row.country,
 		postalCode: row.postal_code,
 		contacts,
+		additionalResponsibles,
 		state: row.state,
 		createdAt: row.created_at,
 		updatedAt: row.updated_at,
@@ -115,7 +159,7 @@ export async function listOwnerContacts(ownerId: number): Promise<OwnerContact[]
 		[ownerId]
 	);
 
-	return rows.map(mapOwnerContact);
+	return rows.map(mapContact);
 }
 
 export async function listOwnerContactsByOwnerIds(ownerIds: number[]): Promise<Map<number, OwnerContact[]>> {
@@ -134,7 +178,7 @@ export async function listOwnerContactsByOwnerIds(ownerIds: number[]): Promise<M
 
 	for (const row of rows) {
 		const contacts = contactsByOwnerId.get(row.owner_id) ?? [];
-		contacts.push(mapOwnerContact(row));
+		contacts.push(mapContact(row));
 		contactsByOwnerId.set(row.owner_id, contacts);
 	}
 
@@ -143,10 +187,71 @@ export async function listOwnerContactsByOwnerIds(ownerIds: number[]): Promise<M
 
 async function mapOwnersWithContacts(rows: OwnerRow[]): Promise<Owner[]> {
 	const contactsByOwnerId = await listOwnerContactsByOwnerIds(rows.map((row) => row.id));
-	return rows.map((row) => mapOwner(row, contactsByOwnerId.get(row.id) ?? []));
+	const additionalResponsiblesByOwnerId = await listOwnerAdditionalResponsiblesByOwnerIds(rows.map((row) => row.id));
+	return rows.map((row) => mapOwner(row, contactsByOwnerId.get(row.id) ?? [], additionalResponsiblesByOwnerId.get(row.id) ?? []));
 }
 
-async function replaceOwnerContacts(ownerId: number, contacts: OwnerContactInput[]): Promise<void> {
+export async function listOwnerAdditionalResponsibleContactsByResponsibleIds(responsibleIds: number[]): Promise<Map<number, OwnerContact[]>> {
+	const uniqueIds = [...new Set(responsibleIds)].filter((id) => Number.isFinite(id));
+	const contactsByResponsibleId = new Map<number, OwnerContact[]>();
+	if (uniqueIds.length === 0) return contactsByResponsibleId;
+
+	const placeholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
+	const rows = await selectMany<OwnerAdditionalResponsibleContactRow>(
+		`SELECT id, responsible_id, kind, value, created_at, updated_at
+		 FROM owner_additional_responsible_contacts
+		 WHERE responsible_id IN (${placeholders})
+		 ORDER BY responsible_id, sort_order, id`,
+		uniqueIds
+	);
+
+	for (const row of rows) {
+		const contacts = contactsByResponsibleId.get(row.responsible_id) ?? [];
+		contacts.push(mapContact(row));
+		contactsByResponsibleId.set(row.responsible_id, contacts);
+	}
+
+	return contactsByResponsibleId;
+}
+
+export async function listOwnerAdditionalResponsibles(ownerId: number): Promise<OwnerAdditionalResponsible[]> {
+	const rows = await selectMany<OwnerAdditionalResponsibleRow>(
+		`SELECT id, owner_id, name, created_at, updated_at
+		 FROM owner_additional_responsibles
+		 WHERE owner_id = $1
+		 ORDER BY sort_order, id`,
+		[ownerId]
+	);
+
+	const contactsByResponsibleId = await listOwnerAdditionalResponsibleContactsByResponsibleIds(rows.map((row) => row.id));
+	return rows.map((row) => mapAdditionalResponsible(row, contactsByResponsibleId.get(row.id) ?? []));
+}
+
+async function listOwnerAdditionalResponsiblesByOwnerIds(ownerIds: number[]): Promise<Map<number, OwnerAdditionalResponsible[]>> {
+	const uniqueIds = [...new Set(ownerIds)].filter((id) => Number.isFinite(id));
+	const responsiblesByOwnerId = new Map<number, OwnerAdditionalResponsible[]>();
+	if (uniqueIds.length === 0) return responsiblesByOwnerId;
+
+	const placeholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
+	const rows = await selectMany<OwnerAdditionalResponsibleRow>(
+		`SELECT id, owner_id, name, created_at, updated_at
+		 FROM owner_additional_responsibles
+		 WHERE owner_id IN (${placeholders})
+		 ORDER BY owner_id, sort_order, id`,
+		uniqueIds
+	);
+
+	const contactsByResponsibleId = await listOwnerAdditionalResponsibleContactsByResponsibleIds(rows.map((row) => row.id));
+	for (const row of rows) {
+		const responsibles = responsiblesByOwnerId.get(row.owner_id) ?? [];
+		responsibles.push(mapAdditionalResponsible(row, contactsByResponsibleId.get(row.id) ?? []));
+		responsiblesByOwnerId.set(row.owner_id, responsibles);
+	}
+
+	return responsiblesByOwnerId;
+}
+
+async function replaceOwnerContacts(ownerId: number, contacts: OwnerContactInput[] = []): Promise<void> {
 	await execute('DELETE FROM owner_contacts WHERE owner_id = $1', [ownerId]);
 
 	const normalizedContacts = normalizeContacts(contacts);
@@ -159,6 +264,29 @@ async function replaceOwnerContacts(ownerId: number, contacts: OwnerContactInput
 	}
 }
 
+async function replaceOwnerAdditionalResponsibles(ownerId: number, responsibles: OwnerAdditionalResponsibleInput[] = []): Promise<void> {
+	await execute('DELETE FROM owner_additional_responsible_contacts WHERE responsible_id IN (SELECT id FROM owner_additional_responsibles WHERE owner_id = $1)', [ownerId]);
+	await execute('DELETE FROM owner_additional_responsibles WHERE owner_id = $1', [ownerId]);
+
+	const normalizedResponsibles = normalizeAdditionalResponsibles(responsibles);
+	for (const [responsibleIndex, responsible] of normalizedResponsibles.entries()) {
+		const result = await execute(
+			`INSERT INTO owner_additional_responsibles (owner_id, name, sort_order, updated_at)
+			 VALUES ($1, $2, $3, CURRENT_TIMESTAMP)`,
+			[ownerId, responsible.name, responsibleIndex]
+		);
+		const responsibleId = Number(result.lastInsertId);
+
+		for (const [contactIndex, contact] of responsible.contacts.entries()) {
+			await execute(
+				`INSERT OR IGNORE INTO owner_additional_responsible_contacts (responsible_id, kind, value, sort_order, updated_at)
+				 VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)`,
+				[responsibleId, contact.kind, contact.value, contactIndex]
+			);
+		}
+	}
+}
+
 export async function listOwners(query = ''): Promise<Owner[]> {
 	const normalized = query.trim();
 	const values = normalized.length > 0 ? [`%${normalized}%`] : [];
@@ -167,6 +295,13 @@ export async function listOwners(query = ''): Promise<Owner[]> {
 			? `AND (name LIKE $1 OR city LIKE $1 OR EXISTS (
 				SELECT 1 FROM owner_contacts
 				WHERE owner_contacts.owner_id = owners.id AND owner_contacts.value LIKE $1
+			) OR EXISTS (
+				SELECT 1 FROM owner_additional_responsibles
+				WHERE owner_additional_responsibles.owner_id = owners.id AND owner_additional_responsibles.name LIKE $1
+			) OR EXISTS (
+				SELECT 1 FROM owner_additional_responsibles
+				JOIN owner_additional_responsible_contacts ON owner_additional_responsible_contacts.responsible_id = owner_additional_responsibles.id
+				WHERE owner_additional_responsibles.owner_id = owners.id AND owner_additional_responsible_contacts.value LIKE $1
 			))`
 			: '';
 
@@ -194,7 +329,8 @@ export async function getOwner(id: number, includeDeleted = false): Promise<Owne
 	);
 
 	if (!rows[0]) return null;
-	return mapOwner(rows[0], await listOwnerContacts(rows[0].id));
+	const [contacts, additionalResponsibles] = await Promise.all([listOwnerContacts(rows[0].id), listOwnerAdditionalResponsibles(rows[0].id)]);
+	return mapOwner(rows[0], contacts, additionalResponsibles);
 }
 
 export async function createOwner(input: OwnerInput): Promise<Owner> {
@@ -229,6 +365,7 @@ export async function createOwner(input: OwnerInput): Promise<Owner> {
 
 	const ownerId = Number(result.lastInsertId);
 	await replaceOwnerContacts(ownerId, input.contacts);
+	await replaceOwnerAdditionalResponsibles(ownerId, input.additionalResponsibles ?? []);
 
 	const owner = await getOwner(ownerId);
 	if (!owner) throw new Error('owner_create_failed');
@@ -269,6 +406,7 @@ export async function updateOwner(id: number, input: OwnerInput): Promise<Owner>
 	if (!existing) throw new Error('owner_not_found');
 
 	await replaceOwnerContacts(id, input.contacts);
+	await replaceOwnerAdditionalResponsibles(id, input.additionalResponsibles ?? []);
 
 	const owner = await getOwner(id);
 	if (!owner) throw new Error('owner_not_found');
@@ -328,5 +466,7 @@ export async function restoreOwner(id: number): Promise<void> {
 export async function hardDeleteOwner(id: number): Promise<void> {
 	await execute('DELETE FROM pet_owners WHERE owner_id = $1', [id]);
 	await execute('DELETE FROM owner_contacts WHERE owner_id = $1', [id]);
+	await execute('DELETE FROM owner_additional_responsible_contacts WHERE responsible_id IN (SELECT id FROM owner_additional_responsibles WHERE owner_id = $1)', [id]);
+	await execute('DELETE FROM owner_additional_responsibles WHERE owner_id = $1', [id]);
 	await execute('DELETE FROM owners WHERE id = $1', [id]);
 }

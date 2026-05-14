@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import OwnerAdditionalResponsiblesField from '$lib/components/owner/OwnerAdditionalResponsiblesField.svelte';
 	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import OwnerAvatarEditorDialog from '$lib/components/owner/OwnerAvatarEditorDialog.svelte';
 	import OwnerContactsField from '$lib/components/owner/OwnerContactsField.svelte';
@@ -22,6 +23,7 @@
 			country: DEFAULT_OWNER_COUNTRY,
 			postalCode: '',
 			contacts: [{ kind: 'mobile', value: '' }],
+			additionalResponsibles: [],
 			state: ''
 		};
 	}
@@ -187,6 +189,7 @@
 
 
 			<OwnerContactsField bind:contacts={form.contacts} />
+			<OwnerAdditionalResponsiblesField bind:responsibles={form.additionalResponsibles} />
 		</div>
 
 		{#if statusKey}

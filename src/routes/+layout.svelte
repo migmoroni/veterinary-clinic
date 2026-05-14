@@ -101,7 +101,7 @@
 	});
 </script>
 
-<div class="flex h-dvh w-full flex-col overflow-hidden bg-background text-foreground">
+<div class="fixed inset-0 flex w-full flex-col overflow-hidden bg-background text-foreground">
 	<header class="hidden shrink-0 border-b border-border bg-background/95 md:block">
 		<div class="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-6 px-6 lg:px-8">
 			<div class="min-w-0">

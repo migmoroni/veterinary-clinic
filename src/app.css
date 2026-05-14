@@ -193,6 +193,8 @@
 @layer base {
 	html {
 		font-size: var(--app-root-font-size);
+		height: 100%;
+		overflow: hidden;
 	}
 
 	* {
@@ -201,6 +203,8 @@
 
 	body {
 		@apply bg-background text-foreground;
+		height: 100%;
+		overflow: hidden;
 		font-family: var(--app-font-family);
 		letter-spacing: 0;
 	}

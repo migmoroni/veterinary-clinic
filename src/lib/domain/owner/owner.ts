@@ -15,6 +15,19 @@ export interface OwnerContactInput {
 	value: string;
 }
 
+export interface OwnerAdditionalResponsible {
+	id: number;
+	name: string;
+	contacts: OwnerContact[];
+	createdAt: string | null;
+	updatedAt: string | null;
+}
+
+export interface OwnerAdditionalResponsibleInput {
+	name: string;
+	contacts: OwnerContactInput[];
+}
+
 export interface Owner {
 	id: number;
 	name: string;
@@ -27,6 +40,7 @@ export interface Owner {
 	country: string | null;
 	postalCode: string | null;
 	contacts: OwnerContact[];
+	additionalResponsibles: OwnerAdditionalResponsible[];
 	state: string | null;
 	createdAt: string | null;
 	updatedAt: string | null;
@@ -45,5 +59,6 @@ export interface OwnerInput {
 	country: string;
 	postalCode: string;
 	contacts: OwnerContactInput[];
+	additionalResponsibles: OwnerAdditionalResponsibleInput[];
 	state: string;
 }

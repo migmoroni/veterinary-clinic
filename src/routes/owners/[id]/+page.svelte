@@ -2,6 +2,7 @@
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
+	import OwnerAdditionalResponsiblesField from '$lib/components/owner/OwnerAdditionalResponsiblesField.svelte';
 	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import OwnerAvatarEditorDialog from '$lib/components/owner/OwnerAvatarEditorDialog.svelte';
 	import OwnerContactsField from '$lib/components/owner/OwnerContactsField.svelte';
@@ -25,7 +26,7 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 
-type OwnerForm = OwnerInput & { avatarBytes: Uint8Array | null };
+	type OwnerForm = OwnerInput & { avatarBytes: Uint8Array | null };
 
 	function avatarSnapshotValue(bytes: Uint8Array | null | undefined): string {
 		if (!bytes || bytes.length === 0) return 'none';
@@ -52,6 +53,10 @@ type OwnerForm = OwnerInput & { avatarBytes: Uint8Array | null };
 			country: owner.country ?? DEFAULT_OWNER_COUNTRY,
 			postalCode: owner.postalCode ?? '',
 			contacts: owner.contacts.length > 0 ? owner.contacts.map((contact) => ({ kind: contact.kind, value: contact.value })) : [{ kind: 'mobile', value: '' }],
+			additionalResponsibles: owner.additionalResponsibles.map((responsible) => ({
+				name: responsible.name,
+				contacts: responsible.contacts.length > 0 ? responsible.contacts.map((contact) => ({ kind: contact.kind, value: contact.value })) : [{ kind: 'mobile', value: '' }]
+			})),
 			state: owner.state ?? ''
 		};
 	}
@@ -68,6 +73,10 @@ type OwnerForm = OwnerInput & { avatarBytes: Uint8Array | null };
 			country: input.country ?? '',
 			postalCode: input.postalCode ?? '',
 			contacts: input.contacts.map((contact) => ({ kind: contact.kind, value: contact.value.trim() })),
+			additionalResponsibles: input.additionalResponsibles.map((responsible) => ({
+				name: responsible.name.trim(),
+				contacts: responsible.contacts.map((contact) => ({ kind: contact.kind, value: contact.value.trim() }))
+			})),
 			state: input.state ?? ''
 		});
 	}
@@ -101,6 +110,7 @@ type OwnerForm = OwnerInput & { avatarBytes: Uint8Array | null };
 		country: DEFAULT_OWNER_COUNTRY,
 		postalCode: '',
 		contacts: [{ kind: 'mobile', value: '' }],
+		additionalResponsibles: [],
 		state: ''
 	});
 	let loading = $state(true);
@@ -492,6 +502,7 @@ type OwnerForm = OwnerInput & { avatarBytes: Uint8Array | null };
 
 					{#if editing}
 						<OwnerContactsField bind:contacts={form.contacts} />
+						<OwnerAdditionalResponsiblesField bind:responsibles={form.additionalResponsibles} />
 					{:else}
 						<div class="sm:col-span-5 pt-2">
 							<h4 class="text-sm font-semibold">{t('owner.contacts')}</h4>
@@ -528,6 +539,55 @@ type OwnerForm = OwnerInput & { avatarBytes: Uint8Array | null };
 								{/each}
 							</div>
 						</div>
+
+						{#if profile.owner.additionalResponsibles.length > 0}
+							<div class="sm:col-span-5 pt-2">
+								<h4 class="text-sm font-semibold">{t('owner.additionalResponsibles')}</h4>
+								<div class="mt-4 flex flex-col gap-3">
+									{#each profile.owner.additionalResponsibles as responsible}
+										<article class="rounded-md border border-border bg-background/50 p-3">
+											<div class="min-w-0">
+												<p class="truncate text-sm font-semibold">{responsible.name}</p>
+												<p class="mt-1 text-xs text-muted-foreground">{t('owner.additionalResponsibleLabel')}</p>
+											</div>
+
+											<div class="mt-3 flex flex-col gap-2">
+												{#each responsible.contacts.filter((contact) => contact.value.trim().length > 0) as contact}
+													<div class="flex flex-col gap-3 rounded-md border border-border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
+														<div class="min-w-0">
+															<p class="truncate text-sm font-semibold">{contact.value}</p>
+															<p class="mt-1 text-xs text-muted-foreground">{t(contactKindLabelKey(contact.kind))}</p>
+														</div>
+
+														<div class="flex flex-wrap gap-2">
+															{#if isEmailContact(contact.kind)}
+																<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.email')}: ${contact.value}`} onclick={() => void emailContact(contact.value)}>
+																	<Mail class="size-4" />
+																	{t('owner.email')}
+																</button>
+															{:else}
+																<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.call')}: ${contact.value}`} onclick={() => void callContact(contact.value)}>
+																	<PhoneCall class="size-4" />
+																	{t('owner.call')}
+																</button>
+															{/if}
+															{#if canOpenWhatsApp(contact.kind)}
+																<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.messageWhatsApp')}: ${contact.value}`} onclick={() => void messageContact(contact.value)}>
+																	<MessageCircle class="size-4 text-[#25D366] sm:text-[#25D366]" />
+																	{t('owner.messageWhatsApp')}
+																</button>
+															{/if}
+														</div>
+													</div>
+												{:else}
+													<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('owner.noContacts')}</p>
+												{/each}
+											</div>
+										</article>
+									{/each}
+								</div>
+							</div>
+						{/if}
 					{/if}
 				</div>
 
