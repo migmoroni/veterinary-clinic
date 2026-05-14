@@ -66,6 +66,21 @@ interface ParsedLegacyAddress {
   addressComplement: string | null;
 }
 
+interface LegacyOwnerContactInput {
+  kind: OwnerContactKind;
+  value: string;
+}
+
+interface LegacyAdditionalResponsibleInput {
+  name: string;
+  contacts: LegacyOwnerContactInput[];
+}
+
+interface ParsedLegacyOwnerName {
+  ownerName: string | null;
+  additionalResponsibles: LegacyAdditionalResponsibleInput[];
+}
+
 interface ImportReport {
   sourceRows: number;
   sourceNumericCodes: number;
@@ -78,6 +93,10 @@ interface ImportReport {
   ownersReused: number;
   ownerContactsCreated: number;
   ownerContactsReused: number;
+  ownerAdditionalResponsiblesCreated: number;
+  ownerAdditionalResponsiblesReused: number;
+  ownerAdditionalResponsibleContactsCreated: number;
+  ownerAdditionalResponsibleContactsReused: number;
   petsCreated: number;
   medicalRecordsCreated: number;
   medicalRecordPeriodsDerived: number;
@@ -269,6 +288,17 @@ const insertOwnerContact = db.prepare(`
   VALUES (@ownerId, @kind, @value, @sortOrder, CURRENT_TIMESTAMP)
 `);
 
+const insertOwnerAdditionalResponsible = db.prepare(`
+  INSERT INTO owner_additional_responsibles (owner_id, name, sort_order, updated_at)
+  VALUES (@ownerId, @name, @sortOrder, CURRENT_TIMESTAMP)
+`);
+
+const insertOwnerAdditionalResponsibleContact = db.prepare(`
+  INSERT OR IGNORE INTO owner_additional_responsible_contacts (responsible_id, kind, value, sort_order, updated_at)
+  VALUES (@responsibleId, @kind, @value, @sortOrder, CURRENT_TIMESTAMP)
+`);
+
+
 const insertPet = db.prepare(`
   INSERT INTO pets (name, birth_date, species, breed, sex)
   VALUES (@name, @birthDate, @species, @breed, @sex)
@@ -332,6 +362,8 @@ const vaccinePresetIds = new Map(
 );
 
 const ownersCache = new Map<string, number | bigint>();
+const ownerAdditionalResponsiblesCache = new Map<string, number | bigint>();
+const ownerAdditionalResponsibleSortOrder = new Map<string, number>();
 
 const canineBreedAliases: BreedAlias[] = [
   { id: 'mixed-breed', aliases: ['srd', 's r d', 'sem raca definida', 'vira lata', 'viralata'] },
@@ -400,6 +432,156 @@ const nullable = (value: string | undefined): string | null => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
+const legacyDocumentFragmentPattern = /\b(?:\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}|\d{2,3}\.?\d{3}\.?\d{3}(?:[-.]?\d{0,2})?)\b/g;
+const legacyEmailPattern = /\b[^\s@]+@[^\s@]+\.[^\s@]+\b/g;
+const legacyPhonePattern = /\b(?:\(?\d{2}\)?\s*)?(?:9\s*)?\d{4}[\s.-]*\d{4}\b/g;
+const legacyLargeSpacePattern = /\s{6,}/g;
+
+const formatLegacyBrazilPhone = (digits: string): string => {
+  const localDigits = digits.startsWith('55') && digits.length > 11 ? digits.slice(2) : digits;
+  const digitsWithAreaCode = localDigits.length === 8 || localDigits.length === 9 ? `16${localDigits}` : localDigits;
+
+  if (digitsWithAreaCode.length < 10 || digitsWithAreaCode.length > 11) return digits;
+
+  const areaCode = digitsWithAreaCode.slice(0, 2);
+  const number = digitsWithAreaCode.slice(2);
+  const formattedNumber = number.length <= 8 ? `${number.slice(0, 4)}-${number.slice(4)}` : `${number.slice(0, 5)}-${number.slice(5)}`;
+
+  return `(${areaCode}) ${formattedNumber}`;
+};
+
+const normalizeLegacyPhoneValue = (value: string | undefined): string | null => {
+  const digits = value?.replace(/\D/g, '') ?? '';
+  if (!digits) return null;
+
+  return formatLegacyBrazilPhone(digits);
+};
+
+const isIgnoredLegacyNameNote = (value: string | undefined): boolean => {
+  const normalized = normalizeText(value);
+  return [
+    'mae',
+    'pai',
+    'marido',
+    'esposa',
+    'filha',
+    'filho',
+    'namorada',
+    'namorado',
+    'vizinha',
+    'vizinho',
+    'tim',
+    'vivo',
+    'claro',
+    'oi',
+    'celular',
+    'telefone'
+  ].includes(normalized);
+};
+
+const cleanLegacyPersonName = (value: string | undefined): string | null => {
+  const cleaned = (value ?? '')
+    .replace(legacyDocumentFragmentPattern, ' ')
+    .replace(legacyEmailPattern, ' ')
+    .replace(/\b(?:CPF|CNPJ|RG)\b\s*:?\s*/gi, ' ')
+    .replace(/\b(?:tel|telefone|cel|celular)\b\s*:?\s*/gi, ' ')
+    .replace(/\(([^)]*)\)/g, (_match, note: string) => (isIgnoredLegacyNameNote(note) ? ' ' : ` ${note} `))
+    .replace(/\s*[-–—]\s*(?:namorad[ao]|m[ãa]e|pai|marido|esposa|filh[ao]|vizinh[ao])\b.*$/i, ' ')
+    .replace(/\b\d+\b/g, ' ')
+    .replace(/^[\s/,-]+|[\s/,-]+$/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (cleaned.length <= 1 || !/[A-Za-zÀ-ÿ]/.test(cleaned) || isIgnoredLegacyNameNote(cleaned) || /^ddd\b/i.test(cleaned)) return null;
+  return cleaned;
+};
+
+const getLegacyPhones = (value: string): LegacyOwnerContactInput[] => {
+  const withoutCpf = value.replace(legacyDocumentFragmentPattern, ' ').replace(legacyEmailPattern, ' ');
+  return [...withoutCpf.matchAll(legacyPhonePattern)]
+    .map((match) => normalizeLegacyPhoneValue(match[0]))
+    .filter((phone): phone is string => phone !== null)
+    .map((value) => ({ kind: 'mobile', value }));
+};
+
+const pushLegacyAdditionalResponsible = (
+  responsibles: LegacyAdditionalResponsibleInput[],
+  ownerName: string,
+  name: string,
+  contacts: LegacyOwnerContactInput[]
+) => {
+  if (normalizeText(name) === normalizeText(ownerName)) return;
+
+  const existing = responsibles.find((responsible) => normalizeText(responsible.name) === normalizeText(name));
+  if (existing) {
+    const existingContacts = new Set(existing.contacts.map((contact) => `${contact.kind}:${contact.value}`));
+    for (const contact of contacts) {
+      const key = `${contact.kind}:${contact.value}`;
+      if (!existingContacts.has(key)) existing.contacts.push(contact);
+    }
+    return;
+  }
+
+  responsibles.push({ name, contacts });
+};
+
+const parseLegacyAdditionalResponsibleSegment = (segment: string): LegacyAdditionalResponsibleInput | null => {
+  const contacts = getLegacyPhones(segment);
+  const name = cleanLegacyPersonName(segment.replace(legacyPhonePattern, ' '));
+  if (!name) return contacts.length > 0 ? { name: '', contacts } : null;
+
+  return { name, contacts };
+};
+
+const parseLegacyAdditionalResponsibles = (value: string, ownerName: string): LegacyAdditionalResponsibleInput[] => {
+  const responsibles: LegacyAdditionalResponsibleInput[] = [];
+  const cleanedValue = value.replace(legacyDocumentFragmentPattern, ' ').replace(legacyEmailPattern, ' ').replace(/\b(?:CPF|CNPJ|RG)\b\s*:?\s*/gi, ' ');
+  const parts = cleanedValue
+    .split(/\s*\/\s*|\n+/g)
+    .flatMap((part) => part.split(legacyLargeSpacePattern))
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  for (const part of parts) {
+    const parsed = parseLegacyAdditionalResponsibleSegment(part);
+    if (!parsed) continue;
+
+    if (!parsed.name) {
+      const previous = responsibles[responsibles.length - 1];
+      if (previous) {
+        const existingContacts = new Set(previous.contacts.map((contact) => `${contact.kind}:${contact.value}`));
+        for (const contact of parsed.contacts) {
+          const key = `${contact.kind}:${contact.value}`;
+          if (!existingContacts.has(key)) previous.contacts.push(contact);
+        }
+      }
+      continue;
+    }
+
+    pushLegacyAdditionalResponsible(responsibles, ownerName, parsed.name, parsed.contacts);
+  }
+
+  return responsibles;
+};
+
+const parseLegacyOwnerName = (value: string | undefined): ParsedLegacyOwnerName => {
+  const raw = (value ?? '').replace(/\r\n?/g, '\n').trim();
+  if (!raw) return { ownerName: null, additionalResponsibles: [] };
+
+  const parts = raw
+    .split(new RegExp(`${legacyLargeSpacePattern.source}|\\n+`, 'g'))
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const ownerName = cleanLegacyPersonName(parts[0]?.replace(legacyPhonePattern, ' '));
+  if (!ownerName) return { ownerName: null, additionalResponsibles: [] };
+
+  const additionalText = parts.slice(1).join('\n');
+  return {
+    ownerName,
+    additionalResponsibles: parseLegacyAdditionalResponsibles(additionalText, ownerName)
+  };
+};
+
 const parseLegacyAddress = (value: string | undefined): ParsedLegacyAddress => {
   const raw = (value ?? '').replace(/\s+/g, ' ').trim();
   if (!raw) {
@@ -449,12 +631,41 @@ const parseLegacyAddress = (value: string | undefined): ParsedLegacyAddress => {
 };
 
 const insertContactFromSource = (report: ImportReport, ownerId: number | bigint, kind: OwnerContactKind, rawValue: string | undefined, sortOrder: number) => {
-  const value = nullable(rawValue);
+  const value = kind === 'email' ? nullable(rawValue) : normalizeLegacyPhoneValue(rawValue);
   if (!value) return;
 
   const result = insertOwnerContact.run({ ownerId, kind, value, sortOrder });
   if (result.changes > 0) report.ownerContactsCreated += 1;
   else report.ownerContactsReused += 1;
+};
+
+const getAdditionalResponsibleSortOrder = (ownerId: number | bigint): number => {
+  const key = String(ownerId);
+  const sortOrder = ownerAdditionalResponsibleSortOrder.get(key) ?? 0;
+  ownerAdditionalResponsibleSortOrder.set(key, sortOrder + 1);
+  return sortOrder;
+};
+
+const insertAdditionalResponsiblesFromSource = (report: ImportReport, ownerId: number | bigint, responsibles: LegacyAdditionalResponsibleInput[]) => {
+  for (const responsible of responsibles) {
+    const cacheKey = `${ownerId}:${normalizeText(responsible.name)}`;
+    let responsibleId = ownerAdditionalResponsiblesCache.get(cacheKey);
+
+    if (!responsibleId) {
+      const result = insertOwnerAdditionalResponsible.run({ ownerId, name: responsible.name, sortOrder: getAdditionalResponsibleSortOrder(ownerId) });
+      responsibleId = result.lastInsertRowid;
+      ownerAdditionalResponsiblesCache.set(cacheKey, responsibleId);
+      report.ownerAdditionalResponsiblesCreated += 1;
+    } else {
+      report.ownerAdditionalResponsiblesReused += 1;
+    }
+
+    for (const [contactIndex, contact] of responsible.contacts.entries()) {
+      const result = insertOwnerAdditionalResponsibleContact.run({ responsibleId, kind: contact.kind, value: contact.value, sortOrder: contactIndex });
+      if (result.changes > 0) report.ownerAdditionalResponsibleContactsCreated += 1;
+      else report.ownerAdditionalResponsibleContactsReused += 1;
+    }
+  }
 };
 
 const normalizeText = (value: string | undefined): string => {
@@ -500,6 +711,10 @@ const createImportReport = (rows: CsvRow[]): ImportReport => {
     ownersReused: 0,
     ownerContactsCreated: 0,
     ownerContactsReused: 0,
+    ownerAdditionalResponsiblesCreated: 0,
+    ownerAdditionalResponsiblesReused: 0,
+    ownerAdditionalResponsibleContactsCreated: 0,
+    ownerAdditionalResponsibleContactsReused: 0,
     petsCreated: 0,
     medicalRecordsCreated: 0,
     medicalRecordPeriodsDerived: 0,
@@ -514,7 +729,7 @@ const createImportReport = (rows: CsvRow[]): ImportReport => {
   };
 };
 
-const skippedReason = (ownerName: string | undefined, petName: string | null): string => {
+const skippedReason = (ownerName: string | null | undefined, petName: string | null): string => {
   if (!ownerName && !petName) return 'sem tutor e sem nome do animal';
   if (!ownerName) return 'sem tutor';
   return 'sem nome do animal';
@@ -555,6 +770,10 @@ const printImportReport = (report: ImportReport) => {
   console.log(`- Linhas que reaproveitaram tutor pelo mesmo nome: ${report.ownersReused}`);
   console.log(`- Contatos convertidos para owner_contacts: ${report.ownerContactsCreated}`);
   console.log(`- Contatos duplicados ignorados: ${report.ownerContactsReused}`);
+  console.log(`- Responsáveis adicionais convertidos: ${report.ownerAdditionalResponsiblesCreated}`);
+  console.log(`- Responsáveis adicionais duplicados ignorados: ${report.ownerAdditionalResponsiblesReused}`);
+  console.log(`- Contatos de responsáveis adicionais convertidos: ${report.ownerAdditionalResponsibleContactsCreated}`);
+  console.log(`- Contatos de responsáveis adicionais duplicados ignorados: ${report.ownerAdditionalResponsibleContactsReused}`);
   console.log('- Pets deduplicados/mesclados: 0 (o conversor cria um pet por linha válida)');
   console.log(`- Possíveis pets duplicados detectados por tutor + nome: ${duplicateCandidates.length} grupos, ${duplicateRows} linhas`);
   for (const candidate of duplicateCandidates.slice(0, 10)) {
@@ -757,7 +976,8 @@ const processarMigracao = () => {
     const latestVaccinationByPetAndPreset = new Map<string, ImportedVaccinationReference>();
 
     for (const row of records) {
-      const ownerName = row['NOME PROPRIETÁRIO']?.trim();
+      const parsedOwnerName = parseLegacyOwnerName(row['NOME PROPRIETÁRIO']);
+      const ownerName = parsedOwnerName.ownerName;
       const petName = nullable(row['NOME DO ANIMAL']);
 
       if (!ownerName || !petName) {
@@ -796,6 +1016,7 @@ const processarMigracao = () => {
 
       insertContactFromSource(report, ownerId, 'phone', row['TELEFONE'], 0);
       insertContactFromSource(report, ownerId, 'mobile', row['CELULAR'], 1);
+      insertAdditionalResponsiblesFromSource(report, ownerId, parsedOwnerName.additionalResponsibles);
 
       const sex = getSex(row);
       const taxonomy = getTaxonomy(row);
