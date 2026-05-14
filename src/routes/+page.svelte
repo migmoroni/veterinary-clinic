@@ -206,7 +206,7 @@
 				</div>
 				<p class="mt-1 text-sm leading-6 text-muted-foreground">{t('home.analysisDescription')}</p>
 			</div>
-			<a href="/dashboard?view=general" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={t('actions.openDashboard')}>
+			<a href="/dashboard/general" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={t('actions.openDashboard')}>
 				{t('analysis.view.general')}
 				<ArrowRight class="size-4" />
 			</a>
@@ -221,7 +221,7 @@
 		{:else}
 			<div class="mt-4 grid gap-3 lg:grid-cols-3">
 				{#each analysisCards as card}
-					<a href={`/dashboard?view=${card.view}`} class="flex min-h-40 flex-col rounded-md border border-border bg-background p-4 hover:bg-accent" aria-label={`${t(card.titleKey)}: ${metricFormatter(analysisCount(card.view))}`}>
+					<a href={`/dashboard/${card.view}`} class="flex min-h-40 flex-col rounded-md border border-border bg-background p-4 hover:bg-accent" aria-label={`${t(card.titleKey)}: ${metricFormatter(analysisCount(card.view))}`}>
 						<span class="flex items-start justify-between gap-3">
 							<span class="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
 								<card.icon class="size-5" />

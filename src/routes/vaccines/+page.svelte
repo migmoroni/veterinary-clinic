@@ -26,6 +26,8 @@
 	type SortOrder = 'recent' | 'old';
 	type HistoryPoint = { key: string; label: string; count: number };
 
+	const { basePath = '/vaccines' } = $props<{ basePath?: string }>();
+
 	const statusOptions: { status: VaccineStatusKey; labelKey: TranslationKey; detailKey: TranslationKey; barClass: string; textClass: string }[] = [
 		{ status: 'current', labelKey: 'vaccine.status.current', detailKey: 'vaccine.status.currentDetail', barClass: 'bg-emerald-600', textClass: 'text-emerald-700' },
 		{ status: 'dueSoon', labelKey: 'vaccine.status.dueSoon', detailKey: 'vaccine.status.dueSoonDetail', barClass: 'bg-sky-600', textClass: 'text-sky-700' },
@@ -175,7 +177,7 @@
 		params.set('period', period);
 		params.set('historyOrder', historyOrder);
 		if (vaccinePresetId) params.set('presetId', String(vaccinePresetId));
-		window.history.replaceState(null, '', `/vaccines?${params.toString()}`);
+		window.history.replaceState(null, '', `${basePath}?${params.toString()}`);
 	}
 
 	function isRefreshing(): boolean {
