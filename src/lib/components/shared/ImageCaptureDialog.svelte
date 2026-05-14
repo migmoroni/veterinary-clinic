@@ -2,6 +2,7 @@
 	import { onDestroy, onMount, tick } from 'svelte';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import X from '@lucide/svelte/icons/x';
+	import Select from '$lib/components/ui/Select.svelte';
 
 	const DEFAULT_FRAME_SIZE = 720;
 	const DEFAULT_MAX_BYTES = 1_000_000;
@@ -229,9 +230,8 @@
 		return device.label || `${t(labels.cameraFallback)} ${index + 1}`;
 	}
 
-	async function onCameraDeviceChange(event: Event) {
-		const select = event.currentTarget as HTMLSelectElement;
-		selectedCameraDeviceId = select.value;
+	async function onCameraDeviceChange(value: string) {
+		selectedCameraDeviceId = value;
 
 		if (cameraOpen && !cameraBusy && !processing) {
 			await startCamera();
@@ -751,15 +751,22 @@
 					</button>
 
 					{#if cameraDevices.length > 1}
-						<label class="flex flex-col gap-1 text-sm font-medium">
-							<span>{t(labels.cameraSelect)}</span>
-							<select class="h-10 rounded-md border border-border bg-background px-3 text-sm disabled:opacity-50" value={selectedCameraDeviceId} disabled={cameraBusy || processing} onchange={(event) => void onCameraDeviceChange(event)}>
-								<option value="">{t(labels.cameraAuto)}</option>
-								{#each cameraDevices as device, index (device.deviceId)}
-									<option value={device.deviceId}>{cameraOptionLabel(device, index)}</option>
-								{/each}
-							</select>
-						</label>
+						<div class="flex flex-col gap-1 text-sm font-medium">
+							<label for="camera-select">{t(labels.cameraSelect)}</label>
+							<Select 
+								id="camera-select"
+								value={selectedCameraDeviceId} 
+								disabled={cameraBusy || processing} 
+								options={[
+									{ value: '', label: t(labels.cameraAuto) },
+									...cameraDevices.map((device, index) => ({
+										value: device.deviceId,
+										label: cameraOptionLabel(device, index)
+									}))
+								]}
+								onchange={(val) => void onCameraDeviceChange(val as string)}
+							/>
+						</div>
 					{/if}
 
 					<button type="button" class="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={cameraBusy || processing} onclick={() => void startCamera()}>
