@@ -743,101 +743,59 @@
 				</div>
 			</section>
 
-			<div class="grid gap-4 xl:grid-cols-2">
-				<section class="rounded-md border border-border bg-background p-4">
-					<div class="flex items-start justify-between gap-3">
-						<div>
-							<h3 class="text-sm font-semibold">{studyTarget === 'vaccines' ? t('analysis.study.relatedVaccines') : studyTarget === 'owners' ? t('analysis.study.relatedOwners') : t('analysis.study.relatedPets')}</h3>
-							<p class="mt-1 text-sm text-muted-foreground">{studyTarget === 'vaccines' ? t('analysis.study.relatedVaccinesDescription') : studyTarget === 'owners' ? t('analysis.study.relatedOwnersListDescription') : t('analysis.study.relatedPetsDescription')}</p>
-						</div>
-						<span class="rounded-md bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">{metricFormatter(studyTarget === 'vaccines' ? studyTargetVaccines.length : studyTarget === 'owners' ? studyTargetOwners.length : studyTargetPets.length)}</span>
+			<section class="rounded-md border border-border bg-background p-4">
+				<div class="flex items-start justify-between gap-3">
+					<div>
+						<h3 class="text-sm font-semibold">{studyTarget === 'vaccines' ? t('analysis.study.relatedVaccines') : studyTarget === 'owners' ? t('analysis.study.relatedOwners') : t('analysis.study.relatedPets')}</h3>
+						<p class="mt-1 text-sm text-muted-foreground">{studyTarget === 'vaccines' ? t('analysis.study.relatedVaccinesDescription') : studyTarget === 'owners' ? t('analysis.study.relatedOwnersListDescription') : t('analysis.study.relatedPetsDescription')}</p>
 					</div>
-					<div class="mt-4 divide-y divide-border rounded-md border border-border">
-						{#if studyTarget === 'vaccines'}
-							{#each studyTargetVaccines.slice(0, 40) as vaccine}
-								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-									<div class="min-w-0">
-										<p class="wrap-break-word text-sm font-semibold">{vaccine.presetName} - {vaccineStatusLabel(vaccine.status)}</p>
-										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{vaccine.pet.name} - {speciesLabel(vaccine.pet.species)} - {breedLabel(vaccine.pet.breed)}</p>
-										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(vaccine.pet)} - {studyPetLocationText(vaccine.pet)}</p>
-										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{t('vaccine.appliedAt')}: {formatDateForDisplay(vaccine.appliedAt)} - {t('vaccine.analytics.dueAt')}: {formatDateForDisplay(vaccine.dueAt)}</p>
-									</div>
-									<a href={studyPetProfileHref(vaccine.pet)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openPet')}</a>
-								</article>
-							{:else}
-								<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyVaccines')}</p>
-							{/each}
-						{:else if studyTarget === 'owners'}
-							{#each studyTargetOwners.slice(0, 40) as owner}
-								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-									<div class="min-w-0">
-										<p class="wrap-break-word text-sm font-semibold">{owner.name}</p>
-										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{owner.locationLabel ?? t('common.notInformed')}</p>
-										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{metricFormatter(owner.petCount)} {t('analysis.study.ownerPets')}: {studyOwnerPetNamesText(owner)}</p>
-									</div>
-									<a href={ownerProfileHref(owner)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openOwner')}</a>
-								</article>
-							{:else}
-								<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyOwners')}</p>
-							{/each}
+					<span class="rounded-md bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">{metricFormatter(studyTarget === 'vaccines' ? studyTargetVaccines.length : studyTarget === 'owners' ? studyTargetOwners.length : studyTargetPets.length)}</span>
+				</div>
+				<div class="mt-4 divide-y divide-border rounded-md border border-border">
+					{#if studyTarget === 'vaccines'}
+						{#each studyTargetVaccines.slice(0, 40) as vaccine}
+							<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+								<div class="min-w-0">
+									<p class="wrap-break-word text-sm font-semibold">{vaccine.presetName} - {vaccineStatusLabel(vaccine.status)}</p>
+									<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{vaccine.pet.name} - {speciesLabel(vaccine.pet.species)} - {breedLabel(vaccine.pet.breed)}</p>
+									<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(vaccine.pet)} - {studyPetLocationText(vaccine.pet)}</p>
+									<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{t('vaccine.appliedAt')}: {formatDateForDisplay(vaccine.appliedAt)} - {t('vaccine.analytics.dueAt')}: {formatDateForDisplay(vaccine.dueAt)}</p>
+								</div>
+								<a href={studyPetProfileHref(vaccine.pet)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openPet')}</a>
+							</article>
 						{:else}
-							{#each studyTargetPets.slice(0, 40) as pet}
-								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-									<div class="min-w-0">
-										<p class="wrap-break-word text-sm font-semibold">{pet.name}</p>
-										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{speciesLabel(pet.species)} - {breedLabel(pet.breed)} - {sexLabel(pet.sex)}</p>
-										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(pet)} - {studyPetLocationText(pet)}</p>
-										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{vaccineStatusLabel(pet.vaccineStatus)} - {studyPetVaccineText(pet)}</p>
-									</div>
-									<a href={studyPetProfileHref(pet)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openPet')}</a>
-								</article>
-							{:else}
-								<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyPets')}</p>
-							{/each}
-						{/if}
-					</div>
-				</section>
-
-				<section class="rounded-md border border-border bg-background p-4">
-					<div class="flex items-start justify-between gap-3">
-						<div>
-							<h3 class="text-sm font-semibold">{studyTarget === 'owners' ? t('analysis.study.relatedPets') : t('analysis.study.relatedOwners')}</h3>
-							<p class="mt-1 text-sm text-muted-foreground">{studyTarget === 'owners' ? t('analysis.study.relatedPetsForOwnersDescription') : studyTarget === 'vaccines' ? t('analysis.study.relatedOwnersForVaccinesDescription') : t('analysis.study.relatedOwnersListDescription')}</p>
-						</div>
-						<span class="rounded-md bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">{metricFormatter(studyTarget === 'owners' ? studyTargetPets.length : studyTargetOwners.length)}</span>
-					</div>
-					<div class="mt-4 divide-y divide-border rounded-md border border-border">
-						{#if studyTarget === 'owners'}
-							{#each studyTargetPets.slice(0, 40) as pet}
-								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-									<div class="min-w-0">
-										<p class="wrap-break-word text-sm font-semibold">{pet.name}</p>
-										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{speciesLabel(pet.species)} - {breedLabel(pet.breed)} - {sexLabel(pet.sex)}</p>
-										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(pet)} - {studyPetLocationText(pet)}</p>
-										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{vaccineStatusLabel(pet.vaccineStatus)} - {studyPetVaccineText(pet)}</p>
-									</div>
-									<a href={studyPetProfileHref(pet)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openPet')}</a>
-								</article>
-							{:else}
-								<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyPets')}</p>
-							{/each}
+							<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyVaccines')}</p>
+						{/each}
+					{:else if studyTarget === 'owners'}
+						{#each studyTargetOwners.slice(0, 40) as owner}
+							<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+								<div class="min-w-0">
+									<p class="wrap-break-word text-sm font-semibold">{owner.name}</p>
+									<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{owner.locationLabel ?? t('common.notInformed')}</p>
+									<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{metricFormatter(owner.petCount)} {t('analysis.study.ownerPets')}: {studyOwnerPetNamesText(owner)}</p>
+								</div>
+								<a href={ownerProfileHref(owner)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openOwner')}</a>
+							</article>
 						{:else}
-							{#each studyTargetOwners.slice(0, 40) as owner}
-								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-									<div class="min-w-0">
-										<p class="wrap-break-word text-sm font-semibold">{owner.name}</p>
-										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{owner.locationLabel ?? t('common.notInformed')}</p>
-										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{metricFormatter(owner.petCount)} {t('analysis.study.ownerPets')}: {studyOwnerPetNamesText(owner)}</p>
-									</div>
-									<a href={ownerProfileHref(owner)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openOwner')}</a>
-								</article>
-							{:else}
-								<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyOwners')}</p>
-							{/each}
-						{/if}
-					</div>
-				</section>
-			</div>
+							<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyOwners')}</p>
+						{/each}
+					{:else}
+						{#each studyTargetPets.slice(0, 40) as pet}
+							<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+								<div class="min-w-0">
+									<p class="wrap-break-word text-sm font-semibold">{pet.name}</p>
+									<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{speciesLabel(pet.species)} - {breedLabel(pet.breed)} - {sexLabel(pet.sex)}</p>
+									<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(pet)} - {studyPetLocationText(pet)}</p>
+									<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{vaccineStatusLabel(pet.vaccineStatus)} - {studyPetVaccineText(pet)}</p>
+								</div>
+								<a href={studyPetProfileHref(pet)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openPet')}</a>
+							</article>
+						{:else}
+							<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyPets')}</p>
+						{/each}
+					{/if}
+				</div>
+			</section>
 		</div>
 	</div>
 </section>
