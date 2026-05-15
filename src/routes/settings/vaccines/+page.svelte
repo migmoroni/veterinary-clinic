@@ -4,6 +4,8 @@
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import { loadUsedDoseIds, loadUsedPresetIds, loadVaccinePresets, removePreset, savePreset, setPresetHidden } from '$lib/services/vaccine.service.js';
 	import Select from '$lib/components/ui/Select.svelte';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import Eye from '@lucide/svelte/icons/eye';
 	import EyeOff from '@lucide/svelte/icons/eye-off';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -24,6 +26,7 @@
 	let usedDoseIds = $state<Set<number>>(new Set());
 	let statusKey = $state<TranslationKey | null>(null);
 	let errorKey = $state<TranslationKey | null>(null);
+	let expandedPresetId = $state<number | null>(null);
 	let nextDoseClientId = 0;
 
 	function doseClientId(): string {
@@ -84,6 +87,10 @@
 		return typeof dose.id === 'number' && usedDoseIds.has(dose.id);
 	}
 
+	function togglePresetExpanded(presetId: number) {
+		expandedPresetId = expandedPresetId === presetId ? null : presetId;
+	}
+
 	function upsertPreset(preset: VaccinePreset) {
 		const editablePreset = toEditablePreset(preset);
 		const next = presets.filter((item) => item.id !== editablePreset.id && item.normalizedName !== editablePreset.normalizedName);
@@ -109,6 +116,7 @@
 		try {
 			const [loadedPresets, loadedUsedIds, loadedUsedDoseIds] = await Promise.all([loadVaccinePresets(), loadUsedPresetIds(), loadUsedDoseIds()]);
 			presets = loadedPresets.map(toEditablePreset);
+			if (expandedPresetId !== null && !loadedPresets.some((preset) => preset.id === expandedPresetId)) expandedPresetId = null;
 			usedPresetIds = new Set(loadedUsedIds);
 			usedDoseIds = new Set(loadedUsedDoseIds);
 		} catch (exception) {
@@ -127,6 +135,7 @@
 		try {
 			const preset = await savePreset({ name: newName, doses: newDoses.map(doseInput) });
 			upsertPreset(preset);
+			expandedPresetId = preset.id;
 			newName = '';
 			newDoses = [createEditableDose()];
 			statusKey = 'vaccine.presetSaved';
@@ -146,6 +155,7 @@
 		try {
 			const saved = await savePreset({ name: preset.name, doses: preset.doses.map(doseInput) }, preset.id);
 			upsertPreset(saved);
+			expandedPresetId = saved.id;
 			statusKey = 'vaccine.presetSaved';
 		} catch (exception) {
 			setFailure(exception);
@@ -186,6 +196,7 @@
 			await removePreset(preset.id);
 			presets = presets.filter((item) => item.id !== preset.id);
 			usedPresetIds = new Set([...usedPresetIds].filter((presetId) => presetId !== preset.id));
+			if (expandedPresetId === preset.id) expandedPresetId = null;
 			statusKey = 'status.deleted';
 		} catch (exception) {
 			errorKey = exception instanceof Error && exception.message === 'vaccine_preset_in_use' ? 'vaccine.presetInUse' : 'vaccine.saveFailed';
@@ -315,66 +326,79 @@
 				<div class="h-28 animate-pulse rounded-md bg-muted"></div>
 			{:else}
 				{#each presets as preset (preset.id)}
-					<form class="space-y-4 rounded-md border border-border bg-background p-3" onsubmit={(event) => submitExisting(event, preset)}>
-						<div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-end">
-							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-								<span class="flex items-center gap-2">
-									<span>{t('vaccine.name')}</span>
-									{#if preset.hiddenAt}
-										<span class="inline-flex h-5 items-center rounded-md bg-muted px-2 text-xs font-medium text-muted-foreground">{t('vaccine.hidden')}</span>
-									{/if}
-								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={preset.name} required oninput={(event) => updatePresetName(preset.id, inputValue(event))} />
-							</label>
-							<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
-								<Save class="size-4" />
-								{t('actions.save')}
-							</button>
-							<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} title={preset.hiddenAt ? t('vaccine.showPreset') : t('vaccine.hidePreset')} onclick={() => void togglePresetHidden(preset)}>
-								{#if preset.hiddenAt}
-									<Eye class="size-4" />
-									{t('vaccine.showPreset')}
+					<article class="overflow-hidden rounded-md border border-border bg-background">
+						<button type="button" class="flex min-h-12 w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-accent" aria-expanded={expandedPresetId === preset.id} aria-controls={`preset-details-${preset.id}`} onclick={() => togglePresetExpanded(preset.id)}>
+							<span class="flex min-w-0 items-center gap-2">
+								{#if expandedPresetId === preset.id}
+									<ChevronDown class="size-4 shrink-0 text-muted-foreground" />
 								{:else}
-									<EyeOff class="size-4" />
-									{t('vaccine.hidePreset')}
+									<ChevronRight class="size-4 shrink-0 text-muted-foreground" />
 								{/if}
-							</button>
-							<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving || isPresetInUse(preset.id)} title={isPresetInUse(preset.id) ? t('vaccine.presetInUse') : t('actions.delete')} onclick={() => void deletePreset(preset)}>
-								<Trash2 class="size-4" />
-								{t('actions.delete')}
-							</button>
-						</div>
+								<span class="truncate text-sm font-medium">{preset.name}</span>
+								{#if preset.hiddenAt}
+									<span class="inline-flex h-5 shrink-0 items-center rounded-md bg-muted px-2 text-xs font-medium text-muted-foreground">{t('vaccine.hidden')}</span>
+								{/if}
+							</span>
+						</button>
 
-						<div class="space-y-3 border-t border-border pt-4">
-							<div class="flex items-center justify-between gap-3">
-								<p class="text-sm font-semibold">{t('vaccine.dosesTitle')}</p>
-								<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} onclick={() => addPresetDose(preset.id)}>
-									<Plus class="size-4" />
-									{t('vaccine.addDose')}
-								</button>
-							</div>
-
-							{#each preset.doses as dose (dose.clientId)}
-								<div class="grid gap-2 md:grid-cols-[minmax(0,1fr)_8rem_9rem_auto] md:items-end">
+						{#if expandedPresetId === preset.id}
+							<form id={`preset-details-${preset.id}`} class="space-y-4 border-t border-border p-3" onsubmit={(event) => submitExisting(event, preset)}>
+								<div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-end">
 									<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-										<span>{t('vaccine.dose')}</span>
-										<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={dose.label} placeholder={t('vaccine.dosePlaceholder')} required oninput={(event) => updatePresetDose(preset.id, dose.clientId, { label: inputValue(event) })} />
+										<span>{t('vaccine.name')}</span>
+										<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={preset.name} required oninput={(event) => updatePresetName(preset.id, inputValue(event))} />
 									</label>
-									<label class="flex flex-col gap-1 text-sm font-medium">
-										<span>{t('vaccine.validityValue')}</span>
-										<input type="number" min="1" class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={dose.validityValue} oninput={(event) => updatePresetDose(preset.id, dose.clientId, { validityValue: numberInputValue(event) })} />
-									</label>
-									<div class="flex flex-col gap-1 text-sm font-medium">
-										<label for={`preset-dose-unit-${preset.id}-${dose.clientId}`}>{t('vaccine.validityUnit')}</label>
-										<Select id={`preset-dose-unit-${preset.id}-${dose.clientId}`} value={dose.validityUnit} options={validityUnitOptions()} onchange={(value) => updatePresetDose(preset.id, dose.clientId, { validityUnit: value as VaccineValidityUnit })} />
-									</div>
-									<button type="button" class="inline-flex size-10 items-center justify-center rounded-md border border-border bg-background hover:bg-accent disabled:opacity-50" disabled={saving || preset.doses.length <= 1 || isDoseInUse(dose)} aria-label={`${t('vaccine.removeDose')}: ${dose.label || t('vaccine.dose')}`} title={isDoseInUse(dose) ? t('vaccine.doseInUse') : t('vaccine.removeDose')} onclick={() => removePresetDose(preset.id, dose.clientId)}>
-										<X class="size-4" />
+									<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
+										<Save class="size-4" />
+										{t('actions.save')}
+									</button>
+									<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} title={preset.hiddenAt ? t('vaccine.showPreset') : t('vaccine.hidePreset')} onclick={() => void togglePresetHidden(preset)}>
+										{#if preset.hiddenAt}
+											<Eye class="size-4" />
+											{t('vaccine.showPreset')}
+										{:else}
+											<EyeOff class="size-4" />
+											{t('vaccine.hidePreset')}
+										{/if}
+									</button>
+									<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving || isPresetInUse(preset.id)} title={isPresetInUse(preset.id) ? t('vaccine.presetInUse') : t('actions.delete')} onclick={() => void deletePreset(preset)}>
+										<Trash2 class="size-4" />
+										{t('actions.delete')}
 									</button>
 								</div>
-							{/each}
-						</div>
-					</form>
+
+								<div class="space-y-3 border-t border-border pt-4">
+									<div class="flex items-center justify-between gap-3">
+										<p class="text-sm font-semibold">{t('vaccine.dosesTitle')}</p>
+										<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} onclick={() => addPresetDose(preset.id)}>
+											<Plus class="size-4" />
+											{t('vaccine.addDose')}
+										</button>
+									</div>
+
+									{#each preset.doses as dose (dose.clientId)}
+										<div class="grid gap-2 md:grid-cols-[minmax(0,1fr)_8rem_9rem_auto] md:items-end">
+											<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+												<span>{t('vaccine.dose')}</span>
+												<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={dose.label} placeholder={t('vaccine.dosePlaceholder')} required oninput={(event) => updatePresetDose(preset.id, dose.clientId, { label: inputValue(event) })} />
+											</label>
+											<label class="flex flex-col gap-1 text-sm font-medium">
+												<span>{t('vaccine.validityValue')}</span>
+												<input type="number" min="1" class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={dose.validityValue} oninput={(event) => updatePresetDose(preset.id, dose.clientId, { validityValue: numberInputValue(event) })} />
+											</label>
+											<div class="flex flex-col gap-1 text-sm font-medium">
+												<label for={`preset-dose-unit-${preset.id}-${dose.clientId}`}>{t('vaccine.validityUnit')}</label>
+												<Select id={`preset-dose-unit-${preset.id}-${dose.clientId}`} value={dose.validityUnit} options={validityUnitOptions()} onchange={(value) => updatePresetDose(preset.id, dose.clientId, { validityUnit: value as VaccineValidityUnit })} />
+											</div>
+											<button type="button" class="inline-flex size-10 items-center justify-center rounded-md border border-border bg-background hover:bg-accent disabled:opacity-50" disabled={saving || preset.doses.length <= 1 || isDoseInUse(dose)} aria-label={`${t('vaccine.removeDose')}: ${dose.label || t('vaccine.dose')}`} title={isDoseInUse(dose) ? t('vaccine.doseInUse') : t('vaccine.removeDose')} onclick={() => removePresetDose(preset.id, dose.clientId)}>
+												<X class="size-4" />
+											</button>
+										</div>
+									{/each}
+								</div>
+							</form>
+						{/if}
+					</article>
 				{:else}
 					<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('vaccine.emptyPresets')}</p>
 				{/each}
