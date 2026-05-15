@@ -446,6 +446,67 @@ const nullable = (value: string | undefined): string | null => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
+const cityNameAliases: [string[], string][] = [
+  [
+    // All misspellings found in the CSV for Américo Brasiliense
+    ['américo brasiliense', 'americo brasiliense',
+      'amnérico brasiliense', 'amérioc brasiliense', 'américo brasailiense',
+      'américo brasilinese', 'américo brasileinse', 'amério brasiliense',
+      'américo brtasiliense', 'amárico brasiliense', 'américo brasliense',
+      'américo braisiliense', 'amérioco brasiliense', 'amérrico brasiliense',
+      'améroico brasiliense', 'amério brasileinse', 'américvo brasiliense',
+      'américo rasiliense', 'américo brsiliense', 'américo breasiliense',
+      'américo brasilinse', 'americo brasilinse', 'américo brasileliense',
+      'améico brasailiense', 'américo brasiliesne', 'amérco brasiliense',
+      'améico brasiliense', 'américa brasiliense', 'américo bbrasiliense',
+      'américo brasileisne', 'américo brasiiense', 'américo brasisliense',
+      'américo brailiense', 'américo nrasiliense', 'américo brasilienmse',
+      'américo brasilie4nse', 'a,érico brasiliense', 'aqmérico brasiliense',
+      'am´rico brasiliense', 'américo brasiliemse', 'amperuci brasiliemse',
+      'améruico brasiliense', 'aco. brasiliense', 'aco brasiliense', 'centro'],
+    'Américo Brasiliense'
+  ],
+  [
+    ['santa lucia', 'sanra lucia', 'santa luicia', 'santa lúcia'],
+    'Santa Lúcia'
+  ],
+  [
+    ['araraqura', 'araraquara-sp', 'araraquara - américo brasiliense'],
+    'Araraquara'
+  ],
+  [
+    ['são carlos'],
+    'São Carlos'
+  ]
+];
+
+const cityNameMap = new Map<string, string>();
+const cityNamePrefixes: [string, string][] = [];
+for (const [aliases, corrected] of cityNameAliases) {
+  for (const alias of aliases) {
+    const key = alias.toLowerCase().normalize('NFC');
+    cityNameMap.set(key, corrected);
+    cityNamePrefixes.push([key, corrected]);
+  }
+}
+cityNamePrefixes.sort((a, b) => b[0].length - a[0].length);
+
+const normalizeCityName = (value: string | undefined): string => {
+  const raw = nullable(value);
+  if (!raw) return 'Américo Brasiliense';
+  // Collapse multiple whitespace into single space, then lowercase + NFC normalize
+  const lower = raw.replace(/\s+/g, ' ').toLowerCase().normalize('NFC');
+  // 1. Exact match
+  const exact = cityNameMap.get(lower);
+  if (exact) return exact;
+  // 2. Prefix match — city name followed by extra content in the same field
+  for (const [prefix, corrected] of cityNamePrefixes) {
+    if (lower.startsWith(prefix) && /[\s,\-]/.test(lower[prefix.length] ?? '')) return corrected;
+  }
+  // Return whitespace-collapsed value even if not matched
+  return raw.replace(/\s+/g, ' ');
+};
+
 const legacyDocumentFragmentPattern = /\b(?:\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}|\d{2,3}\.?\d{3}\.?\d{3}(?:[-.]?\d{0,2})?)\b/g;
 const legacyEmailPattern = /\b[^\s@]+@[^\s@]+\.[^\s@]+\b/g;
 const legacyPhonePattern = /\b(?:\+?55\s*)?(?:\(?\d{2}\)?\s*)?(?:9\s*)?\d{4}[\s.-]*\d{4}\b/g;
@@ -1106,7 +1167,7 @@ const processarMigracao = () => {
           streetNumber: parsedAddress.streetNumber,
           addressComplement: parsedAddress.addressComplement,
           neighborhood: nullable(row['BAIRRO']),
-          city: nullable(row['CIDADE']),
+          city: normalizeCityName(row['CIDADE']),
           country: 'Brazil',
           postalCode: nullable(row['CEP']),
           additionalInformation: null
