@@ -24,13 +24,14 @@
 	type StudyTarget = 'vaccines' | 'pets' | 'owners';
 	type StudyPetSnapshot = DashboardPetStudyItem | DashboardOwnerStudyPet;
 	type StudyVaccineSummary = DashboardPetStudyVaccine & { id: string; pet: DashboardPetStudyItem };
-	type StudyDimension = 'vaccinePreset' | 'vaccineStatus' | 'petSpecies' | 'petBreed' | 'petSex' | 'petAge' | 'petVaccineStatus' | 'ownerLocation' | 'ownerPetCount' | 'ownerPetVaccineStatus' | 'ownerPetSpecies';
+	type StudyDimension = 'vaccinePreset' | 'vaccineStatus' | 'petSpecies' | 'petBreed' | 'petSex' | 'petAge' | 'petVaccineStatus' | 'ownerCity' | 'ownerPetCount' | 'ownerPetVaccineStatus' | 'ownerPetSpecies';
 	type StudyVisualizationMode = 'bars' | 'table';
 	type StudyPanel = 'chart' | 'list';
 	type StudyCrossBucket = { primaryLabel: string; secondaryLabel: string; count: number };
+	type StudyCrossSelection = StudyCrossBucket & { primaryDimension: StudyDimension; secondaryDimension: StudyDimension };
 	type StudyDimensionOption = { dimension: StudyDimension; labelKey: TranslationKey };
 	type StudyFactor = { label: string; value: string; count: number };
-	type StudyFactorKind = 'vaccinePreset' | 'vaccineStatus' | 'species' | 'breed' | 'sex' | 'age' | 'city' | 'location';
+	type StudyFactorKind = 'vaccinePreset' | 'vaccineStatus' | 'species' | 'breed' | 'sex' | 'age' | 'city' | 'ownerPetCount';
 
 	const studyTargetOptions = [
 		{ target: 'vaccines', labelKey: 'analysis.study.axis.vaccines', descriptionKey: 'analysis.study.axis.vaccinesDescription', icon: Syringe },
@@ -59,7 +60,8 @@
 	let studyVaccineStatus = $state('');
 	let studyVaccinePresetId = $state('');
 	let studyCity = $state('');
-	let studyLocation = $state('');
+	let studyOwnerPetCount = $state('');
+	let selectedStudyBucket = $state<StudyCrossSelection | null>(null);
 
 	const allStudyPets = $derived(clinic.dashboard?.analytics.study.pets ?? []);
 	const allStudyOwners = $derived(clinic.dashboard?.analytics.study.owners ?? []);
@@ -72,6 +74,9 @@
 	const studyTargetVaccines = $derived(resolveStudyTargetVaccines());
 	const selectedStudyBuckets = $derived(buildStudyVisualizationBuckets());
 	const selectedStudyFactors = $derived(studyFactorSummaries());
+	const listedStudyVaccines = $derived(resolveListedStudyVaccines());
+	const listedStudyOwners = $derived(resolveListedStudyOwners());
+	const listedStudyPets = $derived(resolveListedStudyPets());
 
 	function metricFormatter(value: number): string {
 		return new Intl.NumberFormat(i18n.locale, { maximumFractionDigits: 1 }).format(value);
@@ -93,11 +98,20 @@
 		studyTarget = target;
 		studyPrimaryDimension = defaultStudyPrimaryDimension(target);
 		studySecondaryDimension = defaultStudySecondaryDimension(target);
+		selectedStudyBucket = null;
+	}
+
+	function studyTargetLabel(): string {
+		return t(studyTargetOptions.find((option) => option.target === studyTarget)?.labelKey ?? 'analysis.study.axis.pets');
+	}
+
+	function studyTargetDescription(): string {
+		return t(studyTargetOptions.find((option) => option.target === studyTarget)?.descriptionKey ?? 'analysis.study.axis.petsDescription');
 	}
 
 	function defaultStudyPrimaryDimension(target: StudyTarget): StudyDimension {
 		if (target === 'vaccines') return 'vaccineStatus';
-		if (target === 'owners') return 'ownerLocation';
+		if (target === 'owners') return 'ownerCity';
 		return 'petBreed';
 	}
 
@@ -110,29 +124,37 @@
 	function availableStudyDimensions(): StudyDimensionOption[] {
 		if (studyTarget === 'vaccines') {
 			return [
-				{ dimension: 'vaccineStatus', labelKey: 'analysis.study.vaccinesByStatus' },
-				{ dimension: 'vaccinePreset', labelKey: 'analysis.study.vaccinesByPreset' },
-				{ dimension: 'petSpecies', labelKey: 'analysis.pet.species' },
-				{ dimension: 'ownerLocation', labelKey: 'analysis.owner.location' }
+				{ dimension: 'vaccineStatus', labelKey: 'analysis.study.dimension.vaccineStatus' },
+				{ dimension: 'vaccinePreset', labelKey: 'analysis.study.dimension.vaccinePreset' },
+				{ dimension: 'petSpecies', labelKey: 'analysis.study.dimension.petSpecies' },
+				{ dimension: 'petBreed', labelKey: 'analysis.study.dimension.petBreed' },
+				{ dimension: 'petAge', labelKey: 'analysis.study.dimension.petAge' },
+				{ dimension: 'ownerCity', labelKey: 'analysis.study.dimension.ownerCity' },
+				{ dimension: 'ownerPetCount', labelKey: 'analysis.study.dimension.ownerPetCount' }
 			];
 		}
 
 		if (studyTarget === 'owners') {
 			return [
-				{ dimension: 'ownerLocation', labelKey: 'analysis.owner.location' },
-				{ dimension: 'ownerPetCount', labelKey: 'analysis.owner.petCount' },
-				{ dimension: 'ownerPetVaccineStatus', labelKey: 'analysis.owner.vaccineStatus' },
-				{ dimension: 'ownerPetSpecies', labelKey: 'analysis.study.ownersByPetSpecies' }
+				{ dimension: 'ownerCity', labelKey: 'analysis.study.dimension.ownerCity' },
+				{ dimension: 'ownerPetCount', labelKey: 'analysis.study.dimension.ownerPetCount' },
+				{ dimension: 'ownerPetVaccineStatus', labelKey: 'analysis.study.dimension.ownerPetVaccineStatus' },
+				{ dimension: 'ownerPetSpecies', labelKey: 'analysis.study.dimension.ownerPetSpecies' },
+				{ dimension: 'vaccinePreset', labelKey: 'analysis.study.dimension.vaccinePreset' },
+				{ dimension: 'petBreed', labelKey: 'analysis.study.dimension.petBreed' },
+				{ dimension: 'petAge', labelKey: 'analysis.study.dimension.petAge' }
 			];
 		}
 
 		return [
-			{ dimension: 'petBreed', labelKey: 'analysis.pet.breed' },
-			{ dimension: 'petSpecies', labelKey: 'analysis.pet.species' },
-			{ dimension: 'petVaccineStatus', labelKey: 'analysis.pet.vaccineStatus' },
-			{ dimension: 'petSex', labelKey: 'analysis.pet.sex' },
-			{ dimension: 'petAge', labelKey: 'analysis.pet.age' },
-			{ dimension: 'ownerLocation', labelKey: 'analysis.owner.location' }
+			{ dimension: 'petBreed', labelKey: 'analysis.study.dimension.petBreed' },
+			{ dimension: 'petSpecies', labelKey: 'analysis.study.dimension.petSpecies' },
+			{ dimension: 'petVaccineStatus', labelKey: 'analysis.study.dimension.petVaccineStatus' },
+			{ dimension: 'vaccinePreset', labelKey: 'analysis.study.dimension.vaccinePreset' },
+			{ dimension: 'petSex', labelKey: 'analysis.study.dimension.petSex' },
+			{ dimension: 'petAge', labelKey: 'analysis.study.dimension.petAge' },
+			{ dimension: 'ownerCity', labelKey: 'analysis.study.dimension.ownerCity' },
+			{ dimension: 'ownerPetCount', labelKey: 'analysis.study.dimension.ownerPetCount' }
 		];
 	}
 
@@ -190,9 +212,8 @@
 		return namedOwnerOptions(allStudyOwners, (owner) => owner.cityKey, (owner) => owner.cityLabel);
 	}
 
-	function studyLocationOptions() {
-		const owners = studyCity ? allStudyOwners.filter((owner) => owner.cityKey === studyCity) : allStudyOwners;
-		return namedOwnerOptions(owners, (owner) => owner.locationKey, (owner) => owner.locationLabel);
+	function studyOwnerPetCountOptions() {
+		return [{ value: '', label: studyAllOptionLabel() }, ...studyBuckets(allStudyOwners, (owner) => ownerPetCountBand(owner.petCount)).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(t(petCountLabelKey(bucket.key)), bucket.count) }))];
 	}
 
 	function namedOwnerOptions(owners: DashboardOwnerStudyItem[], getKey: (owner: DashboardOwnerStudyItem) => string, getLabel: (owner: DashboardOwnerStudyItem) => string | null) {
@@ -230,17 +251,24 @@
 
 	function ownerMatchesOwnerFilters(owner: DashboardOwnerStudyItem): boolean {
 		if (studyCity && owner.cityKey !== studyCity) return false;
-		if (studyLocation && owner.locationKey !== studyLocation) return false;
+		if (studyOwnerPetCount && ownerPetCountBand(owner.petCount) !== studyOwnerPetCount) return false;
 		return true;
 	}
 
 	function petMatchesOwnerFilters(pet: DashboardPetStudyItem): boolean {
-		if (!studyCity && !studyLocation) return true;
-		return pet.owners.some((owner) => {
-			if (studyCity && owner.cityKey !== studyCity) return false;
-			if (studyLocation && owner.locationKey !== studyLocation) return false;
-			return true;
-		});
+		if (!studyCity && !studyOwnerPetCount) return true;
+		return pet.owners.some((owner) => petOwnerMatchesOwnerFilters(owner));
+	}
+
+	function petOwnerMatchesOwnerFilters(owner: { id: number; cityKey: string }): boolean {
+		if (studyCity && owner.cityKey !== studyCity) return false;
+		if (!studyOwnerPetCount) return true;
+		const ownerItem = findStudyOwner(owner.id);
+		return ownerItem ? ownerPetCountBand(ownerItem.petCount) === studyOwnerPetCount : false;
+	}
+
+	function findStudyOwner(ownerId: number): DashboardOwnerStudyItem | undefined {
+		return allStudyOwners.find((owner) => owner.id === ownerId);
 	}
 
 	function studyVaccineMatchesFilters(vaccine: StudyVaccineSummary): boolean {
@@ -315,7 +343,7 @@
 	}
 
 	function hasStudyFilters(): boolean {
-		return !!(studySpecies || studyBreed || studySex || studyAge || studyVaccineStatus || studyVaccinePresetId || studyCity || studyLocation);
+		return !!(studySpecies || studyBreed || studySex || studyAge || studyVaccineStatus || studyVaccinePresetId || studyCity || studyOwnerPetCount);
 	}
 
 	function clearStudyFilters(): void {
@@ -326,7 +354,7 @@
 		studyVaccineStatus = '';
 		studyVaccinePresetId = '';
 		studyCity = '';
-		studyLocation = '';
+		studyOwnerPetCount = '';
 	}
 
 	function studyFactorSummaries(): StudyFactor[] {
@@ -338,7 +366,7 @@
 		if (studySex) factors.push({ label: t('analysis.study.sex'), value: sexLabel(studySex), count: countStudyTargetForFactor('sex') });
 		if (studyAge) factors.push({ label: t('analysis.study.age'), value: t(ageLabelKey(studyAge)), count: countStudyTargetForFactor('age') });
 		if (studyCity) factors.push({ label: t('analysis.study.city'), value: selectedCityLabel(), count: countStudyTargetForFactor('city') });
-		if (studyLocation) factors.push({ label: t('analysis.study.location'), value: selectedLocationLabel(), count: countStudyTargetForFactor('location') });
+		if (studyOwnerPetCount) factors.push({ label: t('analysis.study.ownerPetCount'), value: t(petCountLabelKey(studyOwnerPetCount)), count: countStudyTargetForFactor('ownerPetCount') });
 		return factors;
 	}
 
@@ -351,10 +379,6 @@
 		return studyCityOptions().find((option) => option.value === studyCity)?.label.replace(/ \([0-9.,]+\)$/, '') ?? t('common.notInformed');
 	}
 
-	function selectedLocationLabel(): string {
-		return studyLocationOptions().find((option) => option.value === studyLocation)?.label.replace(/ \([0-9.,]+\)$/, '') ?? t('common.notInformed');
-	}
-
 	function petMatchesFactor(pet: DashboardPetStudyItem, factor: StudyFactorKind): boolean {
 		if (factor === 'vaccinePreset') return pet.vaccinePresetIds.includes(Number(studyVaccinePresetId));
 		if (factor === 'vaccineStatus') return studyVaccineStatus ? pet.vaccineStatus === studyVaccineStatus : true;
@@ -363,7 +387,10 @@
 		if (factor === 'sex') return pet.sex === studySex;
 		if (factor === 'age') return pet.age === studyAge;
 		if (factor === 'city') return pet.ownerCityKeys.includes(studyCity);
-		return pet.ownerLocationKeys.includes(studyLocation);
+		return pet.owners.some((owner) => {
+			const ownerItem = findStudyOwner(owner.id);
+			return ownerItem ? ownerPetCountBand(ownerItem.petCount) === studyOwnerPetCount : false;
+		});
 	}
 
 	function vaccineMatchesFactor(vaccine: StudyVaccineSummary, factor: StudyFactorKind): boolean {
@@ -374,7 +401,7 @@
 
 	function ownerMatchesFactor(owner: DashboardOwnerStudyItem, factor: StudyFactorKind): boolean {
 		if (factor === 'city') return owner.cityKey === studyCity;
-		if (factor === 'location') return owner.locationKey === studyLocation;
+		if (factor === 'ownerPetCount') return ownerPetCountBand(owner.petCount) === studyOwnerPetCount;
 		return owner.pets.some((pet) => {
 			if (factor === 'vaccinePreset') return pet.vaccinePresetIds.includes(Number(studyVaccinePresetId));
 			if (factor === 'vaccineStatus') return studyVaccineStatus ? pet.vaccineStatus === studyVaccineStatus : true;
@@ -417,7 +444,11 @@
 		if (dimension === 'petSex') return [sexLabel(pet.sex)];
 		if (dimension === 'petAge') return [t(ageLabelKey(pet.age))];
 		if (dimension === 'petVaccineStatus') return [vaccineStatusLabel(pet.vaccineStatus)];
-		if (dimension === 'ownerLocation') return uniqueStudyLabels(pet.ownerLocationLabels);
+		if (dimension === 'ownerCity') return uniqueStudyLabels(pet.ownerCityLabels);
+		if (dimension === 'ownerPetCount') return uniqueStudyLabels(pet.owners.map((owner) => {
+			const ownerItem = findStudyOwner(owner.id);
+			return ownerItem ? t(petCountLabelKey(ownerPetCountBand(ownerItem.petCount))) : t('common.notInformed');
+		}));
 		return [t('common.notInformed')];
 	}
 
@@ -439,7 +470,7 @@
 	}
 
 	function ownerDimensionLabels(owner: DashboardOwnerStudyItem, dimension: StudyDimension): string[] {
-		if (dimension === 'ownerLocation') return [owner.locationLabel ?? t('common.notInformed')];
+		if (dimension === 'ownerCity') return [owner.cityLabel ?? t('common.notInformed')];
 		if (dimension === 'ownerPetCount') return [t(petCountLabelKey(ownerPetCountBand(owner.petCount)))];
 		if (dimension === 'ownerPetVaccineStatus') return [vaccineStatusLabel(ownerVaccineStatus(owner))];
 		if (dimension === 'ownerPetSpecies') return uniqueStudyLabels(owner.pets.map((pet) => speciesLabel(pet.species)));
@@ -473,6 +504,42 @@
 		else if (studyTarget === 'owners') for (const owner of studyTargetOwners) addStudyCrossBucket(buckets, ownerDimensionLabels(owner, studyPrimaryDimension), ownerDimensionLabels(owner, studySecondaryDimension));
 		else for (const pet of studyTargetPets) addStudyCrossBucket(buckets, activePetDimensionLabels(pet, studyPrimaryDimension), activePetDimensionLabels(pet, studySecondaryDimension));
 		return [...buckets.values()].sort((first, second) => second.count - first.count || first.primaryLabel.localeCompare(second.primaryLabel) || first.secondaryLabel.localeCompare(second.secondaryLabel));
+	}
+
+	function selectStudyBucket(bucket: StudyCrossBucket): void {
+		selectedStudyBucket = { ...bucket, primaryDimension: studyPrimaryDimension, secondaryDimension: studySecondaryDimension };
+		studyPanel = 'list';
+	}
+
+	function clearSelectedStudyBucket(): void {
+		selectedStudyBucket = null;
+	}
+
+	function selectedStudyBucketLabel(): string {
+		return selectedStudyBucket ? `${selectedStudyBucket.primaryLabel} - ${selectedStudyBucket.secondaryLabel}` : '';
+	}
+
+	function labelsMatchSelectedStudyBucket(primaryLabels: string[], secondaryLabels: string[]): boolean {
+		if (!selectedStudyBucket) return true;
+		return primaryLabels.includes(selectedStudyBucket.primaryLabel) && secondaryLabels.includes(selectedStudyBucket.secondaryLabel);
+	}
+
+	function resolveListedStudyVaccines(): StudyVaccineSummary[] {
+		const selection = selectedStudyBucket;
+		if (!selection) return studyTargetVaccines;
+		return studyTargetVaccines.filter((vaccine) => labelsMatchSelectedStudyBucket(vaccineDimensionLabels(vaccine, selection.primaryDimension), vaccineDimensionLabels(vaccine, selection.secondaryDimension)));
+	}
+
+	function resolveListedStudyOwners(): DashboardOwnerStudyItem[] {
+		const selection = selectedStudyBucket;
+		if (!selection) return studyTargetOwners;
+		return studyTargetOwners.filter((owner) => labelsMatchSelectedStudyBucket(ownerDimensionLabels(owner, selection.primaryDimension), ownerDimensionLabels(owner, selection.secondaryDimension)));
+	}
+
+	function resolveListedStudyPets(): DashboardPetStudyItem[] {
+		const selection = selectedStudyBucket;
+		if (!selection) return studyTargetPets;
+		return studyTargetPets.filter((pet) => labelsMatchSelectedStudyBucket(activePetDimensionLabels(pet, selection.primaryDimension), activePetDimensionLabels(pet, selection.secondaryDimension)));
 	}
 
 	function studyVisualizationTitle(): string {
@@ -539,8 +606,8 @@
 		return pet.owners.map((owner) => owner.name).join(' - ') || t('owner.unassigned');
 	}
 
-	function studyPetLocationText(pet: DashboardPetStudyItem): string {
-		return pet.ownerLocationLabels.join(' - ') || t('common.notInformed');
+	function studyPetCityText(pet: DashboardPetStudyItem): string {
+		return pet.ownerCityLabels.join(' - ') || t('common.notInformed');
 	}
 
 	function studyPetVaccineText(pet: DashboardPetStudyItem): string {
@@ -564,8 +631,15 @@
 		if (!dimensionOptions.some((option) => option.dimension === studyPrimaryDimension)) studyPrimaryDimension = defaultStudyPrimaryDimension(studyTarget);
 		if (!dimensionOptions.some((option) => option.dimension === studySecondaryDimension)) studySecondaryDimension = defaultStudySecondaryDimension(studyTarget);
 		if (studyBreed && !studyBreedOptions().some((option) => option.value === studyBreed)) studyBreed = '';
-		if (studyLocation && !studyLocationOptions().some((option) => option.value === studyLocation)) studyLocation = '';
+		if (studyOwnerPetCount && !studyOwnerPetCountOptions().some((option) => option.value === studyOwnerPetCount)) studyOwnerPetCount = '';
 		if (studyVaccineStatus && !studyVaccineStatusOptions().some((option) => option.value === studyVaccineStatus)) studyVaccineStatus = '';
+	});
+
+	$effect(() => {
+		if (!selectedStudyBucket) return;
+		const dimensionChanged = selectedStudyBucket.primaryDimension !== studyPrimaryDimension || selectedStudyBucket.secondaryDimension !== studySecondaryDimension;
+		const bucketExists = selectedStudyBuckets.some((bucket) => bucket.primaryLabel === selectedStudyBucket?.primaryLabel && bucket.secondaryLabel === selectedStudyBucket?.secondaryLabel);
+		if (dimensionChanged || !bucketExists) selectedStudyBucket = null;
 	});
 </script>
 
@@ -576,82 +650,84 @@
 	</div>
 	<p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{t('analysis.general.description')}</p>
 
-	<div class="mt-5 rounded-md border border-border bg-background p-3">
-		<div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-			<div class="min-w-0">
-				<p class="text-sm font-semibold">{t('analysis.study.axis')}</p>
-				<p class="mt-1 text-sm leading-6 text-muted-foreground">{t('analysis.study.axisDescription')}</p>
-			</div>
-			<div class="grid gap-2 sm:grid-cols-3 lg:min-w-136" role="tablist" aria-label={t('analysis.study.axis')}>
-				{#each studyTargetOptions as option}
-					<button class="flex min-h-20 items-start gap-3 rounded-md border p-3 text-left transition-colors hover:bg-accent {studyTarget === option.target ? 'border-primary bg-primary/10 ring-2 ring-ring/20' : 'border-border bg-background'}" type="button" role="tab" aria-selected={studyTarget === option.target} onclick={() => selectStudyTarget(option.target)}>
-						<option.icon class="mt-0.5 size-4 shrink-0" />
-						<span class="min-w-0">
-							<span class="block text-sm font-semibold">{t(option.labelKey)}</span>
-							<span class="mt-1 block text-xs leading-5 text-muted-foreground">{t(option.descriptionKey)}</span>
-						</span>
-					</button>
-				{/each}
-			</div>
-		</div>
-	</div>
-
 	<div class="mt-5 grid gap-5 xl:grid-cols-[20rem_minmax(0,1fr)]">
 		<aside class="rounded-md border border-border bg-background p-4">
-			<div class="flex items-center justify-between gap-3">
-				<div class="flex min-w-0 items-center gap-2 text-sm font-medium text-muted-foreground">
-					<SlidersHorizontal class="size-4" />
-					<span>{t('analysis.study.yAxis')}</span>
-				</div>
-				<button class="inline-flex size-9 items-center justify-center rounded-md border border-border bg-background hover:bg-accent disabled:opacity-50" type="button" disabled={!hasStudyFilters()} onclick={clearStudyFilters} aria-label={t('analysis.study.clear')}>
-					<X class="size-4" />
-				</button>
-			</div>
+			<div class="space-y-5">
+				<section>
+					<div class="flex min-w-0 items-center gap-2 text-sm font-medium text-muted-foreground">
+						<ChartColumn class="size-4" />
+						<span>{t('analysis.study.axis')}</span>
+					</div>
+					<p class="mt-1 text-xs leading-5 text-muted-foreground">{t('analysis.study.axisSidebarDescription')}</p>
+					<div class="mt-3 grid gap-2" role="tablist" aria-label={t('analysis.study.axis')}>
+						{#each studyTargetOptions as option}
+							<button class="flex h-11 items-center gap-3 rounded-md border px-3 text-left transition-colors hover:bg-accent {studyTarget === option.target ? 'border-primary bg-primary/10 ring-2 ring-ring/20' : 'border-border bg-background'}" type="button" role="tab" aria-selected={studyTarget === option.target} title={t(option.descriptionKey)} onclick={() => selectStudyTarget(option.target)}>
+								<option.icon class="size-4 shrink-0" />
+								<span class="min-w-0">
+									<span class="block truncate text-sm font-semibold">{t(option.labelKey)}</span>
+								</span>
+							</button>
+						{/each}
+					</div>
+				</section>
 
-			<div class="mt-5 space-y-5">
-				<div class="space-y-3">
-					<p class="text-sm font-semibold">{t('analysis.study.vaccineCriteria')}</p>
-					<div class="space-y-1">
-						<label class="text-sm font-medium" for="study-vaccine-preset">{t('analysis.study.vaccinePreset')}</label>
-						<Select id="study-vaccine-preset" bind:value={studyVaccinePresetId} options={studyVaccinePresetOptions()} />
+				<section class="border-t border-border pt-5">
+					<div class="flex items-center justify-between gap-3">
+						<div class="flex min-w-0 items-center gap-2 text-sm font-medium text-muted-foreground">
+							<SlidersHorizontal class="size-4" />
+							<span>{t('analysis.study.yAxis')}</span>
+						</div>
+						<button class="inline-flex size-9 items-center justify-center rounded-md border border-border bg-background hover:bg-accent disabled:opacity-50" type="button" disabled={!hasStudyFilters()} onclick={clearStudyFilters} aria-label={t('analysis.study.clear')}>
+							<X class="size-4" />
+						</button>
 					</div>
-					<div class="space-y-1">
-						<label class="text-sm font-medium" for="study-vaccine-status">{t('analysis.study.vaccineStatus')}</label>
-						<Select id="study-vaccine-status" bind:value={studyVaccineStatus} options={studyVaccineStatusOptions()} />
-					</div>
-				</div>
 
-				<div class="space-y-3 border-t border-border pt-5">
-					<p class="text-sm font-semibold">{t('analysis.study.petCriteria')}</p>
-					<div class="space-y-1">
-						<label class="text-sm font-medium" for="study-species">{t('analysis.study.species')}</label>
-						<Select id="study-species" bind:value={studySpecies} options={studySpeciesOptions()} />
-					</div>
-					<div class="space-y-1">
-						<label class="text-sm font-medium" for="study-breed">{t('analysis.study.breed')}</label>
-						<Select id="study-breed" bind:value={studyBreed} options={studyBreedOptions()} />
-					</div>
-					<div class="space-y-1">
-						<label class="text-sm font-medium" for="study-sex">{t('analysis.study.sex')}</label>
-						<Select id="study-sex" bind:value={studySex} options={studySexOptions()} />
-					</div>
-					<div class="space-y-1">
-						<label class="text-sm font-medium" for="study-age">{t('analysis.study.age')}</label>
-						<Select id="study-age" bind:value={studyAge} options={studyAgeOptions()} />
-					</div>
-				</div>
+					<div class="mt-5 space-y-5">
+						<div class="space-y-3">
+							<p class="text-sm font-semibold">{t('analysis.study.vaccineCriteria')}</p>
+							<div class="space-y-1">
+								<label class="text-sm font-medium" for="study-vaccine-preset">{t('analysis.study.vaccinePreset')}</label>
+								<Select id="study-vaccine-preset" bind:value={studyVaccinePresetId} options={studyVaccinePresetOptions()} />
+							</div>
+							<div class="space-y-1">
+								<label class="text-sm font-medium" for="study-vaccine-status">{t('analysis.study.vaccineStatus')}</label>
+								<Select id="study-vaccine-status" bind:value={studyVaccineStatus} options={studyVaccineStatusOptions()} />
+							</div>
+						</div>
 
-				<div class="space-y-3 border-t border-border pt-5">
-					<p class="text-sm font-semibold">{t('analysis.study.ownerCriteria')}</p>
-					<div class="space-y-1">
-						<label class="text-sm font-medium" for="study-city">{t('analysis.study.city')}</label>
-						<Select id="study-city" bind:value={studyCity} options={studyCityOptions()} />
+						<div class="space-y-3 border-t border-border pt-5">
+							<p class="text-sm font-semibold">{t('analysis.study.petCriteria')}</p>
+							<div class="space-y-1">
+								<label class="text-sm font-medium" for="study-species">{t('analysis.study.species')}</label>
+								<Select id="study-species" bind:value={studySpecies} options={studySpeciesOptions()} />
+							</div>
+							<div class="space-y-1">
+								<label class="text-sm font-medium" for="study-breed">{t('analysis.study.breed')}</label>
+								<Select id="study-breed" bind:value={studyBreed} options={studyBreedOptions()} />
+							</div>
+							<div class="space-y-1">
+								<label class="text-sm font-medium" for="study-sex">{t('analysis.study.sex')}</label>
+								<Select id="study-sex" bind:value={studySex} options={studySexOptions()} />
+							</div>
+							<div class="space-y-1">
+								<label class="text-sm font-medium" for="study-age">{t('analysis.study.age')}</label>
+								<Select id="study-age" bind:value={studyAge} options={studyAgeOptions()} />
+							</div>
+						</div>
+
+						<div class="space-y-3 border-t border-border pt-5">
+							<p class="text-sm font-semibold">{t('analysis.study.ownerCriteria')}</p>
+							<div class="space-y-1">
+								<label class="text-sm font-medium" for="study-city">{t('analysis.study.city')}</label>
+								<Select id="study-city" bind:value={studyCity} options={studyCityOptions()} />
+							</div>
+							<div class="space-y-1">
+								<label class="text-sm font-medium" for="study-owner-pet-count">{t('analysis.study.ownerPetCount')}</label>
+								<Select id="study-owner-pet-count" bind:value={studyOwnerPetCount} options={studyOwnerPetCountOptions()} />
+							</div>
+						</div>
 					</div>
-					<div class="space-y-1">
-						<label class="text-sm font-medium" for="study-location">{t('analysis.study.location')}</label>
-						<Select id="study-location" bind:value={studyLocation} options={studyLocationOptions()} />
-					</div>
-				</div>
+				</section>
 			</div>
 		</aside>
 
@@ -669,13 +745,19 @@
 
 			{#if studyPanel === 'chart'}
 				<section class="rounded-md border border-border bg-background p-4" role="tabpanel">
-					<div class="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
-						<div class="min-w-0">
-							<h3 class="text-sm font-semibold">{t('analysis.study.visualization')}</h3>
+					<div>
+						<div class="min-w-0 max-w-3xl">
+							<div class="flex flex-wrap items-center gap-2">
+								<h3 class="text-sm font-semibold">{t('analysis.study.visualization')}</h3>
+								<span class="inline-flex max-w-full items-center rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+									<span class="truncate">{t('analysis.study.currentFocus')}: {studyTargetLabel()}</span>
+								</span>
+							</div>
 							<p class="mt-1 text-sm leading-6 text-muted-foreground">{t('analysis.study.visualizationDescription')}</p>
+							<p class="mt-1 text-xs leading-5 text-muted-foreground">{studyTargetDescription()}</p>
 						</div>
 
-						<div class="grid gap-3 sm:grid-cols-2 xl:min-w-160 xl:grid-cols-[minmax(12rem,1fr)_minmax(12rem,1fr)_auto]">
+						<div class="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(12rem,1fr)_minmax(12rem,1fr)_auto]">
 							<div class="space-y-1">
 								<label class="text-sm font-medium" for="study-primary-dimension">{t('analysis.study.visualizeByPrimary')}</label>
 								<Select id="study-primary-dimension" bind:value={studyPrimaryDimension} options={studyDimensionOptions()} />
@@ -718,12 +800,13 @@
 						{#if studyVisualizationMode === 'bars'}
 							<div class="divide-y divide-border/70">
 								{#each topChartBuckets(selectedStudyBuckets, 16) as bucket}
-									<div class="grid grid-cols-[minmax(7rem,1fr)_minmax(7rem,1fr)_minmax(8rem,1.6fr)_5rem_4.5rem] items-center gap-3 py-2 text-sm">
+									<div class="grid grid-cols-[minmax(7rem,1fr)_minmax(7rem,1fr)_minmax(8rem,1.6fr)_5rem_4.5rem_3.5rem] items-center gap-3 py-2 text-sm">
 										<span class="truncate text-muted-foreground" title={bucket.primaryLabel}>{bucket.primaryLabel}</span>
 										<span class="truncate text-muted-foreground" title={bucket.secondaryLabel}>{bucket.secondaryLabel}</span>
 										<span class="h-2 rounded-full bg-muted"><span class="block h-2 rounded-full bg-primary" style={`width: ${bucketWidth(bucket.count, maxChartBucketCount(selectedStudyBuckets))}%`}></span></span>
 										<span class="text-right font-medium tabular-nums">{metricFormatter(bucket.count)}</span>
 										<span class="text-right text-xs font-medium tabular-nums text-muted-foreground">{chartBucketPercentLabel(bucket.count, selectedStudyBuckets)}</span>
+										<button class="inline-flex h-8 items-center justify-center rounded-md border border-border bg-background px-2 text-xs font-medium hover:bg-accent" type="button" onclick={() => selectStudyBucket(bucket)}>{t('actions.view')}</button>
 									</div>
 								{:else}
 									<p class="py-4 text-sm text-muted-foreground">{t('analysis.empty')}</p>
@@ -738,6 +821,7 @@
 											<th class="px-3 py-2 font-medium">{studyDimensionLabel(studySecondaryDimension)}</th>
 											<th class="w-28 px-3 py-2 text-right font-medium">{t('analysis.study.column.value')}</th>
 											<th class="w-28 px-3 py-2 text-right font-medium">{t('analysis.study.column.percent')}</th>
+											<th class="w-16 px-3 py-2 text-right font-medium"><span class="sr-only">{t('actions.view')}</span></th>
 										</tr>
 									</thead>
 									<tbody class="divide-y divide-border">
@@ -747,9 +831,10 @@
 												<td class="truncate px-3 py-2 text-muted-foreground" title={bucket.secondaryLabel}>{bucket.secondaryLabel}</td>
 												<td class="px-3 py-2 text-right font-medium tabular-nums">{metricFormatter(bucket.count)}</td>
 												<td class="px-3 py-2 text-right font-medium tabular-nums text-muted-foreground">{chartBucketPercentLabel(bucket.count, selectedStudyBuckets)}</td>
+												<td class="px-3 py-2 text-right"><button class="inline-flex h-8 items-center justify-center rounded-md border border-border bg-background px-2 text-xs font-medium hover:bg-accent" type="button" onclick={() => selectStudyBucket(bucket)}>{t('actions.view')}</button></td>
 											</tr>
 										{:else}
-											<tr><td class="px-3 py-4 text-muted-foreground" colspan="4">{t('analysis.empty')}</td></tr>
+											<tr><td class="px-3 py-4 text-muted-foreground" colspan="5">{t('analysis.empty')}</td></tr>
 										{/each}
 									</tbody>
 								</table>
@@ -761,19 +846,30 @@
 				<section class="rounded-md border border-border bg-background p-4" role="tabpanel">
 					<div class="flex items-start justify-between gap-3">
 						<div>
-							<h3 class="text-sm font-semibold">{studyTarget === 'vaccines' ? t('analysis.study.relatedVaccines') : studyTarget === 'owners' ? t('analysis.study.relatedOwners') : t('analysis.study.relatedPets')}</h3>
+							<div class="flex flex-wrap items-center gap-2">
+								<h3 class="text-sm font-semibold">{studyTarget === 'vaccines' ? t('analysis.study.relatedVaccines') : studyTarget === 'owners' ? t('analysis.study.relatedOwners') : t('analysis.study.relatedPets')}</h3>
+								<span class="inline-flex max-w-full items-center rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+									<span class="truncate">{t('analysis.study.currentFocus')}: {studyTargetLabel()}</span>
+								</span>
+							</div>
 							<p class="mt-1 text-sm text-muted-foreground">{studyTarget === 'vaccines' ? t('analysis.study.relatedVaccinesDescription') : studyTarget === 'owners' ? t('analysis.study.relatedOwnersListDescription') : t('analysis.study.relatedPetsDescription')}</p>
 						</div>
-						<span class="rounded-md bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">{metricFormatter(studyTarget === 'vaccines' ? studyTargetVaccines.length : studyTarget === 'owners' ? studyTargetOwners.length : studyTargetPets.length)}</span>
+						<span class="rounded-md bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">{metricFormatter(studyTarget === 'vaccines' ? listedStudyVaccines.length : studyTarget === 'owners' ? listedStudyOwners.length : listedStudyPets.length)}</span>
 					</div>
+					{#if selectedStudyBucket}
+						<div class="mt-3 flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+							<span class="min-w-0 truncate text-muted-foreground">{t('analysis.study.chartCut')}: {selectedStudyBucketLabel()}</span>
+							<button class="inline-flex h-8 items-center justify-center rounded-md border border-border bg-background px-2 text-xs font-medium hover:bg-accent" type="button" onclick={clearSelectedStudyBucket}>{t('analysis.study.clearChartCut')}</button>
+						</div>
+					{/if}
 					<div class="mt-4 divide-y divide-border rounded-md border border-border">
 						{#if studyTarget === 'vaccines'}
-							{#each studyTargetVaccines.slice(0, 40) as vaccine}
+							{#each listedStudyVaccines.slice(0, 40) as vaccine}
 								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 									<div class="min-w-0">
 										<p class="wrap-break-word text-sm font-semibold">{vaccine.presetName} - {vaccineStatusLabel(vaccine.status)}</p>
 										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{vaccine.pet.name} - {speciesLabel(vaccine.pet.species)} - {breedLabel(vaccine.pet.breed)}</p>
-										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(vaccine.pet)} - {studyPetLocationText(vaccine.pet)}</p>
+										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(vaccine.pet)} - {studyPetCityText(vaccine.pet)}</p>
 										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{t('vaccine.appliedAt')}: {formatDateForDisplay(vaccine.appliedAt)} - {t('vaccine.analytics.dueAt')}: {formatDateForDisplay(vaccine.dueAt)}</p>
 									</div>
 									<a href={studyPetProfileHref(vaccine.pet)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openPet')}</a>
@@ -782,11 +878,11 @@
 								<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyVaccines')}</p>
 							{/each}
 						{:else if studyTarget === 'owners'}
-							{#each studyTargetOwners.slice(0, 40) as owner}
+							{#each listedStudyOwners.slice(0, 40) as owner}
 								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 									<div class="min-w-0">
 										<p class="wrap-break-word text-sm font-semibold">{owner.name}</p>
-										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{owner.locationLabel ?? t('common.notInformed')}</p>
+										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{owner.cityLabel ?? t('common.notInformed')}</p>
 										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{metricFormatter(owner.petCount)} {t('analysis.study.ownerPets')}: {studyOwnerPetNamesText(owner)}</p>
 									</div>
 									<a href={ownerProfileHref(owner)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openOwner')}</a>
@@ -795,12 +891,12 @@
 								<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyOwners')}</p>
 							{/each}
 						{:else}
-							{#each studyTargetPets.slice(0, 40) as pet}
+							{#each listedStudyPets.slice(0, 40) as pet}
 								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 									<div class="min-w-0">
 										<p class="wrap-break-word text-sm font-semibold">{pet.name}</p>
 										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{speciesLabel(pet.species)} - {breedLabel(pet.breed)} - {sexLabel(pet.sex)}</p>
-										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(pet)} - {studyPetLocationText(pet)}</p>
+										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(pet)} - {studyPetCityText(pet)}</p>
 										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{vaccineStatusLabel(pet.vaccineStatus)} - {studyPetVaccineText(pet)}</p>
 									</div>
 									<a href={studyPetProfileHref(pet)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openPet')}</a>
