@@ -361,6 +361,8 @@ export const ptBr = {
 	'analysis.study.yAxis': 'Eixo Y / critérios',
 	'analysis.study.visualization': 'Visualização dos dados',
 	'analysis.study.visualizationDescription': 'Escolha uma dimensão e um formato antes de comparar o recorte.',
+	'analysis.study.tabChart': 'Gráfico',
+	'analysis.study.tabList': 'Lista operacional',
 	'analysis.study.visualizeBy': 'Visualizar por',
 	'analysis.study.visualizeByPrimary': 'Visualizar por',
 	'analysis.study.visualizeBySecondary': 'Comparar com',

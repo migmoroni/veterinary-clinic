@@ -363,6 +363,8 @@ export const enUs = {
 	'analysis.study.yAxis': 'Y axis / criteria',
 	'analysis.study.visualization': 'Data visualization',
 	'analysis.study.visualizationDescription': 'Choose one dimension and one format before comparing the selection.',
+	'analysis.study.tabChart': 'Chart',
+	'analysis.study.tabList': 'Operational list',
 	'analysis.study.visualizeBy': 'View by',
 	'analysis.study.visualizeByPrimary': 'View by',
 	'analysis.study.visualizeBySecondary': 'Compare with',

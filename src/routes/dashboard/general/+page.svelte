@@ -18,6 +18,7 @@
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import Syringe from '@lucide/svelte/icons/syringe';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
+	import List from '@lucide/svelte/icons/list';
 	import X from '@lucide/svelte/icons/x';
 
 	type StudyTarget = 'vaccines' | 'pets' | 'owners';
@@ -25,6 +26,7 @@
 	type StudyVaccineSummary = DashboardPetStudyVaccine & { id: string; pet: DashboardPetStudyItem };
 	type StudyDimension = 'vaccinePreset' | 'vaccineStatus' | 'petSpecies' | 'petBreed' | 'petSex' | 'petAge' | 'petVaccineStatus' | 'ownerLocation' | 'ownerPetCount' | 'ownerPetVaccineStatus' | 'ownerPetSpecies';
 	type StudyVisualizationMode = 'bars' | 'table';
+	type StudyPanel = 'chart' | 'list';
 	type StudyCrossBucket = { primaryLabel: string; secondaryLabel: string; count: number };
 	type StudyDimensionOption = { dimension: StudyDimension; labelKey: TranslationKey };
 	type StudyFactor = { label: string; value: string; count: number };
@@ -49,6 +51,7 @@
 	let studyPrimaryDimension = $state<StudyDimension>('petBreed');
 	let studySecondaryDimension = $state<StudyDimension>('petVaccineStatus');
 	let studyVisualizationMode = $state<StudyVisualizationMode>('bars');
+	let studyPanel = $state<StudyPanel>('chart');
 	let studySpecies = $state('');
 	let studyBreed = $state('');
 	let studySex = $state('');
@@ -653,149 +656,162 @@
 		</aside>
 
 		<div class="min-w-0 space-y-4">
-			<section class="rounded-md border border-border bg-background p-4">
-				<div class="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
-					<div class="min-w-0">
-						<h3 class="text-sm font-semibold">{t('analysis.study.visualization')}</h3>
-						<p class="mt-1 text-sm leading-6 text-muted-foreground">{t('analysis.study.visualizationDescription')}</p>
-					</div>
+			<div class="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1" role="tablist" aria-label={t('analysis.study.visualization')}>
+				<button class="inline-flex h-10 items-center justify-center gap-2 rounded-sm px-3 text-sm font-medium transition-colors {studyPanel === 'chart' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}" type="button" role="tab" aria-selected={studyPanel === 'chart'} onclick={() => (studyPanel = 'chart')}>
+					<ChartColumn class="size-4" />
+					<span class="truncate">{t('analysis.study.tabChart')}</span>
+				</button>
+				<button class="inline-flex h-10 items-center justify-center gap-2 rounded-sm px-3 text-sm font-medium transition-colors {studyPanel === 'list' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}" type="button" role="tab" aria-selected={studyPanel === 'list'} onclick={() => (studyPanel = 'list')}>
+					<List class="size-4" />
+					<span class="truncate">{t('analysis.study.tabList')}</span>
+				</button>
+			</div>
 
-					<div class="grid gap-3 sm:grid-cols-2 xl:min-w-160 xl:grid-cols-[minmax(12rem,1fr)_minmax(12rem,1fr)_auto]">
-						<div class="space-y-1">
-							<label class="text-sm font-medium" for="study-primary-dimension">{t('analysis.study.visualizeByPrimary')}</label>
-							<Select id="study-primary-dimension" bind:value={studyPrimaryDimension} options={studyDimensionOptions()} />
+			{#if studyPanel === 'chart'}
+				<section class="rounded-md border border-border bg-background p-4" role="tabpanel">
+					<div class="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+						<div class="min-w-0">
+							<h3 class="text-sm font-semibold">{t('analysis.study.visualization')}</h3>
+							<p class="mt-1 text-sm leading-6 text-muted-foreground">{t('analysis.study.visualizationDescription')}</p>
 						</div>
-						<div class="space-y-1">
-							<label class="text-sm font-medium" for="study-secondary-dimension">{t('analysis.study.visualizeBySecondary')}</label>
-							<Select id="study-secondary-dimension" bind:value={studySecondaryDimension} options={studyDimensionOptions()} />
-						</div>
-						<div class="space-y-1 sm:col-span-2 xl:col-span-1">
-							<span class="text-sm font-medium">{t('analysis.study.visualFormat')}</span>
-							<div class="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1" role="tablist" aria-label={t('analysis.study.visualFormat')}>
-								<button class="inline-flex h-9 items-center justify-center rounded-sm px-3 text-sm font-medium {studyVisualizationMode === 'bars' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}" type="button" role="tab" aria-selected={studyVisualizationMode === 'bars'} onclick={() => (studyVisualizationMode = 'bars')}>{t('analysis.study.visualFormat.bars')}</button>
-								<button class="inline-flex h-9 items-center justify-center rounded-sm px-3 text-sm font-medium {studyVisualizationMode === 'table' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}" type="button" role="tab" aria-selected={studyVisualizationMode === 'table'} onclick={() => (studyVisualizationMode = 'table')}>{t('analysis.study.visualFormat.table')}</button>
+
+						<div class="grid gap-3 sm:grid-cols-2 xl:min-w-160 xl:grid-cols-[minmax(12rem,1fr)_minmax(12rem,1fr)_auto]">
+							<div class="space-y-1">
+								<label class="text-sm font-medium" for="study-primary-dimension">{t('analysis.study.visualizeByPrimary')}</label>
+								<Select id="study-primary-dimension" bind:value={studyPrimaryDimension} options={studyDimensionOptions()} />
+							</div>
+							<div class="space-y-1">
+								<label class="text-sm font-medium" for="study-secondary-dimension">{t('analysis.study.visualizeBySecondary')}</label>
+								<Select id="study-secondary-dimension" bind:value={studySecondaryDimension} options={studyDimensionOptions()} />
+							</div>
+							<div class="space-y-1 sm:col-span-2 xl:col-span-1">
+								<span class="text-sm font-medium">{t('analysis.study.visualFormat')}</span>
+								<div class="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1" role="tablist" aria-label={t('analysis.study.visualFormat')}>
+									<button class="inline-flex h-9 items-center justify-center rounded-sm px-3 text-sm font-medium {studyVisualizationMode === 'bars' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}" type="button" role="tab" aria-selected={studyVisualizationMode === 'bars'} onclick={() => (studyVisualizationMode = 'bars')}>{t('analysis.study.visualFormat.bars')}</button>
+									<button class="inline-flex h-9 items-center justify-center rounded-sm px-3 text-sm font-medium {studyVisualizationMode === 'table' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}" type="button" role="tab" aria-selected={studyVisualizationMode === 'table'} onclick={() => (studyVisualizationMode = 'table')}>{t('analysis.study.visualFormat.table')}</button>
+								</div>
 							</div>
 						</div>
 					</div>
-				</div>
 
-				<div class="mt-4 rounded-md border border-border bg-muted/40 p-3">
-					{#if selectedStudyFactors.length > 0}
-						<div class="flex flex-wrap gap-2">
-							{#each selectedStudyFactors as factor}
-								<span class="inline-flex max-w-full items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1 text-xs">
-									<span class="truncate text-muted-foreground">{factor.label}: {factor.value}</span>
-									<span class="shrink-0 font-semibold tabular-nums">{metricFormatter(factor.count)}</span>
-								</span>
-							{/each}
-						</div>
-					{:else}
-						<p class="text-sm leading-6 text-muted-foreground">{t('analysis.study.noSelectedFactors')}</p>
-					{/if}
-				</div>
-
-				<div class="mt-4">
-					<div class="flex items-center justify-between gap-3 border-b border-border pb-2">
-						<h4 class="truncate text-sm font-semibold">{studyVisualizationTitle()}</h4>
-						<span class="shrink-0 text-xs font-medium tabular-nums text-muted-foreground">{metricFormatter(chartGroupTotal(selectedStudyBuckets))}</span>
+					<div class="mt-4 rounded-md border border-border bg-muted/40 p-3">
+						{#if selectedStudyFactors.length > 0}
+							<div class="flex flex-wrap gap-2">
+								{#each selectedStudyFactors as factor}
+									<span class="inline-flex max-w-full items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1 text-xs">
+										<span class="truncate text-muted-foreground">{factor.label}: {factor.value}</span>
+										<span class="shrink-0 font-semibold tabular-nums">{metricFormatter(factor.count)}</span>
+									</span>
+								{/each}
+							</div>
+						{:else}
+							<p class="text-sm leading-6 text-muted-foreground">{t('analysis.study.noSelectedFactors')}</p>
+						{/if}
 					</div>
 
-					{#if studyVisualizationMode === 'bars'}
-						<div class="divide-y divide-border/70">
-							{#each topChartBuckets(selectedStudyBuckets, 16) as bucket}
-								<div class="grid grid-cols-[minmax(7rem,1fr)_minmax(7rem,1fr)_minmax(8rem,1.6fr)_5rem_4.5rem] items-center gap-3 py-2 text-sm">
-									<span class="truncate text-muted-foreground" title={bucket.primaryLabel}>{bucket.primaryLabel}</span>
-									<span class="truncate text-muted-foreground" title={bucket.secondaryLabel}>{bucket.secondaryLabel}</span>
-									<span class="h-2 rounded-full bg-muted"><span class="block h-2 rounded-full bg-primary" style={`width: ${bucketWidth(bucket.count, maxChartBucketCount(selectedStudyBuckets))}%`}></span></span>
-									<span class="text-right font-medium tabular-nums">{metricFormatter(bucket.count)}</span>
-									<span class="text-right text-xs font-medium tabular-nums text-muted-foreground">{chartBucketPercentLabel(bucket.count, selectedStudyBuckets)}</span>
-								</div>
-							{:else}
-								<p class="py-4 text-sm text-muted-foreground">{t('analysis.empty')}</p>
-							{/each}
+					<div class="mt-4">
+						<div class="flex items-center justify-between gap-3 border-b border-border pb-2">
+							<h4 class="truncate text-sm font-semibold">{studyVisualizationTitle()}</h4>
+							<span class="shrink-0 text-xs font-medium tabular-nums text-muted-foreground">{metricFormatter(chartGroupTotal(selectedStudyBuckets))}</span>
 						</div>
-					{:else}
-						<div class="mt-3 overflow-hidden rounded-md border border-border">
-							<table class="w-full table-fixed border-collapse text-sm">
-								<thead class="bg-muted text-left text-xs font-medium text-muted-foreground">
-									<tr>
-										<th class="px-3 py-2 font-medium">{studyDimensionLabel(studyPrimaryDimension)}</th>
-										<th class="px-3 py-2 font-medium">{studyDimensionLabel(studySecondaryDimension)}</th>
-										<th class="w-28 px-3 py-2 text-right font-medium">{t('analysis.study.column.value')}</th>
-										<th class="w-28 px-3 py-2 text-right font-medium">{t('analysis.study.column.percent')}</th>
-									</tr>
-								</thead>
-								<tbody class="divide-y divide-border">
-									{#each topChartBuckets(selectedStudyBuckets, 16) as bucket}
+
+						{#if studyVisualizationMode === 'bars'}
+							<div class="divide-y divide-border/70">
+								{#each topChartBuckets(selectedStudyBuckets, 16) as bucket}
+									<div class="grid grid-cols-[minmax(7rem,1fr)_minmax(7rem,1fr)_minmax(8rem,1.6fr)_5rem_4.5rem] items-center gap-3 py-2 text-sm">
+										<span class="truncate text-muted-foreground" title={bucket.primaryLabel}>{bucket.primaryLabel}</span>
+										<span class="truncate text-muted-foreground" title={bucket.secondaryLabel}>{bucket.secondaryLabel}</span>
+										<span class="h-2 rounded-full bg-muted"><span class="block h-2 rounded-full bg-primary" style={`width: ${bucketWidth(bucket.count, maxChartBucketCount(selectedStudyBuckets))}%`}></span></span>
+										<span class="text-right font-medium tabular-nums">{metricFormatter(bucket.count)}</span>
+										<span class="text-right text-xs font-medium tabular-nums text-muted-foreground">{chartBucketPercentLabel(bucket.count, selectedStudyBuckets)}</span>
+									</div>
+								{:else}
+									<p class="py-4 text-sm text-muted-foreground">{t('analysis.empty')}</p>
+								{/each}
+							</div>
+						{:else}
+							<div class="mt-3 overflow-hidden rounded-md border border-border">
+								<table class="w-full table-fixed border-collapse text-sm">
+									<thead class="bg-muted text-left text-xs font-medium text-muted-foreground">
 										<tr>
-											<td class="truncate px-3 py-2 text-muted-foreground" title={bucket.primaryLabel}>{bucket.primaryLabel}</td>
-											<td class="truncate px-3 py-2 text-muted-foreground" title={bucket.secondaryLabel}>{bucket.secondaryLabel}</td>
-											<td class="px-3 py-2 text-right font-medium tabular-nums">{metricFormatter(bucket.count)}</td>
-											<td class="px-3 py-2 text-right font-medium tabular-nums text-muted-foreground">{chartBucketPercentLabel(bucket.count, selectedStudyBuckets)}</td>
+											<th class="px-3 py-2 font-medium">{studyDimensionLabel(studyPrimaryDimension)}</th>
+											<th class="px-3 py-2 font-medium">{studyDimensionLabel(studySecondaryDimension)}</th>
+											<th class="w-28 px-3 py-2 text-right font-medium">{t('analysis.study.column.value')}</th>
+											<th class="w-28 px-3 py-2 text-right font-medium">{t('analysis.study.column.percent')}</th>
 										</tr>
-									{:else}
-										<tr><td class="px-3 py-4 text-muted-foreground" colspan="4">{t('analysis.empty')}</td></tr>
-									{/each}
-								</tbody>
-							</table>
-						</div>
-					{/if}
-				</div>
-			</section>
-
-			<section class="rounded-md border border-border bg-background p-4">
-				<div class="flex items-start justify-between gap-3">
-					<div>
-						<h3 class="text-sm font-semibold">{studyTarget === 'vaccines' ? t('analysis.study.relatedVaccines') : studyTarget === 'owners' ? t('analysis.study.relatedOwners') : t('analysis.study.relatedPets')}</h3>
-						<p class="mt-1 text-sm text-muted-foreground">{studyTarget === 'vaccines' ? t('analysis.study.relatedVaccinesDescription') : studyTarget === 'owners' ? t('analysis.study.relatedOwnersListDescription') : t('analysis.study.relatedPetsDescription')}</p>
+									</thead>
+									<tbody class="divide-y divide-border">
+										{#each topChartBuckets(selectedStudyBuckets, 16) as bucket}
+											<tr>
+												<td class="truncate px-3 py-2 text-muted-foreground" title={bucket.primaryLabel}>{bucket.primaryLabel}</td>
+												<td class="truncate px-3 py-2 text-muted-foreground" title={bucket.secondaryLabel}>{bucket.secondaryLabel}</td>
+												<td class="px-3 py-2 text-right font-medium tabular-nums">{metricFormatter(bucket.count)}</td>
+												<td class="px-3 py-2 text-right font-medium tabular-nums text-muted-foreground">{chartBucketPercentLabel(bucket.count, selectedStudyBuckets)}</td>
+											</tr>
+										{:else}
+											<tr><td class="px-3 py-4 text-muted-foreground" colspan="4">{t('analysis.empty')}</td></tr>
+										{/each}
+									</tbody>
+								</table>
+							</div>
+						{/if}
 					</div>
-					<span class="rounded-md bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">{metricFormatter(studyTarget === 'vaccines' ? studyTargetVaccines.length : studyTarget === 'owners' ? studyTargetOwners.length : studyTargetPets.length)}</span>
-				</div>
-				<div class="mt-4 divide-y divide-border rounded-md border border-border">
-					{#if studyTarget === 'vaccines'}
-						{#each studyTargetVaccines.slice(0, 40) as vaccine}
-							<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-								<div class="min-w-0">
-									<p class="wrap-break-word text-sm font-semibold">{vaccine.presetName} - {vaccineStatusLabel(vaccine.status)}</p>
-									<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{vaccine.pet.name} - {speciesLabel(vaccine.pet.species)} - {breedLabel(vaccine.pet.breed)}</p>
-									<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(vaccine.pet)} - {studyPetLocationText(vaccine.pet)}</p>
-									<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{t('vaccine.appliedAt')}: {formatDateForDisplay(vaccine.appliedAt)} - {t('vaccine.analytics.dueAt')}: {formatDateForDisplay(vaccine.dueAt)}</p>
-								</div>
-								<a href={studyPetProfileHref(vaccine.pet)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openPet')}</a>
-							</article>
+				</section>
+			{:else}
+				<section class="rounded-md border border-border bg-background p-4" role="tabpanel">
+					<div class="flex items-start justify-between gap-3">
+						<div>
+							<h3 class="text-sm font-semibold">{studyTarget === 'vaccines' ? t('analysis.study.relatedVaccines') : studyTarget === 'owners' ? t('analysis.study.relatedOwners') : t('analysis.study.relatedPets')}</h3>
+							<p class="mt-1 text-sm text-muted-foreground">{studyTarget === 'vaccines' ? t('analysis.study.relatedVaccinesDescription') : studyTarget === 'owners' ? t('analysis.study.relatedOwnersListDescription') : t('analysis.study.relatedPetsDescription')}</p>
+						</div>
+						<span class="rounded-md bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">{metricFormatter(studyTarget === 'vaccines' ? studyTargetVaccines.length : studyTarget === 'owners' ? studyTargetOwners.length : studyTargetPets.length)}</span>
+					</div>
+					<div class="mt-4 divide-y divide-border rounded-md border border-border">
+						{#if studyTarget === 'vaccines'}
+							{#each studyTargetVaccines.slice(0, 40) as vaccine}
+								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+									<div class="min-w-0">
+										<p class="wrap-break-word text-sm font-semibold">{vaccine.presetName} - {vaccineStatusLabel(vaccine.status)}</p>
+										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{vaccine.pet.name} - {speciesLabel(vaccine.pet.species)} - {breedLabel(vaccine.pet.breed)}</p>
+										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(vaccine.pet)} - {studyPetLocationText(vaccine.pet)}</p>
+										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{t('vaccine.appliedAt')}: {formatDateForDisplay(vaccine.appliedAt)} - {t('vaccine.analytics.dueAt')}: {formatDateForDisplay(vaccine.dueAt)}</p>
+									</div>
+									<a href={studyPetProfileHref(vaccine.pet)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openPet')}</a>
+								</article>
+							{:else}
+								<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyVaccines')}</p>
+							{/each}
+						{:else if studyTarget === 'owners'}
+							{#each studyTargetOwners.slice(0, 40) as owner}
+								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+									<div class="min-w-0">
+										<p class="wrap-break-word text-sm font-semibold">{owner.name}</p>
+										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{owner.locationLabel ?? t('common.notInformed')}</p>
+										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{metricFormatter(owner.petCount)} {t('analysis.study.ownerPets')}: {studyOwnerPetNamesText(owner)}</p>
+									</div>
+									<a href={ownerProfileHref(owner)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openOwner')}</a>
+								</article>
+							{:else}
+								<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyOwners')}</p>
+							{/each}
 						{:else}
-							<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyVaccines')}</p>
-						{/each}
-					{:else if studyTarget === 'owners'}
-						{#each studyTargetOwners.slice(0, 40) as owner}
-							<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-								<div class="min-w-0">
-									<p class="wrap-break-word text-sm font-semibold">{owner.name}</p>
-									<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{owner.locationLabel ?? t('common.notInformed')}</p>
-									<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{metricFormatter(owner.petCount)} {t('analysis.study.ownerPets')}: {studyOwnerPetNamesText(owner)}</p>
-								</div>
-								<a href={ownerProfileHref(owner)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openOwner')}</a>
-							</article>
-						{:else}
-							<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyOwners')}</p>
-						{/each}
-					{:else}
-						{#each studyTargetPets.slice(0, 40) as pet}
-							<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-								<div class="min-w-0">
-									<p class="wrap-break-word text-sm font-semibold">{pet.name}</p>
-									<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{speciesLabel(pet.species)} - {breedLabel(pet.breed)} - {sexLabel(pet.sex)}</p>
-									<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(pet)} - {studyPetLocationText(pet)}</p>
-									<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{vaccineStatusLabel(pet.vaccineStatus)} - {studyPetVaccineText(pet)}</p>
-								</div>
-								<a href={studyPetProfileHref(pet)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openPet')}</a>
-							</article>
-						{:else}
-							<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyPets')}</p>
-						{/each}
-					{/if}
-				</div>
-			</section>
+							{#each studyTargetPets.slice(0, 40) as pet}
+								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+									<div class="min-w-0">
+										<p class="wrap-break-word text-sm font-semibold">{pet.name}</p>
+										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{speciesLabel(pet.species)} - {breedLabel(pet.breed)} - {sexLabel(pet.sex)}</p>
+										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(pet)} - {studyPetLocationText(pet)}</p>
+										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{vaccineStatusLabel(pet.vaccineStatus)} - {studyPetVaccineText(pet)}</p>
+									</div>
+									<a href={studyPetProfileHref(pet)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openPet')}</a>
+								</article>
+							{:else}
+								<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyPets')}</p>
+							{/each}
+						{/if}
+					</div>
+				</section>
+			{/if}
 		</div>
 	</div>
 </section>

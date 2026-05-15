@@ -363,6 +363,8 @@ export const esEs = {
 	'analysis.study.yAxis': 'Eje Y / criterios',
 	'analysis.study.visualization': 'Visualización de datos',
 	'analysis.study.visualizationDescription': 'Elige una dimensión y un formato antes de comparar el recorte.',
+	'analysis.study.tabChart': 'Gráfico',
+	'analysis.study.tabList': 'Lista operativa',
 	'analysis.study.visualizeBy': 'Visualizar por',
 	'analysis.study.visualizeByPrimary': 'Visualizar por',
 	'analysis.study.visualizeBySecondary': 'Comparar con',
