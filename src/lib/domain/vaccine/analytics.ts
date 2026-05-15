@@ -1,5 +1,5 @@
 import type { OwnerContact } from '$lib/domain/owner/owner.js';
-import { computeVaccineDueAt } from './vaccine.js';
+import { computeVaccineDueAt, type VaccineValidityUnit } from './vaccine.js';
 
 export type VaccineStatusKey = 'current' | 'dueSoon' | 'dueVerySoon' | 'expired' | 'overdue';
 export type VaccineHistoryPeriod = 'week' | 'month' | 'quarter' | 'semester' | 'year';
@@ -111,10 +111,10 @@ export function isPlausibleVaccineAppliedAt(value: string, now = new Date()): bo
 	return date.getTime() <= today.getTime();
 }
 
-export function buildVaccineStatus(appliedAt: string, validityMonths: number, now = new Date()): { dueAt: string; daysUntilDue: number; status: VaccineStatusKey } | null {
+export function buildVaccineStatus(appliedAt: string, validityValue: number, validityUnit: VaccineValidityUnit, now = new Date()): { dueAt: string; daysUntilDue: number; status: VaccineStatusKey } | null {
 	if (!isPlausibleVaccineAppliedAt(appliedAt, now)) return null;
 
-	const dueAt = computeVaccineDueAt(appliedAt, { id: 0, name: '', normalizedName: '', validityMonths, updatedAt: null });
+	const dueAt = computeVaccineDueAt(appliedAt, { validityValue, validityUnit });
 	if (!dueAt) return null;
 
 	const dueDate = parseIsoDate(dueAt);

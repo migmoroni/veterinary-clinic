@@ -2,8 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { findVaccinePreset, normalizeVaccineName, type VaccinePreset } from '../vaccine.js';
 
 const presets: VaccinePreset[] = [
-	{ id: 1, name: 'V 10', normalizedName: normalizeVaccineName('V 10'), validityMonths: 12, updatedAt: null },
-	{ id: 2, name: 'Antirrábica', normalizedName: normalizeVaccineName('Antirrábica'), validityMonths: 12, updatedAt: null }
+	{
+		id: 1,
+		name: 'V 10',
+		normalizedName: normalizeVaccineName('V 10'),
+		doses: [{ id: 1, vaccinePresetId: 1, label: '1ª dose', normalizedLabel: '1dose', validityValue: 21, validityUnit: 'days', sortOrder: 0, updatedAt: null }],
+		updatedAt: null
+	},
+	{
+		id: 2,
+		name: 'Antirrábica',
+		normalizedName: normalizeVaccineName('Antirrábica'),
+		doses: [{ id: 2, vaccinePresetId: 2, label: 'Dose de reforço', normalizedLabel: 'dosedereforco', validityValue: 12, validityUnit: 'months', sortOrder: 0, updatedAt: null }],
+		updatedAt: null
+	}
 ];
 
 describe('vaccine helpers', () => {

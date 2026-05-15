@@ -18,6 +18,7 @@ import type {
 import type { PetBreed, PetSex, PetSpecies } from '$lib/domain/pet/pet.js';
 import type { VaccineStatusKey } from '$lib/domain/vaccine/analytics.js';
 import { buildVaccineStatus, isPlausibleVaccineAppliedAt } from '$lib/domain/vaccine/analytics.js';
+import type { VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
 import { selectMany } from '$lib/persistence/sqlite/client.js';
 
 interface PetAnalyticsRow {
@@ -46,9 +47,12 @@ interface PetOwnerAnalyticsRow {
 interface LatestVaccinationAnalyticsRow {
 	pet_id: number;
 	vaccine_preset_id: number;
+	vaccine_preset_dose_id: number;
 	vaccine_name: string;
+	vaccine_dose_label: string;
 	applied_at: string;
-	validity_months: number;
+	validity_value: number;
+	validity_unit: VaccineValidityUnit;
 }
 
 const vaccineStatusWeight: Record<DashboardVaccineStatusKey, number> = {
@@ -170,10 +174,18 @@ async function listPetOwnerRows(): Promise<PetOwnerAnalyticsRow[]> {
 
 async function listLatestVaccinationRows(): Promise<LatestVaccinationAnalyticsRow[]> {
 	const rows = await selectMany<LatestVaccinationAnalyticsRow>(
-		`SELECT pet_vaccinations.pet_id, pet_vaccinations.vaccine_preset_id, vaccine_presets.name AS vaccine_name, pet_vaccinations.applied_at, vaccine_presets.validity_months
+		`SELECT pet_vaccinations.pet_id,
+			pet_vaccinations.vaccine_preset_id,
+			pet_vaccinations.vaccine_preset_dose_id,
+			vaccine_presets.name AS vaccine_name,
+			vaccine_preset_doses.label AS vaccine_dose_label,
+			pet_vaccinations.applied_at,
+			vaccine_preset_doses.validity_value,
+			vaccine_preset_doses.validity_unit
 		 FROM pet_vaccinations
 		 JOIN pets ON pets.id = pet_vaccinations.pet_id
 		 JOIN vaccine_presets ON vaccine_presets.id = pet_vaccinations.vaccine_preset_id
+		 JOIN vaccine_preset_doses ON vaccine_preset_doses.id = pet_vaccinations.vaccine_preset_dose_id
 		 WHERE pet_vaccinations.deleted_at IS NULL
 			AND pet_vaccinations.validity_ignored_at IS NULL
 			AND pets.deleted_at IS NULL
@@ -195,7 +207,7 @@ function buildPetVaccineStatusMap(rows: LatestVaccinationAnalyticsRow[]): Map<nu
 	const statusByPetId = new Map<number, DashboardVaccineStatusKey>();
 
 	for (const row of rows) {
-		const status = buildVaccineStatus(row.applied_at, row.validity_months);
+		const status = buildVaccineStatus(row.applied_at, row.validity_value, row.validity_unit);
 		if (!status) continue;
 
 		const current = statusByPetId.get(row.pet_id) ?? 'untracked';
@@ -209,11 +221,11 @@ function buildPetVaccinesMap(rows: LatestVaccinationAnalyticsRow[]): Map<number,
 	const vaccinesByPetId = new Map<number, DashboardPetStudyVaccine[]>();
 
 	for (const row of rows) {
-		const status = buildVaccineStatus(row.applied_at, row.validity_months);
+		const status = buildVaccineStatus(row.applied_at, row.validity_value, row.validity_unit);
 		if (!status) continue;
 
 		const vaccines = vaccinesByPetId.get(row.pet_id) ?? [];
-		vaccines.push({ presetId: row.vaccine_preset_id, presetName: row.vaccine_name, appliedAt: row.applied_at, dueAt: status.dueAt, daysUntilDue: status.daysUntilDue, status: status.status });
+		vaccines.push({ presetId: row.vaccine_preset_id, presetName: row.vaccine_name, doseId: row.vaccine_preset_dose_id, doseLabel: row.vaccine_dose_label, appliedAt: row.applied_at, dueAt: status.dueAt, daysUntilDue: status.daysUntilDue, status: status.status });
 		vaccinesByPetId.set(row.pet_id, vaccines);
 	}
 

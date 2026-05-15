@@ -867,7 +867,7 @@
 							{#each listedStudyVaccines.slice(0, 40) as vaccine}
 								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 									<div class="min-w-0">
-										<p class="wrap-break-word text-sm font-semibold">{vaccine.presetName} - {vaccineStatusLabel(vaccine.status)}</p>
+										<p class="wrap-break-word text-sm font-semibold">{vaccine.presetName} · {vaccine.doseLabel} - {vaccineStatusLabel(vaccine.status)}</p>
 										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{vaccine.pet.name} - {speciesLabel(vaccine.pet.species)} - {breedLabel(vaccine.pet.breed)}</p>
 										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(vaccine.pet)} - {studyPetCityText(vaccine.pet)}</p>
 										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{t('vaccine.appliedAt')}: {formatDateForDisplay(vaccine.appliedAt)} - {t('vaccine.analytics.dueAt')}: {formatDateForDisplay(vaccine.dueAt)}</p>

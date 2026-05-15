@@ -42,6 +42,8 @@ export interface DashboardPetStudyOwner {
 export interface DashboardPetStudyVaccine {
 	presetId: number;
 	presetName: string;
+	doseId: number;
+	doseLabel: string;
 	appliedAt: string;
 	dueAt: string;
 	daysUntilDue: number;

@@ -21,10 +21,11 @@ import {
 	shiftIsoDate,
 	todayIsoDate
 } from '$lib/domain/vaccine/analytics.js';
-import type { VaccinePreset } from '$lib/domain/vaccine/vaccine.js';
+import type { VaccinePreset, VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { selectMany } from '$lib/persistence/sqlite/client.js';
 import { listOwnerContactsByOwnerIds } from './owner.repository.js';
+import { listVaccinePresets } from './vaccine.repository.js';
 
 interface LatestVaccinationRow {
 	id: number;
@@ -37,21 +38,16 @@ interface LatestVaccinationRow {
 	owner_contacts: OwnerContact[];
 	applied_at: string;
 	vaccine_preset_id: number;
+	vaccine_preset_dose_id: number;
 	vaccine_name: string;
-	validity_months: number;
+	vaccine_dose_label: string;
+	validity_value: number;
+	validity_unit: VaccineValidityUnit;
 }
 
 interface VaccinationHistoryRow {
 	applied_at: string;
 	vaccine_preset_id: number;
-}
-
-interface VaccinePresetRow {
-	id: number;
-	name: string;
-	normalized_name: string;
-	validity_months: number;
-	updated_at: string | null;
 }
 
 export interface VaccineAnalyticsOverview {
@@ -97,16 +93,6 @@ function parseOwnerIds(value: string | null | undefined): number[] {
 		.split(',')
 		.map((item) => Number(item))
 		.filter((id) => Number.isInteger(id) && id > 0);
-}
-
-function mapPreset(row: VaccinePresetRow): VaccinePreset {
-	return {
-		id: row.id,
-		name: row.name,
-		normalizedName: row.normalized_name,
-		validityMonths: row.validity_months,
-		updatedAt: row.updated_at
-	};
 }
 
 function normalizeStatus(value: string | null | undefined): VaccineStatusKey {
@@ -157,11 +143,15 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationRow[]> {
 			${ownerNamesSql} AS owner_name,
 			pet_vaccinations.applied_at,
 			pet_vaccinations.vaccine_preset_id,
+			pet_vaccinations.vaccine_preset_dose_id,
 			vaccine_presets.name AS vaccine_name,
-			vaccine_presets.validity_months
+			vaccine_preset_doses.label AS vaccine_dose_label,
+			vaccine_preset_doses.validity_value,
+			vaccine_preset_doses.validity_unit
 		 FROM pet_vaccinations
 		 JOIN pets ON pets.id = pet_vaccinations.pet_id
 		 JOIN vaccine_presets ON vaccine_presets.id = pet_vaccinations.vaccine_preset_id
+		 JOIN vaccine_preset_doses ON vaccine_preset_doses.id = pet_vaccinations.vaccine_preset_dose_id
 		 WHERE pet_vaccinations.deleted_at IS NULL
 			AND pet_vaccinations.validity_ignored_at IS NULL
 			AND pets.deleted_at IS NULL
@@ -192,7 +182,7 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationRow[]> {
 }
 
 function mapStatusItem(row: LatestVaccinationRow, now = new Date()): VaccineStatusItem | null {
-	const status = buildVaccineStatus(row.applied_at, row.validity_months, now);
+	const status = buildVaccineStatus(row.applied_at, row.validity_value, row.validity_unit, now);
 	if (!status) return null;
 
 	return {
@@ -203,7 +193,7 @@ function mapStatusItem(row: LatestVaccinationRow, now = new Date()): VaccineStat
 		petName: row.pet_name,
 		petAvatarBytes: normalizeByteArray(row.pet_avatar_blob),
 		vaccinePresetId: row.vaccine_preset_id,
-		vaccineName: row.vaccine_name,
+		vaccineName: `${row.vaccine_name} · ${row.vaccine_dose_label}`,
 		appliedAt: row.applied_at,
 		dueAt: status.dueAt,
 		daysUntilDue: status.daysUntilDue,
@@ -268,11 +258,5 @@ export async function listVaccineHistory(filter: Partial<VaccineHistoryFilter>):
 }
 
 export async function listAnalyticsVaccinePresets(): Promise<VaccinePreset[]> {
-	const rows = await selectMany<VaccinePresetRow>(
-		`SELECT id, name, normalized_name, validity_months, updated_at
-		 FROM vaccine_presets
-		 ORDER BY name COLLATE NOCASE`
-	);
-
-	return rows.map(mapPreset);
+	return listVaccinePresets();
 }

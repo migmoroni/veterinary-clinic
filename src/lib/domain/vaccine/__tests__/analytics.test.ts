@@ -29,7 +29,11 @@ describe('vaccine analytics helpers', () => {
 	});
 
 	it('does not build status for future applications', () => {
-		expect(buildVaccineStatus('5018-10-01', 12, now)).toBeNull();
+		expect(buildVaccineStatus('5018-10-01', 12, 'months', now)).toBeNull();
+	});
+
+	it('builds status using validity in days', () => {
+		expect(buildVaccineStatus('2026-04-17', 21, 'days', now)?.dueAt).toBe('2026-05-08');
 	});
 
 	it('does not create history buckets for impossible future years', () => {
