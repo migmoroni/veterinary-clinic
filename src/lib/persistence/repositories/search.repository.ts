@@ -32,6 +32,8 @@ interface SearchResultRow {
 	pet_avatar_blob: unknown | null;
 }
 
+type SearchTermPredicate = (placeholder: string) => string;
+
 const firstOwnerIdSql = `(SELECT owners.id
 	FROM pet_owners
 	JOIN owners ON owners.id = pet_owners.owner_id
@@ -61,11 +63,90 @@ function resultHref(row: SearchResultRow): string {
 	return `/records/${row.record_id ?? row.id}`;
 }
 
-export async function searchClinic(query: string): Promise<SearchResult[]> {
+function searchTerms(query: string): string[] {
 	const normalized = query.trim();
 	if (normalized.length < 2) return [];
+	return normalized.split(/\s+/).filter((term) => term.length > 0);
+}
 
-	const term = `%${normalized}%`;
+function buildSearchFilter(predicates: SearchTermPredicate[], termCount: number): string {
+	return Array.from({ length: termCount }, (_, index) => {
+		const placeholder = `$${index + 1}`;
+		return `(${predicates.map((predicate) => predicate(placeholder)).join(' OR ')})`;
+	}).join(' AND ');
+}
+
+const ownerSearchPredicates: SearchTermPredicate[] = [
+	(placeholder) => `owners.name LIKE ${placeholder}`,
+	(placeholder) => `owners.additional_information LIKE ${placeholder}`,
+	(placeholder) => `owners.city LIKE ${placeholder}`,
+	(placeholder) => `EXISTS (
+		SELECT 1 FROM owner_contacts
+		WHERE owner_contacts.owner_id = owners.id AND (owner_contacts.value LIKE ${placeholder} OR owner_contacts.label LIKE ${placeholder})
+	)`,
+	(placeholder) => `EXISTS (
+		SELECT 1 FROM owner_additional_responsibles
+		WHERE owner_additional_responsibles.owner_id = owners.id AND owner_additional_responsibles.name LIKE ${placeholder}
+	)`,
+	(placeholder) => `EXISTS (
+		SELECT 1 FROM owner_additional_responsibles
+		JOIN owner_additional_responsible_contacts ON owner_additional_responsible_contacts.responsible_id = owner_additional_responsibles.id
+		WHERE owner_additional_responsibles.owner_id = owners.id AND (owner_additional_responsible_contacts.value LIKE ${placeholder} OR owner_additional_responsible_contacts.label LIKE ${placeholder})
+	)`
+];
+
+const petSearchPredicates: SearchTermPredicate[] = [
+	(placeholder) => `pets.name LIKE ${placeholder}`,
+	(placeholder) => `pets.species LIKE ${placeholder}`,
+	(placeholder) => `pets.breed LIKE ${placeholder}`,
+	(placeholder) => `EXISTS (
+		SELECT 1 FROM pet_owners
+		JOIN owners ON owners.id = pet_owners.owner_id
+		WHERE pet_owners.pet_id = pets.id
+			AND owners.deleted_at IS NULL
+			AND (owners.name LIKE ${placeholder} OR owners.city LIKE ${placeholder})
+	)`,
+	(placeholder) => `EXISTS (
+		SELECT 1 FROM pet_owners
+		JOIN owners ON owners.id = pet_owners.owner_id
+		JOIN owner_contacts ON owner_contacts.owner_id = owners.id
+		WHERE pet_owners.pet_id = pets.id
+			AND owners.deleted_at IS NULL
+			AND (owner_contacts.value LIKE ${placeholder} OR owner_contacts.label LIKE ${placeholder})
+	)`
+];
+
+const recordSearchPredicates: SearchTermPredicate[] = [
+	(placeholder) => `medical_records.title LIKE ${placeholder}`,
+	(placeholder) => `medical_records.description LIKE ${placeholder}`,
+	(placeholder) => `pets.name LIKE ${placeholder}`,
+	(placeholder) => `pets.species LIKE ${placeholder}`,
+	(placeholder) => `pets.breed LIKE ${placeholder}`,
+	(placeholder) => `EXISTS (
+		SELECT 1 FROM pet_owners
+		JOIN owners ON owners.id = pet_owners.owner_id
+		WHERE pet_owners.pet_id = pets.id
+			AND owners.deleted_at IS NULL
+			AND (owners.name LIKE ${placeholder} OR owners.city LIKE ${placeholder})
+	)`,
+	(placeholder) => `EXISTS (
+		SELECT 1 FROM pet_owners
+		JOIN owners ON owners.id = pet_owners.owner_id
+		JOIN owner_contacts ON owner_contacts.owner_id = owners.id
+		WHERE pet_owners.pet_id = pets.id
+			AND owners.deleted_at IS NULL
+			AND (owner_contacts.value LIKE ${placeholder} OR owner_contacts.label LIKE ${placeholder})
+	)`
+];
+
+export async function searchClinic(query: string): Promise<SearchResult[]> {
+	const terms = searchTerms(query);
+	if (terms.length === 0) return [];
+
+	const ownerSearchFilter = buildSearchFilter(ownerSearchPredicates, terms.length);
+	const petSearchFilter = buildSearchFilter(petSearchPredicates, terms.length);
+	const recordSearchFilter = buildSearchFilter(recordSearchPredicates, terms.length);
+	const values = terms.map((term) => `%${term}%`);
 	const rows = await selectMany<SearchResultRow>(
 		`SELECT 'owner' AS kind,
 			owners.id,
@@ -101,17 +182,7 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 			), owners.additional_information, owners.city, '') AS subtitle
 		 FROM owners
 		 WHERE owners.deleted_at IS NULL
-			AND (owners.name LIKE $1 OR owners.additional_information LIKE $1 OR EXISTS (
-				SELECT 1 FROM owner_contacts
-				WHERE owner_contacts.owner_id = owners.id AND (owner_contacts.value LIKE $1 OR owner_contacts.label LIKE $1)
-			) OR EXISTS (
-				SELECT 1 FROM owner_additional_responsibles
-				WHERE owner_additional_responsibles.owner_id = owners.id AND owner_additional_responsibles.name LIKE $1
-			) OR EXISTS (
-				SELECT 1 FROM owner_additional_responsibles
-				JOIN owner_additional_responsible_contacts ON owner_additional_responsible_contacts.responsible_id = owner_additional_responsibles.id
-				WHERE owner_additional_responsibles.owner_id = owners.id AND (owner_additional_responsible_contacts.value LIKE $1 OR owner_additional_responsible_contacts.label LIKE $1)
-			))
+			AND ${ownerSearchFilter}
 
 		 UNION ALL
 
@@ -131,7 +202,7 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 			COALESCE(${ownerNamesSql}, '') AS subtitle
 		 FROM pets
 		 WHERE pets.deleted_at IS NULL
-			AND (pets.name LIKE $1 OR pets.species LIKE $1 OR pets.breed LIKE $1)
+			AND ${petSearchFilter}
 
 		 UNION ALL
 
@@ -148,11 +219,11 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 		 JOIN pets ON pets.id = medical_records.pet_id
 		 WHERE medical_records.deleted_at IS NULL
 			AND pets.deleted_at IS NULL
-			AND (medical_records.title LIKE $1 OR medical_records.description LIKE $1)
+			AND ${recordSearchFilter}
 
 		 ORDER BY kind, title
 		 LIMIT 40`,
-		[term]
+		values
 	);
 
 	const ownerIds = rows.filter((row) => row.kind === 'owner').map((row) => row.id);
