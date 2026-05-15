@@ -6,6 +6,7 @@ import {
 	listUsedVaccinePresetDoseIds,
 	listUsedVaccinePresetIds,
 	saveVaccinePreset,
+	setVaccinePresetHidden,
 	setVaccinationValidityIgnored,
 	softDeleteVaccination
 } from '$lib/persistence/repositories/vaccine.repository.js';
@@ -36,6 +37,10 @@ export async function loadUsedDoseIds(): Promise<number[]> {
 
 export async function savePreset(input: VaccinePresetInput, id?: number): Promise<VaccinePreset> {
 	return saveVaccinePreset(input, id);
+}
+
+export async function setPresetHidden(id: number, hidden: boolean): Promise<VaccinePreset> {
+	return setVaccinePresetHidden(id, hidden);
 }
 
 export async function removePreset(id: number): Promise<void> {

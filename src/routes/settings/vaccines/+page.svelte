@@ -2,8 +2,10 @@
 	import { onMount } from 'svelte';
 	import type { VaccinePreset, VaccinePresetDoseInput, VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
-	import { loadUsedDoseIds, loadUsedPresetIds, loadVaccinePresets, removePreset, savePreset } from '$lib/services/vaccine.service.js';
+	import { loadUsedDoseIds, loadUsedPresetIds, loadVaccinePresets, removePreset, savePreset, setPresetHidden } from '$lib/services/vaccine.service.js';
 	import Select from '$lib/components/ui/Select.svelte';
+	import Eye from '@lucide/svelte/icons/eye';
+	import EyeOff from '@lucide/svelte/icons/eye-off';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Save from '@lucide/svelte/icons/save';
 	import Syringe from '@lucide/svelte/icons/syringe';
@@ -88,6 +90,10 @@
 		presets = [...next, editablePreset].sort((first, second) => first.name.localeCompare(second.name));
 	}
 
+	function updatePresetHiddenState(preset: VaccinePreset) {
+		presets = presets.map((item) => (item.id === preset.id ? { ...item, hiddenAt: preset.hiddenAt, updatedAt: preset.updatedAt } : item));
+	}
+
 	function setFailure(exception: unknown) {
 		if (exception instanceof Error && exception.message === 'vaccine_validity_required') errorKey = 'vaccine.validityRequired';
 		else if (exception instanceof Error && exception.message === 'vaccine_dose_required') errorKey = 'vaccine.doseRequired';
@@ -101,10 +107,10 @@
 		errorKey = null;
 
 		try {
-				const [loadedPresets, loadedUsedIds, loadedUsedDoseIds] = await Promise.all([loadVaccinePresets(), loadUsedPresetIds(), loadUsedDoseIds()]);
+			const [loadedPresets, loadedUsedIds, loadedUsedDoseIds] = await Promise.all([loadVaccinePresets(), loadUsedPresetIds(), loadUsedDoseIds()]);
 			presets = loadedPresets.map(toEditablePreset);
 			usedPresetIds = new Set(loadedUsedIds);
-				usedDoseIds = new Set(loadedUsedDoseIds);
+			usedDoseIds = new Set(loadedUsedDoseIds);
 		} catch (exception) {
 			errorKey = exception instanceof Error && exception.message === 'vaccine_preset_in_use' ? 'vaccine.presetInUse' : 'vaccine.saveFailed';
 		} finally {
@@ -143,6 +149,22 @@
 			statusKey = 'vaccine.presetSaved';
 		} catch (exception) {
 			setFailure(exception);
+		} finally {
+			saving = false;
+		}
+	}
+
+	async function togglePresetHidden(preset: EditablePreset) {
+		saving = true;
+		statusKey = null;
+		errorKey = null;
+
+		try {
+			const saved = await setPresetHidden(preset.id, !preset.hiddenAt);
+			updatePresetHiddenState(saved);
+			statusKey = saved.hiddenAt ? 'vaccine.presetHiddenSaved' : 'vaccine.presetShownSaved';
+		} catch {
+			errorKey = 'vaccine.saveFailed';
 		} finally {
 			saving = false;
 		}
@@ -294,14 +316,28 @@
 			{:else}
 				{#each presets as preset (preset.id)}
 					<form class="space-y-4 rounded-md border border-border bg-background p-3" onsubmit={(event) => submitExisting(event, preset)}>
-						<div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-end">
+						<div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-end">
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-								<span>{t('vaccine.name')}</span>
+								<span class="flex items-center gap-2">
+									<span>{t('vaccine.name')}</span>
+									{#if preset.hiddenAt}
+										<span class="inline-flex h-5 items-center rounded-md bg-muted px-2 text-xs font-medium text-muted-foreground">{t('vaccine.hidden')}</span>
+									{/if}
+								</span>
 								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={preset.name} required oninput={(event) => updatePresetName(preset.id, inputValue(event))} />
 							</label>
 							<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
 								<Save class="size-4" />
 								{t('actions.save')}
+							</button>
+							<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} title={preset.hiddenAt ? t('vaccine.showPreset') : t('vaccine.hidePreset')} onclick={() => void togglePresetHidden(preset)}>
+								{#if preset.hiddenAt}
+									<Eye class="size-4" />
+									{t('vaccine.showPreset')}
+								{:else}
+									<EyeOff class="size-4" />
+									{t('vaccine.hidePreset')}
+								{/if}
 							</button>
 							<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving || isPresetInUse(preset.id)} title={isPresetInUse(preset.id) ? t('vaccine.presetInUse') : t('actions.delete')} onclick={() => void deletePreset(preset)}>
 								<Trash2 class="size-4" />

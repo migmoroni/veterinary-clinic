@@ -36,7 +36,8 @@
 	let errorKey = $state<TranslationKey | null>(null);
 
 	const sortedVaccinations = $derived([...currentVaccinations].sort((first, second) => second.appliedAt.localeCompare(first.appliedAt) || second.id - first.id));
-	const selectedPreset = $derived(currentPresets.find((preset) => String(preset.id) === vaccinePresetId) ?? null);
+	const visiblePresets = $derived(currentPresets.filter((preset) => !preset.hiddenAt));
+	const selectedPreset = $derived(visiblePresets.find((preset) => String(preset.id) === vaccinePresetId) ?? null);
 	const selectedDose = $derived(selectedPreset?.doses.find((dose) => String(dose.id) === vaccineDoseId) ?? null);
 
 	$effect(() => {
@@ -138,6 +139,7 @@
 		} catch (exception) {
 			if (exception instanceof Error && exception.message === 'date_invalid') errorKey = 'date.invalid';
 			else if (exception instanceof Error && exception.message === 'vaccine_preset_required') errorKey = 'vaccine.presetRequired';
+			else if (exception instanceof Error && exception.message === 'vaccine_preset_hidden') errorKey = 'vaccine.presetHidden';
 			else if (exception instanceof Error && exception.message === 'vaccine_dose_required') errorKey = 'vaccine.doseRequired';
 			else errorKey = 'vaccine.saveFailed';
 		} finally {
@@ -252,7 +254,7 @@
 					bind:value={vaccinePresetId}
 					options={[
 						{ value: '', label: t('vaccine.namePlaceholder') },
-						...currentPresets.map((preset) => ({ value: String(preset.id), label: preset.name }))
+						...visiblePresets.map((preset) => ({ value: String(preset.id), label: preset.name }))
 					]}
 				/>
 			</div>

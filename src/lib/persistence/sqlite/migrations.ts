@@ -155,6 +155,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			name TEXT NOT NULL,
 			normalized_name TEXT NOT NULL UNIQUE,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			hidden_at TEXT,
 			updated_at TEXT
 		)
 	`);
@@ -212,6 +213,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_pet_id ON medical_records(pet_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_deleted_at ON medical_records(deleted_at)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccine_presets_normalized_name ON vaccine_presets(normalized_name)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccine_presets_hidden_at ON vaccine_presets(hidden_at)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccine_preset_doses_vaccine_preset_id ON vaccine_preset_doses(vaccine_preset_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccine_preset_doses_normalized_label ON vaccine_preset_doses(normalized_label)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_pet_id ON pet_vaccinations(pet_id)');

@@ -21,6 +21,7 @@ interface VaccinePresetRow {
 	id: number;
 	name: string;
 	normalized_name: string;
+	hidden_at: string | null;
 	updated_at: string | null;
 }
 
@@ -39,6 +40,7 @@ interface SelectedVaccineDoseRow {
 	preset_id: number;
 	preset_name: string;
 	preset_normalized_name: string;
+	preset_hidden_at: string | null;
 	preset_updated_at: string | null;
 	dose_id: number;
 	dose_label: string;
@@ -182,6 +184,7 @@ function mapSelectedDose(row: SelectedVaccineDoseRow): { preset: VaccinePreset; 
 			name: row.preset_name,
 			normalizedName: row.preset_normalized_name,
 			doses: [dose],
+			hiddenAt: row.preset_hidden_at,
 			updatedAt: row.preset_updated_at
 		},
 		dose
@@ -194,6 +197,7 @@ function mapPreset(row: VaccinePresetRow, doses: VaccinePresetDose[] = []): Vacc
 		name: row.name,
 		normalizedName: row.normalized_name,
 		doses: [...doses].sort((first, second) => first.sortOrder - second.sortOrder || first.label.localeCompare(second.label)),
+		hiddenAt: row.hidden_at,
 		updatedAt: row.updated_at
 	};
 }
@@ -247,7 +251,7 @@ function mapPresetsWithDoses(presetRows: VaccinePresetRow[], doseRows: VaccinePr
 
 async function getPresetById(id: number): Promise<VaccinePreset | null> {
 	const rows = await selectMany<VaccinePresetRow>(
-		`SELECT id, name, normalized_name, updated_at
+		`SELECT id, name, normalized_name, hidden_at, updated_at
 		 FROM vaccine_presets
 		 WHERE id = $1
 		 LIMIT 1`,
@@ -265,6 +269,7 @@ async function getSelectedVaccineDose(vaccinePresetId: number, vaccinePresetDose
 		`SELECT vaccine_presets.id AS preset_id,
 			vaccine_presets.name AS preset_name,
 			vaccine_presets.normalized_name AS preset_normalized_name,
+			vaccine_presets.hidden_at AS preset_hidden_at,
 			vaccine_presets.updated_at AS preset_updated_at,
 			vaccine_preset_doses.id AS dose_id,
 			vaccine_preset_doses.label AS dose_label,
@@ -304,6 +309,7 @@ export async function createVaccinations(petId: number, inputs: PetVaccinationIn
 		const vaccinePresetDoseId = requiredDoseId(input.vaccinePresetDoseId);
 		const selection = await getSelectedVaccineDose(vaccinePresetId, vaccinePresetDoseId);
 		if (!selection) throw new Error('vaccine_dose_required');
+		if (selection.preset.hiddenAt) throw new Error('vaccine_preset_hidden');
 
 		const result = await execute(
 			`INSERT INTO pet_vaccinations (pet_id, applied_at, vaccine_preset_id, vaccine_preset_dose_id, vaccine_name, vaccine_dose_label, updated_at)
@@ -348,7 +354,7 @@ export async function setVaccinationValidityIgnored(id: number, ignored: boolean
 
 export async function listVaccinePresets(): Promise<VaccinePreset[]> {
 	const rows = await selectMany<VaccinePresetRow>(
-		`SELECT id, name, normalized_name, updated_at
+		`SELECT id, name, normalized_name, hidden_at, updated_at
 		 FROM vaccine_presets
 		 ORDER BY name COLLATE NOCASE`
 	);
@@ -403,7 +409,7 @@ export async function saveVaccinePreset(input: VaccinePresetInput, id?: number):
 		);
 
 		const rows = await selectMany<VaccinePresetRow>(
-			`SELECT id, name, normalized_name, updated_at
+			`SELECT id, name, normalized_name, hidden_at, updated_at
 			 FROM vaccine_presets
 			 WHERE normalized_name = $1
 			 LIMIT 1`,
@@ -416,6 +422,20 @@ export async function saveVaccinePreset(input: VaccinePresetInput, id?: number):
 	await syncVaccinePresetDoses(presetId, doses);
 
 	const preset = await getPresetById(presetId);
+	if (!preset) throw new Error('vaccine_preset_save_failed');
+	return preset;
+}
+
+export async function setVaccinePresetHidden(id: number, hidden: boolean): Promise<VaccinePreset> {
+	await execute(
+		`UPDATE vaccine_presets
+		 SET hidden_at = ${hidden ? 'COALESCE(hidden_at, CURRENT_TIMESTAMP)' : 'NULL'},
+			updated_at = CURRENT_TIMESTAMP
+		 WHERE id = $1`,
+		[id]
+	);
+
+	const preset = await getPresetById(id);
 	if (!preset) throw new Error('vaccine_preset_save_failed');
 	return preset;
 }

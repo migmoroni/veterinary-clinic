@@ -44,6 +44,7 @@ export interface VaccinePreset {
 	name: string;
 	normalizedName: string;
 	doses: VaccinePresetDose[];
+	hiddenAt: string | null;
 	updatedAt: string | null;
 }
 
