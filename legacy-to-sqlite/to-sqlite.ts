@@ -95,6 +95,7 @@ interface LegacyOwnerContactInput {
 
 interface LegacyAdditionalResponsibleInput {
   name: string;
+  avatarBytes?: Buffer | null;
   contacts: LegacyOwnerContactInput[];
 }
 
@@ -193,6 +194,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     owner_id INTEGER NOT NULL,
     name TEXT NOT NULL,
+    avatar_blob BLOB,
     sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
@@ -344,8 +346,8 @@ const insertOwnerContact = db.prepare(`
 `);
 
 const insertOwnerAdditionalResponsible = db.prepare(`
-  INSERT INTO owner_additional_responsibles (owner_id, name, sort_order, updated_at)
-  VALUES (@ownerId, @name, @sortOrder, CURRENT_TIMESTAMP)
+  INSERT INTO owner_additional_responsibles (owner_id, name, avatar_blob, sort_order, updated_at)
+  VALUES (@ownerId, @name, @avatarBytes, @sortOrder, CURRENT_TIMESTAMP)
 `);
 
 const insertOwnerAdditionalResponsibleContact = db.prepare(`
@@ -899,7 +901,7 @@ const insertAdditionalResponsiblesFromSource = (report: ImportReport, ownerId: n
     let responsibleId = ownerAdditionalResponsiblesCache.get(cacheKey);
 
     if (!responsibleId) {
-      const result = insertOwnerAdditionalResponsible.run({ ownerId, name: responsible.name, sortOrder: getAdditionalResponsibleSortOrder(ownerId) });
+      const result = insertOwnerAdditionalResponsible.run({ ownerId, name: responsible.name, avatarBytes: responsible.avatarBytes ?? null, sortOrder: getAdditionalResponsibleSortOrder(ownerId) });
       responsibleId = result.lastInsertRowid;
       ownerAdditionalResponsiblesCache.set(cacheKey, responsibleId);
       report.ownerAdditionalResponsiblesCreated += 1;

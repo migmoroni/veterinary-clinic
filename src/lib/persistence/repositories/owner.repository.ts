@@ -49,6 +49,7 @@ interface OwnerAdditionalResponsibleRow {
 	id: number;
 	owner_id: number;
 	name: string;
+	avatar_blob: unknown | null;
 	created_at: string | null;
 	updated_at: string | null;
 }
@@ -113,6 +114,7 @@ function normalizeAdditionalResponsibles(responsibles: OwnerAdditionalResponsibl
 	return responsibles
 		.map((responsible) => ({
 			name: nullable(responsible.name) ?? '',
+			avatarBytes: responsible.avatarBytes ?? null,
 			contacts: normalizeContacts(responsible.contacts ?? [])
 		}))
 		.filter((responsible) => responsible.name.length > 0);
@@ -133,6 +135,7 @@ function mapAdditionalResponsible(row: OwnerAdditionalResponsibleRow, contacts: 
 	return {
 		id: row.id,
 		name: row.name,
+		avatarBytes: normalizeByteArray(row.avatar_blob),
 		contacts,
 		createdAt: row.created_at,
 		updatedAt: row.updated_at
@@ -228,7 +231,7 @@ export async function listOwnerAdditionalResponsibleContactsByResponsibleIds(res
 
 export async function listOwnerAdditionalResponsibles(ownerId: number): Promise<OwnerAdditionalResponsible[]> {
 	const rows = await selectMany<OwnerAdditionalResponsibleRow>(
-		`SELECT id, owner_id, name, created_at, updated_at
+		`SELECT id, owner_id, name, avatar_blob, created_at, updated_at
 		 FROM owner_additional_responsibles
 		 WHERE owner_id = $1
 		 ORDER BY sort_order, id`,
@@ -246,7 +249,7 @@ async function listOwnerAdditionalResponsiblesByOwnerIds(ownerIds: number[]): Pr
 
 	const placeholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
 	const rows = await selectMany<OwnerAdditionalResponsibleRow>(
-		`SELECT id, owner_id, name, created_at, updated_at
+		`SELECT id, owner_id, name, avatar_blob, created_at, updated_at
 		 FROM owner_additional_responsibles
 		 WHERE owner_id IN (${placeholders})
 		 ORDER BY owner_id, sort_order, id`,
@@ -282,9 +285,10 @@ async function replaceOwnerAdditionalResponsibles(ownerId: number, responsibles:
 
 	const normalizedResponsibles = normalizeAdditionalResponsibles(responsibles);
 	for (const [responsibleIndex, responsible] of normalizedResponsibles.entries()) {
+		const avatarSqlLiteral = avatarBytesToSqlLiteral(responsible.avatarBytes);
 		const result = await execute(
-			`INSERT INTO owner_additional_responsibles (owner_id, name, sort_order, updated_at)
-			 VALUES ($1, $2, $3, CURRENT_TIMESTAMP)`,
+			`INSERT INTO owner_additional_responsibles (owner_id, name, avatar_blob, sort_order, updated_at)
+			 VALUES ($1, $2, ${avatarSqlLiteral}, $3, CURRENT_TIMESTAMP)`,
 			[ownerId, responsible.name, responsibleIndex]
 		);
 		const responsibleId = Number(result.lastInsertId);

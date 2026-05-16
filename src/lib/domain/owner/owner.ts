@@ -20,6 +20,7 @@ export interface OwnerContactInput {
 export interface OwnerAdditionalResponsible {
 	id: number;
 	name: string;
+	avatarBytes: Uint8Array | null;
 	contacts: OwnerContact[];
 	createdAt: string | null;
 	updatedAt: string | null;
@@ -27,6 +28,7 @@ export interface OwnerAdditionalResponsible {
 
 export interface OwnerAdditionalResponsibleInput {
 	name: string;
+	avatarBytes?: Uint8Array | null;
 	contacts: OwnerContactInput[];
 }
 

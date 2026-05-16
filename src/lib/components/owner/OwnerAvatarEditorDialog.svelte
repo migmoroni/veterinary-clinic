@@ -1,13 +1,12 @@
 <script lang="ts">
 	import ImageCaptureDialog from '$lib/components/shared/ImageCaptureDialog.svelte';
+	import type { TranslationKey } from '$lib/i18n/index.js';
 
 	const AVATAR_FRAME_SIZE = 720;
 	const AVATAR_MAX_BYTES = 1_000_000;
 	const PREVIEW_SIZE = 320;
 	const MIN_EXPORT_SIZE = 256;
-	const avatarImageLabels = {
-		title: 'owner.avatarDialogTitle',
-		description: 'owner.avatarDialogDescription',
+	const sharedAvatarImageLabels = {
 		noImage: 'owner.avatarNoImage',
 		selectFile: 'owner.avatarSelectFile',
 		useCamera: 'owner.avatarUseCamera',
@@ -32,15 +31,25 @@
 
 	let {
 		initialAvatarBytes = null,
+		titleKey = 'owner.avatarDialogTitle',
+		descriptionKey = 'owner.avatarDialogDescription',
 		onApply,
 		onRemove,
 		onClose
 	}: {
 		initialAvatarBytes?: Uint8Array | null;
+		titleKey?: TranslationKey;
+		descriptionKey?: TranslationKey;
 		onApply: (bytes: Uint8Array) => void;
 		onRemove: () => void;
 		onClose: () => void;
 	} = $props();
+
+	const avatarImageLabels = $derived({
+		title: titleKey,
+		description: descriptionKey,
+		...sharedAvatarImageLabels
+	});
 
 	const canRemoveAvatar = $derived(Boolean(initialAvatarBytes && initialAvatarBytes.length > 0));
 </script>

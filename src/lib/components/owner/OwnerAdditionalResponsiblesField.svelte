@@ -1,4 +1,6 @@
 <script lang="ts">
+	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
+	import OwnerAvatarEditorDialog from '$lib/components/owner/OwnerAvatarEditorDialog.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import type { OwnerAdditionalResponsibleInput, OwnerContactInput, OwnerContactKind } from '$lib/domain/owner/owner.js';
 	import { formatEmailForInput } from '$lib/domain/shared/email.js';
@@ -8,8 +10,10 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
 	let { responsibles = $bindable<OwnerAdditionalResponsibleInput[]>([]) }: { responsibles?: OwnerAdditionalResponsibleInput[] } = $props();
+	let avatarDialogIndex = $state<number | null>(null);
 
 	const contactKinds: OwnerContactKind[] = ['mobile', 'phone', 'email', 'other'];
+	const avatarDialogResponsible = $derived(avatarDialogIndex === null ? null : (responsibles[avatarDialogIndex] ?? null));
 
 	function kindLabelKey(kind: OwnerContactKind): TranslationKey {
 		return `owner.contactKind.${kind}` as TranslationKey;
@@ -17,6 +21,10 @@
 
 	function emptyContact(): OwnerContactInput {
 		return { kind: 'mobile', label: '', value: '' };
+	}
+
+	function emptyResponsible(): OwnerAdditionalResponsibleInput {
+		return { name: '', avatarBytes: null, contacts: [emptyContact()] };
 	}
 
 	function normalizeContactKind(kind: string): OwnerContactKind {
@@ -32,7 +40,7 @@
 	}
 
 	function addResponsible() {
-		responsibles = [...responsibles, { name: '', contacts: [emptyContact()] }];
+		responsibles = [...responsibles, emptyResponsible()];
 	}
 
 	function removeResponsible(index: number) {
@@ -41,6 +49,32 @@
 
 	function updateResponsibleName(index: number, name: string) {
 		responsibles = responsibles.map((responsible, responsibleIndex) => (responsibleIndex === index ? { ...responsible, name } : responsible));
+	}
+
+	function openResponsibleAvatarDialog(index: number) {
+		avatarDialogIndex = index;
+	}
+
+	function closeResponsibleAvatarDialog() {
+		avatarDialogIndex = null;
+	}
+
+	function updateResponsibleAvatar(index: number, avatarBytes: Uint8Array | null) {
+		responsibles = responsibles.map((responsible, responsibleIndex) => (responsibleIndex === index ? { ...responsible, avatarBytes } : responsible));
+	}
+
+	function applyResponsibleAvatar(bytes: Uint8Array) {
+		if (avatarDialogIndex === null) return;
+
+		updateResponsibleAvatar(avatarDialogIndex, bytes);
+		avatarDialogIndex = null;
+	}
+
+	function removeResponsibleAvatar() {
+		if (avatarDialogIndex === null) return;
+
+		updateResponsibleAvatar(avatarDialogIndex, null);
+		avatarDialogIndex = null;
 	}
 
 	function addContact(responsibleIndex: number) {
@@ -110,7 +144,26 @@
 	<div class="mt-4 flex flex-col gap-3">
 		{#each responsibles as responsible, responsibleIndex}
 			<article class="rounded-md border border-border bg-background/50 p-3">
-				<div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_2.5rem] sm:items-end">
+				<div class="grid gap-3 sm:grid-cols-[auto_minmax(0,1fr)_2.5rem] sm:items-end">
+					<div class="flex min-w-0 items-center gap-3">
+						<OwnerAvatar
+							avatarBytes={responsible.avatarBytes ?? null}
+							ownerName={responsible.name}
+							avatarAltKey="owner.additionalResponsibleAvatarAlt"
+							avatarPlaceholderAltKey="owner.additionalResponsibleAvatarPlaceholderAlt"
+							className="size-14"
+							iconClass="size-6 text-muted-foreground"
+						/>
+						<div class="min-w-0">
+							<p class="text-sm font-semibold">{t('owner.additionalResponsibleAvatarLabel')}</p>
+							<div class="mt-2 flex flex-wrap gap-2">
+								<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring/30" aria-label={`${t('owner.avatarEdit')}: ${responsible.name || t('owner.additionalResponsibleLabel')}`} title={t('owner.avatarEdit')} onclick={() => openResponsibleAvatarDialog(responsibleIndex)}>
+									{t('owner.avatarEdit')}
+								</button>
+							</div>
+						</div>
+					</div>
+
 					<label class="flex flex-col gap-1 text-sm font-medium">
 						<span>{t('owner.additionalResponsibleName')}</span>
 						<input
@@ -230,3 +283,14 @@
 		{/each}
 	</div>
 </div>
+
+{#if avatarDialogResponsible}
+	<OwnerAvatarEditorDialog
+		initialAvatarBytes={avatarDialogResponsible.avatarBytes ?? null}
+		titleKey="owner.additionalResponsibleAvatarDialogTitle"
+		descriptionKey="owner.additionalResponsibleAvatarDialogDescription"
+		onApply={applyResponsibleAvatar}
+		onRemove={removeResponsibleAvatar}
+		onClose={closeResponsibleAvatarDialog}
+	/>
+{/if}

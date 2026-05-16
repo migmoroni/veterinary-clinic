@@ -128,11 +128,6 @@
 					<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} onclick={openAvatarDialog}>
 						{t('owner.avatarEdit')}
 					</button>
-					{#if form.avatarBytes}
-						<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={removeAvatar}>
-							{t('owner.avatarRemove')}
-						</button>
-					{/if}
 				</div>
 			</div>
 		</div>

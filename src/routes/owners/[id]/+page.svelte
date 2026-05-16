@@ -56,6 +56,7 @@
 			contacts: owner.contacts.map((contact) => ({ kind: contact.kind, label: contact.label, value: contact.value })),
 			additionalResponsibles: owner.additionalResponsibles.map((responsible) => ({
 				name: responsible.name,
+				avatarBytes: responsible.avatarBytes,
 				contacts: responsible.contacts.map((contact) => ({ kind: contact.kind, label: contact.label, value: contact.value }))
 			})),
 			state: owner.state ?? ''
@@ -77,6 +78,7 @@
 			contacts: input.contacts.map((contact) => ({ kind: contact.kind, label: (contact.label ?? '').trim(), value: contact.value.trim() })),
 			additionalResponsibles: input.additionalResponsibles.map((responsible) => ({
 				name: responsible.name.trim(),
+				avatar: avatarSnapshotValue(responsible.avatarBytes),
 				contacts: responsible.contacts.map((contact) => ({ kind: contact.kind, label: (contact.label ?? '').trim(), value: contact.value.trim() }))
 			})),
 			state: input.state ?? ''
@@ -455,11 +457,6 @@
 								<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} onclick={openAvatarDialog}>
 									{t('owner.avatarEdit')}
 								</button>
-								{#if form.avatarBytes}
-									<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={removeAvatar}>
-										{t('owner.avatarRemove')}
-									</button>
-								{/if}
 							</div>
 						</div>
 					{/if}
@@ -574,9 +571,19 @@
 								<div class="mt-4 flex flex-col gap-3">
 									{#each profile.owner.additionalResponsibles as responsible}
 										<article class="rounded-md border border-border bg-background/50 p-3">
-											<div class="min-w-0">
-												<p class="truncate text-sm font-semibold">{responsible.name}</p>
-												<p class="mt-1 text-xs text-muted-foreground">{t('owner.additionalResponsibleLabel')}</p>
+											<div class="flex min-w-0 items-center gap-3">
+												<OwnerAvatar
+													avatarBytes={responsible.avatarBytes}
+													ownerName={responsible.name}
+													avatarAltKey="owner.additionalResponsibleAvatarAlt"
+													avatarPlaceholderAltKey="owner.additionalResponsibleAvatarPlaceholderAlt"
+													className="size-12"
+													iconClass="size-5 text-muted-foreground"
+												/>
+												<div class="min-w-0">
+													<p class="truncate text-sm font-semibold">{responsible.name}</p>
+													<p class="mt-1 text-xs text-muted-foreground">{t('owner.additionalResponsibleLabel')}</p>
+												</div>
 											</div>
 
 											<div class="mt-3 flex flex-col gap-2">
