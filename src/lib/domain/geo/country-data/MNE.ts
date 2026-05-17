@@ -47,5 +47,20 @@ export const MNE = {
 		"de-LI": "Montenegro",
 		"de-LU": "Montenegro"
 	},
-	"callingCode": "382"
+	"callingCode": "382",
+	"phoneMasks": [
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[2-9]"
+			]
+		}
+	]
 } satisfies Country;

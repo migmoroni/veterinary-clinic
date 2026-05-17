@@ -47,5 +47,23 @@ export const ESP = {
 		"de-LI": "Spanien",
 		"de-LU": "Spanien"
 	},
-	"callingCode": "34"
+	"callingCode": "34",
+	"phoneMasks": [
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[5-9]"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[89]00"
+			]
+		}
+	]
 } satisfies Country;

@@ -47,5 +47,83 @@ export const PHL = {
 		"de-LI": "Philippinen",
 		"de-LU": "Philippinen"
 	},
-	"callingCode": "63"
+	"callingCode": "63",
+	"phoneMasks": [
+		{
+			"mask": "# #####",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"2"
+			]
+		},
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8
+		},
+		{
+			"mask": "# #### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"2"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[3-7]|8[2-8]"
+			]
+		},
+		{
+			"mask": "##### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"346|4(?:27|9[35])|883",
+				"3469|4(?:279|9(?:30|56))|8834"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[89]"
+			]
+		},
+		{
+			"mask": "#### ######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"3(?:23|39|46)|4(?:2[3-6]|[35]9|4[26]|76)|544|88[245]|(?:52|64|86)2",
+				"3(?:230|397|461)|4(?:2(?:35|[46]4|51)|396|4(?:22|63)|59[347]|76[15])|5(?:221|446)|642[23]|8(?:622|8(?:[24]2|5[13]))"
+			]
+		},
+		{
+			"mask": "#### ### ####",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"1"
+			]
+		},
+		{
+			"mask": "### ### ### ###",
+			"minLength": 12,
+			"maxLength": 12
+		},
+		{
+			"mask": "#### ## ### ####",
+			"minLength": 13,
+			"maxLength": 13,
+			"leadingDigits": [
+				"1"
+			]
+		}
+	]
 } satisfies Country;

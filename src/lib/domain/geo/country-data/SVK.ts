@@ -47,5 +47,53 @@ export const SVK = {
 		"de-LI": "Slowakei",
 		"de-LU": "Slowakei"
 	},
-	"callingCode": "421"
+	"callingCode": "421",
+	"phoneMasks": [
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6
+		},
+		{
+			"mask": "# ## ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"21"
+			]
+		},
+		{
+			"mask": "## ## ###",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[3-5][1-8]1",
+				"[3-5][1-8]1[67]"
+			]
+		},
+		{
+			"mask": "#/### ### ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"2"
+			]
+		},
+		{
+			"mask": "##/### ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[3-5]"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[689]"
+			]
+		}
+	]
 } satisfies Country;

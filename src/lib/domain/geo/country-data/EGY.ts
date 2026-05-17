@@ -47,5 +47,44 @@ export const EGY = {
 		"de-LI": "Ägypten",
 		"de-LU": "Ägypten"
 	},
-	"callingCode": "20"
+	"callingCode": "20",
+	"phoneMasks": [
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8
+		},
+		{
+			"mask": "# ########",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[23]"
+			]
+		},
+		{
+			"mask": "## #######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"1[35]|[4-6]|8[2468]|9[235-7]"
+			]
+		},
+		{
+			"mask": "## ########",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"1"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[89]"
+			]
+		}
+	]
 } satisfies Country;

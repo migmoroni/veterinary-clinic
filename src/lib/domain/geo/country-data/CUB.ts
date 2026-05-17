@@ -47,5 +47,49 @@ export const CUB = {
 		"de-LI": "Kuba",
 		"de-LU": "Kuba"
 	},
-	"callingCode": "53"
+	"callingCode": "53",
+	"phoneMasks": [
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6
+		},
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7
+		},
+		{
+			"mask": "# #######",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"7"
+			]
+		},
+		{
+			"mask": "# #######",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[56]"
+			]
+		},
+		{
+			"mask": "## ######",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"2[1-4]|[34]"
+			]
+		},
+		{
+			"mask": "### #######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"8"
+			]
+		}
+	]
 } satisfies Country;

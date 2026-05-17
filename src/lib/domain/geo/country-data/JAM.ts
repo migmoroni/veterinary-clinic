@@ -47,5 +47,15 @@ export const JAM = {
 		"de-LI": "Jamaika",
 		"de-LU": "Jamaika"
 	},
-	"callingCode": "1"
+	"callingCode": "1",
+	"phoneMasks": [
+		{
+			"mask": "(###) ###-####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[2-9]"
+			]
+		}
+	]
 } satisfies Country;

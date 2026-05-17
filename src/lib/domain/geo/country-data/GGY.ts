@@ -47,5 +47,22 @@ export const GGY = {
 		"de-LI": "Guernsey",
 		"de-LU": "Guernsey"
 	},
-	"callingCode": "44"
+	"callingCode": "44",
+	"phoneMasks": [
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10
+		}
+	]
 } satisfies Country;

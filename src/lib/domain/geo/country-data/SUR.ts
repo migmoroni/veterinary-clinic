@@ -47,5 +47,31 @@ export const SUR = {
 		"de-LI": "Suriname",
 		"de-LU": "Suriname"
 	},
-	"callingCode": "597"
+	"callingCode": "597",
+	"phoneMasks": [
+		{
+			"mask": "##-##-##",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"56"
+			]
+		},
+		{
+			"mask": "###-###",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"[2-5]"
+			]
+		},
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[6-8]"
+			]
+		}
+	]
 } satisfies Country;

@@ -8,7 +8,7 @@ import {
 	type OwnerContactKind,
 	type OwnerInput
 } from '$lib/domain/owner/owner.js';
-import { countryCallingCode, countryCallingCodes, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '$lib/domain/geo/location.js';
+import { countryPhoneFormat, countryPhoneFormats, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '$lib/domain/geo/location.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { formatEmailForInput } from '$lib/domain/shared/email.js';
 import { formatPhoneForStorage } from '$lib/domain/shared/phone.js';
@@ -60,7 +60,7 @@ interface OwnerAdditionalResponsibleContactRow extends ContactRow {
 	responsible_id: number;
 }
 
-const knownCallingCodes = countryCallingCodes();
+const phoneFormats = countryPhoneFormats();
 
 function nullable(value: string | null | undefined): string | null {
 	const trimmed = value?.trim() ?? '';
@@ -90,7 +90,10 @@ function normalizeContactValue(kind: OwnerContactKind, value: string | null | un
 	if (!trimmed) return null;
 
 	if (kind === 'email') return nullable(formatEmailForInput(trimmed));
-	if (kind === 'phone' || kind === 'mobile') return formatPhoneForStorage(trimmed, countryCallingCode(country), knownCallingCodes);
+	if (kind === 'phone' || kind === 'mobile') {
+		const phoneFormat = countryPhoneFormat(country);
+		return formatPhoneForStorage(trimmed, phoneFormat, { country: phoneFormat, countries: phoneFormats });
+	}
 
 	return trimmed;
 }

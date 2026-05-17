@@ -47,5 +47,12 @@ export const IMN = {
 		"de-LI": "Isle of Man",
 		"de-LU": "Isle of Man"
 	},
-	"callingCode": "44"
+	"callingCode": "44",
+	"phoneMasks": [
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10
+		}
+	]
 } satisfies Country;

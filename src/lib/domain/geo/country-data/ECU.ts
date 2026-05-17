@@ -47,5 +47,36 @@ export const ECU = {
 		"de-LI": "Ecuador",
 		"de-LU": "Ecuador"
 	},
-	"callingCode": "593"
+	"callingCode": "593",
+	"phoneMasks": [
+		{
+			"mask": "# ###-####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[2-7]"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"9"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10
+		},
+		{
+			"mask": "#### ### ####",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"1"
+			]
+		}
+	]
 } satisfies Country;

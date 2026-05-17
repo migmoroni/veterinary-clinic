@@ -47,5 +47,31 @@ export const TUV = {
 		"de-LI": "Tuvalu",
 		"de-LU": "Tuvalu"
 	},
-	"callingCode": "688"
+	"callingCode": "688",
+	"phoneMasks": [
+		{
+			"mask": "## ###",
+			"minLength": 5,
+			"maxLength": 5,
+			"leadingDigits": [
+				"2"
+			]
+		},
+		{
+			"mask": "## ####",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"90"
+			]
+		},
+		{
+			"mask": "## #####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"7"
+			]
+		}
+	]
 } satisfies Country;

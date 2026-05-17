@@ -47,5 +47,31 @@ export const MDA = {
 		"de-LI": "Republik Moldau",
 		"de-LU": "Republik Moldau"
 	},
-	"callingCode": "373"
+	"callingCode": "373",
+	"phoneMasks": [
+		{
+			"mask": "## ### ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"22|3"
+			]
+		},
+		{
+			"mask": "### ## ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[25-7]"
+			]
+		},
+		{
+			"mask": "### #####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[89]"
+			]
+		}
+	]
 } satisfies Country;

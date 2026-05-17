@@ -47,5 +47,47 @@ export const BWA = {
 		"de-LI": "Botsuana",
 		"de-LU": "Botsuana"
 	},
-	"callingCode": "267"
+	"callingCode": "267",
+	"phoneMasks": [
+		{
+			"mask": "## #####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"90"
+			]
+		},
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[24-6]|3[15-9]"
+			]
+		},
+		{
+			"mask": "## ### ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[37]"
+			]
+		},
+		{
+			"mask": "### #### ###",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"8"
+			]
+		},
+		{
+			"mask": "#### ### ###",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"0"
+			]
+		}
+	]
 } satisfies Country;

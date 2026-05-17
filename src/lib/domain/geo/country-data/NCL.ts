@@ -47,5 +47,15 @@ export const NCL = {
 		"de-LI": "Neukaledonien",
 		"de-LU": "Neukaledonien"
 	},
-	"callingCode": "687"
+	"callingCode": "687",
+	"phoneMasks": [
+		{
+			"mask": "##.##.##",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"[02-57-9]"
+			]
+		}
+	]
 } satisfies Country;

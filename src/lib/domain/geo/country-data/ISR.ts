@@ -47,5 +47,76 @@ export const ISR = {
 		"de-LI": "Israel",
 		"de-LU": "Israel"
 	},
-	"callingCode": "972"
+	"callingCode": "972",
+	"phoneMasks": [
+		{
+			"mask": "####-###",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"125"
+			]
+		},
+		{
+			"mask": "#-###-####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[2-489]"
+			]
+		},
+		{
+			"mask": "####-##-##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"121"
+			]
+		},
+		{
+			"mask": "##-###-####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[57]"
+			]
+		},
+		{
+			"mask": "#-###-###-###",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"1[7-9]"
+			]
+		},
+		{
+			"mask": "####-###-###",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"12"
+			]
+		},
+		{
+			"mask": "####-######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"159"
+			]
+		},
+		{
+			"mask": "### #### ####",
+			"minLength": 11,
+			"maxLength": 11
+		},
+		{
+			"mask": "###-## ###-####",
+			"minLength": 12,
+			"maxLength": 12,
+			"leadingDigits": [
+				"15"
+			]
+		}
+	]
 } satisfies Country;

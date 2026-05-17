@@ -47,5 +47,23 @@ export const FRA = {
 		"de-LI": "Frankreich",
 		"de-LU": "Frankreich"
 	},
-	"callingCode": "33"
+	"callingCode": "33",
+	"phoneMasks": [
+		{
+			"mask": "# ## ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[1-79]"
+			]
+		},
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"8"
+			]
+		}
+	]
 } satisfies Country;

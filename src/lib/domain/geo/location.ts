@@ -1,5 +1,5 @@
 import { brazilCities, brazilStates, type BrazilCity } from './brazil-data.js';
-import { countries, type Country, type CountryLabelLocale } from './country-data/index.js';
+import { countries, type Country, type CountryLabelLocale, type CountryPhoneMask } from './country-data/index.js';
 
 export const BRAZIL_COUNTRY_VALUE = 'BRA';
 export const BRAZIL_COUNTRY_CODE = 'BRA';
@@ -8,6 +8,12 @@ export const DEFAULT_BRAZIL_STATE_CODE = 'SP';
 export interface LocationOption {
 	value: string;
 	label: string;
+}
+
+export interface CountryPhoneFormat {
+	countryCode: string;
+	callingCode: string;
+	phoneMasks: readonly CountryPhoneMask[];
 }
 
 function nullable(value: string | null | undefined): string | null {
@@ -32,6 +38,10 @@ function cleanCityValue(value: string): string {
 const countryList: readonly Country[] = countries;
 const countryByCode = new Map<string, Country>(countryList.map((country) => [country.code, country]));
 const callingCodes = [...new Set(countryList.map((country) => country.callingCode).filter((code): code is string => Boolean(code)))].sort((left, right) => right.length - left.length || left.localeCompare(right));
+const phoneFormats: readonly CountryPhoneFormat[] = countryList
+	.filter((country) => Boolean(country.callingCode))
+	.map((country) => ({ countryCode: country.code, callingCode: country.callingCode as string, phoneMasks: country.phoneMasks ?? [] }));
+const phoneFormatByCountryCode = new Map<string, CountryPhoneFormat>(phoneFormats.map((format) => [format.countryCode, format]));
 const stateByCode = new Map(brazilStates.map((state) => [state.code, state]));
 const citiesByState = new Map<string, BrazilCity[]>();
 const cityByStateAndKey = new Map<string, BrazilCity>();
@@ -107,6 +117,17 @@ export function countryCallingCode(value: string | null | undefined): string | n
 
 export function countryCallingCodes(): string[] {
 	return [...callingCodes];
+}
+
+export function countryPhoneFormat(value: string | null | undefined): CountryPhoneFormat | null {
+	const country = normalizeOwnerCountry(value);
+	if (!country) return null;
+
+	return phoneFormatByCountryCode.get(country) ?? null;
+}
+
+export function countryPhoneFormats(): CountryPhoneFormat[] {
+	return [...phoneFormats];
 }
 
 export function countryHasStructuredLocations(value: string | null | undefined): boolean {

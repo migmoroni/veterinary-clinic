@@ -47,5 +47,15 @@ export const TCD = {
 		"de-LI": "Tschad",
 		"de-LU": "Tschad"
 	},
-	"callingCode": "235"
+	"callingCode": "235",
+	"phoneMasks": [
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[26-9]"
+			]
+		}
+	]
 } satisfies Country;

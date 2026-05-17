@@ -47,5 +47,15 @@ export const BMU = {
 		"de-LI": "Bermuda",
 		"de-LU": "Bermuda"
 	},
-	"callingCode": "1441"
+	"callingCode": "1441",
+	"phoneMasks": [
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[2-9]"
+			]
+		}
+	]
 } satisfies Country;

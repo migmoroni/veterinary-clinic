@@ -47,5 +47,31 @@ export const CHE = {
 		"de-LI": "Schweiz",
 		"de-LU": "Schweiz"
 	},
-	"callingCode": "41"
+	"callingCode": "41",
+	"phoneMasks": [
+		{
+			"mask": "## ### ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[2-79]|81"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"8[047]|90"
+			]
+		},
+		{
+			"mask": "### ## ### ## ##",
+			"minLength": 12,
+			"maxLength": 12,
+			"leadingDigits": [
+				"8"
+			]
+		}
+	]
 } satisfies Country;

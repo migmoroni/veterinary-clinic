@@ -47,5 +47,23 @@ export const SEN = {
 		"de-LI": "Senegal",
 		"de-LU": "Senegal"
 	},
-	"callingCode": "221"
+	"callingCode": "221",
+	"phoneMasks": [
+		{
+			"mask": "## ### ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[379]"
+			]
+		},
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"8"
+			]
+		}
+	]
 } satisfies Country;

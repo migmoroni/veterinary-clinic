@@ -47,5 +47,68 @@ export const HRV = {
 		"de-LI": "Kroatien",
 		"de-LU": "Kroatien"
 	},
-	"callingCode": "385"
+	"callingCode": "385",
+	"phoneMasks": [
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6
+		},
+		{
+			"mask": "## ## ###",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"6[01]"
+			]
+		},
+		{
+			"mask": "# #### ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"1"
+			]
+		},
+		{
+			"mask": "### ## ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"8"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"6|7[245]"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"9"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[2-57]"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"8"
+			]
+		}
+	]
 } satisfies Country;

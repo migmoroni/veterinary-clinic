@@ -47,5 +47,28 @@ export const YEM = {
 		"de-LI": "Jemen",
 		"de-LU": "Jemen"
 	},
-	"callingCode": "967"
+	"callingCode": "967",
+	"phoneMasks": [
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7
+		},
+		{
+			"mask": "# ### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[1-6]|7(?:[24-6]|8[0-7])"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"7"
+			]
+		}
+	]
 } satisfies Country;

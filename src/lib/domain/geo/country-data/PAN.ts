@@ -47,5 +47,36 @@ export const PAN = {
 		"de-LI": "Panama",
 		"de-LU": "Panama"
 	},
-	"callingCode": "507"
+	"callingCode": "507",
+	"phoneMasks": [
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[1-57-9]"
+			]
+		},
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[68]"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"8"
+			]
+		},
+		{
+			"mask": "### #### ####",
+			"minLength": 11,
+			"maxLength": 11
+		}
+	]
 } satisfies Country;

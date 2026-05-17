@@ -47,5 +47,31 @@ export const HUN = {
 		"de-LI": "Ungarn",
 		"de-LU": "Ungarn"
 	},
-	"callingCode": "36"
+	"callingCode": "36",
+	"phoneMasks": [
+		{
+			"mask": "# ### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"1"
+			]
+		},
+		{
+			"mask": "## ### ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[27][2-9]|3[2-7]|4[24-9]|5[2-79]|6|8[2-57-9]|9[2-69]"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[2-9]"
+			]
+		}
+	]
 } satisfies Country;

@@ -47,5 +47,51 @@ export const TUR = {
 		"de-LI": "Türkei",
 		"de-LU": "Türkei"
 	},
-	"callingCode": "90"
+	"callingCode": "90",
+	"phoneMasks": [
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7
+		},
+		{
+			"mask": "### ### ## ##",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"5(?:[0-59]|61)",
+				"5(?:[0-59]|61[06])",
+				"5(?:[0-59]|61[06]1)"
+			]
+		},
+		{
+			"mask": "### ### ## ##",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[24][1-8]|3[1-9]"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"512|8[01589]|90"
+			]
+		},
+		{
+			"mask": "### ### ### ###",
+			"minLength": 12,
+			"maxLength": 12
+		},
+		{
+			"mask": "### ### #######",
+			"minLength": 13,
+			"maxLength": 13,
+			"leadingDigits": [
+				"80"
+			]
+		}
+	]
 } satisfies Country;

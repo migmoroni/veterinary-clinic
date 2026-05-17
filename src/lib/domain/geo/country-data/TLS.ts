@@ -47,5 +47,23 @@ export const TLS = {
 		"de-LI": "Timor-Leste",
 		"de-LU": "Timor-Leste"
 	},
-	"callingCode": "670"
+	"callingCode": "670",
+	"phoneMasks": [
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[2-489]|70"
+			]
+		},
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"7"
+			]
+		}
+	]
 } satisfies Country;

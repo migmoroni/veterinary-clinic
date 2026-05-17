@@ -47,5 +47,72 @@ export const FIN = {
 		"de-LI": "Finnland",
 		"de-LU": "Finnland"
 	},
-	"callingCode": "358"
+	"callingCode": "358",
+	"phoneMasks": [
+		{
+			"mask": "#####",
+			"minLength": 5,
+			"maxLength": 5,
+			"leadingDigits": [
+				"20[2-59]"
+			]
+		},
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6
+		},
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7
+		},
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9
+		},
+		{
+			"mask": "# #########",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"(?:19|[2568])[1-8]|3(?:0[1-9]|[1-9])|9"
+			]
+		},
+		{
+			"mask": "## ########",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[14]|2[09]|50|7[135]"
+			]
+		},
+		{
+			"mask": "### #######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"(?:[1-3]0|[68])0|70[07-9]"
+			]
+		},
+		{
+			"mask": "### #### ####",
+			"minLength": 11,
+			"maxLength": 11
+		},
+		{
+			"mask": "## ##########",
+			"minLength": 12,
+			"maxLength": 12,
+			"leadingDigits": [
+				"7"
+			]
+		}
+	]
 } satisfies Country;

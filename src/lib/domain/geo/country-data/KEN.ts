@@ -47,5 +47,41 @@ export const KEN = {
 		"de-LI": "Kenia",
 		"de-LU": "Kenia"
 	},
-	"callingCode": "254"
+	"callingCode": "254",
+	"phoneMasks": [
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7
+		},
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8
+		},
+		{
+			"mask": "## #######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[24-6]"
+			]
+		},
+		{
+			"mask": "### ######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[17]"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[89]"
+			]
+		}
+	]
 } satisfies Country;

@@ -47,5 +47,15 @@ export const NIC = {
 		"de-LI": "Nicaragua",
 		"de-LU": "Nicaragua"
 	},
-	"callingCode": "505"
+	"callingCode": "505",
+	"phoneMasks": [
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[125-8]"
+			]
+		}
+	]
 } satisfies Country;

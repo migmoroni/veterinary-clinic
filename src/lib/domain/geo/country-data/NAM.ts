@@ -47,5 +47,39 @@ export const NAM = {
 		"de-LI": "Namibia",
 		"de-LU": "Namibia"
 	},
-	"callingCode": "264"
+	"callingCode": "264",
+	"phoneMasks": [
+		{
+			"mask": "## ### ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"88"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"6"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"8"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"87"
+			]
+		}
+	]
 } satisfies Country;

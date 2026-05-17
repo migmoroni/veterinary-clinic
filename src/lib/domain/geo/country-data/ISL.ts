@@ -47,5 +47,23 @@ export const ISL = {
 		"de-LI": "Island",
 		"de-LU": "Island"
 	},
-	"callingCode": "354"
+	"callingCode": "354",
+	"phoneMasks": [
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[4-9]"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"3"
+			]
+		}
+	]
 } satisfies Country;

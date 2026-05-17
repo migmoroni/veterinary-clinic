@@ -47,5 +47,31 @@ export const BIH = {
 		"de-LI": "Bosnien und Herzegowina",
 		"de-LU": "Bosnien und Herzegowina"
 	},
-	"callingCode": "387"
+	"callingCode": "387",
+	"phoneMasks": [
+		{
+			"mask": "## ### ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"6[1-3]|[7-9]"
+			]
+		},
+		{
+			"mask": "## ###-###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[3-5]|6[56]"
+			]
+		},
+		{
+			"mask": "## ## ## ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"6"
+			]
+		}
+	]
 } satisfies Country;

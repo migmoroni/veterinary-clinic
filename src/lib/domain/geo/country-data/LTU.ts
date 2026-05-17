@@ -47,5 +47,39 @@ export const LTU = {
 		"de-LI": "Litauen",
 		"de-LU": "Litauen"
 	},
-	"callingCode": "370"
+	"callingCode": "370",
+	"phoneMasks": [
+		{
+			"mask": "# ### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"52[0-7]"
+			]
+		},
+		{
+			"mask": "## ######",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"37|4(?:[15]|6[1-8])"
+			]
+		},
+		{
+			"mask": "### ## ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[7-9]"
+			]
+		},
+		{
+			"mask": "### #####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[3-6]"
+			]
+		}
+	]
 } satisfies Country;

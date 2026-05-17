@@ -47,5 +47,36 @@ export const WSM = {
 		"de-LI": "Samoa",
 		"de-LU": "Samoa"
 	},
-	"callingCode": "685"
+	"callingCode": "685",
+	"phoneMasks": [
+		{
+			"mask": "#####",
+			"minLength": 5,
+			"maxLength": 5,
+			"leadingDigits": [
+				"[2-5]|6[1-9]"
+			]
+		},
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6
+		},
+		{
+			"mask": "## #####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"7"
+			]
+		},
+		{
+			"mask": "### #######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[68]"
+			]
+		}
+	]
 } satisfies Country;

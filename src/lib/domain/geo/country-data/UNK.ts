@@ -47,5 +47,49 @@ export const UNK = {
 		"de-LI": "Kosovo",
 		"de-LU": "Kosovo"
 	},
-	"callingCode": "383"
+	"callingCode": "383",
+	"phoneMasks": [
+		{
+			"mask": "## ### ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[2-4]"
+			]
+		},
+		{
+			"mask": "### #####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[89]"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"2|39"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10
+		},
+		{
+			"mask": "### #### ####",
+			"minLength": 11,
+			"maxLength": 11
+		},
+		{
+			"mask": "## ##########",
+			"minLength": 12,
+			"maxLength": 12,
+			"leadingDigits": [
+				"3"
+			]
+		}
+	]
 } satisfies Country;

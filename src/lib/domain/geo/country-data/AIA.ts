@@ -47,5 +47,15 @@ export const AIA = {
 		"de-LI": "Anguilla",
 		"de-LU": "Anguilla"
 	},
-	"callingCode": "1264"
+	"callingCode": "1264",
+	"phoneMasks": [
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[2-9]"
+			]
+		}
+	]
 } satisfies Country;

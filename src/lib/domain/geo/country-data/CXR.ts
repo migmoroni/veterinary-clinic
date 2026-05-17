@@ -47,5 +47,37 @@ export const CXR = {
 		"de-LI": "Weihnachtsinsel",
 		"de-LU": "Weihnachtsinsel"
 	},
-	"callingCode": "61"
+	"callingCode": "61",
+	"phoneMasks": [
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6
+		},
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7
+		},
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10
+		},
+		{
+			"mask": "### ### ### ###",
+			"minLength": 12,
+			"maxLength": 12
+		}
+	]
 } satisfies Country;

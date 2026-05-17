@@ -47,5 +47,39 @@ export const COL = {
 		"de-LI": "Kolumbien",
 		"de-LU": "Kolumbien"
 	},
-	"callingCode": "57"
+	"callingCode": "57",
+	"phoneMasks": [
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"46"
+			]
+		},
+		{
+			"mask": "(###) #######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"6|90"
+			]
+		},
+		{
+			"mask": "### #######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"3[0-357]|91"
+			]
+		},
+		{
+			"mask": "#-###-#######",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"1"
+			]
+		}
+	]
 } satisfies Country;

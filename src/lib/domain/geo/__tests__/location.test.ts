@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { brazilCityOptions, countryCallingCode, countryCallingCodes, countryOptions, normalizeLocationKey, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '../location.js';
+import { brazilCityOptions, countryCallingCode, countryCallingCodes, countryOptions, countryPhoneFormat, countryPhoneFormats, normalizeLocationKey, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '../location.js';
 
 describe('offline location catalog', () => {
 	it('normalizes country codes from the offline catalog', () => {
@@ -31,6 +31,15 @@ describe('offline location catalog', () => {
 		expect(countryCallingCode('CYM')).toBe('1345');
 		expect(countryCallingCodes()).toEqual(expect.arrayContaining(['1', '55', '351', '1345']));
 		expect(countryCallingCode('BR')).toBeNull();
+	});
+
+	it('returns phone masks from the offline geo catalog', () => {
+		expect(countryPhoneFormat('BRA')?.phoneMasks).toEqual(expect.arrayContaining([expect.objectContaining({ mask: '(##) #####-####', maxLength: 11 })]));
+		expect(countryPhoneFormat('USA')?.phoneMasks).toEqual(expect.arrayContaining([expect.objectContaining({ mask: '(###) ###-####', maxLength: 10 })]));
+		expect(countryPhoneFormat('PRT')?.phoneMasks).toEqual(expect.arrayContaining([expect.objectContaining({ mask: '### ### ###', maxLength: 9 })]));
+		expect(countryPhoneFormat('CYM')?.phoneMasks).toEqual(expect.arrayContaining([expect.objectContaining({ mask: '###-####', maxLength: 7 })]));
+		expect(countryPhoneFormats()).toEqual(expect.arrayContaining([expect.objectContaining({ countryCode: 'BRA', callingCode: '55' })]));
+		expect(countryPhoneFormat('BR')).toBeNull();
 	});
 
 	it('normalizes state and city from the offline Brazilian catalog', () => {

@@ -47,5 +47,31 @@ export const AND = {
 		"de-LI": "Andorra",
 		"de-LU": "Andorra"
 	},
-	"callingCode": "376"
+	"callingCode": "376",
+	"phoneMasks": [
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"[135-9]"
+			]
+		},
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"1"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"6"
+			]
+		}
+	]
 } satisfies Country;

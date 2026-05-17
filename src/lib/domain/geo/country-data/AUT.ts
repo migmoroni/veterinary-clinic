@@ -47,5 +47,93 @@ export const AUT = {
 		"de-LI": "Österreich",
 		"de-LU": "Österreich"
 	},
-	"callingCode": "43"
+	"callingCode": "43",
+	"phoneMasks": [
+		{
+			"mask": "####",
+			"minLength": 4,
+			"maxLength": 4
+		},
+		{
+			"mask": "### ##",
+			"minLength": 5,
+			"maxLength": 5,
+			"leadingDigits": [
+				"517"
+			]
+		},
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6
+		},
+		{
+			"mask": "## #####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"5[079]"
+			]
+		},
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"5"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10
+		},
+		{
+			"mask": "### #### ####",
+			"minLength": 11,
+			"maxLength": 11
+		},
+		{
+			"mask": "### ### ### ###",
+			"minLength": 12,
+			"maxLength": 12
+		},
+		{
+			"mask": "# ############",
+			"minLength": 13,
+			"maxLength": 13,
+			"leadingDigits": [
+				"1(?:11|[2-9])"
+			]
+		},
+		{
+			"mask": "## #### #######",
+			"minLength": 13,
+			"maxLength": 13,
+			"leadingDigits": [
+				"5"
+			]
+		},
+		{
+			"mask": "### ##########",
+			"minLength": 13,
+			"maxLength": 13,
+			"leadingDigits": [
+				"(?:31|4)6|51|6(?:5[0-3579]|[6-9])|7(?:20|32|8)|[89]"
+			]
+		},
+		{
+			"mask": "#### #########",
+			"minLength": 13,
+			"maxLength": 13,
+			"leadingDigits": [
+				"[2-467]|5[2-6]"
+			]
+		}
+	]
 } satisfies Country;

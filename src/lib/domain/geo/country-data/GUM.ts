@@ -47,5 +47,15 @@ export const GUM = {
 		"de-LI": "Guam",
 		"de-LU": "Guam"
 	},
-	"callingCode": "1671"
+	"callingCode": "1671",
+	"phoneMasks": [
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[2-9]"
+			]
+		}
+	]
 } satisfies Country;

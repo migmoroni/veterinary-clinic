@@ -47,5 +47,23 @@ export const MEX = {
 		"de-LI": "Mexiko",
 		"de-LU": "Mexiko"
 	},
-	"callingCode": "52"
+	"callingCode": "52",
+	"phoneMasks": [
+		{
+			"mask": "## #### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"33|5[56]|81"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[2-9]"
+			]
+		}
+	]
 } satisfies Country;

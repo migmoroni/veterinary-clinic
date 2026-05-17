@@ -47,5 +47,31 @@ export const MKD = {
 		"de-LI": "Nordmazedonien",
 		"de-LU": "Nordmazedonien"
 	},
-	"callingCode": "389"
+	"callingCode": "389",
+	"phoneMasks": [
+		{
+			"mask": "# ### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"2|34[47]|4(?:[37]7|5[47]|64)"
+			]
+		},
+		{
+			"mask": "## ### ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[347]"
+			]
+		},
+		{
+			"mask": "### # ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[58]"
+			]
+		}
+	]
 } satisfies Country;

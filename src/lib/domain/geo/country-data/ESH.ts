@@ -47,5 +47,12 @@ export const ESH = {
 		"de-LI": "Westsahara",
 		"de-LU": "Westsahara"
 	},
-	"callingCode": "2125288"
+	"callingCode": "2125288",
+	"phoneMasks": [
+		{
+			"mask": "## ###",
+			"minLength": 5,
+			"maxLength": 5
+		}
+	]
 } satisfies Country;

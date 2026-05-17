@@ -47,5 +47,55 @@ export const SOM = {
 		"de-LI": "Somalia",
 		"de-LU": "Somalia"
 	},
-	"callingCode": "252"
+	"callingCode": "252",
+	"phoneMasks": [
+		{
+			"mask": "## ####",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"8[125]"
+			]
+		},
+		{
+			"mask": "######",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"[134]"
+			]
+		},
+		{
+			"mask": "# ######",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[15]|2[0-79]|3[0-46-8]|4[0-7]"
+			]
+		},
+		{
+			"mask": "# #######",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"(?:2|90)4|[67]"
+			]
+		},
+		{
+			"mask": "## #######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"1|28|6[0-35-9]|7[67]|9[2-9]"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[348]|64|79|90"
+			]
+		}
+	]
 } satisfies Country;

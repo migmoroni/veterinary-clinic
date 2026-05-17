@@ -47,5 +47,23 @@ export const GIN = {
 		"de-LI": "Guinea",
 		"de-LU": "Guinea"
 	},
-	"callingCode": "224"
+	"callingCode": "224",
+	"phoneMasks": [
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"3"
+			]
+		},
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[67]"
+			]
+		}
+	]
 } satisfies Country;

@@ -47,5 +47,31 @@ export const TON = {
 		"de-LI": "Tonga",
 		"de-LU": "Tonga"
 	},
-	"callingCode": "676"
+	"callingCode": "676",
+	"phoneMasks": [
+		{
+			"mask": "##-###",
+			"minLength": 5,
+			"maxLength": 5,
+			"leadingDigits": [
+				"[2-4]|50|6[09]|7[0-24-69]|8[05]"
+			]
+		},
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[5-9]"
+			]
+		},
+		{
+			"mask": "#### ###",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"0"
+			]
+		}
+	]
 } satisfies Country;

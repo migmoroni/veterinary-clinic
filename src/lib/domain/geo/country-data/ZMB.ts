@@ -47,5 +47,23 @@ export const ZMB = {
 		"de-LI": "Sambia",
 		"de-LU": "Sambia"
 	},
-	"callingCode": "260"
+	"callingCode": "260",
+	"phoneMasks": [
+		{
+			"mask": "## #######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[79]"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[28]"
+			]
+		}
+	]
 } satisfies Country;

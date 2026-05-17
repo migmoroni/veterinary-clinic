@@ -47,5 +47,15 @@ export const MLT = {
 		"de-LI": "Malta",
 		"de-LU": "Malta"
 	},
-	"callingCode": "356"
+	"callingCode": "356",
+	"phoneMasks": [
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[2357-9]"
+			]
+		}
+	]
 } satisfies Country;

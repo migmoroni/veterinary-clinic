@@ -47,5 +47,31 @@ export const IRQ = {
 		"de-LI": "Irak",
 		"de-LU": "Irak"
 	},
-	"callingCode": "964"
+	"callingCode": "964",
+	"phoneMasks": [
+		{
+			"mask": "# ### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"1"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[2-6]"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"7"
+			]
+		}
+	]
 } satisfies Country;

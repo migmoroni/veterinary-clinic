@@ -47,5 +47,36 @@ export const OMN = {
 		"de-LI": "Oman",
 		"de-LU": "Oman"
 	},
-	"callingCode": "968"
+	"callingCode": "968",
+	"phoneMasks": [
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7
+		},
+		{
+			"mask": "## ######",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"2"
+			]
+		},
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[179]"
+			]
+		},
+		{
+			"mask": "### ######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[58]"
+			]
+		}
+	]
 } satisfies Country;

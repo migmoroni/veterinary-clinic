@@ -47,5 +47,12 @@ export const FLK = {
 		"de-LI": "Falklandinseln",
 		"de-LU": "Falklandinseln"
 	},
-	"callingCode": "500"
+	"callingCode": "500",
+	"phoneMasks": [
+		{
+			"mask": "## ###",
+			"minLength": 5,
+			"maxLength": 5
+		}
+	]
 } satisfies Country;

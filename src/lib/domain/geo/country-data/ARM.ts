@@ -47,5 +47,39 @@ export const ARM = {
 		"de-LI": "Armenien",
 		"de-LU": "Armenien"
 	},
-	"callingCode": "374"
+	"callingCode": "374",
+	"phoneMasks": [
+		{
+			"mask": "## ######",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"1|47"
+			]
+		},
+		{
+			"mask": "## ######",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[3-9]"
+			]
+		},
+		{
+			"mask": "### ## ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[89]0"
+			]
+		},
+		{
+			"mask": "### #####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"2|3[12]"
+			]
+		}
+	]
 } satisfies Country;

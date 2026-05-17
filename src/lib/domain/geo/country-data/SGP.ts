@@ -47,5 +47,39 @@ export const SGP = {
 		"de-LI": "Singapur",
 		"de-LU": "Singapur"
 	},
-	"callingCode": "65"
+	"callingCode": "65",
+	"phoneMasks": [
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[369]|8(?:0[1-9]|[1-9])"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"8"
+			]
+		},
+		{
+			"mask": "#### ### ####",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"1"
+			]
+		},
+		{
+			"mask": "#### #### ###",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"7"
+			]
+		}
+	]
 } satisfies Country;

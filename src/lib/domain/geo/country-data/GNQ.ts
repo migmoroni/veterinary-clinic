@@ -47,5 +47,23 @@ export const GNQ = {
 		"de-LI": "Äquatorialguinea",
 		"de-LU": "Äquatorialguinea"
 	},
-	"callingCode": "240"
+	"callingCode": "240",
+	"phoneMasks": [
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[235]"
+			]
+		},
+		{
+			"mask": "### ######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[89]"
+			]
+		}
+	]
 } satisfies Country;

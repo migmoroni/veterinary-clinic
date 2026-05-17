@@ -47,5 +47,15 @@ export const REU = {
 		"de-LI": "Réunion",
 		"de-LU": "Réunion"
 	},
-	"callingCode": "262"
+	"callingCode": "262",
+	"phoneMasks": [
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[26-9]"
+			]
+		}
+	]
 } satisfies Country;

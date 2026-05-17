@@ -47,5 +47,15 @@ export const DJI = {
 		"de-LI": "Dschibuti",
 		"de-LU": "Dschibuti"
 	},
-	"callingCode": "253"
+	"callingCode": "253",
+	"phoneMasks": [
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[27]"
+			]
+		}
+	]
 } satisfies Country;

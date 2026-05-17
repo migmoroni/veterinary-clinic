@@ -47,5 +47,23 @@ export const GLP = {
 		"de-LI": "Guadeloupe",
 		"de-LU": "Guadeloupe"
 	},
-	"callingCode": "590"
+	"callingCode": "590",
+	"phoneMasks": [
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[5-79]"
+			]
+		},
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"8"
+			]
+		}
+	]
 } satisfies Country;

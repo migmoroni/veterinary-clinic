@@ -47,5 +47,17 @@ export const SJM = {
 		"de-LI": "Spitzbergen und Jan Mayen",
 		"de-LU": "Spitzbergen und Jan Mayen"
 	},
-	"callingCode": "4779"
+	"callingCode": "4779",
+	"phoneMasks": [
+		{
+			"mask": "###",
+			"minLength": 3,
+			"maxLength": 3
+		},
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6
+		}
+	]
 } satisfies Country;

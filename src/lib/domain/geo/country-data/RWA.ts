@@ -47,5 +47,31 @@ export const RWA = {
 		"de-LI": "Ruanda",
 		"de-LU": "Ruanda"
 	},
-	"callingCode": "250"
+	"callingCode": "250",
+	"phoneMasks": [
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"0"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"2"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[7-9]"
+			]
+		}
+	]
 } satisfies Country;

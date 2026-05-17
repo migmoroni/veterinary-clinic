@@ -47,5 +47,31 @@ export const SLV = {
 		"de-LI": "El Salvador",
 		"de-LU": "El Salvador"
 	},
-	"callingCode": "503"
+	"callingCode": "503",
+	"phoneMasks": [
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[89]"
+			]
+		},
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[267]"
+			]
+		},
+		{
+			"mask": "### #### ####",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"[89]"
+			]
+		}
+	]
 } satisfies Country;

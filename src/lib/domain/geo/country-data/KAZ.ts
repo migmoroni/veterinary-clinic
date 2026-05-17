@@ -47,5 +47,17 @@ export const KAZ = {
 		"de-LI": "Kasachstan",
 		"de-LU": "Kasachstan"
 	},
-	"callingCode": "7"
+	"callingCode": "7",
+	"phoneMasks": [
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10
+		},
+		{
+			"mask": "## ### ### ### ###",
+			"minLength": 14,
+			"maxLength": 14
+		}
+	]
 } satisfies Country;

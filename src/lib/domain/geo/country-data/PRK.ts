@@ -47,5 +47,31 @@ export const PRK = {
 		"de-LI": "Nordkorea",
 		"de-LU": "Nordkorea"
 	},
-	"callingCode": "850"
+	"callingCode": "850",
+	"phoneMasks": [
+		{
+			"mask": "# ### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[2-7]"
+			]
+		},
+		{
+			"mask": "## ### ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"8"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"1"
+			]
+		}
+	]
 } satisfies Country;

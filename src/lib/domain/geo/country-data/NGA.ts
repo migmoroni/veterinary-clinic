@@ -47,5 +47,65 @@ export const NGA = {
 		"de-LI": "Nigeria",
 		"de-LU": "Nigeria"
 	},
-	"callingCode": "234"
+	"callingCode": "234",
+	"phoneMasks": [
+		{
+			"mask": "## ### ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"3"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[7-9]"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"20[129]"
+			]
+		},
+		{
+			"mask": "#### ## ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"2"
+			]
+		},
+		{
+			"mask": "### #### ####",
+			"minLength": 11,
+			"maxLength": 11
+		},
+		{
+			"mask": "### #### #####",
+			"minLength": 12,
+			"maxLength": 12,
+			"leadingDigits": [
+				"[78]"
+			]
+		},
+		{
+			"mask": "# ### ### ### ###",
+			"minLength": 13,
+			"maxLength": 13
+		},
+		{
+			"mask": "### ##### ######",
+			"minLength": 14,
+			"maxLength": 14,
+			"leadingDigits": [
+				"[78]"
+			]
+		}
+	]
 } satisfies Country;

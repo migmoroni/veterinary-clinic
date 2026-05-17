@@ -47,5 +47,15 @@ export const MDG = {
 		"de-LI": "Madagaskar",
 		"de-LU": "Madagaskar"
 	},
-	"callingCode": "261"
+	"callingCode": "261",
+	"phoneMasks": [
+		{
+			"mask": "## ## ### ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[23]"
+			]
+		}
+	]
 } satisfies Country;

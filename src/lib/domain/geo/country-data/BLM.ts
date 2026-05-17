@@ -47,5 +47,12 @@ export const BLM = {
 		"de-LI": "St. Barthélemy",
 		"de-LU": "St. Barthélemy"
 	},
-	"callingCode": "590"
+	"callingCode": "590",
+	"phoneMasks": [
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9
+		}
+	]
 } satisfies Country;

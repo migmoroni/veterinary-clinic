@@ -47,5 +47,15 @@ export const LSO = {
 		"de-LI": "Lesotho",
 		"de-LU": "Lesotho"
 	},
-	"callingCode": "266"
+	"callingCode": "266",
+	"phoneMasks": [
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[2568]"
+			]
+		}
+	]
 } satisfies Country;

@@ -47,5 +47,53 @@ export const SRB = {
 		"de-LI": "Serbien",
 		"de-LU": "Serbien"
 	},
-	"callingCode": "381"
+	"callingCode": "381",
+	"phoneMasks": [
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6
+		},
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7
+		},
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10
+		},
+		{
+			"mask": "### #### ####",
+			"minLength": 11,
+			"maxLength": 11
+		},
+		{
+			"mask": "## ##########",
+			"minLength": 12,
+			"maxLength": 12,
+			"leadingDigits": [
+				"[1-36]"
+			]
+		},
+		{
+			"mask": "### #########",
+			"minLength": 12,
+			"maxLength": 12,
+			"leadingDigits": [
+				"(?:2[389]|39)0|[7-9]"
+			]
+		}
+	]
 } satisfies Country;

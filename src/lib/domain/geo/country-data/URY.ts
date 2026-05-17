@@ -47,5 +47,75 @@ export const URY = {
 		"de-LI": "Uruguay",
 		"de-LU": "Uruguay"
 	},
-	"callingCode": "598"
+	"callingCode": "598",
+	"phoneMasks": [
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6
+		},
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"0"
+			]
+		},
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[49]0|8"
+			]
+		},
+		{
+			"mask": "## ### ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"9"
+			]
+		},
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[124]"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"0"
+			]
+		},
+		{
+			"mask": "### #### ####",
+			"minLength": 11,
+			"maxLength": 11
+		},
+		{
+			"mask": "### ### ### ###",
+			"minLength": 12,
+			"maxLength": 12
+		},
+		{
+			"mask": "### ### ### ####",
+			"minLength": 13,
+			"maxLength": 13,
+			"leadingDigits": [
+				"0"
+			]
+		}
+	]
 } satisfies Country;

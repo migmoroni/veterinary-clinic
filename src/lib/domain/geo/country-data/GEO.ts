@@ -47,5 +47,39 @@ export const GEO = {
 		"de-LI": "Georgien",
 		"de-LU": "Georgien"
 	},
-	"callingCode": "995"
+	"callingCode": "995",
+	"phoneMasks": [
+		{
+			"mask": "## ### ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"32"
+			]
+		},
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[57]"
+			]
+		},
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[348]"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"70"
+			]
+		}
+	]
 } satisfies Country;

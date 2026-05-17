@@ -47,5 +47,23 @@ export const BTN = {
 		"de-LI": "Bhutan",
 		"de-LU": "Bhutan"
 	},
-	"callingCode": "975"
+	"callingCode": "975",
+	"phoneMasks": [
+		{
+			"mask": "# ### ###",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[2-68]|7[246]"
+			]
+		},
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"1[67]|7"
+			]
+		}
+	]
 } satisfies Country;

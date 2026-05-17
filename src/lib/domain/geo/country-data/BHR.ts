@@ -47,5 +47,15 @@ export const BHR = {
 		"de-LI": "Bahrain",
 		"de-LU": "Bahrain"
 	},
-	"callingCode": "973"
+	"callingCode": "973",
+	"phoneMasks": [
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[13679]|8[02-4679]"
+			]
+		}
+	]
 } satisfies Country;

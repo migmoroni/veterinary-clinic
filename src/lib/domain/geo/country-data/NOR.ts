@@ -47,5 +47,28 @@ export const NOR = {
 		"de-LI": "Norwegen",
 		"de-LU": "Norwegen"
 	},
-	"callingCode": "47"
+	"callingCode": "47",
+	"phoneMasks": [
+		{
+			"mask": "## ###",
+			"minLength": 5,
+			"maxLength": 5
+		},
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[2-79]"
+			]
+		},
+		{
+			"mask": "### ## ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"8"
+			]
+		}
+	]
 } satisfies Country;

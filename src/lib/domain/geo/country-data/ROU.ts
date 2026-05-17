@@ -47,5 +47,40 @@ export const ROU = {
 		"de-LI": "Rumänien",
 		"de-LU": "Rumänien"
 	},
-	"callingCode": "40"
+	"callingCode": "40",
+	"phoneMasks": [
+		{
+			"mask": "## ####",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"219|31"
+			]
+		},
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"2[3-6]",
+				"2[3-6]\\d9"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[23]1"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[236-9]"
+			]
+		}
+	]
 } satisfies Country;

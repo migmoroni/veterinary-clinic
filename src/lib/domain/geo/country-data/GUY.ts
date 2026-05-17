@@ -47,5 +47,15 @@ export const GUY = {
 		"de-LI": "Guyana",
 		"de-LU": "Guyana"
 	},
-	"callingCode": "592"
+	"callingCode": "592",
+	"phoneMasks": [
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[2-9]"
+			]
+		}
+	]
 } satisfies Country;

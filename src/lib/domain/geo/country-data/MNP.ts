@@ -47,5 +47,15 @@ export const MNP = {
 		"de-LI": "Nördliche Marianen",
 		"de-LU": "Nördliche Marianen"
 	},
-	"callingCode": "1670"
+	"callingCode": "1670",
+	"phoneMasks": [
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[2-9]"
+			]
+		}
+	]
 } satisfies Country;

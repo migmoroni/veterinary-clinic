@@ -47,5 +47,39 @@ export const PER = {
 		"de-LI": "Peru",
 		"de-LU": "Peru"
 	},
-	"callingCode": "51"
+	"callingCode": "51",
+	"phoneMasks": [
+		{
+			"mask": "# #######",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"1"
+			]
+		},
+		{
+			"mask": "## ######",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[4-8]"
+			]
+		},
+		{
+			"mask": "### #####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"80"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"9"
+			]
+		}
+	]
 } satisfies Country;

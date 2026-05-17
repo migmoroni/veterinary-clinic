@@ -47,5 +47,17 @@ export const KIR = {
 		"de-LI": "Kiribati",
 		"de-LU": "Kiribati"
 	},
-	"callingCode": "686"
+	"callingCode": "686",
+	"phoneMasks": [
+		{
+			"mask": "## ###",
+			"minLength": 5,
+			"maxLength": 5
+		},
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8
+		}
+	]
 } satisfies Country;

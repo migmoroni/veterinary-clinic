@@ -47,5 +47,36 @@ export const NPL = {
 		"de-LI": "Nepal",
 		"de-LU": "Nepal"
 	},
-	"callingCode": "977"
+	"callingCode": "977",
+	"phoneMasks": [
+		{
+			"mask": "#-#######",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"1[2-6]"
+			]
+		},
+		{
+			"mask": "##-######",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"1[01]|[2-8]|9(?:[1-59]|[67][2-6])"
+			]
+		},
+		{
+			"mask": "###-#######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"9"
+			]
+		},
+		{
+			"mask": "### #### ####",
+			"minLength": 11,
+			"maxLength": 11
+		}
+	]
 } satisfies Country;

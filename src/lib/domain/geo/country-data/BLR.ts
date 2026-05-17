@@ -47,5 +47,71 @@ export const BLR = {
 		"de-LI": "Belarus",
 		"de-LU": "Belarus"
 	},
-	"callingCode": "375"
+	"callingCode": "375",
+	"phoneMasks": [
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"800"
+			]
+		},
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7
+		},
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8
+		},
+		{
+			"mask": "## ###-##-##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[1-4]"
+			]
+		},
+		{
+			"mask": "### ## ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"800"
+			]
+		},
+		{
+			"mask": "### ##-##-##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"1(?:[56]|7[467])|2[1-3]"
+			]
+		},
+		{
+			"mask": "#### ##-###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"1(?:5[169]|6[3-5]|7[179])|2(?:1[35]|2[34]|3[3-5])",
+				"1(?:5[169]|6(?:3[1-3]|4|5[125])|7(?:1[3-9]|7[0-24-6]|9[2-7]))|2(?:1[35]|2[34]|3[3-5])"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10
+		},
+		{
+			"mask": "### #### ####",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"[89]"
+			]
+		}
+	]
 } satisfies Country;

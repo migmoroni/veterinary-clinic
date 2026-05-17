@@ -47,5 +47,23 @@ export const CMR = {
 		"de-LI": "Kamerun",
 		"de-LU": "Kamerun"
 	},
-	"callingCode": "237"
+	"callingCode": "237",
+	"phoneMasks": [
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"88"
+			]
+		},
+		{
+			"mask": "# ## ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[26]|88"
+			]
+		}
+	]
 } satisfies Country;

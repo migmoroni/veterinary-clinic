@@ -47,5 +47,31 @@ export const LBR = {
 		"de-LI": "Liberia",
 		"de-LU": "Liberia"
 	},
-	"callingCode": "231"
+	"callingCode": "231",
+	"phoneMasks": [
+		{
+			"mask": "# ### ###",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"4[67]|[56]"
+			]
+		},
+		{
+			"mask": "## ### ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"2"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[2-578]"
+			]
+		}
+	]
 } satisfies Country;

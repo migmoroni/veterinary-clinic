@@ -47,5 +47,41 @@ export const EST = {
 		"de-LI": "Estland",
 		"de-LU": "Estland"
 	},
-	"callingCode": "372"
+	"callingCode": "372",
+	"phoneMasks": [
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[369]|4[3-8]|5(?:[0-2]|5[0-478]|6[45])|7[1-9]|88",
+				"[369]|4[3-8]|5(?:[02]|1(?:[0-8]|95)|5[0-478]|6(?:4[0-4]|5[1-589]))|7[1-9]|88"
+			]
+		},
+		{
+			"mask": "## ## ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"7"
+			]
+		},
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[45]|8(?:00|[1-49])",
+				"[45]|8(?:00[1-9]|[1-49])"
+			]
+		},
+		{
+			"mask": "#### ### ###",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"8"
+			]
+		}
+	]
 } satisfies Country;

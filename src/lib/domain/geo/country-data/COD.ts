@@ -47,5 +47,55 @@ export const COD = {
 		"de-LI": "Kongo-Kinshasa",
 		"de-LU": "Kongo-Kinshasa"
 	},
-	"callingCode": "243"
+	"callingCode": "243",
+	"phoneMasks": [
+		{
+			"mask": "## ## ###",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"88"
+			]
+		},
+		{
+			"mask": "## #####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[1-6]"
+			]
+		},
+		{
+			"mask": "## ## ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"2"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"1"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[89]"
+			]
+		},
+		{
+			"mask": "## ## ### ###",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"5"
+			]
+		}
+	]
 } satisfies Country;

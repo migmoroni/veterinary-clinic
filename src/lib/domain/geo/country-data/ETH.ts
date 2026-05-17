@@ -47,5 +47,15 @@ export const ETH = {
 		"de-LI": "Äthiopien",
 		"de-LU": "Äthiopien"
 	},
-	"callingCode": "251"
+	"callingCode": "251",
+	"phoneMasks": [
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[1-579]"
+			]
+		}
+	]
 } satisfies Country;

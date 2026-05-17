@@ -47,5 +47,15 @@ export const CAF = {
 		"de-LI": "Zentralafrikanische Republik",
 		"de-LU": "Zentralafrikanische Republik"
 	},
-	"callingCode": "236"
+	"callingCode": "236",
+	"phoneMasks": [
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[278]"
+			]
+		}
+	]
 } satisfies Country;

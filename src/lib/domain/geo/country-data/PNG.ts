@@ -47,5 +47,23 @@ export const PNG = {
 		"de-LI": "Papua-Neuguinea",
 		"de-LU": "Papua-Neuguinea"
 	},
-	"callingCode": "675"
+	"callingCode": "675",
+	"phoneMasks": [
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"18|[2-69]|85"
+			]
+		},
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[78]"
+			]
+		}
+	]
 } satisfies Country;

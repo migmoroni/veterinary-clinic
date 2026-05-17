@@ -47,5 +47,23 @@ export const LBN = {
 		"de-LI": "Libanon",
 		"de-LU": "Libanon"
 	},
-	"callingCode": "961"
+	"callingCode": "961",
+	"phoneMasks": [
+		{
+			"mask": "# ### ###",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[13-69]|7(?:[2-57]|62|8[0-7]|9[04-9])|8[02-9]"
+			]
+		},
+		{
+			"mask": "## ### ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[27-9]"
+			]
+		}
+	]
 } satisfies Country;

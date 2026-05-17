@@ -47,5 +47,40 @@ export const LIE = {
 		"de-LI": "Liechtenstein",
 		"de-LU": "Liechtenstein"
 	},
-	"callingCode": "423"
+	"callingCode": "423",
+	"phoneMasks": [
+		{
+			"mask": "### ## ##",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[2379]|8(?:0[09]|7)",
+				"[2379]|8(?:0(?:02|9)|7)"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"69"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"8"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"6"
+			]
+		}
+	]
 } satisfies Country;

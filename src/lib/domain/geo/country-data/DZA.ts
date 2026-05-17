@@ -47,5 +47,31 @@ export const DZA = {
 		"de-LI": "Algerien",
 		"de-LU": "Algerien"
 	},
-	"callingCode": "213"
+	"callingCode": "213",
+	"phoneMasks": [
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[1-4]"
+			]
+		},
+		{
+			"mask": "## ### ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"9"
+			]
+		},
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[5-8]"
+			]
+		}
+	]
 } satisfies Country;

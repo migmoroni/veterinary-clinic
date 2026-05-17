@@ -47,5 +47,77 @@ export const PAK = {
 		"de-LI": "Pakistan",
 		"de-LU": "Pakistan"
 	},
-	"callingCode": "92"
+	"callingCode": "92",
+	"phoneMasks": [
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8
+		},
+		{
+			"mask": "#### #####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"1"
+			]
+		},
+		{
+			"mask": "## ########",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"(?:2[125]|4[0-246-9]|5[1-35-7]|6[1-8]|7[14]|8[16]|91)[2-9]"
+			]
+		},
+		{
+			"mask": "### #######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"2(?:3[2358]|4[2-4]|9[2-8])|45[3479]|54[2-467]|60[468]|72[236]|8(?:2[2-689]|3[23578]|4[3478]|5[2356])|9(?:2[2-8]|3[27-9]|4[2-6]|6[3569]|9[25-8])",
+				"9(?:2[3-8]|98)|(?:2(?:3[2358]|4[2-4]|9[2-8])|45[3479]|54[2-467]|60[468]|72[236]|8(?:2[2-689]|3[23578]|4[3478]|5[2356])|9(?:22|3[27-9]|4[2-6]|6[3569]|9[25-7]))[2-9]"
+			]
+		},
+		{
+			"mask": "### #######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"3"
+			]
+		},
+		{
+			"mask": "##### #####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"58"
+			]
+		},
+		{
+			"mask": "## ### ### ###",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"2[125]|4[0-246-9]|5[1-35-7]|6[1-8]|7[14]|8[16]|91"
+			]
+		},
+		{
+			"mask": "### ### ### ###",
+			"minLength": 12,
+			"maxLength": 12,
+			"leadingDigits": [
+				"[24-9]"
+			]
+		},
+		{
+			"mask": "### ### #######",
+			"minLength": 13,
+			"maxLength": 13,
+			"leadingDigits": [
+				"[89]0"
+			]
+		}
+	]
 } satisfies Country;

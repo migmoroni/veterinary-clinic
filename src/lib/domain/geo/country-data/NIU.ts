@@ -47,5 +47,20 @@ export const NIU = {
 		"de-LI": "Niue",
 		"de-LU": "Niue"
 	},
-	"callingCode": "683"
+	"callingCode": "683",
+	"phoneMasks": [
+		{
+			"mask": "####",
+			"minLength": 4,
+			"maxLength": 4
+		},
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"8"
+			]
+		}
+	]
 } satisfies Country;

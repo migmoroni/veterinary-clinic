@@ -47,5 +47,23 @@ export const FJI = {
 		"de-LI": "Fidschi",
 		"de-LU": "Fidschi"
 	},
-	"callingCode": "679"
+	"callingCode": "679",
+	"phoneMasks": [
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[235-9]|45"
+			]
+		},
+		{
+			"mask": "#### ### ####",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"0"
+			]
+		}
+	]
 } satisfies Country;

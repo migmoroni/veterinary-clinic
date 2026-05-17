@@ -47,5 +47,15 @@ export const DNK = {
 		"de-LI": "Dänemark",
 		"de-LU": "Dänemark"
 	},
-	"callingCode": "45"
+	"callingCode": "45",
+	"phoneMasks": [
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[2-9]"
+			]
+		}
+	]
 } satisfies Country;

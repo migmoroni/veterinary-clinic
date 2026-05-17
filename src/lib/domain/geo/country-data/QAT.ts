@@ -47,5 +47,33 @@ export const QAT = {
 		"de-LI": "Katar",
 		"de-LU": "Katar"
 	},
-	"callingCode": "974"
+	"callingCode": "974",
+	"phoneMasks": [
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"2[16]|8"
+			]
+		},
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[3-7]"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9
+		},
+		{
+			"mask": "### #### ####",
+			"minLength": 11,
+			"maxLength": 11
+		}
+	]
 } satisfies Country;

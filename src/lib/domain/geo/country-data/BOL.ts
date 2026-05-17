@@ -48,5 +48,31 @@ export const BOL = {
 		"de-LI": "Bolivien",
 		"de-LU": "Bolivien"
 	},
-	"callingCode": "591"
+	"callingCode": "591",
+	"phoneMasks": [
+		{
+			"mask": "# #######",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[235]|4[46]"
+			]
+		},
+		{
+			"mask": "########",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[67]"
+			]
+		},
+		{
+			"mask": "### ## ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"8"
+			]
+		}
+	]
 } satisfies Country;

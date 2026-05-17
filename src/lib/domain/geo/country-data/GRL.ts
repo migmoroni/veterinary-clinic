@@ -47,5 +47,15 @@ export const GRL = {
 		"de-LI": "Grönland",
 		"de-LU": "Grönland"
 	},
-	"callingCode": "299"
+	"callingCode": "299",
+	"phoneMasks": [
+		{
+			"mask": "## ## ##",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"19|[2-9]"
+			]
+		}
+	]
 } satisfies Country;

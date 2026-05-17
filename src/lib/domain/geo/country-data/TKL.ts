@@ -47,5 +47,27 @@ export const TKL = {
 		"de-LI": "Tokelau",
 		"de-LU": "Tokelau"
 	},
-	"callingCode": "690"
+	"callingCode": "690",
+	"phoneMasks": [
+		{
+			"mask": "####",
+			"minLength": 4,
+			"maxLength": 4
+		},
+		{
+			"mask": "## ###",
+			"minLength": 5,
+			"maxLength": 5
+		},
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6
+		},
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7
+		}
+	]
 } satisfies Country;

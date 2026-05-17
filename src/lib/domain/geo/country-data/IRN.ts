@@ -47,5 +47,49 @@ export const IRN = {
 		"de-LI": "Iran",
 		"de-LU": "Iran"
 	},
-	"callingCode": "98"
+	"callingCode": "98",
+	"phoneMasks": [
+		{
+			"mask": "####",
+			"minLength": 4,
+			"maxLength": 4
+		},
+		{
+			"mask": "#####",
+			"minLength": 5,
+			"maxLength": 5,
+			"leadingDigits": [
+				"96"
+			]
+		},
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6
+		},
+		{
+			"mask": "## #####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"(?:1[137]|2[13-68]|3[1458]|4[145]|5[1468]|6[16]|7[1467]|8[13467])[12689]"
+			]
+		},
+		{
+			"mask": "## #### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[1-8]"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"9"
+			]
+		}
+	]
 } satisfies Country;

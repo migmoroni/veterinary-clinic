@@ -47,5 +47,15 @@ export const SYC = {
 		"de-LI": "Seychellen",
 		"de-LU": "Seychellen"
 	},
-	"callingCode": "248"
+	"callingCode": "248",
+	"phoneMasks": [
+		{
+			"mask": "# ### ###",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[246]|9[57]"
+			]
+		}
+	]
 } satisfies Country;

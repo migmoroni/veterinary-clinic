@@ -47,5 +47,36 @@ export const THA = {
 		"de-LI": "Thailand",
 		"de-LU": "Thailand"
 	},
-	"callingCode": "66"
+	"callingCode": "66",
+	"phoneMasks": [
+		{
+			"mask": "# ### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"2"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[13-9]"
+			]
+		},
+		{
+			"mask": "#### ### ###",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"1"
+			]
+		},
+		{
+			"mask": "# ### ### ### ###",
+			"minLength": 13,
+			"maxLength": 13
+		}
+	]
 } satisfies Country;

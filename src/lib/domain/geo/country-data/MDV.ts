@@ -47,5 +47,23 @@ export const MDV = {
 		"de-LI": "Malediven",
 		"de-LU": "Malediven"
 	},
-	"callingCode": "960"
+	"callingCode": "960",
+	"phoneMasks": [
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[34679]"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[89]"
+			]
+		}
+	]
 } satisfies Country;

@@ -48,5 +48,81 @@ export const PRY = {
 		"de-LI": "Paraguay",
 		"de-LU": "Paraguay"
 	},
-	"callingCode": "595"
+	"callingCode": "595",
+	"phoneMasks": [
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6
+		},
+		{
+			"mask": "## #####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[26]1|3[289]|4[1246-8]|7[1-3]|8[1-36]"
+			]
+		},
+		{
+			"mask": "### #####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"2[279]|3[13-5]|4[359]|5|6(?:[34]|7[1-46-8])|7[46-8]|85"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"2[14-68]|3[26-9]|4[1246-8]|6(?:1|75)|7[1-35]|8[1-36]"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"87"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[2-8]"
+			]
+		},
+		{
+			"mask": "### ######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[2-9]0"
+			]
+		},
+		{
+			"mask": "### ######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"9(?:[5-79]|8[1-7])"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10
+		},
+		{
+			"mask": "#### ### ####",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"9"
+			]
+		}
+	]
 } satisfies Country;

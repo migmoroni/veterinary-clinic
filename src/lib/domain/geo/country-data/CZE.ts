@@ -47,5 +47,39 @@ export const CZE = {
 		"de-LI": "Tschechien",
 		"de-LU": "Tschechien"
 	},
-	"callingCode": "420"
+	"callingCode": "420",
+	"phoneMasks": [
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[2-8]|9[015-7]"
+			]
+		},
+		{
+			"mask": "## ### ### ##",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"96"
+			]
+		},
+		{
+			"mask": "## ### ### ###",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"9"
+			]
+		},
+		{
+			"mask": "### ### ### ###",
+			"minLength": 12,
+			"maxLength": 12,
+			"leadingDigits": [
+				"9"
+			]
+		}
+	]
 } satisfies Country;

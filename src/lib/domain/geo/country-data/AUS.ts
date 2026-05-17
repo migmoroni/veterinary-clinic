@@ -47,5 +47,67 @@ export const AUS = {
 		"de-LI": "Australien",
 		"de-LU": "Australien"
 	},
-	"callingCode": "61"
+	"callingCode": "61",
+	"phoneMasks": [
+		{
+			"mask": "## ###",
+			"minLength": 5,
+			"maxLength": 5
+		},
+		{
+			"mask": "## ####",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"16"
+			]
+		},
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7
+		},
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8
+		},
+		{
+			"mask": "# #### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[2378]"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"16"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"14|4"
+			]
+		},
+		{
+			"mask": "#### ### ###",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"1(?:30|[89])"
+			]
+		},
+		{
+			"mask": "### ### ### ###",
+			"minLength": 12,
+			"maxLength": 12
+		}
+	]
 } satisfies Country;

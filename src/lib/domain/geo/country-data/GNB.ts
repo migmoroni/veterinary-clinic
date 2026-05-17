@@ -47,5 +47,23 @@ export const GNB = {
 		"de-LI": "Guinea-Bissau",
 		"de-LU": "Guinea-Bissau"
 	},
-	"callingCode": "245"
+	"callingCode": "245",
+	"phoneMasks": [
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"40"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[49]"
+			]
+		}
+	]
 } satisfies Country;

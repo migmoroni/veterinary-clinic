@@ -47,5 +47,80 @@ export const MMR = {
 		"de-LI": "Myanmar",
 		"de-LU": "Myanmar"
 	},
-	"callingCode": "95"
+	"callingCode": "95",
+	"phoneMasks": [
+		{
+			"mask": "# ## ###",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"16|2"
+			]
+		},
+		{
+			"mask": "## ## ###",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"4(?:[2-46]|5[3-5])|5|6(?:[1-689]|7[235-7])|7(?:[0-4]|5[2-7])|8[1-5]|(?:60|86)[23]"
+			]
+		},
+		{
+			"mask": "# ### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[12]|452|678|86",
+				"[12]|452|6788|86"
+			]
+		},
+		{
+			"mask": "# #### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"2"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[4-7]|8[1-35]"
+			]
+		},
+		{
+			"mask": "# ### ### ###",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"92"
+			]
+		},
+		{
+			"mask": "# ### ######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"9(?:2[0-4]|[35-9]|4[137-9])"
+			]
+		},
+		{
+			"mask": "# ##### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"9"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"8"
+			]
+		}
+	]
 } satisfies Country;

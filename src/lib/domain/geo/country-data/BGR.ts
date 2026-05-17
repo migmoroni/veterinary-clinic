@@ -47,5 +47,76 @@ export const BGR = {
 		"de-LI": "Bulgarien",
 		"de-LU": "Bulgarien"
 	},
-	"callingCode": "359"
+	"callingCode": "359",
+	"phoneMasks": [
+		{
+			"mask": "# # ## ##",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"2"
+			]
+		},
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"43[1-6]|70[1-9]"
+			]
+		},
+		{
+			"mask": "# ### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"2"
+			]
+		},
+		{
+			"mask": "## ### ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[356]|4[124-7]|7[1-9]|8[1-6]|9[1-7]"
+			]
+		},
+		{
+			"mask": "### ## ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"(?:70|8)0"
+			]
+		},
+		{
+			"mask": "### ### ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"43[1-7]|7"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[48]|9[08]"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"9"
+			]
+		},
+		{
+			"mask": "### ### ### ###",
+			"minLength": 12,
+			"maxLength": 12
+		}
+	]
 } satisfies Country;

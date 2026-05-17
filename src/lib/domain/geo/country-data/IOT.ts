@@ -47,5 +47,15 @@ export const IOT = {
 		"de-LI": "Britisches Territorium im Indischen Ozean",
 		"de-LU": "Britisches Territorium im Indischen Ozean"
 	},
-	"callingCode": "246"
+	"callingCode": "246",
+	"phoneMasks": [
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"3"
+			]
+		}
+	]
 } satisfies Country;

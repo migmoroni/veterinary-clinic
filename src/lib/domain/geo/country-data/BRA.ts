@@ -47,5 +47,45 @@ export const BRA = {
 		"de-LI": "Brasilien",
 		"de-LU": "Brasilien"
 	},
-	"callingCode": "55"
+	"callingCode": "55",
+	"phoneMasks": [
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"300|4(?:0[02]|37)",
+				"4(?:02|37)0|[34]00"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9
+		},
+		{
+			"mask": "(##) ####-####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"(?:[14689][1-9]|2[12478]|3[1-578]|5[13-5]|7[13-579])[2-57]"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"(?:[358]|90)0"
+			]
+		},
+		{
+			"mask": "(##) #####-####",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"[16][1-9]|[2-57-9]"
+			]
+		}
+	]
 } satisfies Country;

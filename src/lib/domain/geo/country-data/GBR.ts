@@ -47,5 +47,81 @@ export const GBR = {
 		"de-LI": "Vereinigtes Königreich",
 		"de-LU": "Vereinigtes Königreich"
 	},
-	"callingCode": "44"
+	"callingCode": "44",
+	"phoneMasks": [
+		{
+			"mask": "### ## ##",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"845",
+				"8454",
+				"84546",
+				"845464"
+			]
+		},
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"800",
+				"8001",
+				"80011",
+				"800111",
+				"8001111"
+			]
+		},
+		{
+			"mask": "### ######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"800"
+			]
+		},
+		{
+			"mask": "## #### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[25]|7(?:0|6[02-9])",
+				"[25]|7(?:0|6(?:[03-9]|2[356]))"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[1389]"
+			]
+		},
+		{
+			"mask": "#### ######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"1(?:[2-69][02-9]|[78])"
+			]
+		},
+		{
+			"mask": "#### ######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"7"
+			]
+		},
+		{
+			"mask": "##### #####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"1(?:38|5[23]|69|76|94)",
+				"1(?:(?:38|69)7|5(?:24|39)|768|946)",
+				"1(?:3873|5(?:242|39[4-6])|(?:697|768)[347]|9467)"
+			]
+		}
+	]
 } satisfies Country;

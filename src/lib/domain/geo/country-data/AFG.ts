@@ -47,5 +47,15 @@ export const AFG = {
 		"de-LI": "Afghanistan",
 		"de-LU": "Afghanistan"
 	},
-	"callingCode": "93"
+	"callingCode": "93",
+	"phoneMasks": [
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[2-7]"
+			]
+		}
+	]
 } satisfies Country;

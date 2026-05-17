@@ -47,5 +47,12 @@ export const JEY = {
 		"de-LI": "Jersey",
 		"de-LU": "Jersey"
 	},
-	"callingCode": "44"
+	"callingCode": "44",
+	"phoneMasks": [
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10
+		}
+	]
 } satisfies Country;

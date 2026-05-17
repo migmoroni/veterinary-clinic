@@ -47,5 +47,20 @@ export const HND = {
 		"de-LI": "Honduras",
 		"de-LU": "Honduras"
 	},
-	"callingCode": "504"
+	"callingCode": "504",
+	"phoneMasks": [
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[237-9]"
+			]
+		},
+		{
+			"mask": "### #### ####",
+			"minLength": 11,
+			"maxLength": 11
+		}
+	]
 } satisfies Country;

@@ -47,5 +47,15 @@ export const NRU = {
 		"de-LI": "Nauru",
 		"de-LU": "Nauru"
 	},
-	"callingCode": "674"
+	"callingCode": "674",
+	"phoneMasks": [
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[4-68]"
+			]
+		}
+	]
 } satisfies Country;

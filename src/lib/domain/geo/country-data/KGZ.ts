@@ -47,5 +47,31 @@ export const KGZ = {
 		"de-LI": "Kirgisistan",
 		"de-LU": "Kirgisistan"
 	},
-	"callingCode": "996"
+	"callingCode": "996",
+	"phoneMasks": [
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[235-79]|88"
+			]
+		},
+		{
+			"mask": "#### #####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"3(?:1[346]|[24-79])"
+			]
+		},
+		{
+			"mask": "### ### # ###",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"8"
+			]
+		}
+	]
 } satisfies Country;

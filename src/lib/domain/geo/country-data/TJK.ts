@@ -47,5 +47,40 @@ export const TJK = {
 		"de-LI": "Tadschikistan",
 		"de-LU": "Tadschikistan"
 	},
-	"callingCode": "992"
+	"callingCode": "992",
+	"phoneMasks": [
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[0-57-9]"
+			]
+		},
+		{
+			"mask": "### ## ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"44[02-479]|[34]7"
+			]
+		},
+		{
+			"mask": "#### # ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"3(?:[1245]|3[12])"
+			]
+		},
+		{
+			"mask": "###### # ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"331",
+				"3317"
+			]
+		}
+	]
 } satisfies Country;

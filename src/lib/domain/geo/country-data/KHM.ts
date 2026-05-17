@@ -47,5 +47,28 @@ export const KHM = {
 		"de-LI": "Kambodscha",
 		"de-LU": "Kambodscha"
 	},
-	"callingCode": "855"
+	"callingCode": "855",
+	"phoneMasks": [
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[1-9]"
+			]
+		},
+		{
+			"mask": "#### ### ###",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"1"
+			]
+		}
+	]
 } satisfies Country;

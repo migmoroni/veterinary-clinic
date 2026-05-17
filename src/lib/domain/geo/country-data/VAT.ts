@@ -47,5 +47,42 @@ export const VAT = {
 		"de-LI": "Vatikanstadt",
 		"de-LU": "Vatikanstadt"
 	},
-	"callingCode": "3906698"
+	"callingCode": "3906698",
+	"phoneMasks": [
+		{
+			"mask": "#",
+			"minLength": 1,
+			"maxLength": 1
+		},
+		{
+			"mask": "##",
+			"minLength": 2,
+			"maxLength": 2
+		},
+		{
+			"mask": "###",
+			"minLength": 3,
+			"maxLength": 3
+		},
+		{
+			"mask": "####",
+			"minLength": 4,
+			"maxLength": 4
+		},
+		{
+			"mask": "## ###",
+			"minLength": 5,
+			"maxLength": 5
+		},
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6
+		},
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7
+		}
+	]
 } satisfies Country;

@@ -47,5 +47,44 @@ export const GRC = {
 		"de-LI": "Griechenland",
 		"de-LU": "Griechenland"
 	},
-	"callingCode": "30"
+	"callingCode": "30",
+	"phoneMasks": [
+		{
+			"mask": "## #### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"21|7"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[2689]"
+			]
+		},
+		{
+			"mask": "#### ######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"2(?:2|3[2-57-9]|4[2-469]|5[2-59]|6[2-9]|7[2-69]|8[2-49])|5"
+			]
+		},
+		{
+			"mask": "### #### ####",
+			"minLength": 11,
+			"maxLength": 11
+		},
+		{
+			"mask": "### #### #####",
+			"minLength": 12,
+			"maxLength": 12,
+			"leadingDigits": [
+				"8"
+			]
+		}
+	]
 } satisfies Country;

@@ -47,5 +47,23 @@ export const GTM = {
 		"de-LI": "Guatemala",
 		"de-LU": "Guatemala"
 	},
-	"callingCode": "502"
+	"callingCode": "502",
+	"phoneMasks": [
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[2-8]"
+			]
+		},
+		{
+			"mask": "#### ### ####",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"1"
+			]
+		}
+	]
 } satisfies Country;

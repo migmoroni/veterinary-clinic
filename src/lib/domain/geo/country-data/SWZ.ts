@@ -47,5 +47,23 @@ export const SWZ = {
 		"de-LI": "Eswatini",
 		"de-LU": "Eswatini"
 	},
-	"callingCode": "268"
+	"callingCode": "268",
+	"phoneMasks": [
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[0237]"
+			]
+		},
+		{
+			"mask": "##### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"9"
+			]
+		}
+	]
 } satisfies Country;

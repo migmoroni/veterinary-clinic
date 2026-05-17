@@ -47,5 +47,31 @@ export const MCO = {
 		"de-LI": "Monaco",
 		"de-LU": "Monaco"
 	},
-	"callingCode": "377"
+	"callingCode": "377",
+	"phoneMasks": [
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[389]"
+			]
+		},
+		{
+			"mask": "## ### ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"4"
+			]
+		},
+		{
+			"mask": "# ## ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"6"
+			]
+		}
+	]
 } satisfies Country;

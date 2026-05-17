@@ -47,5 +47,12 @@ export const MAF = {
 		"de-LI": "St. Martin",
 		"de-LU": "St. Martin"
 	},
-	"callingCode": "590"
+	"callingCode": "590",
+	"phoneMasks": [
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9
+		}
+	]
 } satisfies Country;

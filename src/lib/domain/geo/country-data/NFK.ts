@@ -47,5 +47,23 @@ export const NFK = {
 		"de-LI": "Norfolkinsel",
 		"de-LU": "Norfolkinsel"
 	},
-	"callingCode": "672"
+	"callingCode": "672",
+	"phoneMasks": [
+		{
+			"mask": "# #####",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"[13]"
+			]
+		},
+		{
+			"mask": "## ####",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"1[0-3]"
+			]
+		}
+	]
 } satisfies Country;

@@ -47,5 +47,23 @@ export const MTQ = {
 		"de-LI": "Martinique",
 		"de-LU": "Martinique"
 	},
-	"callingCode": "596"
+	"callingCode": "596",
+	"phoneMasks": [
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[5-79]|8(?:0[6-9]|[36])"
+			]
+		},
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"8"
+			]
+		}
+	]
 } satisfies Country;

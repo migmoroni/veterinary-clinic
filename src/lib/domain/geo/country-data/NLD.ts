@@ -47,5 +47,75 @@ export const NLD = {
 		"de-LI": "Niederlande",
 		"de-LU": "Niederlande"
 	},
-	"callingCode": "31"
+	"callingCode": "31",
+	"phoneMasks": [
+		{
+			"mask": "## ###",
+			"minLength": 5,
+			"maxLength": 5
+		},
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6
+		},
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7
+		},
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8
+		},
+		{
+			"mask": "# ########",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"6"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[1-578]|91"
+			]
+		},
+		{
+			"mask": "## #######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"66"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"1[16-8]|2[259]|3[124]|4[17-9]|5[124679]"
+			]
+		},
+		{
+			"mask": "### #######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[89]0"
+			]
+		},
+		{
+			"mask": "### ### #####",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"9"
+			]
+		}
+	]
 } satisfies Country;

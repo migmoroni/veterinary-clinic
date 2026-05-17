@@ -47,5 +47,31 @@ export const LAO = {
 		"de-LI": "Laos",
 		"de-LU": "Laos"
 	},
-	"callingCode": "856"
+	"callingCode": "856",
+	"phoneMasks": [
+		{
+			"mask": "## ### ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"2[13]|3[14]|[4-8]"
+			]
+		},
+		{
+			"mask": "## ## ## ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"30[0135-9]"
+			]
+		},
+		{
+			"mask": "## ## ### ###",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[23]"
+			]
+		}
+	]
 } satisfies Country;

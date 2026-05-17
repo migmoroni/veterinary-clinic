@@ -47,5 +47,15 @@ export const CYM = {
 		"de-LI": "Kaimaninseln",
 		"de-LU": "Kaimaninseln"
 	},
-	"callingCode": "1345"
+	"callingCode": "1345",
+	"phoneMasks": [
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[2-9]"
+			]
+		}
+	]
 } satisfies Country;

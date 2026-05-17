@@ -47,5 +47,15 @@ export const LVA = {
 		"de-LI": "Lettland",
 		"de-LU": "Lettland"
 	},
-	"callingCode": "371"
+	"callingCode": "371",
+	"phoneMasks": [
+		{
+			"mask": "## ### ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[269]|8[01]"
+			]
+		}
+	]
 } satisfies Country;

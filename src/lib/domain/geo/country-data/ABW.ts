@@ -47,5 +47,15 @@ export const ABW = {
 		"de-LI": "Aruba",
 		"de-LU": "Aruba"
 	},
-	"callingCode": "297"
+	"callingCode": "297",
+	"phoneMasks": [
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[25-9]"
+			]
+		}
+	]
 } satisfies Country;

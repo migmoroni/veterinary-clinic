@@ -47,5 +47,72 @@ export const CHL = {
 		"de-LI": "Chile",
 		"de-LU": "Chile"
 	},
-	"callingCode": "56"
+	"callingCode": "56",
+	"phoneMasks": [
+		{
+			"mask": "(#) #### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"2[1-36]"
+			]
+		},
+		{
+			"mask": "(##) ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"3[2-5]|[47]|5[1-3578]|6[13-57]|8(?:0[1-9]|[1-9])"
+			]
+		},
+		{
+			"mask": "(#####) ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"219",
+				"2196"
+			]
+		},
+		{
+			"mask": "# #### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"9[2-9]"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"44"
+			]
+		},
+		{
+			"mask": "### ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"60|8"
+			]
+		},
+		{
+			"mask": "### ### ## ###",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"60"
+			]
+		},
+		{
+			"mask": "#### ### ####",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"1"
+			]
+		}
+	]
 } satisfies Country;

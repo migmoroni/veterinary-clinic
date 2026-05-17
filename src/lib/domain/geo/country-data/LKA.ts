@@ -47,5 +47,23 @@ export const LKA = {
 		"de-LI": "Sri Lanka",
 		"de-LU": "Sri Lanka"
 	},
-	"callingCode": "94"
+	"callingCode": "94",
+	"phoneMasks": [
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"7"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[1-689]"
+			]
+		}
+	]
 } satisfies Country;

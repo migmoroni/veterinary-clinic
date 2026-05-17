@@ -47,5 +47,15 @@ export const VIR = {
 		"de-LI": "Amerikanische Jungferninseln",
 		"de-LU": "Amerikanische Jungferninseln"
 	},
-	"callingCode": "1340"
+	"callingCode": "1340",
+	"phoneMasks": [
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[2-9]"
+			]
+		}
+	]
 } satisfies Country;

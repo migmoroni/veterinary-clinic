@@ -47,5 +47,39 @@ export const TZA = {
 		"de-LI": "Tansania",
 		"de-LU": "Tansania"
 	},
-	"callingCode": "255"
+	"callingCode": "255",
+	"phoneMasks": [
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[24]"
+			]
+		},
+		{
+			"mask": "## #######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"5"
+			]
+		},
+		{
+			"mask": "### ## ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[89]"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[67]"
+			]
+		}
+	]
 } satisfies Country;

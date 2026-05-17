@@ -47,5 +47,32 @@ export const UGA = {
 		"de-LI": "Uganda",
 		"de-LU": "Uganda"
 	},
-	"callingCode": "256"
+	"callingCode": "256",
+	"phoneMasks": [
+		{
+			"mask": "## #######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[34]"
+			]
+		},
+		{
+			"mask": "### ######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[27-9]|4(?:6[45]|[7-9])"
+			]
+		},
+		{
+			"mask": "#### #####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"202",
+				"2024"
+			]
+		}
+	]
 } satisfies Country;

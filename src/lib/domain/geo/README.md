@@ -11,6 +11,7 @@ This folder contains the offline geography data used by owner addresses. Runtime
 ## Sources
 
 - Country codes, base country records, and phone calling codes: Rest Countries (`https://restcountries.com/v3.1/all?fields=cca2,cca3,name,idd`). The runtime app uses the vendored files only.
+- Phone/mobile masks: generated at development time from `libphonenumber-js` full metadata. The generated `phoneMasks` are stored locally in `country-data` and are used for contact phone/mobile fields without runtime network access.
 - Country labels: generated at development time with `Intl.DisplayNames` for each configured locale. These names come from the local JavaScript runtime ICU/CLDR data used during generation.
 - Guarani country labels: taken from Rest Countries native names when a `grn` native name exists. When a country has no Guarani label, `location.ts` falls back to Spanish.
 - Brazilian states and municipalities: generated from IBGE Localidades data (`https://servicodados.ibge.gov.br/api/v1/localidades/estados` and municipality endpoints). Stored states use UF codes; stored cities use the canonical municipality name.
@@ -40,11 +41,15 @@ import type { Country } from './types.js';
 
 export const BRA = {
 	code: 'BRA',
-  callingCode: '55',
 	labels: {
 		'pt-BR': 'Brasil',
 		'en-US': 'Brazil'
-	}
+  },
+  callingCode: '55',
+  phoneMasks: [
+    { mask: '(##) ####-####', minLength: 10, maxLength: 10 },
+    { mask: '(##) #####-####', minLength: 11, maxLength: 11 }
+  ]
 } satisfies Country;
 ```
 
@@ -52,6 +57,7 @@ Rules:
 
 - `code` is always a three-letter country code from the country catalog source.
 - `callingCode` is the default international dialing code stored without `+`, when the source has one.
+- `phoneMasks` describes local digits after the country calling code. `#` marks a digit; punctuation and spaces are formatting characters. `minLength`/`maxLength` allow the formatter to pick the expected mask as the number grows.
 - Stored owner country values are alpha-3 only. There is no compatibility path for old names or alpha-2 codes because the app is pre-launch.
 - `labels` is keyed by `CountryLabelLocale` from `country-data/types.ts`.
 - Missing labels are allowed. Fallback happens in `location.ts`, not in the generated country files.

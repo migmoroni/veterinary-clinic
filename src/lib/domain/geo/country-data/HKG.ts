@@ -47,5 +47,55 @@ export const HKG = {
 		"de-LI": "Sonderverwaltungsregion Hongkong",
 		"de-LU": "Sonderverwaltungsregion Hongkong"
 	},
-	"callingCode": "852"
+	"callingCode": "852",
+	"phoneMasks": [
+		{
+			"mask": "## ###",
+			"minLength": 5,
+			"maxLength": 5
+		},
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6
+		},
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7
+		},
+		{
+			"mask": "### #####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"900",
+				"9003"
+			]
+		},
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[2-7]|8[1-4]|9(?:0[1-9]|[1-8])"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"8"
+			]
+		},
+		{
+			"mask": "### ## ### ###",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"9"
+			]
+		}
+	]
 } satisfies Country;

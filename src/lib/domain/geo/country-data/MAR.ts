@@ -47,5 +47,39 @@ export const MAR = {
 		"de-LI": "Marokko",
 		"de-LU": "Marokko"
 	},
-	"callingCode": "212"
+	"callingCode": "212",
+	"phoneMasks": [
+		{
+			"mask": "##-#######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"8"
+			]
+		},
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"5[45]"
+			]
+		},
+		{
+			"mask": "###-######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[5-7]"
+			]
+		},
+		{
+			"mask": "####-#####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"5(?:2[2-46-9]|3[3-9]|9)|8(?:0[89]|92)"
+			]
+		}
+	]
 } satisfies Country;

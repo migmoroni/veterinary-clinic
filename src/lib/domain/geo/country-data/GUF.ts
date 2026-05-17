@@ -47,5 +47,23 @@ export const GUF = {
 		"de-LI": "Französisch-Guayana",
 		"de-LU": "Französisch-Guayana"
 	},
-	"callingCode": "594"
+	"callingCode": "594",
+	"phoneMasks": [
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[5-7]|9[47]"
+			]
+		},
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[89]"
+			]
+		}
+	]
 } satisfies Country;

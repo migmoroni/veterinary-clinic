@@ -47,5 +47,20 @@ export const SLB = {
 		"de-LI": "Salomonen",
 		"de-LU": "Salomonen"
 	},
-	"callingCode": "677"
+	"callingCode": "677",
+	"phoneMasks": [
+		{
+			"mask": "## ###",
+			"minLength": 5,
+			"maxLength": 5
+		},
+		{
+			"mask": "## #####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"6[89]|7|8[4-9]|9(?:[1-8]|9[0-8])"
+			]
+		}
+	]
 } satisfies Country;

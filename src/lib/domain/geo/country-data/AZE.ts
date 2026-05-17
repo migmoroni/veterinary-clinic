@@ -47,5 +47,33 @@ export const AZE = {
 		"de-LI": "Aserbaidschan",
 		"de-LU": "Aserbaidschan"
 	},
-	"callingCode": "994"
+	"callingCode": "994",
+	"phoneMasks": [
+		{
+			"mask": "## ### ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"1[28]|2|365|46",
+				"1[28]|2|365[45]|46",
+				"1[28]|2|365(?:4|5[02])|46"
+			]
+		},
+		{
+			"mask": "## ### ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[13-9]"
+			]
+		},
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"90"
+			]
+		}
+	]
 } satisfies Country;

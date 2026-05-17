@@ -47,5 +47,23 @@ export const NER = {
 		"de-LI": "Niger",
 		"de-LU": "Niger"
 	},
-	"callingCode": "227"
+	"callingCode": "227",
+	"phoneMasks": [
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[089]|2[013]|7[0467]"
+			]
+		},
+		{
+			"mask": "## ### ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"08"
+			]
+		}
+	]
 } satisfies Country;

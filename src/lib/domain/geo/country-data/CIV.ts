@@ -47,5 +47,23 @@ export const CIV = {
 		"de-LI": "Côte d’Ivoire",
 		"de-LU": "Côte d’Ivoire"
 	},
-	"callingCode": "225"
+	"callingCode": "225",
+	"phoneMasks": [
+		{
+			"mask": "## ## # #####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"2"
+			]
+		},
+		{
+			"mask": "## ## ## ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"0"
+			]
+		}
+	]
 } satisfies Country;

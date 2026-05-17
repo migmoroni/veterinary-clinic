@@ -47,5 +47,84 @@ export const LUX = {
 		"de-LI": "Luxemburg",
 		"de-LU": "Luxemburg"
 	},
-	"callingCode": "352"
+	"callingCode": "352",
+	"phoneMasks": [
+		{
+			"mask": "####",
+			"minLength": 4,
+			"maxLength": 4
+		},
+		{
+			"mask": "## ###",
+			"minLength": 5,
+			"maxLength": 5,
+			"leadingDigits": [
+				"2(?:0[2-689]|[2-9])|[3-57]|8(?:0[2-9]|[13-9])|9(?:0[89]|[2-579])"
+			]
+		},
+		{
+			"mask": "## ## ##",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"2(?:0[2-689]|[2-9])|[3-57]|8(?:0[2-9]|[13-9])|9(?:0[89]|[2-579])"
+			]
+		},
+		{
+			"mask": "## ## ###",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"20[2-689]"
+			]
+		},
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"2(?:[0367]|4[3-8])"
+			]
+		},
+		{
+			"mask": "### ## ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"80[01]|90[015]"
+			]
+		},
+		{
+			"mask": "## ## ## ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"20"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"6"
+			]
+		},
+		{
+			"mask": "## ## ## ## ##",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"2(?:[0367]|4[3-8])"
+			]
+		},
+		{
+			"mask": "## ## ## #####",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"[3-57]|8[13-9]|9(?:0[89]|[2-579])|(?:2|80)[2-9]"
+			]
+		}
+	]
 } satisfies Country;

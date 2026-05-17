@@ -47,5 +47,15 @@ export const CPV = {
 		"de-LI": "Cabo Verde",
 		"de-LU": "Cabo Verde"
 	},
-	"callingCode": "238"
+	"callingCode": "238",
+	"phoneMasks": [
+		{
+			"mask": "### ## ##",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[2-589]"
+			]
+		}
+	]
 } satisfies Country;

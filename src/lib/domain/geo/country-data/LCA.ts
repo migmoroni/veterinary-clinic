@@ -47,5 +47,15 @@ export const LCA = {
 		"de-LI": "St. Lucia",
 		"de-LU": "St. Lucia"
 	},
-	"callingCode": "1758"
+	"callingCode": "1758",
+	"phoneMasks": [
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[2-9]"
+			]
+		}
+	]
 } satisfies Country;

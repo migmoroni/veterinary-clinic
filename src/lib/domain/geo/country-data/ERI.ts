@@ -47,5 +47,15 @@ export const ERI = {
 		"de-LI": "Eritrea",
 		"de-LU": "Eritrea"
 	},
-	"callingCode": "291"
+	"callingCode": "291",
+	"phoneMasks": [
+		{
+			"mask": "# ### ###",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[178]"
+			]
+		}
+	]
 } satisfies Country;

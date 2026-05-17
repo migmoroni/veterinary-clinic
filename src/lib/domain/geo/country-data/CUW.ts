@@ -47,5 +47,23 @@ export const CUW = {
 		"de-LI": "Curaçao",
 		"de-LU": "Curaçao"
 	},
-	"callingCode": "599"
+	"callingCode": "599",
+	"phoneMasks": [
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[3467]"
+			]
+		},
+		{
+			"mask": "# ### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"9[4-8]"
+			]
+		}
+	]
 } satisfies Country;

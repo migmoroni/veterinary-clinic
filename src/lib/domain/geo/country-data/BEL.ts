@@ -47,5 +47,39 @@ export const BEL = {
 		"de-LI": "Belgien",
 		"de-LU": "Belgien"
 	},
-	"callingCode": "32"
+	"callingCode": "32",
+	"phoneMasks": [
+		{
+			"mask": "# ### ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[239]|4[23]"
+			]
+		},
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[15-8]"
+			]
+		},
+		{
+			"mask": "### ## ###",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"(?:80|9)0"
+			]
+		},
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"4"
+			]
+		}
+	]
 } satisfies Country;

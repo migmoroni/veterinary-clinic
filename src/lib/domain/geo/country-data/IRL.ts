@@ -47,5 +47,87 @@ export const IRL = {
 		"de-LI": "Irland",
 		"de-LU": "Irland"
 	},
-	"callingCode": "353"
+	"callingCode": "353",
+	"phoneMasks": [
+		{
+			"mask": "## #####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"2[24-9]|47|58|6[237-9]|9[35-9]"
+			]
+		},
+		{
+			"mask": "### #####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[45]0"
+			]
+		},
+		{
+			"mask": "# #### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"1"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[2569]|4[1-69]|7[14]"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[78]"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"70"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"81"
+			]
+		},
+		{
+			"mask": "## # ### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"8"
+			]
+		},
+		{
+			"mask": "## #### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"4"
+			]
+		},
+		{
+			"mask": "#### ### ###",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"1"
+			]
+		}
+	]
 } satisfies Country;

@@ -47,5 +47,83 @@ export const KOR = {
 		"de-LI": "Südkorea",
 		"de-LU": "Südkorea"
 	},
-	"callingCode": "82"
+	"callingCode": "82",
+	"phoneMasks": [
+		{
+			"mask": "## ###",
+			"minLength": 5,
+			"maxLength": 5
+		},
+		{
+			"mask": "##-####",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"(?:3[1-3]|[46][1-4]|5[1-5])1"
+			]
+		},
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"1"
+			]
+		},
+		{
+			"mask": "#-####-####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"2"
+			]
+		},
+		{
+			"mask": "##-###-####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[36]0|8"
+			]
+		},
+		{
+			"mask": "##-####-####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[1346]|5[1-5]"
+			]
+		},
+		{
+			"mask": "##-####-####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[57]"
+			]
+		},
+		{
+			"mask": "##-#####-####",
+			"minLength": 11,
+			"maxLength": 11,
+			"leadingDigits": [
+				"5"
+			]
+		},
+		{
+			"mask": "### ### ### ###",
+			"minLength": 12,
+			"maxLength": 12
+		},
+		{
+			"mask": "# ### ### ### ###",
+			"minLength": 13,
+			"maxLength": 13
+		},
+		{
+			"mask": "## ### ### ### ###",
+			"minLength": 14,
+			"maxLength": 14
+		}
+	]
 } satisfies Country;

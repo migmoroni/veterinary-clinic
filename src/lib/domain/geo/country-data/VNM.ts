@@ -47,5 +47,60 @@ export const VNM = {
 		"de-LI": "Vietnam",
 		"de-LU": "Vietnam"
 	},
-	"callingCode": "84"
+	"callingCode": "84",
+	"phoneMasks": [
+		{
+			"mask": "## #####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"80"
+			]
+		},
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8
+		},
+		{
+			"mask": "## ### ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"6"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[357-9]"
+			]
+		},
+		{
+			"mask": "## #### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"2[48]"
+			]
+		},
+		{
+			"mask": "### #### ###",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"2"
+			]
+		},
+		{
+			"mask": "#### ######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"1"
+			]
+		}
+	]
 } satisfies Country;

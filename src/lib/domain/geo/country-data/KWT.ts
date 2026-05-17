@@ -47,5 +47,28 @@ export const KWT = {
 		"de-LI": "Kuwait",
 		"de-LU": "Kuwait"
 	},
-	"callingCode": "965"
+	"callingCode": "965",
+	"phoneMasks": [
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7
+		},
+		{
+			"mask": "### #####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[245]"
+			]
+		},
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[169]|2(?:[235]|4[1-35-9])|52"
+			]
+		}
+	]
 } satisfies Country;

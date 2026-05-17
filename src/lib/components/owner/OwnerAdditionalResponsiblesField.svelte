@@ -2,7 +2,7 @@
 	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import OwnerAvatarEditorDialog from '$lib/components/owner/OwnerAvatarEditorDialog.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
-	import { countryCallingCodes } from '$lib/domain/geo/location.js';
+	import { countryPhoneFormat, countryPhoneFormats } from '$lib/domain/geo/location.js';
 	import type { OwnerAdditionalResponsibleInput, OwnerContactInput, OwnerContactKind } from '$lib/domain/owner/owner.js';
 	import { formatEmailForInput } from '$lib/domain/shared/email.js';
 	import { formatPhoneForInput, formatPhoneForInputWithCaret } from '$lib/domain/shared/phone.js';
@@ -11,11 +11,12 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import { tick } from 'svelte';
 
-	let { responsibles = $bindable<OwnerAdditionalResponsibleInput[]>([]) }: { responsibles?: OwnerAdditionalResponsibleInput[] } = $props();
+	let { responsibles = $bindable<OwnerAdditionalResponsibleInput[]>([]), country = 'BRA' }: { responsibles?: OwnerAdditionalResponsibleInput[]; country?: string | null } = $props();
 	let avatarDialogIndex = $state<number | null>(null);
 
 	const contactKinds: OwnerContactKind[] = ['mobile', 'phone', 'email', 'other'];
-	const knownCallingCodes = countryCallingCodes();
+	const phoneFormats = countryPhoneFormats();
+	const phoneFormatContext = $derived({ country: countryPhoneFormat(country), countries: phoneFormats });
 	const avatarDialogResponsible = $derived(avatarDialogIndex === null ? null : (responsibles[avatarDialogIndex] ?? null));
 
 	function kindLabelKey(kind: OwnerContactKind): TranslationKey {
@@ -39,7 +40,7 @@
 
 	function formatContactValue(kind: OwnerContactKind, value: string): string {
 		if (kind === 'other') return value;
-		return kind === 'email' ? formatEmailForInput(value) : formatPhoneForInput(value, knownCallingCodes);
+		return kind === 'email' ? formatEmailForInput(value) : formatPhoneForInput(value, phoneFormatContext);
 	}
 
 	function isPhoneContact(kind: OwnerContactKind): boolean {
@@ -138,7 +139,7 @@
 			return;
 		}
 
-		const result = formatPhoneForInputWithCaret(input.value, input.selectionStart, knownCallingCodes);
+		const result = formatPhoneForInputWithCaret(input.value, input.selectionStart, phoneFormatContext);
 		responsibles = responsibles.map((responsible, index) => {
 			if (index !== responsibleIndex) return responsible;
 

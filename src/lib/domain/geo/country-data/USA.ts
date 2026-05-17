@@ -47,5 +47,23 @@ export const USA = {
 		"de-LI": "Vereinigte Staaten",
 		"de-LU": "Vereinigte Staaten"
 	},
-	"callingCode": "1"
+	"callingCode": "1",
+	"phoneMasks": [
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"310"
+			]
+		},
+		{
+			"mask": "(###) ###-####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[2-9]"
+			]
+		}
+	]
 } satisfies Country;

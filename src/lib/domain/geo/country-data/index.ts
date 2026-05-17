@@ -1,5 +1,5 @@
 export { countryLabelLocales } from './types.js';
-export type { Country, CountryLabelLocale } from './types.js';
+export type { Country, CountryLabelLocale, CountryPhoneMask } from './types.js';
 
 import { AFG } from './AFG.js';
 import { ZAF } from './ZAF.js';

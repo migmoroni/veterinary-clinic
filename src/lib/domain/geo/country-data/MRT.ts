@@ -47,5 +47,15 @@ export const MRT = {
 		"de-LI": "Mauretanien",
 		"de-LU": "Mauretanien"
 	},
-	"callingCode": "222"
+	"callingCode": "222",
+	"phoneMasks": [
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[2-48]"
+			]
+		}
+	]
 } satisfies Country;

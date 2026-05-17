@@ -47,5 +47,15 @@ export const FSM = {
 		"de-LI": "Mikronesien",
 		"de-LU": "Mikronesien"
 	},
-	"callingCode": "691"
+	"callingCode": "691",
+	"phoneMasks": [
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[389]"
+			]
+		}
+	]
 } satisfies Country;

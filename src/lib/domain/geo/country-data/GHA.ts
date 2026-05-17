@@ -47,5 +47,23 @@ export const GHA = {
 		"de-LI": "Ghana",
 		"de-LU": "Ghana"
 	},
-	"callingCode": "233"
+	"callingCode": "233",
+	"phoneMasks": [
+		{
+			"mask": "### #####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"8"
+			]
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[235]"
+			]
+		}
+	]
 } satisfies Country;

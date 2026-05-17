@@ -47,5 +47,28 @@ export const MOZ = {
 		"de-LI": "Mosambik",
 		"de-LU": "Mosambik"
 	},
-	"callingCode": "258"
+	"callingCode": "258",
+	"phoneMasks": [
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"2|8[2-79]"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"8"
+			]
+		}
+	]
 } satisfies Country;

@@ -4,6 +4,23 @@ export function digitsOnly(value: string | null | undefined): string {
 
 const MAX_INTERNATIONAL_PHONE_DIGITS = 15;
 
+export interface PhoneMask {
+	mask: string;
+	minLength: number;
+	maxLength: number;
+	leadingDigits?: readonly string[];
+}
+
+export interface PhoneCountryFormat {
+	callingCode: string;
+	phoneMasks?: readonly PhoneMask[];
+}
+
+export interface PhoneFormatContext {
+	country?: PhoneCountryFormat | null;
+	countries?: readonly (PhoneCountryFormat | null | undefined)[];
+}
+
 function startsWithExplicitCountryCode(value: string | null | undefined): boolean {
 	return value?.trimStart().startsWith('+') ?? false;
 }
@@ -27,8 +44,23 @@ function normalizeCallingCode(value: string | null | undefined): string | null {
 	return digits.length > 0 ? digits : null;
 }
 
-function normalizeCallingCodes(values: readonly (string | null | undefined)[] = []): string[] {
-	return [...new Set(values.map(normalizeCallingCode).filter((value): value is string => Boolean(value)))].sort((left, right) => right.length - left.length || left.localeCompare(right));
+function normalizePhoneCountryFormat(format: PhoneCountryFormat | null | undefined): PhoneCountryFormat | null {
+	const callingCode = normalizeCallingCode(format?.callingCode);
+	if (!callingCode) return null;
+
+	return { callingCode, phoneMasks: format?.phoneMasks ?? [] };
+}
+
+function normalizePhoneCountryFormats(context: PhoneFormatContext = {}): PhoneCountryFormat[] {
+	const countries = [...(context.countries ?? []), context.country]
+		.map(normalizePhoneCountryFormat)
+		.filter((format): format is PhoneCountryFormat => Boolean(format));
+
+	return countries.sort((left, right) => right.callingCode.length - left.callingCode.length || left.callingCode.localeCompare(right.callingCode));
+}
+
+function normalizedCallingCodes(formats: readonly PhoneCountryFormat[]): string[] {
+	return [...new Set(formats.map((format) => format.callingCode))].sort((left, right) => right.length - left.length || left.localeCompare(right));
 }
 
 function hasLongerCallingCodeCandidate(value: string, callingCodes: readonly string[]): boolean {
@@ -37,6 +69,14 @@ function hasLongerCallingCodeCandidate(value: string, callingCodes: readonly str
 
 function matchingCallingCode(value: string, callingCodes: readonly string[]): string | null {
 	return callingCodes.find((callingCode) => value.startsWith(callingCode)) ?? null;
+}
+
+function phoneFormatForCallingCode(callingCode: string, formats: readonly PhoneCountryFormat[]): PhoneCountryFormat {
+	const matchingFormats = formats.filter((format) => format.callingCode === callingCode);
+	return {
+		callingCode,
+		phoneMasks: matchingFormats.flatMap((format) => [...(format.phoneMasks ?? [])])
+	};
 }
 
 function phoneInputCaretPosition(value: string, formattedValue: string, selectionStart: number | null | undefined): number {
@@ -63,35 +103,74 @@ function phoneInputCaretPosition(value: string, formattedValue: string, selectio
 	return bestPosition;
 }
 
-function formatBrazilPhoneLocal(value: string): string {
-	const digits = digitsOnly(value).slice(0, 11);
+function maxLocalPhoneDigits(format: PhoneCountryFormat | null | undefined): number {
+	const maskLengths = format?.phoneMasks?.map((mask) => mask.maxLength).filter((length) => Number.isFinite(length) && length > 0) ?? [];
+	if (maskLengths.length > 0) return Math.max(...maskLengths);
+
+	const callingCodeLength = normalizeCallingCode(format?.callingCode)?.length ?? 0;
+	return Math.max(0, MAX_INTERNATIONAL_PHONE_DIGITS - callingCodeLength);
+}
+
+function leadingDigitsMatch(leadingDigits: readonly string[] | undefined, digits: string): boolean {
+	if (!leadingDigits || !digits) return false;
+
+	return leadingDigits.some((pattern) => {
+		try {
+			return new RegExp(`^(?:${pattern})`).test(digits);
+		} catch {
+			return false;
+		}
+	});
+}
+
+function selectPhoneMask(digits: string, masks: readonly PhoneMask[] = []): PhoneMask | null {
+	const availableMasks = masks.filter((mask) => mask.mask.includes('#') && mask.maxLength > 0).sort((left, right) => left.maxLength - right.maxLength || left.mask.localeCompare(right.mask));
+	if (availableMasks.length === 0) return null;
+
+	const matchingByLeadingDigits = availableMasks.filter((mask) => leadingDigitsMatch(mask.leadingDigits, digits));
+	const leadingDigitFit = matchingByLeadingDigits.find((mask) => digits.length <= mask.maxLength);
+	if (leadingDigitFit) return leadingDigitFit;
+	if (matchingByLeadingDigits.length > 0) return matchingByLeadingDigits.at(-1) ?? null;
+
+	return availableMasks.find((mask) => digits.length <= mask.maxLength) ?? availableMasks.at(-1) ?? null;
+}
+
+function applyPhoneMask(digits: string, mask: string): string {
+	let digitIndex = 0;
+	let formatted = '';
+
+	for (const character of mask) {
+		if (character === '#') {
+			if (digitIndex >= digits.length) break;
+			formatted += digits[digitIndex];
+			digitIndex += 1;
+			continue;
+		}
+
+		if (digitIndex < digits.length) formatted += character;
+	}
+
+	return formatted;
+}
+
+function formatLocalPhone(value: string, format: PhoneCountryFormat | null | undefined): string {
+	const digits = digitsOnly(value).slice(0, maxLocalPhoneDigits(format));
 	if (!digits) return '';
 
-	if (digits.length <= 2) return `(${digits}`;
-
-	const areaCode = digits.slice(0, 2);
-	const number = digits.slice(2);
-
-	if (number.length <= 4) return `(${areaCode}) ${number}`;
-	if (number.length <= 8) return `(${areaCode}) ${number.slice(0, 4)}-${number.slice(4)}`;
-
-	return `(${areaCode}) ${number.slice(0, 5)}-${number.slice(5)}`;
+	const mask = selectPhoneMask(digits, format?.phoneMasks);
+	return mask ? applyPhoneMask(digits.slice(0, mask.maxLength), mask.mask) : digits;
 }
 
-function formatLocalPhoneForCallingCode(callingCode: string, value: string): string {
-	if (callingCode === '55') return formatBrazilPhoneLocal(value);
-	return digitsOnly(value);
-}
-
-function formatInternationalPhone(callingCode: string, value: string, preserveEmptyLocalSeparator = false): string {
-	const localDigits = digitsOnly(value).slice(0, Math.max(0, MAX_INTERNATIONAL_PHONE_DIGITS - callingCode.length));
-	const local = formatLocalPhoneForCallingCode(callingCode, localDigits);
+function formatInternationalPhone(callingCode: string, value: string, format: PhoneCountryFormat | null | undefined, preserveEmptyLocalSeparator = false): string {
+	const localDigits = digitsOnly(value).slice(0, maxLocalPhoneDigits(format));
+	const local = formatLocalPhone(localDigits, format);
 
 	if (local) return `+${callingCode} ${local}`;
 	return preserveEmptyLocalSeparator ? `+${callingCode} ` : `+${callingCode}`;
 }
 
-function formatExplicitPhoneForInput(value: string, callingCodes: readonly string[]): string {
+function formatExplicitPhoneForInput(value: string, formats: readonly PhoneCountryFormat[]): string {
+	const callingCodes = normalizedCallingCodes(formats);
 	const trimmed = value.trimStart();
 	const rawAfterPlus = trimmed.slice(1);
 	const firstDigitIndex = rawAfterPlus.search(/\d/);
@@ -107,47 +186,48 @@ function formatExplicitPhoneForInput(value: string, callingCodes: readonly strin
 
 	if (hasUserDefinedSeparator) {
 		const localDigits = digitsOnly(rawAfterFirstDigits);
-		return formatInternationalPhone(firstDigits, localDigits, localDigits.length === 0);
+		return formatInternationalPhone(firstDigits, localDigits, phoneFormatForCallingCode(firstDigits, formats), localDigits.length === 0);
 	}
 
 	const digits = digitsOnly(trimmed).slice(0, MAX_INTERNATIONAL_PHONE_DIGITS);
 	if (hasLongerCallingCodeCandidate(digits, callingCodes)) return `+${digits}`;
 
 	const callingCode = matchingCallingCode(digits, callingCodes);
-	if (callingCode && digits.length > callingCode.length) return formatInternationalPhone(callingCode, digits.slice(callingCode.length));
+	if (callingCode && digits.length > callingCode.length) return formatInternationalPhone(callingCode, digits.slice(callingCode.length), phoneFormatForCallingCode(callingCode, formats));
 
 	return `+${digits}`;
 }
 
-export function formatPhoneForInput(value: string | null | undefined, callingCodes: readonly (string | null | undefined)[] = []): string {
+export function formatPhoneForInput(value: string | null | undefined, context: PhoneFormatContext = {}): string {
 	const hasExplicitCountryCode = startsWithExplicitCountryCode(value);
-	const normalizedCallingCodes = normalizeCallingCodes(callingCodes);
-	const digits = digitsOnly(value).slice(0, hasExplicitCountryCode ? MAX_INTERNATIONAL_PHONE_DIGITS : 13);
+	const formats = normalizePhoneCountryFormats(context);
+	const countryFormat = normalizePhoneCountryFormat(context.country);
+	const digits = digitsOnly(value).slice(0, hasExplicitCountryCode ? MAX_INTERNATIONAL_PHONE_DIGITS : maxLocalPhoneDigits(countryFormat));
 
 	if (hasExplicitCountryCode && !digits) return '+';
 	if (!digits) return '';
 
-	if (hasExplicitCountryCode) return formatExplicitPhoneForInput(value ?? '', normalizedCallingCodes);
+	if (hasExplicitCountryCode) return formatExplicitPhoneForInput(value ?? '', formats);
 
-	return formatBrazilPhoneLocal(digits);
+	return formatLocalPhone(digits, countryFormat);
 }
 
-export function formatPhoneForInputWithCaret(value: string, selectionStart: number | null | undefined, callingCodes: readonly (string | null | undefined)[] = []): { value: string; caret: number } {
-	const formatted = formatPhoneForInput(value, callingCodes);
+export function formatPhoneForInputWithCaret(value: string, selectionStart: number | null | undefined, context: PhoneFormatContext = {}): { value: string; caret: number } {
+	const formatted = formatPhoneForInput(value, context);
 	return { value: formatted, caret: phoneInputCaretPosition(value, formatted, selectionStart) };
 }
 
-export function formatPhoneForStorage(value: string | null | undefined, callingCode: string | null | undefined, callingCodes: readonly (string | null | undefined)[] = []): string | null {
+export function formatPhoneForStorage(value: string | null | undefined, countryFormat: PhoneCountryFormat | null | undefined, context: PhoneFormatContext = {}): string | null {
 	const trimmed = value?.trim() ?? '';
 	const digits = digitsOnly(trimmed);
 	if (!digits) return null;
 
-	if (startsWithExplicitCountryCode(trimmed)) return formatPhoneForInput(trimmed, callingCodes);
+	if (startsWithExplicitCountryCode(trimmed)) return formatPhoneForInput(trimmed, context);
 
-	const countryCallingCode = normalizeCallingCode(callingCode);
-	if (!countryCallingCode) return trimmed;
+	const normalizedCountryFormat = normalizePhoneCountryFormat(countryFormat);
+	if (!normalizedCountryFormat) return trimmed;
 
-	return formatInternationalPhone(countryCallingCode, digits);
+	return formatInternationalPhone(normalizedCountryFormat.callingCode, digits, normalizedCountryFormat);
 }
 
 export function formatPhoneForWhatsApp(value: string | null | undefined): string | null {

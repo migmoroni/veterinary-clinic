@@ -47,5 +47,31 @@ export const MWI = {
 		"de-LI": "Malawi",
 		"de-LU": "Malawi"
 	},
-	"callingCode": "265"
+	"callingCode": "265",
+	"phoneMasks": [
+		{
+			"mask": "# ### ###",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"1[2-9]"
+			]
+		},
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[137-9]"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"2"
+			]
+		}
+	]
 } satisfies Country;

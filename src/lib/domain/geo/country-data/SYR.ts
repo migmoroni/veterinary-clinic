@@ -47,5 +47,28 @@ export const SYR = {
 		"de-LI": "Syrien",
 		"de-LU": "Syrien"
 	},
-	"callingCode": "963"
+	"callingCode": "963",
+	"phoneMasks": [
+		{
+			"mask": "####-####",
+			"minLength": 8,
+			"maxLength": 8
+		},
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[1-4]|5[1-3]"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[59]"
+			]
+		}
+	]
 } satisfies Country;

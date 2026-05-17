@@ -47,5 +47,15 @@ export const UZB = {
 		"de-LI": "Usbekistan",
 		"de-LU": "Usbekistan"
 	},
-	"callingCode": "998"
+	"callingCode": "998",
+	"phoneMasks": [
+		{
+			"mask": "## ### ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[235-9]"
+			]
+		}
+	]
 } satisfies Country;

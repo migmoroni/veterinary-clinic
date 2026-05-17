@@ -47,5 +47,49 @@ export const BGD = {
 		"de-LI": "Bangladesch",
 		"de-LU": "Bangladesch"
 	},
-	"callingCode": "880"
+	"callingCode": "880",
+	"phoneMasks": [
+		{
+			"mask": "### ###",
+			"minLength": 6,
+			"maxLength": 6
+		},
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7
+		},
+		{
+			"mask": "##-######",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"31[5-8]|[459]1"
+			]
+		},
+		{
+			"mask": "#-########",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"2"
+			]
+		},
+		{
+			"mask": "###-#######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"3(?:[67]|8[013-9])|4(?:6[168]|7|[89][18])|5(?:6[128]|9)|6(?:[15]|28|4[14])|7[2-589]|8(?:0[014-9]|[12])|9[358]|(?:3[2-5]|4[235]|5[2-578]|6[0389]|76|8[3-7]|9[24])1|(?:44|66)[01346-9]"
+			]
+		},
+		{
+			"mask": "####-######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[13-9]|2[23]"
+			]
+		}
+	]
 } satisfies Country;

@@ -47,5 +47,31 @@ export const SPM = {
 		"de-LI": "St. Pierre und Miquelon",
 		"de-LU": "St. Pierre und Miquelon"
 	},
-	"callingCode": "508"
+	"callingCode": "508",
+	"phoneMasks": [
+		{
+			"mask": "## ## ##",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"[45]"
+			]
+		},
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"8"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"7"
+			]
+		}
+	]
 } satisfies Country;

@@ -47,5 +47,15 @@ export const ATG = {
 		"de-LI": "Antigua und Barbuda",
 		"de-LU": "Antigua und Barbuda"
 	},
-	"callingCode": "1268"
+	"callingCode": "1268",
+	"phoneMasks": [
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[2-9]"
+			]
+		}
+	]
 } satisfies Country;

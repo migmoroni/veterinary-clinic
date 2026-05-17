@@ -47,5 +47,23 @@ export const CRI = {
 		"de-LI": "Costa Rica",
 		"de-LU": "Costa Rica"
 	},
-	"callingCode": "506"
+	"callingCode": "506",
+	"phoneMasks": [
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[2-7]|8[3-9]"
+			]
+		},
+		{
+			"mask": "###-###-####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[89]"
+			]
+		}
+	]
 } satisfies Country;

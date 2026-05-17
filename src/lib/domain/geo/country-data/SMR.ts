@@ -47,5 +47,23 @@ export const SMR = {
 		"de-LI": "San Marino",
 		"de-LU": "San Marino"
 	},
-	"callingCode": "378"
+	"callingCode": "378",
+	"phoneMasks": [
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[5-7]"
+			]
+		},
+		{
+			"mask": "#### ######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"0"
+			]
+		}
+	]
 } satisfies Country;

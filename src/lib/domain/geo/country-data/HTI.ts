@@ -47,5 +47,15 @@ export const HTI = {
 		"de-LI": "Haiti",
 		"de-LU": "Haiti"
 	},
-	"callingCode": "509"
+	"callingCode": "509",
+	"phoneMasks": [
+		{
+			"mask": "## ## ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[2-589]"
+			]
+		}
+	]
 } satisfies Country;

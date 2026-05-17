@@ -47,5 +47,15 @@ export const COM = {
 		"de-LI": "Komoren",
 		"de-LU": "Komoren"
 	},
-	"callingCode": "269"
+	"callingCode": "269",
+	"phoneMasks": [
+		{
+			"mask": "### ## ##",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[3478]"
+			]
+		}
+	]
 } satisfies Country;

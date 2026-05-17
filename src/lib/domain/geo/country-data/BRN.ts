@@ -47,5 +47,15 @@ export const BRN = {
 		"de-LI": "Brunei Darussalam",
 		"de-LU": "Brunei Darussalam"
 	},
-	"callingCode": "673"
+	"callingCode": "673",
+	"phoneMasks": [
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[2-578]"
+			]
+		}
+	]
 } satisfies Country;

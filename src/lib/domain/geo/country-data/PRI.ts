@@ -47,5 +47,15 @@ export const PRI = {
 		"de-LI": "Puerto Rico",
 		"de-LU": "Puerto Rico"
 	},
-	"callingCode": "1"
+	"callingCode": "1",
+	"phoneMasks": [
+		{
+			"mask": "(###) ###-####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[2-9]"
+			]
+		}
+	]
 } satisfies Country;

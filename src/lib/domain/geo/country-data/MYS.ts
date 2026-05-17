@@ -47,5 +47,56 @@ export const MYS = {
 		"de-LI": "Malaysia",
 		"de-LU": "Malaysia"
 	},
-	"callingCode": "60"
+	"callingCode": "60",
+	"phoneMasks": [
+		{
+			"mask": "#-### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[4-79]"
+			]
+		},
+		{
+			"mask": "#-#### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"3"
+			]
+		},
+		{
+			"mask": "##-### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"1(?:[02469]|[378][1-9]|53)|8",
+				"1(?:[02469]|[37][1-9]|53|8(?:[1-46-9]|5[7-9]))|8"
+			]
+		},
+		{
+			"mask": "#-###-##-####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"1(?:[367]|80)"
+			]
+		},
+		{
+			"mask": "##-#### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"1"
+			]
+		},
+		{
+			"mask": "###-### ####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"15"
+			]
+		}
+	]
 } satisfies Country;

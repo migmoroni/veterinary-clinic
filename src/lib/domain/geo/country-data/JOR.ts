@@ -47,5 +47,39 @@ export const JOR = {
 		"de-LI": "Jordanien",
 		"de-LU": "Jordanien"
 	},
-	"callingCode": "962"
+	"callingCode": "962",
+	"phoneMasks": [
+		{
+			"mask": "# ### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[2356]|87"
+			]
+		},
+		{
+			"mask": "# #### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"7"
+			]
+		},
+		{
+			"mask": "## #######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"70"
+			]
+		},
+		{
+			"mask": "### ######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[89]"
+			]
+		}
+	]
 } satisfies Country;

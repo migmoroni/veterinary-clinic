@@ -47,5 +47,15 @@ export const TGO = {
 		"de-LI": "Togo",
 		"de-LU": "Togo"
 	},
-	"callingCode": "228"
+	"callingCode": "228",
+	"phoneMasks": [
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[279]"
+			]
+		}
+	]
 } satisfies Country;

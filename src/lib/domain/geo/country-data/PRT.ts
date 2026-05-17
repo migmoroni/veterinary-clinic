@@ -47,5 +47,23 @@ export const PRT = {
 		"de-LI": "Portugal",
 		"de-LU": "Portugal"
 	},
-	"callingCode": "351"
+	"callingCode": "351",
+	"phoneMasks": [
+		{
+			"mask": "## ### ####",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"2[12]"
+			]
+		},
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"16|[236-9]"
+			]
+		}
+	]
 } satisfies Country;

@@ -47,5 +47,48 @@ export const MNG = {
 		"de-LI": "Mongolei",
 		"de-LU": "Mongolei"
 	},
-	"callingCode": "976"
+	"callingCode": "976",
+	"phoneMasks": [
+		{
+			"mask": "## ## ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[12]1"
+			]
+		},
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[5-9]"
+			]
+		},
+		{
+			"mask": "### ######",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[12]2[1-3]"
+			]
+		},
+		{
+			"mask": "#### ######",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[12](?:27|3[2-8]|4[2-68]|5[1-4689])",
+				"[12](?:27|3[2-8]|4[2-68]|5[1-4689])[0-3]"
+			]
+		},
+		{
+			"mask": "##### #####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"[12]"
+			]
+		}
+	]
 } satisfies Country;

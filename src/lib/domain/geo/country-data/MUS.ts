@@ -47,5 +47,31 @@ export const MUS = {
 		"de-LI": "Mauritius",
 		"de-LU": "Mauritius"
 	},
-	"callingCode": "230"
+	"callingCode": "230",
+	"phoneMasks": [
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[2-46]|8[013]"
+			]
+		},
+		{
+			"mask": "#### ####",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[57]"
+			]
+		},
+		{
+			"mask": "##### #####",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"8"
+			]
+		}
+	]
 } satisfies Country;

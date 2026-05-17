@@ -47,5 +47,15 @@ export const SSD = {
 		"de-LI": "Südsudan",
 		"de-LU": "Südsudan"
 	},
-	"callingCode": "211"
+	"callingCode": "211",
+	"phoneMasks": [
+		{
+			"mask": "### ### ###",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"[19]"
+			]
+		}
+	]
 } satisfies Country;

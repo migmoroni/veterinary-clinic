@@ -47,5 +47,31 @@ export const PYF = {
 		"de-LI": "Französisch-Polynesien",
 		"de-LU": "Französisch-Polynesien"
 	},
-	"callingCode": "689"
+	"callingCode": "689",
+	"phoneMasks": [
+		{
+			"mask": "## ## ##",
+			"minLength": 6,
+			"maxLength": 6,
+			"leadingDigits": [
+				"44"
+			]
+		},
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"4|8[7-9]"
+			]
+		},
+		{
+			"mask": "### ## ## ##",
+			"minLength": 9,
+			"maxLength": 9,
+			"leadingDigits": [
+				"8"
+			]
+		}
+	]
 } satisfies Country;

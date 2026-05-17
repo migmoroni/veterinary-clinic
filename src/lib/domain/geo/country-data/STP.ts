@@ -47,5 +47,15 @@ export const STP = {
 		"de-LI": "São Tomé und Príncipe",
 		"de-LU": "São Tomé und Príncipe"
 	},
-	"callingCode": "239"
+	"callingCode": "239",
+	"phoneMasks": [
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[29]"
+			]
+		}
+	]
 } satisfies Country;

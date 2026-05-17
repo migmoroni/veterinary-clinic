@@ -47,5 +47,31 @@ export const TKM = {
 		"de-LI": "Turkmenistan",
 		"de-LU": "Turkmenistan"
 	},
-	"callingCode": "993"
+	"callingCode": "993",
+	"phoneMasks": [
+		{
+			"mask": "## ##-##-##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"12"
+			]
+		},
+		{
+			"mask": "## ######",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[67]"
+			]
+		},
+		{
+			"mask": "### #-##-##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[1-5]"
+			]
+		}
+	]
 } satisfies Country;

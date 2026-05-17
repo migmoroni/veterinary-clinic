@@ -236,8 +236,8 @@
 			</label>
 
 
-			<OwnerContactsField bind:contacts={form.contacts} />
-			<OwnerAdditionalResponsiblesField bind:responsibles={form.additionalResponsibles} />
+			<OwnerContactsField bind:contacts={form.contacts} country={form.country} />
+			<OwnerAdditionalResponsiblesField bind:responsibles={form.additionalResponsibles} country={form.country} />
 
 			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-5">
 				<span>{t('owner.additionalInformation')}</span>

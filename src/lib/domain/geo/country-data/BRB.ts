@@ -47,5 +47,15 @@ export const BRB = {
 		"de-LI": "Barbados",
 		"de-LU": "Barbados"
 	},
-	"callingCode": "1246"
+	"callingCode": "1246",
+	"phoneMasks": [
+		{
+			"mask": "###-####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[2-9]"
+			]
+		}
+	]
 } satisfies Country;

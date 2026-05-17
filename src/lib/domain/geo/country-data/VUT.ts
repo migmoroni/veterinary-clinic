@@ -47,5 +47,20 @@ export const VUT = {
 		"de-LI": "Vanuatu",
 		"de-LU": "Vanuatu"
 	},
-	"callingCode": "678"
+	"callingCode": "678",
+	"phoneMasks": [
+		{
+			"mask": "## ###",
+			"minLength": 5,
+			"maxLength": 5
+		},
+		{
+			"mask": "### ####",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[57-9]"
+			]
+		}
+	]
 } satisfies Country;

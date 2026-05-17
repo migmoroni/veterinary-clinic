@@ -47,5 +47,23 @@ export const BEN = {
 		"de-LI": "Benin",
 		"de-LU": "Benin"
 	},
-	"callingCode": "229"
+	"callingCode": "229",
+	"phoneMasks": [
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"[24-689]"
+			]
+		},
+		{
+			"mask": "## ## ## ## ##",
+			"minLength": 10,
+			"maxLength": 10,
+			"leadingDigits": [
+				"0"
+			]
+		}
+	]
 } satisfies Country;

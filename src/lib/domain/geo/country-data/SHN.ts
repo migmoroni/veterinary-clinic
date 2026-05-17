@@ -47,5 +47,17 @@ export const SHN = {
 		"de-LI": "St. Helena",
 		"de-LU": "St. Helena"
 	},
-	"callingCode": "290"
+	"callingCode": "290",
+	"phoneMasks": [
+		{
+			"mask": "####",
+			"minLength": 4,
+			"maxLength": 4
+		},
+		{
+			"mask": "## ###",
+			"minLength": 5,
+			"maxLength": 5
+		}
+	]
 } satisfies Country;

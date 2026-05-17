@@ -47,5 +47,31 @@ export const GAB = {
 		"de-LI": "Gabun",
 		"de-LU": "Gabun"
 	},
-	"callingCode": "241"
+	"callingCode": "241",
+	"phoneMasks": [
+		{
+			"mask": "# ## ## ##",
+			"minLength": 7,
+			"maxLength": 7,
+			"leadingDigits": [
+				"[2-7]"
+			]
+		},
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"0"
+			]
+		},
+		{
+			"mask": "## ## ## ##",
+			"minLength": 8,
+			"maxLength": 8,
+			"leadingDigits": [
+				"11|[67]"
+			]
+		}
+	]
 } satisfies Country;
