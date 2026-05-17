@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { OwnerContactInput, OwnerContactKind } from '$lib/domain/owner/owner.js';
+	import { countryCallingCodes } from '$lib/domain/geo/location.js';
 	import { formatEmailForInput } from '$lib/domain/shared/email.js';
 	import { formatPhoneForInput, formatPhoneForInputWithCaret } from '$lib/domain/shared/phone.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
@@ -11,6 +12,7 @@
 	let { contacts = $bindable<OwnerContactInput[]>([]) }: { contacts?: OwnerContactInput[] } = $props();
 
 	const contactKinds: OwnerContactKind[] = ['mobile', 'phone', 'email', 'other'];
+	const knownCallingCodes = countryCallingCodes();
 
 	function kindLabelKey(kind: OwnerContactKind): TranslationKey {
 		return `owner.contactKind.${kind}` as TranslationKey;
@@ -29,7 +31,7 @@
 
 	function formatContactValue(kind: OwnerContactKind, value: string): string {
 		if (kind === 'other') return value;
-		return kind === 'email' ? formatEmailForInput(value) : formatPhoneForInput(value);
+		return kind === 'email' ? formatEmailForInput(value) : formatPhoneForInput(value, knownCallingCodes);
 	}
 
 	function isPhoneContact(kind: OwnerContactKind): boolean {
@@ -64,7 +66,7 @@
 			return;
 		}
 
-		const result = formatPhoneForInputWithCaret(input.value, input.selectionStart);
+		const result = formatPhoneForInputWithCaret(input.value, input.selectionStart, knownCallingCodes);
 		contacts = contacts.map((contact, contactIndex) => (contactIndex === index ? { ...contact, value: result.value } : contact));
 		await tick();
 		if (input === document.activeElement) input.setSelectionRange(result.caret, result.caret);

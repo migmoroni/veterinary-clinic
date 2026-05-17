@@ -2,6 +2,7 @@
 	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import OwnerAvatarEditorDialog from '$lib/components/owner/OwnerAvatarEditorDialog.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
+	import { countryCallingCodes } from '$lib/domain/geo/location.js';
 	import type { OwnerAdditionalResponsibleInput, OwnerContactInput, OwnerContactKind } from '$lib/domain/owner/owner.js';
 	import { formatEmailForInput } from '$lib/domain/shared/email.js';
 	import { formatPhoneForInput, formatPhoneForInputWithCaret } from '$lib/domain/shared/phone.js';
@@ -14,6 +15,7 @@
 	let avatarDialogIndex = $state<number | null>(null);
 
 	const contactKinds: OwnerContactKind[] = ['mobile', 'phone', 'email', 'other'];
+	const knownCallingCodes = countryCallingCodes();
 	const avatarDialogResponsible = $derived(avatarDialogIndex === null ? null : (responsibles[avatarDialogIndex] ?? null));
 
 	function kindLabelKey(kind: OwnerContactKind): TranslationKey {
@@ -37,7 +39,7 @@
 
 	function formatContactValue(kind: OwnerContactKind, value: string): string {
 		if (kind === 'other') return value;
-		return kind === 'email' ? formatEmailForInput(value) : formatPhoneForInput(value);
+		return kind === 'email' ? formatEmailForInput(value) : formatPhoneForInput(value, knownCallingCodes);
 	}
 
 	function isPhoneContact(kind: OwnerContactKind): boolean {
@@ -136,7 +138,7 @@
 			return;
 		}
 
-		const result = formatPhoneForInputWithCaret(input.value, input.selectionStart);
+		const result = formatPhoneForInputWithCaret(input.value, input.selectionStart, knownCallingCodes);
 		responsibles = responsibles.map((responsible, index) => {
 			if (index !== responsibleIndex) return responsible;
 

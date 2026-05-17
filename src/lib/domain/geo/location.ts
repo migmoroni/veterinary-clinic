@@ -29,7 +29,9 @@ function cleanCityValue(value: string): string {
 	return value.replace(/\s+-\s*[A-Z]{2}\s*$/i, '').replace(/\s+/g, ' ').trim();
 }
 
-const countryByCode = new Map<string, Country>(countries.map((country) => [country.code, country]));
+const countryList: readonly Country[] = countries;
+const countryByCode = new Map<string, Country>(countryList.map((country) => [country.code, country]));
+const callingCodes = [...new Set(countryList.map((country) => country.callingCode).filter((code): code is string => Boolean(code)))].sort((left, right) => right.length - left.length || left.localeCompare(right));
 const stateByCode = new Map(brazilStates.map((state) => [state.code, state]));
 const citiesByState = new Map<string, BrazilCity[]>();
 const cityByStateAndKey = new Map<string, BrazilCity>();
@@ -101,6 +103,10 @@ export function countryCallingCode(value: string | null | undefined): string | n
 	if (!country) return null;
 
 	return countryByCode.get(country)?.callingCode ?? null;
+}
+
+export function countryCallingCodes(): string[] {
+	return [...callingCodes];
 }
 
 export function countryHasStructuredLocations(value: string | null | undefined): boolean {

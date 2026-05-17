@@ -2,6 +2,8 @@ export function digitsOnly(value: string | null | undefined): string {
 	return value?.replace(/\D/g, '') ?? '';
 }
 
+const MAX_INTERNATIONAL_PHONE_DIGITS = 15;
+
 function startsWithExplicitCountryCode(value: string | null | undefined): boolean {
 	return value?.trimStart().startsWith('+') ?? false;
 }
@@ -18,6 +20,23 @@ function trailingFormattingLength(value: string): number {
 	}
 
 	return count;
+}
+
+function normalizeCallingCode(value: string | null | undefined): string | null {
+	const digits = digitsOnly(value);
+	return digits.length > 0 ? digits : null;
+}
+
+function normalizeCallingCodes(values: readonly (string | null | undefined)[] = []): string[] {
+	return [...new Set(values.map(normalizeCallingCode).filter((value): value is string => Boolean(value)))].sort((left, right) => right.length - left.length || left.localeCompare(right));
+}
+
+function hasLongerCallingCodeCandidate(value: string, callingCodes: readonly string[]): boolean {
+	return callingCodes.some((callingCode) => callingCode.length > value.length && callingCode.startsWith(value));
+}
+
+function matchingCallingCode(value: string, callingCodes: readonly string[]): string | null {
+	return callingCodes.find((callingCode) => value.startsWith(callingCode)) ?? null;
 }
 
 function phoneInputCaretPosition(value: string, formattedValue: string, selectionStart: number | null | undefined): number {
@@ -59,45 +78,76 @@ function formatBrazilPhoneLocal(value: string): string {
 	return `(${areaCode}) ${number.slice(0, 5)}-${number.slice(5)}`;
 }
 
-export function formatPhoneForInput(value: string | null | undefined): string {
+function formatLocalPhoneForCallingCode(callingCode: string, value: string): string {
+	if (callingCode === '55') return formatBrazilPhoneLocal(value);
+	return digitsOnly(value);
+}
+
+function formatInternationalPhone(callingCode: string, value: string, preserveEmptyLocalSeparator = false): string {
+	const localDigits = digitsOnly(value).slice(0, Math.max(0, MAX_INTERNATIONAL_PHONE_DIGITS - callingCode.length));
+	const local = formatLocalPhoneForCallingCode(callingCode, localDigits);
+
+	if (local) return `+${callingCode} ${local}`;
+	return preserveEmptyLocalSeparator ? `+${callingCode} ` : `+${callingCode}`;
+}
+
+function formatExplicitPhoneForInput(value: string, callingCodes: readonly string[]): string {
+	const trimmed = value.trimStart();
+	const rawAfterPlus = trimmed.slice(1);
+	const firstDigitIndex = rawAfterPlus.search(/\d/);
+	if (firstDigitIndex < 0) return '+';
+
+	const digitStart = firstDigitIndex;
+	let digitEnd = digitStart;
+	while (digitEnd < rawAfterPlus.length && isDigit(rawAfterPlus[digitEnd])) digitEnd += 1;
+
+	const firstDigits = rawAfterPlus.slice(digitStart, digitEnd).slice(0, MAX_INTERNATIONAL_PHONE_DIGITS);
+	const rawAfterFirstDigits = rawAfterPlus.slice(digitEnd);
+	const hasUserDefinedSeparator = rawAfterFirstDigits.length > 0;
+
+	if (hasUserDefinedSeparator) {
+		const localDigits = digitsOnly(rawAfterFirstDigits);
+		return formatInternationalPhone(firstDigits, localDigits, localDigits.length === 0);
+	}
+
+	const digits = digitsOnly(trimmed).slice(0, MAX_INTERNATIONAL_PHONE_DIGITS);
+	if (hasLongerCallingCodeCandidate(digits, callingCodes)) return `+${digits}`;
+
+	const callingCode = matchingCallingCode(digits, callingCodes);
+	if (callingCode && digits.length > callingCode.length) return formatInternationalPhone(callingCode, digits.slice(callingCode.length));
+
+	return `+${digits}`;
+}
+
+export function formatPhoneForInput(value: string | null | undefined, callingCodes: readonly (string | null | undefined)[] = []): string {
 	const hasExplicitCountryCode = startsWithExplicitCountryCode(value);
-	const digits = digitsOnly(value).slice(0, hasExplicitCountryCode ? 15 : 13);
+	const normalizedCallingCodes = normalizeCallingCodes(callingCodes);
+	const digits = digitsOnly(value).slice(0, hasExplicitCountryCode ? MAX_INTERNATIONAL_PHONE_DIGITS : 13);
 
 	if (hasExplicitCountryCode && !digits) return '+';
 	if (!digits) return '';
 
-	if (hasExplicitCountryCode && digits.startsWith('55')) {
-		const local = formatBrazilPhoneLocal(digits.slice(2));
-		return local ? `+55 ${local}` : '+55';
-	}
-
-	if (hasExplicitCountryCode) return `+${digits}`;
+	if (hasExplicitCountryCode) return formatExplicitPhoneForInput(value ?? '', normalizedCallingCodes);
 
 	return formatBrazilPhoneLocal(digits);
 }
 
-export function formatPhoneForInputWithCaret(value: string, selectionStart: number | null | undefined): { value: string; caret: number } {
-	const formatted = formatPhoneForInput(value);
+export function formatPhoneForInputWithCaret(value: string, selectionStart: number | null | undefined, callingCodes: readonly (string | null | undefined)[] = []): { value: string; caret: number } {
+	const formatted = formatPhoneForInput(value, callingCodes);
 	return { value: formatted, caret: phoneInputCaretPosition(value, formatted, selectionStart) };
 }
 
-export function formatPhoneForStorage(value: string | null | undefined, callingCode: string | null | undefined): string | null {
+export function formatPhoneForStorage(value: string | null | undefined, callingCode: string | null | undefined, callingCodes: readonly (string | null | undefined)[] = []): string | null {
 	const trimmed = value?.trim() ?? '';
 	const digits = digitsOnly(trimmed);
 	if (!digits) return null;
 
-	if (startsWithExplicitCountryCode(trimmed)) return formatPhoneForInput(trimmed);
+	if (startsWithExplicitCountryCode(trimmed)) return formatPhoneForInput(trimmed, callingCodes);
 
-	const countryCallingCode = digitsOnly(callingCode);
+	const countryCallingCode = normalizeCallingCode(callingCode);
 	if (!countryCallingCode) return trimmed;
 
-	const localDigits = digits.slice(0, Math.max(0, 15 - countryCallingCode.length));
-	if (countryCallingCode === '55') {
-		const local = formatBrazilPhoneLocal(localDigits);
-		return local ? `+55 ${local}` : '+55';
-	}
-
-	return `+${countryCallingCode}${localDigits}`;
+	return formatInternationalPhone(countryCallingCode, digits);
 }
 
 export function formatPhoneForWhatsApp(value: string | null | undefined): string | null {
