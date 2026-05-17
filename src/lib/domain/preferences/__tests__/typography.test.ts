@@ -4,8 +4,12 @@ import {
 	CUSTOM_FONT_SIZE_MIN_PX,
 	DEFAULT_CUSTOM_ROOT_SIZE_PX,
 	DEFAULT_TYPOGRAPHY_PREFERENCES,
+	getTypographyFontFamily,
 	getTypographyRootSize,
 	normalizeCustomRootSizePx,
+	normalizeTypographyPreferences,
+	sanitizeSystemFontDirectory,
+	sanitizeSystemFontFamily,
 	stepCustomRootSizePx,
 	stepFontSize
 } from '../typography.js';
@@ -49,5 +53,50 @@ describe('custom typography root size', () => {
 				customRootSizePx: CUSTOM_FONT_SIZE_MAX_PX + 6
 			})
 		).toBe(`${CUSTOM_FONT_SIZE_MAX_PX}px`);
+	});
+});
+
+describe('typography input sanitization', () => {
+	it('removes CSS-breaking characters from system font family input', () => {
+		const sanitized = sanitizeSystemFontFamily(' "Inter";\nbody{display:none}\r ');
+
+		expect(sanitized).toBe('"Inter"bodydisplay:none');
+		expect(sanitizeSystemFontFamily(123)).toBe('');
+		expect(sanitizeSystemFontFamily('A'.repeat(200))).toHaveLength(120);
+	});
+
+	it('removes control characters from system font directories', () => {
+		expect(sanitizeSystemFontDirectory(' /tmp/fonts\0\n../../x\r ')).toBe('/tmp/fonts../../x');
+		expect(sanitizeSystemFontDirectory(null)).toBe('');
+		expect(sanitizeSystemFontDirectory('A'.repeat(600))).toHaveLength(500);
+	});
+
+	it('normalizes full typography preference objects from untrusted shapes', () => {
+		expect(
+			normalizeTypographyPreferences({
+				fontSize: 'giant',
+				customRootSizePx: 10_000,
+				fontSource: 'system',
+				bundledFont: 'unknown',
+				systemFontFamily: 'Bad;\nFont{}',
+				systemFontDirectory: ' /fonts\0bad\n '
+			})
+		).toEqual({
+			...DEFAULT_TYPOGRAPHY_PREFERENCES,
+			customRootSizePx: CUSTOM_FONT_SIZE_MAX_PX,
+			fontSource: 'system',
+			systemFontFamily: 'BadFont',
+			systemFontDirectory: '/fontsbad'
+		});
+	});
+
+	it('quotes and escapes custom system font families for CSS use', () => {
+		expect(
+			getTypographyFontFamily({
+				...DEFAULT_TYPOGRAPHY_PREFERENCES,
+				fontSource: 'system',
+				systemFontFamily: 'A "Quoted" \\ Font'
+			})
+		).toContain('"A \\"Quoted\\" \\\\ Font"');
 	});
 });

@@ -18,6 +18,12 @@ describe('phone input mask', () => {
 		expect(formatPhoneForInput('+351 912 345 678')).toBe('+351912345678');
 	});
 
+	it('strips non-digits and caps long typed phone values', () => {
+		expect(formatPhoneForInput('abc (16) 99999-8888 ramal 999')).toBe('(16) 99999-8888');
+		expect(formatPhoneForInput('+12345678901234567890')).toBe('+123456789012345');
+		expect(formatPhoneForInput('12345678901234567890')).toBe('(12) 34567-8901');
+	});
+
 	it('preserves the caret around generated formatting characters', () => {
 		expect(formatPhoneForInputWithCaret('(16) 99999-8888', 5)).toEqual({ value: '(16) 99999-8888', caret: 5 });
 		expect(formatPhoneForInputWithCaret('16999998888', 4)).toEqual({ value: '(16) 99999-8888', caret: 7 });
@@ -39,6 +45,11 @@ describe('phone storage normalization', () => {
 	it('does not treat bare 55 as a country code', () => {
 		expect(formatPhoneForStorage('5516999998888', '55')).toBe('+55 (55) 16999-9988');
 	});
+
+	it('characterizes storage behavior without a known country calling code', () => {
+		expect(formatPhoneForStorage('  abc 123  ', null)).toBe('abc 123');
+		expect(formatPhoneForStorage('9'.repeat(200), '351')).toBe(`+351${'9'.repeat(12)}`);
+	});
 });
 
 describe('phone helpers', () => {
@@ -58,6 +69,7 @@ describe('phone helpers', () => {
 	it('builds phone call URLs', () => {
 		expect(getPhoneCallUrl('(16) 3333-4444')).toBe('tel:1633334444');
 		expect(getPhoneCallUrl('+1 202 555 0181')).toBe('tel:+12025550181');
+		expect(getPhoneCallUrl('+abc')).toBeNull();
 		expect(getPhoneCallUrl('')).toBeNull();
 	});
 });

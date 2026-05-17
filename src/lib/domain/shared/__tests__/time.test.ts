@@ -13,10 +13,17 @@ describe('trash retention helpers', () => {
 	it('computes age in years, months and days', () => {
 		expect(computeAgeFromBirthDate('2020-05-08', new Date(2026, 4, 8))).toEqual({ years: 6, months: 0, days: 0 });
 		expect(computeAgeFromBirthDate('2024-12-25', new Date(2026, 4, 8))).toEqual({ years: 1, months: 4, days: 13 });
+		expect(computeAgeFromBirthDate('2024-02-29', new Date(2025, 1, 28))).toEqual({ years: 0, months: 11, days: 30 });
 	});
 
 	it('returns null for invalid or future birth dates', () => {
 		expect(computeAgeFromBirthDate('2026-02-31', new Date(2026, 4, 8))).toBeNull();
+		expect(computeAgeFromBirthDate('2026-05-08T00:00:00', new Date(2026, 4, 8))).toBeNull();
+		expect(computeAgeFromBirthDate('2026-05-08<script>', new Date(2026, 4, 8))).toBeNull();
 		expect(computeAgeFromBirthDate('2099-01-01', new Date(2026, 4, 8))).toBeNull();
+	});
+
+	it('surfaces invalid deletion timestamps instead of masking them', () => {
+		expect(() => computePurgeAfter('not-a-date')).toThrow(RangeError);
 	});
 });

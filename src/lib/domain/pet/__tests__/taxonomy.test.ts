@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getPetBreedOptions, isPetBreedForSpecies, isPetSpecies } from '../taxonomy.js';
+import { getPetBreedOption, getPetBreedOptions, getPetSpeciesOption, isPetBreed, isPetBreedForSpecies, isPetSpecies, petBreedOptions } from '../taxonomy.js';
 
 describe('pet taxonomy', () => {
 	it('lists breeds by species', () => {
@@ -12,5 +12,26 @@ describe('pet taxonomy', () => {
 		expect(isPetSpecies('bird')).toBe(false);
 		expect(isPetBreedForSpecies('canine', 'poodle')).toBe(true);
 		expect(isPetBreedForSpecies('canine', 'siamese')).toBe(false);
+	});
+
+	it('rejects casing, markup-like values and oversized unknown ids', () => {
+		expect(isPetSpecies('CANINE')).toBe(false);
+		expect(isPetSpecies('<script>canine</script>')).toBe(false);
+		expect(isPetBreed('poodle')).toBe(true);
+		expect(isPetBreed('POODLE')).toBe(false);
+		expect(isPetBreed('poodle<script>')).toBe(false);
+		expect(isPetBreed('x'.repeat(10_000))).toBe(false);
+	});
+
+	it('returns null or empty collections for missing taxonomy selections', () => {
+		expect(getPetSpeciesOption(null)).toBeNull();
+		expect(getPetBreedOption(null)).toBeNull();
+		expect(getPetBreedOptions(null)).toEqual([]);
+	});
+
+	it('keeps every configured breed compatible with its own species', () => {
+		for (const breed of petBreedOptions) {
+			expect(isPetBreedForSpecies(breed.species, breed.id)).toBe(true);
+		}
 	});
 });

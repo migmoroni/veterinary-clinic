@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findVaccinePreset, normalizeVaccineName, type VaccinePreset } from '../vaccine.js';
+import { computeVaccineDueAt, findVaccinePreset, normalizeVaccineDoseLabel, normalizeVaccineName, type VaccinePreset } from '../vaccine.js';
 
 const presets: VaccinePreset[] = [
 	{
@@ -26,6 +26,9 @@ describe('vaccine helpers', () => {
 		expect(normalizeVaccineName('V 10')).toBe('v10');
 		expect(normalizeVaccineName('v10')).toBe('v10');
 		expect(normalizeVaccineName('v   - 10')).toBe('v10');
+		expect(normalizeVaccineName(' <script>alert(1)</script> V ÁÇ 10 ')).toBe('scriptalert1scriptvac10');
+		expect(normalizeVaccineName('A'.repeat(10_000))).toHaveLength(10_000);
+		expect(normalizeVaccineDoseLabel(' 1ª dose !!! ')).toBe('1dose');
 	});
 
 	it('finds presets when spacing is added or removed', () => {
@@ -37,5 +40,18 @@ describe('vaccine helpers', () => {
 
 	it('matches older spaced normalized keys', () => {
 		expect(findVaccinePreset('v10', [{ ...presets[0], normalizedName: 'v 10' }])?.name).toBe('V 10');
+	});
+
+	it('computes due dates across day and month boundaries', () => {
+		expect(computeVaccineDueAt('2026-05-08', { validityValue: 21, validityUnit: 'days' })).toBe('2026-05-29');
+		expect(computeVaccineDueAt('2024-01-31', { validityValue: 1, validityUnit: 'months' })).toBe('2024-02-29');
+		expect(computeVaccineDueAt('2025-01-31', { validityValue: 1, validityUnit: 'months' })).toBe('2025-02-28');
+	});
+
+	it('returns null for invalid, trailing, or non-positive due date inputs', () => {
+		expect(computeVaccineDueAt('2026-05-08<script>', { validityValue: 21, validityUnit: 'days' })).toBeNull();
+		expect(computeVaccineDueAt('2026-02-31', { validityValue: 21, validityUnit: 'days' })).toBeNull();
+		expect(computeVaccineDueAt('2026-05-08', { validityValue: 0, validityUnit: 'days' })).toBeNull();
+		expect(computeVaccineDueAt('2026-05-08', { validityValue: -1, validityUnit: 'months' })).toBeNull();
 	});
 });

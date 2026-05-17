@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { brazilCityOptions, countryCallingCode, countryOptions, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '../location.js';
+import { brazilCityOptions, countryCallingCode, countryOptions, normalizeLocationKey, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '../location.js';
 
 describe('offline location catalog', () => {
 	it('normalizes country codes from the offline catalog', () => {
@@ -12,9 +12,16 @@ describe('offline location catalog', () => {
 		expect(countryOptions('it-CH').find((option) => option.value === 'DEU')?.label).toBe('Germania');
 		expect(countryOptions('de-AT').find((option) => option.value === 'DEU')?.label).toBe('Deutschland');
 		expect(normalizeOwnerCountry('BRA')).toBe('BRA');
+		expect(normalizeOwnerCountry(' bra ')).toBe('BRA');
 		expect(normalizeOwnerCountry('PRT')).toBe('PRT');
 		expect(normalizeOwnerCountry('BR')).toBeNull();
 		expect(normalizeOwnerCountry('Brazil')).toBeNull();
+		expect(normalizeOwnerCountry('BRA<script>')).toBeNull();
+	});
+
+	it('normalizes location lookup keys by removing accents and punctuation', () => {
+		expect(normalizeLocationKey('  São\tJosé!!! 123  ')).toBe('sao jose 123');
+		expect(normalizeLocationKey('<script>alert(1)</script>')).toBe('script alert 1 script');
 	});
 
 	it('returns country calling codes from the offline catalog', () => {
@@ -26,13 +33,19 @@ describe('offline location catalog', () => {
 
 	it('normalizes state and city from the offline Brazilian catalog', () => {
 		expect(normalizeOwnerState('SP')).toBe('SP');
+		expect(normalizeOwnerState(' sp ')).toBe('SP');
 		expect(normalizeOwnerCity('Araraquara', 'BRA', 'SP')).toBe('Araraquara');
+		expect(normalizeOwnerCity('  Américo\tBrasiliense  ', 'BRA', 'SP')).toBe('Américo Brasiliense');
 		expect(normalizeOwnerCity('Araraquara', 'BRA', 'RJ')).toBeNull();
+		expect(normalizeOwnerCity('x'.repeat(10_000), 'BRA')).toBeNull();
 	});
 
 	it('keeps state and city free for countries without offline subdivision data', () => {
+		const largeCity = 'x'.repeat(10_000);
+
 		expect(normalizeOwnerState('California', 'USA')).toBe('California');
 		expect(normalizeOwnerCity('San Diego', 'USA', 'California')).toBe('San Diego');
+		expect(normalizeOwnerCity(` ${largeCity} `, 'USA', 'California')).toBe(largeCity);
 	});
 
 	it('infers state from a known city when legacy data has no state', () => {
