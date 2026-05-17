@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { countryLabelLocales } from '../country-data/index.js';
 import { brazilCityOptions, countryCallingCode, countryCallingCodes, countryOptions, countryPhoneFormat, countryPhoneFormats, normalizeLocationKey, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '../location.js';
 
 describe('offline location catalog', () => {
@@ -11,6 +12,28 @@ describe('offline location catalog', () => {
 		expect(countryOptions('fr-CA').find((option) => option.value === 'DEU')?.label).toBe('Allemagne');
 		expect(countryOptions('it-CH').find((option) => option.value === 'DEU')?.label).toBe('Germania');
 		expect(countryOptions('de-AT').find((option) => option.value === 'DEU')?.label).toBe('Deutschland');
+		expect(countryOptions('nl-BE').find((option) => option.value === 'DEU')?.label).toBe('Duitsland');
+		expect(countryOptions('sv-FI').find((option) => option.value === 'DEU')?.label).toBe('Tyskland');
+		expect(countryOptions('cs-CZ').find((option) => option.value === 'DEU')?.label).toBe('Německo');
+		expect(countryOptions('uk-UA').find((option) => option.value === 'DEU')?.label).toBe('Німеччина');
+		expect(countryOptions('ca-AD').find((option) => option.value === 'DEU')?.label).toBe('Alemanya');
+		expect(countryOptions('ga-IE').find((option) => option.value === 'DEU')?.label).toBe('an Ghearmáin');
+		expect(countryOptions('no-NO').find((option) => option.value === 'DEU')?.label).toBe('Tyskland');
+		expect(countryOptions('ay-BO').find((option) => option.value === 'BOL')?.label).toBe('Wuliwya');
+		expect(countryOptions('ay-BO').find((option) => option.value === 'DEU')?.label).toBe('Alemania');
+		expect(countryOptions('qu-PE').find((option) => option.value === 'PER')?.label).toBe('Piruw');
+		expect(countryOptions('chr-US').find((option) => option.value === 'USA')?.label).toBe('ᏌᏊ ᎢᏳᎾᎵᏍᏔᏅ ᏍᎦᏚᎩ');
+		expect(countryOptions('lkt-US').find((option) => option.value === 'USA')?.label).toBe('Mílahaŋska Tȟamákȟočhe');
+		expect(countryOptions('kl-GL').find((option) => option.value === 'GRL')?.label).toBe('Kalaallit Nunaat');
+		expect(countryOptions('hi-IN').find((option) => option.value === 'IND')?.label).toBe('भारत');
+		expect(countryOptions('bn-BD').find((option) => option.value === 'BGD')?.label).toBe('বাংলাদেশ');
+		expect(countryOptions('ta-SG').find((option) => option.value === 'SGP')?.label).toBe('சிங்கப்பூர்');
+		expect(countryOptions('ja-JP').find((option) => option.value === 'JPN')?.label).toBe('日本');
+		expect(countryOptions('ko-KR').find((option) => option.value === 'KOR')?.label).toBe('대한민국');
+		expect(countryOptions('zh-Hant-SG').find((option) => option.value === 'CHN')?.label).toBe('中國');
+		expect(countryOptions('th-TH').find((option) => option.value === 'THA')?.label).toBe('ไทย');
+		expect(countryOptions('ar-SA').find((option) => option.value === 'SAU')?.label).toBe('المملكة العربية السعودية');
+		expect(countryLabelLocales).toEqual(expect.arrayContaining(['gn-PY', 'ay-BO', 'qu-PE', 'chr-US', 'lkt-US', 'kl-GL', 'hi-IN', 'ta-SG', 'ja-JP', 'ko-KR', 'zh-CN', 'th-TH', 'ar-SA', 'en-GB', 'pt-AO', 'nl-NL', 'tr-CY']));
 		expect(normalizeOwnerCountry('BRA')).toBe('BRA');
 		expect(normalizeOwnerCountry(' bra ')).toBe('BRA');
 		expect(normalizeOwnerCountry('PRT')).toBe('PRT');

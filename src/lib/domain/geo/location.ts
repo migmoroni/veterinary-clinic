@@ -47,6 +47,123 @@ const citiesByState = new Map<string, BrazilCity[]>();
 const cityByStateAndKey = new Map<string, BrazilCity>();
 const citiesByKey = new Map<string, BrazilCity[]>();
 
+const countryLabelFallbackLocales: Partial<Record<string, readonly CountryLabelLocale[]>> = {
+	gn: ['es-PY', 'es-419', 'es-ES'],
+	ay: ['es-419', 'es-ES'],
+	qu: ['es-419', 'es-ES'],
+	chr: ['en-US'],
+	lkt: ['en-US'],
+	kl: ['da-DK', 'en-GB', 'en-US'],
+	hi: ['hi-IN'],
+	bn: ['bn-IN', 'bn-BD'],
+	ta: ['ta-IN', 'ta-LK', 'ta-SG', 'ta-MY'],
+	te: ['te-IN'],
+	mr: ['mr-IN'],
+	gu: ['gu-IN'],
+	kn: ['kn-IN'],
+	ml: ['ml-IN'],
+	pa: ['pa-IN'],
+	ur: ['ur-IN', 'ur-PK'],
+	or: ['or-IN'],
+	as: ['as-IN'],
+	ne: ['ne-IN', 'ne-NP'],
+	si: ['si-LK'],
+	kok: ['kok-IN'],
+	sd: ['sd-IN'],
+	ks: ['ks-IN'],
+	doi: ['doi-IN'],
+	mni: ['mni-IN'],
+	brx: ['brx-IN'],
+	sat: ['sat-IN'],
+	mai: ['mai-IN'],
+	sa: ['sa-IN'],
+	dz: ['dz-BT'],
+	ja: ['ja-JP'],
+	ko: ['ko-KR', 'ko-KP'],
+	zh: ['zh-CN', 'zh-Hans-CN', 'zh-Hant-TW', 'zh-TW', 'zh-HK', 'zh-MO', 'zh-SG'],
+	yue: ['yue-Hant-HK', 'yue-Hans-CN', 'zh-Hant-TW', 'zh-HK', 'zh-CN'],
+	mn: ['mn-MN'],
+	bo: ['bo-CN', 'bo-IN'],
+	ug: ['ug-CN'],
+	ii: ['ii-CN'],
+	th: ['th-TH'],
+	lo: ['lo-LA'],
+	km: ['km-KH'],
+	my: ['my-MM'],
+	vi: ['vi-VN'],
+	id: ['id-ID'],
+	ms: ['ms-MY', 'ms-SG', 'ms-BN'],
+	jv: ['jv-ID'],
+	su: ['su-ID'],
+	fil: ['fil-PH'],
+	ceb: ['ceb-PH'],
+	ka: ['ka-GE'],
+	hy: ['hy-AM'],
+	az: ['az-AZ', 'az-Cyrl-AZ'],
+	kk: ['kk-KZ'],
+	ky: ['ky-KG'],
+	uz: ['uz-UZ'],
+	tg: ['tg-TJ'],
+	tk: ['tk-TM'],
+	fa: ['fa-IR', 'fa-AF'],
+	ps: ['ps-AF', 'ps-PK'],
+	he: ['he-IL'],
+	ar: ['ar-SA', 'ar-AE', 'ar-QA', 'ar-BH', 'ar-KW', 'ar-OM', 'ar-YE', 'ar-IQ', 'ar-JO', 'ar-LB', 'ar-SY', 'ar-PS'],
+	en: ['en-GB', 'en-US'],
+	pt: ['pt-PT', 'pt-BR'],
+	es: ['es-419', 'es-ES'],
+	fr: ['fr-FR', 'fr-BE', 'fr-CH'],
+	it: ['it-IT', 'it-CH'],
+	de: ['de-DE', 'de-AT', 'de-CH'],
+	nl: ['nl-NL', 'nl-BE'],
+	sv: ['sv-SE', 'sv-FI'],
+	da: ['da-DK'],
+	no: ['nb-NO', 'nn-NO'],
+	nb: ['nb-NO'],
+	nn: ['nn-NO', 'nb-NO'],
+	fi: ['fi-FI'],
+	is: ['is-IS'],
+	fo: ['fo-FO'],
+	et: ['et-EE'],
+	lv: ['lv-LV'],
+	lt: ['lt-LT'],
+	pl: ['pl-PL'],
+	cs: ['cs-CZ'],
+	sk: ['sk-SK'],
+	sl: ['sl-SI'],
+	hr: ['hr-HR'],
+	bs: ['bs-BA'],
+	sr: ['sr-RS', 'sr-BA', 'sr-ME'],
+	mk: ['mk-MK'],
+	bg: ['bg-BG'],
+	be: ['be-BY'],
+	uk: ['uk-UA'],
+	ru: ['ru-RU'],
+	el: ['el-GR', 'el-CY'],
+	ro: ['ro-RO', 'ro-MD'],
+	hu: ['hu-HU'],
+	sq: ['sq-AL', 'sq-XK'],
+	mt: ['mt-MT'],
+	ga: ['ga-IE'],
+	cy: ['cy-GB'],
+	gd: ['gd-GB'],
+	lb: ['lb-LU'],
+	ca: ['ca-ES', 'ca-AD', 'ca-FR', 'ca-IT'],
+	eu: ['eu-ES', 'eu-FR'],
+	gl: ['gl-ES'],
+	tr: ['tr-TR', 'tr-CY']
+};
+
+function countryLabelFallbacks(locale: string, language: string): readonly CountryLabelLocale[] {
+	const normalizedLocale = locale.toLowerCase();
+	if (normalizedLocale.startsWith('zh-hant')) return ['zh-Hant-TW', 'zh-TW', 'zh-HK', 'zh-MO', 'zh-CN', 'zh-Hans-CN', 'zh-SG'];
+	if (normalizedLocale.startsWith('zh-hans')) return ['zh-Hans-CN', 'zh-CN', 'zh-SG', 'zh-Hant-TW', 'zh-TW'];
+	if (normalizedLocale.startsWith('yue-hant')) return ['yue-Hant-HK', 'zh-Hant-TW', 'zh-HK', 'zh-TW', 'zh-CN'];
+	if (normalizedLocale.startsWith('yue-hans')) return ['yue-Hans-CN', 'zh-Hans-CN', 'zh-CN', 'yue-Hant-HK'];
+
+	return countryLabelFallbackLocales[language] ?? [];
+}
+
 for (const city of brazilCities) {
 	const stateCities = citiesByState.get(city.stateCode) ?? [];
 	stateCities.push(city);
@@ -68,15 +185,15 @@ function countryLabel(country: Country, locale: string = 'pt-BR'): string {
 	const labelLocale = locale as CountryLabelLocale;
 	const labels = country.labels;
 	if (labels[labelLocale]) return labels[labelLocale];
-	if (locale === 'gn-PY') return labels['es-PY'] ?? labels['es-419'] ?? labels['es-ES'] ?? labels['pt-BR'] ?? labels['en-US'] ?? country.code;
-	if (locale.startsWith('es')) return labels['es-419'] ?? labels['es-ES'] ?? labels['pt-BR'] ?? labels['en-US'] ?? country.code;
-	if (locale.startsWith('fr')) return labels['fr-FR'] ?? labels['pt-BR'] ?? labels['en-US'] ?? country.code;
-	if (locale.startsWith('it')) return labels['it-IT'] ?? labels['pt-BR'] ?? labels['en-US'] ?? country.code;
-	if (locale.startsWith('de')) return labels['de-DE'] ?? labels['pt-BR'] ?? labels['en-US'] ?? country.code;
-	if (locale.startsWith('pt')) return labels['pt-BR'] ?? labels['pt-PT'] ?? labels['en-US'] ?? country.code;
-	if (locale.startsWith('en')) return labels['en-US'] ?? labels['pt-BR'] ?? country.code;
 
-	return labels['pt-BR'] ?? labels['en-US'] ?? country.code;
+	const language = locale.split('-')[0]?.toLowerCase() ?? '';
+	const languageFallbacks = countryLabelFallbacks(locale, language);
+	const fallbackLocales: CountryLabelLocale[] = [...languageFallbacks, 'pt-BR', 'en-GB', 'en-US'];
+	for (const fallbackLocale of fallbackLocales) {
+		if (labels[fallbackLocale]) return labels[fallbackLocale];
+	}
+
+	return country.code;
 }
 
 export function countryOptions(locale = 'pt-BR'): LocationOption[] {
