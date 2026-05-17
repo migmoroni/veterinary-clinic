@@ -1,3 +1,5 @@
+import { isBrazilCountry } from '$lib/domain/geo/location.js';
+
 export interface CepAddress {
 	postalCode: string;
 	street: string;
@@ -15,17 +17,8 @@ interface ViaCepResponse {
 	erro?: boolean;
 }
 
-function normalizeCountry(value: string): string {
-	return value
-		.normalize('NFD')
-		.replace(/[\u0300-\u036f]/g, '')
-		.toLowerCase()
-		.replace(/[^a-z]/g, '');
-}
-
 export function isCountrySupportedForCepLookup(country: string): boolean {
-	const normalized = normalizeCountry(country.trim());
-	return normalized.length === 0 || normalized === 'br' || normalized === 'brasil' || normalized === 'brazil';
+	return isBrazilCountry(country);
 }
 
 export function normalizeCep(value: string): string {

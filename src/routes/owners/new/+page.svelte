@@ -4,8 +4,10 @@
 	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import OwnerAvatarEditorDialog from '$lib/components/owner/OwnerAvatarEditorDialog.svelte';
 	import OwnerContactsField from '$lib/components/owner/OwnerContactsField.svelte';
+	import Select from '$lib/components/ui/Select.svelte';
+	import { brazilCityOptions, brazilStateOptions, countryHasStructuredLocations, countryOptions, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '$lib/domain/geo/location.js';
 	import { DEFAULT_OWNER_COUNTRY, type OwnerInput } from '$lib/domain/owner/owner.js';
-	import { t, type TranslationKey } from '$lib/i18n/index.js';
+	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
 	import { isCountrySupportedForCepLookup, lookupCep } from '$lib/services/cep.service.js';
 	import { saveNewOwner } from '$lib/services/owner.service.js';
 	import Search from '@lucide/svelte/icons/search';
@@ -35,6 +37,42 @@
 	let avatarDialogOpen = $state(false);
 	let statusKey = $state<TranslationKey | null>(null);
 	let error = $state<string | null>(null);
+	const hasStructuredLocations = $derived(countryHasStructuredLocations(form.country));
+	const countrySelectOptions = $derived(countryOptions(i18n.locale));
+	const stateSelectOptions = $derived(hasStructuredLocations ? [{ value: '', label: t('owner.statePlaceholder') }, ...brazilStateOptions()] : []);
+	const citySelectOptions = $derived(hasStructuredLocations ? [{ value: '', label: t('owner.cityPlaceholder') }, ...brazilCityOptions(form.state)] : []);
+
+	function updateCountry(value: string) {
+		form = {
+			...form,
+			country: normalizeOwnerCountry(value) ?? DEFAULT_OWNER_COUNTRY,
+			state: '',
+			city: ''
+		};
+	}
+
+	function updateState(value: string) {
+		if (!hasStructuredLocations) {
+			form = { ...form, state: value };
+			return;
+		}
+
+		const state = normalizeOwnerState(value, form.country) ?? '';
+		form = {
+			...form,
+			state,
+			city: normalizeOwnerCity(form.city, form.country, state) ?? ''
+		};
+	}
+
+	function updateCity(value: string) {
+		if (!hasStructuredLocations) {
+			form = { ...form, city: value };
+			return;
+		}
+
+		form = { ...form, city: normalizeOwnerCity(value, form.country, form.state) ?? '' };
+	}
 
 	function openAvatarDialog() {
 		if (saving) return;
@@ -72,8 +110,8 @@
 			form.postalCode = cepAddress.postalCode;
 			form.street = cepAddress.street;
 			form.neighborhood = cepAddress.neighborhood;
-			form.city = cepAddress.city;
-			form.state = cepAddress.state;
+			form.state = normalizeOwnerState(cepAddress.state, form.country, cepAddress.city) ?? '';
+			form.city = normalizeOwnerCity(cepAddress.city, form.country, form.state) ?? '';
 			statusKey = 'status.cepFound';
 		} catch (exception) {
 			if (exception instanceof Error && exception.message === 'cep_invalid') {
@@ -90,6 +128,7 @@
 
 	function ownerErrorMessage(exception: unknown): string {
 		if (exception instanceof Error && exception.message === 'owner_contact_required') return t('owner.contactRequired');
+		if (exception instanceof Error && exception.message === 'owner_location_invalid') return t('owner.locationInvalid');
 		return exception instanceof Error ? exception.message : String(exception);
 	}
 
@@ -140,7 +179,7 @@
 
 			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
 				<span>{t('owner.country')}</span>
-				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.country} />
+				<Select id="owner-country" value={form.country} options={countrySelectOptions} ariaLabel={t('owner.country')} onchange={updateCountry} />
 			</label>
 
 			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-3">
@@ -178,14 +217,22 @@
 				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.neighborhood} />
 			</label>
 
-			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
-				<span>{t('owner.city')}</span>
-				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.city} />
-			</label>
-
 			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-1">
 				<span>{t('owner.state')}</span>
-				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.state} />
+				{#if hasStructuredLocations}
+					<Select id="owner-state" value={form.state} options={stateSelectOptions} ariaLabel={t('owner.state')} onchange={updateState} />
+				{:else}
+					<input id="owner-state" class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.state} autocomplete="address-level1" />
+				{/if}
+			</label>
+
+			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
+				<span>{t('owner.city')}</span>
+				{#if hasStructuredLocations}
+					<Select id="owner-city" value={form.city} options={citySelectOptions} disabled={!form.state} ariaLabel={t('owner.city')} onchange={updateCity} />
+				{:else}
+					<input id="owner-city" class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.city} autocomplete="address-level2" />
+				{/if}
 			</label>
 
 

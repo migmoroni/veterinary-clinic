@@ -168,7 +168,7 @@ db.exec(`
     neighborhood TEXT,
     city TEXT,
     state TEXT,
-    country TEXT NOT NULL DEFAULT 'Brazil',
+    country TEXT NOT NULL DEFAULT 'BRA',
     postal_code TEXT,
     additional_information TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -336,8 +336,8 @@ db.exec(`
 `);
 
 const insertOwner = db.prepare(`
-  INSERT INTO owners (name, street, street_number, address_complement, neighborhood, city, country, postal_code, additional_information)
-  VALUES (@name, @street, @streetNumber, @addressComplement, @neighborhood, @city, @country, @postalCode, @additionalInformation)
+  INSERT INTO owners (name, street, street_number, address_complement, neighborhood, city, state, country, postal_code, additional_information)
+  VALUES (@name, @street, @streetNumber, @addressComplement, @neighborhood, @city, @state, @country, @postalCode, @additionalInformation)
 `);
 
 const insertOwnerContact = db.prepare(`
@@ -565,8 +565,60 @@ const cityNameAliases: [string[], string][] = [
   [
     ['são carlos'],
     'São Carlos'
+  ],
+  [
+    ['rincão'],
+    'Rincão'
+  ],
+  [
+    ['guatapará'],
+    'Guatapará'
+  ],
+  [
+    ['motuca'],
+    'Motuca'
+  ],
+  [
+    ['dobrada'],
+    'Dobrada'
+  ],
+  [
+    ['matão'],
+    'Matão'
+  ],
+  [
+    ['vinhedo'],
+    'Vinhedo'
+  ],
+  [
+    ['bocaina'],
+    'Bocaina'
+  ],
+  [
+    ['boa esperança do sul'],
+    'Boa Esperança do Sul'
+  ],
+  [
+    ['alcinópolis - ms', 'alcinópolis'],
+    'Alcinópolis'
   ]
 ];
+
+const cityStateByName = new Map([
+  ['Alcinópolis', 'MS'],
+  ['Américo Brasiliense', 'SP'],
+  ['Araraquara', 'SP'],
+  ['Boa Esperança do Sul', 'SP'],
+  ['Bocaina', 'SP'],
+  ['Dobrada', 'SP'],
+  ['Guatapará', 'SP'],
+  ['Matão', 'SP'],
+  ['Motuca', 'SP'],
+  ['Rincão', 'SP'],
+  ['Santa Lúcia', 'SP'],
+  ['São Carlos', 'SP'],
+  ['Vinhedo', 'SP']
+]);
 
 const cityNameMap = new Map<string, string>();
 const cityNamePrefixes: [string, string][] = [];
@@ -594,6 +646,8 @@ const normalizeCityName = (value: string | undefined): string => {
   // Return whitespace-collapsed value even if not matched
   return raw.replace(/\s+/g, ' ');
 };
+
+const stateForCity = (city: string): string => cityStateByName.get(city) ?? 'SP';
 
 const legacyDocumentFragmentPattern = /\b(?:\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}|\d{2,3}\.?\d{3}\.?\d{3}(?:[-.]?\d{0,2})?)\b/g;
 const legacyEmailPattern = /\b[^\s@]+@[^\s@]+\.[^\s@]+\b/g;
@@ -1315,14 +1369,16 @@ const processarMigracao = () => {
         ownerId = ownersCache.get(ownerName)!;
         report.ownersReused += 1;
       } else {
+        const city = normalizeCityName(row['CIDADE']);
         const res = insertOwner.run({
           name: ownerName,
           street: parsedAddress.street,
           streetNumber: parsedAddress.streetNumber,
           addressComplement: parsedAddress.addressComplement,
           neighborhood: nullable(row['BAIRRO']),
-          city: normalizeCityName(row['CIDADE']),
-          country: 'Brazil',
+          city,
+          state: stateForCity(city),
+          country: 'BRA',
           postalCode: nullable(row['CEP']),
           additionalInformation: null
         });

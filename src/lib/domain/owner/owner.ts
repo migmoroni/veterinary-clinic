@@ -1,6 +1,6 @@
 export type OwnerContactKind = 'phone' | 'mobile' | 'email' | 'other';
 
-export const DEFAULT_OWNER_COUNTRY = 'Brazil';
+export const DEFAULT_OWNER_COUNTRY = 'BRA';
 
 export interface OwnerContact {
 	id: number;

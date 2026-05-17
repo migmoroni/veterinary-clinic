@@ -9,10 +9,12 @@
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import UnsavedChangesDialog from '$lib/components/records/UnsavedChangesDialog.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
+	import Select from '$lib/components/ui/Select.svelte';
+	import { brazilCityOptions, brazilStateOptions, countryHasStructuredLocations, countryOptions, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '$lib/domain/geo/location.js';
 	import { DEFAULT_OWNER_COUNTRY, type Owner, type OwnerContact, type OwnerContactKind, type OwnerInput } from '$lib/domain/owner/owner.js';
 	import type { Pet } from '$lib/domain/pet/pet.js';
 	import { getPetBreedOption, getPetSpeciesOption } from '$lib/domain/pet/taxonomy.js';
-	import { t, type TranslationKey } from '$lib/i18n/index.js';
+	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
 	import { isCountrySupportedForCepLookup, lookupCep } from '$lib/services/cep.service.js';
 	import { openEmailForEmail, openPhoneCallForPhone, openWhatsAppForPhone } from '$lib/services/contact.service.js';
 	import type { OwnerProfile } from '$lib/services/owner.service.js';
@@ -42,6 +44,10 @@
 	}
 
 	function toForm(owner: Owner): OwnerForm {
+		const country = normalizeOwnerCountry(owner.country) ?? DEFAULT_OWNER_COUNTRY;
+		const state = normalizeOwnerState(owner.state, country, owner.city) ?? '';
+		const city = normalizeOwnerCity(owner.city, country, state) ?? '';
+
 		return {
 			name: owner.name,
 			avatarBytes: owner.avatarBytes,
@@ -49,8 +55,8 @@
 			streetNumber: owner.streetNumber ?? '',
 			addressComplement: owner.addressComplement ?? '',
 			neighborhood: owner.neighborhood ?? '',
-			city: owner.city ?? '',
-			country: owner.country ?? DEFAULT_OWNER_COUNTRY,
+			city,
+			country,
 			postalCode: owner.postalCode ?? '',
 			additionalInformation: owner.additionalInformation ?? '',
 			contacts: owner.contacts.map((contact) => ({ kind: contact.kind, label: contact.label, value: contact.value })),
@@ -59,7 +65,7 @@
 				avatarBytes: responsible.avatarBytes,
 				contacts: responsible.contacts.map((contact) => ({ kind: contact.kind, label: contact.label, value: contact.value }))
 			})),
-			state: owner.state ?? ''
+			state
 		};
 	}
 
@@ -105,6 +111,38 @@
 		return kind === 'phone' || kind === 'mobile';
 	}
 
+	function updateCountry(value: string) {
+		form = {
+			...form,
+			country: normalizeOwnerCountry(value) ?? DEFAULT_OWNER_COUNTRY,
+			state: '',
+			city: ''
+		};
+	}
+
+	function updateState(value: string) {
+		if (!countryHasStructuredLocations(form.country)) {
+			form = { ...form, state: value };
+			return;
+		}
+
+		const state = normalizeOwnerState(value, form.country) ?? '';
+		form = {
+			...form,
+			state,
+			city: normalizeOwnerCity(form.city, form.country, state) ?? ''
+		};
+	}
+
+	function updateCity(value: string) {
+		if (!countryHasStructuredLocations(form.country)) {
+			form = { ...form, city: value };
+			return;
+		}
+
+		form = { ...form, city: normalizeOwnerCity(value, form.country, form.state) ?? '' };
+	}
+
 	function contactIsVisible(contact: OwnerContact | OwnerInput['contacts'][number]): boolean {
 		return contact.value.trim().length > 0 && (contact.kind !== 'other' || (contact.label ?? '').trim().length > 0);
 	}
@@ -116,6 +154,7 @@
 
 	function ownerErrorMessage(exception: unknown): string {
 		if (exception instanceof Error && exception.message === 'owner_contact_required') return t('owner.contactRequired');
+		if (exception instanceof Error && exception.message === 'owner_location_invalid') return t('owner.locationInvalid');
 		return exception instanceof Error ? exception.message : String(exception);
 	}
 
@@ -154,6 +193,10 @@
 	const currentSnapshot = $derived(snapshotForm(form));
 	const hasUnsavedChanges = $derived(editing && Boolean(profile) && !loading && currentSnapshot !== savedSnapshot);
 	const visibleContacts = $derived((editing ? form.contacts : (profile?.owner.contacts ?? [])).filter((contact) => contactIsVisible(contact)));
+	const hasStructuredLocations = $derived(countryHasStructuredLocations(form.country));
+	const countrySelectOptions = $derived(countryOptions(i18n.locale));
+	const stateSelectOptions = $derived(hasStructuredLocations ? [{ value: '', label: t('owner.statePlaceholder') }, ...brazilStateOptions()] : []);
+	const citySelectOptions = $derived(hasStructuredLocations ? [{ value: '', label: t('owner.cityPlaceholder') }, ...brazilCityOptions(form.state)] : []);
 
 	function petTaxonomyLabel(pet: Pet): string {
 		const species = getPetSpeciesOption(pet.species);
@@ -265,8 +308,8 @@
 			form.postalCode = cepAddress.postalCode;
 			form.street = cepAddress.street;
 			form.neighborhood = cepAddress.neighborhood;
-			form.city = cepAddress.city;
-			form.state = cepAddress.state;
+			form.state = normalizeOwnerState(cepAddress.state, form.country, cepAddress.city) ?? '';
+			form.city = normalizeOwnerCity(cepAddress.city, form.country, form.state) ?? '';
 			statusKey = 'status.cepFound';
 		} catch (exception) {
 			if (exception instanceof Error && exception.message === 'cep_invalid') {
@@ -470,7 +513,7 @@
 
 					<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
 						<span>{t('owner.country')}</span>
-						<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.country} disabled={!editing} />
+						<Select id="owner-country" value={form.country} options={countrySelectOptions} disabled={!editing} ariaLabel={t('owner.country')} onchange={updateCountry} />
 					</label>
 
 					<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-3">
@@ -508,14 +551,22 @@
 						<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.neighborhood} disabled={!editing} />
 					</label>
 
-					<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
-						<span>{t('owner.city')}</span>
-						<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.city} disabled={!editing} />
-					</label>
-
 					<label class="flex flex-col gap-1 text-sm font-medium">
 						<span>{t('owner.state')}</span>
-						<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.state} disabled={!editing} />
+						{#if hasStructuredLocations}
+							<Select id="owner-state" value={form.state} options={stateSelectOptions} disabled={!editing} ariaLabel={t('owner.state')} onchange={updateState} />
+						{:else}
+							<input id="owner-state" class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.state} disabled={!editing} autocomplete="address-level1" />
+						{/if}
+					</label>
+
+					<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
+						<span>{t('owner.city')}</span>
+						{#if hasStructuredLocations}
+							<Select id="owner-city" value={form.city} options={citySelectOptions} disabled={!editing || !form.state} ariaLabel={t('owner.city')} onchange={updateCity} />
+						{:else}
+							<input id="owner-city" class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.city} disabled={!editing} autocomplete="address-level2" />
+						{/if}
 					</label>
 
 					{#if editing}

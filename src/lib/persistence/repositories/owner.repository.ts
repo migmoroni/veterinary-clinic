@@ -8,6 +8,7 @@ import {
 	type OwnerContactKind,
 	type OwnerInput
 } from '$lib/domain/owner/owner.js';
+import { normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '$lib/domain/geo/location.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { formatEmailForInput } from '$lib/domain/shared/email.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
@@ -88,9 +89,23 @@ function normalizeContactValue(kind: OwnerContactKind, value: string | null | un
 	return kind === 'email' ? nullable(formatEmailForInput(trimmed)) : trimmed;
 }
 
-function normalizeCountry(value: string | null | undefined): string {
-	const trimmed = value?.trim() ?? '';
-	return trimmed.length > 0 ? trimmed : DEFAULT_OWNER_COUNTRY;
+interface NormalizedOwnerAddress {
+	country: string;
+	state: string | null;
+	city: string | null;
+}
+
+function normalizeOwnerAddress(input: Pick<OwnerInput, 'country' | 'state' | 'city'>): NormalizedOwnerAddress {
+	const country = normalizeOwnerCountry(input.country);
+	if (!country) throw new Error('owner_location_invalid');
+
+	const state = normalizeOwnerState(input.state, country, input.city);
+	if (nullable(input.state) && !state) throw new Error('owner_location_invalid');
+
+	const city = normalizeOwnerCity(input.city, country, state);
+	if (nullable(input.city) && !city) throw new Error('owner_location_invalid');
+
+	return { country, state, city };
 }
 
 function normalizeContacts(contacts: OwnerContactInput[]): OwnerContactInput[] {
@@ -351,6 +366,7 @@ export async function getOwner(id: number, includeDeleted = false): Promise<Owne
 
 export async function createOwner(input: OwnerInput): Promise<Owner> {
 	const avatarSqlLiteral = avatarBytesToSqlLiteral(input.avatarBytes);
+	const address = normalizeOwnerAddress(input);
 	const result = await execute(
 		`INSERT INTO owners (
 			name,
@@ -373,11 +389,11 @@ export async function createOwner(input: OwnerInput): Promise<Owner> {
 			nullable(input.streetNumber),
 			nullable(input.addressComplement),
 			nullable(input.neighborhood),
-			nullable(input.city),
-			normalizeCountry(input.country),
+			address.city,
+			address.country,
 			nullable(input.postalCode),
 			nullable(input.additionalInformation),
-			nullable(input.state)?.toUpperCase() ?? null
+			address.state
 		]
 	);
 
@@ -392,6 +408,7 @@ export async function createOwner(input: OwnerInput): Promise<Owner> {
 
 export async function updateOwner(id: number, input: OwnerInput): Promise<Owner> {
 	const avatarSqlLiteral = avatarBytesToSqlLiteral(input.avatarBytes);
+	const address = normalizeOwnerAddress(input);
 	await execute(
 		`UPDATE owners
 		 SET name = $2,
@@ -414,11 +431,11 @@ export async function updateOwner(id: number, input: OwnerInput): Promise<Owner>
 			nullable(input.streetNumber),
 			nullable(input.addressComplement),
 			nullable(input.neighborhood),
-			nullable(input.city),
-			normalizeCountry(input.country),
+			address.city,
+			address.country,
 			nullable(input.postalCode),
 			nullable(input.additionalInformation),
-			nullable(input.state)?.toUpperCase() ?? null
+			address.state
 		]
 	);
 
