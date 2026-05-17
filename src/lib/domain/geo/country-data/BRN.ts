@@ -46,5 +46,6 @@ export const BRN = {
 		"de-BE": "Brunei Darussalam",
 		"de-LI": "Brunei Darussalam",
 		"de-LU": "Brunei Darussalam"
-	}
+	},
+	"callingCode": "673"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const SWE = {
 		"de-BE": "Schweden",
 		"de-LI": "Schweden",
 		"de-LU": "Schweden"
-	}
+	},
+	"callingCode": "46"
 } satisfies Country;

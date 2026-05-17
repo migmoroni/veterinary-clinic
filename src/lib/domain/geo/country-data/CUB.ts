@@ -46,5 +46,6 @@ export const CUB = {
 		"de-BE": "Kuba",
 		"de-LI": "Kuba",
 		"de-LU": "Kuba"
-	}
+	},
+	"callingCode": "53"
 } satisfies Country;

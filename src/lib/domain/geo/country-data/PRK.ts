@@ -46,5 +46,6 @@ export const PRK = {
 		"de-BE": "Nordkorea",
 		"de-LI": "Nordkorea",
 		"de-LU": "Nordkorea"
-	}
+	},
+	"callingCode": "850"
 } satisfies Country;

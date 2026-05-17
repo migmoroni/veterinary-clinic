@@ -46,5 +46,6 @@ export const LBY = {
 		"de-BE": "Libyen",
 		"de-LI": "Libyen",
 		"de-LU": "Libyen"
-	}
+	},
+	"callingCode": "218"
 } satisfies Country;

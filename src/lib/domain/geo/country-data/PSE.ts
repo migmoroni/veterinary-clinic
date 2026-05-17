@@ -46,5 +46,6 @@ export const PSE = {
 		"de-BE": "Palästinensische Autonomiegebiete",
 		"de-LI": "Palästinensische Autonomiegebiete",
 		"de-LU": "Palästinensische Autonomiegebiete"
-	}
+	},
+	"callingCode": "970"
 } satisfies Country;

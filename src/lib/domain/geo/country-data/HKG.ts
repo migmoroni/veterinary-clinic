@@ -46,5 +46,6 @@ export const HKG = {
 		"de-BE": "Sonderverwaltungsregion Hongkong",
 		"de-LI": "Sonderverwaltungsregion Hongkong",
 		"de-LU": "Sonderverwaltungsregion Hongkong"
-	}
+	},
+	"callingCode": "852"
 } satisfies Country;

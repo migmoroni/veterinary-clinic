@@ -46,5 +46,6 @@ export const GMB = {
 		"de-BE": "Gambia",
 		"de-LI": "Gambia",
 		"de-LU": "Gambia"
-	}
+	},
+	"callingCode": "220"
 } satisfies Country;

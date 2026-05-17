@@ -46,5 +46,6 @@ export const BLZ = {
 		"de-BE": "Belize",
 		"de-LI": "Belize",
 		"de-LU": "Belize"
-	}
+	},
+	"callingCode": "501"
 } satisfies Country;

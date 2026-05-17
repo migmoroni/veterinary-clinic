@@ -46,5 +46,6 @@ export const COD = {
 		"de-BE": "Kongo-Kinshasa",
 		"de-LI": "Kongo-Kinshasa",
 		"de-LU": "Kongo-Kinshasa"
-	}
+	},
+	"callingCode": "243"
 } satisfies Country;

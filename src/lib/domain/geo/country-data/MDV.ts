@@ -46,5 +46,6 @@ export const MDV = {
 		"de-BE": "Malediven",
 		"de-LI": "Malediven",
 		"de-LU": "Malediven"
-	}
+	},
+	"callingCode": "960"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const UGA = {
 		"de-BE": "Uganda",
 		"de-LI": "Uganda",
 		"de-LU": "Uganda"
-	}
+	},
+	"callingCode": "256"
 } satisfies Country;

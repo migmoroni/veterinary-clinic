@@ -46,5 +46,6 @@ export const KHM = {
 		"de-BE": "Kambodscha",
 		"de-LI": "Kambodscha",
 		"de-LU": "Kambodscha"
-	}
+	},
+	"callingCode": "855"
 } satisfies Country;

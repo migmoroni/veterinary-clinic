@@ -46,5 +46,6 @@ export const LTU = {
 		"de-BE": "Litauen",
 		"de-LI": "Litauen",
 		"de-LU": "Litauen"
-	}
+	},
+	"callingCode": "370"
 } satisfies Country;

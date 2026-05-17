@@ -46,5 +46,6 @@ export const MAF = {
 		"de-BE": "St. Martin",
 		"de-LI": "St. Martin",
 		"de-LU": "St. Martin"
-	}
+	},
+	"callingCode": "590"
 } satisfies Country;

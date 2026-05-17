@@ -46,5 +46,6 @@ export const GIN = {
 		"de-BE": "Guinea",
 		"de-LI": "Guinea",
 		"de-LU": "Guinea"
-	}
+	},
+	"callingCode": "224"
 } satisfies Country;

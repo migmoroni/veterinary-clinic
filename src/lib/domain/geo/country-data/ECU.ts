@@ -46,5 +46,6 @@ export const ECU = {
 		"de-BE": "Ecuador",
 		"de-LI": "Ecuador",
 		"de-LU": "Ecuador"
-	}
+	},
+	"callingCode": "593"
 } satisfies Country;

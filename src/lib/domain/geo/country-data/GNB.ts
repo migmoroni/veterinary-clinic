@@ -46,5 +46,6 @@ export const GNB = {
 		"de-BE": "Guinea-Bissau",
 		"de-LI": "Guinea-Bissau",
 		"de-LU": "Guinea-Bissau"
-	}
+	},
+	"callingCode": "245"
 } satisfies Country;

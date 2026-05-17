@@ -46,5 +46,6 @@ export const TTO = {
 		"de-BE": "Trinidad und Tobago",
 		"de-LI": "Trinidad und Tobago",
 		"de-LU": "Trinidad und Tobago"
-	}
+	},
+	"callingCode": "1868"
 } satisfies Country;

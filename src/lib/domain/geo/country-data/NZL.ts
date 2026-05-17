@@ -46,5 +46,6 @@ export const NZL = {
 		"de-BE": "Neuseeland",
 		"de-LI": "Neuseeland",
 		"de-LU": "Neuseeland"
-	}
+	},
+	"callingCode": "64"
 } satisfies Country;

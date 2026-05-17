@@ -46,5 +46,6 @@ export const CPV = {
 		"de-BE": "Cabo Verde",
 		"de-LI": "Cabo Verde",
 		"de-LU": "Cabo Verde"
-	}
+	},
+	"callingCode": "238"
 } satisfies Country;

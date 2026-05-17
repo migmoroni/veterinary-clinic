@@ -46,5 +46,6 @@ export const WLF = {
 		"de-BE": "Wallis und Futuna",
 		"de-LI": "Wallis und Futuna",
 		"de-LU": "Wallis und Futuna"
-	}
+	},
+	"callingCode": "681"
 } satisfies Country;

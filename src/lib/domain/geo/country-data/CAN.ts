@@ -46,5 +46,6 @@ export const CAN = {
 		"de-BE": "Kanada",
 		"de-LI": "Kanada",
 		"de-LU": "Kanada"
-	}
+	},
+	"callingCode": "1"
 } satisfies Country;

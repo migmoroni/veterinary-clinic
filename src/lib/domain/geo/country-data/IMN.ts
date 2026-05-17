@@ -46,5 +46,6 @@ export const IMN = {
 		"de-BE": "Isle of Man",
 		"de-LI": "Isle of Man",
 		"de-LU": "Isle of Man"
-	}
+	},
+	"callingCode": "44"
 } satisfies Country;

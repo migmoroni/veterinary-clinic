@@ -46,5 +46,6 @@ export const BLM = {
 		"de-BE": "St. Barthélemy",
 		"de-LI": "St. Barthélemy",
 		"de-LU": "St. Barthélemy"
-	}
+	},
+	"callingCode": "590"
 } satisfies Country;

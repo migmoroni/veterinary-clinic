@@ -46,5 +46,6 @@ export const ZWE = {
 		"de-BE": "Simbabwe",
 		"de-LI": "Simbabwe",
 		"de-LU": "Simbabwe"
-	}
+	},
+	"callingCode": "263"
 } satisfies Country;

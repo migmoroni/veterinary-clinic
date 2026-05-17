@@ -46,5 +46,6 @@ export const IRL = {
 		"de-BE": "Irland",
 		"de-LI": "Irland",
 		"de-LU": "Irland"
-	}
+	},
+	"callingCode": "353"
 } satisfies Country;

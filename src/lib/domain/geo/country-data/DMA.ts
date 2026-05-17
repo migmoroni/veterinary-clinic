@@ -46,5 +46,6 @@ export const DMA = {
 		"de-BE": "Dominica",
 		"de-LI": "Dominica",
 		"de-LU": "Dominica"
-	}
+	},
+	"callingCode": "1767"
 } satisfies Country;

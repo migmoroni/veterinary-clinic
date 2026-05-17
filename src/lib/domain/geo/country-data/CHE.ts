@@ -46,5 +46,6 @@ export const CHE = {
 		"de-BE": "Schweiz",
 		"de-LI": "Schweiz",
 		"de-LU": "Schweiz"
-	}
+	},
+	"callingCode": "41"
 } satisfies Country;

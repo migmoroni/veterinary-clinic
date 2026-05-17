@@ -46,5 +46,6 @@ export const MCO = {
 		"de-BE": "Monaco",
 		"de-LI": "Monaco",
 		"de-LU": "Monaco"
-	}
+	},
+	"callingCode": "377"
 } satisfies Country;

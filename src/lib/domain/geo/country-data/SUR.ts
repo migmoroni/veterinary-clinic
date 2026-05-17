@@ -46,5 +46,6 @@ export const SUR = {
 		"de-BE": "Suriname",
 		"de-LI": "Suriname",
 		"de-LU": "Suriname"
-	}
+	},
+	"callingCode": "597"
 } satisfies Country;

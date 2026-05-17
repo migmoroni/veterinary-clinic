@@ -46,5 +46,6 @@ export const VCT = {
 		"de-BE": "St. Vincent und die Grenadinen",
 		"de-LI": "St. Vincent und die Grenadinen",
 		"de-LU": "St. Vincent und die Grenadinen"
-	}
+	},
+	"callingCode": "1784"
 } satisfies Country;

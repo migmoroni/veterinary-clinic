@@ -46,5 +46,6 @@ export const AGO = {
 		"de-BE": "Angola",
 		"de-LI": "Angola",
 		"de-LU": "Angola"
-	}
+	},
+	"callingCode": "244"
 } satisfies Country;

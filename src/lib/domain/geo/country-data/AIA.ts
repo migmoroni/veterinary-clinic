@@ -46,5 +46,6 @@ export const AIA = {
 		"de-BE": "Anguilla",
 		"de-LI": "Anguilla",
 		"de-LU": "Anguilla"
-	}
+	},
+	"callingCode": "1264"
 } satisfies Country;

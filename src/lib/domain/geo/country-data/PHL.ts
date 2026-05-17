@@ -46,5 +46,6 @@ export const PHL = {
 		"de-BE": "Philippinen",
 		"de-LI": "Philippinen",
 		"de-LU": "Philippinen"
-	}
+	},
+	"callingCode": "63"
 } satisfies Country;

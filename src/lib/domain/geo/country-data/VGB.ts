@@ -46,5 +46,6 @@ export const VGB = {
 		"de-BE": "Britische Jungferninseln",
 		"de-LI": "Britische Jungferninseln",
 		"de-LU": "Britische Jungferninseln"
-	}
+	},
+	"callingCode": "1284"
 } satisfies Country;

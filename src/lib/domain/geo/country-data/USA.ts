@@ -46,5 +46,6 @@ export const USA = {
 		"de-BE": "Vereinigte Staaten",
 		"de-LI": "Vereinigte Staaten",
 		"de-LU": "Vereinigte Staaten"
-	}
+	},
+	"callingCode": "1"
 } satisfies Country;

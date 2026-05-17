@@ -46,5 +46,6 @@ export const TCD = {
 		"de-BE": "Tschad",
 		"de-LI": "Tschad",
 		"de-LU": "Tschad"
-	}
+	},
+	"callingCode": "235"
 } satisfies Country;

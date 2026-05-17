@@ -46,5 +46,6 @@ export const ATF = {
 		"de-BE": "Französische Süd- und Antarktisgebiete",
 		"de-LI": "Französische Süd- und Antarktisgebiete",
 		"de-LU": "Französische Süd- und Antarktisgebiete"
-	}
+	},
+	"callingCode": "262"
 } satisfies Country;

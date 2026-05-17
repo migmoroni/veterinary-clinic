@@ -46,5 +46,6 @@ export const LBR = {
 		"de-BE": "Liberia",
 		"de-LI": "Liberia",
 		"de-LU": "Liberia"
-	}
+	},
+	"callingCode": "231"
 } satisfies Country;

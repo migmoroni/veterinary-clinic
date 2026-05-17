@@ -46,5 +46,6 @@ export const SVN = {
 		"de-BE": "Slowenien",
 		"de-LI": "Slowenien",
 		"de-LU": "Slowenien"
-	}
+	},
+	"callingCode": "386"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const UZB = {
 		"de-BE": "Usbekistan",
 		"de-LI": "Usbekistan",
 		"de-LU": "Usbekistan"
-	}
+	},
+	"callingCode": "998"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const MHL = {
 		"de-BE": "Marshallinseln",
 		"de-LI": "Marshallinseln",
 		"de-LU": "Marshallinseln"
-	}
+	},
+	"callingCode": "692"
 } satisfies Country;

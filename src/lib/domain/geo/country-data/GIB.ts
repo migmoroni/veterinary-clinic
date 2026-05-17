@@ -46,5 +46,6 @@ export const GIB = {
 		"de-BE": "Gibraltar",
 		"de-LI": "Gibraltar",
 		"de-LU": "Gibraltar"
-	}
+	},
+	"callingCode": "350"
 } satisfies Country;

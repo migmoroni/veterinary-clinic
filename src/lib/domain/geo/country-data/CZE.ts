@@ -46,5 +46,6 @@ export const CZE = {
 		"de-BE": "Tschechien",
 		"de-LI": "Tschechien",
 		"de-LU": "Tschechien"
-	}
+	},
+	"callingCode": "420"
 } satisfies Country;

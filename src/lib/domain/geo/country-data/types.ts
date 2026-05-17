@@ -50,4 +50,5 @@ export type CountryLabelLocale = 'pt-BR' | 'pt-PT' | 'gn-PY' | 'es-ES' | 'es-419
 export interface Country {
 	code: string;
 	labels: Partial<Record<CountryLabelLocale, string>>;
+	callingCode?: string;
 }

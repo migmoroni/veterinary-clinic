@@ -46,5 +46,6 @@ export const DZA = {
 		"de-BE": "Algerien",
 		"de-LI": "Algerien",
 		"de-LU": "Algerien"
-	}
+	},
+	"callingCode": "213"
 } satisfies Country;

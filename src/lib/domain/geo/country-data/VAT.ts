@@ -46,5 +46,6 @@ export const VAT = {
 		"de-BE": "Vatikanstadt",
 		"de-LI": "Vatikanstadt",
 		"de-LU": "Vatikanstadt"
-	}
+	},
+	"callingCode": "3906698"
 } satisfies Country;

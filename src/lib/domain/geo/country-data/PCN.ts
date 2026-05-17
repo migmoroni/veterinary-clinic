@@ -46,5 +46,6 @@ export const PCN = {
 		"de-BE": "Pitcairninseln",
 		"de-LI": "Pitcairninseln",
 		"de-LU": "Pitcairninseln"
-	}
+	},
+	"callingCode": "64"
 } satisfies Country;

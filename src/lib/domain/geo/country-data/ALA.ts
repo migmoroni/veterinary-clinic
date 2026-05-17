@@ -46,5 +46,6 @@ export const ALA = {
 		"de-BE": "Ålandinseln",
 		"de-LI": "Ålandinseln",
 		"de-LU": "Ålandinseln"
-	}
+	},
+	"callingCode": "35818"
 } satisfies Country;

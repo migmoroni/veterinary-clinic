@@ -46,5 +46,6 @@ export const WSM = {
 		"de-BE": "Samoa",
 		"de-LI": "Samoa",
 		"de-LU": "Samoa"
-	}
+	},
+	"callingCode": "685"
 } satisfies Country;

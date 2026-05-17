@@ -46,5 +46,6 @@ export const ISL = {
 		"de-BE": "Island",
 		"de-LI": "Island",
 		"de-LU": "Island"
-	}
+	},
+	"callingCode": "354"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const THA = {
 		"de-BE": "Thailand",
 		"de-LI": "Thailand",
 		"de-LU": "Thailand"
-	}
+	},
+	"callingCode": "66"
 } satisfies Country;

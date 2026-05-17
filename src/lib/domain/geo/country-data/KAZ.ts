@@ -46,5 +46,6 @@ export const KAZ = {
 		"de-BE": "Kasachstan",
 		"de-LI": "Kasachstan",
 		"de-LU": "Kasachstan"
-	}
+	},
+	"callingCode": "7"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const GRC = {
 		"de-BE": "Griechenland",
 		"de-LI": "Griechenland",
 		"de-LU": "Griechenland"
-	}
+	},
+	"callingCode": "30"
 } satisfies Country;

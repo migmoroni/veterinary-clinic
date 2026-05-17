@@ -46,5 +46,6 @@ export const BLR = {
 		"de-BE": "Belarus",
 		"de-LI": "Belarus",
 		"de-LU": "Belarus"
-	}
+	},
+	"callingCode": "375"
 } satisfies Country;

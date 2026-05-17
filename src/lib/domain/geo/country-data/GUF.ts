@@ -46,5 +46,6 @@ export const GUF = {
 		"de-BE": "Französisch-Guayana",
 		"de-LI": "Französisch-Guayana",
 		"de-LU": "Französisch-Guayana"
-	}
+	},
+	"callingCode": "594"
 } satisfies Country;

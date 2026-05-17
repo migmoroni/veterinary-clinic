@@ -46,5 +46,6 @@ export const ITA = {
 		"de-BE": "Italien",
 		"de-LI": "Italien",
 		"de-LU": "Italien"
-	}
+	},
+	"callingCode": "39"
 } satisfies Country;

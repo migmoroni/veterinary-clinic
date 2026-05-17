@@ -46,5 +46,6 @@ export const MLT = {
 		"de-BE": "Malta",
 		"de-LI": "Malta",
 		"de-LU": "Malta"
-	}
+	},
+	"callingCode": "356"
 } satisfies Country;

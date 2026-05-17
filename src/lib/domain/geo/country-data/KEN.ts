@@ -46,5 +46,6 @@ export const KEN = {
 		"de-BE": "Kenia",
 		"de-LI": "Kenia",
 		"de-LU": "Kenia"
-	}
+	},
+	"callingCode": "254"
 } satisfies Country;

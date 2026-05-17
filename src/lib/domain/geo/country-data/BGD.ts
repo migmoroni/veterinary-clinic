@@ -46,5 +46,6 @@ export const BGD = {
 		"de-BE": "Bangladesch",
 		"de-LI": "Bangladesch",
 		"de-LU": "Bangladesch"
-	}
+	},
+	"callingCode": "880"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const VNM = {
 		"de-BE": "Vietnam",
 		"de-LI": "Vietnam",
 		"de-LU": "Vietnam"
-	}
+	},
+	"callingCode": "84"
 } satisfies Country;

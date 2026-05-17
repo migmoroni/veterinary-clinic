@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { brazilCityOptions, countryOptions, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '../location.js';
+import { brazilCityOptions, countryCallingCode, countryOptions, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '../location.js';
 
 describe('offline location catalog', () => {
 	it('normalizes country codes from the offline catalog', () => {
@@ -15,6 +15,13 @@ describe('offline location catalog', () => {
 		expect(normalizeOwnerCountry('PRT')).toBe('PRT');
 		expect(normalizeOwnerCountry('BR')).toBeNull();
 		expect(normalizeOwnerCountry('Brazil')).toBeNull();
+	});
+
+	it('returns country calling codes from the offline catalog', () => {
+		expect(countryCallingCode('BRA')).toBe('55');
+		expect(countryCallingCode('PRT')).toBe('351');
+		expect(countryCallingCode('USA')).toBe('1');
+		expect(countryCallingCode('BR')).toBeNull();
 	});
 
 	it('normalizes state and city from the offline Brazilian catalog', () => {

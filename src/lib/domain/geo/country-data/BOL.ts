@@ -47,5 +47,6 @@ export const BOL = {
 		"de-BE": "Bolivien",
 		"de-LI": "Bolivien",
 		"de-LU": "Bolivien"
-	}
+	},
+	"callingCode": "591"
 } satisfies Country;

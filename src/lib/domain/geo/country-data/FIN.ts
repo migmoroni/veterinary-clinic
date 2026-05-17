@@ -46,5 +46,6 @@ export const FIN = {
 		"de-BE": "Finnland",
 		"de-LI": "Finnland",
 		"de-LU": "Finnland"
-	}
+	},
+	"callingCode": "358"
 } satisfies Country;

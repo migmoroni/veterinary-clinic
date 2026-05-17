@@ -46,5 +46,6 @@ export const IND = {
 		"de-BE": "Indien",
 		"de-LI": "Indien",
 		"de-LU": "Indien"
-	}
+	},
+	"callingCode": "91"
 } satisfies Country;

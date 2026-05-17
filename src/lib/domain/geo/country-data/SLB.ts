@@ -46,5 +46,6 @@ export const SLB = {
 		"de-BE": "Salomonen",
 		"de-LI": "Salomonen",
 		"de-LU": "Salomonen"
-	}
+	},
+	"callingCode": "677"
 } satisfies Country;

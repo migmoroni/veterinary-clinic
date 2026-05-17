@@ -46,5 +46,6 @@ export const SGP = {
 		"de-BE": "Singapur",
 		"de-LI": "Singapur",
 		"de-LU": "Singapur"
-	}
+	},
+	"callingCode": "65"
 } satisfies Country;

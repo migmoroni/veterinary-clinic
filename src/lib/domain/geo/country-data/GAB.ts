@@ -46,5 +46,6 @@ export const GAB = {
 		"de-BE": "Gabun",
 		"de-LI": "Gabun",
 		"de-LU": "Gabun"
-	}
+	},
+	"callingCode": "241"
 } satisfies Country;

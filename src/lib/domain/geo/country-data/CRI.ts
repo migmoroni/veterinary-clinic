@@ -46,5 +46,6 @@ export const CRI = {
 		"de-BE": "Costa Rica",
 		"de-LI": "Costa Rica",
 		"de-LU": "Costa Rica"
-	}
+	},
+	"callingCode": "506"
 } satisfies Country;

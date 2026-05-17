@@ -46,5 +46,6 @@ export const BVT = {
 		"de-BE": "Bouvetinsel",
 		"de-LI": "Bouvetinsel",
 		"de-LU": "Bouvetinsel"
-	}
+	},
+	"callingCode": "47"
 } satisfies Country;

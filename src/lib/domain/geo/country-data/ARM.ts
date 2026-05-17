@@ -46,5 +46,6 @@ export const ARM = {
 		"de-BE": "Armenien",
 		"de-LI": "Armenien",
 		"de-LU": "Armenien"
-	}
+	},
+	"callingCode": "374"
 } satisfies Country;

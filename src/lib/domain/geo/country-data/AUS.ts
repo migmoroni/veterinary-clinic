@@ -46,5 +46,6 @@ export const AUS = {
 		"de-BE": "Australien",
 		"de-LI": "Australien",
 		"de-LU": "Australien"
-	}
+	},
+	"callingCode": "61"
 } satisfies Country;

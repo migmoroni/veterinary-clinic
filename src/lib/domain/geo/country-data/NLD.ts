@@ -46,5 +46,6 @@ export const NLD = {
 		"de-BE": "Niederlande",
 		"de-LI": "Niederlande",
 		"de-LU": "Niederlande"
-	}
+	},
+	"callingCode": "31"
 } satisfies Country;

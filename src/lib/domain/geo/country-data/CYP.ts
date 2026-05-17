@@ -46,5 +46,6 @@ export const CYP = {
 		"de-BE": "Zypern",
 		"de-LI": "Zypern",
 		"de-LU": "Zypern"
-	}
+	},
+	"callingCode": "357"
 } satisfies Country;

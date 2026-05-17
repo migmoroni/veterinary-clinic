@@ -46,5 +46,6 @@ export const GEO = {
 		"de-BE": "Georgien",
 		"de-LI": "Georgien",
 		"de-LU": "Georgien"
-	}
+	},
+	"callingCode": "995"
 } satisfies Country;

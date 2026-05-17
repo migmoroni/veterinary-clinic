@@ -46,5 +46,6 @@ export const GTM = {
 		"de-BE": "Guatemala",
 		"de-LI": "Guatemala",
 		"de-LU": "Guatemala"
-	}
+	},
+	"callingCode": "502"
 } satisfies Country;

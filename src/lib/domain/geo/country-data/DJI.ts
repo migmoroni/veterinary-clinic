@@ -46,5 +46,6 @@ export const DJI = {
 		"de-BE": "Dschibuti",
 		"de-LI": "Dschibuti",
 		"de-LU": "Dschibuti"
-	}
+	},
+	"callingCode": "253"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const EST = {
 		"de-BE": "Estland",
 		"de-LI": "Estland",
 		"de-LU": "Estland"
-	}
+	},
+	"callingCode": "372"
 } satisfies Country;

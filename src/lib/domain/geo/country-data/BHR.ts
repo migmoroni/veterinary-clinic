@@ -46,5 +46,6 @@ export const BHR = {
 		"de-BE": "Bahrain",
 		"de-LI": "Bahrain",
 		"de-LU": "Bahrain"
-	}
+	},
+	"callingCode": "973"
 } satisfies Country;

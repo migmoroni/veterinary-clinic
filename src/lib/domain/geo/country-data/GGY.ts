@@ -46,5 +46,6 @@ export const GGY = {
 		"de-BE": "Guernsey",
 		"de-LI": "Guernsey",
 		"de-LU": "Guernsey"
-	}
+	},
+	"callingCode": "44"
 } satisfies Country;

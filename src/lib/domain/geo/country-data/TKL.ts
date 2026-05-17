@@ -46,5 +46,6 @@ export const TKL = {
 		"de-BE": "Tokelau",
 		"de-LI": "Tokelau",
 		"de-LU": "Tokelau"
-	}
+	},
+	"callingCode": "690"
 } satisfies Country;

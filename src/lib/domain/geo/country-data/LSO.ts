@@ -46,5 +46,6 @@ export const LSO = {
 		"de-BE": "Lesotho",
 		"de-LI": "Lesotho",
 		"de-LU": "Lesotho"
-	}
+	},
+	"callingCode": "266"
 } satisfies Country;

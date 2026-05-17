@@ -46,5 +46,6 @@ export const IRN = {
 		"de-BE": "Iran",
 		"de-LI": "Iran",
 		"de-LU": "Iran"
-	}
+	},
+	"callingCode": "98"
 } satisfies Country;

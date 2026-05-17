@@ -46,5 +46,6 @@ export const FRA = {
 		"de-BE": "Frankreich",
 		"de-LI": "Frankreich",
 		"de-LU": "Frankreich"
-	}
+	},
+	"callingCode": "33"
 } satisfies Country;

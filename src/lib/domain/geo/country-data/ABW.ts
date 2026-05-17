@@ -46,5 +46,6 @@ export const ABW = {
 		"de-BE": "Aruba",
 		"de-LI": "Aruba",
 		"de-LU": "Aruba"
-	}
+	},
+	"callingCode": "297"
 } satisfies Country;

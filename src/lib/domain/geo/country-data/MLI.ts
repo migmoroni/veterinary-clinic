@@ -46,5 +46,6 @@ export const MLI = {
 		"de-BE": "Mali",
 		"de-LI": "Mali",
 		"de-LU": "Mali"
-	}
+	},
+	"callingCode": "223"
 } satisfies Country;

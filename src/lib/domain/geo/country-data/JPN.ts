@@ -46,5 +46,6 @@ export const JPN = {
 		"de-BE": "Japan",
 		"de-LI": "Japan",
 		"de-LU": "Japan"
-	}
+	},
+	"callingCode": "81"
 } satisfies Country;

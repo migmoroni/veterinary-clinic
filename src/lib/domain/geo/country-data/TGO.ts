@@ -46,5 +46,6 @@ export const TGO = {
 		"de-BE": "Togo",
 		"de-LI": "Togo",
 		"de-LU": "Togo"
-	}
+	},
+	"callingCode": "228"
 } satisfies Country;

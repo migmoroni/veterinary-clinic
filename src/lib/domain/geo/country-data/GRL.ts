@@ -46,5 +46,6 @@ export const GRL = {
 		"de-BE": "Grönland",
 		"de-LI": "Grönland",
 		"de-LU": "Grönland"
-	}
+	},
+	"callingCode": "299"
 } satisfies Country;

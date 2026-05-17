@@ -46,5 +46,6 @@ export const UNK = {
 		"de-BE": "Kosovo",
 		"de-LI": "Kosovo",
 		"de-LU": "Kosovo"
-	}
+	},
+	"callingCode": "383"
 } satisfies Country;

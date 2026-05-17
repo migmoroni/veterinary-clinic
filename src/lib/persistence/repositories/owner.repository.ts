@@ -8,9 +8,10 @@ import {
 	type OwnerContactKind,
 	type OwnerInput
 } from '$lib/domain/owner/owner.js';
-import { normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '$lib/domain/geo/location.js';
+import { countryCallingCode, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '$lib/domain/geo/location.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { formatEmailForInput } from '$lib/domain/shared/email.js';
+import { formatPhoneForStorage } from '$lib/domain/shared/phone.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
 
@@ -82,11 +83,14 @@ function normalizeContactLabel(kind: OwnerContactKind, value: string | null | un
 	return nullable(value) ?? '';
 }
 
-function normalizeContactValue(kind: OwnerContactKind, value: string | null | undefined): string | null {
+function normalizeContactValue(kind: OwnerContactKind, value: string | null | undefined, country: string): string | null {
 	const trimmed = nullable(value);
 	if (!trimmed) return null;
 
-	return kind === 'email' ? nullable(formatEmailForInput(trimmed)) : trimmed;
+	if (kind === 'email') return nullable(formatEmailForInput(trimmed));
+	if (kind === 'phone' || kind === 'mobile') return formatPhoneForStorage(trimmed, countryCallingCode(country));
+
+	return trimmed;
 }
 
 interface NormalizedOwnerAddress {
@@ -108,13 +112,13 @@ function normalizeOwnerAddress(input: Pick<OwnerInput, 'country' | 'state' | 'ci
 	return { country, state, city };
 }
 
-function normalizeContacts(contacts: OwnerContactInput[]): OwnerContactInput[] {
+function normalizeContacts(contacts: OwnerContactInput[], country: string): OwnerContactInput[] {
 	const unique = new Map<string, OwnerContactInput>();
 
 	for (const contact of contacts) {
 		const kind = normalizeContactKind(contact.kind);
 		const label = normalizeContactLabel(kind, contact.label);
-		const value = normalizeContactValue(kind, contact.value);
+		const value = normalizeContactValue(kind, contact.value, country);
 		if (!value) throw new Error('owner_contact_required');
 		if (kind === 'other' && !label) throw new Error('owner_contact_required');
 
@@ -125,12 +129,12 @@ function normalizeContacts(contacts: OwnerContactInput[]): OwnerContactInput[] {
 	return [...unique.values()];
 }
 
-function normalizeAdditionalResponsibles(responsibles: OwnerAdditionalResponsibleInput[] = []): OwnerAdditionalResponsibleInput[] {
+function normalizeAdditionalResponsibles(responsibles: OwnerAdditionalResponsibleInput[] = [], country: string = DEFAULT_OWNER_COUNTRY): OwnerAdditionalResponsibleInput[] {
 	return responsibles
 		.map((responsible) => ({
 			name: nullable(responsible.name) ?? '',
 			avatarBytes: responsible.avatarBytes ?? null,
-			contacts: normalizeContacts(responsible.contacts ?? [])
+			contacts: normalizeContacts(responsible.contacts ?? [], country)
 		}))
 		.filter((responsible) => responsible.name.length > 0);
 }
@@ -281,10 +285,10 @@ async function listOwnerAdditionalResponsiblesByOwnerIds(ownerIds: number[]): Pr
 	return responsiblesByOwnerId;
 }
 
-async function replaceOwnerContacts(ownerId: number, contacts: OwnerContactInput[] = []): Promise<void> {
+async function replaceOwnerContacts(ownerId: number, contacts: OwnerContactInput[] = [], country: string = DEFAULT_OWNER_COUNTRY): Promise<void> {
 	await execute('DELETE FROM owner_contacts WHERE owner_id = $1', [ownerId]);
 
-	const normalizedContacts = normalizeContacts(contacts);
+	const normalizedContacts = normalizeContacts(contacts, country);
 	for (const [index, contact] of normalizedContacts.entries()) {
 		await execute(
 			`INSERT INTO owner_contacts (owner_id, kind, label, value, sort_order, updated_at)
@@ -294,11 +298,11 @@ async function replaceOwnerContacts(ownerId: number, contacts: OwnerContactInput
 	}
 }
 
-async function replaceOwnerAdditionalResponsibles(ownerId: number, responsibles: OwnerAdditionalResponsibleInput[] = []): Promise<void> {
+async function replaceOwnerAdditionalResponsibles(ownerId: number, responsibles: OwnerAdditionalResponsibleInput[] = [], country: string = DEFAULT_OWNER_COUNTRY): Promise<void> {
 	await execute('DELETE FROM owner_additional_responsible_contacts WHERE responsible_id IN (SELECT id FROM owner_additional_responsibles WHERE owner_id = $1)', [ownerId]);
 	await execute('DELETE FROM owner_additional_responsibles WHERE owner_id = $1', [ownerId]);
 
-	const normalizedResponsibles = normalizeAdditionalResponsibles(responsibles);
+	const normalizedResponsibles = normalizeAdditionalResponsibles(responsibles, country);
 	for (const [responsibleIndex, responsible] of normalizedResponsibles.entries()) {
 		const avatarSqlLiteral = avatarBytesToSqlLiteral(responsible.avatarBytes);
 		const result = await execute(
@@ -398,8 +402,8 @@ export async function createOwner(input: OwnerInput): Promise<Owner> {
 	);
 
 	const ownerId = Number(result.lastInsertId);
-	await replaceOwnerContacts(ownerId, input.contacts);
-	await replaceOwnerAdditionalResponsibles(ownerId, input.additionalResponsibles ?? []);
+	await replaceOwnerContacts(ownerId, input.contacts, address.country);
+	await replaceOwnerAdditionalResponsibles(ownerId, input.additionalResponsibles ?? [], address.country);
 
 	const owner = await getOwner(ownerId);
 	if (!owner) throw new Error('owner_create_failed');
@@ -442,8 +446,8 @@ export async function updateOwner(id: number, input: OwnerInput): Promise<Owner>
 	const existing = await selectOne<{ id: number }>('SELECT id FROM owners WHERE id = $1 AND deleted_at IS NULL', [id]);
 	if (!existing) throw new Error('owner_not_found');
 
-	await replaceOwnerContacts(id, input.contacts);
-	await replaceOwnerAdditionalResponsibles(id, input.additionalResponsibles ?? []);
+	await replaceOwnerContacts(id, input.contacts, address.country);
+	await replaceOwnerAdditionalResponsibles(id, input.additionalResponsibles ?? [], address.country);
 
 	const owner = await getOwner(id);
 	if (!owner) throw new Error('owner_not_found');

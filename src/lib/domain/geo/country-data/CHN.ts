@@ -46,5 +46,6 @@ export const CHN = {
 		"de-BE": "China",
 		"de-LI": "China",
 		"de-LU": "China"
-	}
+	},
+	"callingCode": "86"
 } satisfies Country;

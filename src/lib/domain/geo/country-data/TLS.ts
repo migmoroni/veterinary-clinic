@@ -46,5 +46,6 @@ export const TLS = {
 		"de-BE": "Timor-Leste",
 		"de-LI": "Timor-Leste",
 		"de-LU": "Timor-Leste"
-	}
+	},
+	"callingCode": "670"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const MAR = {
 		"de-BE": "Marokko",
 		"de-LI": "Marokko",
 		"de-LU": "Marokko"
-	}
+	},
+	"callingCode": "212"
 } satisfies Country;

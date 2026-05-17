@@ -46,5 +46,6 @@ export const LIE = {
 		"de-BE": "Liechtenstein",
 		"de-LI": "Liechtenstein",
 		"de-LU": "Liechtenstein"
-	}
+	},
+	"callingCode": "423"
 } satisfies Country;

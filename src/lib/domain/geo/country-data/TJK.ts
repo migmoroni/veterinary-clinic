@@ -46,5 +46,6 @@ export const TJK = {
 		"de-BE": "Tadschikistan",
 		"de-LI": "Tadschikistan",
 		"de-LU": "Tadschikistan"
-	}
+	},
+	"callingCode": "992"
 } satisfies Country;

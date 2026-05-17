@@ -46,5 +46,6 @@ export const ERI = {
 		"de-BE": "Eritrea",
 		"de-LI": "Eritrea",
 		"de-LU": "Eritrea"
-	}
+	},
+	"callingCode": "291"
 } satisfies Country;

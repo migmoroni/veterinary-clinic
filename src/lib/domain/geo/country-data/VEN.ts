@@ -46,5 +46,6 @@ export const VEN = {
 		"de-BE": "Venezuela",
 		"de-LI": "Venezuela",
 		"de-LU": "Venezuela"
-	}
+	},
+	"callingCode": "58"
 } satisfies Country;

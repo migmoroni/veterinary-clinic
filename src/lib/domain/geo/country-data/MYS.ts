@@ -46,5 +46,6 @@ export const MYS = {
 		"de-BE": "Malaysia",
 		"de-LI": "Malaysia",
 		"de-LU": "Malaysia"
-	}
+	},
+	"callingCode": "60"
 } satisfies Country;

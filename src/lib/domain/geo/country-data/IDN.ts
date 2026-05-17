@@ -46,5 +46,6 @@ export const IDN = {
 		"de-BE": "Indonesien",
 		"de-LI": "Indonesien",
 		"de-LU": "Indonesien"
-	}
+	},
+	"callingCode": "62"
 } satisfies Country;

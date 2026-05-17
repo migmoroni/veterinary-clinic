@@ -46,5 +46,6 @@ export const FLK = {
 		"de-BE": "Falklandinseln",
 		"de-LI": "Falklandinseln",
 		"de-LU": "Falklandinseln"
-	}
+	},
+	"callingCode": "500"
 } satisfies Country;

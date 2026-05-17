@@ -46,5 +46,6 @@ export const SAU = {
 		"de-BE": "Saudi-Arabien",
 		"de-LI": "Saudi-Arabien",
 		"de-LU": "Saudi-Arabien"
-	}
+	},
+	"callingCode": "966"
 } satisfies Country;

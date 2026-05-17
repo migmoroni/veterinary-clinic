@@ -46,5 +46,6 @@ export const MRT = {
 		"de-BE": "Mauretanien",
 		"de-LI": "Mauretanien",
 		"de-LU": "Mauretanien"
-	}
+	},
+	"callingCode": "222"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const COM = {
 		"de-BE": "Komoren",
 		"de-LI": "Komoren",
 		"de-LU": "Komoren"
-	}
+	},
+	"callingCode": "269"
 } satisfies Country;

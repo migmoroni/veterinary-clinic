@@ -46,5 +46,6 @@ export const MEX = {
 		"de-BE": "Mexiko",
 		"de-LI": "Mexiko",
 		"de-LU": "Mexiko"
-	}
+	},
+	"callingCode": "52"
 } satisfies Country;

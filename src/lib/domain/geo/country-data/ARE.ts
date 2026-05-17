@@ -46,5 +46,6 @@ export const ARE = {
 		"de-BE": "Vereinigte Arabische Emirate",
 		"de-LI": "Vereinigte Arabische Emirate",
 		"de-LU": "Vereinigte Arabische Emirate"
-	}
+	},
+	"callingCode": "971"
 } satisfies Country;

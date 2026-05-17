@@ -46,5 +46,6 @@ export const LKA = {
 		"de-BE": "Sri Lanka",
 		"de-LI": "Sri Lanka",
 		"de-LU": "Sri Lanka"
-	}
+	},
+	"callingCode": "94"
 } satisfies Country;

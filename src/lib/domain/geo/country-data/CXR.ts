@@ -46,5 +46,6 @@ export const CXR = {
 		"de-BE": "Weihnachtsinsel",
 		"de-LI": "Weihnachtsinsel",
 		"de-LU": "Weihnachtsinsel"
-	}
+	},
+	"callingCode": "61"
 } satisfies Country;

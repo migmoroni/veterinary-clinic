@@ -46,5 +46,6 @@ export const PLW = {
 		"de-BE": "Palau",
 		"de-LI": "Palau",
 		"de-LU": "Palau"
-	}
+	},
+	"callingCode": "680"
 } satisfies Country;

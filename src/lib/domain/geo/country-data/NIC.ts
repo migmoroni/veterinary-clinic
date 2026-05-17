@@ -46,5 +46,6 @@ export const NIC = {
 		"de-BE": "Nicaragua",
 		"de-LI": "Nicaragua",
 		"de-LU": "Nicaragua"
-	}
+	},
+	"callingCode": "505"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const TKM = {
 		"de-BE": "Turkmenistan",
 		"de-LI": "Turkmenistan",
 		"de-LU": "Turkmenistan"
-	}
+	},
+	"callingCode": "993"
 } satisfies Country;

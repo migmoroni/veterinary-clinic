@@ -46,5 +46,6 @@ export const PNG = {
 		"de-BE": "Papua-Neuguinea",
 		"de-LI": "Papua-Neuguinea",
 		"de-LU": "Papua-Neuguinea"
-	}
+	},
+	"callingCode": "675"
 } satisfies Country;

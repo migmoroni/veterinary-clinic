@@ -46,5 +46,6 @@ export const REU = {
 		"de-BE": "Réunion",
 		"de-LI": "Réunion",
 		"de-LU": "Réunion"
-	}
+	},
+	"callingCode": "262"
 } satisfies Country;

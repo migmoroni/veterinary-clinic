@@ -46,5 +46,6 @@ export const SLV = {
 		"de-BE": "El Salvador",
 		"de-LI": "El Salvador",
 		"de-LU": "El Salvador"
-	}
+	},
+	"callingCode": "503"
 } satisfies Country;

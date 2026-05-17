@@ -46,5 +46,6 @@ export const TUN = {
 		"de-BE": "Tunesien",
 		"de-LI": "Tunesien",
 		"de-LU": "Tunesien"
-	}
+	},
+	"callingCode": "216"
 } satisfies Country;

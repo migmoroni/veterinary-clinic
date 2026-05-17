@@ -46,5 +46,6 @@ export const MDG = {
 		"de-BE": "Madagaskar",
 		"de-LI": "Madagaskar",
 		"de-LU": "Madagaskar"
-	}
+	},
+	"callingCode": "261"
 } satisfies Country;

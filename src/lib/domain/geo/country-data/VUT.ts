@@ -46,5 +46,6 @@ export const VUT = {
 		"de-BE": "Vanuatu",
 		"de-LI": "Vanuatu",
 		"de-LU": "Vanuatu"
-	}
+	},
+	"callingCode": "678"
 } satisfies Country;

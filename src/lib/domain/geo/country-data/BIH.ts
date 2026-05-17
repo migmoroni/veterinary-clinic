@@ -46,5 +46,6 @@ export const BIH = {
 		"de-BE": "Bosnien und Herzegowina",
 		"de-LI": "Bosnien und Herzegowina",
 		"de-LU": "Bosnien und Herzegowina"
-	}
+	},
+	"callingCode": "387"
 } satisfies Country;

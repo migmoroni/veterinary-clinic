@@ -46,5 +46,6 @@ export const SWZ = {
 		"de-BE": "Eswatini",
 		"de-LI": "Eswatini",
 		"de-LU": "Eswatini"
-	}
+	},
+	"callingCode": "268"
 } satisfies Country;

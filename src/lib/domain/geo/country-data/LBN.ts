@@ -46,5 +46,6 @@ export const LBN = {
 		"de-BE": "Libanon",
 		"de-LI": "Libanon",
 		"de-LU": "Libanon"
-	}
+	},
+	"callingCode": "961"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const HUN = {
 		"de-BE": "Ungarn",
 		"de-LI": "Ungarn",
 		"de-LU": "Ungarn"
-	}
+	},
+	"callingCode": "36"
 } satisfies Country;

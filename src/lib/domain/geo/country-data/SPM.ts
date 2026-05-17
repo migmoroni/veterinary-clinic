@@ -46,5 +46,6 @@ export const SPM = {
 		"de-BE": "St. Pierre und Miquelon",
 		"de-LI": "St. Pierre und Miquelon",
 		"de-LU": "St. Pierre und Miquelon"
-	}
+	},
+	"callingCode": "508"
 } satisfies Country;

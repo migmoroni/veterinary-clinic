@@ -46,5 +46,6 @@ export const MNE = {
 		"de-BE": "Montenegro",
 		"de-LI": "Montenegro",
 		"de-LU": "Montenegro"
-	}
+	},
+	"callingCode": "382"
 } satisfies Country;

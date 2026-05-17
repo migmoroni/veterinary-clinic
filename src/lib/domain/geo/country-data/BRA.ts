@@ -46,5 +46,6 @@ export const BRA = {
 		"de-BE": "Brasilien",
 		"de-LI": "Brasilien",
 		"de-LU": "Brasilien"
-	}
+	},
+	"callingCode": "55"
 } satisfies Country;

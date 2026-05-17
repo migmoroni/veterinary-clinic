@@ -46,5 +46,6 @@ export const KWT = {
 		"de-BE": "Kuwait",
 		"de-LI": "Kuwait",
 		"de-LU": "Kuwait"
-	}
+	},
+	"callingCode": "965"
 } satisfies Country;

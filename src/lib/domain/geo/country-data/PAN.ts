@@ -46,5 +46,6 @@ export const PAN = {
 		"de-BE": "Panama",
 		"de-LI": "Panama",
 		"de-LU": "Panama"
-	}
+	},
+	"callingCode": "507"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const TUR = {
 		"de-BE": "Türkei",
 		"de-LI": "Türkei",
 		"de-LU": "Türkei"
-	}
+	},
+	"callingCode": "90"
 } satisfies Country;

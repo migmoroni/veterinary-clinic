@@ -46,5 +46,6 @@ export const KOR = {
 		"de-BE": "Südkorea",
 		"de-LI": "Südkorea",
 		"de-LU": "Südkorea"
-	}
+	},
+	"callingCode": "82"
 } satisfies Country;

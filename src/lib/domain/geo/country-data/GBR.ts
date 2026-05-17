@@ -46,5 +46,6 @@ export const GBR = {
 		"de-BE": "Vereinigtes Königreich",
 		"de-LI": "Vereinigtes Königreich",
 		"de-LU": "Vereinigtes Königreich"
-	}
+	},
+	"callingCode": "44"
 } satisfies Country;

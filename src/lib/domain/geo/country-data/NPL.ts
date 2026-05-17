@@ -46,5 +46,6 @@ export const NPL = {
 		"de-BE": "Nepal",
 		"de-LI": "Nepal",
 		"de-LU": "Nepal"
-	}
+	},
+	"callingCode": "977"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const TCA = {
 		"de-BE": "Turks- und Caicosinseln",
 		"de-LI": "Turks- und Caicosinseln",
 		"de-LU": "Turks- und Caicosinseln"
-	}
+	},
+	"callingCode": "1649"
 } satisfies Country;

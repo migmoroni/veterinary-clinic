@@ -46,5 +46,6 @@ export const NGA = {
 		"de-BE": "Nigeria",
 		"de-LI": "Nigeria",
 		"de-LU": "Nigeria"
-	}
+	},
+	"callingCode": "234"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const TUV = {
 		"de-BE": "Tuvalu",
 		"de-LI": "Tuvalu",
 		"de-LU": "Tuvalu"
-	}
+	},
+	"callingCode": "688"
 } satisfies Country;

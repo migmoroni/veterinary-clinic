@@ -46,5 +46,6 @@ export const FRO = {
 		"de-BE": "Färöer",
 		"de-LI": "Färöer",
 		"de-LU": "Färöer"
-	}
+	},
+	"callingCode": "298"
 } satisfies Country;

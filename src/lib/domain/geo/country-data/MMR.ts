@@ -46,5 +46,6 @@ export const MMR = {
 		"de-BE": "Myanmar",
 		"de-LI": "Myanmar",
 		"de-LU": "Myanmar"
-	}
+	},
+	"callingCode": "95"
 } satisfies Country;

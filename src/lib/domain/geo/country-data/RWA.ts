@@ -46,5 +46,6 @@ export const RWA = {
 		"de-BE": "Ruanda",
 		"de-LI": "Ruanda",
 		"de-LU": "Ruanda"
-	}
+	},
+	"callingCode": "250"
 } satisfies Country;

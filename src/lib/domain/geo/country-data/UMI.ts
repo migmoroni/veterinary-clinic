@@ -46,5 +46,6 @@ export const UMI = {
 		"de-BE": "Amerikanische Überseeinseln",
 		"de-LI": "Amerikanische Überseeinseln",
 		"de-LU": "Amerikanische Überseeinseln"
-	}
+	},
+	"callingCode": "268"
 } satisfies Country;

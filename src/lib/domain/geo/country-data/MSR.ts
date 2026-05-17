@@ -46,5 +46,6 @@ export const MSR = {
 		"de-BE": "Montserrat",
 		"de-LI": "Montserrat",
 		"de-LU": "Montserrat"
-	}
+	},
+	"callingCode": "1664"
 } satisfies Country;

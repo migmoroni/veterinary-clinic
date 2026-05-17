@@ -46,5 +46,6 @@ export const BHS = {
 		"de-BE": "Bahamas",
 		"de-LI": "Bahamas",
 		"de-LU": "Bahamas"
-	}
+	},
+	"callingCode": "1242"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const COK = {
 		"de-BE": "Cookinseln",
 		"de-LI": "Cookinseln",
 		"de-LU": "Cookinseln"
-	}
+	},
+	"callingCode": "682"
 } satisfies Country;

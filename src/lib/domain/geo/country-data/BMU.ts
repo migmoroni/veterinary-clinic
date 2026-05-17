@@ -46,5 +46,6 @@ export const BMU = {
 		"de-BE": "Bermuda",
 		"de-LI": "Bermuda",
 		"de-LU": "Bermuda"
-	}
+	},
+	"callingCode": "1441"
 } satisfies Country;

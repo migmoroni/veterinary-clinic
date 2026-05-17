@@ -4,10 +4,11 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import type { OwnerAdditionalResponsibleInput, OwnerContactInput, OwnerContactKind } from '$lib/domain/owner/owner.js';
 	import { formatEmailForInput } from '$lib/domain/shared/email.js';
-	import { formatPhoneForInput } from '$lib/domain/shared/phone.js';
+	import { formatPhoneForInput, formatPhoneForInputWithCaret } from '$lib/domain/shared/phone.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import { tick } from 'svelte';
 
 	let { responsibles = $bindable<OwnerAdditionalResponsibleInput[]>([]) }: { responsibles?: OwnerAdditionalResponsibleInput[] } = $props();
 	let avatarDialogIndex = $state<number | null>(null);
@@ -37,6 +38,10 @@
 	function formatContactValue(kind: OwnerContactKind, value: string): string {
 		if (kind === 'other') return value;
 		return kind === 'email' ? formatEmailForInput(value) : formatPhoneForInput(value);
+	}
+
+	function isPhoneContact(kind: OwnerContactKind): boolean {
+		return kind === 'phone' || kind === 'mobile';
 	}
 
 	function addResponsible() {
@@ -123,6 +128,25 @@
 				)
 			};
 		});
+	}
+
+	async function updateContactValueFromInput(responsibleIndex: number, contactIndex: number, kind: OwnerContactKind, input: HTMLInputElement) {
+		if (!isPhoneContact(kind)) {
+			updateContactValue(responsibleIndex, contactIndex, input.value);
+			return;
+		}
+
+		const result = formatPhoneForInputWithCaret(input.value, input.selectionStart);
+		responsibles = responsibles.map((responsible, index) => {
+			if (index !== responsibleIndex) return responsible;
+
+			return {
+				...responsible,
+				contacts: responsible.contacts.map((contact, currentContactIndex) => (currentContactIndex === contactIndex ? { ...contact, value: result.value } : contact))
+			};
+		});
+		await tick();
+		if (input === document.activeElement) input.setSelectionRange(result.caret, result.caret);
 	}
 </script>
 
@@ -239,7 +263,7 @@
 											autocomplete="off"
 											class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
 											value={contact.value}
-											oninput={(event) => updateContactValue(responsibleIndex, contactIndex, event.currentTarget.value)}
+											oninput={(event) => void updateContactValueFromInput(responsibleIndex, contactIndex, contact.kind, event.currentTarget)}
 											placeholder={t('owner.contactOtherValue')}
 											aria-label={t('owner.contactOtherValue')}
 											required
@@ -254,7 +278,7 @@
 											autocomplete={contact.kind === 'email' ? 'email' : 'tel'}
 											class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
 											value={contact.value}
-											oninput={(event) => updateContactValue(responsibleIndex, contactIndex, event.currentTarget.value)}
+											oninput={(event) => void updateContactValueFromInput(responsibleIndex, contactIndex, contact.kind, event.currentTarget)}
 											placeholder={t('owner.contactValue')}
 											aria-label={t('owner.contactValue')}
 											required

@@ -46,5 +46,6 @@ export const TON = {
 		"de-BE": "Tonga",
 		"de-LI": "Tonga",
 		"de-LU": "Tonga"
-	}
+	},
+	"callingCode": "676"
 } satisfies Country;

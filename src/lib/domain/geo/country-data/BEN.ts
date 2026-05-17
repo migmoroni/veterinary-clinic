@@ -46,5 +46,6 @@ export const BEN = {
 		"de-BE": "Benin",
 		"de-LI": "Benin",
 		"de-LU": "Benin"
-	}
+	},
+	"callingCode": "229"
 } satisfies Country;

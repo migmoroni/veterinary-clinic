@@ -46,5 +46,6 @@ export const MWI = {
 		"de-BE": "Malawi",
 		"de-LI": "Malawi",
 		"de-LU": "Malawi"
-	}
+	},
+	"callingCode": "265"
 } satisfies Country;

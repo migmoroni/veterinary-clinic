@@ -46,5 +46,6 @@ export const MKD = {
 		"de-BE": "Nordmazedonien",
 		"de-LI": "Nordmazedonien",
 		"de-LU": "Nordmazedonien"
-	}
+	},
+	"callingCode": "389"
 } satisfies Country;

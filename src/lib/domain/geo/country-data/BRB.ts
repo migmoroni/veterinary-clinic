@@ -46,5 +46,6 @@ export const BRB = {
 		"de-BE": "Barbados",
 		"de-LI": "Barbados",
 		"de-LU": "Barbados"
-	}
+	},
+	"callingCode": "1246"
 } satisfies Country;

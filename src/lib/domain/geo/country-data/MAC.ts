@@ -46,5 +46,6 @@ export const MAC = {
 		"de-BE": "Sonderverwaltungsregion Macau",
 		"de-LI": "Sonderverwaltungsregion Macau",
 		"de-LU": "Sonderverwaltungsregion Macau"
-	}
+	},
+	"callingCode": "853"
 } satisfies Country;

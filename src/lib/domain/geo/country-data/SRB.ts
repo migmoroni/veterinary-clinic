@@ -46,5 +46,6 @@ export const SRB = {
 		"de-BE": "Serbien",
 		"de-LI": "Serbien",
 		"de-LU": "Serbien"
-	}
+	},
+	"callingCode": "381"
 } satisfies Country;

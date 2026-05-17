@@ -46,5 +46,6 @@ export const BES = {
 		"de-BE": "Karibische Niederlande",
 		"de-LI": "Karibische Niederlande",
 		"de-LU": "Karibische Niederlande"
-	}
+	},
+	"callingCode": "599"
 } satisfies Country;

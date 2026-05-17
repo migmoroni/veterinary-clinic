@@ -46,5 +46,6 @@ export const PER = {
 		"de-BE": "Peru",
 		"de-LI": "Peru",
 		"de-LU": "Peru"
-	}
+	},
+	"callingCode": "51"
 } satisfies Country;

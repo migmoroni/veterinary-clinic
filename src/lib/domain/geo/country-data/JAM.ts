@@ -46,5 +46,6 @@ export const JAM = {
 		"de-BE": "Jamaika",
 		"de-LI": "Jamaika",
 		"de-LU": "Jamaika"
-	}
+	},
+	"callingCode": "1"
 } satisfies Country;

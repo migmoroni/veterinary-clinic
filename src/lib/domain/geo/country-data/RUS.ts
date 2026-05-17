@@ -46,5 +46,6 @@ export const RUS = {
 		"de-BE": "Russland",
 		"de-LI": "Russland",
 		"de-LU": "Russland"
-	}
+	},
+	"callingCode": "7"
 } satisfies Country;

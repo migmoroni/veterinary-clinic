@@ -46,5 +46,6 @@ export const ASM = {
 		"de-BE": "Amerikanisch-Samoa",
 		"de-LI": "Amerikanisch-Samoa",
 		"de-LU": "Amerikanisch-Samoa"
-	}
+	},
+	"callingCode": "1684"
 } satisfies Country;

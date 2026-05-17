@@ -46,5 +46,6 @@ export const MYT = {
 		"de-BE": "Mayotte",
 		"de-LI": "Mayotte",
 		"de-LU": "Mayotte"
-	}
+	},
+	"callingCode": "262"
 } satisfies Country;

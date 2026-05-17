@@ -46,5 +46,6 @@ export const SEN = {
 		"de-BE": "Senegal",
 		"de-LI": "Senegal",
 		"de-LU": "Senegal"
-	}
+	},
+	"callingCode": "221"
 } satisfies Country;

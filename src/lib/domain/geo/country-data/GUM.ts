@@ -46,5 +46,6 @@ export const GUM = {
 		"de-BE": "Guam",
 		"de-LI": "Guam",
 		"de-LU": "Guam"
-	}
+	},
+	"callingCode": "1671"
 } satisfies Country;

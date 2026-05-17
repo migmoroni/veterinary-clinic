@@ -46,5 +46,6 @@ export const ISR = {
 		"de-BE": "Israel",
 		"de-LI": "Israel",
 		"de-LU": "Israel"
-	}
+	},
+	"callingCode": "972"
 } satisfies Country;

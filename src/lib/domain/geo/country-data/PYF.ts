@@ -46,5 +46,6 @@ export const PYF = {
 		"de-BE": "Französisch-Polynesien",
 		"de-LI": "Französisch-Polynesien",
 		"de-LU": "Französisch-Polynesien"
-	}
+	},
+	"callingCode": "689"
 } satisfies Country;

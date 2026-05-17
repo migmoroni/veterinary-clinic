@@ -46,5 +46,6 @@ export const MOZ = {
 		"de-BE": "Mosambik",
 		"de-LI": "Mosambik",
 		"de-LU": "Mosambik"
-	}
+	},
+	"callingCode": "258"
 } satisfies Country;

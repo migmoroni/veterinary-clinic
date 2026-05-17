@@ -46,5 +46,6 @@ export const HRV = {
 		"de-BE": "Kroatien",
 		"de-LI": "Kroatien",
 		"de-LU": "Kroatien"
-	}
+	},
+	"callingCode": "385"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const ESH = {
 		"de-BE": "Westsahara",
 		"de-LI": "Westsahara",
 		"de-LU": "Westsahara"
-	}
+	},
+	"callingCode": "2125288"
 } satisfies Country;

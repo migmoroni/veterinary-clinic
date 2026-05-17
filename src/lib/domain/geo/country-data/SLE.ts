@@ -46,5 +46,6 @@ export const SLE = {
 		"de-BE": "Sierra Leone",
 		"de-LI": "Sierra Leone",
 		"de-LU": "Sierra Leone"
-	}
+	},
+	"callingCode": "232"
 } satisfies Country;

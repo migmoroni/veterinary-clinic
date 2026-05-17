@@ -46,5 +46,6 @@ export const CCK = {
 		"de-BE": "Kokosinseln",
 		"de-LI": "Kokosinseln",
 		"de-LU": "Kokosinseln"
-	}
+	},
+	"callingCode": "61"
 } satisfies Country;

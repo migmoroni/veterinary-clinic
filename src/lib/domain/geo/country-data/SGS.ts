@@ -46,5 +46,6 @@ export const SGS = {
 		"de-BE": "Südgeorgien und die Südlichen Sandwichinseln",
 		"de-LI": "Südgeorgien und die Südlichen Sandwichinseln",
 		"de-LU": "Südgeorgien und die Südlichen Sandwichinseln"
-	}
+	},
+	"callingCode": "500"
 } satisfies Country;

@@ -29,7 +29,7 @@ function cleanCityValue(value: string): string {
 	return value.replace(/\s+-\s*[A-Z]{2}\s*$/i, '').replace(/\s+/g, ' ').trim();
 }
 
-const countryByCode = new Map(countries.map((country) => [country.code, country]));
+const countryByCode = new Map<string, Country>(countries.map((country) => [country.code, country]));
 const stateByCode = new Map(brazilStates.map((state) => [state.code, state]));
 const citiesByState = new Map<string, BrazilCity[]>();
 const cityByStateAndKey = new Map<string, BrazilCity>();
@@ -94,6 +94,13 @@ export function normalizeOwnerCountry(value: string | null | undefined): string 
 
 export function isBrazilCountry(value: string | null | undefined): boolean {
 	return normalizeOwnerCountry(value) === BRAZIL_COUNTRY_VALUE;
+}
+
+export function countryCallingCode(value: string | null | undefined): string | null {
+	const country = normalizeOwnerCountry(value);
+	if (!country) return null;
+
+	return countryByCode.get(country)?.callingCode ?? null;
 }
 
 export function countryHasStructuredLocations(value: string | null | undefined): boolean {

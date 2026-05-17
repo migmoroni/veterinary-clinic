@@ -46,5 +46,6 @@ export const QAT = {
 		"de-BE": "Katar",
 		"de-LI": "Katar",
 		"de-LU": "Katar"
-	}
+	},
+	"callingCode": "974"
 } satisfies Country;

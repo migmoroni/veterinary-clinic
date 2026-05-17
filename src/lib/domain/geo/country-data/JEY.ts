@@ -46,5 +46,6 @@ export const JEY = {
 		"de-BE": "Jersey",
 		"de-LI": "Jersey",
 		"de-LU": "Jersey"
-	}
+	},
+	"callingCode": "44"
 } satisfies Country;

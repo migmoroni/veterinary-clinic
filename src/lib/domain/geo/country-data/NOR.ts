@@ -46,5 +46,6 @@ export const NOR = {
 		"de-BE": "Norwegen",
 		"de-LI": "Norwegen",
 		"de-LU": "Norwegen"
-	}
+	},
+	"callingCode": "47"
 } satisfies Country;

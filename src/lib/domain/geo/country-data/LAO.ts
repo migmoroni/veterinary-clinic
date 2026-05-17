@@ -46,5 +46,6 @@ export const LAO = {
 		"de-BE": "Laos",
 		"de-LI": "Laos",
 		"de-LU": "Laos"
-	}
+	},
+	"callingCode": "856"
 } satisfies Country;

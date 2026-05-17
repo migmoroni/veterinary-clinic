@@ -46,5 +46,6 @@ export const IOT = {
 		"de-BE": "Britisches Territorium im Indischen Ozean",
 		"de-LI": "Britisches Territorium im Indischen Ozean",
 		"de-LU": "Britisches Territorium im Indischen Ozean"
-	}
+	},
+	"callingCode": "246"
 } satisfies Country;

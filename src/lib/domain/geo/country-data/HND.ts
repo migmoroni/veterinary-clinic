@@ -46,5 +46,6 @@ export const HND = {
 		"de-BE": "Honduras",
 		"de-LI": "Honduras",
 		"de-LU": "Honduras"
-	}
+	},
+	"callingCode": "504"
 } satisfies Country;

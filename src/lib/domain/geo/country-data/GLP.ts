@@ -46,5 +46,6 @@ export const GLP = {
 		"de-BE": "Guadeloupe",
 		"de-LI": "Guadeloupe",
 		"de-LU": "Guadeloupe"
-	}
+	},
+	"callingCode": "590"
 } satisfies Country;

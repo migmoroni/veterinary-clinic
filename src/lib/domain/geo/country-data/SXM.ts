@@ -46,5 +46,6 @@ export const SXM = {
 		"de-BE": "Sint Maarten",
 		"de-LI": "Sint Maarten",
 		"de-LU": "Sint Maarten"
-	}
+	},
+	"callingCode": "1721"
 } satisfies Country;

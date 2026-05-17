@@ -46,5 +46,6 @@ export const MNG = {
 		"de-BE": "Mongolei",
 		"de-LI": "Mongolei",
 		"de-LU": "Mongolei"
-	}
+	},
+	"callingCode": "976"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const BFA = {
 		"de-BE": "Burkina Faso",
 		"de-LI": "Burkina Faso",
 		"de-LU": "Burkina Faso"
-	}
+	},
+	"callingCode": "226"
 } satisfies Country;

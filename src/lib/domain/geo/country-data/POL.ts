@@ -46,5 +46,6 @@ export const POL = {
 		"de-BE": "Polen",
 		"de-LI": "Polen",
 		"de-LU": "Polen"
-	}
+	},
+	"callingCode": "48"
 } satisfies Country;

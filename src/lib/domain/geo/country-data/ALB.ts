@@ -46,5 +46,6 @@ export const ALB = {
 		"de-BE": "Albanien",
 		"de-LI": "Albanien",
 		"de-LU": "Albanien"
-	}
+	},
+	"callingCode": "355"
 } satisfies Country;

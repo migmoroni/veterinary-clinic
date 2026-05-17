@@ -46,5 +46,6 @@ export const GRD = {
 		"de-BE": "Grenada",
 		"de-LI": "Grenada",
 		"de-LU": "Grenada"
-	}
+	},
+	"callingCode": "1473"
 } satisfies Country;

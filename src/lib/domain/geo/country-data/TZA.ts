@@ -46,5 +46,6 @@ export const TZA = {
 		"de-BE": "Tansania",
 		"de-LI": "Tansania",
 		"de-LU": "Tansania"
-	}
+	},
+	"callingCode": "255"
 } satisfies Country;

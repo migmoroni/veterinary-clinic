@@ -46,5 +46,6 @@ export const UKR = {
 		"de-BE": "Ukraine",
 		"de-LI": "Ukraine",
 		"de-LU": "Ukraine"
-	}
+	},
+	"callingCode": "380"
 } satisfies Country;

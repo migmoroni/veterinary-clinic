@@ -46,5 +46,6 @@ export const TWN = {
 		"de-BE": "Taiwan",
 		"de-LI": "Taiwan",
 		"de-LU": "Taiwan"
-	}
+	},
+	"callingCode": "886"
 } satisfies Country;

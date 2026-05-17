@@ -46,5 +46,6 @@ export const FJI = {
 		"de-BE": "Fidschi",
 		"de-LI": "Fidschi",
 		"de-LU": "Fidschi"
-	}
+	},
+	"callingCode": "679"
 } satisfies Country;

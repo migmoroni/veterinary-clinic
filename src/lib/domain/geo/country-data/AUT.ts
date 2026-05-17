@@ -46,5 +46,6 @@ export const AUT = {
 		"de-BE": "Österreich",
 		"de-LI": "Österreich",
 		"de-LU": "Österreich"
-	}
+	},
+	"callingCode": "43"
 } satisfies Country;

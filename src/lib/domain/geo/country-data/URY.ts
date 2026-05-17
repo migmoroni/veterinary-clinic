@@ -46,5 +46,6 @@ export const URY = {
 		"de-BE": "Uruguay",
 		"de-LI": "Uruguay",
 		"de-LU": "Uruguay"
-	}
+	},
+	"callingCode": "598"
 } satisfies Country;

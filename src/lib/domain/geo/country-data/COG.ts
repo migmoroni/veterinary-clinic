@@ -46,5 +46,6 @@ export const COG = {
 		"de-BE": "Kongo-Brazzaville",
 		"de-LI": "Kongo-Brazzaville",
 		"de-LU": "Kongo-Brazzaville"
-	}
+	},
+	"callingCode": "242"
 } satisfies Country;

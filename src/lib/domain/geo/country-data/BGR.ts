@@ -46,5 +46,6 @@ export const BGR = {
 		"de-BE": "Bulgarien",
 		"de-LI": "Bulgarien",
 		"de-LU": "Bulgarien"
-	}
+	},
+	"callingCode": "359"
 } satisfies Country;

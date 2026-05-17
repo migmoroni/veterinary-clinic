@@ -46,5 +46,6 @@ export const KIR = {
 		"de-BE": "Kiribati",
 		"de-LI": "Kiribati",
 		"de-LU": "Kiribati"
-	}
+	},
+	"callingCode": "686"
 } satisfies Country;

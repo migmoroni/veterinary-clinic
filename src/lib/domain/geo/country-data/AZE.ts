@@ -46,5 +46,6 @@ export const AZE = {
 		"de-BE": "Aserbaidschan",
 		"de-LI": "Aserbaidschan",
 		"de-LU": "Aserbaidschan"
-	}
+	},
+	"callingCode": "994"
 } satisfies Country;

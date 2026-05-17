@@ -46,5 +46,6 @@ export const CIV = {
 		"de-BE": "Côte d’Ivoire",
 		"de-LI": "Côte d’Ivoire",
 		"de-LU": "Côte d’Ivoire"
-	}
+	},
+	"callingCode": "225"
 } satisfies Country;

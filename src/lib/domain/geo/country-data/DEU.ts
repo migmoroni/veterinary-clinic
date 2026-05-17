@@ -46,5 +46,6 @@ export const DEU = {
 		"de-BE": "Deutschland",
 		"de-LI": "Deutschland",
 		"de-LU": "Deutschland"
-	}
+	},
+	"callingCode": "49"
 } satisfies Country;

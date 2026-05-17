@@ -46,5 +46,6 @@ export const GHA = {
 		"de-BE": "Ghana",
 		"de-LI": "Ghana",
 		"de-LU": "Ghana"
-	}
+	},
+	"callingCode": "233"
 } satisfies Country;

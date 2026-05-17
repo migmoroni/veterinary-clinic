@@ -46,5 +46,6 @@ export const ESP = {
 		"de-BE": "Spanien",
 		"de-LI": "Spanien",
 		"de-LU": "Spanien"
-	}
+	},
+	"callingCode": "34"
 } satisfies Country;

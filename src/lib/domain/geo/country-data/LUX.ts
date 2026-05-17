@@ -46,5 +46,6 @@ export const LUX = {
 		"de-BE": "Luxemburg",
 		"de-LI": "Luxemburg",
 		"de-LU": "Luxemburg"
-	}
+	},
+	"callingCode": "352"
 } satisfies Country;

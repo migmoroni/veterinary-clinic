@@ -46,5 +46,6 @@ export const AND = {
 		"de-BE": "Andorra",
 		"de-LI": "Andorra",
 		"de-LU": "Andorra"
-	}
+	},
+	"callingCode": "376"
 } satisfies Country;

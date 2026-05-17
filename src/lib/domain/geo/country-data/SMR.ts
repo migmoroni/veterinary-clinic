@@ -46,5 +46,6 @@ export const SMR = {
 		"de-BE": "San Marino",
 		"de-LI": "San Marino",
 		"de-LU": "San Marino"
-	}
+	},
+	"callingCode": "378"
 } satisfies Country;

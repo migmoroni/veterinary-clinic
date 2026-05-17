@@ -46,5 +46,6 @@ export const SOM = {
 		"de-BE": "Somalia",
 		"de-LI": "Somalia",
 		"de-LU": "Somalia"
-	}
+	},
+	"callingCode": "252"
 } satisfies Country;

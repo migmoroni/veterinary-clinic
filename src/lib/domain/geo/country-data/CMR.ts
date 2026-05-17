@@ -46,5 +46,6 @@ export const CMR = {
 		"de-BE": "Kamerun",
 		"de-LI": "Kamerun",
 		"de-LU": "Kamerun"
-	}
+	},
+	"callingCode": "237"
 } satisfies Country;

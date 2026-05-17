@@ -46,5 +46,6 @@ export const IRQ = {
 		"de-BE": "Irak",
 		"de-LI": "Irak",
 		"de-LU": "Irak"
-	}
+	},
+	"callingCode": "964"
 } satisfies Country;

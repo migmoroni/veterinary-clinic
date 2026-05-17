@@ -46,5 +46,6 @@ export const MUS = {
 		"de-BE": "Mauritius",
 		"de-LI": "Mauritius",
 		"de-LU": "Mauritius"
-	}
+	},
+	"callingCode": "230"
 } satisfies Country;

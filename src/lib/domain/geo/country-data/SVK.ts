@@ -46,5 +46,6 @@ export const SVK = {
 		"de-BE": "Slowakei",
 		"de-LI": "Slowakei",
 		"de-LU": "Slowakei"
-	}
+	},
+	"callingCode": "421"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const PRT = {
 		"de-BE": "Portugal",
 		"de-LI": "Portugal",
 		"de-LU": "Portugal"
-	}
+	},
+	"callingCode": "351"
 } satisfies Country;

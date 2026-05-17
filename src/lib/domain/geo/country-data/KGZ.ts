@@ -46,5 +46,6 @@ export const KGZ = {
 		"de-BE": "Kirgisistan",
 		"de-LI": "Kirgisistan",
 		"de-LU": "Kirgisistan"
-	}
+	},
+	"callingCode": "996"
 } satisfies Country;

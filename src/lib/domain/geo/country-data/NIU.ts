@@ -46,5 +46,6 @@ export const NIU = {
 		"de-BE": "Niue",
 		"de-LI": "Niue",
 		"de-LU": "Niue"
-	}
+	},
+	"callingCode": "683"
 } satisfies Country;

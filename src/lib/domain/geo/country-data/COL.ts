@@ -46,5 +46,6 @@ export const COL = {
 		"de-BE": "Kolumbien",
 		"de-LI": "Kolumbien",
 		"de-LU": "Kolumbien"
-	}
+	},
+	"callingCode": "57"
 } satisfies Country;

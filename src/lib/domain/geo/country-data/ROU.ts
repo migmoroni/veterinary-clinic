@@ -46,5 +46,6 @@ export const ROU = {
 		"de-BE": "Rumänien",
 		"de-LI": "Rumänien",
 		"de-LU": "Rumänien"
-	}
+	},
+	"callingCode": "40"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const BTN = {
 		"de-BE": "Bhutan",
 		"de-LI": "Bhutan",
 		"de-LU": "Bhutan"
-	}
+	},
+	"callingCode": "975"
 } satisfies Country;

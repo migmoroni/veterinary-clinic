@@ -46,5 +46,6 @@ export const BDI = {
 		"de-BE": "Burundi",
 		"de-LI": "Burundi",
 		"de-LU": "Burundi"
-	}
+	},
+	"callingCode": "257"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const NFK = {
 		"de-BE": "Norfolkinsel",
 		"de-LI": "Norfolkinsel",
 		"de-LU": "Norfolkinsel"
-	}
+	},
+	"callingCode": "672"
 } satisfies Country;

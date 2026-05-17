@@ -46,5 +46,6 @@ export const SHN = {
 		"de-BE": "St. Helena",
 		"de-LI": "St. Helena",
 		"de-LU": "St. Helena"
-	}
+	},
+	"callingCode": "290"
 } satisfies Country;

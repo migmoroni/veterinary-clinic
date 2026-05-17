@@ -47,5 +47,6 @@ export const PRY = {
 		"de-BE": "Paraguay",
 		"de-LI": "Paraguay",
 		"de-LU": "Paraguay"
-	}
+	},
+	"callingCode": "595"
 } satisfies Country;

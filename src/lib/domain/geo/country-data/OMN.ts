@@ -46,5 +46,6 @@ export const OMN = {
 		"de-BE": "Oman",
 		"de-LI": "Oman",
 		"de-LU": "Oman"
-	}
+	},
+	"callingCode": "968"
 } satisfies Country;

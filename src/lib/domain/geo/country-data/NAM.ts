@@ -46,5 +46,6 @@ export const NAM = {
 		"de-BE": "Namibia",
 		"de-LI": "Namibia",
 		"de-LU": "Namibia"
-	}
+	},
+	"callingCode": "264"
 } satisfies Country;

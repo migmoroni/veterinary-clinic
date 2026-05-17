@@ -46,5 +46,6 @@ export const BWA = {
 		"de-BE": "Botsuana",
 		"de-LI": "Botsuana",
 		"de-LU": "Botsuana"
-	}
+	},
+	"callingCode": "267"
 } satisfies Country;

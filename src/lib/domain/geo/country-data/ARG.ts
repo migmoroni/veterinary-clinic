@@ -47,5 +47,6 @@ export const ARG = {
 		"de-BE": "Argentinien",
 		"de-LI": "Argentinien",
 		"de-LU": "Argentinien"
-	}
+	},
+	"callingCode": "54"
 } satisfies Country;

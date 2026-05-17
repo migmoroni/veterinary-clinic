@@ -46,5 +46,6 @@ export const MDA = {
 		"de-BE": "Republik Moldau",
 		"de-LI": "Republik Moldau",
 		"de-LU": "Republik Moldau"
-	}
+	},
+	"callingCode": "373"
 } satisfies Country;

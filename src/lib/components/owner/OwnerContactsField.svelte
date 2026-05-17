@@ -1,11 +1,12 @@
 <script lang="ts">
 	import type { OwnerContactInput, OwnerContactKind } from '$lib/domain/owner/owner.js';
 	import { formatEmailForInput } from '$lib/domain/shared/email.js';
-	import { formatPhoneForInput } from '$lib/domain/shared/phone.js';
+	import { formatPhoneForInput, formatPhoneForInputWithCaret } from '$lib/domain/shared/phone.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Select from '$lib/components/ui/Select.svelte';
+	import { tick } from 'svelte';
 
 	let { contacts = $bindable<OwnerContactInput[]>([]) }: { contacts?: OwnerContactInput[] } = $props();
 
@@ -31,6 +32,10 @@
 		return kind === 'email' ? formatEmailForInput(value) : formatPhoneForInput(value);
 	}
 
+	function isPhoneContact(kind: OwnerContactKind): boolean {
+		return kind === 'phone' || kind === 'mobile';
+	}
+
 	function removeContact(index: number) {
 		contacts = contacts.filter((_, contactIndex) => contactIndex !== index);
 	}
@@ -51,6 +56,18 @@
 			if (contactIndex !== index) return contact;
 			return { ...contact, value: formatContactValue(contact.kind, value) };
 		});
+	}
+
+	async function updateContactValueFromInput(index: number, kind: OwnerContactKind, input: HTMLInputElement) {
+		if (!isPhoneContact(kind)) {
+			updateContactValue(index, input.value);
+			return;
+		}
+
+		const result = formatPhoneForInputWithCaret(input.value, input.selectionStart);
+		contacts = contacts.map((contact, contactIndex) => (contactIndex === index ? { ...contact, value: result.value } : contact));
+		await tick();
+		if (input === document.activeElement) input.setSelectionRange(result.caret, result.caret);
 	}
 </script>
 
@@ -106,7 +123,7 @@
 							autocomplete="off"
 							class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
 							value={contact.value}
-							oninput={(event) => updateContactValue(index, event.currentTarget.value)}
+							oninput={(event) => void updateContactValueFromInput(index, contact.kind, event.currentTarget)}
 							placeholder={t('owner.contactOtherValue')}
 							aria-label={t('owner.contactOtherValue')}
 							required
@@ -121,7 +138,7 @@
 							autocomplete={contact.kind === 'email' ? 'email' : 'tel'}
 							class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
 							value={contact.value}
-							oninput={(event) => updateContactValue(index, event.currentTarget.value)}
+							oninput={(event) => void updateContactValueFromInput(index, contact.kind, event.currentTarget)}
 							placeholder={t('owner.contactValue')}
 							aria-label={t('owner.contactValue')}
 							required

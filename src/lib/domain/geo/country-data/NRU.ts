@@ -46,5 +46,6 @@ export const NRU = {
 		"de-BE": "Nauru",
 		"de-LI": "Nauru",
 		"de-LU": "Nauru"
-	}
+	},
+	"callingCode": "674"
 } satisfies Country;

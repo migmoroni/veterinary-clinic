@@ -46,5 +46,6 @@ export const JOR = {
 		"de-BE": "Jordanien",
 		"de-LI": "Jordanien",
 		"de-LU": "Jordanien"
-	}
+	},
+	"callingCode": "962"
 } satisfies Country;

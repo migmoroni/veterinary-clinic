@@ -46,5 +46,6 @@ export const PRI = {
 		"de-BE": "Puerto Rico",
 		"de-LI": "Puerto Rico",
 		"de-LU": "Puerto Rico"
-	}
+	},
+	"callingCode": "1"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const MTQ = {
 		"de-BE": "Martinique",
 		"de-LI": "Martinique",
 		"de-LU": "Martinique"
-	}
+	},
+	"callingCode": "596"
 } satisfies Country;

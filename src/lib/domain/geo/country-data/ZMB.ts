@@ -46,5 +46,6 @@ export const ZMB = {
 		"de-BE": "Sambia",
 		"de-LI": "Sambia",
 		"de-LU": "Sambia"
-	}
+	},
+	"callingCode": "260"
 } satisfies Country;

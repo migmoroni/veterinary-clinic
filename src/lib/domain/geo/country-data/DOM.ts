@@ -46,5 +46,6 @@ export const DOM = {
 		"de-BE": "Dominikanische Republik",
 		"de-LI": "Dominikanische Republik",
 		"de-LU": "Dominikanische Republik"
-	}
+	},
+	"callingCode": "1"
 } satisfies Country;

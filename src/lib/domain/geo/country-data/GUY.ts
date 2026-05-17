@@ -46,5 +46,6 @@ export const GUY = {
 		"de-BE": "Guyana",
 		"de-LI": "Guyana",
 		"de-LU": "Guyana"
-	}
+	},
+	"callingCode": "592"
 } satisfies Country;

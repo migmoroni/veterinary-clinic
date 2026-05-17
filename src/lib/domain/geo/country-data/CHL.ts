@@ -46,5 +46,6 @@ export const CHL = {
 		"de-BE": "Chile",
 		"de-LI": "Chile",
 		"de-LU": "Chile"
-	}
+	},
+	"callingCode": "56"
 } satisfies Country;

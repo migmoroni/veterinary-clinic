@@ -46,5 +46,6 @@ export const EGY = {
 		"de-BE": "Ägypten",
 		"de-LI": "Ägypten",
 		"de-LU": "Ägypten"
-	}
+	},
+	"callingCode": "20"
 } satisfies Country;

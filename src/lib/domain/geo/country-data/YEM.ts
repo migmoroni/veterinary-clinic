@@ -46,5 +46,6 @@ export const YEM = {
 		"de-BE": "Jemen",
 		"de-LI": "Jemen",
 		"de-LU": "Jemen"
-	}
+	},
+	"callingCode": "967"
 } satisfies Country;

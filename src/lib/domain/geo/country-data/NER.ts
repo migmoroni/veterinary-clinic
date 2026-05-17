@@ -46,5 +46,6 @@ export const NER = {
 		"de-BE": "Niger",
 		"de-LI": "Niger",
 		"de-LU": "Niger"
-	}
+	},
+	"callingCode": "227"
 } satisfies Country;

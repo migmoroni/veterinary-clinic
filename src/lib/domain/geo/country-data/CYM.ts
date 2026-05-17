@@ -46,5 +46,6 @@ export const CYM = {
 		"de-BE": "Kaimaninseln",
 		"de-LI": "Kaimaninseln",
 		"de-LU": "Kaimaninseln"
-	}
+	},
+	"callingCode": "1345"
 } satisfies Country;

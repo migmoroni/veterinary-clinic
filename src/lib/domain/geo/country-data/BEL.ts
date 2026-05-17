@@ -46,5 +46,6 @@ export const BEL = {
 		"de-BE": "Belgien",
 		"de-LI": "Belgien",
 		"de-LU": "Belgien"
-	}
+	},
+	"callingCode": "32"
 } satisfies Country;

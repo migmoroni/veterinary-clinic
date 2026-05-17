@@ -46,5 +46,6 @@ export const PAK = {
 		"de-BE": "Pakistan",
 		"de-LI": "Pakistan",
 		"de-LU": "Pakistan"
-	}
+	},
+	"callingCode": "92"
 } satisfies Country;

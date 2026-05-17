@@ -46,5 +46,6 @@ export const SYR = {
 		"de-BE": "Syrien",
 		"de-LI": "Syrien",
 		"de-LU": "Syrien"
-	}
+	},
+	"callingCode": "963"
 } satisfies Country;

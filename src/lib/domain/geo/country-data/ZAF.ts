@@ -46,5 +46,6 @@ export const ZAF = {
 		"de-BE": "Südafrika",
 		"de-LI": "Südafrika",
 		"de-LU": "Südafrika"
-	}
+	},
+	"callingCode": "27"
 } satisfies Country;

@@ -46,5 +46,6 @@ export const KNA = {
 		"de-BE": "St. Kitts und Nevis",
 		"de-LI": "St. Kitts und Nevis",
 		"de-LU": "St. Kitts und Nevis"
-	}
+	},
+	"callingCode": "1869"
 } satisfies Country;

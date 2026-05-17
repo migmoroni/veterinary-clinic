@@ -46,5 +46,6 @@ export const SDN = {
 		"de-BE": "Sudan",
 		"de-LI": "Sudan",
 		"de-LU": "Sudan"
-	}
+	},
+	"callingCode": "249"
 } satisfies Country;

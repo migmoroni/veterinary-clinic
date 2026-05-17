@@ -46,5 +46,6 @@ export const CUW = {
 		"de-BE": "Curaçao",
 		"de-LI": "Curaçao",
 		"de-LU": "Curaçao"
-	}
+	},
+	"callingCode": "599"
 } satisfies Country;
