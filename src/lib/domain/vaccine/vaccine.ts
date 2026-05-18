@@ -3,8 +3,10 @@ export interface PetVaccination {
 	petId: number;
 	appliedAt: string;
 	vaccinePresetId: number;
+	vaccineProtocolId: number;
 	vaccinePresetDoseId: number;
 	vaccineName: string;
+	vaccineProtocolName: string;
 	vaccineDoseLabel: string;
 	validityIgnoredAt: string | null;
 	updatedAt: string | null;
@@ -15,6 +17,7 @@ export interface PetVaccination {
 export interface PetVaccinationInput {
 	appliedAt: string;
 	vaccinePresetId: number;
+	vaccineProtocolId: number;
 	vaccinePresetDoseId: number;
 }
 
@@ -23,6 +26,7 @@ export type VaccineValidityUnit = 'days' | 'months';
 export interface VaccinePresetDose {
 	id: number;
 	vaccinePresetId: number;
+	vaccineProtocolId: number;
 	label: string;
 	normalizedLabel: string;
 	validityValue: number;
@@ -39,10 +43,31 @@ export interface VaccinePresetDoseInput {
 	sortOrder?: number;
 }
 
+export interface VaccineProtocol {
+	id: number;
+	vaccinePresetId: number;
+	name: string;
+	normalizedName: string;
+	doses: VaccinePresetDose[];
+	isDefault: boolean;
+	sortOrder: number;
+	updatedAt: string | null;
+}
+
+export interface VaccineProtocolInput {
+	id?: number;
+	name: string;
+	doses: VaccinePresetDoseInput[];
+	isDefault?: boolean;
+	sortOrder?: number;
+}
+
 export interface VaccinePreset {
 	id: number;
 	name: string;
 	normalizedName: string;
+	defaultProtocolId: number | null;
+	protocols: VaccineProtocol[];
 	doses: VaccinePresetDose[];
 	hiddenAt: string | null;
 	updatedAt: string | null;
@@ -50,7 +75,7 @@ export interface VaccinePreset {
 
 export interface VaccinePresetInput {
 	name: string;
-	doses: VaccinePresetDoseInput[];
+	protocols: VaccineProtocolInput[];
 }
 
 export interface VaccineDueStatus {
@@ -74,6 +99,10 @@ export function normalizeVaccineName(value: string): string {
 }
 
 export function normalizeVaccineDoseLabel(value: string): string {
+	return normalizeVaccineName(value);
+}
+
+export function normalizeVaccineProtocolName(value: string): string {
 	return normalizeVaccineName(value);
 }
 
@@ -108,14 +137,27 @@ export function getVaccinationPreset(vaccination: PetVaccination, presets: Vacci
 	return presets.find((item) => item.id === vaccination.vaccinePresetId) ?? null;
 }
 
+export function getDefaultVaccineProtocol(preset: VaccinePreset | null): VaccineProtocol | null {
+	if (!preset) return null;
+	return preset.protocols.find((protocol) => protocol.id === preset.defaultProtocolId) ?? preset.protocols[0] ?? null;
+}
+
+export function getVaccinationProtocol(vaccination: PetVaccination, presets: VaccinePreset[]): VaccineProtocol | null {
+	const preset = getVaccinationPreset(vaccination, presets);
+	if (!preset) return null;
+	return preset.protocols.find((protocol) => protocol.id === vaccination.vaccineProtocolId) ?? null;
+}
+
 export function getVaccinationDose(vaccination: PetVaccination, presets: VaccinePreset[]): VaccinePresetDose | null {
-	return getVaccinationPreset(vaccination, presets)?.doses.find((item) => item.id === vaccination.vaccinePresetDoseId) ?? null;
+	const protocol = getVaccinationProtocol(vaccination, presets);
+	return protocol?.doses.find((item) => item.id === vaccination.vaccinePresetDoseId) ?? null;
 }
 
 export function getVaccinationDisplayName(vaccination: PetVaccination, presets: VaccinePreset[]): string {
 	const presetName = getVaccinationPreset(vaccination, presets)?.name ?? vaccination.vaccineName;
+	const protocolName = getVaccinationProtocol(vaccination, presets)?.name ?? vaccination.vaccineProtocolName;
 	const doseLabel = getVaccinationDose(vaccination, presets)?.label ?? vaccination.vaccineDoseLabel;
-	return doseLabel ? `${presetName} · ${doseLabel}` : presetName;
+	return [presetName, protocolName, doseLabel].filter((item) => item.trim().length > 0).join(' · ');
 }
 
 export function computeVaccineDueAt(appliedAt: string, dose: Pick<VaccinePresetDose, 'validityValue' | 'validityUnit'> | null): string | null {

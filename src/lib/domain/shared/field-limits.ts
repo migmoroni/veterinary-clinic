@@ -28,6 +28,8 @@ export const FIELD_LIMITS = {
 	backupKind: 32,
 	vaccinePresetName: 80,
 	vaccineNormalizedName: 80,
+	vaccineProtocolName: 80,
+	vaccineNormalizedProtocolName: 80,
 	vaccineDoseLabel: 80,
 	vaccineNormalizedDoseLabel: 80,
 	vaccineValidityDays: 3650,

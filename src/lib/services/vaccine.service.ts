@@ -5,6 +5,7 @@ import {
 	listVaccinePresets,
 	listUsedVaccinePresetDoseIds,
 	listUsedVaccinePresetIds,
+	listUsedVaccineProtocolIds,
 	saveVaccinePreset,
 	setVaccinePresetHidden,
 	setVaccinationValidityIgnored,
@@ -29,6 +30,10 @@ export async function loadVaccinePresets(): Promise<VaccinePreset[]> {
 
 export async function loadUsedPresetIds(): Promise<number[]> {
 	return listUsedVaccinePresetIds();
+}
+
+export async function loadUsedProtocolIds(): Promise<number[]> {
+	return listUsedVaccineProtocolIds();
 }
 
 export async function loadUsedDoseIds(): Promise<number[]> {

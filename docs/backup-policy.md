@@ -13,9 +13,9 @@ Import contract:
 
 - The main app expects imported databases to already use the current canonical schema.
 - `PRAGMA user_version` is intentionally unused and remains `0` while the app is pre-launch.
-- Legacy data must be converted before import. The supported converter is `legacy-to-sqlite`, which generates `veterinary_clinic.db` with the app tables, indexes, vaccine presets, and pet vaccination rows.
-- Vaccination rows must reference an existing vaccine preset through `vaccine_preset_id`; free-text vaccinations are not valid in the canonical schema.
-- Repeated applications of the same vaccine preset for the same pet should keep only the latest application active for due-date tracking. Older equivalent applications use `validity_ignored_at` and are excluded from due-date alerts and status analytics.
+- Legacy data must be converted before import. The supported converter is `legacy-to-sqlite`, which generates `veterinary_clinic.db` with the current app tables, indexes, vaccine roots, vaccination protocols, doses, and pet vaccination rows.
+- Vaccination rows must reference an existing vaccine root, protocol, and dose through `vaccine_preset_id`, `vaccine_protocol_id`, and `vaccine_preset_dose_id`; free-text vaccinations are not valid in the canonical schema.
+- Repeated applications of the same vaccine root for the same pet should keep only the latest application active for due-date tracking, even when a different protocol is selected. Older equivalent applications use `validity_ignored_at` and are excluded from due-date alerts and status analytics.
 
 Planned follow-up behavior:
 

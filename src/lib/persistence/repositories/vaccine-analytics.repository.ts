@@ -38,8 +38,10 @@ interface LatestVaccinationRow {
 	owner_contacts: OwnerAssociatedContact[];
 	applied_at: string;
 	vaccine_preset_id: number;
+	vaccine_protocol_id: number;
 	vaccine_preset_dose_id: number;
 	vaccine_name: string;
+	vaccine_protocol_name: string;
 	vaccine_dose_label: string;
 	validity_value: number;
 	validity_unit: VaccineValidityUnit;
@@ -143,14 +145,17 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationRow[]> {
 			${ownerNamesSql} AS owner_name,
 			pet_vaccinations.applied_at,
 			pet_vaccinations.vaccine_preset_id,
+			pet_vaccinations.vaccine_protocol_id,
 			pet_vaccinations.vaccine_preset_dose_id,
 			vaccine_presets.name AS vaccine_name,
+			vaccine_protocols.name AS vaccine_protocol_name,
 			vaccine_preset_doses.label AS vaccine_dose_label,
 			vaccine_preset_doses.validity_value,
 			vaccine_preset_doses.validity_unit
 		 FROM pet_vaccinations
 		 JOIN pets ON pets.id = pet_vaccinations.pet_id
 		 JOIN vaccine_presets ON vaccine_presets.id = pet_vaccinations.vaccine_preset_id
+		 JOIN vaccine_protocols ON vaccine_protocols.id = pet_vaccinations.vaccine_protocol_id
 		 JOIN vaccine_preset_doses ON vaccine_preset_doses.id = pet_vaccinations.vaccine_preset_dose_id
 		 WHERE pet_vaccinations.deleted_at IS NULL
 			AND pet_vaccinations.validity_ignored_at IS NULL
@@ -193,7 +198,9 @@ function mapStatusItem(row: LatestVaccinationRow, now = new Date()): VaccineStat
 		petName: row.pet_name,
 		petAvatarBytes: normalizeByteArray(row.pet_avatar_blob),
 		vaccinePresetId: row.vaccine_preset_id,
-		vaccineName: `${row.vaccine_name} · ${row.vaccine_dose_label}`,
+		vaccineProtocolId: row.vaccine_protocol_id,
+		vaccineProtocolName: row.vaccine_protocol_name,
+		vaccineName: `${row.vaccine_name} · ${row.vaccine_protocol_name} · ${row.vaccine_dose_label}`,
 		appliedAt: row.applied_at,
 		dueAt: status.dueAt,
 		daysUntilDue: status.daysUntilDue,

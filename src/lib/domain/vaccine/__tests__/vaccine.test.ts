@@ -6,7 +6,20 @@ const presets: VaccinePreset[] = [
 		id: 1,
 		name: 'V 10',
 		normalizedName: normalizeVaccineName('V 10'),
-		doses: [{ id: 1, vaccinePresetId: 1, label: '1ª dose', normalizedLabel: '1dose', validityValue: 21, validityUnit: 'days', sortOrder: 0, updatedAt: null }],
+		defaultProtocolId: 1,
+		protocols: [
+			{
+				id: 1,
+				vaccinePresetId: 1,
+				name: 'Padrão',
+				normalizedName: 'padrao',
+				doses: [{ id: 1, vaccinePresetId: 1, vaccineProtocolId: 1, label: '1ª dose', normalizedLabel: '1dose', validityValue: 21, validityUnit: 'days', sortOrder: 0, updatedAt: null }],
+				isDefault: true,
+				sortOrder: 0,
+				updatedAt: null
+			}
+		],
+		doses: [{ id: 1, vaccinePresetId: 1, vaccineProtocolId: 1, label: '1ª dose', normalizedLabel: '1dose', validityValue: 21, validityUnit: 'days', sortOrder: 0, updatedAt: null }],
 		hiddenAt: null,
 		updatedAt: null
 	},
@@ -14,7 +27,20 @@ const presets: VaccinePreset[] = [
 		id: 2,
 		name: 'Antirrábica',
 		normalizedName: normalizeVaccineName('Antirrábica'),
-		doses: [{ id: 2, vaccinePresetId: 2, label: 'Dose de reforço', normalizedLabel: 'dosedereforco', validityValue: 12, validityUnit: 'months', sortOrder: 0, updatedAt: null }],
+		defaultProtocolId: 2,
+		protocols: [
+			{
+				id: 2,
+				vaccinePresetId: 2,
+				name: 'Padrão',
+				normalizedName: 'padrao',
+				doses: [{ id: 2, vaccinePresetId: 2, vaccineProtocolId: 2, label: 'Dose de reforço', normalizedLabel: 'dosedereforco', validityValue: 12, validityUnit: 'months', sortOrder: 0, updatedAt: null }],
+				isDefault: true,
+				sortOrder: 0,
+				updatedAt: null
+			}
+		],
+		doses: [{ id: 2, vaccinePresetId: 2, vaccineProtocolId: 2, label: 'Dose de reforço', normalizedLabel: 'dosedereforco', validityValue: 12, validityUnit: 'months', sortOrder: 0, updatedAt: null }],
 		hiddenAt: null,
 		updatedAt: null
 	}

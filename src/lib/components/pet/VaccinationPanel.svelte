@@ -1,6 +1,6 @@
 <script lang="ts">
 	import DateField from '$lib/components/forms/DateField.svelte';
-	import type { PetVaccination, VaccinePreset, VaccinePresetDose } from '$lib/domain/vaccine/vaccine.js';
+	import type { PetVaccination, VaccinePreset, VaccinePresetDose, VaccineProtocol } from '$lib/domain/vaccine/vaccine.js';
 	import { getVaccinationDisplayName, getVaccineDueStatus } from '$lib/domain/vaccine/vaccine.js';
 	import { formatDateForDisplay, normalizeDateInput } from '$lib/domain/shared/date-input.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
@@ -16,7 +16,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import Select from '$lib/components/ui/Select.svelte';
 
-	type SelectedVaccinationDose = { preset: VaccinePreset; dose: VaccinePresetDose };
+	type SelectedVaccinationDose = { preset: VaccinePreset; protocol: VaccineProtocol; dose: VaccinePresetDose };
 
 	let { petId, vaccinations = [], presets = [] }: { petId: number; vaccinations?: PetVaccination[]; presets?: VaccinePreset[] } = $props();
 
@@ -28,6 +28,7 @@
 	let loadedPetId = $state<number | null>(null);
 	let appliedAt = $state(todayInput);
 	let vaccinePresetId = $state('');
+	let vaccineProtocolId = $state('');
 	let vaccineDoseId = $state('');
 	let selectedVaccines = $state<SelectedVaccinationDose[]>([]);
 	let vaccinationPendingRemoval = $state<PetVaccination | null>(null);
@@ -38,7 +39,8 @@
 	const sortedVaccinations = $derived([...currentVaccinations].sort((first, second) => second.appliedAt.localeCompare(first.appliedAt) || second.id - first.id));
 	const visiblePresets = $derived(currentPresets.filter((preset) => !preset.hiddenAt));
 	const selectedPreset = $derived(visiblePresets.find((preset) => String(preset.id) === vaccinePresetId) ?? null);
-	const selectedDose = $derived(selectedPreset?.doses.find((dose) => String(dose.id) === vaccineDoseId) ?? null);
+	const selectedProtocol = $derived(selectedPreset?.protocols.find((protocol) => String(protocol.id) === vaccineProtocolId) ?? null);
+	const selectedDose = $derived(selectedProtocol?.doses.find((dose) => String(dose.id) === vaccineDoseId) ?? null);
 
 	$effect(() => {
 		if (loadedPetId === petId) return;
@@ -49,22 +51,35 @@
 
 	$effect(() => {
 		if (!selectedPreset) {
+			if (vaccineProtocolId) vaccineProtocolId = '';
 			if (vaccineDoseId) vaccineDoseId = '';
 			return;
 		}
 
-		if (!selectedPreset.doses.some((dose) => String(dose.id) === vaccineDoseId)) {
-			vaccineDoseId = selectedPreset.doses[0] ? String(selectedPreset.doses[0].id) : '';
+		if (!selectedPreset.protocols.some((protocol) => String(protocol.id) === vaccineProtocolId)) {
+			const defaultProtocol = selectedPreset.protocols.find((protocol) => protocol.id === selectedPreset.defaultProtocolId) ?? selectedPreset.protocols.find((protocol) => protocol.isDefault) ?? selectedPreset.protocols[0];
+			vaccineProtocolId = defaultProtocol ? String(defaultProtocol.id) : '';
+		}
+	});
+
+	$effect(() => {
+		if (!selectedProtocol) {
+			if (vaccineDoseId) vaccineDoseId = '';
+			return;
+		}
+
+		if (!selectedProtocol.doses.some((dose) => String(dose.id) === vaccineDoseId)) {
+			vaccineDoseId = selectedProtocol.doses[0] ? String(selectedProtocol.doses[0].id) : '';
 		}
 	});
 
 	function selectedKey(vaccine: SelectedVaccinationDose): string {
-		return `preset:${vaccine.preset.id}:dose:${vaccine.dose.id}`;
+		return `preset:${vaccine.preset.id}:protocol:${vaccine.protocol.id}:dose:${vaccine.dose.id}`;
 	}
 
 	function resolveSelectedVaccine(): SelectedVaccinationDose | null {
-		if (!selectedPreset || !selectedDose) return null;
-		return { preset: selectedPreset, dose: selectedDose };
+		if (!selectedPreset || !selectedProtocol || !selectedDose) return null;
+		return { preset: selectedPreset, protocol: selectedProtocol, dose: selectedDose };
 	}
 
 	function canAddVaccineName(): boolean {
@@ -82,6 +97,7 @@
 		if (!vaccine || hasSelectedVaccine(vaccine)) return;
 		selectedVaccines = [...selectedVaccines, vaccine];
 		vaccinePresetId = '';
+		vaccineProtocolId = '';
 		vaccineDoseId = '';
 	}
 
@@ -115,7 +131,7 @@
 			}
 
 			if (vaccinePresetId && !selectedDose) {
-				errorKey = 'vaccine.doseRequired';
+				errorKey = selectedProtocol ? 'vaccine.doseRequired' : 'vaccine.protocolRequired';
 				return;
 			}
 
@@ -128,17 +144,19 @@
 			const normalizedAppliedAt = normalizeDateInput(appliedAt);
 			const updated = await saveNewVaccinations(
 				petId,
-				vaccines.map((vaccine) => ({ appliedAt: normalizedAppliedAt, vaccinePresetId: vaccine.preset.id, vaccinePresetDoseId: vaccine.dose.id }))
+				vaccines.map((vaccine) => ({ appliedAt: normalizedAppliedAt, vaccinePresetId: vaccine.preset.id, vaccineProtocolId: vaccine.protocol.id, vaccinePresetDoseId: vaccine.dose.id }))
 			);
 
 			currentVaccinations = updated;
 			selectedVaccines = [];
 			vaccinePresetId = '';
+			vaccineProtocolId = '';
 			vaccineDoseId = '';
 			statusKey = 'vaccine.saved';
 		} catch (exception) {
 			if (exception instanceof Error && exception.message === 'date_invalid') errorKey = 'date.invalid';
 			else if (exception instanceof Error && exception.message === 'vaccine_preset_required') errorKey = 'vaccine.presetRequired';
+			else if (exception instanceof Error && exception.message === 'vaccine_protocol_required') errorKey = 'vaccine.protocolRequired';
 			else if (exception instanceof Error && exception.message === 'vaccine_preset_hidden') errorKey = 'vaccine.presetHidden';
 			else if (exception instanceof Error && exception.message === 'vaccine_dose_required') errorKey = 'vaccine.doseRequired';
 			else errorKey = 'vaccine.saveFailed';
@@ -193,7 +211,7 @@
 	}
 
 	function selectedLabel(vaccine: SelectedVaccinationDose): string {
-		return `${vaccine.preset.name} · ${vaccine.dose.label}`;
+		return `${vaccine.preset.name} · ${vaccine.protocol.name} · ${vaccine.dose.label}`;
 	}
 
 	function dueLabel(vaccination: PetVaccination): string {
@@ -241,7 +259,7 @@
 	{/if}
 
 	<form class="mt-4 flex flex-col gap-3" onsubmit={submitVaccinations}>
-		<div class="grid gap-3 md:grid-cols-[12rem_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
+		<div class="grid gap-3 md:grid-cols-[12rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
 			<label class="flex flex-col gap-1 text-sm font-medium">
 				<span>{t('vaccine.appliedAt')}</span>
 				<DateField bind:value={appliedAt} ariaLabel={t('vaccine.appliedAt')} />
@@ -260,14 +278,27 @@
 			</div>
 
 			<div class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+				<label for={`vaccine-protocol-${petId}`}>{t('vaccine.protocol')}</label>
+				<Select
+					id={`vaccine-protocol-${petId}`}
+					bind:value={vaccineProtocolId}
+					disabled={!selectedPreset}
+					options={[
+						{ value: '', label: t('vaccine.protocolPlaceholder') },
+						...(selectedPreset?.protocols ?? []).map((protocol) => ({ value: String(protocol.id), label: protocol.name }))
+					]}
+				/>
+			</div>
+
+			<div class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 				<label for={`vaccine-dose-${petId}`}>{t('vaccine.dose')}</label>
 				<Select
 					id={`vaccine-dose-${petId}`}
 					bind:value={vaccineDoseId}
-					disabled={!selectedPreset}
+					disabled={!selectedProtocol}
 					options={[
 						{ value: '', label: t('vaccine.dosePlaceholder') },
-						...(selectedPreset?.doses ?? []).map((dose) => ({ value: String(dose.id), label: `${dose.label} (${validityLabel(dose)})` }))
+						...(selectedProtocol?.doses ?? []).map((dose) => ({ value: String(dose.id), label: `${dose.label} (${validityLabel(dose)})` }))
 					]}
 				/>
 			</div>

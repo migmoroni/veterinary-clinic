@@ -25,6 +25,8 @@ export interface VaccineStatusItem {
 	petName: string;
 	petAvatarBytes: Uint8Array | null;
 	vaccinePresetId: number;
+	vaccineProtocolId: number;
+	vaccineProtocolName: string;
 	vaccineName: string;
 	appliedAt: string;
 	dueAt: string;

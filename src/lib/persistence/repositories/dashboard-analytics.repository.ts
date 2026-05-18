@@ -47,8 +47,10 @@ interface PetOwnerAnalyticsRow {
 interface LatestVaccinationAnalyticsRow {
 	pet_id: number;
 	vaccine_preset_id: number;
+	vaccine_protocol_id: number;
 	vaccine_preset_dose_id: number;
 	vaccine_name: string;
+	vaccine_protocol_name: string;
 	vaccine_dose_label: string;
 	applied_at: string;
 	validity_value: number;
@@ -176,8 +178,10 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationAnalyticsRo
 	const rows = await selectMany<LatestVaccinationAnalyticsRow>(
 		`SELECT pet_vaccinations.pet_id,
 			pet_vaccinations.vaccine_preset_id,
+			pet_vaccinations.vaccine_protocol_id,
 			pet_vaccinations.vaccine_preset_dose_id,
 			vaccine_presets.name AS vaccine_name,
+			vaccine_protocols.name AS vaccine_protocol_name,
 			vaccine_preset_doses.label AS vaccine_dose_label,
 			pet_vaccinations.applied_at,
 			vaccine_preset_doses.validity_value,
@@ -185,6 +189,7 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationAnalyticsRo
 		 FROM pet_vaccinations
 		 JOIN pets ON pets.id = pet_vaccinations.pet_id
 		 JOIN vaccine_presets ON vaccine_presets.id = pet_vaccinations.vaccine_preset_id
+		 JOIN vaccine_protocols ON vaccine_protocols.id = pet_vaccinations.vaccine_protocol_id
 		 JOIN vaccine_preset_doses ON vaccine_preset_doses.id = pet_vaccinations.vaccine_preset_dose_id
 		 WHERE pet_vaccinations.deleted_at IS NULL
 			AND pet_vaccinations.validity_ignored_at IS NULL
@@ -225,7 +230,18 @@ function buildPetVaccinesMap(rows: LatestVaccinationAnalyticsRow[]): Map<number,
 		if (!status) continue;
 
 		const vaccines = vaccinesByPetId.get(row.pet_id) ?? [];
-		vaccines.push({ presetId: row.vaccine_preset_id, presetName: row.vaccine_name, doseId: row.vaccine_preset_dose_id, doseLabel: row.vaccine_dose_label, appliedAt: row.applied_at, dueAt: status.dueAt, daysUntilDue: status.daysUntilDue, status: status.status });
+		vaccines.push({
+			presetId: row.vaccine_preset_id,
+			presetName: row.vaccine_name,
+			protocolId: row.vaccine_protocol_id,
+			protocolName: row.vaccine_protocol_name,
+			doseId: row.vaccine_preset_dose_id,
+			doseLabel: row.vaccine_dose_label,
+			appliedAt: row.applied_at,
+			dueAt: status.dueAt,
+			daysUntilDue: status.daysUntilDue,
+			status: status.status
+		});
 		vaccinesByPetId.set(row.pet_id, vaccines);
 	}
 

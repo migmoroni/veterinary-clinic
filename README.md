@@ -2,7 +2,7 @@
 
 Local-first veterinary clinic app built with SvelteKit, Tailwind CSS and Tauri 2.
 
-On first launch, the app asks whether to import an existing compatible SQLite database or start a new empty clinic database. After setup, the MVP opens directly on the latest medical record, supports global search, and includes real CRUD flows for owners, pets, medical records, and preset-based pet vaccinations, owner/pet profile screens, ViaCEP address lookup, a functional trash screen, and manual backup/export/import actions.
+On first launch, the app asks whether to import an existing compatible SQLite database or start a new clinic database with default vaccination protocols. After setup, the MVP opens directly on the latest medical record, supports global search, and includes real CRUD flows for owners, pets, medical records, protocol-based pet vaccinations, owner/pet profile screens, ViaCEP address lookup, a functional trash screen, and manual backup/export/import actions.
 
 SQLite access goes through `tauri-plugin-sql`; the app does not depend on `rusqlite` directly.
 
@@ -46,7 +46,7 @@ npx tsc to-sqlite.ts --ignoreConfig
 node to-sqlite.js
 ```
 
-The converter reads `legacy-to-sqlite/dist/old-clinic.csv` and writes `legacy-to-sqlite/build/veterinary_clinic.db` using the app's current schema. Legacy `TELEFONE` values become `owner_contacts.kind = 'phone'`, and `CELULAR` values become `owner_contacts.kind = 'mobile'`. Medical record periods are derived from dated entries in the legacy record text: the earliest valid date becomes `admitted_at`, and the latest valid date becomes `discharged_at` when there is more than one dated entry. When the same pet has repeated applications of the same vaccine preset, older applications are marked with `validity_ignored_at` so only the latest one contributes to due-date alerts and vaccine status analytics.
+The converter reads `legacy-to-sqlite/dist/old-clinic.csv` and writes `legacy-to-sqlite/build/veterinary_clinic.db` using the app's current canonical schema. Legacy `TELEFONE` values become `owner_contacts.kind = 'phone'`, and `CELULAR` values become `owner_contacts.kind = 'mobile'`. Medical record periods are derived from dated entries in the legacy record text: the earliest valid date becomes `admitted_at`, and the latest valid date becomes `discharged_at` when there is more than one dated entry. Legacy vaccination rows are imported under the default vaccination protocol for each vaccine root.
 
 ## Desktop bundles
 

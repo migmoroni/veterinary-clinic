@@ -34,7 +34,7 @@ export async function createEmptyDatabase(): Promise<void> {
 
 	const database = await Database.load(DATABASE_URL);
 	await database.execute('PRAGMA foreign_keys = ON');
-	await runMigrations(database);
+	await runMigrations(database, { seedDefaultData: true });
 	cached = database;
 }
 
