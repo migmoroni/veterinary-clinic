@@ -613,12 +613,128 @@ const canineBreedAliases: BreedAlias[] = [
   { id: 'dalmatian', aliases: ['dalmata'] },
   { id: 'schnauzer', aliases: ['schnauzer'] },
   { id: 'belgian-shepherd', aliases: ['pastor belga'] },
-  { id: 'english-bulldog', aliases: ['bulldog ingles'] }
+  { id: 'english-bulldog', aliases: ['bulldog ingles'] },
+  { id: 'akita', aliases: ['akita'] },
+  { id: 'australian-shepherd', aliases: ['pastor australiano', 'australian shepherd', 'aussie'] },
+  { id: 'basset-hound', aliases: ['basset', 'basset hound'] },
+  { id: 'bernese-mountain-dog', aliases: ['boiadeiro de berna', 'bernese', 'bernese mountain dog'] },
+  { id: 'boston-terrier', aliases: ['boston terrier'] },
+  { id: 'cane-corso', aliases: ['cane corso'] },
+  { id: 'chihuahua', aliases: ['chihuahua'] },
+  { id: 'doberman', aliases: ['doberman'] },
+  { id: 'great-dane', aliases: ['dogue alemao', 'great dane'] },
+  { id: 'jack-russell-terrier', aliases: ['jack russell', 'jack russel'] },
+  { id: 'samoyed', aliases: ['samoieda', 'samoiedo', 'samoyed'] },
+  { id: 'weimaraner', aliases: ['weimaraner'] },
+  { id: 'affenpinscher', aliases: ['affenpinscher'] },
+  { id: 'afghan-hound', aliases: ['galgo afegao', 'afghan hound', 'afegao'] },
+  { id: 'airedale-terrier', aliases: ['airedale terrier'] },
+  { id: 'basenji', aliases: ['basenji'] },
+  { id: 'bichon-frise', aliases: ['bichon frise', 'bichon'] },
+  { id: 'bloodhound', aliases: ['bloodhound', 'cao de santo humberto'] },
+  { id: 'borzoi', aliases: ['borzoi'] },
+  { id: 'bull-terrier', aliases: ['bull terrier'] },
+  { id: 'bullmastiff', aliases: ['bullmastiff', 'bull mastiff'] },
+  { id: 'cavalier-king-charles-spaniel', aliases: ['cavalier king charles', 'cavalier'] },
+  { id: 'collie', aliases: ['collie'] },
+  { id: 'coton-de-tulear', aliases: ['coton de tulear', 'coton'] },
+  { id: 'dogo-argentino', aliases: ['dogo argentino'] },
+  { id: 'dogue-de-bordeaux', aliases: ['dogue de bordeaux'] },
+  { id: 'english-setter', aliases: ['setter ingles', 'english setter'] },
+  { id: 'fox-terrier', aliases: ['fox terrier'] },
+  { id: 'greyhound', aliases: ['greyhound', 'galgo ingles'] },
+  { id: 'havanese', aliases: ['havanese', 'bichon havanes', 'havanes'] },
+  { id: 'irish-setter', aliases: ['setter irlandes', 'irish setter'] },
+  { id: 'italian-greyhound', aliases: ['galgo italiano', 'italian greyhound'] },
+  { id: 'japanese-spitz', aliases: ['spitz japones', 'japanese spitz'] },
+  { id: 'mastiff', aliases: ['mastiff', 'mastim'] },
+  { id: 'papillon', aliases: ['papillon'] },
+  { id: 'pembroke-welsh-corgi', aliases: ['corgi', 'welsh corgi', 'pembroke'] },
+  { id: 'pointer', aliases: ['pointer'] },
+  { id: 'portuguese-water-dog', aliases: ['cao de agua portugues', 'portuguese water dog'] },
+  { id: 'saint-bernard', aliases: ['sao bernardo', 'saint bernard'] },
+  { id: 'shetland-sheepdog', aliases: ['pastor de shetland', 'shetland sheepdog', 'sheltie'] },
+  { id: 'shiba-inu', aliases: ['shiba inu', 'shiba'] },
+  { id: 'whippet', aliases: ['whippet'] },
+  { id: 'alaskan-malamute', aliases: ['malamute do alasca', 'alaskan malamute', 'malamute'] },
+  { id: 'anatolian-shepherd-dog', aliases: ['pastor da anatolia', 'pastor de anatolia', 'anatolian shepherd'] },
+  { id: 'barbet', aliases: ['barbet'] },
+  { id: 'beauceron', aliases: ['beauceron'] },
+  { id: 'belgian-malinois', aliases: ['malinois', 'pastor belga malinois'] },
+  { id: 'biewer-terrier', aliases: ['biewer terrier'] },
+  { id: 'black-russian-terrier', aliases: ['terrier preto russo', 'black russian terrier'] },
+  { id: 'boerboel', aliases: ['boerboel'] },
+  { id: 'briard', aliases: ['briard'] },
+  { id: 'brussels-griffon', aliases: ['griffon de bruxelas', 'brussels griffon'] },
+  { id: 'cardigan-welsh-corgi', aliases: ['welsh corgi cardigan', 'cardigan welsh corgi'] },
+  { id: 'chesapeake-bay-retriever', aliases: ['chesapeake bay retriever', 'chesapeake'] },
+  { id: 'chinese-crested', aliases: ['cao de crista chines', 'cristado chines', 'chinese crested'] },
+  { id: 'clumber-spaniel', aliases: ['clumber spaniel'] },
+  { id: 'curly-coated-retriever', aliases: ['curly coated retriever'] },
+  { id: 'english-cocker-spaniel', aliases: ['cocker spaniel ingles', 'english cocker spaniel'] },
+  { id: 'english-springer-spaniel', aliases: ['springer spaniel ingles', 'english springer spaniel'] },
+  { id: 'flat-coated-retriever', aliases: ['flat coated retriever'] },
+  { id: 'gordon-setter', aliases: ['setter gordon', 'gordon setter'] },
+  { id: 'irish-wolfhound', aliases: ['wolfhound irlandes', 'irish wolfhound'] },
+  { id: 'keeshond', aliases: ['keeshond'] },
+  { id: 'komondor', aliases: ['komondor'] },
+  { id: 'kuvasz', aliases: ['kuvasz'] },
+  { id: 'leonberger', aliases: ['leonberger'] },
+  { id: 'miniature-pinscher', aliases: ['pinscher miniatura', 'miniature pinscher'] },
+  { id: 'newfoundland', aliases: ['terra nova', 'newfoundland'] },
+  { id: 'norfolk-terrier', aliases: ['norfolk terrier'] },
+  { id: 'norwich-terrier', aliases: ['norwich terrier'] },
+  { id: 'old-english-sheepdog', aliases: ['old english sheepdog', 'antigo pastor ingles'] },
+  { id: 'pomeranian', aliases: ['pomerania', 'pomeranian', 'lulu da pomerania'] },
+  { id: 'rhodesian-ridgeback', aliases: ['rhodesian ridgeback'] },
+  { id: 'saluki', aliases: ['saluki'] },
+  { id: 'scottish-terrier', aliases: ['scottish terrier'] },
+  { id: 'staffordshire-bull-terrier', aliases: ['staffordshire bull terrier', 'staffbull'] },
+  { id: 'west-highland-white-terrier', aliases: ['west highland white terrier', 'westie'] }
 ];
 
 const felineBreedAliases: BreedAlias[] = [
   { id: 'siamese', aliases: ['siames'] },
   { id: 'persian', aliases: ['persa'] },
+  { id: 'abyssinian', aliases: ['abissinio', 'abyssinian'] },
+  { id: 'angora', aliases: ['angora'] },
+  { id: 'bengal', aliases: ['bengal', 'bengali'] },
+  { id: 'brazilian-shorthair', aliases: ['pelo curto brasileiro', 'brasileiro pelo curto', 'brazilian shorthair'] },
+  { id: 'british-shorthair', aliases: ['british shorthair', 'britanico de pelo curto'] },
+  { id: 'burmese', aliases: ['burmes', 'burmese'] },
+  { id: 'exotic-shorthair', aliases: ['exotico de pelo curto', 'exotic shorthair'] },
+  { id: 'himalayan', aliases: ['himalaio', 'himalayan'] },
+  { id: 'maine-coon', aliases: ['maine coon'] },
+  { id: 'ragdoll', aliases: ['ragdoll'] },
+  { id: 'russian-blue', aliases: ['azul russo', 'russian blue'] },
+  { id: 'sacred-birman', aliases: ['sagrado da birmania', 'birman', 'birmana'] },
+  { id: 'scottish-fold', aliases: ['scottish fold'] },
+  { id: 'sphynx', aliases: ['sphynx', 'esfinge'] },
+  { id: 'american-shorthair', aliases: ['american shorthair', 'americano de pelo curto'] },
+  { id: 'balinese', aliases: ['balines'] },
+  { id: 'cornish-rex', aliases: ['cornish rex'] },
+  { id: 'devon-rex', aliases: ['devon rex'] },
+  { id: 'egyptian-mau', aliases: ['mau egipcio', 'egyptian mau'] },
+  { id: 'manx', aliases: ['manx'] },
+  { id: 'norwegian-forest-cat', aliases: ['gato noruegues da floresta', 'norwegian forest'] },
+  { id: 'oriental-shorthair', aliases: ['oriental shorthair', 'oriental de pelo curto'] },
+  { id: 'savannah', aliases: ['savannah', 'savana'] },
+  { id: 'somali', aliases: ['somali'] },
+  { id: 'chartreux', aliases: ['chartreux'] },
+  { id: 'european-shorthair', aliases: ['europeu de pelo curto', 'european shorthair'] },
+  { id: 'japanese-bobtail', aliases: ['bobtail japones', 'japanese bobtail'] },
+  { id: 'korat', aliases: ['korat'] },
+  { id: 'laperm', aliases: ['laperm', 'la perm'] },
+  { id: 'munchkin', aliases: ['munchkin'] },
+  { id: 'nebelung', aliases: ['nebelung'] },
+  { id: 'ocicat', aliases: ['ocicat'] },
+  { id: 'peterbald', aliases: ['peterbald'] },
+  { id: 'pixie-bob', aliases: ['pixie bob', 'pixiebob'] },
+  { id: 'selkirk-rex', aliases: ['selkirk rex'] },
+  { id: 'siberian-cat', aliases: ['siberiano', 'siberian cat'] },
+  { id: 'singapura', aliases: ['singapura'] },
+  { id: 'snowshoe', aliases: ['snowshoe'] },
+  { id: 'tonkinese', aliases: ['tonquines', 'tonkinese'] },
   { id: 'feline-mixed-breed', aliases: ['srd', 's r d', 'sem raca definida', 'felina', 'felino', 'gato', 'gata'] }
 ];
 
@@ -1448,7 +1564,11 @@ const extractVaccinationsFromRecord = (description: string, report: ImportReport
 
 const detectSpecies = (rawBreed: string | undefined): PetSpecies => {
   const normalized = normalizeText(rawBreed);
-  if (['felina', 'felino', 'felin', 'gato', 'gata', 'siames', 'persa'].some((alias) => normalized.includes(alias))) return 'feline';
+  const padded = ` ${normalized} `;
+  const hasFelineMarker = ['felina', 'felino', 'felin', 'gato', 'gata'].some((alias) => includesAlias(padded, alias));
+  const hasFelineBreed = felineBreedAliases.filter((breedAlias) => breedAlias.id !== 'feline-mixed-breed').some((breedAlias) => breedAlias.aliases.some((alias) => includesAlias(padded, alias)));
+  if (hasFelineMarker || hasFelineBreed)
+    return 'feline';
 
   return 'canine';
 };
@@ -1485,7 +1605,7 @@ const ignoreVaccinationValidity = (report: ImportReport, id: number) => {
 };
 
 const processarMigracao = () => {
-  const csvFilePath = path.resolve(projectDir, 'dist/old-clinic.csv');
+  const csvFilePath = path.resolve(projectDir, 'dist/old-clinic-2.csv');
 
   const rows = parse(fs.readFileSync(csvFilePath, 'utf8'), {
     columns: true,

@@ -259,13 +259,13 @@
 	{/if}
 
 	<form class="mt-4 flex flex-col gap-3" onsubmit={submitVaccinations}>
-		<div class="grid gap-3 md:grid-cols-[12rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
+		<div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
 			<label class="flex flex-col gap-1 text-sm font-medium">
 				<span>{t('vaccine.appliedAt')}</span>
 				<DateField bind:value={appliedAt} ariaLabel={t('vaccine.appliedAt')} />
 			</label>
 
-			<div class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+			<div class="flex min-w-0 flex-col gap-1 text-sm font-medium md:col-span-2">
 				<label for={`vaccine-preset-${petId}`}>{t('vaccine.name')}</label>
 				<Select
 					id={`vaccine-preset-${petId}`}

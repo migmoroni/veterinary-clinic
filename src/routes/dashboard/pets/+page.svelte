@@ -25,8 +25,9 @@
 	}
 
 	function breedLabel(key: string): string {
+		if (key === 'unknown') return t('common.notInformed');
 		const option = isPetBreed(key) ? getPetBreedOption(key) : null;
-		return option ? t(option.labelKey) : t('common.notInformed');
+		return option ? t(option.labelKey) : key;
 	}
 
 	function sexLabel(key: string): string {
