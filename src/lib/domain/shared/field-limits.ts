@@ -16,7 +16,7 @@ export const FIELD_LIMITS = {
 	ownerAdditionalResponsibleName: 120,
 	petName: 80,
 	petBirthDate: 10,
-	petSpecies: 16,
+	petSpecies: 80,
 	petBreed: 80,
 	petSex: 1,
 	medicalRecordTitle: 160,

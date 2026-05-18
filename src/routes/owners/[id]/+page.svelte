@@ -187,7 +187,7 @@
 	function petTaxonomyLabel(pet: Pet): string {
 		const species = getPetSpeciesOption(pet.species);
 		const breed = getPetBreedOption(pet.breed);
-		const parts = [species ? t(species.labelKey) : null, breed ? t(breed.labelKey) : (pet.breed?.trim() || null)].filter(Boolean);
+		const parts = [species ? t(species.labelKey) : (pet.species?.trim() || null), breed ? t(breed.labelKey) : (pet.breed?.trim() || null)].filter(Boolean);
 		return parts.length > 0 ? parts.join(' · ') : t('common.notInformed');
 	}
 

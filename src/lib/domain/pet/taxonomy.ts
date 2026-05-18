@@ -1,9 +1,12 @@
 import type { TranslationKey } from '$lib/i18n/index.js';
 
-export type PetSpecies = 'canine' | 'feline';
+const knownPetSpeciesIds = ['canine', 'feline'] as const;
+
+export type KnownPetSpecies = (typeof knownPetSpeciesIds)[number];
+export type PetSpecies = KnownPetSpecies | (string & {});
 
 export interface PetSpeciesOption {
-	id: PetSpecies;
+	id: KnownPetSpecies;
 	labelKey: TranslationKey;
 	imagePath: string;
 	fallbackImagePath: string;
@@ -11,7 +14,7 @@ export interface PetSpeciesOption {
 
 interface PetBreedOptionBase {
 	id: string;
-	species: PetSpecies;
+	species: KnownPetSpecies;
 	labelKey: TranslationKey;
 	imagePath: string;
 	fallbackImagePath: string;
@@ -201,7 +204,7 @@ export type PetBreedOption = (typeof petBreedOptions)[number];
 const petSpeciesIds = new Set<string>(petSpeciesOptions.map((option) => option.id));
 const petBreedIds = new Set<string>(petBreedOptions.map((option) => option.id));
 
-export function isPetSpecies(value: string | null | undefined): value is PetSpecies {
+export function isPetSpecies(value: string | null | undefined): value is KnownPetSpecies {
 	return petSpeciesIds.has(value ?? '');
 }
 
@@ -209,7 +212,7 @@ export function isPetBreed(value: string | null | undefined): value is KnownPetB
 	return petBreedIds.has(value ?? '');
 }
 
-export function getPetSpeciesOption(species: PetSpecies | null | undefined): PetSpeciesOption | null {
+export function getPetSpeciesOption(species: string | null | undefined): PetSpeciesOption | null {
 	return petSpeciesOptions.find((option) => option.id === species) ?? null;
 }
 
@@ -217,11 +220,11 @@ export function getPetBreedOption(breed: string | null | undefined): PetBreedOpt
 	return petBreedOptions.find((option) => option.id === breed) ?? null;
 }
 
-export function getPetBreedOptions(species: PetSpecies | null | undefined): PetBreedOption[] {
+export function getPetBreedOptions(species: string | null | undefined): PetBreedOption[] {
 	if (!species) return [];
 	return petBreedOptions.filter((option) => option.species === species);
 }
 
-export function isPetBreedForSpecies(species: PetSpecies, breed: string): boolean {
+export function isPetBreedForSpecies(species: string, breed: string): boolean {
 	return getPetBreedOptions(species).some((option) => option.id === breed);
 }

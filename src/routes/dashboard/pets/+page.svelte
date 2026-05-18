@@ -20,8 +20,9 @@
 	}
 
 	function speciesLabel(key: string): string {
+		if (key === 'unknown') return t('common.notInformed');
 		const option = isPetSpecies(key) ? getPetSpeciesOption(key) : null;
-		return option ? t(option.labelKey) : t('common.notInformed');
+		return option ? t(option.labelKey) : key;
 	}
 
 	function breedLabel(key: string): string {

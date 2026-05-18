@@ -16,11 +16,14 @@
 
 	let open = $state(false);
 	let activeStep = $state<PickerStep>('species');
+	let manualSpeciesMode = $state(false);
+	let manualSpeciesName = $state('');
 	let breedSearch = $state('');
 	let manualBreedMode = $state(false);
 	let manualBreedName = $state('');
 
 	const speciesOption = $derived(getPetSpeciesOption(species));
+	const speciesDisplayName = $derived(speciesOption ? t(speciesOption.labelKey) : (species?.trim() ?? ''));
 	const breedOption = $derived(getPetBreedOption(breed));
 	const breedDisplayName = $derived(breedOption ? t(breedOption.labelKey) : (breed?.trim() ?? ''));
 	const breedOptions = $derived.by(() => {
@@ -62,6 +65,8 @@
 	function openDialog(step: PickerStep) {
 		if (disabled) return;
 		activeStep = step === 'breed' && !species ? 'species' : step;
+		manualSpeciesMode = false;
+		manualSpeciesName = '';
 		breedSearch = '';
 		manualBreedMode = false;
 		manualBreedName = '';
@@ -69,6 +74,8 @@
 	}
 
 	function closeDialog() {
+		manualSpeciesMode = false;
+		manualSpeciesName = '';
 		breedSearch = '';
 		manualBreedMode = false;
 		manualBreedName = '';
@@ -83,10 +90,34 @@
 			breed = null;
 		}
 
+		manualSpeciesMode = false;
+		manualSpeciesName = '';
 		breedSearch = '';
 		manualBreedMode = false;
 		manualBreedName = '';
 		activeStep = 'breed';
+	}
+
+	function startManualSpecies() {
+		manualSpeciesName = '';
+		manualSpeciesMode = true;
+	}
+
+	function cancelManualSpecies() {
+		manualSpeciesMode = false;
+		manualSpeciesName = '';
+	}
+
+	function chooseManualSpecies() {
+		const nextSpecies = manualSpeciesName.trim();
+		if (!nextSpecies) return;
+		chooseSpecies(nextSpecies as PetSpecies);
+	}
+
+	function submitManualSpeciesOnEnter(event: KeyboardEvent) {
+		if (event.key !== 'Enter') return;
+		event.preventDefault();
+		chooseManualSpecies();
 	}
 
 	function chooseBreed(nextBreed: PetBreed) {
@@ -140,7 +171,7 @@
 
 <div class="flex flex-col gap-2">
 	<div class="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-		<button type="button" class={summaryClass(Boolean(speciesOption))} aria-label={`${t('pet.species')}: ${speciesOption ? t(speciesOption.labelKey) : t('common.notInformed')}`} disabled={disabled} onclick={() => openDialog('species')}>
+		<button type="button" class={summaryClass(Boolean(speciesDisplayName))} aria-label={`${t('pet.species')}: ${speciesDisplayName || t('common.notInformed')}`} disabled={disabled} onclick={() => openDialog('species')}>
 			{#if speciesOption}
 				<img class="size-10 shrink-0 rounded-md border border-border bg-muted object-cover" src={speciesOption.imagePath} alt="" aria-hidden="true" loading="lazy" onerror={(event) => useFallbackImage(event, speciesOption.fallbackImagePath)} />
 			{:else}
@@ -148,7 +179,7 @@
 			{/if}
 			<span class="min-w-0">
 				<span class="block truncate text-xs font-semibold uppercase text-muted-foreground">{t('pet.species')}</span>
-				<span class="block truncate text-sm font-medium">{speciesOption ? t(speciesOption.labelKey) : t('common.notInformed')}</span>
+				<span class="block truncate text-sm font-medium">{speciesDisplayName || t('common.notInformed')}</span>
 			</span>
 		</button>
 
@@ -196,7 +227,7 @@
 				<header class="flex items-center justify-between gap-3 border-b border-border p-4">
 					<div class="min-w-0">
 						<h3 class="truncate text-base font-semibold">{t('pet.taxonomyDialogTitle')}</h3>
-						<p class="mt-1 truncate text-xs text-muted-foreground">{speciesOption ? t(speciesOption.labelKey) : t('common.notInformed')} · {breedDisplayName || t('common.notInformed')}</p>
+						<p class="mt-1 truncate text-xs text-muted-foreground">{speciesDisplayName || t('common.notInformed')} · {breedDisplayName || t('common.notInformed')}</p>
 					</div>
 
 					<button type="button" class="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground" aria-label={t('pet.closeTaxonomy')} title={t('pet.closeTaxonomy')} onclick={closeDialog}>
@@ -208,14 +239,34 @@
 					<div class="flex w-[200%] transition-transform duration-300 ease-out {activeStep === 'breed' ? '-translate-x-1/2' : 'translate-x-0'}">
 						<section class="w-1/2 shrink-0 p-4" aria-label={t('pet.chooseSpecies')}>
 							<h4 class="mb-3 text-sm font-semibold">{t('pet.chooseSpecies')}</h4>
-							<div class={optionGridClass}>
-								{#each petSpeciesOptions as option}
-									<button type="button" class={optionClass(species === option.id, true)} aria-label={`${t('pet.species')}: ${t(option.labelKey)}`} aria-pressed={species === option.id} onclick={() => chooseSpecies(option.id)}>
-										<img class="size-11 shrink-0 rounded-md border border-border bg-muted object-cover" src={option.imagePath} alt="" aria-hidden="true" loading="lazy" onerror={(event) => useFallbackImage(event, option.fallbackImagePath)} />
-										<span class="min-w-0 truncate text-sm font-semibold">{t(option.labelKey)}</span>
+							{#if manualSpeciesMode}
+								<div class="rounded-md border border-border bg-muted/30 p-3">
+									<label class="flex flex-col gap-1 text-sm font-medium">
+										<span class="flex min-w-0 items-baseline justify-between gap-2">
+											<span>{t('pet.manualSpeciesName')}</span>
+											<CharacterLimitHint value={manualSpeciesName} max={FIELD_LIMITS.petSpecies} />
+										</span>
+										<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={manualSpeciesName} maxlength={FIELD_LIMITS.petSpecies} placeholder={t('pet.manualSpeciesNamePlaceholder')} aria-label={t('pet.manualSpeciesName')} onkeydown={submitManualSpeciesOnEnter} />
+									</label>
+									<div class="mt-3 flex flex-wrap gap-2">
+										<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" onclick={cancelManualSpecies}>{t('actions.cancel')}</button>
+										<button type="button" class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={!manualSpeciesName.trim()} onclick={chooseManualSpecies}>{t('pet.useManualSpecies')}</button>
+									</div>
+								</div>
+							{:else}
+								<div class={optionGridClass}>
+									<button type="button" class={optionClass(false, true)} aria-label={t('pet.manualSpecies')} onclick={startManualSpecies}>
+										<span class="flex size-11 shrink-0 items-center justify-center rounded-md border border-dashed border-border bg-muted text-muted-foreground"><PawPrint class="size-5" /></span>
+										<span class="min-w-0 truncate text-sm font-semibold">{t('pet.manualSpecies')}</span>
 									</button>
-								{/each}
-							</div>
+									{#each petSpeciesOptions as option}
+										<button type="button" class={optionClass(species === option.id, true)} aria-label={`${t('pet.species')}: ${t(option.labelKey)}`} aria-pressed={species === option.id} onclick={() => chooseSpecies(option.id)}>
+											<img class="size-11 shrink-0 rounded-md border border-border bg-muted object-cover" src={option.imagePath} alt="" aria-hidden="true" loading="lazy" onerror={(event) => useFallbackImage(event, option.fallbackImagePath)} />
+											<span class="min-w-0 truncate text-sm font-semibold">{t(option.labelKey)}</span>
+										</button>
+									{/each}
+								</div>
+							{/if}
 						</section>
 
 						<section class="w-1/2 shrink-0 p-4" aria-label={t('pet.chooseBreed')}>

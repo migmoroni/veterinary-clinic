@@ -13,11 +13,12 @@ describe('pet taxonomy', () => {
 		expect(getPetBreedOptions('feline').some((option) => option.id === 'tonkinese')).toBe(true);
 	});
 
-	it('guards valid species and compatible breeds', () => {
+	it('guards known species and compatible breeds', () => {
 		expect(isPetSpecies('canine')).toBe(true);
 		expect(isPetSpecies('bird')).toBe(false);
 		expect(isPetBreedForSpecies('canine', 'poodle')).toBe(true);
 		expect(isPetBreedForSpecies('canine', 'siamese')).toBe(false);
+		expect(isPetBreedForSpecies('bird', 'poodle')).toBe(false);
 	});
 
 	it('rejects casing, markup-like values and oversized unknown ids', () => {
@@ -32,9 +33,11 @@ describe('pet taxonomy', () => {
 
 	it('returns null or empty collections for missing taxonomy selections', () => {
 		expect(getPetSpeciesOption(null)).toBeNull();
+		expect(getPetSpeciesOption('ave')).toBeNull();
 		expect(getPetBreedOption(null)).toBeNull();
 		expect(getPetBreedOption('raça manual')).toBeNull();
 		expect(getPetBreedOptions(null)).toEqual([]);
+		expect(getPetBreedOptions('ave')).toEqual([]);
 	});
 
 	it('keeps every configured breed compatible with its own species', () => {

@@ -1,5 +1,5 @@
 import type { Pet, PetBreed, PetInput, PetSex, PetSpecies } from '$lib/domain/pet/pet.js';
-import { isPetBreed, isPetBreedForSpecies } from '$lib/domain/pet/taxonomy.js';
+import { isPetBreed, isPetBreedForSpecies, isPetSpecies } from '$lib/domain/pet/taxonomy.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { FIELD_LIMITS, assertTextLimit, nullableLimitedText, requireLimitedText } from '$lib/domain/shared/field-limits.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
@@ -76,12 +76,12 @@ async function mapPetsWithOwners(rows: PetRow[], includeDeleted = false): Promis
 }
 
 function normalizeTaxonomy(input: PetInput): { species: PetSpecies | null; breed: PetBreed | null } {
-	if (!input.species) return { species: null, breed: null };
+	const species = nullableLimitedText(input.species, FIELD_LIMITS.petSpecies) as PetSpecies | null;
+	if (!species) return { species: null, breed: null };
 	const breed = nullableLimitedText(input.breed, FIELD_LIMITS.petBreed) as PetBreed | null;
-	if (breed && isPetBreed(breed) && !isPetBreedForSpecies(input.species, breed)) throw new Error('pet_taxonomy_invalid');
-	assertTextLimit(input.species, FIELD_LIMITS.petSpecies);
+	if (breed && isPetBreed(breed) && isPetSpecies(species) && !isPetBreedForSpecies(species, breed)) throw new Error('pet_taxonomy_invalid');
 
-	return { species: input.species, breed };
+	return { species, breed };
 }
 
 export async function listPetsByOwner(ownerId: number, includeDeleted = false): Promise<Pet[]> {

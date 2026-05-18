@@ -111,7 +111,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.petName)}),
 			birth_date TEXT CHECK(${optionalTextCheck('birth_date', FIELD_LIMITS.petBirthDate)}),
-			species TEXT CHECK(species IS NULL OR (species IN ('canine', 'feline') AND length(species) <= ${FIELD_LIMITS.petSpecies})),
+			species TEXT CHECK(${optionalTextCheck('species', FIELD_LIMITS.petSpecies)}),
 			breed TEXT CHECK(${optionalTextCheck('breed', FIELD_LIMITS.petBreed)}),
 			sex TEXT CHECK(sex IS NULL OR (sex IN ('M', 'F') AND length(sex) = ${FIELD_LIMITS.petSex})),
 			avatar_blob BLOB,
