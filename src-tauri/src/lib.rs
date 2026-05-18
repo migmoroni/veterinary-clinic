@@ -1,4 +1,3 @@
-#[cfg(target_os = "linux")]
 use tauri::Manager;
 #[cfg(target_os = "linux")]
 use webkit2gtk::glib::object::Cast;
@@ -33,9 +32,25 @@ fn configure_linux_media_capture<R: tauri::Runtime>(webview_window: &tauri::Webv
   });
 }
 
+#[cfg(not(mobile))]
+fn focus_main_window<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
+  if let Some(window) = app.get_webview_window("main") {
+    let _ = window.show();
+    let _ = window.unminimize();
+    let _ = window.set_focus();
+  }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-  tauri::Builder::default()
+  let builder = tauri::Builder::default();
+
+  #[cfg(not(mobile))]
+  let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+    focus_main_window(app);
+  }));
+
+  builder
     .plugin(tauri_plugin_sql::Builder::default().build())
     .plugin(tauri_plugin_shell::init())
     .plugin(tauri_plugin_fs::init())
