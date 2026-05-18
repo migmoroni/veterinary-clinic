@@ -8,6 +8,8 @@ export type OwnerContactLike = {
 	kind: OwnerContactKind;
 	label?: string | null;
 	value: string;
+	responsibleId?: number | null;
+	responsibleName?: string | null;
 };
 
 export const OWNER_CONTACT_KINDS = ['mobile', 'phone', 'email', 'other'] as const satisfies readonly OwnerContactKind[];
@@ -66,7 +68,13 @@ export function ownerContactIsVisible(contact: OwnerContactLike): boolean {
 	return contact.value.trim().length > 0 && (contact.kind !== 'other' || (contact.label ?? '').trim().length > 0);
 }
 
-export function ownerContactSubtitle(contact: OwnerContactLike, translate: (key: TranslationKey) => string): string {
+export function ownerContactKindSubtitle(contact: OwnerContactLike, translate: (key: TranslationKey) => string): string {
 	const label = (contact.label ?? '').trim();
 	return contact.kind === 'other' && label.length > 0 ? label : translate(ownerContactKindLabelKey(contact.kind));
+}
+
+export function ownerContactSubtitle(contact: OwnerContactLike, translate: (key: TranslationKey) => string): string {
+	const kindLabel = ownerContactKindSubtitle(contact, translate);
+	const responsibleName = contact.responsibleName?.trim() ?? '';
+	return responsibleName.length > 0 ? `${responsibleName} · ${kindLabel}` : kindLabel;
 }

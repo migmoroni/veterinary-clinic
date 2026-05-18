@@ -3,12 +3,12 @@
 	import OwnerContactDialog from '$lib/components/owner/OwnerContactDialog.svelte';
 	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
-	import type { OwnerContact } from '$lib/domain/owner/owner.js';
+	import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import type { SearchResult, SearchResultKind } from '$lib/persistence/repositories/search.repository.js';
 	import { t } from '$lib/i18n/index.js';
 	import { RECENT_SEARCH_STORAGE_KEY } from '$lib/services/client-state.service.js';
-	import { loadOwnerAvatarsByOwnerIds, loadOwnerContactsByOwnerIds, loadPetAvatarsByPetIds, searchEverywhere } from '$lib/services/clinic.service.js';
+	import { loadOwnerAssociatedContactsByOwnerIds, loadOwnerAvatarsByOwnerIds, loadPetAvatarsByPetIds, searchEverywhere } from '$lib/services/clinic.service.js';
 	import ClipboardPenLine from '@lucide/svelte/icons/clipboard-pen-line';
 	import Phone from '@lucide/svelte/icons/phone';
 	import Search from '@lucide/svelte/icons/search';
@@ -21,7 +21,7 @@
 	let error = $state<string | null>(null);
 	let contactDialogOpen = $state(false);
 	let contactDialogOwnerName = $state('');
-	let contactDialogContacts = $state<OwnerContact[]>([]);
+	let contactDialogContacts = $state<OwnerAssociatedContact[]>([]);
 
 	const showRecentResults = $derived(query.trim().length === 0 && recentResults.length > 0);
 	const visibleResults = $derived(showRecentResults ? recentResults : results);
@@ -59,8 +59,8 @@
 		const petIds = baseResults.filter((result) => result.kind === 'pet').map((result) => result.id);
 		if (ownerIds.length === 0 && petIds.length === 0) return baseResults;
 
-		const [contactsResult, ownerAvatarsResult, petAvatarsResult] = await Promise.allSettled([loadOwnerContactsByOwnerIds(ownerIds), loadOwnerAvatarsByOwnerIds(ownerIds), loadPetAvatarsByPetIds(petIds)]);
-		const contactsByOwnerId = contactsResult.status === 'fulfilled' ? contactsResult.value : new Map<number, OwnerContact[]>();
+		const [contactsResult, ownerAvatarsResult, petAvatarsResult] = await Promise.allSettled([loadOwnerAssociatedContactsByOwnerIds(ownerIds), loadOwnerAvatarsByOwnerIds(ownerIds), loadPetAvatarsByPetIds(petIds)]);
+		const contactsByOwnerId = contactsResult.status === 'fulfilled' ? contactsResult.value : new Map<number, OwnerAssociatedContact[]>();
 		const avatarBytesByOwnerId = ownerAvatarsResult.status === 'fulfilled' ? ownerAvatarsResult.value : new Map<number, Uint8Array | null>();
 		const avatarBytesByPetId = petAvatarsResult.status === 'fulfilled' ? petAvatarsResult.value : new Map<number, Uint8Array | null>();
 
@@ -95,7 +95,7 @@
 		saveRecentResults(nextResults);
 	}
 
-	function ownerContactsFor(result: SearchResult): OwnerContact[] {
+	function ownerContactsFor(result: SearchResult): OwnerAssociatedContact[] {
 		if (result.kind !== 'owner') return [];
 		return (result.ownerContacts ?? []).filter((contact) => contact.value.trim().length > 0);
 	}

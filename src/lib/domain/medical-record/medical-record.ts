@@ -1,4 +1,4 @@
-import type { Owner, OwnerContact } from '$lib/domain/owner/owner.js';
+import type { Owner, OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 
 export interface MedicalRecord {
 	id: number;
@@ -24,7 +24,7 @@ export interface CurrentRecordSummary {
 	petName: string;
 	ownerId: number;
 	ownerName: string;
-	ownerContacts: OwnerContact[];
+	ownerContacts: OwnerAssociatedContact[];
 }
 
 export interface MedicalRecordInput {

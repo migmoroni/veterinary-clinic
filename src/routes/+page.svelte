@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import OwnerContactDialog from '$lib/components/owner/OwnerContactDialog.svelte';
 	import type { DashboardAnalysisView } from '$lib/domain/dashboard/analytics.js';
-	import type { OwnerContact } from '$lib/domain/owner/owner.js';
+	import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 	import { clinic } from '$lib/stores/clinic.svelte.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
 	import Phone from '@lucide/svelte/icons/phone';
@@ -24,7 +24,7 @@
 	let setupStatusKey = $state<TranslationKey | null>(null);
 	let contactDialogOpen = $state(false);
 	let contactDialogOwnerName = $state('');
-	let contactDialogContacts = $state<OwnerContact[]>([]);
+	let contactDialogContacts = $state<OwnerAssociatedContact[]>([]);
 
 	async function startNewDatabase() {
 		setupStatusKey = null;

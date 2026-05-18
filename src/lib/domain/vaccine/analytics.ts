@@ -1,4 +1,4 @@
-import type { OwnerContact } from '$lib/domain/owner/owner.js';
+import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 import { computeVaccineDueAt, type VaccineValidityUnit } from './vaccine.js';
 
 export type VaccineStatusKey = 'current' | 'dueSoon' | 'dueVerySoon' | 'expired' | 'overdue';
@@ -20,7 +20,7 @@ export interface VaccineStatusSummary {
 export interface VaccineStatusItem {
 	ownerId: number;
 	ownerName: string;
-	ownerContacts: OwnerContact[];
+	ownerContacts: OwnerAssociatedContact[];
 	petId: number;
 	petName: string;
 	petAvatarBytes: Uint8Array | null;

@@ -1,10 +1,10 @@
 import type { CurrentRecordSummary } from '$lib/domain/medical-record/medical-record.js';
-import type { OwnerContact } from '$lib/domain/owner/owner.js';
+import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 import type { DashboardAnalytics } from '$lib/domain/dashboard/analytics.js';
 import { hasDatabaseFile } from '$lib/native/database-file.js';
 import { createEmptyDatabase, getDatabase } from '$lib/persistence/sqlite/client.js';
 import { getLastEditedRecord } from '$lib/persistence/repositories/medical-record.repository.js';
-import { listOwnerAvatarBytesByIds, listOwnerContactsByOwnerIds } from '$lib/persistence/repositories/owner.repository.js';
+import { listOwnerAssociatedContactsByOwnerIds, listOwnerAvatarBytesByIds } from '$lib/persistence/repositories/owner.repository.js';
 import { listPetAvatarBytesByIds } from '$lib/persistence/repositories/pet.repository.js';
 import { searchClinic, type SearchResult } from '$lib/persistence/repositories/search.repository.js';
 import { getClinicCounts } from '$lib/persistence/repositories/stats.repository.js';
@@ -70,11 +70,11 @@ export async function searchEverywhere(query: string): Promise<SearchResult[]> {
 	return searchClinic(query);
 }
 
-export async function loadOwnerContactsByOwnerIds(ownerIds: number[]): Promise<Map<number, OwnerContact[]>> {
+export async function loadOwnerAssociatedContactsByOwnerIds(ownerIds: number[]): Promise<Map<number, OwnerAssociatedContact[]>> {
 	const uniqueIds = [...new Set(ownerIds)].filter((id) => Number.isFinite(id));
-	if (uniqueIds.length === 0) return new Map<number, OwnerContact[]>();
+	if (uniqueIds.length === 0) return new Map<number, OwnerAssociatedContact[]>();
 
-	return listOwnerContactsByOwnerIds(uniqueIds);
+	return listOwnerAssociatedContactsByOwnerIds(uniqueIds);
 }
 
 export async function loadOwnerAvatarsByOwnerIds(ownerIds: number[]): Promise<Map<number, Uint8Array | null>> {

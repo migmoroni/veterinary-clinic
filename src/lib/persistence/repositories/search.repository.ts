@@ -1,7 +1,7 @@
 import { selectMany } from '$lib/persistence/sqlite/client.js';
-import type { OwnerContact } from '$lib/domain/owner/owner.js';
+import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
-import { listOwnerContactsByOwnerIds } from './owner.repository.js';
+import { listOwnerAssociatedContactsByOwnerIds } from './owner.repository.js';
 
 export type SearchResultKind = 'owner' | 'pet' | 'record';
 
@@ -16,7 +16,7 @@ export interface SearchResult {
 	subtitle: string;
 	ownerAvatarBytes?: Uint8Array | null;
 	petAvatarBytes?: Uint8Array | null;
-	ownerContacts?: OwnerContact[];
+	ownerContacts?: OwnerAssociatedContact[];
 }
 
 
@@ -227,7 +227,7 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 	);
 
 	const ownerIds = rows.filter((row) => row.kind === 'owner').map((row) => row.id);
-	const contactsByOwnerId = await listOwnerContactsByOwnerIds(ownerIds);
+	const contactsByOwnerId = await listOwnerAssociatedContactsByOwnerIds(ownerIds);
 
 	return rows.map((row) => ({
 		kind: row.kind,

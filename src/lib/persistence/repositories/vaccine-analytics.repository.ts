@@ -8,7 +8,7 @@ import type {
 	VaccineStatusKey,
 	VaccineStatusSummary
 } from '$lib/domain/vaccine/analytics.js';
-import type { OwnerContact } from '$lib/domain/owner/owner.js';
+import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 import {
 	buildVaccineStatus,
 	emptyVaccineStatusSummary,
@@ -24,7 +24,7 @@ import {
 import type { VaccinePreset, VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { selectMany } from '$lib/persistence/sqlite/client.js';
-import { listOwnerContactsByOwnerIds } from './owner.repository.js';
+import { listOwnerAssociatedContactsByOwnerIds } from './owner.repository.js';
 import { listVaccinePresets } from './vaccine.repository.js';
 
 interface LatestVaccinationRow {
@@ -35,7 +35,7 @@ interface LatestVaccinationRow {
 	owner_id: number | null;
 	owner_ids: string | null;
 	owner_name: string | null;
-	owner_contacts: OwnerContact[];
+	owner_contacts: OwnerAssociatedContact[];
 	applied_at: string;
 	vaccine_preset_id: number;
 	vaccine_preset_dose_id: number;
@@ -174,7 +174,7 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationRow[]> {
 		allOwnerIds.push(...ownerIds);
 	}
 
-	const contactsByOwnerId = await listOwnerContactsByOwnerIds(allOwnerIds);
+	const contactsByOwnerId = await listOwnerAssociatedContactsByOwnerIds(allOwnerIds);
 	return latestRows.map((row) => ({
 		...row,
 		owner_contacts: (ownerIdsByRow.get(row) ?? []).flatMap((ownerId) => contactsByOwnerId.get(ownerId) ?? [])

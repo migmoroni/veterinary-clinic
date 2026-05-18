@@ -4,7 +4,7 @@
 	import OwnerContactDialog from '$lib/components/owner/OwnerContactDialog.svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
-	import type { OwnerContact } from '$lib/domain/owner/owner.js';
+	import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 	import type { TranslationKey } from '$lib/i18n/index.js';
 	import { i18n, t } from '$lib/i18n/index.js';
 	import type { VaccineDueFilterMode, VaccineHistoryPeriod, VaccineStatusItem, VaccineStatusKey, VaccineStatusSummary } from '$lib/domain/vaccine/analytics.js';
@@ -66,7 +66,7 @@
 	let historyError = $state('');
 	let contactDialogOpen = $state(false);
 	let contactDialogOwnerName = $state('');
-	let contactDialogContacts = $state<OwnerContact[]>([]);
+	let contactDialogContacts = $state<OwnerAssociatedContact[]>([]);
 	let statusRequestId = 0;
 	let statusRenderRequestId = 0;
 	let historyRequestId = 0;
@@ -404,7 +404,7 @@
 		return `${item.daysUntilDue} ${unit} ${t('vaccine.status.daysUntilDue')}`;
 	}
 
-	function hasContacts(contacts: OwnerContact[]): boolean {
+	function hasContacts(contacts: OwnerAssociatedContact[]): boolean {
 		return contacts.some((contact) => contact.value.trim().length > 0);
 	}
 

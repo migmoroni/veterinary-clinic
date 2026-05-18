@@ -8,7 +8,7 @@ import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { FIELD_LIMITS, nullableLimitedText } from '$lib/domain/shared/field-limits.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
-import { listOwnerContactsByOwnerIds, listOwnersByPet } from './owner.repository.js';
+import { listOwnerAssociatedContactsByOwnerIds, listOwnersByPet } from './owner.repository.js';
 
 interface MedicalRecordRow {
 	id: number;
@@ -106,7 +106,7 @@ function mapMedicalRecord(row: MedicalRecordRow): MedicalRecord {
 
 async function mapCurrentRecord(row: CurrentRecordRow): Promise<CurrentRecordSummary> {
 	const ownerIds = parseOwnerIds(row.owner_ids);
-	const contactsByOwnerId = await listOwnerContactsByOwnerIds(ownerIds);
+	const contactsByOwnerId = await listOwnerAssociatedContactsByOwnerIds(ownerIds);
 	const ownerContacts = ownerIds.flatMap((ownerId) => contactsByOwnerId.get(ownerId) ?? []);
 
 	return {

@@ -1,6 +1,5 @@
 <script lang="ts">
-	import type { OwnerContact } from '$lib/domain/owner/owner.js';
-	import { t } from '$lib/i18n/index.js';
+	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import { openEmailForEmail, openPhoneCallForPhone, openWhatsAppForPhone } from '$lib/services/contact.service.js';
 	import Mail from '@lucide/svelte/icons/mail';
 	import MessageCircle from '@lucide/svelte/icons/message-circle';
@@ -10,9 +9,17 @@
 		canCallOwnerContact as canCallContact,
 		canOpenOwnerContactWhatsApp as canOpenWhatsApp,
 		isEmailOwnerContact as isEmailContact,
+		type OwnerContactLike,
 		ownerContactIsVisible,
-		ownerContactSubtitle
+		ownerContactKindSubtitle
 	} from './owner-contact-utils.js';
+
+	type ContactGroup = {
+		key: string;
+		name: string;
+		roleKey: TranslationKey;
+		contacts: OwnerContactLike[];
+	};
 
 	let {
 		open = $bindable(false),
@@ -21,10 +28,31 @@
 	}: {
 		open?: boolean;
 		ownerName?: string;
-		contacts?: OwnerContact[];
+		contacts?: OwnerContactLike[];
 	} = $props();
 
 	const availableContacts = $derived(contacts.filter(ownerContactIsVisible));
+	const contactGroups = $derived(groupContacts(availableContacts));
+
+	function groupContacts(source: OwnerContactLike[]): ContactGroup[] {
+		const groups = new Map<string, ContactGroup>();
+
+		for (const contact of source) {
+			const responsibleName = contact.responsibleName?.trim() ?? '';
+			const key = responsibleName.length > 0 ? `responsible:${contact.responsibleId ?? responsibleName}` : 'owner';
+			const group = groups.get(key) ?? {
+				key,
+				name: responsibleName.length > 0 ? responsibleName : ownerName,
+				roleKey: responsibleName.length > 0 ? 'owner.additionalResponsibleLabel' : 'owner.contextLabel',
+				contacts: []
+			};
+
+			group.contacts.push(contact);
+			groups.set(key, group);
+		}
+
+		return [...groups.values()];
+	}
 
 	function closeDialog() {
 		open = false;
@@ -56,9 +84,6 @@
 			<header class="flex items-center justify-between gap-3 border-b border-border p-4">
 				<div class="min-w-0">
 					<h3 class="truncate text-base font-semibold">{t('owner.contactDialogTitle')}</h3>
-					{#if ownerName}
-						<p class="mt-1 truncate text-sm text-muted-foreground">{ownerName}</p>
-					{/if}
 				</div>
 
 				<button type="button" class="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground" aria-label={t('owner.closeContactDialog')} title={t('owner.closeContactDialog')} onclick={closeDialog}>
@@ -67,37 +92,48 @@
 			</header>
 
 			<div class="overflow-y-auto p-4">
-				{#if availableContacts.length > 0}
-					<div class="divide-y divide-border rounded-md border border-border">
-						{#each availableContacts as contact}
-							<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-								<div class="min-w-0">
-									<p class="truncate text-sm font-semibold">{contact.value}</p>
-									<p class="mt-1 text-xs text-muted-foreground">{ownerContactSubtitle(contact, t)}</p>
-								</div>
+				{#if contactGroups.length > 0}
+					<div class="space-y-3">
+						{#each contactGroups as group (group.key)}
+							<section class="overflow-hidden rounded-md border border-border">
+								<header class="border-b border-border bg-muted/40 px-3 py-2">
+									<p class="truncate text-sm font-semibold">{group.name || t(group.roleKey)}</p>
+									<p class="mt-0.5 text-xs text-muted-foreground">{t(group.roleKey)}</p>
+								</header>
 
-								{#if isEmailContact(contact.kind) || canCallContact(contact.kind) || canOpenWhatsApp(contact.kind)}
-								<div class="grid gap-2 sm:flex sm:justify-end {canOpenWhatsApp(contact.kind) ? 'grid-cols-2' : 'grid-cols-1'}">
-									{#if isEmailContact(contact.kind)}
-										<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.email')}: ${contact.value}`} onclick={() => void emailContact(contact.value)}>
-											<Mail class="size-4" />
-											{t('owner.email')}
-										</button>
-									{:else if canCallContact(contact.kind)}
-										<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.call')}: ${contact.value}`} onclick={() => void callContact(contact.value)}>
-											<PhoneCall class="size-4" />
-											{t('owner.call')}
-										</button>
-									{/if}
-									{#if canOpenWhatsApp(contact.kind)}
-										<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.messageWhatsApp')}: ${contact.value}`} onclick={() => void messageContact(contact.value)}>
-											<MessageCircle class="size-4" />
-											{t('owner.messageWhatsApp')}
-										</button>
-									{/if}
+								<div class="divide-y divide-border">
+									{#each group.contacts as contact}
+										<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+											<div class="min-w-0">
+												<p class="truncate text-sm font-semibold">{contact.value}</p>
+												<p class="mt-1 text-xs text-muted-foreground">{ownerContactKindSubtitle(contact, t)}</p>
+											</div>
+
+											{#if isEmailContact(contact.kind) || canCallContact(contact.kind) || canOpenWhatsApp(contact.kind)}
+												<div class="grid gap-2 sm:flex sm:justify-end {canOpenWhatsApp(contact.kind) ? 'grid-cols-2' : 'grid-cols-1'}">
+													{#if isEmailContact(contact.kind)}
+														<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.email')}: ${contact.value}`} onclick={() => void emailContact(contact.value)}>
+															<Mail class="size-4" />
+															{t('owner.email')}
+														</button>
+													{:else if canCallContact(contact.kind)}
+														<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.call')}: ${contact.value}`} onclick={() => void callContact(contact.value)}>
+															<PhoneCall class="size-4" />
+															{t('owner.call')}
+														</button>
+													{/if}
+													{#if canOpenWhatsApp(contact.kind)}
+														<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={`${t('owner.messageWhatsApp')}: ${contact.value}`} onclick={() => void messageContact(contact.value)}>
+															<MessageCircle class="size-4" />
+															{t('owner.messageWhatsApp')}
+														</button>
+													{/if}
+												</div>
+											{/if}
+										</article>
+									{/each}
 								</div>
-								{/if}
-							</article>
+							</section>
 						{/each}
 					</div>
 				{:else}

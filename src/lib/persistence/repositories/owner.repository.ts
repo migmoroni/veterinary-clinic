@@ -3,6 +3,7 @@ import {
 	type Owner,
 	type OwnerAdditionalResponsible,
 	type OwnerAdditionalResponsibleInput,
+	type OwnerAssociatedContact,
 	type OwnerContact,
 	type OwnerContactInput,
 	type OwnerContactKind,
@@ -46,6 +47,12 @@ interface ContactRow {
 
 interface OwnerContactRow extends ContactRow {
 	owner_id: number;
+}
+
+interface OwnerAssociatedContactRow extends ContactRow {
+	owner_id: number;
+	responsible_id: number | null;
+	responsible_name: string | null;
 }
 
 interface OwnerAdditionalResponsibleRow {
@@ -166,6 +173,14 @@ function mapContact(row: ContactRow): OwnerContact {
 	};
 }
 
+function mapAssociatedContact(row: OwnerAssociatedContactRow): OwnerAssociatedContact {
+	return {
+		...mapContact(row),
+		responsibleId: row.responsible_id,
+		responsibleName: row.responsible_name
+	};
+}
+
 function mapAdditionalResponsible(row: OwnerAdditionalResponsibleRow, contacts: OwnerContact[] = []): OwnerAdditionalResponsible {
 	return {
 		id: row.id,
@@ -229,6 +244,48 @@ export async function listOwnerContactsByOwnerIds(ownerIds: number[]): Promise<M
 	for (const row of rows) {
 		const contacts = contactsByOwnerId.get(row.owner_id) ?? [];
 		contacts.push(mapContact(row));
+		contactsByOwnerId.set(row.owner_id, contacts);
+	}
+
+	return contactsByOwnerId;
+}
+
+export async function listOwnerAssociatedContactsByOwnerIds(ownerIds: number[]): Promise<Map<number, OwnerAssociatedContact[]>> {
+	const uniqueIds = [...new Set(ownerIds)].filter((id) => Number.isFinite(id));
+	const contactsByOwnerId = new Map<number, OwnerAssociatedContact[]>();
+	if (uniqueIds.length === 0) return contactsByOwnerId;
+
+	const ownerContactPlaceholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
+	const responsibleContactPlaceholders = uniqueIds.map((_, index) => `$${uniqueIds.length + index + 1}`).join(', ');
+	const rows = await selectMany<OwnerAssociatedContactRow>(
+		`SELECT id, owner_id, kind, label, value, created_at, updated_at, NULL AS responsible_id, NULL AS responsible_name, 0 AS source_order, sort_order AS owner_sort_order, sort_order AS contact_sort_order
+		 FROM owner_contacts
+		 WHERE owner_id IN (${ownerContactPlaceholders})
+
+		 UNION ALL
+
+		 SELECT owner_additional_responsible_contacts.id,
+			owner_additional_responsibles.owner_id,
+			owner_additional_responsible_contacts.kind,
+			owner_additional_responsible_contacts.label,
+			owner_additional_responsible_contacts.value,
+			owner_additional_responsible_contacts.created_at,
+			owner_additional_responsible_contacts.updated_at,
+			owner_additional_responsibles.id AS responsible_id,
+			owner_additional_responsibles.name AS responsible_name,
+			1 AS source_order,
+			owner_additional_responsibles.sort_order AS owner_sort_order,
+			owner_additional_responsible_contacts.sort_order AS contact_sort_order
+		 FROM owner_additional_responsibles
+		 JOIN owner_additional_responsible_contacts ON owner_additional_responsible_contacts.responsible_id = owner_additional_responsibles.id
+		 WHERE owner_additional_responsibles.owner_id IN (${responsibleContactPlaceholders})
+		 ORDER BY owner_id, source_order, owner_sort_order, contact_sort_order, id`,
+		[...uniqueIds, ...uniqueIds]
+	);
+
+	for (const row of rows) {
+		const contacts = contactsByOwnerId.get(row.owner_id) ?? [];
+		contacts.push(mapAssociatedContact(row));
 		contactsByOwnerId.set(row.owner_id, contacts);
 	}
 

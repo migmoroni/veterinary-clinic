@@ -11,6 +11,11 @@ export interface OwnerContact {
 	updatedAt: string | null;
 }
 
+export interface OwnerAssociatedContact extends OwnerContact {
+	responsibleId: number | null;
+	responsibleName: string | null;
+}
+
 export interface OwnerContactInput {
 	kind: OwnerContactKind;
 	label?: string;
