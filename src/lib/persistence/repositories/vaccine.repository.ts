@@ -1,5 +1,6 @@
 import type { PetVaccination, PetVaccinationInput, VaccinePreset, VaccinePresetDose, VaccinePresetInput, VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
 import { normalizeVaccineDoseLabel, normalizeVaccineName } from '$lib/domain/vaccine/vaccine.js';
+import { FIELD_LIMITS, assertTextLimit } from '$lib/domain/shared/field-limits.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
@@ -72,15 +73,18 @@ interface NormalizedDoseInput {
 	sortOrder: number;
 }
 
-function requiredText(value: string, error: string): string {
+function requiredText(value: string, error: string, maxLength?: number): string {
 	const trimmed = value.trim();
 	if (!trimmed) throw new Error(error);
+	if (maxLength !== undefined) assertTextLimit(trimmed, maxLength);
 	return trimmed;
 }
 
-function normalizeValidityValue(value: number): number {
+function normalizeValidityValue(value: number, unit: VaccineValidityUnit): number {
 	const normalized = Number.isFinite(value) ? Math.trunc(value) : 0;
-	return Math.max(0, normalized);
+	const max = unit === 'days' ? FIELD_LIMITS.vaccineValidityDays : FIELD_LIMITS.vaccineValidityMonths;
+	if (normalized <= 0 || normalized > max) throw new Error('vaccine_validity_required');
+	return normalized;
 }
 
 function normalizeValidityUnit(value: string): VaccineValidityUnit {
@@ -207,20 +211,22 @@ function normalizeDoseInputs(doses: VaccinePresetInput['doses']): NormalizedDose
 
 	const seenLabels = new Set<string>();
 	return doses.map((dose, index) => {
-		const label = requiredText(dose.label, 'vaccine_dose_required');
+		const label = requiredText(dose.label, 'vaccine_dose_required', FIELD_LIMITS.vaccineDoseLabel);
 		const normalizedLabel = normalizeVaccineDoseLabel(label);
+		if (!normalizedLabel) throw new Error('vaccine_dose_required');
+		assertTextLimit(normalizedLabel, FIELD_LIMITS.vaccineNormalizedDoseLabel);
 		if (seenLabels.has(normalizedLabel)) throw new Error('vaccine_dose_duplicate');
 		seenLabels.add(normalizedLabel);
 
-		const validityValue = normalizeValidityValue(Number(dose.validityValue));
-		if (validityValue === 0) throw new Error('vaccine_validity_required');
+		const validityUnit = normalizeValidityUnit(dose.validityUnit);
+		const validityValue = normalizeValidityValue(Number(dose.validityValue), validityUnit);
 
 		return {
 			id: dose.id,
 			label,
 			normalizedLabel,
 			validityValue,
-			validityUnit: normalizeValidityUnit(dose.validityUnit),
+			validityUnit,
 			sortOrder: Number.isInteger(dose.sortOrder) ? Number(dose.sortOrder) : index
 		};
 	});
@@ -314,7 +320,7 @@ export async function createVaccinations(petId: number, inputs: PetVaccinationIn
 		const result = await execute(
 			`INSERT INTO pet_vaccinations (pet_id, applied_at, vaccine_preset_id, vaccine_preset_dose_id, vaccine_name, vaccine_dose_label, updated_at)
 			 VALUES ($1, COALESCE($2, CURRENT_DATE), $3, $4, $5, $6, CURRENT_TIMESTAMP)`,
-			[petId, requiredText(input.appliedAt, 'date_invalid'), selection.preset.id, selection.dose.id, selection.preset.name, selection.dose.label]
+			[petId, requiredText(input.appliedAt, 'date_invalid', FIELD_LIMITS.isoDate), selection.preset.id, selection.dose.id, selection.preset.name, selection.dose.label]
 		);
 		createdIds.push(Number(result.lastInsertId));
 		affectedPresetIds.add(selection.preset.id);
@@ -384,8 +390,10 @@ export async function listUsedVaccinePresetDoseIds(): Promise<number[]> {
 }
 
 export async function saveVaccinePreset(input: VaccinePresetInput, id?: number): Promise<VaccinePreset> {
-	const name = requiredText(input.name, 'vaccine_name_required');
+	const name = requiredText(input.name, 'vaccine_name_required', FIELD_LIMITS.vaccinePresetName);
 	const normalizedName = normalizeVaccineName(name);
+	if (!normalizedName) throw new Error('vaccine_name_required');
+	assertTextLimit(normalizedName, FIELD_LIMITS.vaccineNormalizedName);
 	const doses = normalizeDoseInputs(input.doses);
 	let presetId = id;
 

@@ -1,6 +1,7 @@
 import type { Pet, PetBreed, PetInput, PetSex, PetSpecies } from '$lib/domain/pet/pet.js';
 import { isPetBreedForSpecies } from '$lib/domain/pet/taxonomy.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
+import { FIELD_LIMITS, assertTextLimit, nullableLimitedText, requireLimitedText } from '$lib/domain/shared/field-limits.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
 
@@ -20,11 +21,6 @@ interface PetRow {
 interface PetOwnerRow {
 	pet_id: number;
 	owner_id: number;
-}
-
-function nullable(value: string | null | undefined): string | null {
-	const trimmed = value?.trim() ?? '';
-	return trimmed.length > 0 ? trimmed : null;
 }
 
 function avatarBytesToSqlLiteral(value: Uint8Array | null | undefined): string {
@@ -82,6 +78,8 @@ async function mapPetsWithOwners(rows: PetRow[], includeDeleted = false): Promis
 function normalizeTaxonomy(input: PetInput): { species: PetSpecies | null; breed: PetBreed | null } {
 	if (!input.species) return { species: null, breed: null };
 	if (input.breed && !isPetBreedForSpecies(input.species, input.breed)) throw new Error('pet_taxonomy_invalid');
+	assertTextLimit(input.species, FIELD_LIMITS.petSpecies);
+	assertTextLimit(input.breed, FIELD_LIMITS.petBreed);
 
 	return { species: input.species, breed: input.breed };
 }
@@ -180,7 +178,7 @@ export async function createPet(ownerId: number, input: PetInput): Promise<Pet> 
 	const result = await execute(
 		`INSERT INTO pets (name, birth_date, species, breed, sex, avatar_blob, updated_at)
 		 VALUES ($1, $2, $3, $4, $5, ${avatarSqlLiteral}, CURRENT_TIMESTAMP)`,
-		[input.name.trim(), nullable(input.birthDate), taxonomy.species, taxonomy.breed, input.sex]
+		[requireLimitedText(input.name, FIELD_LIMITS.petName), nullableLimitedText(input.birthDate, FIELD_LIMITS.petBirthDate), taxonomy.species, taxonomy.breed, input.sex]
 	);
 
 	return linkPetToOwner(ownerId, Number(result.lastInsertId));
@@ -199,7 +197,7 @@ export async function updatePet(id: number, input: PetInput): Promise<Pet> {
 			avatar_blob = ${avatarSqlLiteral},
 			updated_at = CURRENT_TIMESTAMP
 		 WHERE id = $1 AND deleted_at IS NULL`,
-		[id, input.name.trim(), nullable(input.birthDate), taxonomy.species, taxonomy.breed, input.sex]
+		[id, requireLimitedText(input.name, FIELD_LIMITS.petName), nullableLimitedText(input.birthDate, FIELD_LIMITS.petBirthDate), taxonomy.species, taxonomy.breed, input.sex]
 	);
 
 	const pet = await getPet(id);

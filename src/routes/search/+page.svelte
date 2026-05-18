@@ -4,6 +4,7 @@
 	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import type { OwnerContact } from '$lib/domain/owner/owner.js';
+	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import type { SearchResult, SearchResultKind } from '$lib/persistence/repositories/search.repository.js';
 	import { t } from '$lib/i18n/index.js';
 	import { RECENT_SEARCH_STORAGE_KEY } from '$lib/services/client-state.service.js';
@@ -130,7 +131,7 @@
 		<span>{t('search.label')}</span>
 		<span class="relative">
 			<Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-			<input class="h-11 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" placeholder={t('search.placeholder')} bind:value={query} oninput={() => void runSearch()} />
+			<input class="h-11 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" placeholder={t('search.placeholder')} bind:value={query} maxlength={FIELD_LIMITS.searchQuery} oninput={() => void runSearch()} />
 		</span>
 	</label>
 

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
+	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import type { VaccinePreset, VaccinePresetDoseInput, VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import { loadUsedDoseIds, loadUsedPresetIds, loadVaccinePresets, removePreset, savePreset, setPresetHidden } from '$lib/services/vaccine.service.js';
@@ -71,6 +73,10 @@
 		];
 	}
 
+	function validityValueLimit(unit: VaccineValidityUnit): number {
+		return unit === 'days' ? FIELD_LIMITS.vaccineValidityDays : FIELD_LIMITS.vaccineValidityMonths;
+	}
+
 	function inputValue(event: Event): string {
 		return (event.currentTarget as HTMLInputElement).value;
 	}
@@ -102,7 +108,10 @@
 	}
 
 	function setFailure(exception: unknown) {
-		if (exception instanceof Error && exception.message === 'vaccine_validity_required') errorKey = 'vaccine.validityRequired';
+		if (exception instanceof Error && exception.message === 'field_limit_exceeded') errorKey = 'form.limitExceeded';
+		else if (exception instanceof Error && exception.message === 'field_required') errorKey = 'form.fieldRequired';
+		else if (exception instanceof Error && exception.message === 'vaccine_name_required') errorKey = 'form.fieldRequired';
+		else if (exception instanceof Error && exception.message === 'vaccine_validity_required') errorKey = 'vaccine.validityRequired';
 		else if (exception instanceof Error && exception.message === 'vaccine_dose_required') errorKey = 'vaccine.doseRequired';
 		else if (exception instanceof Error && exception.message === 'vaccine_dose_duplicate') errorKey = 'vaccine.doseDuplicate';
 		else if (exception instanceof Error && exception.message === 'vaccine_dose_in_use') errorKey = 'vaccine.doseInUse';
@@ -274,10 +283,13 @@
 			<div class="min-w-0 flex-1">
 				<h3 class="text-base font-semibold">{t('vaccine.newPresetTitle')}</h3>
 				<form class="mt-4 space-y-4" onsubmit={submitNew}>
-					<div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+					<div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-							<span>{t('vaccine.name')}</span>
-							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newName} required />
+							<span class="flex min-w-0 items-baseline justify-between gap-2">
+								<span>{t('vaccine.name')}</span>
+								<CharacterLimitHint value={newName} max={FIELD_LIMITS.vaccinePresetName} />
+							</span>
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newName} maxlength={FIELD_LIMITS.vaccinePresetName} required />
 						</label>
 						<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={saving}>
 							<Plus class="size-4" />
@@ -295,14 +307,17 @@
 						</div>
 
 						{#each newDoses as dose (dose.clientId)}
-							<div class="grid gap-2 md:grid-cols-[minmax(0,1fr)_8rem_9rem_auto] md:items-end">
+							<div class="grid gap-2 md:grid-cols-[minmax(0,1fr)_8rem_9rem_auto] md:items-start">
 								<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-									<span>{t('vaccine.dose')}</span>
-									<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={dose.label} placeholder={t('vaccine.dosePlaceholder')} required oninput={(event) => updateNewDose(dose.clientId, { label: inputValue(event) })} />
+									<span class="flex min-w-0 items-baseline justify-between gap-2">
+										<span>{t('vaccine.dose')}</span>
+										<CharacterLimitHint value={dose.label} max={FIELD_LIMITS.vaccineDoseLabel} />
+									</span>
+									<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={dose.label} maxlength={FIELD_LIMITS.vaccineDoseLabel} placeholder={t('vaccine.dosePlaceholder')} required oninput={(event) => updateNewDose(dose.clientId, { label: inputValue(event) })} />
 								</label>
 								<label class="flex flex-col gap-1 text-sm font-medium">
 									<span>{t('vaccine.validityValue')}</span>
-									<input type="number" min="1" class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={dose.validityValue} oninput={(event) => updateNewDose(dose.clientId, { validityValue: numberInputValue(event) })} />
+									<input type="number" min="1" max={validityValueLimit(dose.validityUnit)} class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={dose.validityValue} oninput={(event) => updateNewDose(dose.clientId, { validityValue: numberInputValue(event) })} />
 								</label>
 								<div class="flex flex-col gap-1 text-sm font-medium">
 									<label for={`new-dose-unit-${dose.clientId}`}>{t('vaccine.validityUnit')}</label>
@@ -343,10 +358,13 @@
 
 						{#if expandedPresetId === preset.id}
 							<form id={`preset-details-${preset.id}`} class="space-y-4 border-t border-border p-3" onsubmit={(event) => submitExisting(event, preset)}>
-								<div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-end">
+								<div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-start">
 									<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-										<span>{t('vaccine.name')}</span>
-										<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={preset.name} required oninput={(event) => updatePresetName(preset.id, inputValue(event))} />
+										<span class="flex min-w-0 items-baseline justify-between gap-2">
+											<span>{t('vaccine.name')}</span>
+											<CharacterLimitHint value={preset.name} max={FIELD_LIMITS.vaccinePresetName} />
+										</span>
+										<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={preset.name} maxlength={FIELD_LIMITS.vaccinePresetName} required oninput={(event) => updatePresetName(preset.id, inputValue(event))} />
 									</label>
 									<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
 										<Save class="size-4" />
@@ -377,14 +395,17 @@
 									</div>
 
 									{#each preset.doses as dose (dose.clientId)}
-										<div class="grid gap-2 md:grid-cols-[minmax(0,1fr)_8rem_9rem_auto] md:items-end">
+										<div class="grid gap-2 md:grid-cols-[minmax(0,1fr)_8rem_9rem_auto] md:items-start">
 											<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-												<span>{t('vaccine.dose')}</span>
-												<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={dose.label} placeholder={t('vaccine.dosePlaceholder')} required oninput={(event) => updatePresetDose(preset.id, dose.clientId, { label: inputValue(event) })} />
+												<span class="flex min-w-0 items-baseline justify-between gap-2">
+													<span>{t('vaccine.dose')}</span>
+													<CharacterLimitHint value={dose.label} max={FIELD_LIMITS.vaccineDoseLabel} />
+												</span>
+												<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={dose.label} maxlength={FIELD_LIMITS.vaccineDoseLabel} placeholder={t('vaccine.dosePlaceholder')} required oninput={(event) => updatePresetDose(preset.id, dose.clientId, { label: inputValue(event) })} />
 											</label>
 											<label class="flex flex-col gap-1 text-sm font-medium">
 												<span>{t('vaccine.validityValue')}</span>
-												<input type="number" min="1" class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={dose.validityValue} oninput={(event) => updatePresetDose(preset.id, dose.clientId, { validityValue: numberInputValue(event) })} />
+												<input type="number" min="1" max={validityValueLimit(dose.validityUnit)} class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={dose.validityValue} oninput={(event) => updatePresetDose(preset.id, dose.clientId, { validityValue: numberInputValue(event) })} />
 											</label>
 											<div class="flex flex-col gap-1 text-sm font-medium">
 												<label for={`preset-dose-unit-${preset.id}-${dose.clientId}`}>{t('vaccine.validityUnit')}</label>

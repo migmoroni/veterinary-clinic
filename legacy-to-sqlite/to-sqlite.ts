@@ -144,6 +144,46 @@ const db = new Database(path.resolve(projectDir, 'build/veterinary_clinic.db'));
 
 db.pragma('foreign_keys = ON');
 
+const FIELD_LIMITS = {
+  ownerName: 120,
+  ownerStreet: 160,
+  ownerStreetNumber: 32,
+  ownerAddressComplement: 80,
+  ownerNeighborhood: 120,
+  ownerCity: 120,
+  ownerState: 80,
+  ownerCountry: 3,
+  ownerPostalCode: 32,
+  ownerAdditionalInformation: 2000,
+  ownerContactLabel: 64,
+  ownerContactPhoneValue: 32,
+  ownerContactEmailValue: 254,
+  ownerContactOtherValue: 120,
+  ownerAdditionalResponsibleName: 120,
+  petName: 80,
+  petBirthDate: 10,
+  petSpecies: 16,
+  petBreed: 80,
+  petSex: 1,
+  medicalRecordTitle: 160,
+  medicalRecordDescription: 36000,
+  isoDate: 10,
+  settingKey: 80,
+  settingValue: 4096,
+  backupPath: 2048,
+  backupKind: 32,
+  vaccinePresetName: 80,
+  vaccineNormalizedName: 80,
+  vaccineDoseLabel: 80,
+  vaccineNormalizedDoseLabel: 80,
+  vaccineValidityDays: 3650,
+  vaccineValidityMonths: 120,
+  searchQuery: 160
+} as const;
+
+const optionalTextCheck = (column: string, maxLength: number): string => `${column} IS NULL OR length(${column}) <= ${maxLength}`;
+const requiredTextCheck = (column: string, maxLength: number): string => `length(trim(${column})) BETWEEN 1 AND ${maxLength}`;
+
 db.exec(`
   DROP TABLE IF EXISTS pet_vaccinations;
   DROP TABLE IF EXISTS vaccine_preset_doses;
@@ -160,17 +200,17 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS owners (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
+    name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.ownerName)}),
     avatar_blob BLOB,
-    street TEXT,
-    street_number TEXT,
-    address_complement TEXT,
-    neighborhood TEXT,
-    city TEXT,
-    state TEXT,
-    country TEXT NOT NULL DEFAULT 'BRA',
-    postal_code TEXT,
-    additional_information TEXT,
+    street TEXT CHECK(${optionalTextCheck('street', FIELD_LIMITS.ownerStreet)}),
+    street_number TEXT CHECK(${optionalTextCheck('street_number', FIELD_LIMITS.ownerStreetNumber)}),
+    address_complement TEXT CHECK(${optionalTextCheck('address_complement', FIELD_LIMITS.ownerAddressComplement)}),
+    neighborhood TEXT CHECK(${optionalTextCheck('neighborhood', FIELD_LIMITS.ownerNeighborhood)}),
+    city TEXT CHECK(${optionalTextCheck('city', FIELD_LIMITS.ownerCity)}),
+    state TEXT CHECK(${optionalTextCheck('state', FIELD_LIMITS.ownerState)}),
+    country TEXT NOT NULL DEFAULT 'BRA' CHECK(length(country) = ${FIELD_LIMITS.ownerCountry}),
+    postal_code TEXT CHECK(${optionalTextCheck('postal_code', FIELD_LIMITS.ownerPostalCode)}),
+    additional_information TEXT CHECK(${optionalTextCheck('additional_information', FIELD_LIMITS.ownerAdditionalInformation)}),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
     deleted_at TEXT,
@@ -181,8 +221,8 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     owner_id INTEGER NOT NULL,
     kind TEXT NOT NULL CHECK(kind IN ('phone', 'mobile', 'email', 'other')),
-    label TEXT NOT NULL DEFAULT '',
-    value TEXT NOT NULL,
+    label TEXT NOT NULL DEFAULT '' CHECK(length(label) <= ${FIELD_LIMITS.ownerContactLabel} AND (kind = 'other' OR label = '')),
+    value TEXT NOT NULL CHECK(length(trim(value)) > 0 AND ((kind IN ('phone', 'mobile') AND length(value) <= ${FIELD_LIMITS.ownerContactPhoneValue}) OR (kind = 'email' AND length(value) <= ${FIELD_LIMITS.ownerContactEmailValue}) OR (kind = 'other' AND length(value) <= ${FIELD_LIMITS.ownerContactOtherValue}))),
     sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
@@ -193,7 +233,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS owner_additional_responsibles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     owner_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
+    name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.ownerAdditionalResponsibleName)}),
     avatar_blob BLOB,
     sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -205,8 +245,8 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     responsible_id INTEGER NOT NULL,
     kind TEXT NOT NULL CHECK(kind IN ('phone', 'mobile', 'email', 'other')),
-    label TEXT NOT NULL DEFAULT '',
-    value TEXT NOT NULL,
+    label TEXT NOT NULL DEFAULT '' CHECK(length(label) <= ${FIELD_LIMITS.ownerContactLabel} AND (kind = 'other' OR label = '')),
+    value TEXT NOT NULL CHECK(length(trim(value)) > 0 AND ((kind IN ('phone', 'mobile') AND length(value) <= ${FIELD_LIMITS.ownerContactPhoneValue}) OR (kind = 'email' AND length(value) <= ${FIELD_LIMITS.ownerContactEmailValue}) OR (kind = 'other' AND length(value) <= ${FIELD_LIMITS.ownerContactOtherValue}))),
     sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
@@ -216,11 +256,11 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS pets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    birth_date TEXT,
-    species TEXT CHECK(species IN ('canine', 'feline')),
-    breed TEXT,
-    sex TEXT CHECK(sex IN ('M', 'F')),
+    name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.petName)}),
+    birth_date TEXT CHECK(${optionalTextCheck('birth_date', FIELD_LIMITS.petBirthDate)}),
+    species TEXT CHECK(species IS NULL OR (species IN ('canine', 'feline') AND length(species) <= ${FIELD_LIMITS.petSpecies})),
+    breed TEXT CHECK(${optionalTextCheck('breed', FIELD_LIMITS.petBreed)}),
+    sex TEXT CHECK(sex IS NULL OR (sex IN ('M', 'F') AND length(sex) = ${FIELD_LIMITS.petSex})),
     avatar_blob BLOB,
     updated_at TEXT,
     deleted_at TEXT,
@@ -242,10 +282,10 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS medical_records (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     pet_id INTEGER NOT NULL,
-    title TEXT,
-    description TEXT,
-    admitted_at TEXT DEFAULT CURRENT_DATE,
-    discharged_at TEXT,
+    title TEXT CHECK(${optionalTextCheck('title', FIELD_LIMITS.medicalRecordTitle)}),
+    description TEXT CHECK(${optionalTextCheck('description', FIELD_LIMITS.medicalRecordDescription)}),
+    admitted_at TEXT DEFAULT CURRENT_DATE CHECK(${optionalTextCheck('admitted_at', FIELD_LIMITS.isoDate)}),
+    discharged_at TEXT CHECK(${optionalTextCheck('discharged_at', FIELD_LIMITS.isoDate)}),
     updated_at TEXT,
     deleted_at TEXT,
     purge_after TEXT,
@@ -254,22 +294,22 @@ db.exec(`
   );
 
   CREATE TABLE IF NOT EXISTS app_settings (
-    key TEXT PRIMARY KEY,
-    value TEXT,
+    key TEXT PRIMARY KEY CHECK(${requiredTextCheck('key', FIELD_LIMITS.settingKey)}),
+    value TEXT CHECK(${optionalTextCheck('value', FIELD_LIMITS.settingValue)}),
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
   CREATE TABLE IF NOT EXISTS backup_history (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    path TEXT NOT NULL,
-    kind TEXT NOT NULL,
+    path TEXT NOT NULL CHECK(${requiredTextCheck('path', FIELD_LIMITS.backupPath)}),
+    kind TEXT NOT NULL CHECK(kind IN ('manual_backup', 'export', 'import', 'pre_import_backup') AND length(kind) <= ${FIELD_LIMITS.backupKind}),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
   CREATE TABLE IF NOT EXISTS vaccine_presets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    normalized_name TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.vaccinePresetName)}),
+    normalized_name TEXT NOT NULL UNIQUE CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedName)}),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     hidden_at TEXT,
     updated_at TEXT
@@ -278,25 +318,26 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS vaccine_preset_doses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     vaccine_preset_id INTEGER NOT NULL,
-    label TEXT NOT NULL,
-    normalized_label TEXT NOT NULL,
+    label TEXT NOT NULL CHECK(${requiredTextCheck('label', FIELD_LIMITS.vaccineDoseLabel)}),
+    normalized_label TEXT NOT NULL CHECK(${requiredTextCheck('normalized_label', FIELD_LIMITS.vaccineNormalizedDoseLabel)}),
     validity_value INTEGER NOT NULL CHECK(validity_value > 0),
     validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months')),
     sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
     FOREIGN KEY (vaccine_preset_id) REFERENCES vaccine_presets (id) ON DELETE CASCADE,
-    UNIQUE(vaccine_preset_id, normalized_label)
+    UNIQUE(vaccine_preset_id, normalized_label),
+    CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.vaccineValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.vaccineValidityMonths}))
   );
 
   CREATE TABLE IF NOT EXISTS pet_vaccinations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     pet_id INTEGER NOT NULL,
-    applied_at TEXT NOT NULL,
+    applied_at TEXT NOT NULL CHECK(length(applied_at) <= ${FIELD_LIMITS.isoDate}),
     vaccine_preset_id INTEGER NOT NULL,
     vaccine_preset_dose_id INTEGER NOT NULL,
-    vaccine_name TEXT NOT NULL,
-    vaccine_dose_label TEXT NOT NULL,
+    vaccine_name TEXT NOT NULL CHECK(${requiredTextCheck('vaccine_name', FIELD_LIMITS.vaccinePresetName)}),
+    vaccine_dose_label TEXT NOT NULL CHECK(${requiredTextCheck('vaccine_dose_label', FIELD_LIMITS.vaccineDoseLabel)}),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     validity_ignored_at TEXT,
     updated_at TEXT,
@@ -529,10 +570,30 @@ const boosterOnlyVaccines = new Set(['Antirrábica']);
 
 const dateHeaderPattern = /(^|\n)\s*(\d{1,2}\s*\/\s*\d{1,2}\s*\/\s*(?:\d{2}|\d{4}))\s*:/g;
 
-const nullable = (value: string | undefined): string | null => {
+const textLength = (value: string | null | undefined): number => Array.from(value ?? '').length;
+
+const truncateText = (value: string, maxLength: number): string => {
+  const characters = Array.from(value);
+  return characters.length <= maxLength ? value : characters.slice(0, maxLength).join('');
+};
+
+const nullable = (value: string | undefined | null): string | null => {
   const trimmed = value?.trim() ?? '';
   return trimmed.length > 0 ? trimmed : null;
 };
+
+const nullableWithLimit = (value: string | undefined | null, maxLength: number): string | null => {
+  const trimmed = nullable(value);
+  return trimmed ? truncateText(trimmed, maxLength) : null;
+};
+
+const limitedContactValue = (kind: OwnerContactKind, value: string): string | null => {
+  const maxLength = kind === 'email' ? FIELD_LIMITS.ownerContactEmailValue : kind === 'other' ? FIELD_LIMITS.ownerContactOtherValue : FIELD_LIMITS.ownerContactPhoneValue;
+  if ((kind === 'email' || kind === 'phone' || kind === 'mobile') && textLength(value) > maxLength) return null;
+  return truncateText(value, maxLength);
+};
+
+const limitedPhoneValue = (value: string): string | null => limitedContactValue('phone', value);
 
 const cityNameAliases: [string[], string][] = [
   [
@@ -644,7 +705,7 @@ const normalizeCityName = (value: string | undefined): string => {
     if (lower.startsWith(prefix) && /[\s,\-]/.test(lower[prefix.length] ?? '')) return corrected;
   }
   // Return whitespace-collapsed value even if not matched
-  return raw.replace(/\s+/g, ' ');
+  return truncateText(raw.replace(/\s+/g, ' '), FIELD_LIMITS.ownerCity);
 };
 
 const stateForCity = (city: string): string => cityStateByName.get(city) ?? 'SP';
@@ -677,20 +738,20 @@ const normalizeLegacyPhoneValue = (value: string | undefined, kind: Exclude<Owne
   const digits = raw.replace(/\D/g, '').replace(/^00/, '');
   if (!digits) return null;
 
-  if (!digits.startsWith('55') && (hasInternationalPrefix || digits.length > 11)) return `+${digits}`;
+  if (!digits.startsWith('55') && (hasInternationalPrefix || digits.length > 11)) return limitedPhoneValue(`+${digits}`);
 
-  if (digits.startsWith('55') && digits.length !== 12 && digits.length !== 13) return `+${digits}`;
+  if (digits.startsWith('55') && digits.length !== 12 && digits.length !== 13) return limitedPhoneValue(`+${digits}`);
 
   const nationalDigits = digits.startsWith('55') ? digits.slice(2) : digits;
   const digitsWithAreaCode = nationalDigits.length === 8 || nationalDigits.length === 9 ? `16${nationalDigits}` : nationalDigits;
   const normalizedDigits = kind === 'mobile' && digitsWithAreaCode.length === 10 ? `${digitsWithAreaCode.slice(0, 2)}9${digitsWithAreaCode.slice(2)}` : digitsWithAreaCode;
 
-  return formatLegacyBrazilPhoneWithCountryCode(normalizedDigits);
+  return limitedPhoneValue(formatLegacyBrazilPhoneWithCountryCode(normalizedDigits));
 };
 
 const normalizeLegacyEmailValue = (value: string | undefined): string | null => {
   const email = (value ?? '').trim().replace(/\s+/g, '').toLowerCase();
-  return email.includes('@') ? email : null;
+  return email.includes('@') && textLength(email) <= FIELD_LIMITS.ownerContactEmailValue ? email : null;
 };
 
 const pushLegacyContact = (contacts: LegacyOwnerContactInput[], contact: LegacyOwnerContactInput) => {
@@ -733,7 +794,7 @@ const cleanLegacyPersonName = (value: string | undefined): string | null => {
     .trim();
 
   if (cleaned.length <= 1 || !/[A-Za-zÀ-ÿ]/.test(cleaned) || isIgnoredLegacyNameNote(cleaned) || /^ddd\b/i.test(cleaned)) return null;
-  return cleaned;
+  return truncateText(cleaned, FIELD_LIMITS.ownerName);
 };
 
 const getLegacyPhones = (value: string): LegacyOwnerContactInput[] => {
@@ -930,7 +991,10 @@ const parseLegacyAddress = (value: string | undefined, ownerName: string): Parse
 };
 
 const insertOwnerContactValue = (report: ImportReport, ownerId: number | bigint, kind: OwnerContactKind, value: string, sortOrder: number) => {
-  const result = insertOwnerContact.run({ ownerId, kind, label: '', value, sortOrder });
+  const limitedValue = limitedContactValue(kind, value);
+  if (!limitedValue) return;
+
+  const result = insertOwnerContact.run({ ownerId, kind, label: '', value: limitedValue, sortOrder });
   if (result.changes > 0) report.ownerContactsCreated += 1;
   else report.ownerContactsReused += 1;
 };
@@ -955,7 +1019,7 @@ const insertAdditionalResponsiblesFromSource = (report: ImportReport, ownerId: n
     let responsibleId = ownerAdditionalResponsiblesCache.get(cacheKey);
 
     if (!responsibleId) {
-      const result = insertOwnerAdditionalResponsible.run({ ownerId, name: responsible.name, avatarBytes: responsible.avatarBytes ?? null, sortOrder: getAdditionalResponsibleSortOrder(ownerId) });
+      const result = insertOwnerAdditionalResponsible.run({ ownerId, name: truncateText(responsible.name, FIELD_LIMITS.ownerAdditionalResponsibleName), avatarBytes: responsible.avatarBytes ?? null, sortOrder: getAdditionalResponsibleSortOrder(ownerId) });
       responsibleId = result.lastInsertRowid;
       ownerAdditionalResponsiblesCache.set(cacheKey, responsibleId);
       report.ownerAdditionalResponsiblesCreated += 1;
@@ -964,7 +1028,11 @@ const insertAdditionalResponsiblesFromSource = (report: ImportReport, ownerId: n
     }
 
     for (const [contactIndex, contact] of responsible.contacts.entries()) {
-      const result = insertOwnerAdditionalResponsibleContact.run({ responsibleId, kind: contact.kind, label: contact.label ?? '', value: contact.value, sortOrder: contactIndex });
+      const limitedValue = limitedContactValue(contact.kind, contact.value);
+      if (!limitedValue) continue;
+
+      const label = contact.kind === 'other' ? truncateText(contact.label ?? '', FIELD_LIMITS.ownerContactLabel) : '';
+      const result = insertOwnerAdditionalResponsibleContact.run({ responsibleId, kind: contact.kind, label, value: limitedValue, sortOrder: contactIndex });
       if (result.changes > 0) report.ownerAdditionalResponsibleContactsCreated += 1;
       else report.ownerAdditionalResponsibleContactsReused += 1;
     }
@@ -1129,7 +1197,7 @@ const getSex = (row: CsvRow): PetSex => {
 const normalizeDate = (value: string | undefined): string | null => {
   const trimmed = value?.trim() ?? '';
   const match = trimmed.match(/^(\d{1,2})\s*\/\s*(\d{1,2})\s*\/\s*(\d{2}|\d{4})$/);
-  if (!match) return nullable(value);
+  if (!match) return nullableWithLimit(value, FIELD_LIMITS.isoDate);
 
   const day = Number(match[1]);
   const month = Number(match[2]);
@@ -1348,7 +1416,7 @@ const processarMigracao = () => {
     for (const row of records) {
       const parsedOwnerName = parseLegacyOwnerName(row['NOME PROPRIETÁRIO']);
       const ownerName = parsedOwnerName.ownerName;
-      const petName = nullable(row['NOME DO ANIMAL']);
+      const petName = nullableWithLimit(row['NOME DO ANIMAL'], FIELD_LIMITS.petName);
 
       if (!ownerName || !petName) {
         report.skippedRows.push({
@@ -1372,14 +1440,14 @@ const processarMigracao = () => {
         const city = normalizeCityName(row['CIDADE']);
         const res = insertOwner.run({
           name: ownerName,
-          street: parsedAddress.street,
-          streetNumber: parsedAddress.streetNumber,
-          addressComplement: parsedAddress.addressComplement,
-          neighborhood: nullable(row['BAIRRO']),
+          street: nullableWithLimit(parsedAddress.street, FIELD_LIMITS.ownerStreet),
+          streetNumber: nullableWithLimit(parsedAddress.streetNumber, FIELD_LIMITS.ownerStreetNumber),
+          addressComplement: nullableWithLimit(parsedAddress.addressComplement, FIELD_LIMITS.ownerAddressComplement),
+          neighborhood: nullableWithLimit(row['BAIRRO'], FIELD_LIMITS.ownerNeighborhood),
           city,
-          state: stateForCity(city),
+          state: nullableWithLimit(stateForCity(city), FIELD_LIMITS.ownerState),
           country: 'BRA',
-          postalCode: nullable(row['CEP']),
+          postalCode: nullableWithLimit(row['CEP'], FIELD_LIMITS.ownerPostalCode),
           additionalInformation: null
         });
         ownerId = res.lastInsertRowid;
@@ -1411,9 +1479,10 @@ const processarMigracao = () => {
       insertPetOwner.run({ petId: petRes.lastInsertRowid, ownerId, sortOrder: 0 });
       report.petsCreated += 1;
 
-      const description = nullable(row['PRONTUÁRIO']);
-      if (description) {
-        const period = getMedicalRecordPeriod(description);
+      const fullDescription = nullable(row['PRONTUÁRIO']);
+      if (fullDescription) {
+        const description = nullableWithLimit(fullDescription, FIELD_LIMITS.medicalRecordDescription);
+        const period = getMedicalRecordPeriod(fullDescription);
         insertMedicalRecord.run({
           petId: petRes.lastInsertRowid,
           description,
@@ -1425,7 +1494,7 @@ const processarMigracao = () => {
         else report.medicalRecordPeriodsMissing += 1;
         if (period.dischargedAt) report.medicalRecordPeriodsWithDischarge += 1;
 
-        for (const vaccination of extractVaccinationsFromRecord(description, report)) {
+        for (const vaccination of extractVaccinationsFromRecord(fullDescription, report)) {
           const vaccinePresetId = vaccinePresetIds.get(normalizeVaccineName(vaccination.vaccine));
           if (!vaccinePresetId) throw new Error(`Preset de vacina não encontrado: ${vaccination.vaccine}`);
           const vaccinePresetDoseId = ensureVaccinePresetDose(vaccinePresetId, vaccination.doseLabel);

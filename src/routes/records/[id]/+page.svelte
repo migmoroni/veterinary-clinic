@@ -2,6 +2,7 @@
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
+	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
 	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import UnsavedChangesDialog from '$lib/components/records/UnsavedChangesDialog.svelte';
@@ -9,6 +10,7 @@
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
 	import type { MedicalRecordDetails, MedicalRecordInput } from '$lib/domain/medical-record/medical-record.js';
 	import { formatDateForInput, normalizeDateInput } from '$lib/domain/shared/date-input.js';
+	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import { loadRecordAutoSavePreference, saveRecordAutoSavePreference } from '$lib/services/preferences.service.js';
 	import { loadRecordDetails, removeRecord, saveRecord } from '$lib/services/record.service.js';
@@ -73,6 +75,7 @@
 	function errorMessage(exception: unknown): string {
 		if (exception instanceof Error && exception.message === 'date_invalid') return t('date.invalid');
 		if (exception instanceof Error && exception.message === 'record_period_invalid') return t('record.periodInvalid');
+		if (exception instanceof Error && exception.message === 'field_limit_exceeded') return t('form.limitExceeded');
 		return exception instanceof Error ? exception.message : String(exception);
 	}
 
@@ -329,8 +332,11 @@
 			</div>
 			<div class="mt-4 grid gap-4 sm:grid-cols-2">
 				<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
-					<span>{t('record.titleLabel')}</span>
-					<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.title} />
+					<span class="flex min-w-0 items-baseline justify-between gap-2">
+						<span>{t('record.titleLabel')}</span>
+						<CharacterLimitHint value={form.title} max={FIELD_LIMITS.medicalRecordTitle} />
+					</span>
+					<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.title} maxlength={FIELD_LIMITS.medicalRecordTitle} />
 				</label>
 
 				<fieldset class="grid gap-4 sm:col-span-2 sm:grid-cols-2">
@@ -347,8 +353,11 @@
 				</fieldset>
 
 				<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
-					<span>{t('record.descriptionLabel')}</span>
-					<textarea class="min-h-80 rounded-md border border-input bg-background p-3 text-sm leading-6 shadow-inner focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.description}></textarea>
+					<span class="flex min-w-0 items-baseline justify-between gap-2">
+						<span>{t('record.descriptionLabel')}</span>
+						<CharacterLimitHint value={form.description} max={FIELD_LIMITS.medicalRecordDescription} />
+					</span>
+					<textarea class="min-h-80 rounded-md border border-input bg-background p-3 text-sm leading-6 shadow-inner focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.description} maxlength={FIELD_LIMITS.medicalRecordDescription}></textarea>
 				</label>
 			</div>
 

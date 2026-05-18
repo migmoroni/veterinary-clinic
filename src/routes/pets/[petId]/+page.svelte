@@ -2,6 +2,7 @@
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
+	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
 	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
@@ -14,6 +15,7 @@
 	import type { Pet, PetInput, PetSex } from '$lib/domain/pet/pet.js';
 	import { getPetBreedOption, getPetSpeciesOption } from '$lib/domain/pet/taxonomy.js';
 	import { formatDateForDisplay, formatDateForInput, normalizeDateInput } from '$lib/domain/shared/date-input.js';
+	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import { computeAgeFromBirthDate } from '$lib/domain/shared/time.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
 	import type { PetProfile } from '$lib/services/pet.service.js';
@@ -81,6 +83,8 @@
 	function errorMessage(exception: unknown): string {
 		if (exception instanceof Error && exception.message === 'date_invalid') return t('date.invalid');
 		if (exception instanceof Error && exception.message === 'pet_taxonomy_invalid') return t('pet.taxonomyInvalid');
+		if (exception instanceof Error && exception.message === 'field_limit_exceeded') return t('form.limitExceeded');
+		if (exception instanceof Error && exception.message === 'field_required') return t('form.fieldRequired');
 		return exception instanceof Error ? exception.message : String(exception);
 	}
 
@@ -430,8 +434,11 @@
 				</div>
 				<div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 					<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2 lg:col-span-1">
-						<span>{t('pet.name')}</span>
-						<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.name} disabled={!editing} required />
+						<span class="flex min-w-0 items-baseline justify-between gap-2">
+							<span>{t('pet.name')}</span>
+							{#if editing}<CharacterLimitHint value={form.name} max={FIELD_LIMITS.petName} />{/if}
+						</span>
+						<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.name} maxlength={FIELD_LIMITS.petName} disabled={!editing} required />
 					</label>
 
 					<label class="flex flex-col gap-1 text-sm font-medium">

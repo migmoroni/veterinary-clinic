@@ -5,6 +5,7 @@ import type {
 	MedicalRecordInput
 } from '$lib/domain/medical-record/medical-record.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
+import { FIELD_LIMITS, nullableLimitedText } from '$lib/domain/shared/field-limits.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
 import { listOwnerContactsByOwnerIds, listOwnersByPet } from './owner.repository.js';
@@ -73,11 +74,6 @@ const ownerIdsSql = `(SELECT group_concat(owner_id, ',')
 		WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
 		ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
 	))`;
-
-function nullable(value: string | null | undefined): string | null {
-	const trimmed = value?.trim() ?? '';
-	return trimmed.length > 0 ? trimmed : null;
-}
 
 function fallbackTitle(id: number, title: string | null): string {
 	return title ?? `Prontuario ${id}`;
@@ -192,15 +188,15 @@ export async function getMedicalRecordDetails(id: number, includeDeleted = false
 }
 
 export async function createMedicalRecord(petId: number, input: MedicalRecordInput): Promise<MedicalRecord> {
-	const title = nullable(input.title);
-	const admittedAt = nullable(input.admittedAt);
-	const dischargedAt = nullable(input.dischargedAt);
+	const title = nullableLimitedText(input.title, FIELD_LIMITS.medicalRecordTitle);
+	const admittedAt = nullableLimitedText(input.admittedAt, FIELD_LIMITS.isoDate);
+	const dischargedAt = nullableLimitedText(input.dischargedAt, FIELD_LIMITS.isoDate);
 	assertValidPeriod(admittedAt, dischargedAt);
 
 	const result = await execute(
 		`INSERT INTO medical_records (pet_id, title, description, admitted_at, discharged_at, updated_at)
 		 VALUES ($1, $2, $3, COALESCE($4, CURRENT_DATE), $5, CURRENT_TIMESTAMP)`,
-		[petId, title, nullable(input.description), admittedAt, dischargedAt]
+		[petId, title, nullableLimitedText(input.description, FIELD_LIMITS.medicalRecordDescription), admittedAt, dischargedAt]
 	);
 
 	const id = Number(result.lastInsertId);
@@ -214,8 +210,8 @@ export async function createMedicalRecord(petId: number, input: MedicalRecordInp
 }
 
 export async function updateMedicalRecord(id: number, input: MedicalRecordInput): Promise<MedicalRecord> {
-	const admittedAt = nullable(input.admittedAt);
-	const dischargedAt = nullable(input.dischargedAt);
+	const admittedAt = nullableLimitedText(input.admittedAt, FIELD_LIMITS.isoDate);
+	const dischargedAt = nullableLimitedText(input.dischargedAt, FIELD_LIMITS.isoDate);
 	assertValidPeriod(admittedAt, dischargedAt);
 
 	await execute(
@@ -226,7 +222,7 @@ export async function updateMedicalRecord(id: number, input: MedicalRecordInput)
 			discharged_at = $5,
 			updated_at = CURRENT_TIMESTAMP
 		 WHERE id = $1 AND deleted_at IS NULL`,
-		[id, nullable(input.title) ?? fallbackTitle(id, null), nullable(input.description), admittedAt, dischargedAt]
+		[id, nullableLimitedText(input.title, FIELD_LIMITS.medicalRecordTitle) ?? fallbackTitle(id, null), nullableLimitedText(input.description, FIELD_LIMITS.medicalRecordDescription), admittedAt, dischargedAt]
 	);
 
 	const record = await getMedicalRecord(id);

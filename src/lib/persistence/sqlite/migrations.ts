@@ -1,4 +1,5 @@
 import type Database from '@tauri-apps/plugin-sql';
+import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 import { normalizeVaccineName } from '$lib/domain/vaccine/vaccine.js';
 
 const defaultVaccinePresets = [
@@ -23,21 +24,29 @@ const defaultVaccinePresets = [
 	{ name: 'Imunocan', doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }
 ] as const;
 
+function optionalTextCheck(column: string, maxLength: number): string {
+	return `${column} IS NULL OR length(${column}) <= ${maxLength}`;
+}
+
+function requiredTextCheck(column: string, maxLength: number): string {
+	return `length(trim(${column})) BETWEEN 1 AND ${maxLength}`;
+}
+
 async function createCurrentSchema(database: Database): Promise<void> {
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS owners (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			name TEXT NOT NULL,
+			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.ownerName)}),
 			avatar_blob BLOB,
-			street TEXT,
-			street_number TEXT,
-			address_complement TEXT,
-			neighborhood TEXT,
-			city TEXT,
-			state TEXT,
-			country TEXT NOT NULL DEFAULT 'BRA',
-			postal_code TEXT,
-			additional_information TEXT,
+			street TEXT CHECK(${optionalTextCheck('street', FIELD_LIMITS.ownerStreet)}),
+			street_number TEXT CHECK(${optionalTextCheck('street_number', FIELD_LIMITS.ownerStreetNumber)}),
+			address_complement TEXT CHECK(${optionalTextCheck('address_complement', FIELD_LIMITS.ownerAddressComplement)}),
+			neighborhood TEXT CHECK(${optionalTextCheck('neighborhood', FIELD_LIMITS.ownerNeighborhood)}),
+			city TEXT CHECK(${optionalTextCheck('city', FIELD_LIMITS.ownerCity)}),
+			state TEXT CHECK(${optionalTextCheck('state', FIELD_LIMITS.ownerState)}),
+			country TEXT NOT NULL DEFAULT 'BRA' CHECK(length(country) = ${FIELD_LIMITS.ownerCountry}),
+			postal_code TEXT CHECK(${optionalTextCheck('postal_code', FIELD_LIMITS.ownerPostalCode)}),
+			additional_information TEXT CHECK(${optionalTextCheck('additional_information', FIELD_LIMITS.ownerAdditionalInformation)}),
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
 			deleted_at TEXT,
@@ -50,8 +59,8 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			owner_id INTEGER NOT NULL,
 			kind TEXT NOT NULL CHECK(kind IN ('phone', 'mobile', 'email', 'other')),
-			label TEXT NOT NULL DEFAULT '',
-			value TEXT NOT NULL,
+			label TEXT NOT NULL DEFAULT '' CHECK(length(label) <= ${FIELD_LIMITS.ownerContactLabel} AND (kind = 'other' OR label = '')),
+			value TEXT NOT NULL CHECK(length(trim(value)) > 0 AND ((kind IN ('phone', 'mobile') AND length(value) <= ${FIELD_LIMITS.ownerContactPhoneValue}) OR (kind = 'email' AND length(value) <= ${FIELD_LIMITS.ownerContactEmailValue}) OR (kind = 'other' AND length(value) <= ${FIELD_LIMITS.ownerContactOtherValue}))),
 			sort_order INTEGER NOT NULL DEFAULT 0,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
@@ -64,7 +73,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 		CREATE TABLE IF NOT EXISTS owner_additional_responsibles (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			owner_id INTEGER NOT NULL,
-			name TEXT NOT NULL,
+			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.ownerAdditionalResponsibleName)}),
 			avatar_blob BLOB,
 			sort_order INTEGER NOT NULL DEFAULT 0,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -78,8 +87,8 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			responsible_id INTEGER NOT NULL,
 			kind TEXT NOT NULL CHECK(kind IN ('phone', 'mobile', 'email', 'other')),
-			label TEXT NOT NULL DEFAULT '',
-			value TEXT NOT NULL,
+			label TEXT NOT NULL DEFAULT '' CHECK(length(label) <= ${FIELD_LIMITS.ownerContactLabel} AND (kind = 'other' OR label = '')),
+			value TEXT NOT NULL CHECK(length(trim(value)) > 0 AND ((kind IN ('phone', 'mobile') AND length(value) <= ${FIELD_LIMITS.ownerContactPhoneValue}) OR (kind = 'email' AND length(value) <= ${FIELD_LIMITS.ownerContactEmailValue}) OR (kind = 'other' AND length(value) <= ${FIELD_LIMITS.ownerContactOtherValue}))),
 			sort_order INTEGER NOT NULL DEFAULT 0,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
@@ -91,11 +100,11 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS pets (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			name TEXT NOT NULL,
-			birth_date TEXT,
-			species TEXT CHECK(species IN ('canine', 'feline')),
-			breed TEXT,
-			sex TEXT CHECK(sex IN ('M', 'F')),
+			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.petName)}),
+			birth_date TEXT CHECK(${optionalTextCheck('birth_date', FIELD_LIMITS.petBirthDate)}),
+			species TEXT CHECK(species IS NULL OR (species IN ('canine', 'feline') AND length(species) <= ${FIELD_LIMITS.petSpecies})),
+			breed TEXT CHECK(${optionalTextCheck('breed', FIELD_LIMITS.petBreed)}),
+			sex TEXT CHECK(sex IS NULL OR (sex IN ('M', 'F') AND length(sex) = ${FIELD_LIMITS.petSex})),
 			avatar_blob BLOB,
 			updated_at TEXT,
 			deleted_at TEXT,
@@ -121,10 +130,10 @@ async function createCurrentSchema(database: Database): Promise<void> {
 		CREATE TABLE IF NOT EXISTS medical_records (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			pet_id INTEGER NOT NULL,
-			title TEXT,
-			description TEXT,
-			admitted_at TEXT DEFAULT CURRENT_DATE,
-			discharged_at TEXT,
+			title TEXT CHECK(${optionalTextCheck('title', FIELD_LIMITS.medicalRecordTitle)}),
+			description TEXT CHECK(${optionalTextCheck('description', FIELD_LIMITS.medicalRecordDescription)}),
+			admitted_at TEXT DEFAULT CURRENT_DATE CHECK(${optionalTextCheck('admitted_at', FIELD_LIMITS.isoDate)}),
+			discharged_at TEXT CHECK(${optionalTextCheck('discharged_at', FIELD_LIMITS.isoDate)}),
 			updated_at TEXT,
 			deleted_at TEXT,
 			purge_after TEXT,
@@ -135,8 +144,8 @@ async function createCurrentSchema(database: Database): Promise<void> {
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS app_settings (
-			key TEXT PRIMARY KEY,
-			value TEXT,
+			key TEXT PRIMARY KEY CHECK(${requiredTextCheck('key', FIELD_LIMITS.settingKey)}),
+			value TEXT CHECK(${optionalTextCheck('value', FIELD_LIMITS.settingValue)}),
 			updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 		)
 	`);
@@ -144,8 +153,8 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS backup_history (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			path TEXT NOT NULL,
-			kind TEXT NOT NULL,
+			path TEXT NOT NULL CHECK(${requiredTextCheck('path', FIELD_LIMITS.backupPath)}),
+			kind TEXT NOT NULL CHECK(kind IN ('manual_backup', 'export', 'import', 'pre_import_backup') AND length(kind) <= ${FIELD_LIMITS.backupKind}),
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 		)
 	`);
@@ -153,8 +162,8 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS vaccine_presets (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			name TEXT NOT NULL,
-			normalized_name TEXT NOT NULL UNIQUE,
+			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.vaccinePresetName)}),
+			normalized_name TEXT NOT NULL UNIQUE CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedName)}),
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			hidden_at TEXT,
 			updated_at TEXT
@@ -165,15 +174,16 @@ async function createCurrentSchema(database: Database): Promise<void> {
 		CREATE TABLE IF NOT EXISTS vaccine_preset_doses (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			vaccine_preset_id INTEGER NOT NULL,
-			label TEXT NOT NULL,
-			normalized_label TEXT NOT NULL,
+			label TEXT NOT NULL CHECK(${requiredTextCheck('label', FIELD_LIMITS.vaccineDoseLabel)}),
+			normalized_label TEXT NOT NULL CHECK(${requiredTextCheck('normalized_label', FIELD_LIMITS.vaccineNormalizedDoseLabel)}),
 			validity_value INTEGER NOT NULL CHECK(validity_value > 0),
 			validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months')),
 			sort_order INTEGER NOT NULL DEFAULT 0,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
 			FOREIGN KEY (vaccine_preset_id) REFERENCES vaccine_presets(id) ON DELETE CASCADE,
-			UNIQUE(vaccine_preset_id, normalized_label)
+			UNIQUE(vaccine_preset_id, normalized_label),
+			CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.vaccineValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.vaccineValidityMonths}))
 		)
 	`);
 
@@ -181,11 +191,11 @@ async function createCurrentSchema(database: Database): Promise<void> {
 		CREATE TABLE IF NOT EXISTS pet_vaccinations (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			pet_id INTEGER NOT NULL,
-			applied_at TEXT NOT NULL DEFAULT CURRENT_DATE,
+			applied_at TEXT NOT NULL DEFAULT CURRENT_DATE CHECK(length(applied_at) <= ${FIELD_LIMITS.isoDate}),
 			vaccine_preset_id INTEGER NOT NULL,
 			vaccine_preset_dose_id INTEGER NOT NULL,
-			vaccine_name TEXT NOT NULL,
-			vaccine_dose_label TEXT NOT NULL,
+			vaccine_name TEXT NOT NULL CHECK(${requiredTextCheck('vaccine_name', FIELD_LIMITS.vaccinePresetName)}),
+			vaccine_dose_label TEXT NOT NULL CHECK(${requiredTextCheck('vaccine_dose_label', FIELD_LIMITS.vaccineDoseLabel)}),
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			validity_ignored_at TEXT,
 			updated_at TEXT,

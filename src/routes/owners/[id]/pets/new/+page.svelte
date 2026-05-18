@@ -2,12 +2,14 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
+	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import PetTaxonomyPicker from '$lib/components/pet/PetTaxonomyPicker.svelte';
 	import type { Pet, PetInput, PetSex } from '$lib/domain/pet/pet.js';
 	import { getPetBreedOption, getPetSpeciesOption } from '$lib/domain/pet/taxonomy.js';
 	import { normalizeDateInput } from '$lib/domain/shared/date-input.js';
+	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import { t } from '$lib/i18n/index.js';
 	import { loadOwnerProfile } from '$lib/services/owner.service.js';
 	import { addExistingPetToOwner, saveNewPet, searchExistingPetsForOwner } from '$lib/services/pet.service.js';
@@ -51,6 +53,8 @@
 	function errorMessage(exception: unknown): string {
 		if (exception instanceof Error && exception.message === 'date_invalid') return t('date.invalid');
 		if (exception instanceof Error && exception.message === 'pet_taxonomy_invalid') return t('pet.taxonomyInvalid');
+		if (exception instanceof Error && exception.message === 'field_limit_exceeded') return t('form.limitExceeded');
+		if (exception instanceof Error && exception.message === 'field_required') return t('form.fieldRequired');
 		return exception instanceof Error ? exception.message : String(exception);
 	}
 
@@ -124,10 +128,13 @@
 	<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
 		<h3 class="text-base font-semibold">{t('pet.existingSection')}</h3>
 		<label class="mt-4 flex flex-col gap-2 text-sm font-medium">
-			<span>{t('pet.existingSearchLabel')}</span>
+			<span class="flex min-w-0 items-baseline justify-between gap-2">
+				<span>{t('pet.existingSearchLabel')}</span>
+				<CharacterLimitHint value={existingQuery} max={FIELD_LIMITS.searchQuery} />
+			</span>
 			<span class="relative">
 				<Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-				<input class="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" placeholder={t('pet.existingSearchPlaceholder')} bind:value={existingQuery} disabled={busy} oninput={() => void searchExistingPets()} />
+				<input class="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" placeholder={t('pet.existingSearchPlaceholder')} bind:value={existingQuery} maxlength={FIELD_LIMITS.searchQuery} disabled={busy} oninput={() => void searchExistingPets()} />
 			</span>
 		</label>
 
@@ -161,8 +168,11 @@
 		<h3 class="text-base font-semibold">{t('pet.createSection')}</h3>
 		<div class="grid gap-4 sm:grid-cols-2">
 			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
-				<span>{t('pet.name')}</span>
-				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.name} required />
+				<span class="flex min-w-0 items-baseline justify-between gap-2">
+					<span>{t('pet.name')}</span>
+					<CharacterLimitHint value={form.name} max={FIELD_LIMITS.petName} />
+				</span>
+				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.name} maxlength={FIELD_LIMITS.petName} required />
 			</label>
 
 			<label class="flex flex-col gap-1 text-sm font-medium">

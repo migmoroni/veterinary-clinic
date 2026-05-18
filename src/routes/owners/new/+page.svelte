@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
 	import OwnerAdditionalResponsiblesField from '$lib/components/owner/OwnerAdditionalResponsiblesField.svelte';
 	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import OwnerAvatarEditorDialog from '$lib/components/owner/OwnerAvatarEditorDialog.svelte';
@@ -7,6 +8,7 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import { brazilCityOptions, brazilStateOptions, countryHasStructuredLocations, countryOptions, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '$lib/domain/geo/location.js';
 	import { DEFAULT_OWNER_COUNTRY, type OwnerInput } from '$lib/domain/owner/owner.js';
+	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
 	import { isCountrySupportedForCepLookup, lookupCep } from '$lib/services/cep.service.js';
 	import { saveNewOwner } from '$lib/services/owner.service.js';
@@ -129,6 +131,8 @@
 	function ownerErrorMessage(exception: unknown): string {
 		if (exception instanceof Error && exception.message === 'owner_contact_required') return t('owner.contactRequired');
 		if (exception instanceof Error && exception.message === 'owner_location_invalid') return t('owner.locationInvalid');
+		if (exception instanceof Error && exception.message === 'field_limit_exceeded') return t('form.limitExceeded');
+		if (exception instanceof Error && exception.message === 'field_required') return t('form.fieldRequired');
 		return exception instanceof Error ? exception.message : String(exception);
 	}
 
@@ -173,8 +177,11 @@
 
 		<div class="grid gap-4 sm:grid-cols-5">
 			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-5">
-				<span>{t('owner.name')}</span>
-				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.name} required />
+				<span class="flex min-w-0 items-baseline justify-between gap-2">
+					<span>{t('owner.name')}</span>
+					<CharacterLimitHint value={form.name} max={FIELD_LIMITS.ownerName} />
+				</span>
+				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.name} maxlength={FIELD_LIMITS.ownerName} required />
 			</label>
 
 			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
@@ -183,9 +190,12 @@
 			</label>
 
 			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-3">
-				<span>{t('owner.postalCode')}</span>
+				<span class="flex min-w-0 items-baseline justify-between gap-2">
+					<span>{t('owner.postalCode')}</span>
+					<CharacterLimitHint value={form.postalCode} max={FIELD_LIMITS.ownerPostalCode} />
+				</span>
 				<span class="flex gap-2">
-					<input class="h-10 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.postalCode} />
+					<input class="h-10 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.postalCode} maxlength={FIELD_LIMITS.ownerPostalCode} />
 					<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={cepLoading || !isCountrySupportedForCepLookup(form.country)} onclick={() => void fillAddressFromCep()} aria-label={t('actions.searchCep')}>
 						<Search class="size-4" />
 						{t('actions.searchCep')}
@@ -198,40 +208,58 @@
 			{/if}
 
 			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-3">
-				<span>{t('owner.street')}</span>
-				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.street} />
+				<span class="flex min-w-0 items-baseline justify-between gap-2">
+					<span>{t('owner.street')}</span>
+					<CharacterLimitHint value={form.street} max={FIELD_LIMITS.ownerStreet} />
+				</span>
+				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.street} maxlength={FIELD_LIMITS.ownerStreet} />
 			</label>
 
 			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-1">
-				<span>{t('owner.streetNumber')}</span>
-				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.streetNumber} />
+				<span class="flex min-w-0 items-baseline justify-between gap-2">
+					<span>{t('owner.streetNumber')}</span>
+					<CharacterLimitHint value={form.streetNumber} max={FIELD_LIMITS.ownerStreetNumber} />
+				</span>
+				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.streetNumber} maxlength={FIELD_LIMITS.ownerStreetNumber} />
 			</label>
 
 			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-1">
-				<span>{t('owner.addressComplement')}</span>
-				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.addressComplement} />
+				<span class="flex min-w-0 items-baseline justify-between gap-2">
+					<span>{t('owner.addressComplement')}</span>
+					<CharacterLimitHint value={form.addressComplement} max={FIELD_LIMITS.ownerAddressComplement} />
+				</span>
+				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.addressComplement} maxlength={FIELD_LIMITS.ownerAddressComplement} />
 			</label>
 
 			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
-				<span>{t('owner.neighborhood')}</span>
-				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.neighborhood} />
+				<span class="flex min-w-0 items-baseline justify-between gap-2">
+					<span>{t('owner.neighborhood')}</span>
+					<CharacterLimitHint value={form.neighborhood} max={FIELD_LIMITS.ownerNeighborhood} />
+				</span>
+				<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.neighborhood} maxlength={FIELD_LIMITS.ownerNeighborhood} />
 			</label>
 
 			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-1">
-				<span>{t('owner.state')}</span>
+				<span class="flex min-w-0 items-baseline justify-between gap-2">
+					<span>{t('owner.state')}</span>
+					{#if !hasStructuredLocations}<CharacterLimitHint value={form.state} max={FIELD_LIMITS.ownerState} />{/if}
+				</span>
 				{#if hasStructuredLocations}
 					<Select id="owner-state" value={form.state} options={stateSelectOptions} ariaLabel={t('owner.state')} onchange={updateState} />
 				{:else}
-					<input id="owner-state" class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.state} autocomplete="address-level1" />
+					<input id="owner-state" class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.state} maxlength={FIELD_LIMITS.ownerState} autocomplete="address-level1" />
 				{/if}
 			</label>
 
 			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
-				<span>{t('owner.city')}</span>
+				<span class="flex min-w-0 items-baseline justify-between gap-2">
+					<span>{t('owner.city')}</span>
+					{#if !hasStructuredLocations}<CharacterLimitHint value={form.city} max={FIELD_LIMITS.ownerCity} />{/if}
+				</span>
 				{#if hasStructuredLocations}
 					<Select id="owner-city" value={form.city} options={citySelectOptions} disabled={!form.state} ariaLabel={t('owner.city')} onchange={updateCity} />
 				{:else}
-					<input id="owner-city" class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.city} autocomplete="address-level2" />
+					<input id="owner-city" class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.city} maxlength={FIELD_LIMITS.ownerCity} autocomplete="address-level2" />
 				{/if}
 			</label>
 
@@ -240,8 +268,11 @@
 			<OwnerAdditionalResponsiblesField bind:responsibles={form.additionalResponsibles} country={form.country} />
 
 			<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-5">
-				<span>{t('owner.additionalInformation')}</span>
-				<textarea class="min-h-28 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.additionalInformation} aria-label={t('owner.additionalInformation')}></textarea>
+				<span class="flex min-w-0 items-baseline justify-between gap-2">
+					<span>{t('owner.additionalInformation')}</span>
+					<CharacterLimitHint value={form.additionalInformation} max={FIELD_LIMITS.ownerAdditionalInformation} />
+				</span>
+				<textarea class="min-h-28 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.additionalInformation} maxlength={FIELD_LIMITS.ownerAdditionalInformation} aria-label={t('owner.additionalInformation')}></textarea>
 			</label>
 		</div>
 

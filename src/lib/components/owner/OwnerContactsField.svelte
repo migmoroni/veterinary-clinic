@@ -1,7 +1,9 @@
 <script lang="ts">
+	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
 	import type { OwnerContactInput, OwnerContactKind } from '$lib/domain/owner/owner.js';
 	import { countryPhoneFormat, countryPhoneFormats } from '$lib/domain/geo/location.js';
 	import { formatEmailForInput } from '$lib/domain/shared/email.js';
+	import { FIELD_LIMITS, textLength } from '$lib/domain/shared/field-limits.js';
 	import { formatPhoneForInput, formatPhoneForInputWithCaret } from '$lib/domain/shared/phone.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -33,6 +35,20 @@
 	function formatContactValue(kind: OwnerContactKind, value: string): string {
 		if (kind === 'other') return value;
 		return kind === 'email' ? formatEmailForInput(value) : formatPhoneForInput(value, phoneFormatContext);
+	}
+
+	function contactValueLimit(kind: OwnerContactKind): number {
+		if (kind === 'email') return FIELD_LIMITS.ownerContactEmailValue;
+		if (kind === 'other') return FIELD_LIMITS.ownerContactOtherValue;
+		return FIELD_LIMITS.ownerContactPhoneValue;
+	}
+
+	function shouldShowLimitHint(value: string | null | undefined, max: number): boolean {
+		return max > 0 && textLength(value) >= Math.floor(max * 0.85);
+	}
+
+	function contactHasLimitHint(contact: OwnerContactInput): boolean {
+		return (contact.kind === 'other' && shouldShowLimitHint(contact.label, FIELD_LIMITS.ownerContactLabel)) || shouldShowLimitHint(contact.value, contactValueLimit(contact.kind));
 	}
 
 	function isPhoneContact(kind: OwnerContactKind): boolean {
@@ -91,73 +107,87 @@
 
 	<div class="mt-4 flex flex-col gap-3">
 		{#each contacts as contact, index}
-			<div class="grid gap-2 rounded-md border border-border bg-background/50 p-2 items-center {contact.kind === 'other' ? 'sm:grid-cols-[10rem_minmax(0,1fr)_minmax(0,1fr)_2.5rem]' : 'sm:grid-cols-[10rem_minmax(0,1fr)_2.5rem]'}">
-				<div class="flex flex-col gap-1 text-sm font-medium m-0">
-					<span class="sr-only">{t('owner.contactType')}</span>
-					<Select
-						value={contact.kind}
-						options={contactKinds.map(kind => ({ value: kind, label: t(kindLabelKey(kind)) }))}
-						ariaLabel={t('owner.contactType')}
-						onchange={(value) => updateContactKind(index, value)}
-					/>
-				</div>
-
-				{#if contact.kind === 'other'}
-					<label class="flex flex-col gap-1 text-sm font-medium m-0">
-						<span class="sr-only">{t('owner.contactLabel')}</span>
-						<input
-							type="text"
-							inputmode="text"
-							autocomplete="off"
-							class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
-							value={contact.label ?? ''}
-							oninput={(event) => updateContactLabel(index, event.currentTarget.value)}
-							placeholder={t('owner.contactLabel')}
-							aria-label={t('owner.contactLabel')}
-							required
-						/>
-					</label>
-
-					<label class="flex flex-col gap-1 text-sm font-medium m-0">
-						<span class="sr-only">{t('owner.contactOtherValue')}</span>
-						<input
-							type="text"
-							inputmode="text"
-							autocomplete="off"
-							class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
-							value={contact.value}
-							oninput={(event) => void updateContactValueFromInput(index, contact.kind, event.currentTarget)}
-							placeholder={t('owner.contactOtherValue')}
-							aria-label={t('owner.contactOtherValue')}
-							required
-						/>
-					</label>
-				{:else}
-					<label class="flex flex-col gap-1 text-sm font-medium m-0">
-						<span class="sr-only">{t('owner.contactValue')}</span>
-						<input
-							type={contact.kind === 'email' ? 'email' : 'tel'}
-							inputmode={contact.kind === 'email' ? 'email' : 'tel'}
-							autocomplete={contact.kind === 'email' ? 'email' : 'tel'}
-							class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
-							value={contact.value}
-							oninput={(event) => void updateContactValueFromInput(index, contact.kind, event.currentTarget)}
-							placeholder={t('owner.contactValue')}
-							aria-label={t('owner.contactValue')}
-							required
-						/>
-					</label>
+			<div class="rounded-md border border-border bg-background/50 p-2">
+				{#if contactHasLimitHint(contact)}
+					<div class="mb-2 flex flex-wrap items-center justify-end gap-2 px-1">
+						{#if contact.kind === 'other'}
+							<CharacterLimitHint value={contact.label ?? ''} max={FIELD_LIMITS.ownerContactLabel} />
+						{/if}
+						<CharacterLimitHint value={contact.value} max={contactValueLimit(contact.kind)} />
+					</div>
 				{/if}
 
-				<button
-					type="button"
-					class="flex size-10 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus:outline-none focus:ring-2 focus:ring-ring/30"
-					aria-label={t('owner.removeContact')}
-					title={t('owner.removeContact')}
-					onclick={() => removeContact(index)}
-				>
-					<Trash2 class="size-4" />
-				</button>
+				<div class="grid gap-2 items-center {contact.kind === 'other' ? 'sm:grid-cols-[10rem_minmax(0,1fr)_minmax(0,1fr)_2.5rem]' : 'sm:grid-cols-[10rem_minmax(0,1fr)_2.5rem]'}">
+					<div class="flex flex-col gap-1 text-sm font-medium m-0">
+						<span class="sr-only">{t('owner.contactType')}</span>
+						<Select
+							value={contact.kind}
+							options={contactKinds.map(kind => ({ value: kind, label: t(kindLabelKey(kind)) }))}
+							ariaLabel={t('owner.contactType')}
+							onchange={(value) => updateContactKind(index, value)}
+						/>
+					</div>
+
+					{#if contact.kind === 'other'}
+						<label class="flex flex-col gap-1 text-sm font-medium m-0">
+							<span class="sr-only">{t('owner.contactLabel')}</span>
+							<input
+								type="text"
+								inputmode="text"
+								autocomplete="off"
+								class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
+								value={contact.label ?? ''}
+								maxlength={FIELD_LIMITS.ownerContactLabel}
+								oninput={(event) => updateContactLabel(index, event.currentTarget.value)}
+								placeholder={t('owner.contactLabel')}
+								aria-label={t('owner.contactLabel')}
+								required
+							/>
+						</label>
+
+						<label class="flex flex-col gap-1 text-sm font-medium m-0">
+							<span class="sr-only">{t('owner.contactOtherValue')}</span>
+							<input
+								type="text"
+								inputmode="text"
+								autocomplete="off"
+								class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
+								value={contact.value}
+								maxlength={contactValueLimit(contact.kind)}
+								oninput={(event) => void updateContactValueFromInput(index, contact.kind, event.currentTarget)}
+								placeholder={t('owner.contactOtherValue')}
+								aria-label={t('owner.contactOtherValue')}
+								required
+							/>
+						</label>
+					{:else}
+						<label class="flex flex-col gap-1 text-sm font-medium m-0">
+							<span class="sr-only">{t('owner.contactValue')}</span>
+							<input
+								type={contact.kind === 'email' ? 'email' : 'tel'}
+								inputmode={contact.kind === 'email' ? 'email' : 'tel'}
+								autocomplete={contact.kind === 'email' ? 'email' : 'tel'}
+								class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
+								value={contact.value}
+								maxlength={contactValueLimit(contact.kind)}
+								oninput={(event) => void updateContactValueFromInput(index, contact.kind, event.currentTarget)}
+								placeholder={t('owner.contactValue')}
+								aria-label={t('owner.contactValue')}
+								required
+							/>
+						</label>
+					{/if}
+
+					<button
+						type="button"
+						class="flex size-10 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus:outline-none focus:ring-2 focus:ring-ring/30"
+						aria-label={t('owner.removeContact')}
+						title={t('owner.removeContact')}
+						onclick={() => removeContact(index)}
+					>
+						<Trash2 class="size-4" />
+					</button>
+				</div>
 			</div>
 		{:else}
 			<p class="text-sm text-muted-foreground">{t('owner.noContacts')}</p>

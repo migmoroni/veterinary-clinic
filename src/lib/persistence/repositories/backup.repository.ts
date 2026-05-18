@@ -1,3 +1,4 @@
+import { FIELD_LIMITS, requireLimitedText } from '$lib/domain/shared/field-limits.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
 export type BackupKind = 'manual_backup' | 'export' | 'import' | 'pre_import_backup';
@@ -17,7 +18,7 @@ interface BackupHistoryRow {
 }
 
 export async function addBackupHistory(path: string, kind: BackupKind): Promise<void> {
-	await execute('INSERT INTO backup_history (path, kind) VALUES ($1, $2)', [path, kind]);
+	await execute('INSERT INTO backup_history (path, kind) VALUES ($1, $2)', [requireLimitedText(path, FIELD_LIMITS.backupPath), requireLimitedText(kind, FIELD_LIMITS.backupKind)]);
 }
 
 export async function listBackupHistory(limit = 20): Promise<BackupHistoryItem[]> {

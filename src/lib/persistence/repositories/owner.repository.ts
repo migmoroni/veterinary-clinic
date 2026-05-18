@@ -11,6 +11,7 @@ import {
 import { countryPhoneFormat, countryPhoneFormats, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '$lib/domain/geo/location.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { formatEmailForInput } from '$lib/domain/shared/email.js';
+import { FIELD_LIMITS, assertTextLimit, nullableLimitedText, requireLimitedText } from '$lib/domain/shared/field-limits.js';
 import { formatPhoneForStorage } from '$lib/domain/shared/phone.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
@@ -82,19 +83,26 @@ function normalizeContactKind(value: string | null | undefined): OwnerContactKin
 
 function normalizeContactLabel(kind: OwnerContactKind, value: string | null | undefined): string {
 	if (kind !== 'other') return '';
-	return nullable(value) ?? '';
+	return nullableLimitedText(value, FIELD_LIMITS.ownerContactLabel) ?? '';
 }
 
 function normalizeContactValue(kind: OwnerContactKind, value: string | null | undefined, country: string): string | null {
 	const trimmed = nullable(value);
 	if (!trimmed) return null;
 
-	if (kind === 'email') return nullable(formatEmailForInput(trimmed));
+	if (kind === 'email') {
+		const email = nullable(formatEmailForInput(trimmed));
+		assertTextLimit(email, FIELD_LIMITS.ownerContactEmailValue);
+		return email;
+	}
 	if (kind === 'phone' || kind === 'mobile') {
 		const phoneFormat = countryPhoneFormat(country);
-		return formatPhoneForStorage(trimmed, phoneFormat, { country: phoneFormat, countries: phoneFormats });
+		const phone = formatPhoneForStorage(trimmed, phoneFormat, { country: phoneFormat, countries: phoneFormats });
+		assertTextLimit(phone, FIELD_LIMITS.ownerContactPhoneValue);
+		return phone;
 	}
 
+	assertTextLimit(trimmed, FIELD_LIMITS.ownerContactOtherValue);
 	return trimmed;
 }
 
@@ -113,6 +121,9 @@ function normalizeOwnerAddress(input: Pick<OwnerInput, 'country' | 'state' | 'ci
 
 	const city = normalizeOwnerCity(input.city, country, state);
 	if (nullable(input.city) && !city) throw new Error('owner_location_invalid');
+
+	assertTextLimit(state, FIELD_LIMITS.ownerState);
+	assertTextLimit(city, FIELD_LIMITS.ownerCity);
 
 	return { country, state, city };
 }
@@ -137,7 +148,7 @@ function normalizeContacts(contacts: OwnerContactInput[], country: string): Owne
 function normalizeAdditionalResponsibles(responsibles: OwnerAdditionalResponsibleInput[] = [], country: string = DEFAULT_OWNER_COUNTRY): OwnerAdditionalResponsibleInput[] {
 	return responsibles
 		.map((responsible) => ({
-			name: nullable(responsible.name) ?? '',
+			name: nullableLimitedText(responsible.name, FIELD_LIMITS.ownerAdditionalResponsibleName) ?? '',
 			avatarBytes: responsible.avatarBytes ?? null,
 			contacts: normalizeContacts(responsible.contacts ?? [], country)
 		}))
@@ -393,15 +404,15 @@ export async function createOwner(input: OwnerInput): Promise<Owner> {
 		)
 		 VALUES ($1, ${avatarSqlLiteral}, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP)`,
 		[
-			input.name.trim(),
-			nullable(input.street),
-			nullable(input.streetNumber),
-			nullable(input.addressComplement),
-			nullable(input.neighborhood),
+			requireLimitedText(input.name, FIELD_LIMITS.ownerName),
+			nullableLimitedText(input.street, FIELD_LIMITS.ownerStreet),
+			nullableLimitedText(input.streetNumber, FIELD_LIMITS.ownerStreetNumber),
+			nullableLimitedText(input.addressComplement, FIELD_LIMITS.ownerAddressComplement),
+			nullableLimitedText(input.neighborhood, FIELD_LIMITS.ownerNeighborhood),
 			address.city,
 			address.country,
-			nullable(input.postalCode),
-			nullable(input.additionalInformation),
+			nullableLimitedText(input.postalCode, FIELD_LIMITS.ownerPostalCode),
+			nullableLimitedText(input.additionalInformation, FIELD_LIMITS.ownerAdditionalInformation),
 			address.state
 		]
 	);
@@ -435,15 +446,15 @@ export async function updateOwner(id: number, input: OwnerInput): Promise<Owner>
 		 WHERE id = $1 AND deleted_at IS NULL`,
 		[
 			id,
-			input.name.trim(),
-			nullable(input.street),
-			nullable(input.streetNumber),
-			nullable(input.addressComplement),
-			nullable(input.neighborhood),
+			requireLimitedText(input.name, FIELD_LIMITS.ownerName),
+			nullableLimitedText(input.street, FIELD_LIMITS.ownerStreet),
+			nullableLimitedText(input.streetNumber, FIELD_LIMITS.ownerStreetNumber),
+			nullableLimitedText(input.addressComplement, FIELD_LIMITS.ownerAddressComplement),
+			nullableLimitedText(input.neighborhood, FIELD_LIMITS.ownerNeighborhood),
 			address.city,
 			address.country,
-			nullable(input.postalCode),
-			nullable(input.additionalInformation),
+			nullableLimitedText(input.postalCode, FIELD_LIMITS.ownerPostalCode),
+			nullableLimitedText(input.additionalInformation, FIELD_LIMITS.ownerAdditionalInformation),
 			address.state
 		]
 	);
