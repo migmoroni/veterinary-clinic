@@ -1,66 +1,22 @@
 <script lang="ts">
 	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
+	import OwnerContactEditorList from '$lib/components/owner/OwnerContactEditorList.svelte';
 	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import OwnerAvatarEditorDialog from '$lib/components/owner/OwnerAvatarEditorDialog.svelte';
-	import Select from '$lib/components/ui/Select.svelte';
-	import { countryPhoneFormat, countryPhoneFormats } from '$lib/domain/geo/location.js';
-	import type { OwnerAdditionalResponsibleInput, OwnerContactInput, OwnerContactKind } from '$lib/domain/owner/owner.js';
-	import { formatEmailForInput } from '$lib/domain/shared/email.js';
-	import { FIELD_LIMITS, textLength } from '$lib/domain/shared/field-limits.js';
-	import { formatPhoneForInput, formatPhoneForInputWithCaret } from '$lib/domain/shared/phone.js';
-	import { t, type TranslationKey } from '$lib/i18n/index.js';
+	import { createEmptyOwnerContact } from '$lib/components/owner/owner-contact-utils.js';
+	import type { OwnerAdditionalResponsibleInput, OwnerContactInput } from '$lib/domain/owner/owner.js';
+	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
+	import { t } from '$lib/i18n/index.js';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import { tick } from 'svelte';
 
 	let { responsibles = $bindable<OwnerAdditionalResponsibleInput[]>([]), country = 'BRA' }: { responsibles?: OwnerAdditionalResponsibleInput[]; country?: string | null } = $props();
 	let avatarDialogIndex = $state<number | null>(null);
 
-	const contactKinds: OwnerContactKind[] = ['mobile', 'phone', 'email', 'other'];
-	const phoneFormats = countryPhoneFormats();
-	const phoneFormatContext = $derived({ country: countryPhoneFormat(country), countries: phoneFormats });
 	const avatarDialogResponsible = $derived(avatarDialogIndex === null ? null : (responsibles[avatarDialogIndex] ?? null));
 
-	function kindLabelKey(kind: OwnerContactKind): TranslationKey {
-		return `owner.contactKind.${kind}` as TranslationKey;
-	}
-
-	function emptyContact(): OwnerContactInput {
-		return { kind: 'mobile', label: '', value: '' };
-	}
-
 	function emptyResponsible(): OwnerAdditionalResponsibleInput {
-		return { name: '', avatarBytes: null, contacts: [emptyContact()] };
-	}
-
-	function normalizeContactKind(kind: string): OwnerContactKind {
-		if (kind === 'other') return 'other';
-		if (kind === 'phone') return 'phone';
-		if (kind === 'email') return 'email';
-		return 'mobile';
-	}
-
-	function formatContactValue(kind: OwnerContactKind, value: string): string {
-		if (kind === 'other') return value;
-		return kind === 'email' ? formatEmailForInput(value) : formatPhoneForInput(value, phoneFormatContext);
-	}
-
-	function contactValueLimit(kind: OwnerContactKind): number {
-		if (kind === 'email') return FIELD_LIMITS.ownerContactEmailValue;
-		if (kind === 'other') return FIELD_LIMITS.ownerContactOtherValue;
-		return FIELD_LIMITS.ownerContactPhoneValue;
-	}
-
-	function shouldShowLimitHint(value: string | null | undefined, max: number): boolean {
-		return max > 0 && textLength(value) >= Math.floor(max * 0.85);
-	}
-
-	function contactHasLimitHint(contact: OwnerContactInput): boolean {
-		return (contact.kind === 'other' && shouldShowLimitHint(contact.label, FIELD_LIMITS.ownerContactLabel)) || shouldShowLimitHint(contact.value, contactValueLimit(contact.kind));
-	}
-
-	function isPhoneContact(kind: OwnerContactKind): boolean {
-		return kind === 'phone' || kind === 'mobile';
+		return { name: '', avatarBytes: null, contacts: [createEmptyOwnerContact()] };
 	}
 
 	function addResponsible() {
@@ -69,6 +25,10 @@
 
 	function removeResponsible(index: number) {
 		responsibles = responsibles.filter((_, responsibleIndex) => responsibleIndex !== index);
+	}
+
+	function updateResponsibleContacts(index: number, contacts: OwnerContactInput[]) {
+		responsibles = responsibles.map((responsible, responsibleIndex) => (responsibleIndex === index ? { ...responsible, contacts } : responsible));
 	}
 
 	function updateResponsibleName(index: number, name: string) {
@@ -101,72 +61,6 @@
 		avatarDialogIndex = null;
 	}
 
-	function addContact(responsibleIndex: number) {
-		responsibles = responsibles.map((responsible, index) => (index === responsibleIndex ? { ...responsible, contacts: [...responsible.contacts, emptyContact()] } : responsible));
-	}
-
-	function removeContact(responsibleIndex: number, contactIndex: number) {
-		responsibles = responsibles.map((responsible, index) =>
-			index === responsibleIndex ? { ...responsible, contacts: responsible.contacts.filter((_, currentContactIndex) => currentContactIndex !== contactIndex) } : responsible
-		);
-	}
-
-	function updateContactKind(responsibleIndex: number, contactIndex: number, kind: string) {
-		const nextKind = normalizeContactKind(kind);
-		responsibles = responsibles.map((responsible, index) => {
-			if (index !== responsibleIndex) return responsible;
-
-			return {
-				...responsible,
-				contacts: responsible.contacts.map((contact, currentContactIndex) =>
-					currentContactIndex === contactIndex ? { ...contact, kind: nextKind, label: nextKind === 'other' ? (contact.label ?? '') : '', value: formatContactValue(nextKind, contact.value) } : contact
-				)
-			};
-		});
-	}
-
-	function updateContactLabel(responsibleIndex: number, contactIndex: number, label: string) {
-		responsibles = responsibles.map((responsible, index) => {
-			if (index !== responsibleIndex) return responsible;
-
-			return {
-				...responsible,
-				contacts: responsible.contacts.map((contact, currentContactIndex) => (currentContactIndex === contactIndex ? { ...contact, label } : contact))
-			};
-		});
-	}
-
-	function updateContactValue(responsibleIndex: number, contactIndex: number, value: string) {
-		responsibles = responsibles.map((responsible, index) => {
-			if (index !== responsibleIndex) return responsible;
-
-			return {
-				...responsible,
-				contacts: responsible.contacts.map((contact, currentContactIndex) =>
-					currentContactIndex === contactIndex ? { ...contact, value: formatContactValue(contact.kind, value) } : contact
-				)
-			};
-		});
-	}
-
-	async function updateContactValueFromInput(responsibleIndex: number, contactIndex: number, kind: OwnerContactKind, input: HTMLInputElement) {
-		if (!isPhoneContact(kind)) {
-			updateContactValue(responsibleIndex, contactIndex, input.value);
-			return;
-		}
-
-		const result = formatPhoneForInputWithCaret(input.value, input.selectionStart, phoneFormatContext);
-		responsibles = responsibles.map((responsible, index) => {
-			if (index !== responsibleIndex) return responsible;
-
-			return {
-				...responsible,
-				contacts: responsible.contacts.map((contact, currentContactIndex) => (currentContactIndex === contactIndex ? { ...contact, value: result.value } : contact))
-			};
-		});
-		await tick();
-		if (input === document.activeElement) input.setSelectionRange(result.caret, result.caret);
-	}
 </script>
 
 <div class="sm:col-span-5 pt-2">
@@ -235,108 +129,15 @@
 				</div>
 
 				<div class="mt-4">
-					<div class="flex flex-wrap items-center justify-between gap-3">
-						<h5 class="text-sm font-semibold">{t('owner.additionalResponsibleContacts')}</h5>
-						<button
-							type="button"
-							class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring/30"
-							aria-label={t('owner.addContact')}
-							title={t('owner.addContact')}
-							onclick={() => addContact(responsibleIndex)}
-						>
-							<Plus class="size-4" />
-							{t('owner.addContact')}
-						</button>
-					</div>
-
-					<div class="mt-3 flex flex-col gap-2">
-						{#each responsible.contacts as contact, contactIndex}
-							<div class="rounded-md border border-border bg-background p-2">
-								{#if contactHasLimitHint(contact)}
-									<div class="mb-2 flex flex-wrap items-center justify-end gap-2 px-1">
-										{#if contact.kind === 'other'}
-											<CharacterLimitHint value={contact.label ?? ''} max={FIELD_LIMITS.ownerContactLabel} />
-										{/if}
-										<CharacterLimitHint value={contact.value} max={contactValueLimit(contact.kind)} />
-									</div>
-								{/if}
-
-								<div class="grid gap-2 sm:items-center {contact.kind === 'other' ? 'sm:grid-cols-[10rem_minmax(0,1fr)_minmax(0,1fr)_2.5rem]' : 'sm:grid-cols-[10rem_minmax(0,1fr)_2.5rem]'}">
-									<div class="flex flex-col gap-1 text-sm font-medium">
-										<span class="sr-only">{t('owner.contactType')}</span>
-										<Select
-											value={contact.kind}
-											options={contactKinds.map((kind) => ({ value: kind, label: t(kindLabelKey(kind)) }))}
-											ariaLabel={t('owner.contactType')}
-											onchange={(value) => updateContactKind(responsibleIndex, contactIndex, value)}
-										/>
-									</div>
-
-									{#if contact.kind === 'other'}
-										<label class="flex flex-col gap-1 text-sm font-medium">
-											<span class="sr-only">{t('owner.contactLabel')}</span>
-											<input
-												type="text"
-												inputmode="text"
-												autocomplete="off"
-												class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
-												value={contact.label ?? ''}
-												maxlength={FIELD_LIMITS.ownerContactLabel}
-												oninput={(event) => updateContactLabel(responsibleIndex, contactIndex, event.currentTarget.value)}
-												placeholder={t('owner.contactLabel')}
-												aria-label={t('owner.contactLabel')}
-												required
-											/>
-										</label>
-
-										<label class="flex flex-col gap-1 text-sm font-medium">
-											<span class="sr-only">{t('owner.contactOtherValue')}</span>
-											<input
-												type="text"
-												inputmode="text"
-												autocomplete="off"
-												class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
-												value={contact.value}
-												maxlength={contactValueLimit(contact.kind)}
-												oninput={(event) => void updateContactValueFromInput(responsibleIndex, contactIndex, contact.kind, event.currentTarget)}
-												placeholder={t('owner.contactOtherValue')}
-												aria-label={t('owner.contactOtherValue')}
-												required
-											/>
-										</label>
-									{:else}
-										<label class="flex flex-col gap-1 text-sm font-medium">
-											<span class="sr-only">{t('owner.contactValue')}</span>
-											<input
-												type={contact.kind === 'email' ? 'email' : 'tel'}
-												inputmode={contact.kind === 'email' ? 'email' : 'tel'}
-												autocomplete={contact.kind === 'email' ? 'email' : 'tel'}
-												class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
-												value={contact.value}
-												maxlength={contactValueLimit(contact.kind)}
-												oninput={(event) => void updateContactValueFromInput(responsibleIndex, contactIndex, contact.kind, event.currentTarget)}
-												placeholder={t('owner.contactValue')}
-												aria-label={t('owner.contactValue')}
-												required
-											/>
-										</label>
-									{/if}
-
-									<button
-										type="button"
-										class="flex size-10 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus:outline-none focus:ring-2 focus:ring-ring/30"
-										aria-label={t('owner.removeContact')}
-										title={t('owner.removeContact')}
-										onclick={() => removeContact(responsibleIndex, contactIndex)}
-									>
-										<Trash2 class="size-4" />
-									</button>
-								</div>
-							</div>
-						{:else}
-							<p class="text-sm text-muted-foreground">{t('owner.noContacts')}</p>
-						{/each}
-					</div>
+					<OwnerContactEditorList
+						contacts={responsible.contacts}
+						country={country}
+						titleKey="owner.additionalResponsibleContacts"
+						headingTag="h5"
+						listClass="mt-3 flex flex-col gap-2"
+						itemClass="bg-background"
+						onContactsChange={(contacts) => updateResponsibleContacts(responsibleIndex, contacts)}
+					/>
 				</div>
 			</article>
 		{:else}

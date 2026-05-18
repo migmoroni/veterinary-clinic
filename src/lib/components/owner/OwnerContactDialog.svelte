@@ -1,11 +1,18 @@
 <script lang="ts">
-	import type { OwnerContact, OwnerContactKind } from '$lib/domain/owner/owner.js';
-	import { t, type TranslationKey } from '$lib/i18n/index.js';
+	import type { OwnerContact } from '$lib/domain/owner/owner.js';
+	import { t } from '$lib/i18n/index.js';
 	import { openEmailForEmail, openPhoneCallForPhone, openWhatsAppForPhone } from '$lib/services/contact.service.js';
 	import Mail from '@lucide/svelte/icons/mail';
 	import MessageCircle from '@lucide/svelte/icons/message-circle';
 	import PhoneCall from '@lucide/svelte/icons/phone-call';
 	import X from '@lucide/svelte/icons/x';
+	import {
+		canCallOwnerContact as canCallContact,
+		canOpenOwnerContactWhatsApp as canOpenWhatsApp,
+		isEmailOwnerContact as isEmailContact,
+		ownerContactIsVisible,
+		ownerContactSubtitle
+	} from './owner-contact-utils.js';
 
 	let {
 		open = $bindable(false),
@@ -17,28 +24,7 @@
 		contacts?: OwnerContact[];
 	} = $props();
 
-	const availableContacts = $derived(contacts.filter((contact) => contact.value.trim().length > 0 && (contact.kind !== 'other' || (contact.label ?? '').trim().length > 0)));
-
-	function kindLabelKey(kind: OwnerContactKind): TranslationKey {
-		return `owner.contactKind.${kind}` as TranslationKey;
-	}
-
-	function canOpenWhatsApp(kind: OwnerContactKind): boolean {
-		return kind == 'mobile';
-	}
-
-	function isEmailContact(kind: OwnerContactKind): boolean {
-		return kind === 'email';
-	}
-
-	function canCallContact(kind: OwnerContactKind): boolean {
-		return kind === 'phone' || kind === 'mobile';
-	}
-
-	function contactSubtitle(contact: OwnerContact): string {
-		const label = (contact.label ?? '').trim();
-		return contact.kind === 'other' && label.length > 0 ? label : t(kindLabelKey(contact.kind));
-	}
+	const availableContacts = $derived(contacts.filter(ownerContactIsVisible));
 
 	function closeDialog() {
 		open = false;
@@ -87,7 +73,7 @@
 							<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 								<div class="min-w-0">
 									<p class="truncate text-sm font-semibold">{contact.value}</p>
-									<p class="mt-1 text-xs text-muted-foreground">{contactSubtitle(contact)}</p>
+									<p class="mt-1 text-xs text-muted-foreground">{ownerContactSubtitle(contact, t)}</p>
 								</div>
 
 								{#if isEmailContact(contact.kind) || canCallContact(contact.kind) || canOpenWhatsApp(contact.kind)}

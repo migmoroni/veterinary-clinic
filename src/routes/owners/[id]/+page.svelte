@@ -7,12 +7,19 @@
 	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import OwnerAvatarEditorDialog from '$lib/components/owner/OwnerAvatarEditorDialog.svelte';
 	import OwnerContactsField from '$lib/components/owner/OwnerContactsField.svelte';
+	import {
+		canCallOwnerContact as canCallContact,
+		canOpenOwnerContactWhatsApp as canOpenWhatsApp,
+		isEmailOwnerContact as isEmailContact,
+		ownerContactIsVisible,
+		ownerContactSubtitle
+	} from '$lib/components/owner/owner-contact-utils.js';
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import UnsavedChangesDialog from '$lib/components/records/UnsavedChangesDialog.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import { brazilCityOptions, brazilStateOptions, countryHasStructuredLocations, countryOptions, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '$lib/domain/geo/location.js';
-	import { DEFAULT_OWNER_COUNTRY, type Owner, type OwnerContact, type OwnerContactKind, type OwnerInput } from '$lib/domain/owner/owner.js';
+	import { DEFAULT_OWNER_COUNTRY, type Owner, type OwnerInput } from '$lib/domain/owner/owner.js';
 	import type { Pet } from '$lib/domain/pet/pet.js';
 	import { getPetBreedOption, getPetSpeciesOption } from '$lib/domain/pet/taxonomy.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
@@ -97,22 +104,6 @@
 		return `${url.pathname}${url.search}${url.hash}`;
 	}
 
-	function contactKindLabelKey(kind: OwnerContactKind): TranslationKey {
-		return `owner.contactKind.${kind}` as TranslationKey;
-	}
-
-	function canOpenWhatsApp(kind: OwnerContactKind): boolean {
-		return kind == 'mobile';
-	}
-
-	function isEmailContact(kind: OwnerContactKind): boolean {
-		return kind === 'email';
-	}
-
-	function canCallContact(kind: OwnerContactKind): boolean {
-		return kind === 'phone' || kind === 'mobile';
-	}
-
 	function updateCountry(value: string) {
 		form = {
 			...form,
@@ -143,15 +134,6 @@
 		}
 
 		form = { ...form, city: normalizeOwnerCity(value, form.country, form.state) ?? '' };
-	}
-
-	function contactIsVisible(contact: OwnerContact | OwnerInput['contacts'][number]): boolean {
-		return contact.value.trim().length > 0 && (contact.kind !== 'other' || (contact.label ?? '').trim().length > 0);
-	}
-
-	function contactSubtitle(contact: OwnerContact | OwnerInput['contacts'][number]): string {
-		const label = (contact.label ?? '').trim();
-		return contact.kind === 'other' && label.length > 0 ? label : t(contactKindLabelKey(contact.kind));
 	}
 
 	function ownerErrorMessage(exception: unknown): string {
@@ -196,7 +178,7 @@
 
 	const currentSnapshot = $derived(snapshotForm(form));
 	const hasUnsavedChanges = $derived(editing && Boolean(profile) && !loading && currentSnapshot !== savedSnapshot);
-	const visibleContacts = $derived((editing ? form.contacts : (profile?.owner.contacts ?? [])).filter((contact) => contactIsVisible(contact)));
+	const visibleContacts = $derived((editing ? form.contacts : (profile?.owner.contacts ?? [])).filter(ownerContactIsVisible));
 	const hasStructuredLocations = $derived(countryHasStructuredLocations(form.country));
 	const countrySelectOptions = $derived(countryOptions(i18n.locale));
 	const stateSelectOptions = $derived(hasStructuredLocations ? [{ value: '', label: t('owner.statePlaceholder') }, ...brazilStateOptions()] : []);
@@ -616,7 +598,7 @@
 									<article class="flex flex-col gap-3 rounded-md border border-border bg-background/50 p-3 sm:flex-row sm:items-center sm:justify-between">
 										<div class="min-w-0">
 											<p class="truncate text-sm font-semibold">{contact.value}</p>
-											<p class="mt-1 text-xs text-muted-foreground">{contactSubtitle(contact)}</p>
+											<p class="mt-1 text-xs text-muted-foreground">{ownerContactSubtitle(contact, t)}</p>
 										</div>
 
 										{#if isEmailContact(contact.kind) || canCallContact(contact.kind) || canOpenWhatsApp(contact.kind)}
@@ -669,11 +651,11 @@
 											</div>
 
 											<div class="mt-3 flex flex-col gap-2">
-												{#each responsible.contacts.filter((contact) => contactIsVisible(contact)) as contact}
+												{#each responsible.contacts.filter(ownerContactIsVisible) as contact}
 													<div class="flex flex-col gap-3 rounded-md border border-border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
 														<div class="min-w-0">
 															<p class="truncate text-sm font-semibold">{contact.value}</p>
-															<p class="mt-1 text-xs text-muted-foreground">{contactSubtitle(contact)}</p>
+															<p class="mt-1 text-xs text-muted-foreground">{ownerContactSubtitle(contact, t)}</p>
 														</div>
 
 														{#if isEmailContact(contact.kind) || canCallContact(contact.kind) || canOpenWhatsApp(contact.kind)}
