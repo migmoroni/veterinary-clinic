@@ -6,7 +6,7 @@ On first launch, the app asks whether to import an existing compatible SQLite da
 
 SQLite access goes through `tauri-plugin-sql`; the app does not depend on `rusqlite` directly.
 
-The app uses a current canonical SQLite schema and intentionally keeps `PRAGMA user_version` at `0` while pre-launch. Legacy database adaptation is handled by `legacy-to-sqlite`, which generates a compatible `veterinary_clinic.db` before import.
+The app uses a current canonical SQLite schema and intentionally keeps `PRAGMA user_version` at `0` during the `0.2.0` single-client production test. Database adaptation is handled outside the runtime app by `legacy-to-sqlite`, which generates a compatible `veterinary_clinic.db` before import.
 
 ## Stack
 
@@ -38,15 +38,27 @@ npm run test:run
 npm run build
 ```
 
-## Legacy import converter
+## External database converters
+
+### Legacy CSV converter
 
 ```sh
 cd legacy-to-sqlite
-npx tsc to-sqlite.ts --ignoreConfig
-node to-sqlite.js
+npm run build:csv
+npm run csv
 ```
 
 The converter reads `legacy-to-sqlite/dist/old-clinic.csv` and writes `legacy-to-sqlite/build/veterinary_clinic.db` using the app's current canonical schema. Legacy `TELEFONE` values become `owner_contacts.kind = 'phone'`, and `CELULAR` values become `owner_contacts.kind = 'mobile'`. Medical record periods are derived from dated entries in the legacy record text: the earliest valid date becomes `admitted_at`, and the latest valid date becomes `discharged_at` when there is more than one dated entry. Legacy vaccination rows are imported under the default vaccination protocol for each vaccine root.
+
+### Exported app database rebuild
+
+```sh
+cd legacy-to-sqlite
+npm run build:exported-db
+npm run exported-db
+```
+
+The rebuild converter reads an exported SQLite database from `legacy-to-sqlite/dist` and writes a validated `legacy-to-sqlite/build/veterinary_clinic.db`. If there is more than one `.db`, `.sqlite`, or `.sqlite3` file in `dist`, pass the source explicitly: `node exported-db-to-sqlite.js dist/exported.db`. For version `0.2.0`, no structural transformation is applied; the converter validates the exported app schema, runs SQLite integrity checks, and creates a clean database copy for import/testing. Future version-to-version update logic should live in this external converter, not in the app runtime migrations.
 
 ## Desktop bundles
 

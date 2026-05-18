@@ -240,11 +240,31 @@ cd legacy-to-sqlite
 npm ci
 mkdir -p dist build
 # coloque o CSV legado em dist/old-clinic.csv
-npx tsc to-sqlite.ts --ignoreConfig
-node to-sqlite.js
+npm run build:csv
+npm run csv
 ```
 
 O arquivo gerado pode ser importado pelo app na primeira execucao ou pelo fluxo de importacao de dados.
+
+## Rebuild de banco exportado
+
+A partir da versao `0.2.0`, o app pode entrar em teste de producao com um unico cliente. Como ainda nao existe contrato de migracao multi-cliente no runtime, atualizacoes de bancos exportados devem passar por um processo externo em `legacy-to-sqlite/`.
+
+O rebuild de banco exportado le um arquivo `.db`, `.sqlite` ou `.sqlite3` em `legacy-to-sqlite/dist` e grava `legacy-to-sqlite/build/veterinary_clinic.db`:
+
+```sh
+cd legacy-to-sqlite
+npm run build:exported-db
+npm run exported-db
+```
+
+Se houver mais de um banco em `dist`, informe a origem explicitamente:
+
+```sh
+node exported-db-to-sqlite.js dist/export-veterinary-clinic.db
+```
+
+Na `0.2.0`, esse processo nao aplica transformacoes estruturais. Ele valida as tabelas e colunas esperadas, executa `PRAGMA integrity_check` e `PRAGMA foreign_key_check`, e cria uma copia limpa para importacao/teste. Futuras transformacoes entre versoes devem ser implementadas nesse conversor externo, nao em `src/lib/persistence/sqlite/migrations.ts`.
 
 ## Scripts npm principais
 
@@ -257,6 +277,15 @@ O arquivo gerado pode ser importado pelo app na primeira execucao ou pelo fluxo 
 | `npm run build` | Build web estatico via SvelteKit |
 | `npm run tauri:appimage` | Bundle AppImage |
 | `npm run tauri:deb` | Bundle `.deb` |
+
+Scripts principais dentro de `legacy-to-sqlite/`:
+
+| Script | Uso |
+| --- | --- |
+| `npm run build:csv` | Compila o conversor do CSV legado |
+| `npm run csv` | Gera `build/veterinary_clinic.db` a partir de `dist/old-clinic.csv` |
+| `npm run build:exported-db` | Compila o rebuild de banco exportado da app |
+| `npm run exported-db` | Rebuilda um SQLite exportado de `dist` para `build/veterinary_clinic.db` |
 
 ## Diagnostico rapido
 

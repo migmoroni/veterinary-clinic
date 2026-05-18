@@ -1,6 +1,6 @@
 [package]
 name = "veterinary_clinic"
-version = "0.1.0"
+version = "0.2.0"
 description = "Local-first veterinary clinic app"
 authors = ["Veterinary Clinic"]
 license = ""

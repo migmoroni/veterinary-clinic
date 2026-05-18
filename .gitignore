@@ -24,3 +24,4 @@ vite.config.ts.timestamp-*
 legacy-to-sqlite/build/
 legacy-to-sqlite/dist/
 legacy-to-sqlite/to-sqlite.js
+legacy-to-sqlite/exported-db-to-sqlite.js
