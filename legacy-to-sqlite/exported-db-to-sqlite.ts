@@ -21,6 +21,12 @@ interface TableInfoRow {
   name: string;
 }
 
+interface CliOptions {
+  source?: string;
+  output?: string;
+  help: boolean;
+}
+
 const projectDir = process.cwd();
 const distDir = path.resolve(projectDir, 'dist');
 const buildDir = path.resolve(projectDir, 'build');
@@ -58,6 +64,76 @@ function resolvePath(value: string): string {
   return path.isAbsolute(value) ? value : path.resolve(projectDir, value);
 }
 
+function parseCliOptions(args: string[]): CliOptions {
+  const options: CliOptions = { help: false };
+  const positionals: string[] = [];
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '--help' || arg === '-h') {
+      options.help = true;
+      continue;
+    }
+
+    if (arg === '--source' || arg === '--input' || arg === '-s') {
+      const value = args[index + 1];
+      if (!value) throw new Error(`Informe um caminho após ${arg}.`);
+      options.source = value;
+      index += 1;
+      continue;
+    }
+
+    if (arg.startsWith('--source=') || arg.startsWith('--input=')) {
+      options.source = arg.slice(arg.indexOf('=') + 1);
+      continue;
+    }
+
+    if (arg === '--output' || arg === '-o') {
+      const value = args[index + 1];
+      if (!value) throw new Error(`Informe um caminho após ${arg}.`);
+      options.output = value;
+      index += 1;
+      continue;
+    }
+
+    if (arg.startsWith('--output=')) {
+      options.output = arg.slice(arg.indexOf('=') + 1);
+      continue;
+    }
+
+    if (arg.startsWith('-')) throw new Error(`Opção desconhecida: ${arg}`);
+    positionals.push(arg);
+  }
+
+  if (!options.source && positionals[0]) options.source = positionals[0];
+  if (!options.output && positionals[1]) options.output = positionals[1];
+  if (positionals.length > 2) throw new Error(`Argumentos posicionais demais: ${positionals.slice(2).join(', ')}`);
+
+  return options;
+}
+
+function printUsage(): void {
+  console.log(`Uso:
+  node exported-db-to-sqlite.js [source-db] [output-db]
+  node exported-db-to-sqlite.js --source dist/export.db --output build/veterinary_clinic.db
+
+Variáveis de ambiente:
+  SOURCE_DB=dist/export.db OUTPUT_DB=build/veterinary_clinic.db node exported-db-to-sqlite.js
+
+Com npm, passe argumentos após --:
+  npm run exported-db -- --source dist/export.db`);
+}
+
+function resolveInputCandidate(value: string): string {
+  const directPath = resolvePath(value);
+  if (fs.existsSync(directPath)) return directPath;
+
+  const distPath = path.resolve(distDir, value);
+  if (!path.isAbsolute(value) && fs.existsSync(distPath)) return distPath;
+
+  return directPath;
+}
+
 function findDistDatabase(): string {
   if (!fs.existsSync(distDir)) throw new Error(`Pasta dist não encontrada: ${distDir}`);
 
@@ -70,19 +146,16 @@ function findDistDatabase(): string {
   if (candidates.length === 0) throw new Error(`Nenhum arquivo .db, .sqlite ou .sqlite3 encontrado em ${distDir}`);
   if (candidates.length === 1) return candidates[0];
 
-  const preferred = candidates.filter((candidate) => path.basename(candidate).toLowerCase() === 'veterinary_clinic.db');
-  if (preferred.length === 1) return preferred[0];
-
-  throw new Error(`Mais de um banco encontrado em dist. Informe o caminho explicitamente: ${candidates.map((candidate) => path.basename(candidate)).join(', ')}`);
+  throw new Error(`Mais de um banco encontrado em dist. Informe o caminho com --source: ${candidates.map((candidate) => path.basename(candidate)).join(', ')}`);
 }
 
-function resolveInputPath(): string {
-  const explicit = process.argv[2] ?? process.env.SOURCE_DB;
-  return explicit ? resolvePath(explicit) : findDistDatabase();
+function resolveInputPath(options: CliOptions): string {
+  const explicit = options.source ?? process.env.SOURCE_DB;
+  return explicit ? resolveInputCandidate(explicit) : findDistDatabase();
 }
 
-function resolveOutputPath(): string {
-  const explicit = process.argv[3] ?? process.env.OUTPUT_DB;
+function resolveOutputPath(options: CliOptions): string {
+  const explicit = options.output ?? process.env.OUTPUT_DB;
   return explicit ? resolvePath(explicit) : defaultOutputPath;
 }
 
@@ -164,8 +237,14 @@ function printReport(inputPath: string, outputPath: string, counts: Map<TableNam
 }
 
 function rebuildExportedDatabase(): void {
-  const inputPath = resolveInputPath();
-  const outputPath = resolveOutputPath();
+  const options = parseCliOptions(process.argv.slice(2));
+  if (options.help) {
+    printUsage();
+    return;
+  }
+
+  const inputPath = resolveInputPath(options);
+  const outputPath = resolveOutputPath(options);
   prepareOutputPath(inputPath, outputPath);
 
   const source = new Database(inputPath, { readonly: true, fileMustExist: true });

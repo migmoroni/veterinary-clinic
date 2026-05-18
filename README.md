@@ -58,7 +58,7 @@ npm run build:exported-db
 npm run exported-db
 ```
 
-The rebuild converter reads an exported SQLite database from `legacy-to-sqlite/dist` and writes a validated `legacy-to-sqlite/build/veterinary_clinic.db`. If there is more than one `.db`, `.sqlite`, or `.sqlite3` file in `dist`, pass the source explicitly: `node exported-db-to-sqlite.js dist/exported.db`. For version `0.2.0`, no structural transformation is applied; the converter validates the exported app schema, runs SQLite integrity checks, and creates a clean database copy for import/testing. Future version-to-version update logic should live in this external converter, not in the app runtime migrations.
+The rebuild converter reads an exported SQLite database from `legacy-to-sqlite/dist` and writes a validated `legacy-to-sqlite/build/veterinary_clinic.db`. If there is more than one `.db`, `.sqlite`, or `.sqlite3` file in `dist`, pass the source explicitly: `npm run exported-db -- --source dist/exported.db`. A bare filename such as `--source exported.db` is resolved inside `dist` when present. For version `0.2.0`, no structural transformation is applied; the converter validates the exported app schema, runs SQLite integrity checks, and creates a clean database copy for import/testing. Future version-to-version update logic should live in this external converter, not in the app runtime migrations.
 
 ## Desktop bundles
 

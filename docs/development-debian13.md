@@ -261,8 +261,10 @@ npm run exported-db
 Se houver mais de um banco em `dist`, informe a origem explicitamente:
 
 ```sh
-node exported-db-to-sqlite.js dist/export-veterinary-clinic.db
+npm run exported-db -- --source dist/export-veterinary-clinic.db
 ```
+
+Ao usar `npm run`, os argumentos do script precisam vir depois de `--`. O conversor tambem aceita `node exported-db-to-sqlite.js --source dist/export-veterinary-clinic.db` e resolve nomes simples como `--source export-veterinary-clinic.db` dentro de `dist` quando o arquivo existir.
 
 Na `0.2.0`, esse processo nao aplica transformacoes estruturais. Ele valida as tabelas e colunas esperadas, executa `PRAGMA integrity_check` e `PRAGMA foreign_key_check`, e cria uma copia limpa para importacao/teste. Futuras transformacoes entre versoes devem ser implementadas nesse conversor externo, nao em `src/lib/persistence/sqlite/migrations.ts`.
 

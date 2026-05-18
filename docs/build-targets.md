@@ -36,6 +36,12 @@ npm run exported-db
 
 `exported-db-to-sqlite.ts` reads a SQLite export from `legacy-to-sqlite/dist` and writes `legacy-to-sqlite/build/veterinary_clinic.db`. For `0.2.0`, it is a validated rebuild with no structural transformations.
 
+When more than one exported database exists in `dist`, pass the source after npm's argument separator:
+
+```sh
+npm run exported-db -- --source dist/exported.db
+```
+
 ## Desktop bundles
 
 ```sh
