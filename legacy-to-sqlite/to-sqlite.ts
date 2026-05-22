@@ -582,32 +582,32 @@ const ownerAdditionalResponsibleSortOrder = new Map<string, number>();
 
 const canineBreedAliases: BreedAlias[] = [
   { id: 'mixed-breed', aliases: ['srd', 's r d', 'sem raca definida', 'vira lata', 'viralata'] },
-  { id: 'shih-tzu', aliases: ['shih tzu', 'shihtzu', 'shih'] },
+  { id: 'shih-tzu', aliases: ['shih tzu', 'shihtzu', 'shih', 'shi tzu', 'shit tzu'] },
   { id: 'poodle', aliases: ['poodle'] },
   { id: 'pinscher', aliases: ['pinscher', 'pinsher'] },
   { id: 'pit-bull', aliases: ['pit bull', 'pitbull'] },
-  { id: 'lhasa-apso', aliases: ['lhasa apso', 'lhasa'] },
-  { id: 'dachshund', aliases: ['teckel', 'dachshund'] },
-  { id: 'rottweiler', aliases: ['rottweiler', 'rott weiler'] },
+  { id: 'lhasa-apso', aliases: ['lhasa apso', 'lhasa', 'lhasa apaso'] },
+  { id: 'dachshund', aliases: ['teckel', 'dachshund', 'techel'] },
+  { id: 'rottweiler', aliases: ['rottweiler', 'rott weiler', 'rottwelier'] },
   { id: 'labrador-retriever', aliases: ['labrador'] },
   { id: 'yorkshire-terrier', aliases: ['yorkshire', 'york shire'] },
   { id: 'german-shepherd', aliases: ['pastor alemao'] },
   { id: 'chow-chow', aliases: ['chow chow'] },
   { id: 'pug', aliases: ['pug'] },
   { id: 'maltese', aliases: ['maltes'] },
-  { id: 'border-collie', aliases: ['border collie'] },
-  { id: 'golden-retriever', aliases: ['golden'] },
-  { id: 'australian-cattle-dog', aliases: ['blue heeler', 'boiadeiro australiano'] },
+  { id: 'border-collie', aliases: ['border collie', 'border colie'] },
+  { id: 'golden-retriever', aliases: ['golden', 'golden retrivier'] },
+  { id: 'australian-cattle-dog', aliases: ['blue heeler', 'boiadeiro australiano', 'blue hiller', 'australian cattle dog'] },
   { id: 'boxer', aliases: ['boxer'] },
-  { id: 'brazilian-terrier', aliases: ['terrier brasileiro', 'fox paulistinha'] },
-  { id: 'cocker-spaniel', aliases: ['cocker'] },
+  { id: 'brazilian-terrier', aliases: ['terrier brasileiro', 'fox paulistinha', 'terrier brasilieiro'] },
+  { id: 'cocker-spaniel', aliases: ['cocker', 'cooker spaniel'] },
   { id: 'german-spitz', aliases: ['spitz', 'sptiz'] },
   { id: 'pekingese', aliases: ['pequines', 'pequenes'] },
   { id: 'fila-brasileiro', aliases: ['fila brasileiro', 'fila'] },
   { id: 'american-bully', aliases: ['american bully'] },
-  { id: 'french-bulldog', aliases: ['bulldog frances'] },
+  { id: 'french-bulldog', aliases: ['bulldog frances', 'buldog frances'] },
   { id: 'american-foxhound', aliases: ['fox hound americano', 'foxhound americano'] },
-  { id: 'siberian-husky', aliases: ['husky siberiano', 'husk siberiano'] },
+  { id: 'siberian-husky', aliases: ['husky siberiano', 'husk siberiano', 'hask siberiano', 'huski', 'huski siberiano'] },
   { id: 'shar-pei', aliases: ['sharpei', 'shar pei'] },
   { id: 'beagle', aliases: ['beagle'] },
   { id: 'dalmatian', aliases: ['dalmata'] },
@@ -616,14 +616,14 @@ const canineBreedAliases: BreedAlias[] = [
   { id: 'english-bulldog', aliases: ['bulldog ingles'] },
   { id: 'akita', aliases: ['akita'] },
   { id: 'australian-shepherd', aliases: ['pastor australiano', 'australian shepherd', 'aussie'] },
-  { id: 'basset-hound', aliases: ['basset', 'basset hound'] },
+  { id: 'basset-hound', aliases: ['basset', 'basset hound', 'basset round'] },
   { id: 'bernese-mountain-dog', aliases: ['boiadeiro de berna', 'bernese', 'bernese mountain dog'] },
-  { id: 'boston-terrier', aliases: ['boston terrier'] },
+  { id: 'boston-terrier', aliases: ['boston terrier', 'bonston terrier'] },
   { id: 'cane-corso', aliases: ['cane corso'] },
   { id: 'chihuahua', aliases: ['chihuahua'] },
-  { id: 'doberman', aliases: ['doberman'] },
-  { id: 'great-dane', aliases: ['dogue alemao', 'great dane'] },
-  { id: 'jack-russell-terrier', aliases: ['jack russell', 'jack russel'] },
+  { id: 'doberman', aliases: ['doberman', 'dobermann'] },
+  { id: 'great-dane', aliases: ['dogue alemao', 'great dane', 'dog alemao'] },
+  { id: 'jack-russell-terrier', aliases: ['jack russell', 'jack russel', 'jack russel terrier'] },
   { id: 'samoyed', aliases: ['samoieda', 'samoiedo', 'samoyed'] },
   { id: 'weimaraner', aliases: ['weimaraner'] },
   { id: 'affenpinscher', aliases: ['affenpinscher'] },
@@ -650,7 +650,7 @@ const canineBreedAliases: BreedAlias[] = [
   { id: 'mastiff', aliases: ['mastiff', 'mastim'] },
   { id: 'papillon', aliases: ['papillon'] },
   { id: 'pembroke-welsh-corgi', aliases: ['corgi', 'welsh corgi', 'pembroke'] },
-  { id: 'pointer', aliases: ['pointer'] },
+  { id: 'pointer', aliases: ['pointer', 'pointer ingles'] },
   { id: 'portuguese-water-dog', aliases: ['cao de agua portugues', 'portuguese water dog'] },
   { id: 'saint-bernard', aliases: ['sao bernardo', 'saint bernard'] },
   { id: 'shetland-sheepdog', aliases: ['pastor de shetland', 'shetland sheepdog', 'sheltie'] },
@@ -1410,6 +1410,42 @@ const normalizeDate = (value: string | undefined): string | null => {
   return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 };
 
+// Legacy birth dates use American format MM/DD/YY (often with a trailing time component)
+// or, occasionally, an ISO 8601 date. Returns null if the value cannot be parsed.
+const normalizeLegacyBirthDate = (value: string | undefined): string | null => {
+  const raw = value?.trim() ?? '';
+  if (!raw) return null;
+
+  const isoMatch = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[\sT].*)?$/);
+  if (isoMatch) {
+    const year = Number(isoMatch[1]);
+    const month = Number(isoMatch[2]);
+    const day = Number(isoMatch[3]);
+    const date = new Date(year, month - 1, day);
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+    return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
+
+  const slashMatch = raw.match(/^(\d{1,2})\s*\/\s*(\d{1,2})\s*\/\s*(\d{2}|\d{4})(?:\s+\d{1,2}:\d{1,2}(?::\d{1,2})?)?$/);
+  if (!slashMatch) return null;
+
+  const month = Number(slashMatch[1]);
+  const day = Number(slashMatch[2]);
+  let year = Number(slashMatch[3]);
+  if (year < 100) year += year >= 40 ? 1900 : 2000;
+
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+
+  // Reject implausible future birth dates (likely misparsed entries).
+  const today = new Date();
+  const currentDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  if (date.getTime() > currentDay.getTime()) return null;
+
+  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+};
+
 const isFutureDate = (value: string): boolean => {
   const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!match) return true;
@@ -1605,7 +1641,7 @@ const ignoreVaccinationValidity = (report: ImportReport, id: number) => {
 };
 
 const processarMigracao = () => {
-  const csvFilePath = path.resolve(projectDir, 'dist/old-clinic-2.csv');
+  const csvFilePath = path.resolve(projectDir, 'dist/clinica-veterinaria-last.csv');
 
   const rows = parse(fs.readFileSync(csvFilePath, 'utf8'), {
     columns: true,
@@ -1676,7 +1712,7 @@ const processarMigracao = () => {
 
       const petRes = insertPet.run({
         name: petName,
-        birthDate: normalizeDate(row['DATA NASCIMENTO']),
+        birthDate: normalizeLegacyBirthDate(row['DATA NASCIMENTO']),
         species: taxonomy.species,
         breed: taxonomy.breed,
         sex
