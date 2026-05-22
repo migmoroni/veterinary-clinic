@@ -744,10 +744,10 @@ const breedAliases: Record<PetSpecies, BreedAlias[]> = {
 };
 
 const vaccineMatchers: VaccineMatcher[] = [
-  { name: 'V 10', pattern: /\b(?:v\s*10|v10)\b/ },
+  { name: 'V 10', pattern: /\b(?:v\s*10|v10|v\s*1o|v1o|dhppi(?:\s*l)?|dhppil)\b/ },
   { name: 'V 8', pattern: /\b(?:v\s*8|v8)\b/ },
   { name: 'Antirrábica', pattern: /\banti\s*r*abic[ao]?\b|\braiva\b/ },
-  { name: 'Recombitek', pattern: /\brecombitek\b/ },
+  { name: 'Recombitek', pattern: /\brecombite[ck]\b/ },
   { name: 'Quadrupla', pattern: /\bquadrupla\b/ },
   { name: 'Quíntupla', pattern: /\bquintupla\b/ },
   { name: 'Giardia', pattern: /\bgiardia\b/ },
