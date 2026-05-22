@@ -65,3 +65,10 @@ export function nullableLimitedText(value: string | null | undefined, maxLength:
 	assertTextLimit(trimmed, maxLength);
 	return trimmed;
 }
+
+export function nullableMultilineText(value: string | null | undefined, maxLength: number): string | null {
+	const raw = value ?? '';
+	if (!raw.trim()) return null;
+	assertTextLimit(raw, maxLength);
+	return raw;
+}

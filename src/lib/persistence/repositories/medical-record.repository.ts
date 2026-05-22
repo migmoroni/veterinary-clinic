@@ -5,7 +5,7 @@ import type {
 	MedicalRecordInput
 } from '$lib/domain/medical-record/medical-record.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
-import { FIELD_LIMITS, nullableLimitedText } from '$lib/domain/shared/field-limits.js';
+import { FIELD_LIMITS, nullableLimitedText, nullableMultilineText } from '$lib/domain/shared/field-limits.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
 import { listOwnerAssociatedContactsByOwnerIds, listOwnersByPet } from './owner.repository.js';
@@ -196,7 +196,7 @@ export async function createMedicalRecord(petId: number, input: MedicalRecordInp
 	const result = await execute(
 		`INSERT INTO medical_records (pet_id, title, description, admitted_at, discharged_at, updated_at)
 		 VALUES ($1, $2, $3, COALESCE($4, CURRENT_DATE), $5, CURRENT_TIMESTAMP)`,
-		[petId, title, nullableLimitedText(input.description, FIELD_LIMITS.medicalRecordDescription), admittedAt, dischargedAt]
+		[petId, title, nullableMultilineText(input.description, FIELD_LIMITS.medicalRecordDescription), admittedAt, dischargedAt]
 	);
 
 	const id = Number(result.lastInsertId);
@@ -222,7 +222,7 @@ export async function updateMedicalRecord(id: number, input: MedicalRecordInput)
 			discharged_at = $5,
 			updated_at = CURRENT_TIMESTAMP
 		 WHERE id = $1 AND deleted_at IS NULL`,
-		[id, nullableLimitedText(input.title, FIELD_LIMITS.medicalRecordTitle) ?? fallbackTitle(id, null), nullableLimitedText(input.description, FIELD_LIMITS.medicalRecordDescription), admittedAt, dischargedAt]
+		[id, nullableLimitedText(input.title, FIELD_LIMITS.medicalRecordTitle) ?? fallbackTitle(id, null), nullableMultilineText(input.description, FIELD_LIMITS.medicalRecordDescription), admittedAt, dischargedAt]
 	);
 
 	const record = await getMedicalRecord(id);
