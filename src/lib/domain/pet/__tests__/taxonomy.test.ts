@@ -7,6 +7,8 @@ describe('pet taxonomy', () => {
 		expect(getPetBreedOptions('canine').some((option) => option.id === 'akita')).toBe(true);
 		expect(getPetBreedOptions('canine').some((option) => option.id === 'whippet')).toBe(true);
 		expect(getPetBreedOptions('canine').some((option) => option.id === 'west-highland-white-terrier')).toBe(true);
+		expect(getPetBreedOptions('canine').some((option) => option.id === 'brazilian-pit-monster')).toBe(true);
+		expect(getPetBreedOptions('canine').some((option) => option.id === 'gaucho-sheepdog')).toBe(true);
 		expect(getPetBreedOptions('feline').some((option) => option.id === 'siamese')).toBe(true);
 		expect(getPetBreedOptions('feline').some((option) => option.id === 'maine-coon')).toBe(true);
 		expect(getPetBreedOptions('feline').some((option) => option.id === 'somali')).toBe(true);
