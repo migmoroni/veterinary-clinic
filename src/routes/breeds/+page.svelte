@@ -309,31 +309,6 @@
 		<p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{t('breedReference.description')}</p>
 	</header>
 
-	<section class="grid gap-3 rounded-md border border-border bg-card p-4 shadow-sm sm:p-5 lg:grid-cols-[minmax(14rem,1.2fr)_minmax(10rem,0.7fr)_minmax(10rem,0.7fr)_minmax(12rem,0.9fr)]">
-		<label class="space-y-1">
-			<span class="text-sm font-medium">{t('breedReference.searchLabel')}</span>
-			<span class="relative block">
-				<Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-				<input class="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30" bind:value={searchTerm} placeholder={t('breedReference.searchPlaceholder')} />
-			</span>
-		</label>
-
-		<div class="space-y-1">
-			<label class="text-sm font-medium" for="breed-reference-species">{t('breedReference.speciesFilter')}</label>
-			<Select id="breed-reference-species" bind:value={speciesFilter} options={speciesOptions()} />
-		</div>
-
-		<div class="space-y-1">
-			<label class="text-sm font-medium" for="breed-reference-size">{t('breedReference.sizeFilter')}</label>
-			<Select id="breed-reference-size" bind:value={sizeFilter} options={sizeOptions()} />
-		</div>
-
-		<div class="space-y-1">
-			<label class="text-sm font-medium" for="breed-reference-origin">{t('breedReference.originFilter')}</label>
-			<Select id="breed-reference-origin" bind:value={originFilter} options={originOptions()} />
-		</div>
-	</section>
-
 	<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
 		<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 			<div class="min-w-0">
@@ -380,6 +355,31 @@
 					</button>
 				{/each}
 			</div>
+		</div>
+	</section>
+
+    <section class="grid gap-3 rounded-md border border-border bg-card p-4 shadow-sm sm:p-5 lg:grid-cols-[minmax(14rem,1.2fr)_minmax(10rem,0.7fr)_minmax(10rem,0.7fr)_minmax(12rem,0.9fr)]">
+		<label class="space-y-1">
+			<span class="text-sm font-medium">{t('breedReference.searchLabel')}</span>
+			<span class="relative block">
+				<Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+				<input class="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30" bind:value={searchTerm} placeholder={t('breedReference.searchPlaceholder')} />
+			</span>
+		</label>
+
+		<div class="space-y-1">
+			<label class="text-sm font-medium" for="breed-reference-species">{t('breedReference.speciesFilter')}</label>
+			<Select id="breed-reference-species" bind:value={speciesFilter} options={speciesOptions()} />
+		</div>
+
+		<div class="space-y-1">
+			<label class="text-sm font-medium" for="breed-reference-size">{t('breedReference.sizeFilter')}</label>
+			<Select id="breed-reference-size" bind:value={sizeFilter} options={sizeOptions()} />
+		</div>
+
+		<div class="space-y-1">
+			<label class="text-sm font-medium" for="breed-reference-origin">{t('breedReference.originFilter')}</label>
+			<Select id="breed-reference-origin" bind:value={originFilter} options={originOptions()} />
 		</div>
 	</section>
 
