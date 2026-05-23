@@ -1,0 +1,639 @@
+import type { TranslationKey } from '$lib/i18n/index.js';
+import { petBreedOptions, type KnownPetBreed, type PetBreedOption } from './taxonomy.js';
+
+export type BreedSizeCategory = 'small' | 'medium' | 'large' | 'giant';
+
+export interface BreedSexRange {
+	male: readonly [number, number];
+	female: readonly [number, number];
+}
+
+export interface BreedReferenceOrigin {
+	id: string;
+	labelKey?: TranslationKey;
+	countryCode?: string;
+	latitude: number | null;
+	longitude: number | null;
+}
+
+export interface BreedReferenceProfile {
+	option: PetBreedOption;
+	origin: BreedReferenceOrigin;
+	sizeCategory: BreedSizeCategory;
+	averageWeightKg: BreedSexRange;
+	averageHeightCm: BreedSexRange;
+}
+
+interface BreedReferenceMetrics {
+	sizeCategory: BreedSizeCategory;
+	weightKg: BreedSexRange;
+	heightCm: BreedSexRange;
+}
+
+const breedReferenceOrigins = {
+	varied: { id: 'varied', labelKey: 'breedReference.origin.varied', latitude: null, longitude: null },
+	europe: { id: 'europe', labelKey: 'breedReference.origin.europe', latitude: 50, longitude: 10 },
+	middleEast: { id: 'middle-east', labelKey: 'breedReference.origin.middleEast', latitude: 30, longitude: 40 },
+	centralAsia: { id: 'central-asia', labelKey: 'breedReference.origin.centralAsia', latitude: 43, longitude: 64 },
+	sahel: { id: 'sahel', labelKey: 'breedReference.origin.sahel', latitude: 15.6, longitude: -1.5 },
+	southernAfrica: { id: 'southern-africa', labelKey: 'breedReference.origin.southernAfrica', latitude: -22, longitude: 24 },
+	tibet: { id: 'tibet', labelKey: 'breedReference.origin.tibet', latitude: 31, longitude: 88 },
+	caucasus: { id: 'caucasus', labelKey: 'breedReference.origin.caucasus', latitude: 42, longitude: 45 },
+	tierraDelFuego: { id: 'tierra-del-fuego', labelKey: 'breedReference.origin.tierraDelFuego', latitude: -54.7, longitude: -68.1 },
+	england: { id: 'england', labelKey: 'breedReference.origin.england', latitude: 52.4, longitude: -1.5 },
+	scotland: { id: 'scotland', labelKey: 'breedReference.origin.scotland', latitude: 56.5, longitude: -4.2 },
+	wales: { id: 'wales', labelKey: 'breedReference.origin.wales', latitude: 52.2, longitude: -3.8 },
+	isleOfMan: { id: 'isle-of-man', labelKey: 'breedReference.origin.isleOfMan', latitude: 54.2, longitude: -4.5 },
+	br: { id: 'br', countryCode: 'BR', latitude: -14.2, longitude: -51.9 },
+	cn: { id: 'cn', countryCode: 'CN', latitude: 35.9, longitude: 104.2 },
+	fr: { id: 'fr', countryCode: 'FR', latitude: 46.2, longitude: 2.2 },
+	de: { id: 'de', countryCode: 'DE', latitude: 51.2, longitude: 10.5 },
+	ca: { id: 'ca', countryCode: 'CA', latitude: 56.1, longitude: -106.3 },
+	gl: { id: 'gl', countryCode: 'GL', latitude: 72, longitude: -40 },
+	us: { id: 'us', countryCode: 'US', latitude: 39.8, longitude: -98.6 },
+	au: { id: 'au', countryCode: 'AU', latitude: -25.3, longitude: 133.8 },
+	nz: { id: 'nz', countryCode: 'NZ', latitude: -40.9, longitude: 174.9 },
+	jp: { id: 'jp', countryCode: 'JP', latitude: 36.2, longitude: 138.3 },
+	ru: { id: 'ru', countryCode: 'RU', latitude: 61.5, longitude: 105.3 },
+	be: { id: 'be', countryCode: 'BE', latitude: 50.5, longitude: 4.5 },
+	it: { id: 'it', countryCode: 'IT', latitude: 41.9, longitude: 12.6 },
+	af: { id: 'af', countryCode: 'AF', latitude: 33.9, longitude: 67.7 },
+	cd: { id: 'cd', countryCode: 'CD', latitude: -4, longitude: 21.8 },
+	mg: { id: 'mg', countryCode: 'MG', latitude: -18.8, longitude: 46.9 },
+	ma: { id: 'ma', countryCode: 'MA', latitude: 31.8, longitude: -7.1 },
+	ar: { id: 'ar', countryCode: 'AR', latitude: -38.4, longitude: -63.6 },
+	ie: { id: 'ie', countryCode: 'IE', latitude: 53.4, longitude: -8.2 },
+	pt: { id: 'pt', countryCode: 'PT', latitude: 39.4, longitude: -8.2 },
+	ch: { id: 'ch', countryCode: 'CH', latitude: 46.8, longitude: 8.2 },
+	tr: { id: 'tr', countryCode: 'TR', latitude: 38.9, longitude: 35.2 },
+	za: { id: 'za', countryCode: 'ZA', latitude: -30.6, longitude: 22.9 },
+	nl: { id: 'nl', countryCode: 'NL', latitude: 52.1, longitude: 5.3 },
+	hu: { id: 'hu', countryCode: 'HU', latitude: 47.2, longitude: 19.5 },
+	zw: { id: 'zw', countryCode: 'ZW', latitude: -19, longitude: 29.2 },
+	mt: { id: 'mt', countryCode: 'MT', latitude: 35.9, longitude: 14.4 },
+	cu: { id: 'cu', countryCode: 'CU', latitude: 21.5, longitude: -78.9 },
+	hr: { id: 'hr', countryCode: 'HR', latitude: 45.1, longitude: 15.2 },
+	mx: { id: 'mx', countryCode: 'MX', latitude: 23.6, longitude: -102.6 },
+	es: { id: 'es', countryCode: 'ES', latitude: 40.5, longitude: -3.7 },
+	pe: { id: 'pe', countryCode: 'PE', latitude: -9.2, longitude: -75 },
+	cl: { id: 'cl', countryCode: 'CL', latitude: -35.7, longitude: -71.5 },
+	uy: { id: 'uy', countryCode: 'UY', latitude: -32.5, longitude: -55.8 },
+	ve: { id: 've', countryCode: 'VE', latitude: 6.4, longitude: -66.6 },
+	pr: { id: 'pr', countryCode: 'PR', latitude: 18.2, longitude: -66.6 },
+	bo: { id: 'bo', countryCode: 'BO', latitude: -16.3, longitude: -63.6 },
+	co: { id: 'co', countryCode: 'CO', latitude: 4.6, longitude: -74.1 },
+	ec: { id: 'ec', countryCode: 'EC', latitude: -1.8, longitude: -78.2 },
+	ir: { id: 'ir', countryCode: 'IR', latitude: 32.4, longitude: 53.7 },
+	il: { id: 'il', countryCode: 'IL', latitude: 31, longitude: 35 },
+	am: { id: 'am', countryCode: 'AM', latitude: 40.1, longitude: 45 },
+	ge: { id: 'ge', countryCode: 'GE', latitude: 42.3, longitude: 43.4 },
+	cy: { id: 'cy', countryCode: 'CY', latitude: 35.1, longitude: 33.4 },
+	in: { id: 'in', countryCode: 'IN', latitude: 20.6, longitude: 78.9 },
+	et: { id: 'et', countryCode: 'ET', latitude: 9.1, longitude: 40.5 },
+	mm: { id: 'mm', countryCode: 'MM', latitude: 21.9, longitude: 95.9 },
+	no: { id: 'no', countryCode: 'NO', latitude: 60.5, longitude: 8.5 },
+	eg: { id: 'eg', countryCode: 'EG', latitude: 26.8, longitude: 30.8 },
+	th: { id: 'th', countryCode: 'TH', latitude: 15.9, longitude: 100.9 },
+	tw: { id: 'tw', countryCode: 'TW', latitude: 23.7, longitude: 121 },
+	id: { id: 'id', countryCode: 'ID', latitude: -2.5, longitude: 118 },
+	vn: { id: 'vn', countryCode: 'VN', latitude: 14.1, longitude: 108.3 },
+	sg: { id: 'sg', countryCode: 'SG', latitude: 1.35, longitude: 103.8 },
+	fi: { id: 'fi', countryCode: 'FI', latitude: 61.9, longitude: 25.7 },
+	se: { id: 'se', countryCode: 'SE', latitude: 60.1, longitude: 18.6 },
+	kr: { id: 'kr', countryCode: 'KR', latitude: 36.5, longitude: 127.9 },
+	is: { id: 'is', countryCode: 'IS', latitude: 64.9, longitude: -19 },
+	gr: { id: 'gr', countryCode: 'GR', latitude: 39.1, longitude: 21.8 },
+	ua: { id: 'ua', countryCode: 'UA', latitude: 48.4, longitude: 31.2 },
+	ke: { id: 'ke', countryCode: 'KE', latitude: 0, longitude: 37.9 }
+} as const satisfies Record<string, BreedReferenceOrigin>;
+
+export type BreedReferenceOriginId = keyof typeof breedReferenceOrigins;
+
+const breedOriginGroups = {
+	varied: ['mixed-breed', 'feline-mixed-breed'],
+	br: ['brazilian-terrier', 'fila-brasileiro', 'brazilian-pit-monster', 'gaucho-sheepdog', 'dogo-brasileiro', 'campeiro-bulldog', 'rastreador-brasileiro', 'veadeiro-pampeano', 'pastor-da-mantiqueira', 'boca-preta-sertanejo', 'caramelo', 'original-fila-brasileiro', 'serrano-bulldog', 'boiadeiro-pantaneiro', 'brazilian-shorthair'],
+	cn: ['shih-tzu', 'chow-chow', 'pug', 'pekingese', 'shar-pei', 'chinese-crested', 'dragon-li'],
+	tibet: ['lhasa-apso', 'tibetan-spaniel', 'tibetan-terrier', 'tibetan-mastiff'],
+	fr: ['poodle', 'french-bulldog', 'basset-hound', 'bichon-frise', 'barbet', 'beauceron', 'briard', 'papillon', 'dogue-de-bordeaux', 'great-pyrenees', 'brittany', 'wirehaired-pointing-griffon', 'chartreux'],
+	de: ['pinscher', 'dachshund', 'rottweiler', 'german-shepherd', 'german-spitz', 'boxer', 'schnauzer', 'miniature-schnauzer', 'giant-schnauzer', 'doberman', 'great-dane', 'weimaraner', 'affenpinscher', 'leonberger', 'miniature-pinscher', 'pomeranian', 'german-shorthaired-pointer', 'german-wirehaired-pointer', 'biewer-terrier', 'german-rex'],
+	ca: ['labrador-retriever', 'newfoundland', 'nova-scotia-duck-tolling-retriever', 'canadian-eskimo-dog', 'sphynx', 'tonkinese', 'foldex'],
+	england: ['yorkshire-terrier', 'cocker-spaniel', 'english-bulldog', 'beagle', 'jack-russell-terrier', 'english-toy-spaniel', 'border-terrier', 'airedale-terrier', 'bedlington-terrier', 'lakeland-terrier', 'parson-russell-terrier', 'manchester-terrier', 'bull-terrier', 'bullmastiff', 'cavalier-king-charles-spaniel', 'english-setter', 'fox-terrier', 'greyhound', 'mastiff', 'pointer', 'whippet', 'clumber-spaniel', 'curly-coated-retriever', 'english-cocker-spaniel', 'english-springer-spaniel', 'field-spaniel', 'sussex-spaniel', 'flat-coated-retriever', 'norfolk-terrier', 'norwich-terrier', 'old-english-sheepdog', 'staffordshire-bull-terrier', 'british-shorthair', 'cornish-rex', 'devon-rex', 'oriental-shorthair', 'burmilla', 'havana-brown', 'asian-cat'],
+	scotland: ['border-collie', 'golden-retriever', 'collie', 'shetland-sheepdog', 'gordon-setter', 'cairn-terrier', 'dandie-dinmont-terrier', 'skye-terrier', 'scottish-terrier', 'west-highland-white-terrier', 'scottish-fold'],
+	wales: ['pembroke-welsh-corgi', 'cardigan-welsh-corgi', 'welsh-terrier', 'welsh-springer-spaniel'],
+	us: ['pit-bull', 'american-bully', 'american-foxhound', 'boston-terrier', 'australian-shepherd', 'alaskan-malamute', 'american-cocker-spaniel', 'english-shepherd', 'american-staffordshire-terrier', 'american-bulldog', 'olde-english-bulldogge', 'chesapeake-bay-retriever', 'catahoula-leopard-dog', 'carolina-dog', 'rat-terrier', 'toy-fox-terrier', 'american-eskimo-dog', 'miniature-american-shepherd', 'boykin-spaniel', 'american-water-spaniel', 'american-english-coonhound', 'american-hairless-terrier', 'american-leopard-hound', 'black-mouth-cur', 'blue-lacy', 'mountain-cur', 'mcnab', 'silken-windhound', 'teddy-roosevelt-terrier', 'treeing-tennessee-brindle', 'black-and-tan-coonhound', 'bluetick-coonhound', 'redbone-coonhound', 'treeing-walker-coonhound', 'plott-hound', 'chinook', 'alaskan-klee-kai', 'goldendoodle', 'cockapoo', 'cavapoo', 'bombay', 'ragamuffin', 'toyger', 'lykoi', 'serengeti', 'chausie', 'cheetoh', 'colorpoint-shorthair', 'minuet', 'minskin', 'highlander', 'york-chocolate', 'american-shorthair', 'american-bobtail', 'american-curl', 'american-wirehair', 'balinese', 'bengal', 'exotic-shorthair', 'himalayan', 'maine-coon', 'ragdoll', 'laperm', 'munchkin', 'nebelung', 'ocicat', 'pixie-bob', 'selkirk-rex', 'savannah', 'snowshoe', 'somali'],
+	au: ['australian-cattle-dog', 'australian-stumpy-tail-cattle-dog', 'australian-terrier', 'silky-terrier', 'tenterfield-terrier', 'australian-kelpie', 'labradoodle', 'australian-mist', 'russian-white-black-tabby'],
+	nz: ['huntaway'],
+	jp: ['akita', 'japanese-spitz', 'hokkaido', 'kai-ken', 'kishu', 'shikoku', 'tosa', 'japanese-terrier', 'japanese-chin', 'shiba-inu', 'japanese-bobtail'],
+	ru: ['siberian-husky', 'samoyed', 'borzoi', 'black-russian-terrier', 'yakutian-laika', 'russian-blue', 'peterbald', 'siberian-cat', 'donskoy', 'kurilian-bobtail', 'mekong-bobtail'],
+	be: ['belgian-shepherd', 'belgian-malinois', 'belgian-tervuren', 'belgian-groenendael', 'bouvier-des-flandres', 'schipperke', 'brussels-griffon', 'bloodhound'],
+	it: ['cane-corso', 'italian-greyhound', 'lagotto-romagnolo', 'bracco-italiano', 'spinone-italiano', 'neapolitan-mastiff', 'bolognese', 'maremma-sheepdog'],
+	af: ['afghan-hound'],
+	cd: ['basenji'],
+	mg: ['coton-de-tulear'],
+	ma: ['aidi', 'sloughi'],
+	sahel: ['azawakh'],
+	southernAfrica: ['africanis'],
+	ar: ['dogo-argentino', 'argentine-pila-dog', 'argentine-polar-dog', 'perro-pampa-argentino'],
+	ie: ['irish-setter', 'irish-wolfhound', 'irish-terrier', 'soft-coated-wheaten-terrier', 'kerry-blue-terrier', 'irish-water-spaniel'],
+	pt: ['portuguese-water-dog', 'portuguese-podengo'],
+	ch: ['bernese-mountain-dog', 'saint-bernard', 'appenzeller-sennenhund'],
+	tr: ['anatolian-shepherd-dog', 'kangal-shepherd-dog', 'akbash', 'aksaray-malaklisi', 'kars-dog', 'zerdava', 'tarsus-catalburun', 'angora', 'turkish-van'],
+	za: ['boerboel'],
+	nl: ['keeshond', 'dutch-shepherd'],
+	hu: ['komondor', 'kuvasz', 'vizsla', 'puli', 'pumi'],
+	zw: ['rhodesian-ridgeback'],
+	cu: ['havanese'],
+	hr: ['dalmatian'],
+	mx: ['chihuahua', 'xoloitzcuintli', 'calupoh'],
+	gl: ['greenland-dog'],
+	es: ['presa-canario', 'spanish-water-dog', 'ibizan-hound'],
+	pe: ['peruvian-inca-orchid', 'chiribaya-dog'],
+	cl: ['chilean-terrier', 'patagonian-sheepdog'],
+	uy: ['cimarron-uruguayo'],
+	ve: ['mucuchies'],
+	pr: ['gran-mastin-de-borinquen'],
+	bo: ['khala', 'double-nosed-andean-tiger-hound'],
+	co: ['colombian-fino-hound'],
+	ec: ['ecuadorian-hairless-dog'],
+	tierraDelFuego: ['fuegian-dog'],
+	ir: ['sarabi-dog', 'persian'],
+	il: ['canaan-dog'],
+	am: ['armenian-gampr'],
+	ge: ['georgian-shepherd'],
+	cy: ['aphrodite'],
+	in: ['indian-spitz', 'mudhol-hound', 'rajapalayam', 'chippiparai', 'kombai', 'rampur-greyhound'],
+	et: ['abyssinian'],
+	mm: ['burmese', 'sacred-birman'],
+	no: ['norwegian-elkhound', 'norwegian-forest-cat'],
+	eg: ['armant', 'egyptian-mau'],
+	th: ['siamese', 'korat', 'khao-manee', 'thai-cat', 'suphalak', 'thai-ridgeback', 'thai-bangkaew-dog'],
+	tw: ['taiwan-dog'],
+	id: ['kintamani-bali-dog', 'raas-cat'],
+	vn: ['phu-quoc-ridgeback'],
+	sg: ['singapura'],
+	europe: ['european-shorthair'],
+	middleEast: ['saluki', 'arabian-mau'],
+	centralAsia: ['central-asian-shepherd-dog'],
+	caucasus: ['caucasian-shepherd-dog'],
+	isleOfMan: ['manx', 'cymric'],
+	mt: ['maltese', 'pharaoh-hound'],
+	fi: ['finnish-spitz', 'finnish-lapphund'],
+	se: ['swedish-vallhund'],
+	kr: ['jindo', 'sapsali'],
+	is: ['icelandic-sheepdog'],
+	gr: ['aegean'],
+	ua: ['ukrainian-levkoy'],
+	ke: ['sokoke']
+} as const satisfies Partial<Record<BreedReferenceOriginId, readonly KnownPetBreed[]>>;
+
+const breedMetricsById = {
+	'mixed-breed': metric('medium', [8, 25], [6, 22], [35, 55], [33, 52]),
+	'shih-tzu': metric('small', [4, 8], [4, 7.5], [22, 28], [20, 27]),
+	poodle: metric('medium', [3, 32], [3, 28], [24, 60], [24, 56]),
+	pinscher: metric('small', [3.5, 6], [3.5, 5.5], [25, 30], [25, 29]),
+	'pit-bull': metric('medium', [16, 30], [14, 27], [45, 53], [43, 50]),
+	'lhasa-apso': metric('small', [6, 8], [5, 7], [25, 28], [23, 27]),
+	dachshund: metric('small', [5, 14], [4, 12], [20, 27], [18, 25]),
+	rottweiler: metric('large', [50, 60], [35, 48], [61, 69], [56, 63]),
+	'labrador-retriever': metric('large', [29, 36], [25, 32], [57, 62], [54, 60]),
+	'yorkshire-terrier': metric('small', [2, 3.5], [2, 3.2], [18, 23], [18, 22]),
+	'german-shepherd': metric('large', [30, 40], [22, 32], [60, 65], [55, 60]),
+	'chow-chow': metric('medium', [22, 32], [18, 27], [48, 56], [46, 51]),
+	pug: metric('small', [6.3, 8.5], [6, 8], [28, 33], [25, 30]),
+	maltese: metric('small', [3, 4], [3, 4], [21, 25], [20, 23]),
+	'border-collie': metric('medium', [14, 20], [12, 19], [48, 56], [46, 53]),
+	'golden-retriever': metric('large', [29, 34], [25, 29], [56, 61], [51, 56]),
+	'australian-cattle-dog': metric('medium', [16, 22], [14, 20], [46, 51], [43, 48]),
+	'australian-stumpy-tail-cattle-dog': metric('medium', [16, 23], [14, 20], [46, 51], [43, 48]),
+	boxer: metric('large', [27, 32], [25, 29], [57, 63], [53, 59]),
+	'brazilian-terrier': metric('small', [8, 10], [7, 9], [35, 40], [33, 38]),
+	'cocker-spaniel': metric('medium', [13, 16], [12, 15], [38, 43], [36, 41]),
+	'german-spitz': metric('small', [5, 11], [4, 10], [23, 35], [22, 34]),
+	pekingese: metric('small', [3.5, 6.5], [3.2, 6], [15, 23], [15, 22]),
+	'fila-brasileiro': metric('giant', [50, 82], [40, 70], [65, 75], [60, 70]),
+	'american-bully': metric('large', [30, 50], [25, 45], [43, 51], [40, 48]),
+	'french-bulldog': metric('small', [9, 14], [8, 13], [28, 35], [27, 34]),
+	'american-foxhound': metric('large', [29, 34], [25, 32], [56, 64], [53, 61]),
+	'siberian-husky': metric('medium', [20, 27], [16, 23], [53, 60], [51, 56]),
+	'shar-pei': metric('medium', [20, 29], [18, 25], [46, 51], [44, 49]),
+	beagle: metric('medium', [10, 14], [9, 13], [36, 41], [33, 38]),
+	dalmatian: metric('large', [27, 32], [24, 29], [58, 61], [56, 58]),
+	schnauzer: metric('medium', [15, 20], [14, 18], [47, 50], [45, 48]),
+	'belgian-shepherd': metric('large', [25, 30], [20, 25], [60, 66], [56, 62]),
+	'english-bulldog': metric('medium', [23, 25], [18, 23], [31, 40], [30, 38]),
+	akita: metric('large', [38, 59], [32, 45], [64, 71], [58, 66]),
+	'australian-shepherd': metric('medium', [23, 32], [18, 25], [51, 58], [46, 53]),
+	'basset-hound': metric('medium', [23, 29], [18, 25], [30, 38], [28, 36]),
+	'bernese-mountain-dog': metric('giant', [38, 52], [32, 43], [64, 70], [58, 66]),
+	'boston-terrier': metric('small', [6, 11], [5, 10], [38, 43], [36, 41]),
+	'cane-corso': metric('large', [45, 50], [40, 45], [64, 68], [60, 64]),
+	chihuahua: metric('small', [1.8, 3], [1.5, 2.8], [16, 23], [15, 21]),
+	doberman: metric('large', [40, 45], [32, 35], [68, 72], [63, 68]),
+	'great-dane': metric('giant', [54, 90], [45, 59], [76, 86], [71, 81]),
+	'jack-russell-terrier': metric('small', [6, 8], [5, 7], [25, 30], [23, 29]),
+	samoyed: metric('medium', [20, 30], [16, 23], [54, 60], [48, 53]),
+	weimaraner: metric('large', [30, 40], [25, 35], [62, 70], [57, 65]),
+	affenpinscher: metric('small', [3, 6], [3, 5], [25, 30], [23, 28]),
+	'afghan-hound': metric('large', [27, 34], [23, 30], [68, 74], [63, 69]),
+	africanis: metric('medium', [20, 30], [18, 27], [52, 62], [50, 58]),
+	aidi: metric('medium', [23, 28], [20, 26], [55, 62], [52, 58]),
+	'airedale-terrier': metric('large', [23, 29], [18, 25], [58, 61], [56, 59]),
+	basenji: metric('medium', [10, 12], [9, 11], [41, 43], [38, 41]),
+	'bichon-frise': metric('small', [5, 8], [4.5, 7], [25, 30], [23, 28]),
+	bloodhound: metric('giant', [41, 54], [36, 45], [63, 69], [58, 63]),
+	borzoi: metric('giant', [34, 48], [27, 41], [75, 85], [66, 78]),
+	'bull-terrier': metric('medium', [22, 35], [20, 30], [48, 56], [45, 53]),
+	bullmastiff: metric('giant', [50, 59], [41, 50], [64, 69], [61, 66]),
+	'cavalier-king-charles-spaniel': metric('small', [5.5, 8.2], [5.4, 7.8], [30, 33], [29, 32]),
+	collie: metric('large', [27, 34], [23, 29], [61, 66], [56, 61]),
+	'coton-de-tulear': metric('small', [4, 6], [3.5, 5], [26, 30], [23, 28]),
+	'dogo-argentino': metric('large', [40, 45], [35, 40], [62, 68], [60, 65]),
+	'dogue-de-bordeaux': metric('giant', [50, 68], [45, 57], [60, 68], [58, 66]),
+	'english-setter': metric('large', [25, 36], [20, 30], [63, 69], [58, 64]),
+	'fox-terrier': metric('small', [7, 9], [6.5, 8], [36, 39], [33, 36]),
+	greyhound: metric('large', [29, 40], [27, 34], [71, 76], [68, 71]),
+	havanese: metric('small', [4.5, 7.5], [4, 7], [23, 29], [23, 28]),
+	'irish-setter': metric('large', [29, 32], [25, 29], [64, 67], [55, 62]),
+	'italian-greyhound': metric('small', [3.5, 5], [3.5, 5], [33, 38], [32, 37]),
+	'japanese-spitz': metric('small', [6, 11], [5, 10], [30, 38], [28, 36]),
+	hokkaido: metric('medium', [20, 25], [17, 22], [48, 52], [45, 49]),
+	'kai-ken': metric('medium', [16, 25], [14, 20], [46, 56], [43, 51]),
+	kishu: metric('medium', [18, 27], [14, 23], [49, 55], [43, 49]),
+	shikoku: metric('medium', [16, 25], [14, 20], [49, 55], [46, 52]),
+	tosa: metric('giant', [45, 90], [36, 61], [62, 82], [55, 72]),
+	'japanese-terrier': metric('small', [2.3, 4], [2, 3.5], [30, 33], [28, 32]),
+	mastiff: metric('giant', [70, 100], [54, 82], [76, 91], [70, 86]),
+	papillon: metric('small', [2.5, 5], [2.5, 4.5], [20, 28], [20, 27]),
+	'pembroke-welsh-corgi': metric('small', [10, 14], [9, 12], [25, 31], [25, 30]),
+	pointer: metric('large', [25, 34], [20, 30], [58, 70], [53, 66]),
+	'portuguese-water-dog': metric('medium', [19, 27], [16, 23], [50, 57], [43, 52]),
+	'saint-bernard': metric('giant', [64, 82], [54, 64], [70, 90], [65, 80]),
+	'shetland-sheepdog': metric('small', [7, 12], [6, 10], [35, 41], [33, 39]),
+	'shiba-inu': metric('small', [9, 11], [8, 10], [38, 41], [35, 38]),
+	whippet: metric('medium', [12, 19], [9, 16], [47, 56], [44, 53]),
+	'alaskan-malamute': metric('large', [34, 45], [30, 38], [61, 64], [56, 59]),
+	'anatolian-shepherd-dog': metric('giant', [50, 68], [40, 55], [74, 81], [71, 79]),
+	armant: metric('medium', [23, 30], [20, 27], [50, 60], [45, 55]),
+	azawakh: metric('large', [20, 25], [15, 20], [64, 74], [60, 70]),
+	barbet: metric('medium', [18, 28], [14, 23], [58, 65], [53, 61]),
+	beauceron: metric('large', [35, 45], [30, 40], [65, 70], [61, 68]),
+	'belgian-malinois': metric('large', [25, 30], [20, 25], [60, 66], [56, 62]),
+	'biewer-terrier': metric('small', [2, 4], [2, 3.8], [18, 28], [18, 26]),
+	'black-russian-terrier': metric('giant', [50, 68], [36, 59], [72, 76], [68, 72]),
+	boerboel: metric('giant', [60, 90], [50, 75], [60, 70], [55, 65]),
+	briard: metric('large', [30, 41], [23, 34], [62, 69], [56, 64]),
+	'brussels-griffon': metric('small', [3, 5.5], [3, 5], [18, 28], [18, 26]),
+	'cardigan-welsh-corgi': metric('small', [14, 17], [11, 15], [27, 33], [25, 31]),
+	'chesapeake-bay-retriever': metric('large', [30, 36], [25, 32], [58, 66], [53, 61]),
+	'chinese-crested': metric('small', [2.5, 5.5], [2.3, 5], [28, 33], [23, 30]),
+	'clumber-spaniel': metric('large', [32, 39], [25, 32], [46, 51], [43, 48]),
+	'curly-coated-retriever': metric('large', [32, 43], [27, 36], [64, 69], [58, 64]),
+	'english-cocker-spaniel': metric('medium', [13, 16], [12, 15], [39, 43], [38, 41]),
+	'english-springer-spaniel': metric('medium', [20, 25], [18, 23], [48, 56], [46, 53]),
+	'flat-coated-retriever': metric('large', [27, 36], [25, 32], [59, 61], [56, 59]),
+	'gordon-setter': metric('large', [27, 36], [20, 32], [61, 69], [58, 66]),
+	'irish-wolfhound': metric('giant', [54, 82], [48, 68], [81, 90], [76, 86]),
+	keeshond: metric('medium', [16, 18], [14, 16], [44, 46], [43, 45]),
+	komondor: metric('giant', [45, 61], [36, 50], [71, 76], [64, 69]),
+	kuvasz: metric('giant', [45, 52], [32, 41], [71, 76], [66, 70]),
+	leonberger: metric('giant', [50, 77], [45, 61], [72, 80], [65, 75]),
+	'miniature-pinscher': metric('small', [4, 5], [3.5, 4.5], [25, 32], [25, 30]),
+	newfoundland: metric('giant', [60, 68], [45, 55], [69, 74], [63, 69]),
+	'norfolk-terrier': metric('small', [5, 6], [5, 5.8], [23, 25], [22, 24]),
+	'norwich-terrier': metric('small', [5, 6], [5, 5.8], [24, 26], [23, 25]),
+	'old-english-sheepdog': metric('large', [32, 45], [27, 36], [56, 61], [51, 56]),
+	pomeranian: metric('small', [1.8, 3.5], [1.8, 3.2], [18, 24], [18, 23]),
+	'rhodesian-ridgeback': metric('large', [36, 41], [29, 34], [63, 69], [61, 66]),
+	saluki: metric('large', [20, 27], [18, 23], [58, 71], [56, 66]),
+	sloughi: metric('large', [23, 30], [18, 25], [66, 72], [61, 68]),
+	'scottish-terrier': metric('small', [8.5, 10.5], [8, 9.5], [25, 28], [24, 27]),
+	'staffordshire-bull-terrier': metric('medium', [13, 17], [11, 15], [36, 41], [33, 38]),
+	'west-highland-white-terrier': metric('small', [7, 10], [6, 9], [26, 28], [25, 27]),
+	'brazilian-pit-monster': metric('giant', [45, 60], [40, 55], [55, 65], [50, 60]),
+	'gaucho-sheepdog': metric('large', [24, 35], [20, 30], [58, 65], [55, 62]),
+	'dogo-brasileiro': metric('large', [32, 43], [23, 35], [54, 60], [50, 58]),
+	'campeiro-bulldog': metric('large', [36, 45], [31, 40], [50, 58], [48, 56]),
+	'rastreador-brasileiro': metric('large', [26, 33], [21, 28], [60, 67], [56, 63]),
+	'veadeiro-pampeano': metric('large', [23, 30], [20, 27], [52, 59], [47, 55]),
+	'pastor-da-mantiqueira': metric('large', [25, 35], [20, 30], [55, 65], [50, 60]),
+	'american-staffordshire-terrier': metric('medium', [25, 32], [18, 25], [46, 48], [43, 46]),
+	'american-bulldog': metric('large', [34, 54], [27, 41], [56, 71], [50, 64]),
+	'olde-english-bulldogge': metric('medium', [27, 36], [23, 32], [46, 51], [43, 48]),
+	'presa-canario': metric('giant', [50, 65], [40, 55], [60, 66], [56, 62]),
+	'catahoula-leopard-dog': metric('large', [25, 43], [22, 36], [56, 66], [51, 61]),
+	'carolina-dog': metric('medium', [15, 20], [14, 18], [47, 50], [45, 49]),
+	'rat-terrier': metric('small', [5, 11], [4.5, 9], [25, 46], [25, 41]),
+	'toy-fox-terrier': metric('small', [1.5, 3.5], [1.5, 3.2], [22, 29], [21, 28]),
+	'american-eskimo-dog': metric('medium', [8, 16], [7, 14], [38, 48], [35, 46]),
+	'miniature-american-shepherd': metric('medium', [11, 18], [9, 16], [36, 46], [33, 43]),
+	'boykin-spaniel': metric('medium', [14, 18], [11, 16], [39, 46], [36, 42]),
+	'american-water-spaniel': metric('medium', [14, 20], [11, 18], [38, 46], [36, 43]),
+	'american-english-coonhound': metric('large', [20, 29], [20, 29], [61, 66], [58, 64]),
+	'american-hairless-terrier': metric('small', [5.5, 13], [5.5, 12.5], [30, 41], [30, 41]),
+	'american-leopard-hound': metric('large', [20, 34], [16, 29], [56, 69], [53, 64]),
+	'black-mouth-cur': metric('large', [18, 45], [16, 40], [46, 64], [41, 60]),
+	'blue-lacy': metric('medium', [16, 25], [11, 20], [46, 56], [43, 53]),
+	'mountain-cur': metric('medium', [14, 27], [14, 25], [46, 66], [41, 61]),
+	mcnab: metric('medium', [16, 29], [14, 23], [46, 64], [41, 53]),
+	'silken-windhound': metric('medium', [12, 25], [10, 22], [47, 60], [47, 60]),
+	'teddy-roosevelt-terrier': metric('small', [4, 11], [3.5, 10], [20, 36], [20, 36]),
+	'treeing-tennessee-brindle': metric('medium', [16, 23], [14, 18], [46, 61], [41, 56]),
+	'black-and-tan-coonhound': metric('large', [32, 50], [29, 41], [63, 69], [58, 64]),
+	'bluetick-coonhound': metric('large', [25, 36], [20, 29], [56, 69], [53, 64]),
+	'redbone-coonhound': metric('large', [23, 32], [20, 29], [56, 69], [53, 64]),
+	'treeing-walker-coonhound': metric('large', [25, 32], [23, 29], [56, 69], [51, 64]),
+	'plott-hound': metric('large', [23, 27], [18, 25], [51, 64], [51, 58]),
+	'nova-scotia-duck-tolling-retriever': metric('medium', [20, 23], [17, 20], [48, 53], [45, 50]),
+	'canadian-eskimo-dog': metric('large', [30, 40], [18, 30], [58, 70], [50, 60]),
+	'greenland-dog': metric('large', [30, 35], [25, 30], [60, 68], [55, 62]),
+	chinook: metric('large', [27, 41], [23, 32], [61, 69], [53, 61]),
+	xoloitzcuintli: metric('medium', [10, 25], [8, 22], [36, 60], [35, 58]),
+	calupoh: metric('large', [30, 45], [25, 40], [62, 75], [58, 70]),
+	'peruvian-inca-orchid': metric('medium', [8, 25], [7, 22], [40, 65], [38, 60]),
+	'chilean-terrier': metric('small', [6, 8], [5, 7], [32, 38], [28, 35]),
+	'cimarron-uruguayo': metric('large', [38, 45], [33, 40], [58, 61], [55, 58]),
+	mucuchies: metric('large', [35, 50], [30, 45], [60, 71], [56, 66]),
+	'gran-mastin-de-borinquen': metric('giant', [50, 68], [45, 60], [66, 71], [61, 66]),
+	'argentine-pila-dog': metric('medium', [8, 25], [7, 22], [35, 55], [33, 52]),
+	'boca-preta-sertanejo': metric('medium', [18, 28], [16, 25], [45, 58], [42, 55]),
+	caramelo: metric('medium', [10, 25], [8, 22], [35, 55], [33, 52]),
+	'original-fila-brasileiro': metric('giant', [45, 70], [38, 60], [60, 75], [58, 70]),
+	'serrano-bulldog': metric('large', [28, 40], [25, 35], [48, 58], [45, 55]),
+	'boiadeiro-pantaneiro': metric('large', [25, 36], [22, 32], [52, 62], [48, 58]),
+	'argentine-polar-dog': metric('giant', [45, 60], [35, 50], [58, 70], [55, 65]),
+	'fuegian-dog': metric('medium', [8, 14], [7, 12], [35, 45], [33, 42]),
+	'patagonian-sheepdog': metric('medium', [18, 30], [16, 26], [45, 60], [42, 56]),
+	'chiribaya-dog': metric('medium', [10, 18], [8, 16], [35, 45], [33, 43]),
+	'colombian-fino-hound': metric('medium', [15, 25], [13, 22], [43, 55], [40, 52]),
+	'ecuadorian-hairless-dog': metric('medium', [8, 16], [7, 14], [35, 45], [33, 43]),
+	khala: metric('medium', [8, 25], [7, 22], [36, 53], [34, 50]),
+	'perro-pampa-argentino': metric('large', [30, 45], [25, 38], [55, 65], [52, 60]),
+	'double-nosed-andean-tiger-hound': metric('medium', [18, 30], [16, 26], [45, 55], [42, 52]),
+	'alaskan-klee-kai': metric('small', [4, 10], [4, 9], [33, 43], [33, 40]),
+	'dutch-shepherd': metric('large', [26, 32], [23, 29], [57, 62], [55, 60]),
+	'great-pyrenees': metric('giant', [45, 59], [39, 52], [70, 82], [65, 75]),
+	'german-shorthaired-pointer': metric('large', [25, 32], [20, 27], [58, 64], [53, 59]),
+	vizsla: metric('large', [23, 30], [20, 25], [58, 64], [53, 60]),
+	brittany: metric('medium', [15, 20], [14, 18], [47, 52], [44, 50]),
+	'german-wirehaired-pointer': metric('large', [25, 34], [20, 29], [61, 68], [57, 64]),
+	'wirehaired-pointing-griffon': metric('medium', [23, 32], [16, 23], [56, 61], [51, 56]),
+	'tibetan-mastiff': metric('giant', [45, 72], [34, 54], [66, 76], [61, 71]),
+	'maremma-sheepdog': metric('large', [35, 45], [30, 40], [65, 73], [60, 68]),
+	'caucasian-shepherd-dog': metric('giant', [50, 100], [45, 80], [68, 75], [64, 70]),
+	'kangal-shepherd-dog': metric('giant', [50, 66], [40, 55], [72, 78], [65, 73]),
+	akbash: metric('giant', [41, 64], [34, 50], [71, 86], [69, 81]),
+	'aksaray-malaklisi': metric('giant', [65, 85], [55, 75], [75, 85], [70, 80]),
+	'kars-dog': metric('giant', [45, 60], [35, 50], [70, 76], [66, 72]),
+	'armenian-gampr': metric('giant', [50, 70], [40, 60], [65, 75], [60, 70]),
+	'georgian-shepherd': metric('giant', [55, 70], [45, 60], [65, 72], [60, 67]),
+	'sarabi-dog': metric('giant', [60, 90], [50, 75], [75, 90], [70, 82]),
+	zerdava: metric('medium', [14, 20], [12, 18], [45, 52], [42, 49]),
+	'tarsus-catalburun': metric('medium', [20, 25], [18, 23], [48, 50], [46, 49]),
+	labradoodle: metric('medium', [12, 30], [10, 27], [43, 63], [40, 58]),
+	goldendoodle: metric('large', [15, 40], [14, 34], [45, 66], [43, 61]),
+	cockapoo: metric('small', [6, 11], [5, 10], [28, 38], [25, 35]),
+	cavapoo: metric('small', [5, 11], [5, 10], [25, 35], [23, 33]),
+	'miniature-schnauzer': metric('small', [5, 9], [5, 8], [33, 36], [30, 34]),
+	'giant-schnauzer': metric('giant', [34, 48], [27, 38], [65, 70], [60, 65]),
+	'english-toy-spaniel': metric('small', [3.6, 6.4], [3.6, 6], [23, 28], [22, 27]),
+	'japanese-chin': metric('small', [1.8, 5], [1.8, 4.5], [20, 27], [20, 25]),
+	'tibetan-spaniel': metric('small', [4, 7], [4, 6.5], [24, 26], [23, 25]),
+	'tibetan-terrier': metric('medium', [9, 14], [8, 13], [38, 41], [35, 39]),
+	'border-terrier': metric('small', [5.9, 7.1], [5.1, 6.4], [33, 40], [30, 36]),
+	'cairn-terrier': metric('small', [6, 7.5], [5.5, 7], [25, 33], [23, 30]),
+	'australian-terrier': metric('small', [6, 7], [5.5, 6.5], [25, 28], [23, 26]),
+	'silky-terrier': metric('small', [3.5, 5], [3, 4.5], [23, 26], [21, 25]),
+	'tenterfield-terrier': metric('small', [4, 6], [3.5, 5.5], [25, 30], [24, 29]),
+	'bedlington-terrier': metric('medium', [8, 10], [7, 9], [41, 44], [38, 42]),
+	'lakeland-terrier': metric('small', [7, 8], [6.5, 7.5], [34, 37], [32, 35]),
+	'welsh-terrier': metric('small', [9, 10], [8, 9], [38, 39], [36, 38]),
+	'dandie-dinmont-terrier': metric('small', [8, 11], [8, 10], [20, 28], [20, 26]),
+	'skye-terrier': metric('small', [16, 18], [12, 16], [24, 26], [23, 25]),
+	'parson-russell-terrier': metric('small', [6, 8], [5.5, 7.5], [33, 36], [31, 34]),
+	'manchester-terrier': metric('small', [5.5, 10], [5, 8], [38, 41], [35, 39]),
+	'irish-terrier': metric('medium', [12, 13], [11, 12], [45, 48], [43, 46]),
+	'soft-coated-wheaten-terrier': metric('medium', [16, 20], [14, 18], [46, 49], [43, 46]),
+	'kerry-blue-terrier': metric('medium', [15, 18], [13, 16], [46, 49], [44, 48]),
+	'irish-water-spaniel': metric('large', [25, 30], [20, 26], [56, 61], [53, 58]),
+	'welsh-springer-spaniel': metric('medium', [18, 25], [16, 23], [46, 48], [43, 46]),
+	'field-spaniel': metric('medium', [18, 25], [16, 23], [43, 46], [41, 44]),
+	'sussex-spaniel': metric('medium', [16, 23], [15, 22], [33, 38], [33, 37]),
+	'american-cocker-spaniel': metric('medium', [11, 14], [9, 13], [37, 39], [34, 37]),
+	'bouvier-des-flandres': metric('large', [35, 54], [27, 45], [62, 68], [59, 65]),
+	schipperke: metric('small', [5, 8], [4, 7], [28, 33], [25, 31]),
+	'belgian-tervuren': metric('large', [25, 30], [20, 25], [60, 66], [56, 62]),
+	'belgian-groenendael': metric('large', [25, 30], [20, 25], [60, 66], [56, 62]),
+	'australian-kelpie': metric('medium', [14, 21], [12, 19], [46, 51], [43, 48]),
+	huntaway: metric('large', [30, 45], [25, 38], [58, 66], [56, 64]),
+	'english-shepherd': metric('medium', [20, 27], [18, 25], [48, 58], [46, 56]),
+	puli: metric('medium', [13, 15], [10, 13], [41, 43], [38, 41]),
+	pumi: metric('medium', [10, 13], [8, 11], [41, 47], [38, 44]),
+	'spanish-water-dog': metric('medium', [18, 22], [14, 18], [44, 50], [40, 46]),
+	'portuguese-podengo': metric('medium', [4, 30], [4, 25], [20, 70], [20, 65]),
+	'ibizan-hound': metric('large', [23, 29], [20, 25], [66, 72], [60, 67]),
+	'pharaoh-hound': metric('large', [23, 25], [20, 23], [56, 63], [53, 61]),
+	'lagotto-romagnolo': metric('medium', [13, 16], [11, 14], [43, 48], [41, 46]),
+	'bracco-italiano': metric('large', [25, 40], [25, 34], [58, 67], [55, 62]),
+	'spinone-italiano': metric('large', [34, 39], [29, 34], [60, 70], [58, 65]),
+	'neapolitan-mastiff': metric('giant', [60, 70], [50, 60], [65, 75], [60, 68]),
+	bolognese: metric('small', [2.5, 4], [2.5, 3.5], [27, 30], [25, 28]),
+	jindo: metric('medium', [18, 23], [15, 19], [50, 55], [45, 50]),
+	'thai-ridgeback': metric('large', [23, 34], [20, 30], [56, 61], [51, 56]),
+	'canaan-dog': metric('medium', [18, 25], [15, 22], [50, 60], [45, 55]),
+	'central-asian-shepherd-dog': metric('giant', [50, 79], [40, 65], [70, 78], [65, 73]),
+	'yakutian-laika': metric('large', [23, 30], [18, 25], [55, 59], [53, 57]),
+	sapsali: metric('medium', [20, 29], [18, 25], [49, 53], [47, 51]),
+	'taiwan-dog': metric('medium', [14, 18], [12, 16], [48, 52], [43, 47]),
+	'thai-bangkaew-dog': metric('medium', [16, 20], [14, 18], [46, 55], [41, 50]),
+	'kintamani-bali-dog': metric('medium', [15, 18], [13, 16], [49, 57], [44, 52]),
+	'phu-quoc-ridgeback': metric('medium', [18, 25], [15, 22], [50, 55], [48, 52]),
+	'indian-spitz': metric('small', [6, 12], [5, 10], [35, 45], [33, 43]),
+	'mudhol-hound': metric('large', [22, 28], [18, 25], [68, 72], [64, 68]),
+	rajapalayam: metric('large', [25, 30], [22, 28], [65, 75], [60, 70]),
+	chippiparai: metric('large', [20, 28], [16, 24], [60, 66], [55, 62]),
+	kombai: metric('medium', [20, 30], [16, 25], [50, 60], [45, 55]),
+	'rampur-greyhound': metric('large', [27, 30], [22, 28], [64, 75], [60, 70]),
+	'finnish-spitz': metric('medium', [12, 15], [7, 10], [44, 50], [39, 45]),
+	'finnish-lapphund': metric('medium', [15, 24], [13, 20], [46, 52], [41, 47]),
+	'norwegian-elkhound': metric('medium', [22, 25], [18, 22], [50, 52], [47, 50]),
+	'swedish-vallhund': metric('small', [11, 16], [9, 14], [32, 35], [30, 33]),
+	'icelandic-sheepdog': metric('medium', [11, 14], [9, 12], [42, 46], [38, 42]),
+	'appenzeller-sennenhund': metric('large', [25, 32], [22, 29], [52, 56], [50, 54]),
+	'feline-mixed-breed': metric('medium', [4, 6.5], [3, 5.5], [23, 28], [21, 27]),
+	siamese: metric('medium', [4, 6], [3, 5], [22, 26], [20, 24]),
+	persian: metric('medium', [4, 6.5], [3, 5.5], [23, 28], [21, 27]),
+	abyssinian: metric('medium', [4, 5.5], [3, 4.5], [22, 26], [20, 24]),
+	angora: metric('medium', [4, 6], [3, 5], [23, 28], [21, 26]),
+	bengal: metric('large', [5, 7.5], [4, 6], [26, 32], [24, 30]),
+	'brazilian-shorthair': metric('medium', [4, 6], [3, 5], [23, 28], [21, 27]),
+	'british-shorthair': metric('large', [5, 8], [4, 6], [25, 33], [24, 30]),
+	burmese: metric('medium', [4, 6], [3, 5], [22, 27], [20, 25]),
+	'exotic-shorthair': metric('medium', [4, 6.5], [3, 5.5], [23, 28], [21, 27]),
+	himalayan: metric('medium', [4, 6.5], [3, 5.5], [23, 28], [21, 27]),
+	'maine-coon': metric('giant', [6, 11], [4, 7], [30, 40], [28, 36]),
+	ragdoll: metric('giant', [6, 9], [4.5, 7], [28, 35], [26, 33]),
+	'russian-blue': metric('medium', [4, 6], [3, 5], [23, 28], [21, 27]),
+	'russian-white-black-tabby': metric('medium', [4, 6], [3, 5], [23, 28], [21, 27]),
+	'sacred-birman': metric('medium', [4, 6.5], [3, 5], [23, 30], [21, 28]),
+	'scottish-fold': metric('medium', [4, 6], [2.7, 4.5], [22, 28], [20, 26]),
+	sphynx: metric('medium', [3.5, 6], [3, 5], [22, 26], [20, 25]),
+	'american-shorthair': metric('medium', [5, 7], [3.5, 5.5], [25, 30], [23, 28]),
+	'american-bobtail': metric('large', [5, 7.5], [3.5, 5.5], [24, 32], [22, 29]),
+	'american-curl': metric('medium', [3.2, 4.5], [2.3, 3.6], [22, 26], [20, 24]),
+	'american-wirehair': metric('medium', [4, 7], [3, 5.5], [23, 30], [21, 28]),
+	balinese: metric('medium', [3.5, 5.5], [2.5, 4.5], [22, 26], [20, 24]),
+	'cornish-rex': metric('small', [3, 4.5], [2.5, 4], [20, 25], [18, 23]),
+	'devon-rex': metric('small', [3, 4.5], [2.5, 4], [20, 25], [18, 23]),
+	'egyptian-mau': metric('medium', [4, 6], [3, 5], [23, 28], [21, 26]),
+	manx: metric('medium', [4, 6.5], [3.5, 5.5], [23, 28], [21, 27]),
+	'norwegian-forest-cat': metric('giant', [5.5, 9], [4, 6], [30, 40], [28, 36]),
+	'oriental-shorthair': metric('medium', [3.5, 5.5], [2.5, 4.5], [22, 26], [20, 24]),
+	savannah: metric('giant', [6, 11], [4, 8], [30, 43], [28, 38]),
+	somali: metric('medium', [4, 5.5], [3, 4.5], [22, 26], [20, 24]),
+	chartreux: metric('large', [4.5, 7], [3, 5], [25, 32], [23, 29]),
+	'european-shorthair': metric('medium', [4, 7], [3, 5], [23, 30], [21, 28]),
+	'japanese-bobtail': metric('medium', [3.5, 5], [2.5, 4], [22, 27], [20, 25]),
+	korat: metric('medium', [3.5, 5], [2.5, 4.5], [22, 27], [20, 25]),
+	laperm: metric('medium', [3.5, 5.5], [2.5, 4.5], [22, 28], [20, 26]),
+	munchkin: metric('small', [3, 4.5], [2, 4], [15, 20], [14, 19]),
+	nebelung: metric('medium', [4, 6.5], [3, 5], [23, 30], [21, 28]),
+	ocicat: metric('large', [4.5, 7], [3.5, 5.5], [25, 32], [23, 30]),
+	peterbald: metric('medium', [3.5, 5.5], [2.5, 4.5], [22, 27], [20, 25]),
+	'pixie-bob': metric('large', [5, 8], [4, 6], [25, 32], [23, 30]),
+	'selkirk-rex': metric('large', [4.5, 7], [3, 5.5], [25, 32], [23, 30]),
+	'siberian-cat': metric('giant', [5, 9], [4, 6.5], [28, 38], [26, 34]),
+	singapura: metric('small', [2.5, 3.5], [2, 3], [18, 22], [17, 21]),
+	snowshoe: metric('medium', [4, 6], [3, 5], [23, 28], [21, 26]),
+	tonkinese: metric('medium', [3.5, 5.5], [2.5, 4.5], [22, 27], [20, 25]),
+	bombay: metric('medium', [4, 6], [3, 5], [23, 28], [21, 26]),
+	burmilla: metric('medium', [4, 6], [3, 5], [23, 28], [21, 26]),
+	ragamuffin: metric('giant', [6, 9], [4, 7], [28, 35], [25, 33]),
+	'turkish-van': metric('large', [5, 8], [3, 6], [25, 33], [23, 30]),
+	'khao-manee': metric('medium', [3.5, 5.5], [2.5, 4.5], [22, 27], [20, 25]),
+	'havana-brown': metric('medium', [3.5, 5.5], [2.5, 4.5], [22, 27], [20, 25]),
+	toyger: metric('large', [4.5, 7], [3.5, 5.5], [25, 32], [23, 30]),
+	lykoi: metric('medium', [3.5, 5.5], [2.5, 4.5], [22, 27], [20, 25]),
+	'australian-mist': metric('medium', [4, 6], [3, 5], [23, 28], [21, 26]),
+	'arabian-mau': metric('medium', [4, 7], [3, 5.5], [24, 30], [22, 28]),
+	aphrodite: metric('large', [6.8, 8.2], [4.5, 6.4], [28, 35], [25, 32]),
+	'dragon-li': metric('medium', [4, 6], [3, 5], [23, 28], [21, 26]),
+	suphalak: metric('medium', [4, 6], [3, 5], [22, 27], [20, 25]),
+	'raas-cat': metric('medium', [4, 6], [3, 5], [22, 27], [20, 25]),
+	aegean: metric('medium', [4, 5.5], [3, 4.5], [22, 27], [20, 25]),
+	'asian-cat': metric('medium', [4, 6], [3, 5], [23, 28], [21, 26]),
+	'german-rex': metric('medium', [3.5, 5], [2.5, 4], [22, 27], [20, 25]),
+	donskoy: metric('medium', [3.5, 6], [3, 5], [22, 28], [20, 26]),
+	'ukrainian-levkoy': metric('medium', [4, 6], [3, 5], [22, 28], [20, 26]),
+	'kurilian-bobtail': metric('large', [5, 7], [3.5, 5.5], [25, 32], [23, 30]),
+	'mekong-bobtail': metric('medium', [3.5, 5], [2.5, 4], [22, 27], [20, 25]),
+	'thai-cat': metric('medium', [4, 6], [3, 5], [22, 27], [20, 25]),
+	serengeti: metric('large', [4.5, 7], [3.5, 5.5], [25, 32], [23, 30]),
+	chausie: metric('giant', [6, 11], [5, 8], [30, 43], [28, 38]),
+	cheetoh: metric('giant', [6, 10], [4.5, 7], [30, 40], [28, 36]),
+	'colorpoint-shorthair': metric('medium', [3.5, 5.5], [2.5, 4.5], [22, 27], [20, 25]),
+	cymric: metric('large', [4, 6.5], [3.5, 5.5], [23, 30], [21, 28]),
+	minuet: metric('small', [3, 4.5], [2.5, 4], [18, 24], [17, 23]),
+	minskin: metric('small', [2, 4], [1.8, 3.5], [18, 23], [17, 22]),
+	highlander: metric('large', [5, 9], [4, 7], [26, 35], [24, 32]),
+	'york-chocolate': metric('large', [5, 8], [4, 6], [25, 32], [23, 30]),
+	foldex: metric('medium', [3.5, 6], [2.5, 5], [22, 28], [20, 26]),
+	sokoke: metric('medium', [3.5, 5.5], [2.5, 4.5], [22, 27], [20, 25])
+} as const satisfies Record<KnownPetBreed, BreedReferenceMetrics>;
+
+const equalEarth = {
+	a1: 1.340264,
+	a2: -0.081106,
+	a3: 0.000893,
+	a4: 0.003796,
+	sqrt3: Math.sqrt(3),
+	thetaMax: Math.asin(Math.sqrt(3) / 2)
+} as const;
+
+const equalEarthMaxX = projectEqualEarthX(0, Math.PI);
+const equalEarthMaxY = projectEqualEarthY(equalEarth.thetaMax);
+
+const breedOriginById = buildBreedGroupMap(breedOriginGroups);
+
+export const breedReferenceProfiles = petBreedOptions.map((option) => buildBreedReferenceProfile(option));
+
+function metric(sizeCategory: BreedSizeCategory, maleWeight: readonly [number, number], femaleWeight: readonly [number, number], maleHeight: readonly [number, number], femaleHeight: readonly [number, number]): BreedReferenceMetrics {
+	return {
+		sizeCategory,
+		weightKg: { male: maleWeight, female: femaleWeight },
+		heightCm: { male: maleHeight, female: femaleHeight }
+	};
+}
+
+function buildBreedGroupMap<Value extends string>(groups: Partial<Record<Value, readonly KnownPetBreed[]>>): Partial<Record<KnownPetBreed, Value>> {
+	const map: Partial<Record<KnownPetBreed, Value>> = {};
+
+	for (const [value, breedIds] of Object.entries(groups) as [Value, readonly KnownPetBreed[]][]) {
+		for (const breedId of breedIds) {
+			map[breedId] = value;
+		}
+	}
+
+	return map;
+}
+
+function buildBreedReferenceProfile(option: PetBreedOption): BreedReferenceProfile {
+	const metrics = breedMetricsById[option.id];
+
+	return {
+		option,
+		origin: breedReferenceOrigins[breedOriginById[option.id] ?? 'varied'],
+		sizeCategory: metrics.sizeCategory,
+		averageWeightKg: metrics.weightKg,
+		averageHeightCm: metrics.heightCm
+	};
+}
+
+export function listBreedReferenceProfiles(): BreedReferenceProfile[] {
+	return breedReferenceProfiles;
+}
+
+export function getBreedReferenceProfile(breedId: string | null | undefined): BreedReferenceProfile | null {
+	if (!breedId) return null;
+	return breedReferenceProfiles.find((profile) => profile.option.id === breedId) ?? null;
+}
+
+export function getBreedOriginMapPosition(origin: BreedReferenceOrigin): { left: number; top: number } | null {
+	if (origin.latitude === null || origin.longitude === null) return null;
+
+	const projected = projectEqualEarth(origin.latitude, origin.longitude);
+
+	return {
+		left: clamp(((projected.x + equalEarthMaxX) / (equalEarthMaxX * 2)) * 100, 3, 97),
+		top: clamp(((equalEarthMaxY - projected.y) / (equalEarthMaxY * 2)) * 100, 6, 94)
+	};
+}
+
+function projectEqualEarth(latitude: number, longitude: number): { x: number; y: number } {
+	const latitudeRadians = degreesToRadians(latitude);
+	const longitudeRadians = degreesToRadians(longitude);
+	const theta = Math.asin((equalEarth.sqrt3 / 2) * Math.sin(latitudeRadians));
+
+	return {
+		x: projectEqualEarthX(theta, longitudeRadians),
+		y: projectEqualEarthY(theta)
+	};
+}
+
+function projectEqualEarthX(theta: number, longitudeRadians: number): number {
+	const thetaSquared = theta ** 2;
+	const denominator = equalEarth.a1 + 3 * equalEarth.a2 * thetaSquared + 7 * equalEarth.a3 * theta ** 6 + 9 * equalEarth.a4 * theta ** 8;
+
+	return (2 * equalEarth.sqrt3 * longitudeRadians * Math.cos(theta)) / (3 * denominator);
+}
+
+function projectEqualEarthY(theta: number): number {
+	return equalEarth.a1 * theta + equalEarth.a2 * theta ** 3 + equalEarth.a3 * theta ** 7 + equalEarth.a4 * theta ** 9;
+}
+
+function degreesToRadians(value: number): number {
+	return (value * Math.PI) / 180;
+}
+
+function clamp(value: number, min: number, max: number): number {
+	return Math.min(max, Math.max(min, value));
+}
