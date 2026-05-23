@@ -507,7 +507,7 @@
 
 			<div class="grid gap-5 lg:grid-cols-2 lg:items-start">
 				<section class="{activePanel === 'vaccines' ? 'block' : 'hidden'} lg:block" role="tabpanel">
-					<VaccinationPanel petId={petId} vaccinations={profile.vaccinations} presets={profile.vaccinePresets} />
+					<VaccinationPanel petId={petId} vaccinations={profile.vaccinations} vaccines={profile.vaccines} />
 				</section>
 				<section class="{activePanel === 'records' ? 'block' : 'hidden'} rounded-md border border-border bg-card p-4 shadow-sm sm:p-5 lg:block" role="tabpanel">
 					<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

@@ -55,7 +55,7 @@ export async function loadDashboard(): Promise<ClinicDashboard> {
 		getLastEditedRecord(),
 		getClinicCounts(),
 		loadVaccineAnalyticsOverview(),
-		loadVaccineHistory({ period: 'month', vaccinePresetId: null }),
+		loadVaccineHistory({ period: 'month', vaccineNormalizedName: null }),
 		loadDashboardAnalytics()
 	]);
 	return {

@@ -3,11 +3,11 @@ import { computeVaccineDueAt, type VaccineValidityUnit } from './vaccine.js';
 
 export type VaccineStatusKey = 'current' | 'dueSoon' | 'dueVerySoon' | 'expired' | 'overdue';
 export type VaccineHistoryPeriod = 'week' | 'month' | 'quarter' | 'semester' | 'year';
-export type VaccineDueFilterMode = 'preset' | 'period';
+export type VaccineDueFilterMode = 'status' | 'period';
 
 export const vaccineStatusKeys: VaccineStatusKey[] = ['current', 'dueSoon', 'dueVerySoon', 'expired', 'overdue'];
 export const vaccineHistoryPeriods: VaccineHistoryPeriod[] = ['week', 'month', 'quarter', 'semester', 'year'];
-export const vaccineDueFilterModes: VaccineDueFilterMode[] = ['preset', 'period'];
+export const vaccineDueFilterModes: VaccineDueFilterMode[] = ['status', 'period'];
 
 export interface VaccineStatusSummary {
 	current: number;
@@ -24,10 +24,8 @@ export interface VaccineStatusItem {
 	petId: number;
 	petName: string;
 	petAvatarBytes: Uint8Array | null;
-	vaccinePresetId: number;
-	vaccineProtocolId: number;
-	vaccineProtocolName: string;
 	vaccineName: string;
+	vaccineNormalizedName: string;
 	appliedAt: string;
 	dueAt: string;
 	daysUntilDue: number;
@@ -42,7 +40,7 @@ export interface VaccineHistoryPoint {
 
 export interface VaccineHistoryFilter {
 	period: VaccineHistoryPeriod;
-	vaccinePresetId: number | null;
+	vaccineNormalizedName: string | null;
 }
 
 export interface VaccineDueFilter {
@@ -50,6 +48,12 @@ export interface VaccineDueFilter {
 	status: VaccineStatusKey;
 	startDate: string;
 	endDate: string;
+}
+
+export interface VaccineAnalyticsVaccine {
+	vaccineName: string;
+	vaccineNormalizedName: string;
+	count: number;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -101,7 +105,7 @@ export function getVaccineStatus(daysUntilDue: number): VaccineStatusKey {
 }
 
 export function matchesVaccineDueFilter(item: VaccineStatusItem, filter: VaccineDueFilter): boolean {
-	if (filter.mode === 'preset') return item.status === filter.status;
+	if (filter.mode === 'status') return item.status === filter.status;
 	return item.dueAt >= filter.startDate && item.dueAt <= filter.endDate;
 }
 

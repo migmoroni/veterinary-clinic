@@ -42,10 +42,10 @@ const requiredSchema = {
   medical_records: ['id', 'pet_id', 'title', 'description', 'admitted_at', 'discharged_at', 'updated_at', 'deleted_at', 'purge_after'],
   app_settings: ['key', 'value', 'updated_at'],
   backup_history: ['id', 'path', 'kind', 'created_at'],
-  vaccine_presets: ['id', 'name', 'normalized_name', 'default_protocol_id', 'created_at', 'hidden_at', 'updated_at'],
-  vaccine_protocols: ['id', 'vaccine_preset_id', 'name', 'normalized_name', 'sort_order', 'created_at', 'updated_at'],
-  vaccine_preset_doses: ['id', 'vaccine_preset_id', 'vaccine_protocol_id', 'label', 'normalized_label', 'validity_value', 'validity_unit', 'sort_order', 'created_at', 'updated_at'],
-  pet_vaccinations: ['id', 'pet_id', 'applied_at', 'vaccine_preset_id', 'vaccine_protocol_id', 'vaccine_preset_dose_id', 'vaccine_name', 'vaccine_protocol_name', 'vaccine_dose_label', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after']
+  vaccines: ['id', 'name', 'normalized_name', 'hidden_at', 'created_at', 'updated_at'],
+  vaccine_dose_types: ['id', 'name', 'normalized_name', 'requires_dose_number', 'sort_order', 'hidden_at', 'created_at', 'updated_at'],
+  vaccine_validity_options: ['id', 'validity_value', 'validity_unit', 'sort_order', 'hidden_at', 'created_at', 'updated_at'],
+  pet_vaccinations: ['id', 'pet_id', 'applied_at', 'vaccine_name', 'vaccine_normalized_name', 'dose_type', 'dose_number', 'validity_value', 'validity_unit', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after']
 } as const;
 
 type TableName = keyof typeof requiredSchema;

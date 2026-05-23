@@ -1,33 +1,5 @@
 import type Database from '@tauri-apps/plugin-sql';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
-import { normalizeVaccineName } from '$lib/domain/vaccine/vaccine.js';
-
-const defaultVaccinePresets = [
-	{
-		name: 'V 10',
-		protocols: [
-			{
-				name: 'Padrão',
-				doses: [
-					{ label: '1ª dose', validityValue: 21, validityUnit: 'days' },
-					{ label: '2ª dose', validityValue: 21, validityUnit: 'days' },
-					{ label: '3ª dose', validityValue: 21, validityUnit: 'days' },
-					{ label: '4ª dose', validityValue: 12, validityUnit: 'months' },
-					{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }
-				]
-			}
-		]
-	},
-	{ name: 'V 8', protocols: [{ name: 'Padrão', doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }] },
-	{ name: 'Antirrábica', protocols: [{ name: 'Padrão', doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }] },
-	{ name: 'Recombitek', protocols: [{ name: 'Padrão', doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }] },
-	{ name: 'Quadrupla', protocols: [{ name: 'Padrão', doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }] },
-	{ name: 'Quíntupla', protocols: [{ name: 'Padrão', doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }] },
-	{ name: 'Giardia', protocols: [{ name: 'Padrão', doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }] },
-	{ name: 'Gripe', protocols: [{ name: 'Padrão', doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }] },
-	{ name: 'Nobivac', protocols: [{ name: 'Padrão', doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }] },
-	{ name: 'Imunocan', protocols: [{ name: 'Padrão', doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }] }
-] as const;
 
 function optionalTextCheck(column: string, maxLength: number): string {
 	return `${column} IS NULL OR length(${column}) <= ${maxLength}`;
@@ -39,6 +11,64 @@ function requiredTextCheck(column: string, maxLength: number): string {
 
 interface RunMigrationsOptions {
 	seedDefaultData?: boolean;
+}
+
+const DEFAULT_VACCINE_DOSE_TYPES = [
+	{ name: 'Dose inicial', requiresDoseNumber: true },
+	{ name: 'Reforço', requiresDoseNumber: false }
+] as const;
+
+const DEFAULT_VACCINE_VALIDITY_OPTIONS = [
+	{ validityValue: 21, validityUnit: 'days' },
+	{ validityValue: 12, validityUnit: 'months' }
+] as const;
+
+function normalizeCatalogName(value: string): string {
+	return value
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '');
+}
+
+async function seedDefaultVaccineDoseCatalogs(database: Database): Promise<void> {
+	const rows = await database.select<{ value: string | null }[]>(`SELECT value FROM app_settings WHERE key = 'vaccine_dose_catalog_seeded' LIMIT 1`);
+	if (rows[0]?.value === '1') return;
+
+	for (const [index, doseType] of DEFAULT_VACCINE_DOSE_TYPES.entries()) {
+		await database.execute(
+			`INSERT INTO vaccine_dose_types (name, normalized_name, requires_dose_number, sort_order, updated_at)
+			 VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+			 ON CONFLICT(normalized_name) DO NOTHING`,
+			[doseType.name, normalizeCatalogName(doseType.name), doseType.requiresDoseNumber ? 1 : 0, index]
+		);
+	}
+
+	await database.execute(
+		`INSERT INTO app_settings (key, value, updated_at)
+		 VALUES ('vaccine_dose_catalog_seeded', '1', CURRENT_TIMESTAMP)
+		 ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP`
+	);
+}
+
+async function seedDefaultVaccineValidityCatalog(database: Database): Promise<void> {
+	const rows = await database.select<{ value: string | null }[]>(`SELECT value FROM app_settings WHERE key = 'vaccine_validity_catalog_seeded' LIMIT 1`);
+	if (rows[0]?.value === '1') return;
+
+	for (const [index, option] of DEFAULT_VACCINE_VALIDITY_OPTIONS.entries()) {
+		await database.execute(
+			`INSERT INTO vaccine_validity_options (validity_value, validity_unit, sort_order, updated_at)
+			 VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+			 ON CONFLICT(validity_value, validity_unit) DO NOTHING`,
+			[option.validityValue, option.validityUnit, index]
+		);
+	}
+
+	await database.execute(
+		`INSERT INTO app_settings (key, value, updated_at)
+		 VALUES ('vaccine_validity_catalog_seeded', '1', CURRENT_TIMESTAMP)
+		 ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP`
+	);
 }
 
 async function createCurrentSchema(database: Database): Promise<void> {
@@ -169,46 +199,39 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	`);
 
 	await database.execute(`
-		CREATE TABLE IF NOT EXISTS vaccine_presets (
+		CREATE TABLE IF NOT EXISTS vaccines (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.vaccinePresetName)}),
+			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.vaccineName)}),
 			normalized_name TEXT NOT NULL UNIQUE CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedName)}),
-			default_protocol_id INTEGER,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			hidden_at TEXT,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT
 		)
 	`);
 
 	await database.execute(`
-		CREATE TABLE IF NOT EXISTS vaccine_protocols (
+		CREATE TABLE IF NOT EXISTS vaccine_dose_types (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			vaccine_preset_id INTEGER NOT NULL,
-			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.vaccineProtocolName)}),
-			normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedProtocolName)}),
+			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.vaccineDoseType)}),
+			normalized_name TEXT NOT NULL UNIQUE CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedName)}),
+			requires_dose_number INTEGER NOT NULL DEFAULT 1 CHECK(requires_dose_number IN (0, 1)),
 			sort_order INTEGER NOT NULL DEFAULT 0,
+			hidden_at TEXT,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
-			FOREIGN KEY (vaccine_preset_id) REFERENCES vaccine_presets(id) ON DELETE CASCADE,
-			UNIQUE(vaccine_preset_id, normalized_name)
+			updated_at TEXT
 		)
 	`);
 
 	await database.execute(`
-		CREATE TABLE IF NOT EXISTS vaccine_preset_doses (
+		CREATE TABLE IF NOT EXISTS vaccine_validity_options (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			vaccine_preset_id INTEGER NOT NULL,
-			vaccine_protocol_id INTEGER NOT NULL,
-			label TEXT NOT NULL CHECK(${requiredTextCheck('label', FIELD_LIMITS.vaccineDoseLabel)}),
-			normalized_label TEXT NOT NULL CHECK(${requiredTextCheck('normalized_label', FIELD_LIMITS.vaccineNormalizedDoseLabel)}),
 			validity_value INTEGER NOT NULL CHECK(validity_value > 0),
 			validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months')),
 			sort_order INTEGER NOT NULL DEFAULT 0,
+			hidden_at TEXT,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
-			FOREIGN KEY (vaccine_preset_id) REFERENCES vaccine_presets(id) ON DELETE CASCADE,
-			FOREIGN KEY (vaccine_protocol_id) REFERENCES vaccine_protocols(id) ON DELETE CASCADE,
-			UNIQUE(vaccine_protocol_id, normalized_label),
+			UNIQUE(validity_value, validity_unit),
 			CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.vaccineValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.vaccineValidityMonths}))
 		)
 	`);
@@ -218,21 +241,19 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			pet_id INTEGER NOT NULL,
 			applied_at TEXT NOT NULL DEFAULT CURRENT_DATE CHECK(length(applied_at) <= ${FIELD_LIMITS.isoDate}),
-			vaccine_preset_id INTEGER NOT NULL,
-			vaccine_protocol_id INTEGER NOT NULL,
-			vaccine_preset_dose_id INTEGER NOT NULL,
-			vaccine_name TEXT NOT NULL CHECK(${requiredTextCheck('vaccine_name', FIELD_LIMITS.vaccinePresetName)}),
-			vaccine_protocol_name TEXT NOT NULL CHECK(${requiredTextCheck('vaccine_protocol_name', FIELD_LIMITS.vaccineProtocolName)}),
-			vaccine_dose_label TEXT NOT NULL CHECK(${requiredTextCheck('vaccine_dose_label', FIELD_LIMITS.vaccineDoseLabel)}),
+			vaccine_name TEXT NOT NULL CHECK(${requiredTextCheck('vaccine_name', FIELD_LIMITS.vaccineName)}),
+			vaccine_normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('vaccine_normalized_name', FIELD_LIMITS.vaccineNormalizedName)}),
+			dose_type TEXT NOT NULL CHECK(${requiredTextCheck('dose_type', FIELD_LIMITS.vaccineDoseType)}),
+			dose_number INTEGER CHECK(dose_number IS NULL OR (dose_number BETWEEN 1 AND ${FIELD_LIMITS.vaccineDoseNumber})),
+			validity_value INTEGER NOT NULL CHECK(validity_value > 0),
+			validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months')),
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			validity_ignored_at TEXT,
 			updated_at TEXT,
 			deleted_at TEXT,
 			purge_after TEXT,
-			FOREIGN KEY (pet_id) REFERENCES pets(id),
-			FOREIGN KEY (vaccine_preset_id) REFERENCES vaccine_presets(id) ON DELETE RESTRICT,
-			FOREIGN KEY (vaccine_protocol_id) REFERENCES vaccine_protocols(id) ON DELETE RESTRICT,
-			FOREIGN KEY (vaccine_preset_dose_id) REFERENCES vaccine_preset_doses(id) ON DELETE RESTRICT
+			FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE RESTRICT,
+			CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.vaccineValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.vaccineValidityMonths}))
 		)
 	`);
 
@@ -252,78 +273,25 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pets_breed ON pets(breed)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_pet_id ON medical_records(pet_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_deleted_at ON medical_records(deleted_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccine_presets_normalized_name ON vaccine_presets(normalized_name)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccine_presets_hidden_at ON vaccine_presets(hidden_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccine_protocols_vaccine_preset_id ON vaccine_protocols(vaccine_preset_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccine_protocols_normalized_name ON vaccine_protocols(normalized_name)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccine_preset_doses_vaccine_preset_id ON vaccine_preset_doses(vaccine_preset_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccine_preset_doses_vaccine_protocol_id ON vaccine_preset_doses(vaccine_protocol_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccine_preset_doses_normalized_label ON vaccine_preset_doses(normalized_label)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccines_normalized_name ON vaccines(normalized_name)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccines_hidden_at ON vaccines(hidden_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccine_dose_types_normalized_name ON vaccine_dose_types(normalized_name)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccine_dose_types_hidden_at ON vaccine_dose_types(hidden_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccine_validity_options_value_unit ON vaccine_validity_options(validity_value, validity_unit)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccine_validity_options_hidden_at ON vaccine_validity_options(hidden_at)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_pet_id ON pet_vaccinations(pet_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_vaccine_preset_id ON pet_vaccinations(vaccine_preset_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_vaccine_protocol_id ON pet_vaccinations(vaccine_protocol_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_vaccine_preset_dose_id ON pet_vaccinations(vaccine_preset_dose_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_applied_at ON pet_vaccinations(applied_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_vaccine_normalized_name ON pet_vaccinations(vaccine_normalized_name)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_validity_ignored_at ON pet_vaccinations(validity_ignored_at)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_deleted_at ON pet_vaccinations(deleted_at)');
 }
 
-async function seedDefaultVaccinePresets(database: Database): Promise<void> {
-	for (const preset of defaultVaccinePresets) {
-		await database.execute(
-			`INSERT OR IGNORE INTO vaccine_presets (name, normalized_name, updated_at)
-			 VALUES ($1, $2, CURRENT_TIMESTAMP)`,
-			[preset.name, normalizeVaccineName(preset.name)]
-		);
-
-		const rows = await database.select<{ id: number }[]>(
-			`SELECT id
-			 FROM vaccine_presets
-			 WHERE normalized_name = $1
-			 LIMIT 1`,
-			[normalizeVaccineName(preset.name)]
-		);
-		const presetId = rows[0]?.id;
-		if (!presetId) continue;
-
-		for (const [protocolIndex, protocol] of preset.protocols.entries()) {
-			await database.execute(
-				`INSERT OR IGNORE INTO vaccine_protocols (vaccine_preset_id, name, normalized_name, sort_order, updated_at)
-				 VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)`,
-				[presetId, protocol.name, normalizeVaccineName(protocol.name), protocolIndex]
-			);
-
-			const protocolRows = await database.select<{ id: number }[]>(
-				`SELECT id
-				 FROM vaccine_protocols
-				 WHERE vaccine_preset_id = $1 AND normalized_name = $2
-				 LIMIT 1`,
-				[presetId, normalizeVaccineName(protocol.name)]
-			);
-			const protocolId = protocolRows[0]?.id;
-			if (!protocolId) continue;
-
-			if (protocolIndex === 0) {
-				await database.execute('UPDATE vaccine_presets SET default_protocol_id = COALESCE(default_protocol_id, $2) WHERE id = $1', [presetId, protocolId]);
-			}
-
-			for (const [index, dose] of protocol.doses.entries()) {
-				const sortOrder = dose.label === 'Dose de reforço' ? 99 : index;
-				await database.execute(
-					`INSERT OR IGNORE INTO vaccine_preset_doses (vaccine_preset_id, vaccine_protocol_id, label, normalized_label, validity_value, validity_unit, sort_order, updated_at)
-					 VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)`,
-					[presetId, protocolId, dose.label, normalizeVaccineName(dose.label), dose.validityValue, dose.validityUnit, sortOrder]
-				);
-			}
-		}
-	}
-}
-
-export async function runMigrations(database: Database, options: RunMigrationsOptions = {}): Promise<void> {
+export async function runMigrations(database: Database, _options: RunMigrationsOptions = {}): Promise<void> {
 	await database.execute('BEGIN IMMEDIATE');
 	try {
 		await createCurrentSchema(database);
-		if (options.seedDefaultData) await seedDefaultVaccinePresets(database);
+		await seedDefaultVaccineDoseCatalogs(database);
+		await seedDefaultVaccineValidityCatalog(database);
 		await database.execute('COMMIT');
 	} catch (error) {
 		await database.execute('ROLLBACK');

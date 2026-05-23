@@ -7,13 +7,12 @@
 	import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 	import type { TranslationKey } from '$lib/i18n/index.js';
 	import { i18n, t } from '$lib/i18n/index.js';
-	import type { VaccineDueFilterMode, VaccineHistoryPeriod, VaccineStatusItem, VaccineStatusKey, VaccineStatusSummary } from '$lib/domain/vaccine/analytics.js';
+	import type { VaccineAnalyticsVaccine, VaccineDueFilterMode, VaccineHistoryPeriod, VaccineStatusItem, VaccineStatusKey, VaccineStatusSummary } from '$lib/domain/vaccine/analytics.js';
 	import { emptyVaccineStatusSummary, shiftIsoDate, todayIsoDate, vaccineHistoryPeriods, vaccineStatusKeys } from '$lib/domain/vaccine/analytics.js';
-	import type { VaccinePreset } from '$lib/domain/vaccine/vaccine.js';
 	import { formatDateForDisplay, formatDateForInput } from '$lib/domain/shared/date-input.js';
 	import {
+		loadAnalyticsVaccines,
 		loadVaccineAnalyticsOverview,
-		loadAnalyticsVaccinePresets,
 		loadVaccineHistory,
 		loadVaccineStatusItems
 	} from '$lib/services/vaccine-analytics.service.js';
@@ -40,12 +39,12 @@
 	const defaultPeriodStartDate = shiftIsoDate(todayDate, -30);
 	const defaultPeriodEndDate = shiftIsoDate(todayDate, 30);
 
-	let dueFilterMode = $state<VaccineDueFilterMode>('preset');
+	let dueFilterMode = $state<VaccineDueFilterMode>('status');
 	let status = $state<VaccineStatusKey>('expired');
 	let periodStartDate = $state(defaultPeriodStartDate);
 	let periodEndDate = $state(defaultPeriodEndDate);
 	let period = $state<VaccineHistoryPeriod>('month');
-	let vaccinePresetId = $state<number | null>(null);
+	let vaccineNormalizedName = $state('');
 	let activeTab = $state<ActiveTab>('status');
 	let statusOrder = $state<SortOrder>('recent');
 	let historyOrder = $state<SortOrder>('recent');
@@ -54,14 +53,14 @@
 	let statusSummary = $state<VaccineStatusSummary>(emptyVaccineStatusSummary());
 	let statusTotalTracked = $state(0);
 	let history = $state<HistoryPoint[]>([]);
-	let presets = $state<VaccinePreset[]>([]);
+	let analyticsVaccines = $state<VaccineAnalyticsVaccine[]>([]);
 	let statusLoading = $state(false);
 	let statusListLoading = $state(false);
 	let historyLoading = $state(false);
-	let presetsLoading = $state(false);
+	let vaccinesLoading = $state(false);
 	let statusLoaded = $state(false);
 	let historyLoaded = $state(false);
-	let presetsLoaded = $state(false);
+	let vaccinesLoaded = $state(false);
 	let statusError = $state('');
 	let historyError = $state('');
 	let contactDialogOpen = $state(false);
@@ -70,7 +69,7 @@
 	let statusRequestId = 0;
 	let statusRenderRequestId = 0;
 	let historyRequestId = 0;
-	let presetsRequestId = 0;
+	let vaccinesRequestId = 0;
 
 	const sortedHistory = $derived(sortHistoryPoints(history, historyOrder));
 	const maxHistoryCount = $derived(history.reduce((max, point) => Math.max(max, point.count), 0));
@@ -80,7 +79,7 @@
 	}
 
 	function normalizeDueFilterMode(value: string | null): VaccineDueFilterMode {
-		return value === 'period' || value === 'preset' ? value : 'preset';
+		return value === 'period' || value === 'status' ? value : 'status';
 	}
 
 	function normalizePeriodStartDate(value: string | null): string {
@@ -110,7 +109,7 @@
 	}
 
 	function statusSectionTitleKey(): TranslationKey {
-		return dueFilterMode === 'preset' ? statusLabelKey(status) : 'vaccine.analytics.periodFilterTitle';
+		return dueFilterMode === 'status' ? statusLabelKey(status) : 'vaccine.analytics.periodFilterTitle';
 	}
 
 	function statusCount(value: VaccineStatusKey): number {
@@ -168,7 +167,7 @@
 		const params = new URLSearchParams();
 		params.set('tab', activeTab);
 		params.set('filterMode', dueFilterMode);
-		if (dueFilterMode === 'preset') params.set('status', status);
+		if (dueFilterMode === 'status') params.set('status', status);
 		if (dueFilterMode === 'period') {
 			params.set('startDate', periodStartDate);
 			params.set('endDate', periodEndDate);
@@ -176,12 +175,12 @@
 		params.set('statusOrder', statusOrder);
 		params.set('period', period);
 		params.set('historyOrder', historyOrder);
-		if (vaccinePresetId) params.set('presetId', String(vaccinePresetId));
+		if (vaccineNormalizedName) params.set('vaccine', vaccineNormalizedName);
 		window.history.replaceState(null, '', `${basePath}?${params.toString()}`);
 	}
 
 	function isRefreshing(): boolean {
-		return activeTab === 'status' ? statusLoading : historyLoading || presetsLoading;
+		return activeTab === 'status' ? statusLoading : historyLoading || vaccinesLoading;
 	}
 
 	async function waitForNextPaint() {
@@ -248,12 +247,12 @@
 	async function loadHistoryData() {
 		const requestId = ++historyRequestId;
 		const requestedPeriod = period;
-		const requestedPresetId = vaccinePresetId;
+		const requestedVaccine = vaccineNormalizedName;
 		historyLoading = true;
 		historyError = '';
 		try {
-			const loadedHistory = await loadVaccineHistory({ period: requestedPeriod, vaccinePresetId: requestedPresetId });
-			if (requestId !== historyRequestId || requestedPeriod !== period || requestedPresetId !== vaccinePresetId) return;
+			const loadedHistory = await loadVaccineHistory({ period: requestedPeriod, vaccineNormalizedName: requestedVaccine || null });
+			if (requestId !== historyRequestId || requestedPeriod !== period || requestedVaccine !== vaccineNormalizedName) return;
 			history = loadedHistory;
 			historyLoaded = true;
 		} catch (err) {
@@ -265,26 +264,26 @@
 		}
 	}
 
-	async function loadPresetData(force = false) {
-		if (!force && presetsLoaded) {
-			presetsLoading = false;
+	async function loadVaccineData(force = false) {
+		if (!force && vaccinesLoaded) {
+			vaccinesLoading = false;
 			return;
 		}
 
-		const requestId = ++presetsRequestId;
-		presetsLoading = true;
+		const requestId = ++vaccinesRequestId;
+		vaccinesLoading = true;
 		historyError = '';
 		try {
-			const loadedPresets = await loadAnalyticsVaccinePresets();
-			if (requestId !== presetsRequestId) return;
-			presets = loadedPresets;
-			presetsLoaded = true;
+			const loadedVaccines = await loadAnalyticsVaccines();
+			if (requestId !== vaccinesRequestId) return;
+			analyticsVaccines = loadedVaccines;
+			vaccinesLoaded = true;
 		} catch (err) {
-			if (requestId !== presetsRequestId) return;
+			if (requestId !== vaccinesRequestId) return;
 			console.error(err);
 			historyError = err instanceof Error ? err.message : t('common.error');
 		} finally {
-			if (requestId === presetsRequestId) presetsLoading = false;
+			if (requestId === vaccinesRequestId) vaccinesLoading = false;
 		}
 	}
 
@@ -298,11 +297,11 @@
 		void waitForNextPaint().then(() => loadStatusData());
 	}
 
-	function queueHistoryLoad(forcePresets = false) {
+	function queueHistoryLoad(forceVaccines = false) {
 		historyLoading = true;
 		historyLoaded = false;
-		if (forcePresets || !presetsLoaded) presetsLoading = true;
-		void waitForNextPaint().then(() => Promise.all([loadHistoryData(), loadPresetData(forcePresets)]));
+		if (forceVaccines || !vaccinesLoaded) vaccinesLoading = true;
+		void waitForNextPaint().then(() => Promise.all([loadHistoryData(), loadVaccineData(forceVaccines)]));
 	}
 
 	function loadInitialTab() {
@@ -330,12 +329,12 @@
 
 		if (tab === 'status' && statusLoaded && !statusLoading) void renderStatusItemsInChunks(items);
 		if (tab === 'status' && !statusLoaded && !statusLoading) queueStatusLoad();
-		if (tab === 'history' && ((!historyLoaded && !historyLoading) || (!presetsLoaded && !presetsLoading))) queueHistoryLoad();
+		if (tab === 'history' && ((!historyLoaded && !historyLoading) || (!vaccinesLoaded && !vaccinesLoading))) queueHistoryLoad();
 	}
 
 	function selectStatus(value: string) {
 		activeTab = 'status';
-		dueFilterMode = 'preset';
+		dueFilterMode = 'status';
 		status = normalizeStatus(value);
 		updateUrl();
 		queueStatusLoad();
@@ -385,9 +384,9 @@
 		updateUrl();
 	}
 
-	function selectPreset(value: string) {
+	function selectVaccine(value: string) {
 		activeTab = 'history';
-		vaccinePresetId = Number(value) > 0 ? Number(value) : null;
+		vaccineNormalizedName = value;
 		updateUrl();
 		queueHistoryLoad();
 	}
@@ -418,7 +417,7 @@
 		const tab = params.get('tab');
 		if (tab === 'history' || tab === 'status') return tab;
 		if (params.has('status') || params.has('filterMode') || params.has('startDate') || params.has('endDate')) return 'status';
-		return params.has('period') || params.has('presetId') ? 'history' : 'status';
+		return params.has('period') || params.has('vaccine') ? 'history' : 'status';
 	}
 
 	onMount(() => {
@@ -431,8 +430,7 @@
 			statusOrder = normalizeOrder(params.get('statusOrder'));
 			period = normalizePeriod(params.get('period'));
 			historyOrder = normalizeOrder(params.get('historyOrder'));
-			const presetParam = Number(params.get('presetId'));
-			vaccinePresetId = presetParam > 0 ? presetParam : null;
+			vaccineNormalizedName = params.get('vaccine') ?? '';
 			activeTab = initialActiveTab(params);
 		}
 		loadInitialTab();
@@ -493,14 +491,14 @@
 						id="due-filter-mode"
 						value={dueFilterMode}
 						options={[
-							{ value: 'preset', label: t('vaccine.analytics.filterMode.preset') },
+							{ value: 'status', label: t('vaccine.analytics.filterMode.status') },
 							{ value: 'period', label: t('vaccine.analytics.filterMode.period') }
 						]}
 						onchange={(value) => selectDueFilterMode(value as string)}
 					/>
 				</div>
 
-				{#if dueFilterMode === 'preset'}
+				{#if dueFilterMode === 'status'}
 					<div class="space-y-2">
 						<span class="text-sm font-medium">{t('vaccine.analytics.statusFilter')}</span>
 						<div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
@@ -651,13 +649,13 @@
 							<label class="block text-sm font-medium" for="history-vaccine">{t('vaccine.analytics.vaccineFilter')}</label>
 							<Select
 								id="history-vaccine"
-								value={vaccinePresetId ?? ''}
-								disabled={presetsLoading || historyLoading}
+								value={vaccineNormalizedName}
+								disabled={vaccinesLoading || historyLoading}
 								options={[
 									{ value: '', label: t('vaccine.analytics.allVaccines') },
-									...presets.map((preset) => ({ value: preset.id, label: preset.name }))
+									...analyticsVaccines.map((vaccine) => ({ value: vaccine.vaccineNormalizedName, label: vaccine.vaccineName }))
 								]}
-								onchange={(value) => selectPreset(value as string)}
+								onchange={(value) => selectVaccine(value as string)}
 							/>
 						</div>
 
@@ -676,7 +674,7 @@
 						</div>
 
 						<div class="min-w-0">
-							{#if historyLoading || presetsLoading}
+							{#if historyLoading || vaccinesLoading}
 								<div class="space-y-3">
 									{#each Array(8) as _}
 										<div class="h-9 animate-pulse rounded-md bg-muted"></div>

@@ -1,13 +1,56 @@
+export type VaccineValidityUnit = 'days' | 'months';
+
+export interface Vaccine {
+	id: number;
+	name: string;
+	normalizedName: string;
+	hiddenAt: string | null;
+	updatedAt: string | null;
+}
+
+export interface VaccineInput {
+	name: string;
+}
+
+export interface VaccineDoseType {
+	id: number;
+	name: string;
+	normalizedName: string;
+	requiresDoseNumber: boolean;
+	sortOrder: number;
+	hiddenAt: string | null;
+	updatedAt: string | null;
+}
+
+export interface VaccineDoseTypeInput {
+	name: string;
+	requiresDoseNumber: boolean;
+}
+
+export interface VaccineValidityOption {
+	id: number;
+	validityValue: number;
+	validityUnit: VaccineValidityUnit;
+	sortOrder: number;
+	hiddenAt: string | null;
+	updatedAt: string | null;
+}
+
+export interface VaccineValidityOptionInput {
+	validityValue: number;
+	validityUnit: VaccineValidityUnit;
+}
+
 export interface PetVaccination {
 	id: number;
 	petId: number;
 	appliedAt: string;
-	vaccinePresetId: number;
-	vaccineProtocolId: number;
-	vaccinePresetDoseId: number;
 	vaccineName: string;
-	vaccineProtocolName: string;
-	vaccineDoseLabel: string;
+	vaccineNormalizedName: string;
+	doseType: string;
+	doseNumber: number | null;
+	validityValue: number;
+	validityUnit: VaccineValidityUnit;
 	validityIgnoredAt: string | null;
 	updatedAt: string | null;
 	deletedAt: string | null;
@@ -16,71 +59,14 @@ export interface PetVaccination {
 
 export interface PetVaccinationInput {
 	appliedAt: string;
-	vaccinePresetId: number;
-	vaccineProtocolId: number;
-	vaccinePresetDoseId: number;
-}
-
-export type VaccineValidityUnit = 'days' | 'months';
-
-export interface VaccinePresetDose {
-	id: number;
-	vaccinePresetId: number;
-	vaccineProtocolId: number;
-	label: string;
-	normalizedLabel: string;
+	vaccineName: string;
+	doseType: string;
+	doseNumber: number | null;
 	validityValue: number;
 	validityUnit: VaccineValidityUnit;
-	sortOrder: number;
-	updatedAt: string | null;
-}
-
-export interface VaccinePresetDoseInput {
-	id?: number;
-	label: string;
-	validityValue: number;
-	validityUnit: VaccineValidityUnit;
-	sortOrder?: number;
-}
-
-export interface VaccineProtocol {
-	id: number;
-	vaccinePresetId: number;
-	name: string;
-	normalizedName: string;
-	doses: VaccinePresetDose[];
-	isDefault: boolean;
-	sortOrder: number;
-	updatedAt: string | null;
-}
-
-export interface VaccineProtocolInput {
-	id?: number;
-	name: string;
-	doses: VaccinePresetDoseInput[];
-	isDefault?: boolean;
-	sortOrder?: number;
-}
-
-export interface VaccinePreset {
-	id: number;
-	name: string;
-	normalizedName: string;
-	defaultProtocolId: number | null;
-	protocols: VaccineProtocol[];
-	doses: VaccinePresetDose[];
-	hiddenAt: string | null;
-	updatedAt: string | null;
-}
-
-export interface VaccinePresetInput {
-	name: string;
-	protocols: VaccineProtocolInput[];
 }
 
 export interface VaccineDueStatus {
-	preset: VaccinePreset | null;
-	dose: VaccinePresetDose | null;
 	dueAt: string | null;
 	daysUntilDue: number | null;
 	expired: boolean;
@@ -98,12 +84,8 @@ export function normalizeVaccineName(value: string): string {
 		.replace(/[^a-z0-9]+/g, '');
 }
 
-export function normalizeVaccineDoseLabel(value: string): string {
-	return normalizeVaccineName(value);
-}
-
-export function normalizeVaccineProtocolName(value: string): string {
-	return normalizeVaccineName(value);
+export function formatDoseNumberLabel(doseNumber: number, doseLabel: string): string {
+	return `${doseNumber}\u00aa ${doseLabel.trim()}`;
 }
 
 function parseIsoDate(value: string): { year: number; month: number; day: number } | null {
@@ -128,50 +110,18 @@ function daysInMonth(year: number, month: number): number {
 	return new Date(year, month, 0).getDate();
 }
 
-export function findVaccinePreset(vaccine: string, presets: VaccinePreset[]): VaccinePreset | null {
-	const normalized = normalizeVaccineName(vaccine);
-	return presets.find((preset) => normalizeVaccineName(preset.normalizedName) === normalized) ?? null;
-}
-
-export function getVaccinationPreset(vaccination: PetVaccination, presets: VaccinePreset[]): VaccinePreset | null {
-	return presets.find((item) => item.id === vaccination.vaccinePresetId) ?? null;
-}
-
-export function getDefaultVaccineProtocol(preset: VaccinePreset | null): VaccineProtocol | null {
-	if (!preset) return null;
-	return preset.protocols.find((protocol) => protocol.id === preset.defaultProtocolId) ?? preset.protocols[0] ?? null;
-}
-
-export function getVaccinationProtocol(vaccination: PetVaccination, presets: VaccinePreset[]): VaccineProtocol | null {
-	const preset = getVaccinationPreset(vaccination, presets);
-	if (!preset) return null;
-	return preset.protocols.find((protocol) => protocol.id === vaccination.vaccineProtocolId) ?? null;
-}
-
-export function getVaccinationDose(vaccination: PetVaccination, presets: VaccinePreset[]): VaccinePresetDose | null {
-	const protocol = getVaccinationProtocol(vaccination, presets);
-	return protocol?.doses.find((item) => item.id === vaccination.vaccinePresetDoseId) ?? null;
-}
-
-export function getVaccinationDisplayName(vaccination: PetVaccination, presets: VaccinePreset[]): string {
-	const presetName = getVaccinationPreset(vaccination, presets)?.name ?? vaccination.vaccineName;
-	const protocolName = getVaccinationProtocol(vaccination, presets)?.name ?? vaccination.vaccineProtocolName;
-	const doseLabel = getVaccinationDose(vaccination, presets)?.label ?? vaccination.vaccineDoseLabel;
-	return [presetName, protocolName, doseLabel].filter((item) => item.trim().length > 0).join(' · ');
-}
-
-export function computeVaccineDueAt(appliedAt: string, dose: Pick<VaccinePresetDose, 'validityValue' | 'validityUnit'> | null): string | null {
-	if (!dose) return null;
-	if (dose.validityValue <= 0) return null;
+export function computeVaccineDueAt(appliedAt: string, validity: Pick<PetVaccination, 'validityValue' | 'validityUnit'> | null): string | null {
+	if (!validity) return null;
+	if (validity.validityValue <= 0) return null;
 	const applied = parseIsoDate(appliedAt);
 	if (!applied) return null;
-	if (dose.validityUnit === 'days') {
+	if (validity.validityUnit === 'days') {
 		const date = new Date(applied.year, applied.month - 1, applied.day);
-		date.setDate(date.getDate() + dose.validityValue);
+		date.setDate(date.getDate() + validity.validityValue);
 		return formatIsoDate(date);
 	}
 
-	const totalMonths = applied.year * 12 + applied.month - 1 + dose.validityValue;
+	const totalMonths = applied.year * 12 + applied.month - 1 + validity.validityValue;
 	const year = Math.floor(totalMonths / 12);
 	const month = (totalMonths % 12) + 1;
 	const day = Math.min(applied.day, daysInMonth(year, month));
@@ -179,20 +129,18 @@ export function computeVaccineDueAt(appliedAt: string, dose: Pick<VaccinePresetD
 	return formatIsoDate(new Date(year, month - 1, day));
 }
 
-export function getVaccineDueStatus(vaccination: PetVaccination, presets: VaccinePreset[], now = new Date()): VaccineDueStatus {
-	const preset = getVaccinationPreset(vaccination, presets);
-	const dose = getVaccinationDose(vaccination, presets);
-	if (vaccination.validityIgnoredAt) return { preset, dose, dueAt: null, daysUntilDue: null, expired: false, validityIgnored: true };
+export function getVaccineDueStatus(vaccination: PetVaccination, now = new Date()): VaccineDueStatus {
+	if (vaccination.validityIgnoredAt) return { dueAt: null, daysUntilDue: null, expired: false, validityIgnored: true };
 
-	const dueAt = computeVaccineDueAt(vaccination.appliedAt, dose);
-	if (!dueAt) return { preset, dose, dueAt: null, daysUntilDue: null, expired: false, validityIgnored: false };
+	const dueAt = computeVaccineDueAt(vaccination.appliedAt, vaccination);
+	if (!dueAt) return { dueAt: null, daysUntilDue: null, expired: false, validityIgnored: false };
 
 	const due = parseIsoDate(dueAt);
-	if (!due) return { preset, dose, dueAt: null, daysUntilDue: null, expired: false, validityIgnored: false };
+	if (!due) return { dueAt: null, daysUntilDue: null, expired: false, validityIgnored: false };
 
 	const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 	const dueDate = new Date(due.year, due.month - 1, due.day);
 	const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / DAY_MS);
 
-	return { preset, dose, dueAt, daysUntilDue, expired: daysUntilDue < 0, validityIgnored: false };
+	return { dueAt, daysUntilDue, expired: daysUntilDue < 0, validityIgnored: false };
 }

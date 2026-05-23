@@ -1,50 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { computeVaccineDueAt, findVaccinePreset, normalizeVaccineDoseLabel, normalizeVaccineName, type VaccinePreset } from '../vaccine.js';
+import { computeVaccineDueAt, getVaccineDueStatus, normalizeVaccineName, type PetVaccination } from '../vaccine.js';
 
-const presets: VaccinePreset[] = [
-	{
+function vaccination(input: Partial<PetVaccination> = {}): PetVaccination {
+	return {
 		id: 1,
-		name: 'V 10',
-		normalizedName: normalizeVaccineName('V 10'),
-		defaultProtocolId: 1,
-		protocols: [
-			{
-				id: 1,
-				vaccinePresetId: 1,
-				name: 'Padrão',
-				normalizedName: 'padrao',
-				doses: [{ id: 1, vaccinePresetId: 1, vaccineProtocolId: 1, label: '1ª dose', normalizedLabel: '1dose', validityValue: 21, validityUnit: 'days', sortOrder: 0, updatedAt: null }],
-				isDefault: true,
-				sortOrder: 0,
-				updatedAt: null
-			}
-		],
-		doses: [{ id: 1, vaccinePresetId: 1, vaccineProtocolId: 1, label: '1ª dose', normalizedLabel: '1dose', validityValue: 21, validityUnit: 'days', sortOrder: 0, updatedAt: null }],
-		hiddenAt: null,
-		updatedAt: null
-	},
-	{
-		id: 2,
-		name: 'Antirrábica',
-		normalizedName: normalizeVaccineName('Antirrábica'),
-		defaultProtocolId: 2,
-		protocols: [
-			{
-				id: 2,
-				vaccinePresetId: 2,
-				name: 'Padrão',
-				normalizedName: 'padrao',
-				doses: [{ id: 2, vaccinePresetId: 2, vaccineProtocolId: 2, label: 'Dose de reforço', normalizedLabel: 'dosedereforco', validityValue: 12, validityUnit: 'months', sortOrder: 0, updatedAt: null }],
-				isDefault: true,
-				sortOrder: 0,
-				updatedAt: null
-			}
-		],
-		doses: [{ id: 2, vaccinePresetId: 2, vaccineProtocolId: 2, label: 'Dose de reforço', normalizedLabel: 'dosedereforco', validityValue: 12, validityUnit: 'months', sortOrder: 0, updatedAt: null }],
-		hiddenAt: null,
-		updatedAt: null
-	}
-];
+		petId: 1,
+		appliedAt: '2026-05-08',
+		vaccineName: 'V 10',
+		vaccineNormalizedName: 'v10',
+		doseType: 'Dose inicial',
+		doseNumber: 1,
+		validityValue: 21,
+		validityUnit: 'days',
+		validityIgnoredAt: null,
+		updatedAt: null,
+		deletedAt: null,
+		purgeAfter: null,
+		...input
+	};
+}
 
 describe('vaccine helpers', () => {
 	it('normalizes accents and spacing from vaccine names', () => {
@@ -54,18 +28,6 @@ describe('vaccine helpers', () => {
 		expect(normalizeVaccineName('v   - 10')).toBe('v10');
 		expect(normalizeVaccineName(' <script>alert(1)</script> V ÁÇ 10 ')).toBe('scriptalert1scriptvac10');
 		expect(normalizeVaccineName('A'.repeat(10_000))).toHaveLength(10_000);
-		expect(normalizeVaccineDoseLabel(' 1ª dose !!! ')).toBe('1dose');
-	});
-
-	it('finds presets when spacing is added or removed', () => {
-		expect(findVaccinePreset('v10', presets)?.name).toBe('V 10');
-		expect(findVaccinePreset('v 10', presets)?.name).toBe('V 10');
-		expect(findVaccinePreset('v   10', presets)?.name).toBe('V 10');
-		expect(findVaccinePreset('antirrabica', presets)?.name).toBe('Antirrábica');
-	});
-
-	it('matches older spaced normalized keys', () => {
-		expect(findVaccinePreset('v10', [{ ...presets[0], normalizedName: 'v 10' }])?.name).toBe('V 10');
 	});
 
 	it('computes due dates across day and month boundaries', () => {
@@ -79,5 +41,17 @@ describe('vaccine helpers', () => {
 		expect(computeVaccineDueAt('2026-02-31', { validityValue: 21, validityUnit: 'days' })).toBeNull();
 		expect(computeVaccineDueAt('2026-05-08', { validityValue: 0, validityUnit: 'days' })).toBeNull();
 		expect(computeVaccineDueAt('2026-05-08', { validityValue: -1, validityUnit: 'months' })).toBeNull();
+	});
+
+	it('builds due status from the vaccination validity snapshot', () => {
+		const status = getVaccineDueStatus(vaccination(), new Date(2026, 4, 20));
+		expect(status.dueAt).toBe('2026-05-29');
+		expect(status.daysUntilDue).toBe(9);
+		expect(status.expired).toBe(false);
+		expect(status.validityIgnored).toBe(false);
+	});
+
+	it('ignores due status when validity is disabled', () => {
+		expect(getVaccineDueStatus(vaccination({ validityIgnoredAt: '2026-05-09' }))).toEqual({ dueAt: null, daysUntilDue: null, expired: false, validityIgnored: true });
 	});
 });

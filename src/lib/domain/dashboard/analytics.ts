@@ -40,12 +40,10 @@ export interface DashboardPetStudyOwner {
 }
 
 export interface DashboardPetStudyVaccine {
-	presetId: number;
-	presetName: string;
-	protocolId: number;
-	protocolName: string;
-	doseId: number;
-	doseLabel: string;
+	vaccineNormalizedName: string;
+	vaccineName: string;
+	doseType: string;
+	doseNumber: number | null;
 	appliedAt: string;
 	dueAt: string;
 	daysUntilDue: number;
@@ -60,8 +58,8 @@ export interface DashboardOwnerStudyPet {
 	sex: DashboardSexKey;
 	age: DashboardAgeBandKey;
 	vaccineStatus: DashboardVaccineStatusKey;
-	vaccinePresetIds: number[];
-	vaccinePresetNames: string[];
+	vaccineNormalizedNames: string[];
+	vaccineNames: string[];
 	vaccines: DashboardPetStudyVaccine[];
 }
 
@@ -79,8 +77,8 @@ export interface DashboardPetStudyItem {
 	sex: DashboardSexKey;
 	age: DashboardAgeBandKey;
 	vaccineStatus: DashboardVaccineStatusKey;
-	vaccinePresetIds: number[];
-	vaccinePresetNames: string[];
+	vaccineNormalizedNames: string[];
+	vaccineNames: string[];
 	vaccines: DashboardPetStudyVaccine[];
 	owners: DashboardPetStudyOwner[];
 	ownerCityKeys: string[];
@@ -100,7 +98,7 @@ export interface DashboardOwnerAnalytics {
 export interface DashboardStudyAnalytics {
 	pets: DashboardPetStudyItem[];
 	owners: DashboardOwnerStudyItem[];
-	vaccinePresets: DashboardNamedBucket[];
+	vaccines: DashboardNamedBucket[];
 	ownerCities: DashboardNamedBucket[];
 	ownerLocations: DashboardNamedBucket[];
 }

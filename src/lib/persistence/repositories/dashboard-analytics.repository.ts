@@ -46,12 +46,10 @@ interface PetOwnerAnalyticsRow {
 
 interface LatestVaccinationAnalyticsRow {
 	pet_id: number;
-	vaccine_preset_id: number;
-	vaccine_protocol_id: number;
-	vaccine_preset_dose_id: number;
 	vaccine_name: string;
-	vaccine_protocol_name: string;
-	vaccine_dose_label: string;
+	vaccine_normalized_name: string;
+	dose_type: string;
+	dose_number: number | null;
 	applied_at: string;
 	validity_value: number;
 	validity_unit: VaccineValidityUnit;
@@ -177,31 +175,26 @@ async function listPetOwnerRows(): Promise<PetOwnerAnalyticsRow[]> {
 async function listLatestVaccinationRows(): Promise<LatestVaccinationAnalyticsRow[]> {
 	const rows = await selectMany<LatestVaccinationAnalyticsRow>(
 		`SELECT pet_vaccinations.pet_id,
-			pet_vaccinations.vaccine_preset_id,
-			pet_vaccinations.vaccine_protocol_id,
-			pet_vaccinations.vaccine_preset_dose_id,
-			vaccine_presets.name AS vaccine_name,
-			vaccine_protocols.name AS vaccine_protocol_name,
-			vaccine_preset_doses.label AS vaccine_dose_label,
+			pet_vaccinations.vaccine_name,
+			pet_vaccinations.vaccine_normalized_name,
+			pet_vaccinations.dose_type,
+			pet_vaccinations.dose_number,
 			pet_vaccinations.applied_at,
-			vaccine_preset_doses.validity_value,
-			vaccine_preset_doses.validity_unit
+			pet_vaccinations.validity_value,
+			pet_vaccinations.validity_unit
 		 FROM pet_vaccinations
 		 JOIN pets ON pets.id = pet_vaccinations.pet_id
-		 JOIN vaccine_presets ON vaccine_presets.id = pet_vaccinations.vaccine_preset_id
-		 JOIN vaccine_protocols ON vaccine_protocols.id = pet_vaccinations.vaccine_protocol_id
-		 JOIN vaccine_preset_doses ON vaccine_preset_doses.id = pet_vaccinations.vaccine_preset_dose_id
 		 WHERE pet_vaccinations.deleted_at IS NULL
 			AND pet_vaccinations.validity_ignored_at IS NULL
 			AND pets.deleted_at IS NULL
-		 ORDER BY pet_vaccinations.pet_id, pet_vaccinations.vaccine_preset_id, pet_vaccinations.applied_at DESC, pet_vaccinations.id DESC`
+		 ORDER BY pet_vaccinations.pet_id, pet_vaccinations.vaccine_normalized_name, pet_vaccinations.applied_at DESC, pet_vaccinations.id DESC`
 	);
 
 	const latest = new Map<string, LatestVaccinationAnalyticsRow>();
 	for (const row of rows) {
 		if (!isPlausibleVaccineAppliedAt(row.applied_at)) continue;
 
-		const key = `${row.pet_id}:${row.vaccine_preset_id}`;
+		const key = `${row.pet_id}:${row.vaccine_normalized_name}`;
 		if (!latest.has(key)) latest.set(key, row);
 	}
 
@@ -231,12 +224,10 @@ function buildPetVaccinesMap(rows: LatestVaccinationAnalyticsRow[]): Map<number,
 
 		const vaccines = vaccinesByPetId.get(row.pet_id) ?? [];
 		vaccines.push({
-			presetId: row.vaccine_preset_id,
-			presetName: row.vaccine_name,
-			protocolId: row.vaccine_protocol_id,
-			protocolName: row.vaccine_protocol_name,
-			doseId: row.vaccine_preset_dose_id,
-			doseLabel: row.vaccine_dose_label,
+			vaccineNormalizedName: row.vaccine_normalized_name,
+			vaccineName: row.vaccine_name,
+			doseType: row.dose_type,
+			doseNumber: row.dose_number,
 			appliedAt: row.applied_at,
 			dueAt: status.dueAt,
 			daysUntilDue: status.daysUntilDue,
@@ -333,8 +324,8 @@ function toOwnerStudyPet(pet: DashboardPetStudyItem): DashboardOwnerStudyPet {
 		sex: pet.sex,
 		age: pet.age,
 		vaccineStatus: pet.vaccineStatus,
-		vaccinePresetIds: pet.vaccinePresetIds,
-		vaccinePresetNames: pet.vaccinePresetNames,
+		vaccineNormalizedNames: pet.vaccineNormalizedNames,
+		vaccineNames: pet.vaccineNames,
 		vaccines: pet.vaccines
 	};
 }
@@ -353,7 +344,7 @@ function buildStudyAnalytics(
 	const ownersById = new Map(owners.map((owner) => [owner.id, owner]));
 	const ownerIdsByPetId = buildPetOwnerMap(petOwnerRows);
 	const petIdsByOwnerId = buildOwnerPetMap(petOwnerRows);
-	const vaccinePresets = new Map<string, { label: string | null; count: number }>();
+	const vaccinesBucket = new Map<string, { label: string | null; count: number }>();
 	const ownerCities = new Map<string, { label: string | null; count: number }>();
 	const ownerLocations = new Map<string, { label: string | null; count: number }>();
 	const studyPets: DashboardPetStudyItem[] = [];
@@ -373,14 +364,13 @@ function buildStudyAnalytics(
 		const ownerLocationKeys: string[] = [];
 		const ownerLocationLabels: string[] = [];
 		const vaccines = vaccinesByPetId.get(pet.id) ?? [];
-		const vaccinePresetIds: number[] = [];
-		const vaccinePresetNames: string[] = [];
+		const vaccineNormalizedNames: string[] = [];
+		const vaccineNames: string[] = [];
 
 		for (const vaccine of vaccines) {
-			const presetKey = String(vaccine.presetId);
-			if (!vaccinePresetIds.includes(vaccine.presetId)) vaccinePresetIds.push(vaccine.presetId);
-			addUnique(vaccinePresetNames, vaccine.presetName);
-			incrementNamedBucket(vaccinePresets, presetKey, vaccine.presetName);
+			if (!vaccineNormalizedNames.includes(vaccine.vaccineNormalizedName)) vaccineNormalizedNames.push(vaccine.vaccineNormalizedName);
+			addUnique(vaccineNames, vaccine.vaccineName);
+			incrementNamedBucket(vaccinesBucket, vaccine.vaccineNormalizedName, vaccine.vaccineName);
 		}
 
 		for (const ownerId of ownerIdsByPetId.get(pet.id) ?? []) {
@@ -418,8 +408,8 @@ function buildStudyAnalytics(
 			sex: pet.sex ?? 'unknown',
 			age: ageBand(pet.birth_date),
 			vaccineStatus: statusByPetId.get(pet.id) ?? 'untracked',
-			vaccinePresetIds,
-			vaccinePresetNames,
+			vaccineNormalizedNames,
+			vaccineNames,
 			vaccines,
 			owners,
 			ownerCityKeys,
@@ -454,7 +444,7 @@ function buildStudyAnalytics(
 	return {
 		pets: studyPets,
 		owners: studyOwners,
-		vaccinePresets: toNamedBuckets(vaccinePresets),
+		vaccines: toNamedBuckets(vaccinesBucket),
 		ownerCities: toNamedBuckets(ownerCities),
 		ownerLocations: toNamedBuckets(ownerLocations)
 	};

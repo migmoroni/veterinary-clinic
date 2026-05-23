@@ -1,4 +1,5 @@
 import type {
+	VaccineAnalyticsVaccine,
 	VaccineHistoryFilter,
 	VaccineHistoryPoint,
 	VaccineHistoryPeriod,
@@ -21,11 +22,10 @@ import {
 	shiftIsoDate,
 	todayIsoDate
 } from '$lib/domain/vaccine/analytics.js';
-import type { VaccinePreset, VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
+import type { VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { selectMany } from '$lib/persistence/sqlite/client.js';
 import { listOwnerAssociatedContactsByOwnerIds } from './owner.repository.js';
-import { listVaccinePresets } from './vaccine.repository.js';
 
 interface LatestVaccinationRow {
 	id: number;
@@ -37,19 +37,21 @@ interface LatestVaccinationRow {
 	owner_name: string | null;
 	owner_contacts: OwnerAssociatedContact[];
 	applied_at: string;
-	vaccine_preset_id: number;
-	vaccine_protocol_id: number;
-	vaccine_preset_dose_id: number;
 	vaccine_name: string;
-	vaccine_protocol_name: string;
-	vaccine_dose_label: string;
+	vaccine_normalized_name: string;
 	validity_value: number;
 	validity_unit: VaccineValidityUnit;
 }
 
 interface VaccinationHistoryRow {
 	applied_at: string;
-	vaccine_preset_id: number;
+	vaccine_normalized_name: string;
+}
+
+interface AnalyticsVaccineRow {
+	vaccine_name: string;
+	vaccine_normalized_name: string;
+	count: number;
 }
 
 export interface VaccineAnalyticsOverview {
@@ -102,7 +104,7 @@ function normalizeStatus(value: string | null | undefined): VaccineStatusKey {
 }
 
 function normalizeDueFilterMode(value: string | null | undefined): VaccineDueFilterMode {
-	return vaccineDueFilterModes.includes(value as VaccineDueFilterMode) ? (value as VaccineDueFilterMode) : 'preset';
+	return vaccineDueFilterModes.includes(value as VaccineDueFilterMode) ? (value as VaccineDueFilterMode) : 'status';
 }
 
 function normalizeDueDate(value: string | null | undefined, fallback: string): string {
@@ -115,7 +117,7 @@ function normalizeDueFilter(filter: Partial<VaccineDueFilter> | string | null | 
 	const defaultEndDate = shiftIsoDate(today, 30);
 
 	if (typeof filter === 'string') {
-		return { mode: 'preset', status: normalizeStatus(filter), startDate: defaultStartDate, endDate: defaultEndDate };
+		return { mode: 'status', status: normalizeStatus(filter), startDate: defaultStartDate, endDate: defaultEndDate };
 	}
 
 	const startDate = normalizeDueDate(filter?.startDate, defaultStartDate);
@@ -133,6 +135,11 @@ function normalizePeriod(value: string | null | undefined): VaccineHistoryPeriod
 	return vaccineHistoryPeriods.includes(value as VaccineHistoryPeriod) ? (value as VaccineHistoryPeriod) : 'month';
 }
 
+function normalizeVaccineFilter(value: string | null | undefined): string | null {
+	const normalized = value?.trim() ?? '';
+	return normalized ? normalized : null;
+}
+
 async function listLatestVaccinationRows(): Promise<LatestVaccinationRow[]> {
 	const rows = await selectMany<LatestVaccinationRow>(
 		`SELECT
@@ -144,29 +151,22 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationRow[]> {
 			${ownerIdsSql} AS owner_ids,
 			${ownerNamesSql} AS owner_name,
 			pet_vaccinations.applied_at,
-			pet_vaccinations.vaccine_preset_id,
-			pet_vaccinations.vaccine_protocol_id,
-			pet_vaccinations.vaccine_preset_dose_id,
-			vaccine_presets.name AS vaccine_name,
-			vaccine_protocols.name AS vaccine_protocol_name,
-			vaccine_preset_doses.label AS vaccine_dose_label,
-			vaccine_preset_doses.validity_value,
-			vaccine_preset_doses.validity_unit
+			pet_vaccinations.vaccine_name,
+			pet_vaccinations.vaccine_normalized_name,
+			pet_vaccinations.validity_value,
+			pet_vaccinations.validity_unit
 		 FROM pet_vaccinations
 		 JOIN pets ON pets.id = pet_vaccinations.pet_id
-		 JOIN vaccine_presets ON vaccine_presets.id = pet_vaccinations.vaccine_preset_id
-		 JOIN vaccine_protocols ON vaccine_protocols.id = pet_vaccinations.vaccine_protocol_id
-		 JOIN vaccine_preset_doses ON vaccine_preset_doses.id = pet_vaccinations.vaccine_preset_dose_id
 		 WHERE pet_vaccinations.deleted_at IS NULL
 			AND pet_vaccinations.validity_ignored_at IS NULL
 			AND pets.deleted_at IS NULL
-		 ORDER BY pet_vaccinations.pet_id, pet_vaccinations.vaccine_preset_id, pet_vaccinations.applied_at DESC, pet_vaccinations.id DESC`
+		 ORDER BY pet_vaccinations.pet_id, pet_vaccinations.vaccine_normalized_name, pet_vaccinations.applied_at DESC, pet_vaccinations.id DESC`
 	);
 
 	const latest = new Map<string, LatestVaccinationRow>();
 	for (const row of rows) {
 		if (!isPlausibleVaccineAppliedAt(row.applied_at)) continue;
-		const key = `${row.pet_id}:${row.vaccine_preset_id}`;
+		const key = `${row.pet_id}:${row.vaccine_normalized_name}`;
 		if (!latest.has(key)) latest.set(key, row);
 	}
 
@@ -197,10 +197,8 @@ function mapStatusItem(row: LatestVaccinationRow, now = new Date()): VaccineStat
 		petId: row.pet_id,
 		petName: row.pet_name,
 		petAvatarBytes: normalizeByteArray(row.pet_avatar_blob),
-		vaccinePresetId: row.vaccine_preset_id,
-		vaccineProtocolId: row.vaccine_protocol_id,
-		vaccineProtocolName: row.vaccine_protocol_name,
-		vaccineName: `${row.vaccine_name} · ${row.vaccine_protocol_name} · ${row.vaccine_dose_label}`,
+		vaccineName: row.vaccine_name,
+		vaccineNormalizedName: row.vaccine_normalized_name,
 		appliedAt: row.applied_at,
 		dueAt: status.dueAt,
 		daysUntilDue: status.daysUntilDue,
@@ -239,15 +237,15 @@ export async function listVaccineStatusItems(filter: Partial<VaccineDueFilter> |
 
 export async function listVaccineHistory(filter: Partial<VaccineHistoryFilter>): Promise<VaccineHistoryPoint[]> {
 	const period = normalizePeriod(filter.period);
-	const vaccinePresetId = Number(filter.vaccinePresetId) > 0 ? Number(filter.vaccinePresetId) : null;
-	const values = vaccinePresetId ? [vaccinePresetId] : [];
+	const vaccineNormalizedName = normalizeVaccineFilter(filter.vaccineNormalizedName);
+	const values = vaccineNormalizedName ? [vaccineNormalizedName] : [];
 	const rows = await selectMany<VaccinationHistoryRow>(
-		`SELECT pet_vaccinations.applied_at, pet_vaccinations.vaccine_preset_id
+		`SELECT pet_vaccinations.applied_at, pet_vaccinations.vaccine_normalized_name
 		 FROM pet_vaccinations
 		 JOIN pets ON pets.id = pet_vaccinations.pet_id
 		 WHERE pet_vaccinations.deleted_at IS NULL
 			AND pets.deleted_at IS NULL
-			${vaccinePresetId ? 'AND pet_vaccinations.vaccine_preset_id = $1' : ''}
+			${vaccineNormalizedName ? 'AND pet_vaccinations.vaccine_normalized_name = $1' : ''}
 		 ORDER BY pet_vaccinations.applied_at ASC`,
 		values
 	);
@@ -264,6 +262,18 @@ export async function listVaccineHistory(filter: Partial<VaccineHistoryFilter>):
 	return [...buckets.values()].sort((first, second) => first.key.localeCompare(second.key));
 }
 
-export async function listAnalyticsVaccinePresets(): Promise<VaccinePreset[]> {
-	return listVaccinePresets();
+export async function listAnalyticsVaccines(): Promise<VaccineAnalyticsVaccine[]> {
+	const rows = await selectMany<AnalyticsVaccineRow>(
+		`SELECT vaccine_name, vaccine_normalized_name, COUNT(*) AS count
+		 FROM (
+			SELECT vaccine_name, vaccine_normalized_name, applied_at, id
+			FROM pet_vaccinations
+			WHERE deleted_at IS NULL
+			ORDER BY vaccine_normalized_name, applied_at DESC, id DESC
+		 )
+		 GROUP BY vaccine_normalized_name
+		 ORDER BY vaccine_name COLLATE NOCASE`
+	);
+
+	return rows.map((row) => ({ vaccineName: row.vaccine_name, vaccineNormalizedName: row.vaccine_normalized_name, count: row.count }));
 }

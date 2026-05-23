@@ -1,7 +1,7 @@
 import type { VaccineDueFilter, VaccineHistoryFilter } from '$lib/domain/vaccine/analytics.js';
 import {
 	getVaccineAnalyticsOverview,
-	listAnalyticsVaccinePresets,
+	listAnalyticsVaccines,
 	listVaccineHistory,
 	listVaccineStatusItems
 } from '$lib/persistence/repositories/vaccine-analytics.repository.js';
@@ -18,6 +18,6 @@ export async function loadVaccineHistory(filter: Partial<VaccineHistoryFilter>) 
 	return listVaccineHistory(filter);
 }
 
-export async function loadAnalyticsVaccinePresets() {
-	return listAnalyticsVaccinePresets();
+export async function loadAnalyticsVaccines() {
+	return listAnalyticsVaccines();
 }

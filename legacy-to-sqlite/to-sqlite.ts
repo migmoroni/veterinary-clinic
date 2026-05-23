@@ -47,21 +47,8 @@ interface DoseSignal {
   kind: 'numbered' | 'booster';
 }
 
-interface VaccinePresetIdRow {
+interface VaccineIdRow {
   id: number;
-  normalized_name: string;
-}
-
-interface VaccinePresetDoseIdRow {
-  id: number;
-  vaccine_preset_id: number;
-  vaccine_protocol_id: number;
-  normalized_label: string;
-}
-
-interface VaccineProtocolIdRow {
-  id: number;
-  vaccine_preset_id: number;
   normalized_name: string;
 }
 
@@ -180,12 +167,10 @@ const FIELD_LIMITS = {
   settingValue: 4096,
   backupPath: 2048,
   backupKind: 32,
-  vaccinePresetName: 80,
+  vaccineName: 80,
   vaccineNormalizedName: 80,
-  vaccineProtocolName: 80,
-  vaccineNormalizedProtocolName: 80,
-  vaccineDoseLabel: 80,
-  vaccineNormalizedDoseLabel: 80,
+  vaccineDoseType: 80,
+  vaccineDoseNumber: 999,
   vaccineValidityDays: 3650,
   vaccineValidityMonths: 120,
   searchQuery: 160
@@ -196,9 +181,9 @@ const requiredTextCheck = (column: string, maxLength: number): string => `length
 
 db.exec(`
   DROP TABLE IF EXISTS pet_vaccinations;
-  DROP TABLE IF EXISTS vaccine_preset_doses;
-  DROP TABLE IF EXISTS vaccine_protocols;
-  DROP TABLE IF EXISTS vaccine_presets;
+  DROP TABLE IF EXISTS vaccine_validity_options;
+  DROP TABLE IF EXISTS vaccine_dose_types;
+  DROP TABLE IF EXISTS vaccines;
   DROP TABLE IF EXISTS backup_history;
   DROP TABLE IF EXISTS app_settings;
   DROP TABLE IF EXISTS medical_records;
@@ -317,42 +302,35 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
-  CREATE TABLE IF NOT EXISTS vaccine_presets (
+  CREATE TABLE IF NOT EXISTS vaccines (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.vaccinePresetName)}),
+    name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.vaccineName)}),
     normalized_name TEXT NOT NULL UNIQUE CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedName)}),
-    default_protocol_id INTEGER,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     hidden_at TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT
   );
 
-  CREATE TABLE IF NOT EXISTS vaccine_protocols (
+  CREATE TABLE IF NOT EXISTS vaccine_dose_types (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    vaccine_preset_id INTEGER NOT NULL,
-    name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.vaccineProtocolName)}),
-    normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedProtocolName)}),
+    name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.vaccineDoseType)}),
+    normalized_name TEXT NOT NULL UNIQUE CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedName)}),
+    requires_dose_number INTEGER NOT NULL DEFAULT 1 CHECK(requires_dose_number IN (0, 1)),
     sort_order INTEGER NOT NULL DEFAULT 0,
+    hidden_at TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT,
-    FOREIGN KEY (vaccine_preset_id) REFERENCES vaccine_presets (id) ON DELETE CASCADE,
-    UNIQUE(vaccine_preset_id, normalized_name)
+    updated_at TEXT
   );
 
-  CREATE TABLE IF NOT EXISTS vaccine_preset_doses (
+  CREATE TABLE IF NOT EXISTS vaccine_validity_options (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    vaccine_preset_id INTEGER NOT NULL,
-    vaccine_protocol_id INTEGER NOT NULL,
-    label TEXT NOT NULL CHECK(${requiredTextCheck('label', FIELD_LIMITS.vaccineDoseLabel)}),
-    normalized_label TEXT NOT NULL CHECK(${requiredTextCheck('normalized_label', FIELD_LIMITS.vaccineNormalizedDoseLabel)}),
     validity_value INTEGER NOT NULL CHECK(validity_value > 0),
     validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months')),
     sort_order INTEGER NOT NULL DEFAULT 0,
+    hidden_at TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
-    FOREIGN KEY (vaccine_preset_id) REFERENCES vaccine_presets (id) ON DELETE CASCADE,
-    FOREIGN KEY (vaccine_protocol_id) REFERENCES vaccine_protocols (id) ON DELETE CASCADE,
-    UNIQUE(vaccine_protocol_id, normalized_label),
+    UNIQUE(validity_value, validity_unit),
     CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.vaccineValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.vaccineValidityMonths}))
   );
 
@@ -360,21 +338,19 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     pet_id INTEGER NOT NULL,
     applied_at TEXT NOT NULL DEFAULT CURRENT_DATE CHECK(length(applied_at) <= ${FIELD_LIMITS.isoDate}),
-    vaccine_preset_id INTEGER NOT NULL,
-    vaccine_protocol_id INTEGER NOT NULL,
-    vaccine_preset_dose_id INTEGER NOT NULL,
-    vaccine_name TEXT NOT NULL CHECK(${requiredTextCheck('vaccine_name', FIELD_LIMITS.vaccinePresetName)}),
-    vaccine_protocol_name TEXT NOT NULL CHECK(${requiredTextCheck('vaccine_protocol_name', FIELD_LIMITS.vaccineProtocolName)}),
-    vaccine_dose_label TEXT NOT NULL CHECK(${requiredTextCheck('vaccine_dose_label', FIELD_LIMITS.vaccineDoseLabel)}),
+    vaccine_name TEXT NOT NULL CHECK(${requiredTextCheck('vaccine_name', FIELD_LIMITS.vaccineName)}),
+    vaccine_normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('vaccine_normalized_name', FIELD_LIMITS.vaccineNormalizedName)}),
+    dose_type TEXT NOT NULL CHECK(${requiredTextCheck('dose_type', FIELD_LIMITS.vaccineDoseType)}),
+    dose_number INTEGER CHECK(dose_number IS NULL OR (dose_number BETWEEN 1 AND ${FIELD_LIMITS.vaccineDoseNumber})),
+    validity_value INTEGER NOT NULL CHECK(validity_value > 0),
+    validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months')),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     validity_ignored_at TEXT,
     updated_at TEXT,
     deleted_at TEXT,
     purge_after TEXT,
-    FOREIGN KEY (pet_id) REFERENCES pets (id),
-    FOREIGN KEY (vaccine_preset_id) REFERENCES vaccine_presets (id) ON DELETE RESTRICT,
-    FOREIGN KEY (vaccine_protocol_id) REFERENCES vaccine_protocols (id) ON DELETE RESTRICT,
-    FOREIGN KEY (vaccine_preset_dose_id) REFERENCES vaccine_preset_doses (id) ON DELETE RESTRICT
+    FOREIGN KEY (pet_id) REFERENCES pets (id) ON DELETE RESTRICT,
+    CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.vaccineValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.vaccineValidityMonths}))
   );
 
   CREATE INDEX IF NOT EXISTS idx_owners_name ON owners(name);
@@ -393,18 +369,15 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_pets_breed ON pets(breed);
   CREATE INDEX IF NOT EXISTS idx_medical_records_pet_id ON medical_records(pet_id);
   CREATE INDEX IF NOT EXISTS idx_medical_records_deleted_at ON medical_records(deleted_at);
-  CREATE INDEX IF NOT EXISTS idx_vaccine_presets_normalized_name ON vaccine_presets(normalized_name);
-  CREATE INDEX IF NOT EXISTS idx_vaccine_presets_hidden_at ON vaccine_presets(hidden_at);
-  CREATE INDEX IF NOT EXISTS idx_vaccine_protocols_vaccine_preset_id ON vaccine_protocols(vaccine_preset_id);
-  CREATE INDEX IF NOT EXISTS idx_vaccine_protocols_normalized_name ON vaccine_protocols(normalized_name);
-  CREATE INDEX IF NOT EXISTS idx_vaccine_preset_doses_vaccine_preset_id ON vaccine_preset_doses(vaccine_preset_id);
-  CREATE INDEX IF NOT EXISTS idx_vaccine_preset_doses_vaccine_protocol_id ON vaccine_preset_doses(vaccine_protocol_id);
-  CREATE INDEX IF NOT EXISTS idx_vaccine_preset_doses_normalized_label ON vaccine_preset_doses(normalized_label);
+  CREATE INDEX IF NOT EXISTS idx_vaccines_normalized_name ON vaccines(normalized_name);
+  CREATE INDEX IF NOT EXISTS idx_vaccines_hidden_at ON vaccines(hidden_at);
+  CREATE INDEX IF NOT EXISTS idx_vaccine_dose_types_normalized_name ON vaccine_dose_types(normalized_name);
+  CREATE INDEX IF NOT EXISTS idx_vaccine_dose_types_hidden_at ON vaccine_dose_types(hidden_at);
+  CREATE INDEX IF NOT EXISTS idx_vaccine_validity_options_value_unit ON vaccine_validity_options(validity_value, validity_unit);
+  CREATE INDEX IF NOT EXISTS idx_vaccine_validity_options_hidden_at ON vaccine_validity_options(hidden_at);
   CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_pet_id ON pet_vaccinations(pet_id);
-  CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_vaccine_preset_id ON pet_vaccinations(vaccine_preset_id);
-  CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_vaccine_protocol_id ON pet_vaccinations(vaccine_protocol_id);
-  CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_vaccine_preset_dose_id ON pet_vaccinations(vaccine_preset_dose_id);
   CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_applied_at ON pet_vaccinations(applied_at);
+  CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_vaccine_normalized_name ON pet_vaccinations(vaccine_normalized_name);
   CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_validity_ignored_at ON pet_vaccinations(validity_ignored_at);
   CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_deleted_at ON pet_vaccinations(deleted_at);
 `);
@@ -445,31 +418,24 @@ const insertMedicalRecord = db.prepare(`
   VALUES (@petId, @description, @admittedAt, @dischargedAt, CURRENT_TIMESTAMP)
 `);
 
-const insertVaccinePreset = db.prepare(`
-  INSERT OR IGNORE INTO vaccine_presets (name, normalized_name, updated_at)
+const insertVaccine = db.prepare(`
+  INSERT OR IGNORE INTO vaccines (name, normalized_name, updated_at)
   VALUES (@name, @normalizedName, CURRENT_TIMESTAMP)
 `);
 
-const insertVaccineProtocol = db.prepare(`
-  INSERT OR IGNORE INTO vaccine_protocols (vaccine_preset_id, name, normalized_name, sort_order, updated_at)
-  VALUES (@vaccinePresetId, @name, @normalizedName, @sortOrder, CURRENT_TIMESTAMP)
+const insertDoseType = db.prepare(`
+  INSERT OR IGNORE INTO vaccine_dose_types (name, normalized_name, requires_dose_number, sort_order, updated_at)
+  VALUES (@name, @normalizedName, @requiresDoseNumber, @sortOrder, CURRENT_TIMESTAMP)
 `);
 
-const updateVaccinePresetDefaultProtocol = db.prepare(`
-  UPDATE vaccine_presets
-  SET default_protocol_id = COALESCE(default_protocol_id, @vaccineProtocolId),
-      updated_at = CURRENT_TIMESTAMP
-  WHERE id = @vaccinePresetId
-`);
-
-const insertVaccinePresetDose = db.prepare(`
-  INSERT OR IGNORE INTO vaccine_preset_doses (vaccine_preset_id, vaccine_protocol_id, label, normalized_label, validity_value, validity_unit, sort_order, updated_at)
-  VALUES (@vaccinePresetId, @vaccineProtocolId, @label, @normalizedLabel, @validityValue, @validityUnit, @sortOrder, CURRENT_TIMESTAMP)
+const insertValidityOption = db.prepare(`
+  INSERT OR IGNORE INTO vaccine_validity_options (validity_value, validity_unit, sort_order, updated_at)
+  VALUES (@validityValue, @validityUnit, @sortOrder, CURRENT_TIMESTAMP)
 `);
 
 const insertPetVaccination = db.prepare(`
-  INSERT INTO pet_vaccinations (pet_id, applied_at, vaccine_preset_id, vaccine_protocol_id, vaccine_preset_dose_id, vaccine_name, vaccine_protocol_name, vaccine_dose_label, updated_at)
-  VALUES (@petId, @appliedAt, @vaccinePresetId, @vaccineProtocolId, @vaccinePresetDoseId, @vaccineName, @vaccineProtocolName, @vaccineDoseLabel, CURRENT_TIMESTAMP)
+  INSERT INTO pet_vaccinations (pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose_type, dose_number, validity_value, validity_unit, updated_at)
+  VALUES (@petId, @appliedAt, @vaccineName, @vaccineNormalizedName, @doseType, @doseNumber, @validityValue, @validityUnit, CURRENT_TIMESTAMP)
 `);
 
 const markVaccinationValidityIgnored = db.prepare(`
@@ -487,94 +453,46 @@ const normalizeVaccineName = (value: string | undefined): string => {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '');
 };
+const initialDoseTypeLabel = 'Dose inicial';
+const boosterDoseTypeLabel = 'Reforço';
 const boosterDoseLabel = 'Dose de reforço';
-const defaultVaccineProtocolName = 'Padrão';
 
-const defaultVaccinePresets = [
-  {
-    name: 'V 10',
-    protocols: [
-      {
-        name: defaultVaccineProtocolName,
-        doses: [
-          { label: '1ª dose', validityValue: 21, validityUnit: 'days' },
-          { label: '2ª dose', validityValue: 21, validityUnit: 'days' },
-          { label: '3ª dose', validityValue: 21, validityUnit: 'days' },
-          { label: '4ª dose', validityValue: 12, validityUnit: 'months' },
-          { label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }
-        ]
-      }
-    ]
-  },
-  { name: 'V 8', protocols: [{ name: defaultVaccineProtocolName, doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }] },
-  { name: 'Antirrábica', protocols: [{ name: defaultVaccineProtocolName, doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }] },
-  { name: 'Recombitek', protocols: [{ name: defaultVaccineProtocolName, doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }] },
-  { name: 'Quadrupla', protocols: [{ name: defaultVaccineProtocolName, doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }] },
-  { name: 'Quíntupla', protocols: [{ name: defaultVaccineProtocolName, doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }] },
-  { name: 'Giardia', protocols: [{ name: defaultVaccineProtocolName, doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }] },
-  { name: 'Gripe', protocols: [{ name: defaultVaccineProtocolName, doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }] },
-  { name: 'Nobivac', protocols: [{ name: defaultVaccineProtocolName, doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }] },
-  { name: 'Imunocan', protocols: [{ name: defaultVaccineProtocolName, doses: [{ label: 'Dose de reforço', validityValue: 12, validityUnit: 'months' }] }] }
-].map((preset) => ({
-  ...preset,
-  normalizedName: normalizeVaccineName(preset.name),
-  protocols: preset.protocols.map((protocol) => ({ ...protocol, normalizedName: normalizeVaccineName(protocol.name) }))
-}));
+const defaultVaccineNames = ['V 10', 'V 8', 'Antirrábica', 'Recombitek', 'Quadrupla', 'Quíntupla', 'Giardia', 'Gripe', 'Nobivac', 'Imunocan'];
 
-for (const preset of defaultVaccinePresets) {
-  insertVaccinePreset.run(preset);
+const defaultDoseTypes = [
+  { name: initialDoseTypeLabel, requiresDoseNumber: 1, sortOrder: 0 },
+  { name: boosterDoseTypeLabel, requiresDoseNumber: 0, sortOrder: 1 }
+];
+
+const defaultValidityOptions = [
+  { validityValue: 21, validityUnit: 'days', sortOrder: 0 },
+  { validityValue: 12, validityUnit: 'months', sortOrder: 1 }
+];
+
+for (const name of defaultVaccineNames) {
+  insertVaccine.run({ name, normalizedName: normalizeVaccineName(name) });
 }
 
-const vaccinePresetIds = new Map(
-  (db.prepare('SELECT id, normalized_name FROM vaccine_presets').all() as VaccinePresetIdRow[]).map((preset) => [normalizeVaccineName(preset.normalized_name), preset.id])
+for (const doseType of defaultDoseTypes) {
+  insertDoseType.run({ ...doseType, normalizedName: normalizeVaccineName(doseType.name) });
+}
+
+for (const option of defaultValidityOptions) {
+  insertValidityOption.run(option);
+}
+
+const vaccineIds = new Map(
+  (db.prepare('SELECT id, normalized_name FROM vaccines').all() as VaccineIdRow[]).map((vaccine) => [normalizeVaccineName(vaccine.normalized_name), vaccine.id])
 );
 
-for (const preset of defaultVaccinePresets) {
-  const vaccinePresetId = vaccinePresetIds.get(preset.normalizedName);
-  if (!vaccinePresetId) continue;
-
-  for (const [protocolIndex, protocol] of preset.protocols.entries()) {
-    insertVaccineProtocol.run({
-      vaccinePresetId,
-      name: protocol.name,
-      normalizedName: protocol.normalizedName,
-      sortOrder: protocolIndex
-    });
+const ensureVaccineName = (name: string): string => {
+  const normalizedName = normalizeVaccineName(name);
+  if (!vaccineIds.has(normalizedName)) {
+    const result = insertVaccine.run({ name, normalizedName });
+    vaccineIds.set(normalizedName, Number(result.lastInsertRowid));
   }
-}
-
-const vaccineProtocolIds = new Map<string, number | bigint>(
-  (db.prepare('SELECT id, vaccine_preset_id, normalized_name FROM vaccine_protocols').all() as VaccineProtocolIdRow[]).map((protocol) => [`${protocol.vaccine_preset_id}:${normalizeVaccineName(protocol.normalized_name)}`, protocol.id])
-);
-
-for (const preset of defaultVaccinePresets) {
-  const vaccinePresetId = vaccinePresetIds.get(preset.normalizedName);
-  if (!vaccinePresetId) continue;
-
-  for (const [protocolIndex, protocol] of preset.protocols.entries()) {
-    const vaccineProtocolId = vaccineProtocolIds.get(`${vaccinePresetId}:${protocol.normalizedName}`);
-    if (!vaccineProtocolId) continue;
-
-    if (protocolIndex === 0) updateVaccinePresetDefaultProtocol.run({ vaccinePresetId, vaccineProtocolId });
-
-    for (const [index, dose] of protocol.doses.entries()) {
-      const sortOrder = dose.label === boosterDoseLabel ? 99 : index;
-      insertVaccinePresetDose.run({
-        vaccinePresetId,
-        vaccineProtocolId,
-        label: dose.label,
-        normalizedLabel: normalizeVaccineName(dose.label),
-        validityValue: dose.validityValue,
-        validityUnit: dose.validityUnit,
-        sortOrder
-      });
-    }
-  }
-}
-
-const vaccinePresetDoseIds = new Map<string, number | bigint>(
-  (db.prepare('SELECT id, vaccine_preset_id, vaccine_protocol_id, normalized_label FROM vaccine_preset_doses').all() as VaccinePresetDoseIdRow[]).map((dose) => [`${dose.vaccine_protocol_id}:${normalizeVaccineName(dose.normalized_label)}`, dose.id])
-);
+  return normalizedName;
+};
 
 const ownersCache = new Map<string, number | bigint>();
 const ownerAdditionalResponsiblesCache = new Map<string, number | bigint>();
@@ -1363,9 +1281,9 @@ const countRows = (table: string): number => {
 };
 
 const printDatabaseReport = () => {
-  const vaccinationsWithoutPreset = (db.prepare('SELECT COUNT(*) AS total FROM pet_vaccinations WHERE vaccine_preset_id IS NULL').get() as CountRow).total;
-  const vaccinationsWithoutProtocol = (db.prepare('SELECT COUNT(*) AS total FROM pet_vaccinations WHERE vaccine_protocol_id IS NULL').get() as CountRow).total;
-  const vaccinationsWithoutDose = (db.prepare('SELECT COUNT(*) AS total FROM pet_vaccinations WHERE vaccine_preset_dose_id IS NULL').get() as CountRow).total;
+  const vaccinationsWithoutNormalizedName = (db.prepare("SELECT COUNT(*) AS total FROM pet_vaccinations WHERE vaccine_normalized_name IS NULL OR length(trim(vaccine_normalized_name)) = 0").get() as CountRow).total;
+  const vaccinationsWithInvalidDose = (db.prepare(`SELECT COUNT(*) AS total FROM pet_vaccinations WHERE dose_type IS NULL OR length(trim(dose_type)) = 0 OR (dose_number IS NOT NULL AND (dose_number < 1 OR dose_number > ${FIELD_LIMITS.vaccineDoseNumber}))`).get() as CountRow).total;
+  const vaccinationsWithInvalidValidity = (db.prepare("SELECT COUNT(*) AS total FROM pet_vaccinations WHERE validity_value <= 0 OR validity_unit NOT IN ('days', 'months')").get() as CountRow).total;
 
   console.log('\nConferência do SQLite gerado:');
   console.log(`- owners: ${countRows('owners')}`);
@@ -1375,13 +1293,13 @@ const printDatabaseReport = () => {
   console.log(`- pets: ${countRows('pets')}`);
   console.log(`- pet_owners: ${countRows('pet_owners')}`);
   console.log(`- medical_records: ${countRows('medical_records')}`);
-  console.log(`- vaccine_presets: ${countRows('vaccine_presets')}`);
-  console.log(`- vaccine_protocols: ${countRows('vaccine_protocols')}`);
-  console.log(`- vaccine_preset_doses: ${countRows('vaccine_preset_doses')}`);
+  console.log(`- vaccines: ${countRows('vaccines')}`);
+  console.log(`- vaccine_dose_types: ${countRows('vaccine_dose_types')}`);
+  console.log(`- vaccine_validity_options: ${countRows('vaccine_validity_options')}`);
   console.log(`- pet_vaccinations: ${countRows('pet_vaccinations')}`);
-  console.log(`- pet_vaccinations sem preset: ${vaccinationsWithoutPreset}`);
-  console.log(`- pet_vaccinations sem protocolo: ${vaccinationsWithoutProtocol}`);
-  console.log(`- pet_vaccinations sem dose: ${vaccinationsWithoutDose}`);
+  console.log(`- pet_vaccinations sem nome normalizado: ${vaccinationsWithoutNormalizedName}`);
+  console.log(`- pet_vaccinations com dose inválida: ${vaccinationsWithInvalidDose}`);
+  console.log(`- pet_vaccinations com validade inválida: ${vaccinationsWithInvalidValidity}`);
 };
 
 const isTruthy = (value: string | undefined) => {
@@ -1543,32 +1461,18 @@ const doseLabelForVaccine = (normalizedLine: string, vaccineMatch: VaccineMatch,
   return boosterDose?.label ?? boosterDoseLabel;
 };
 
-const doseValidity = (doseLabel: string): { validityValue: number; validityUnit: VaccineValidityUnit; sortOrder: number } => {
+const doseModel = (doseLabel: string): { doseType: string; doseNumber: number | null } => {
   const numberedDose = numberedDoseMatchers.find((matcher) => matcher.label === doseLabel);
-  if (numberedDose && numberedDose.sortOrder <= 2) return { validityValue: 21, validityUnit: 'days', sortOrder: numberedDose.sortOrder };
-  if (numberedDose) return { validityValue: 12, validityUnit: 'months', sortOrder: numberedDose.sortOrder };
-  return { validityValue: 12, validityUnit: 'months', sortOrder: 99 };
+  if (!numberedDose) return { doseType: boosterDoseTypeLabel, doseNumber: null };
+  return { doseType: initialDoseTypeLabel, doseNumber: numberedDose.sortOrder + 1 };
 };
 
-const ensureVaccinePresetDose = (vaccinePresetId: number | bigint, vaccineProtocolId: number | bigint, doseLabel: string): number | bigint => {
-  const normalizedLabel = normalizeVaccineName(doseLabel);
-  const key = `${vaccineProtocolId}:${normalizedLabel}`;
-  const existing = vaccinePresetDoseIds.get(key);
-  if (existing) return existing;
-
-  const validity = doseValidity(doseLabel);
-  const result = insertVaccinePresetDose.run({
-    vaccinePresetId,
-    vaccineProtocolId,
-    label: doseLabel,
-    normalizedLabel,
-    validityValue: validity.validityValue,
-    validityUnit: validity.validityUnit,
-    sortOrder: validity.sortOrder
-  });
-  const id = result.lastInsertRowid;
-  vaccinePresetDoseIds.set(key, id);
-  return id;
+const doseValidity = (doseLabel: string, options: { v10ThreeDoseFinal?: boolean } = {}): { validityValue: number; validityUnit: VaccineValidityUnit } => {
+  const dose = doseModel(doseLabel);
+  if (dose.doseNumber === null) return { validityValue: 12, validityUnit: 'months' };
+  if (dose.doseNumber === 1 || dose.doseNumber === 2) return { validityValue: 21, validityUnit: 'days' };
+  if (dose.doseNumber === 3 && !options.v10ThreeDoseFinal) return { validityValue: 21, validityUnit: 'days' };
+  return { validityValue: 12, validityUnit: 'months' };
 };
 
 const extractVaccinationsFromLine = (line: string): Omit<ExtractedVaccination, 'appliedAt'>[] => {
@@ -1652,7 +1556,7 @@ const processarMigracao = () => {
 
   const migrateRows = db.transaction((records: CsvRow[]) => {
     console.log('Iniciando processamento...');
-    const latestVaccinationByPetAndPreset = new Map<string, ImportedVaccinationReference>();
+    const latestVaccinationByPetAndVaccine = new Map<string, ImportedVaccinationReference>();
 
     for (const row of records) {
       const parsedOwnerName = parseLegacyOwnerName(row['NOME PROPRIETÁRIO']);
@@ -1735,32 +1639,34 @@ const processarMigracao = () => {
         else report.medicalRecordPeriodsMissing += 1;
         if (period.dischargedAt) report.medicalRecordPeriodsWithDischarge += 1;
 
-        for (const vaccination of extractVaccinationsFromRecord(fullDescription, report)) {
-          const vaccinePresetId = vaccinePresetIds.get(normalizeVaccineName(vaccination.vaccine));
-          if (!vaccinePresetId) throw new Error(`Preset de vacina não encontrado: ${vaccination.vaccine}`);
-          const vaccineProtocolId = vaccineProtocolIds.get(`${vaccinePresetId}:${normalizeVaccineName(defaultVaccineProtocolName)}`);
-          if (!vaccineProtocolId) throw new Error(`Protocolo padrão de vacina não encontrado: ${vaccination.vaccine}`);
-          const vaccinePresetDoseId = ensureVaccinePresetDose(vaccinePresetId, vaccineProtocolId, vaccination.doseLabel);
+        const extractedVaccinations = extractVaccinationsFromRecord(fullDescription, report);
+        const v10HasFourthDose = extractedVaccinations.some((v) => v.vaccine === 'V 10' && v.doseLabel === '4ª dose');
+        const v10HasThirdDose = extractedVaccinations.some((v) => v.vaccine === 'V 10' && v.doseLabel === '3ª dose');
+        const v10ThreeDoseFinal = !v10HasFourthDose && v10HasThirdDose;
+
+        for (const vaccination of extractedVaccinations) {
+          const vaccineNormalizedName = ensureVaccineName(vaccination.vaccine);
+          const dose = doseModel(vaccination.doseLabel);
+          const validity = doseValidity(vaccination.doseLabel, { v10ThreeDoseFinal: vaccination.vaccine === 'V 10' && v10ThreeDoseFinal });
 
           const vaccinationRes = insertPetVaccination.run({
             petId: petRes.lastInsertRowid,
             appliedAt: vaccination.appliedAt,
-            vaccinePresetId,
-            vaccineProtocolId,
-            vaccinePresetDoseId,
             vaccineName: vaccination.vaccine,
-            vaccineProtocolName: defaultVaccineProtocolName,
-            vaccineDoseLabel: vaccination.doseLabel
+            vaccineNormalizedName,
+            doseType: dose.doseType,
+            doseNumber: dose.doseNumber,
+            validityValue: validity.validityValue,
+            validityUnit: validity.validityUnit
           });
           report.vaccinationsCreated += 1;
-
           const vaccinationReference = { id: Number(vaccinationRes.lastInsertRowid), appliedAt: vaccination.appliedAt };
-          const vaccineKey = `${petRes.lastInsertRowid}:${vaccinePresetId}`;
-          const currentLatest = latestVaccinationByPetAndPreset.get(vaccineKey);
+          const vaccineKey = `${petRes.lastInsertRowid}:${vaccineNormalizedName}`;
+          const currentLatest = latestVaccinationByPetAndVaccine.get(vaccineKey);
 
           if (!currentLatest || isAtLeastAsRecentVaccination(vaccinationReference, currentLatest)) {
             if (currentLatest) ignoreVaccinationValidity(report, currentLatest.id);
-            latestVaccinationByPetAndPreset.set(vaccineKey, vaccinationReference);
+            latestVaccinationByPetAndVaccine.set(vaccineKey, vaccinationReference);
           } else {
             ignoreVaccinationValidity(report, vaccinationReference.id);
           }

@@ -10,10 +10,8 @@ function statusItem(daysUntilDue: number, dueAt = '2026-05-08'): VaccineStatusIt
 		petId: 1,
 		petName: 'Pet',
 		petAvatarBytes: null,
-		vaccinePresetId: 1,
-		vaccineProtocolId: 1,
-		vaccineProtocolName: 'Protocol',
 		vaccineName: 'Vaccine',
+		vaccineNormalizedName: 'vaccine',
 		appliedAt: '2025-05-08',
 		dueAt,
 		daysUntilDue,
@@ -76,7 +74,7 @@ describe('vaccine analytics helpers', () => {
 	});
 
 	it('filters by status when preset mode is selected', () => {
-		const filter = { mode: 'preset', status: 'expired', startDate: '2026-01-01', endDate: '2026-01-31' } as const;
+		const filter = { mode: 'status', status: 'expired', startDate: '2026-01-01', endDate: '2026-01-31' } as const;
 
 		expect(matchesVaccineDueFilter(statusItem(-1, '2030-01-01'), filter)).toBe(true);
 		expect(matchesVaccineDueFilter(statusItem(0, '2026-01-15'), filter)).toBe(false);
