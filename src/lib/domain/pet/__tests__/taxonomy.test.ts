@@ -3,8 +3,8 @@ import { getPetBreedOption, getPetBreedOptions, getPetSpeciesOption, isPetBreed,
 
 describe('pet taxonomy', () => {
 	it('lists breeds by species', () => {
-		expect(getPetBreedOptions('canine')).toHaveLength(272);
-		expect(getPetBreedOptions('feline')).toHaveLength(79);
+		expect(getPetBreedOptions('canine')).toHaveLength(328);
+		expect(getPetBreedOptions('feline')).toHaveLength(80);
 		expect(getPetBreedOptions('canine').some((option) => option.id === 'poodle')).toBe(true);
 		expect(getPetBreedOptions('canine').some((option) => option.id === 'akita')).toBe(true);
 		expect(getPetBreedOptions('canine').some((option) => option.id === 'whippet')).toBe(true);
@@ -31,6 +31,13 @@ describe('pet taxonomy', () => {
 		expect(getPetBreedOptions('canine').some((option) => option.id === 'armenian-gampr')).toBe(true);
 		expect(getPetBreedOptions('canine').some((option) => option.id === 'sarabi-dog')).toBe(true);
 		expect(getPetBreedOptions('canine').some((option) => option.id === 'tarsus-catalburun')).toBe(true);
+		expect(getPetBreedOptions('canine').some((option) => option.id === 'russian-toy')).toBe(true);
+		expect(getPetBreedOptions('canine').some((option) => option.id === 'west-siberian-laika')).toBe(true);
+		expect(getPetBreedOptions('canine').some((option) => option.id === 'polish-tatra-sheepdog')).toBe(true);
+		expect(getPetBreedOptions('canine').some((option) => option.id === 'czechoslovakian-wolfdog')).toBe(true);
+		expect(getPetBreedOptions('canine').some((option) => option.id === 'sarplaninac')).toBe(true);
+		expect(getPetBreedOptions('canine').some((option) => option.id === 'spanish-mastiff')).toBe(true);
+		expect(getPetBreedOptions('canine').some((option) => option.id === 'danish-swedish-farmdog')).toBe(true);
 		expect(getPetBreedOptions('feline').some((option) => option.id === 'siamese')).toBe(true);
 		expect(getPetBreedOptions('feline').some((option) => option.id === 'maine-coon')).toBe(true);
 		expect(getPetBreedOptions('feline').some((option) => option.id === 'somali')).toBe(true);
@@ -44,6 +51,7 @@ describe('pet taxonomy', () => {
 		expect(getPetBreedOptions('feline').some((option) => option.id === 'suphalak')).toBe(true);
 		expect(getPetBreedOptions('feline').some((option) => option.id === 'raas-cat')).toBe(true);
 		expect(getPetBreedOptions('feline').some((option) => option.id === 'aphrodite')).toBe(true);
+		expect(getPetBreedOptions('feline').some((option) => option.id === 'toybob')).toBe(true);
 		expect(getPetBreedOption('chantilly-tiffany')).toBeNull();
 	});
 

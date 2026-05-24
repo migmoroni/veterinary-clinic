@@ -112,6 +112,25 @@ describe('breed reference', () => {
 			sizeCategory: 'medium',
 			averageWeightKg: { male: [3.2, 4.5], female: [2.3, 3.6] }
 		});
+		expect(getBreedReferenceProfile('russian-toy')).toMatchObject({
+			sizeCategory: 'small',
+			averageWeightKg: { male: [1.5, 3], female: [1.3, 2.8] },
+			averageHeightCm: { male: [22, 27], female: [20, 26] }
+		});
+		expect(getBreedReferenceProfile('moscow-watchdog')).toMatchObject({
+			sizeCategory: 'giant',
+			averageWeightKg: { male: [55, 68], female: [45, 60] },
+			averageHeightCm: { male: [68, 78], female: [66, 73] }
+		});
+		expect(getBreedReferenceProfile('spanish-mastiff')).toMatchObject({
+			sizeCategory: 'giant',
+			averageWeightKg: { male: [60, 90], female: [50, 75] },
+			averageHeightCm: { male: [77, 88], female: [72, 80] }
+		});
+		expect(getBreedReferenceProfile('toybob')).toMatchObject({
+			sizeCategory: 'small',
+			averageWeightKg: { male: [2, 3], female: [1.5, 2.5] }
+		});
 	});
 
 	it('projects mapped origins inside the map viewport', () => {
