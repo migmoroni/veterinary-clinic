@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
-	import { exportDatabase, importDatabase } from '$lib/services/backup.service.js';
+	import { importDatabaseFromCsv } from '$lib/services/csv-import.service.js';
+	import { exportDatabaseAsCsv } from '$lib/services/csv-export.service.js';
+	import { exportDatabase } from '$lib/services/database-export.service.js';
+	import { importDatabase } from '$lib/services/database-import.service.js';
 	import Archive from '@lucide/svelte/icons/archive';
+	import Table from '@lucide/svelte/icons/table';
 	import Upload from '@lucide/svelte/icons/upload';
 
 	let busy = $state(false);
@@ -29,6 +33,26 @@
 		}
 	}
 
+	async function exportCsv() {
+		busy = true;
+		error = null;
+		statusKey = null;
+
+		try {
+			const path = await exportDatabaseAsCsv(t('dialog.exportCsvTitle'));
+			if (!path) {
+				statusKey = 'status.operationCanceled';
+				return;
+			}
+			lastPath = path;
+			statusKey = 'status.csvExportCreated';
+		} catch (exception) {
+			error = exception instanceof Error ? exception.message : String(exception);
+		} finally {
+			busy = false;
+		}
+	}
+
 	async function importCopy() {
 		if (!window.confirm(t('data.importConfirm'))) return;
 		busy = true;
@@ -37,6 +61,27 @@
 
 		try {
 			const result = await importDatabase(t('dialog.importTitle'));
+			if (!result) {
+				statusKey = 'status.operationCanceled';
+				return;
+			}
+			lastPath = result.safetyBackupName;
+			statusKey = 'status.imported';
+		} catch (exception) {
+			error = exception instanceof Error ? exception.message : String(exception);
+		} finally {
+			busy = false;
+		}
+	}
+
+	async function importCsv() {
+		if (!window.confirm(t('data.importCsvConfirm'))) return;
+		busy = true;
+		error = null;
+		statusKey = null;
+
+		try {
+			const result = await importDatabaseFromCsv(t('dialog.importCsvTitle'));
 			if (!result) {
 				statusKey = 'status.operationCanceled';
 				return;
@@ -76,10 +121,18 @@
 				<Archive class="size-5" />
 			</div>
 			<h3 class="mt-4 text-base font-semibold">{t('actions.exportDatabase')}</h3>
-			<button type="button" class="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={busy} onclick={() => void exportCopy()}>
-				<Archive class="size-4" />
-				{t('actions.exportDatabase')}
-			</button>
+			<p class="mt-2 text-sm leading-6 text-muted-foreground">{t('data.exportDatabaseDescription')}</p>
+			<div class="mt-4 flex flex-wrap gap-2">
+				<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={busy} onclick={() => void exportCopy()}>
+					<Archive class="size-4" />
+					{t('actions.exportDatabase')}
+				</button>
+				<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={busy} onclick={() => void exportCsv()}>
+					<Table class="size-4" />
+					{t('actions.exportCsv')}
+				</button>
+			</div>
+			<p class="mt-3 text-xs leading-5 text-muted-foreground">{t('data.exportCsvDescription')}</p>
 		</section>
 
 		<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
@@ -88,10 +141,16 @@
 			</div>
 			<h3 class="mt-4 text-base font-semibold">{t('actions.importDatabase')}</h3>
 			<p class="mt-2 text-sm leading-6 text-muted-foreground">{t('data.importWarning')}</p>
-			<button type="button" class="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={busy} onclick={() => void importCopy()}>
-				<Upload class="size-4" />
-				{t('actions.importDatabase')}
-			</button>
+			<div class="mt-4 flex flex-wrap gap-2">
+				<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={busy} onclick={() => void importCopy()}>
+					<Upload class="size-4" />
+					{t('actions.importDatabase')}
+				</button>
+				<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={busy} onclick={() => void importCsv()}>
+					<Table class="size-4" />
+					{t('actions.importCsv')}
+				</button>
+			</div>
 		</section>
 	</div>
 </section>

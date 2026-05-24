@@ -2,7 +2,8 @@
 	import { onMount } from 'svelte';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import type { BackupHistoryItem, BackupKind } from '$lib/persistence/repositories/backup.repository.js';
-	import { exportDatabase, getBackupHistory } from '$lib/services/backup.service.js';
+	import { getBackupHistory } from '$lib/services/backup.service.js';
+	import { exportDatabase } from '$lib/services/database-export.service.js';
 	import DatabaseBackup from '@lucide/svelte/icons/database-backup';
 	import RotateCw from '@lucide/svelte/icons/rotate-cw';
 

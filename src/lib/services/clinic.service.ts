@@ -11,7 +11,7 @@ import { getClinicCounts } from '$lib/persistence/repositories/stats.repository.
 import type { VaccineAnalyticsOverview } from '$lib/persistence/repositories/vaccine-analytics.repository.js';
 import type { VaccineHistoryPoint } from '$lib/domain/vaccine/analytics.js';
 import { loadLocalePreference } from './preferences.service.js';
-import { importDatabase } from './backup.service.js';
+import { importDatabase } from './database-import.service.js';
 import { shouldResetOverviewLastRecordOnce } from './client-state.service.js';
 import { loadVaccineAnalyticsOverview, loadVaccineHistory } from './vaccine-analytics.service.js';
 import { loadDashboardAnalytics } from './dashboard-analytics.service.js';

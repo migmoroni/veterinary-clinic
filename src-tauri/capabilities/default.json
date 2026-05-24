@@ -21,6 +21,7 @@
     {
       "identifier": "fs:scope",
       "allow": [
+        { "path": "$APPCONFIG" },
         { "path": "$APPCONFIG/**" },
         { "path": "$DOWNLOAD/**" },
         { "path": "$DOCUMENT/**" }

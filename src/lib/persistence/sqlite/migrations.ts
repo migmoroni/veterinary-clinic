@@ -11,6 +11,7 @@ function requiredTextCheck(column: string, maxLength: number): string {
 
 interface RunMigrationsOptions {
 	seedDefaultData?: boolean;
+	createIndexes?: boolean;
 }
 
 const DEFAULT_VACCINE_DOSE_TYPES = [
@@ -257,6 +258,9 @@ async function createCurrentSchema(database: Database): Promise<void> {
 		)
 	`);
 
+}
+
+export async function createCurrentIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owners_name ON owners(name)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_owner_id ON owner_contacts(owner_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_label ON owner_contacts(label)');
@@ -286,12 +290,17 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_deleted_at ON pet_vaccinations(deleted_at)');
 }
 
-export async function runMigrations(database: Database, _options: RunMigrationsOptions = {}): Promise<void> {
+export async function runMigrations(database: Database, options: RunMigrationsOptions = {}): Promise<void> {
+	const { seedDefaultData = true, createIndexes = true } = options;
+
 	await database.execute('BEGIN IMMEDIATE');
 	try {
 		await createCurrentSchema(database);
-		await seedDefaultVaccineDoseCatalogs(database);
-		await seedDefaultVaccineValidityCatalog(database);
+		if (createIndexes) await createCurrentIndexes(database);
+		if (seedDefaultData) {
+			await seedDefaultVaccineDoseCatalogs(database);
+			await seedDefaultVaccineValidityCatalog(database);
+		}
 		await database.execute('COMMIT');
 	} catch (error) {
 		await database.execute('ROLLBACK');
