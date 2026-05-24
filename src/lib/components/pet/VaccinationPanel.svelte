@@ -2,10 +2,11 @@
 	import { onMount } from 'svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
+	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
 	import type { PetVaccination, PetVaccinationInput, Vaccine, VaccineDoseType, VaccineValidityOption, VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
 	import { formatDoseNumberLabel, getVaccineDueStatus } from '$lib/domain/vaccine/vaccine.js';
-	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
+	import { FIELD_LIMITS, textLength } from '$lib/domain/shared/field-limits.js';
 	import { formatDateForDisplay, normalizeDateInput } from '$lib/domain/shared/date-input.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
 	import { loadVaccines, loadVaccineDoseTypes, loadVaccineValidityOptions, removeVaccination, saveNewVaccinations, setVaccinationValidity } from '$lib/services/vaccine.service.js';
@@ -34,6 +35,7 @@
 	let doseType = $state('');
 	let doseNumberText = $state('1');
 	let validityOptionId = $state(0);
+	let observation = $state('');
 	let pendingApplications = $state<PetVaccinationInput[]>([]);
 	let vaccinationPendingRemoval = $state<PetVaccination | null>(null);
 	let saving = $state(false);
@@ -79,7 +81,9 @@
 	}
 
 	function pendingLabel(input: PetVaccinationInput): string {
-		return `${input.vaccineName} · ${doseLabel(input.doseType, input.doseNumber)} · ${validityLabel(input.validityValue, input.validityUnit)}`;
+		const baseLabel = `${input.vaccineName} · ${doseLabel(input.doseType, input.doseNumber)} · ${validityLabel(input.validityValue, input.validityUnit)}`;
+		const observationSummary = input.observation?.replace(/\s+/g, ' ').trim();
+		return observationSummary ? `${baseLabel} · ${observationSummary}` : baseLabel;
 	}
 
 	function requiresDoseNumberFor(type: string): boolean {
@@ -160,13 +164,20 @@
 			doseNumber = normalizedDoseNumber;
 		}
 
+		const normalizedObservation = observation.trim() ? observation : null;
+		if (textLength(normalizedObservation) > FIELD_LIMITS.vaccinationObservation) {
+			errorKey = 'form.limitExceeded';
+			return null;
+		}
+
 		return {
 			appliedAt: normalizedAppliedAt,
 			vaccineName: trimmedName,
 			doseType: trimmedDoseType,
 			doseNumber,
 			validityValue: validityOption.validityValue,
-			validityUnit: validityOption.validityUnit
+			validityUnit: validityOption.validityUnit,
+			observation: normalizedObservation
 		};
 	}
 
@@ -174,6 +185,7 @@
 		vaccineName = '';
 		resetDoseFields();
 		validityOptionId = defaultValidityOptionId();
+		observation = '';
 	}
 
 	function addPendingApplication() {
@@ -384,6 +396,11 @@
 				<label for={`vaccine-validity-${petId}`}>{t('vaccine.step.validity')}</label>
 				<Select id={`vaccine-validity-${petId}`} bind:value={validityOptionId} options={validityOptionOptions()} disabled={visibleValidityOptions.length === 0} />
 			</div>
+
+			<div class="flex min-w-0 flex-col gap-1 text-sm font-medium md:col-span-2">
+				<label for={`vaccine-observation-${petId}`}>{t('vaccine.observation')}</label>
+				<Textarea id={`vaccine-observation-${petId}`} bind:value={observation} ariaLabel={t('vaccine.observation')} maxLength={FIELD_LIMITS.vaccinationObservation} class="min-h-24" />
+			</div>
 		</div>
 
 		<div class="flex flex-wrap gap-2">
@@ -421,6 +438,9 @@
 					<span class="block truncate text-sm font-medium">{vaccinationName(vaccination)}</span>
 					<span class="mt-0.5 block text-xs text-muted-foreground">{formatDateForDisplay(vaccination.appliedAt, i18n.locale) || t('common.notInformed')}</span>
 					<span class="mt-1 block text-xs text-muted-foreground">{validityLabel(vaccination.validityValue, vaccination.validityUnit)}</span>
+					{#if vaccination.observation}
+						<span class="mt-1 block whitespace-pre-wrap wrap-break-word text-xs text-muted-foreground"><span class="font-medium text-foreground">{t('vaccine.observation')}:</span> {vaccination.observation}</span>
+					{/if}
 					<span class="mt-2 inline-flex max-w-full items-center rounded-md border px-2 py-1 text-xs font-semibold leading-5 shadow-sm {dueBadgeClass(vaccination)}">
 						<span class="truncate">{dueLabel(vaccination)}</span>
 					</span>

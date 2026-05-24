@@ -1,6 +1,6 @@
 import type { PetVaccination, PetVaccinationInput, Vaccine, VaccineDoseType, VaccineDoseTypeInput, VaccineInput, VaccineValidityOption, VaccineValidityOptionInput, VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
 import { normalizeVaccineName } from '$lib/domain/vaccine/vaccine.js';
-import { FIELD_LIMITS, assertTextLimit } from '$lib/domain/shared/field-limits.js';
+import { FIELD_LIMITS, assertTextLimit, nullableMultilineText } from '$lib/domain/shared/field-limits.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
@@ -14,6 +14,7 @@ interface PetVaccinationRow {
 	dose_number: number | null;
 	validity_value: number;
 	validity_unit: VaccineValidityUnit;
+	observation: string | null;
 	validity_ignored_at: string | null;
 	updated_at: string | null;
 	deleted_at: string | null;
@@ -140,6 +141,7 @@ function mapVaccination(row: PetVaccinationRow): PetVaccination {
 		doseNumber: row.dose_number,
 		validityValue: row.validity_value,
 		validityUnit: row.validity_unit,
+		observation: row.observation,
 		validityIgnoredAt: row.validity_ignored_at,
 		updatedAt: row.updated_at,
 		deletedAt: row.deleted_at,
@@ -154,7 +156,7 @@ async function nextSortOrder(table: 'vaccine_dose_types' | 'vaccine_validity_opt
 
 async function getVaccinationRow(id: number): Promise<PetVaccinationRow | null> {
 	const rows = await selectMany<PetVaccinationRow>(
-		`SELECT id, pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose_type, dose_number, validity_value, validity_unit, validity_ignored_at, updated_at, deleted_at, purge_after
+		`SELECT id, pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose_type, dose_number, validity_value, validity_unit, observation, validity_ignored_at, updated_at, deleted_at, purge_after
 		 FROM pet_vaccinations
 		 WHERE id = $1
 		 LIMIT 1`,
@@ -419,7 +421,7 @@ export async function deleteVaccineValidityOption(id: number): Promise<void> {
 
 export async function listVaccinationsByPet(petId: number, includeDeleted = false): Promise<PetVaccination[]> {
 	const rows = await selectMany<PetVaccinationRow>(
-		`SELECT id, pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose_type, dose_number, validity_value, validity_unit, validity_ignored_at, updated_at, deleted_at, purge_after
+		`SELECT id, pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose_type, dose_number, validity_value, validity_unit, observation, validity_ignored_at, updated_at, deleted_at, purge_after
 		 FROM pet_vaccinations
 		 WHERE pet_id = $1 ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
 		 ORDER BY applied_at DESC, id DESC`,
@@ -439,12 +441,13 @@ export async function createVaccinations(petId: number, inputs: PetVaccinationIn
 		const doseNumber = normalizeDoseNumber(input.doseNumber);
 		const validityUnit = normalizeValidityUnit(input.validityUnit);
 		const validityValue = normalizeValidityValue(Number(input.validityValue), validityUnit);
+		const observation = nullableMultilineText(input.observation, FIELD_LIMITS.vaccinationObservation);
 
 		await ensureVaccine(name, normalizedName);
 		await execute(
-			`INSERT INTO pet_vaccinations (pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose_type, dose_number, validity_value, validity_unit, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
-			[petId, appliedAt, name, normalizedName, doseType, doseNumber, validityValue, validityUnit]
+			`INSERT INTO pet_vaccinations (pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose_type, dose_number, validity_value, validity_unit, observation, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)`,
+			[petId, appliedAt, name, normalizedName, doseType, doseNumber, validityValue, validityUnit, observation]
 		);
 		affectedVaccines.add(normalizedName);
 	}

@@ -248,6 +248,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			dose_number INTEGER CHECK(dose_number IS NULL OR (dose_number BETWEEN 1 AND ${FIELD_LIMITS.vaccineDoseNumber})),
 			validity_value INTEGER NOT NULL CHECK(validity_value > 0),
 			validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months')),
+			observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.vaccinationObservation)}),
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			validity_ignored_at TEXT,
 			updated_at TEXT,

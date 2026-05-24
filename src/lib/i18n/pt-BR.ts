@@ -284,6 +284,7 @@ export const ptBr = {
 	'vaccine.step.vaccine': 'Vacina',
 	'vaccine.step.dose': 'Dose',
 	'vaccine.step.validity': 'Validade',
+	'vaccine.observation': 'Observação',
 	'vaccine.dose': 'Dose',
 	'vaccine.doseType.label': 'Tipo de dose',
 	'vaccine.doseType.name': 'Tipo de dose',

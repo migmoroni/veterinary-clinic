@@ -12,6 +12,7 @@ function vaccination(input: Partial<PetVaccination> = {}): PetVaccination {
 		doseNumber: 1,
 		validityValue: 21,
 		validityUnit: 'days',
+		observation: null,
 		validityIgnoredAt: null,
 		updatedAt: null,
 		deletedAt: null,

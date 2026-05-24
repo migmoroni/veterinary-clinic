@@ -284,6 +284,7 @@ export const gnPy = {
 	'vaccine.step.vaccine': 'Vakúna',
 	'vaccine.step.dose': 'Dose',
 	'vaccine.step.validity': 'Ára oikóva',
+	'vaccine.observation': 'Jehai',
 	'vaccine.dose': 'Dose',
 	'vaccine.doseType.label': 'Dose reko',
 	'vaccine.doseType.name': 'Dose reko',

@@ -285,6 +285,7 @@ export const esEs = {
 	'vaccine.step.vaccine': 'Vacuna',
 	'vaccine.step.dose': 'Dosis',
 	'vaccine.step.validity': 'Validez',
+	'vaccine.observation': 'Observación',
 	'vaccine.dose': 'Dosis',
 	'vaccine.doseType.label': 'Tipo de dosis',
 	'vaccine.doseType.name': 'Tipo de dosis',

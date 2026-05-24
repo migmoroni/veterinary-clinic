@@ -3,22 +3,28 @@
 
 	let {
 		value = $bindable(''),
+		id,
 		placeholder = '',
 		ariaLabel,
+		maxLength,
 		readonly = false,
 		class: className = ''
 	}: {
 		value?: string;
+		id?: string;
 		placeholder?: string;
 		ariaLabel?: string;
+		maxLength?: number;
 		readonly?: boolean;
 		class?: string;
 	} = $props();
 </script>
 
 <textarea
+	{id}
 	{placeholder}
 	aria-label={ariaLabel}
+	maxlength={maxLength}
 	{readonly}
 	bind:value
 	class={cn(

@@ -51,6 +51,7 @@ export interface PetVaccination {
 	doseNumber: number | null;
 	validityValue: number;
 	validityUnit: VaccineValidityUnit;
+	observation: string | null;
 	validityIgnoredAt: string | null;
 	updatedAt: string | null;
 	deletedAt: string | null;
@@ -64,6 +65,7 @@ export interface PetVaccinationInput {
 	doseNumber: number | null;
 	validityValue: number;
 	validityUnit: VaccineValidityUnit;
+	observation: string | null;
 }
 
 export interface VaccineDueStatus {

@@ -285,6 +285,7 @@ export const enUs = {
 	'vaccine.step.vaccine': 'Vaccine',
 	'vaccine.step.dose': 'Dose',
 	'vaccine.step.validity': 'Validity',
+	'vaccine.observation': 'Observation',
 	'vaccine.dose': 'Dose',
 	'vaccine.doseType.label': 'Dose type',
 	'vaccine.doseType.name': 'Dose type',

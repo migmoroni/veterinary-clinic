@@ -32,6 +32,7 @@ export const FIELD_LIMITS = {
 	vaccineDoseNumber: 999,
 	vaccineValidityDays: 3650,
 	vaccineValidityMonths: 120,
+	vaccinationObservation: 2000,
 	searchQuery: 160
 } as const;
 

@@ -173,6 +173,7 @@ const FIELD_LIMITS = {
   vaccineDoseNumber: 999,
   vaccineValidityDays: 3650,
   vaccineValidityMonths: 120,
+  vaccinationObservation: 2000,
   searchQuery: 160
 } as const;
 
@@ -346,6 +347,7 @@ db.exec(`
     dose_number INTEGER CHECK(dose_number IS NULL OR (dose_number BETWEEN 1 AND ${FIELD_LIMITS.vaccineDoseNumber})),
     validity_value INTEGER NOT NULL CHECK(validity_value > 0),
     validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months')),
+    observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.vaccinationObservation)}),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     validity_ignored_at TEXT,
     updated_at TEXT,
@@ -441,8 +443,8 @@ const insertSetting = db.prepare(`
 `);
 
 const insertPetVaccination = db.prepare(`
-  INSERT INTO pet_vaccinations (pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose_type, dose_number, validity_value, validity_unit, updated_at)
-  VALUES (@petId, @appliedAt, @vaccineName, @vaccineNormalizedName, @doseType, @doseNumber, @validityValue, @validityUnit, CURRENT_TIMESTAMP)
+  INSERT INTO pet_vaccinations (pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose_type, dose_number, validity_value, validity_unit, observation, updated_at)
+  VALUES (@petId, @appliedAt, @vaccineName, @vaccineNormalizedName, @doseType, @doseNumber, @validityValue, @validityUnit, @observation, CURRENT_TIMESTAMP)
 `);
 
 const markVaccinationValidityIgnored = db.prepare(`
@@ -1666,7 +1668,8 @@ const processarMigracao = () => {
             doseType: dose.doseType,
             doseNumber: dose.doseNumber,
             validityValue: validity.validityValue,
-            validityUnit: validity.validityUnit
+            validityUnit: validity.validityUnit,
+            observation: null
           });
           report.vaccinationsCreated += 1;
           const vaccinationReference = { id: Number(vaccinationRes.lastInsertRowid), appliedAt: vaccination.appliedAt };
