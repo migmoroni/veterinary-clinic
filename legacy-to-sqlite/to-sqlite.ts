@@ -178,6 +178,8 @@ const FIELD_LIMITS = {
 
 const optionalTextCheck = (column: string, maxLength: number): string => `${column} IS NULL OR length(${column}) <= ${maxLength}`;
 const requiredTextCheck = (column: string, maxLength: number): string => `length(trim(${column})) BETWEEN 1 AND ${maxLength}`;
+const backupPolicyIntervalSettingKey = 'backup.policyIntervalMinutes';
+const defaultBackupPolicyIntervalMinutes = 7 * 24 * 60;
 
 db.exec(`
   DROP TABLE IF EXISTS pet_vaccinations;
@@ -298,7 +300,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS backup_history (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     path TEXT NOT NULL CHECK(${requiredTextCheck('path', FIELD_LIMITS.backupPath)}),
-    kind TEXT NOT NULL CHECK(kind IN ('manual_backup', 'export', 'import', 'pre_import_backup') AND length(kind) <= ${FIELD_LIMITS.backupKind}),
+    kind TEXT NOT NULL CHECK(kind IN ('manual_backup', 'automatic_backup', 'export', 'import', 'pre_import_backup') AND length(kind) <= ${FIELD_LIMITS.backupKind}),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -433,6 +435,11 @@ const insertValidityOption = db.prepare(`
   VALUES (@validityValue, @validityUnit, @sortOrder, CURRENT_TIMESTAMP)
 `);
 
+const insertSetting = db.prepare(`
+  INSERT INTO app_settings (key, value, updated_at)
+  VALUES (@key, @value, CURRENT_TIMESTAMP)
+`);
+
 const insertPetVaccination = db.prepare(`
   INSERT INTO pet_vaccinations (pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose_type, dose_number, validity_value, validity_unit, updated_at)
   VALUES (@petId, @appliedAt, @vaccineName, @vaccineNormalizedName, @doseType, @doseNumber, @validityValue, @validityUnit, CURRENT_TIMESTAMP)
@@ -480,6 +487,8 @@ for (const doseType of defaultDoseTypes) {
 for (const option of defaultValidityOptions) {
   insertValidityOption.run(option);
 }
+
+insertSetting.run({ key: backupPolicyIntervalSettingKey, value: String(defaultBackupPolicyIntervalMinutes) });
 
 const vaccineIds = new Map(
   (db.prepare('SELECT id, normalized_name FROM vaccines').all() as VaccineIdRow[]).map((vaccine) => [normalizeVaccineName(vaccine.normalized_name), vaccine.id])

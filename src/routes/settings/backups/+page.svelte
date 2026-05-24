@@ -2,26 +2,67 @@
 	import { onMount } from 'svelte';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import type { BackupHistoryItem, BackupKind } from '$lib/persistence/repositories/backup.repository.js';
-	import { getBackupHistory } from '$lib/services/backup.service.js';
+	import Select from '$lib/components/ui/Select.svelte';
+	import { BACKUP_POLICY_INTERVAL_MINUTES, DEFAULT_BACKUP_POLICY_INTERVAL_MINUTES, getBackupHistory, loadBackupPolicyIntervalMinutes, saveBackupPolicyIntervalMinutes } from '$lib/services/backup.service.js';
 	import { exportDatabase } from '$lib/services/database-export.service.js';
 	import DatabaseBackup from '@lucide/svelte/icons/database-backup';
 	import RotateCw from '@lucide/svelte/icons/rotate-cw';
 
 	let history = $state<BackupHistoryItem[]>([]);
 	let busy = $state(false);
+	let savingPolicy = $state(false);
+	let policyIntervalMinutes = $state<number>(DEFAULT_BACKUP_POLICY_INTERVAL_MINUTES);
 	let statusKey = $state<TranslationKey | null>(null);
 	let lastPath = $state('');
 	let error = $state<string | null>(null);
+
+	let policyOptions = $derived(
+		BACKUP_POLICY_INTERVAL_MINUTES.map((minutes) => ({
+			value: minutes,
+			label: policyIntervalLabel(minutes)
+		}))
+	);
 
 	function kindLabel(kind: BackupKind): string {
 		return t(`backup.kind.${kind}` as TranslationKey);
 	}
 
+	function policyIntervalLabel(minutes: number): string {
+		if (minutes <= 24 * 60) {
+			const hours = minutes / 60;
+			const unitKey = hours === 1 ? 'backup.policyHour' : 'backup.policyHours';
+			return `${t('backup.policyEvery')} ${hours} ${t(unitKey)}`;
+		}
+
+		const days = minutes / (24 * 60);
+		const unitKey = days === 1 ? 'backup.policyDay' : 'backup.policyDays';
+		return `${t('backup.policyEvery')} ${days} ${t(unitKey)}`;
+	}
+
 	async function load() {
 		try {
-			history = await getBackupHistory();
+			const [loadedHistory, loadedPolicyIntervalMinutes] = await Promise.all([getBackupHistory(), loadBackupPolicyIntervalMinutes()]);
+			history = loadedHistory;
+			policyIntervalMinutes = loadedPolicyIntervalMinutes;
 		} catch (exception) {
 			error = exception instanceof Error ? exception.message : String(exception);
+		}
+	}
+
+	async function changeBackupPolicy(intervalMinutes: number) {
+		savingPolicy = true;
+		error = null;
+		statusKey = null;
+		lastPath = '';
+		policyIntervalMinutes = intervalMinutes;
+
+		try {
+			policyIntervalMinutes = await saveBackupPolicyIntervalMinutes(intervalMinutes);
+			statusKey = 'status.preferencesSaved';
+		} catch (exception) {
+			error = exception instanceof Error ? exception.message : String(exception);
+		} finally {
+			savingPolicy = false;
 		}
 	}
 
@@ -75,12 +116,22 @@
 	</header>
 
 	{#if statusKey}
-		<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t(statusKey)} {lastPath}</p>
+		<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t(statusKey)}{#if lastPath} {lastPath}{/if}</p>
 	{/if}
 
 	{#if error}
 		<p class="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm">{error}</p>
 	{/if}
+
+	<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
+		<h3 class="text-base font-semibold">{t('backup.policyTitle')}</h3>
+		<p class="mt-2 text-sm leading-6 text-muted-foreground">{t('backup.policyDescription')}</p>
+		<div class="mt-4 flex max-w-sm flex-col gap-2 text-sm font-medium">
+			<p>{t('backup.policySelectLabel')}</p>
+			<Select id="backup-policy-interval" bind:value={policyIntervalMinutes} options={policyOptions} disabled={savingPolicy || busy} ariaLabel={t('backup.policySelectLabel')} onchange={(value) => void changeBackupPolicy(value)} />
+		</div>
+		<p class="mt-3 text-xs leading-5 text-muted-foreground">{t('backup.policyRequired')}</p>
+	</section>
 
 	<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
 		<h3 class="text-base font-semibold">{t('backup.history')}</h3>

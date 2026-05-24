@@ -5,6 +5,7 @@ import { isTauriRuntime } from './platform.js';
 export const DATABASE_FILE = 'veterinary_clinic.db';
 
 export const DATABASE_URL = `sqlite:${DATABASE_FILE}`;
+const APP_CONFIG_BACKUP_DIR = 'backups';
 
 function timestampForFile(): string {
 	return new Date().toISOString().replace(/[:.]/g, '-');
@@ -40,6 +41,21 @@ export function makeDatabaseCopyName(prefix: string): string {
 export async function copyDatabaseToPath(destinationPath: string): Promise<void> {
 	await requireDatabaseFile();
 	await copyFile(DATABASE_FILE, destinationPath, { fromPathBaseDir: BaseDirectory.AppConfig });
+}
+
+export async function copyDatabaseToAppConfigBackup(prefix: string): Promise<string> {
+	await requireDatabaseFile();
+	await mkdir(APP_CONFIG_BACKUP_DIR, { baseDir: BaseDirectory.AppConfig, recursive: true });
+
+	const fileName = makeDatabaseCopyName(prefix);
+	const relativePath = `${APP_CONFIG_BACKUP_DIR}/${fileName}`;
+	await copyFile(DATABASE_FILE, relativePath, {
+		fromPathBaseDir: BaseDirectory.AppConfig,
+		toPathBaseDir: BaseDirectory.AppConfig
+	});
+
+	const configDir = await appConfigDir();
+	return `${configDir.replace(/\/$/, '')}/${relativePath}`;
 }
 
 export async function copyExternalDatabaseToAppConfig(sourcePath: string, targetName: string): Promise<void> {

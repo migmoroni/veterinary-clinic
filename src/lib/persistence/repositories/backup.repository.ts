@@ -1,7 +1,7 @@
 import { FIELD_LIMITS, requireLimitedText } from '$lib/domain/shared/field-limits.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
-export type BackupKind = 'manual_backup' | 'export' | 'import' | 'pre_import_backup';
+export type BackupKind = 'manual_backup' | 'automatic_backup' | 'export' | 'import' | 'pre_import_backup';
 
 export interface BackupHistoryItem {
 	id: number;

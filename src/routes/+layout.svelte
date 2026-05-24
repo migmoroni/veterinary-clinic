@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	import { t } from '$lib/i18n/index.js';
 	import { hasDatabaseFile } from '$lib/native/database-file.js';
+	import { AUTOMATIC_BACKUP_CHECK_INTERVAL_MS, createAutomaticBackupIfDue } from '$lib/services/backup.service.js';
 	import {
 		adjustTypographyFontSize,
 		loadLocalePreference,
@@ -27,6 +28,7 @@
 
 	const showBackButton = $derived(page.url.pathname !== '/');
 	let adjustingTypographyShortcut = false;
+	let automaticBackupTimer: number | undefined;
 
 	function isActive(href: string) {
 		const path = page.url.pathname;
@@ -47,9 +49,18 @@
 			if (await hasDatabaseFile()) {
 				await loadLocalePreference();
 				await loadTypographyPreference();
+				await createAutomaticBackupIfDue();
 			}
 		} catch {
 			// The setup screen can render before the local database exists.
+		}
+	}
+
+	async function checkAutomaticBackupPolicy() {
+		try {
+			if (await hasDatabaseFile()) await createAutomaticBackupIfDue();
+		} catch {
+			// Automatic backups should not interrupt the active workflow.
 		}
 	}
 
@@ -93,9 +104,11 @@
 
 	onMount(() => {
 		void loadDatabasePreferences();
+		automaticBackupTimer = window.setInterval(() => void checkAutomaticBackupPolicy(), AUTOMATIC_BACKUP_CHECK_INTERVAL_MS);
 		window.addEventListener('keydown', handleTypographyShortcut);
 
 		return () => {
+			if (automaticBackupTimer) window.clearInterval(automaticBackupTimer);
 			window.removeEventListener('keydown', handleTypographyShortcut);
 		};
 	});
