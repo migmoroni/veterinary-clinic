@@ -54,7 +54,7 @@
 	<title>{t('backup.title')} · {t('app.name')}</title>
 </svelte:head>
 
-<section class="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
+<section class="flex w-full flex-col gap-5">
 	<header class="flex flex-col gap-3 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
 		<div>
 			<p class="text-sm font-medium text-muted-foreground">{t('settings.title')}</p>

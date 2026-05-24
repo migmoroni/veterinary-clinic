@@ -396,7 +396,7 @@
 	<title>{t('settings.vaccines.title')} · {t('app.name')}</title>
 </svelte:head>
 
-<section class="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
+<section class="flex w-full flex-col gap-5">
 	<header class="border-b border-border pb-5">
 		<p class="text-sm font-medium text-muted-foreground">{t('settings.title')}</p>
 		<h2 class="mt-1 text-2xl font-semibold sm:text-3xl">{t('settings.vaccines.title')}</h2>
