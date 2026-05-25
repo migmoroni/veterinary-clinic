@@ -194,12 +194,22 @@ db.exec(`
   DROP TABLE IF EXISTS pets;
   DROP TABLE IF EXISTS owner_additional_responsibles;
   DROP TABLE IF EXISTS owner_contacts;
+  DROP TABLE IF EXISTS owner_addresses;
   DROP TABLE IF EXISTS owners;
 
   CREATE TABLE IF NOT EXISTS owners (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.ownerName)}),
     avatar_blob BLOB,
+    additional_information TEXT CHECK(${optionalTextCheck('additional_information', FIELD_LIMITS.ownerAdditionalInformation)}),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT,
+    deleted_at TEXT,
+    purge_after TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS owner_addresses (
+    owner_id INTEGER PRIMARY KEY,
     street TEXT CHECK(${optionalTextCheck('street', FIELD_LIMITS.ownerStreet)}),
     street_number TEXT CHECK(${optionalTextCheck('street_number', FIELD_LIMITS.ownerStreetNumber)}),
     address_complement TEXT CHECK(${optionalTextCheck('address_complement', FIELD_LIMITS.ownerAddressComplement)}),
@@ -208,11 +218,9 @@ db.exec(`
     state TEXT CHECK(${optionalTextCheck('state', FIELD_LIMITS.ownerState)}),
     country TEXT NOT NULL DEFAULT 'BRA' CHECK(length(country) = ${FIELD_LIMITS.ownerCountry}),
     postal_code TEXT CHECK(${optionalTextCheck('postal_code', FIELD_LIMITS.ownerPostalCode)}),
-    additional_information TEXT CHECK(${optionalTextCheck('additional_information', FIELD_LIMITS.ownerAdditionalInformation)}),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
-    deleted_at TEXT,
-    purge_after TEXT
+    FOREIGN KEY (owner_id) REFERENCES owners (id) ON DELETE CASCADE
   );
 
   CREATE TABLE IF NOT EXISTS owner_contacts (
@@ -348,6 +356,8 @@ db.exec(`
   );
 
   CREATE INDEX IF NOT EXISTS idx_owners_name ON owners(name);
+  CREATE INDEX IF NOT EXISTS idx_owner_addresses_city ON owner_addresses(city);
+  CREATE INDEX IF NOT EXISTS idx_owner_addresses_state ON owner_addresses(state);
   CREATE INDEX IF NOT EXISTS idx_owner_contacts_owner_id ON owner_contacts(owner_id);
   CREATE INDEX IF NOT EXISTS idx_owner_contacts_responsible_id ON owner_contacts(responsible_id);
   CREATE INDEX IF NOT EXISTS idx_owner_contacts_label ON owner_contacts(label);
@@ -375,8 +385,13 @@ db.exec(`
 `);
 
 const insertOwner = db.prepare(`
-  INSERT INTO owners (name, street, street_number, address_complement, neighborhood, city, state, country, postal_code, additional_information)
-  VALUES (@name, @street, @streetNumber, @addressComplement, @neighborhood, @city, @state, @country, @postalCode, @additionalInformation)
+  INSERT INTO owners (name, additional_information)
+  VALUES (@name, @additionalInformation)
+`);
+
+const insertOwnerAddress = db.prepare(`
+  INSERT INTO owner_addresses (owner_id, street, street_number, address_complement, neighborhood, city, state, country, postal_code, updated_at)
+  VALUES (@ownerId, @street, @streetNumber, @addressComplement, @neighborhood, @city, @state, @country, @postalCode, CURRENT_TIMESTAMP)
 `);
 
 const insertOwnerContact = db.prepare(`
@@ -1283,11 +1298,13 @@ const printDatabaseReport = () => {
   const vaccinationsWithoutNormalizedName = (db.prepare("SELECT COUNT(*) AS total FROM pet_vaccinations WHERE vaccine_normalized_name IS NULL OR length(trim(vaccine_normalized_name)) = 0").get() as CountRow).total;
   const vaccinationsWithInvalidDose = (db.prepare(`SELECT COUNT(*) AS total FROM pet_vaccinations WHERE dose_type IS NULL OR length(trim(dose_type)) = 0 OR (dose_number IS NOT NULL AND (dose_number < 1 OR dose_number > ${FIELD_LIMITS.vaccineDoseNumber}))`).get() as CountRow).total;
   const vaccinationsWithInvalidValidity = (db.prepare("SELECT COUNT(*) AS total FROM pet_vaccinations WHERE validity_value <= 0 OR validity_unit NOT IN ('days', 'months')").get() as CountRow).total;
-  const additionalResponsibleContacts = (db.prepare('SELECT COUNT(*) AS total FROM owner_contacts WHERE responsible_id IS NOT NULL').get() as CountRow).total;
+  const ownerContacts = (db.prepare('SELECT COUNT(*) AS total FROM owner_contacts WHERE owner_id IS NOT NULL AND responsible_id IS NULL').get() as CountRow).total;
+  const additionalResponsibleContacts = (db.prepare('SELECT COUNT(*) AS total FROM owner_contacts WHERE responsible_id IS NOT NULL AND owner_id IS NULL').get() as CountRow).total;
 
   console.log('\nConferência do SQLite gerado:');
   console.log(`- owners: ${countRows('owners')}`);
-  console.log(`- owner_contacts: ${countRows('owner_contacts')}`);
+  console.log(`- owner_addresses: ${countRows('owner_addresses')}`);
+  console.log(`- owner_contacts de tutores: ${ownerContacts}`);
   console.log(`- owner_additional_responsibles: ${countRows('owner_additional_responsibles')}`);
   console.log(`- owner_contacts de responsáveis adicionais: ${additionalResponsibleContacts}`);
   console.log(`- pets: ${countRows('pets')}`);
@@ -1585,6 +1602,11 @@ const processarMigracao = () => {
         const city = normalizeCityName(row['CIDADE']);
         const res = insertOwner.run({
           name: ownerName,
+          additionalInformation: null
+        });
+        ownerId = res.lastInsertRowid;
+        insertOwnerAddress.run({
+          ownerId,
           street: nullableWithLimit(parsedAddress.street, FIELD_LIMITS.ownerStreet),
           streetNumber: nullableWithLimit(parsedAddress.streetNumber, FIELD_LIMITS.ownerStreetNumber),
           addressComplement: nullableWithLimit(parsedAddress.addressComplement, FIELD_LIMITS.ownerAddressComplement),
@@ -1592,10 +1614,8 @@ const processarMigracao = () => {
           city,
           state: nullableWithLimit(stateForCity(city), FIELD_LIMITS.ownerState),
           country: 'BRA',
-          postalCode: nullableWithLimit(row['CEP'], FIELD_LIMITS.ownerPostalCode),
-          additionalInformation: null
+          postalCode: nullableWithLimit(row['CEP'], FIELD_LIMITS.ownerPostalCode)
         });
-        ownerId = res.lastInsertRowid;
         ownersCache.set(ownerName, ownerId);
         report.ownersCreated += 1;
       }

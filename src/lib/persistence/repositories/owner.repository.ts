@@ -395,12 +395,51 @@ async function replaceOwnerAdditionalResponsibles(ownerId: number, responsibles:
 	}
 }
 
+async function upsertOwnerAddress(ownerId: number, input: OwnerInput, address: NormalizedOwnerAddress): Promise<void> {
+	await execute(
+		`INSERT INTO owner_addresses (
+			owner_id,
+			street,
+			street_number,
+			address_complement,
+			neighborhood,
+			city,
+			state,
+			country,
+			postal_code,
+			updated_at
+		)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)
+		 ON CONFLICT(owner_id) DO UPDATE SET
+			street = excluded.street,
+			street_number = excluded.street_number,
+			address_complement = excluded.address_complement,
+			neighborhood = excluded.neighborhood,
+			city = excluded.city,
+			state = excluded.state,
+			country = excluded.country,
+			postal_code = excluded.postal_code,
+			updated_at = CURRENT_TIMESTAMP`,
+		[
+			ownerId,
+			nullableLimitedText(input.street, FIELD_LIMITS.ownerStreet),
+			nullableLimitedText(input.streetNumber, FIELD_LIMITS.ownerStreetNumber),
+			nullableLimitedText(input.addressComplement, FIELD_LIMITS.ownerAddressComplement),
+			nullableLimitedText(input.neighborhood, FIELD_LIMITS.ownerNeighborhood),
+			address.city,
+			address.state,
+			address.country,
+			nullableLimitedText(input.postalCode, FIELD_LIMITS.ownerPostalCode)
+		]
+	);
+}
+
 export async function listOwners(query = ''): Promise<Owner[]> {
 	const normalized = query.trim();
 	const values = normalized.length > 0 ? [`%${normalized}%`] : [];
 	const filter =
 		normalized.length > 0
-			? `AND (name LIKE $1 OR city LIKE $1 OR additional_information LIKE $1 OR EXISTS (
+			? `AND (owners.name LIKE $1 OR owner_addresses.city LIKE $1 OR owners.additional_information LIKE $1 OR EXISTS (
 				SELECT 1 FROM owner_contacts
 				WHERE owner_contacts.owner_id = owners.id AND (owner_contacts.value LIKE $1 OR owner_contacts.label LIKE $1)
 			) OR EXISTS (
@@ -414,11 +453,12 @@ export async function listOwners(query = ''): Promise<Owner[]> {
 			: '';
 
 	const rows = await selectMany<OwnerRow>(
-		`SELECT id, name, avatar_blob, street, street_number, address_complement, neighborhood, city, country, postal_code, additional_information, state,
-			created_at, updated_at, deleted_at, purge_after
+		`SELECT owners.id, owners.name, owners.avatar_blob, owner_addresses.street, owner_addresses.street_number, owner_addresses.address_complement, owner_addresses.neighborhood, owner_addresses.city, owner_addresses.country, owner_addresses.postal_code, owners.additional_information, owner_addresses.state,
+			owners.created_at, owners.updated_at, owners.deleted_at, owners.purge_after
 		 FROM owners
-		 WHERE deleted_at IS NULL ${filter}
-		 ORDER BY name COLLATE NOCASE
+		 LEFT JOIN owner_addresses ON owner_addresses.owner_id = owners.id
+		 WHERE owners.deleted_at IS NULL ${filter}
+		 ORDER BY owners.name COLLATE NOCASE
 		 LIMIT 100`,
 		values
 	);
@@ -428,10 +468,11 @@ export async function listOwners(query = ''): Promise<Owner[]> {
 
 export async function getOwner(id: number, includeDeleted = false): Promise<Owner | null> {
 	const rows = await selectMany<OwnerRow>(
-		`SELECT id, name, avatar_blob, street, street_number, address_complement, neighborhood, city, country, postal_code, additional_information, state,
-			created_at, updated_at, deleted_at, purge_after
+		`SELECT owners.id, owners.name, owners.avatar_blob, owner_addresses.street, owner_addresses.street_number, owner_addresses.address_complement, owner_addresses.neighborhood, owner_addresses.city, owner_addresses.country, owner_addresses.postal_code, owners.additional_information, owner_addresses.state,
+			owners.created_at, owners.updated_at, owners.deleted_at, owners.purge_after
 		 FROM owners
-		 WHERE id = $1 ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
+		 LEFT JOIN owner_addresses ON owner_addresses.owner_id = owners.id
+		 WHERE owners.id = $1 ${includeDeleted ? '' : 'AND owners.deleted_at IS NULL'}
 		 LIMIT 1`,
 		[id]
 	);
@@ -448,33 +489,18 @@ export async function createOwner(input: OwnerInput): Promise<Owner> {
 		`INSERT INTO owners (
 			name,
 			avatar_blob,
-			street,
-			street_number,
-			address_complement,
-			neighborhood,
-			city,
-			country,
-			postal_code,
 			additional_information,
-			state,
 			updated_at
 		)
-		 VALUES ($1, ${avatarSqlLiteral}, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP)`,
+		 VALUES ($1, ${avatarSqlLiteral}, $2, CURRENT_TIMESTAMP)`,
 		[
 			requireLimitedText(input.name, FIELD_LIMITS.ownerName),
-			nullableLimitedText(input.street, FIELD_LIMITS.ownerStreet),
-			nullableLimitedText(input.streetNumber, FIELD_LIMITS.ownerStreetNumber),
-			nullableLimitedText(input.addressComplement, FIELD_LIMITS.ownerAddressComplement),
-			nullableLimitedText(input.neighborhood, FIELD_LIMITS.ownerNeighborhood),
-			address.city,
-			address.country,
-			nullableLimitedText(input.postalCode, FIELD_LIMITS.ownerPostalCode),
-			nullableLimitedText(input.additionalInformation, FIELD_LIMITS.ownerAdditionalInformation),
-			address.state
+			nullableLimitedText(input.additionalInformation, FIELD_LIMITS.ownerAdditionalInformation)
 		]
 	);
 
 	const ownerId = Number(result.lastInsertId);
+	await upsertOwnerAddress(ownerId, input, address);
 	await replaceOwnerContacts(ownerId, input.contacts, address.country);
 	await replaceOwnerAdditionalResponsibles(ownerId, input.additionalResponsibles ?? [], address.country);
 
@@ -486,39 +512,24 @@ export async function createOwner(input: OwnerInput): Promise<Owner> {
 export async function updateOwner(id: number, input: OwnerInput): Promise<Owner> {
 	const avatarSqlLiteral = avatarBytesToSqlLiteral(input.avatarBytes);
 	const address = normalizeOwnerAddress(input);
+	const existing = await selectOne<{ id: number }>('SELECT id FROM owners WHERE id = $1 AND deleted_at IS NULL', [id]);
+	if (!existing) throw new Error('owner_not_found');
+
 	await execute(
 		`UPDATE owners
 		 SET name = $2,
 			avatar_blob = ${avatarSqlLiteral},
-			street = $3,
-			street_number = $4,
-			address_complement = $5,
-			neighborhood = $6,
-			city = $7,
-			country = $8,
-			postal_code = $9,
-			additional_information = $10,
-			state = $11,
+			additional_information = $3,
 			updated_at = CURRENT_TIMESTAMP
 		 WHERE id = $1 AND deleted_at IS NULL`,
 		[
 			id,
 			requireLimitedText(input.name, FIELD_LIMITS.ownerName),
-			nullableLimitedText(input.street, FIELD_LIMITS.ownerStreet),
-			nullableLimitedText(input.streetNumber, FIELD_LIMITS.ownerStreetNumber),
-			nullableLimitedText(input.addressComplement, FIELD_LIMITS.ownerAddressComplement),
-			nullableLimitedText(input.neighborhood, FIELD_LIMITS.ownerNeighborhood),
-			address.city,
-			address.country,
-			nullableLimitedText(input.postalCode, FIELD_LIMITS.ownerPostalCode),
-			nullableLimitedText(input.additionalInformation, FIELD_LIMITS.ownerAdditionalInformation),
-			address.state
+			nullableLimitedText(input.additionalInformation, FIELD_LIMITS.ownerAdditionalInformation)
 		]
 	);
 
-	const existing = await selectOne<{ id: number }>('SELECT id FROM owners WHERE id = $1 AND deleted_at IS NULL', [id]);
-	if (!existing) throw new Error('owner_not_found');
-
+	await upsertOwnerAddress(id, input, address);
 	await replaceOwnerContacts(id, input.contacts, address.country);
 	await replaceOwnerAdditionalResponsibles(id, input.additionalResponsibles ?? [], address.country);
 
@@ -544,9 +555,10 @@ export async function listOwnerAvatarBytesByIds(ownerIds: number[]): Promise<Map
 
 export async function listOwnersByPet(petId: number, includeDeleted = false): Promise<Owner[]> {
 	const rows = await selectMany<OwnerRow>(
-		`SELECT owners.id, owners.name, owners.avatar_blob, owners.street, owners.street_number, owners.address_complement, owners.neighborhood, owners.city, owners.country, owners.postal_code, owners.additional_information, owners.state,
+		`SELECT owners.id, owners.name, owners.avatar_blob, owner_addresses.street, owner_addresses.street_number, owner_addresses.address_complement, owner_addresses.neighborhood, owner_addresses.city, owner_addresses.country, owner_addresses.postal_code, owners.additional_information, owner_addresses.state,
 			owners.created_at, owners.updated_at, owners.deleted_at, owners.purge_after
 		 FROM owners
+		 LEFT JOIN owner_addresses ON owner_addresses.owner_id = owners.id
 		 JOIN pet_owners ON pet_owners.owner_id = owners.id
 		 WHERE pet_owners.pet_id = $1 ${includeDeleted ? '' : 'AND owners.deleted_at IS NULL'}
 		 ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id`,
@@ -581,5 +593,6 @@ export async function hardDeleteOwner(id: number): Promise<void> {
 	await execute('DELETE FROM pet_owners WHERE owner_id = $1', [id]);
 	await execute('DELETE FROM owner_contacts WHERE owner_id = $1 OR responsible_id IN (SELECT id FROM owner_additional_responsibles WHERE owner_id = $1)', [id]);
 	await execute('DELETE FROM owner_additional_responsibles WHERE owner_id = $1', [id]);
+	await execute('DELETE FROM owner_addresses WHERE owner_id = $1', [id]);
 	await execute('DELETE FROM owners WHERE id = $1', [id]);
 }

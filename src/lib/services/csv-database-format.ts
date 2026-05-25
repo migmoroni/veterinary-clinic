@@ -8,9 +8,14 @@ export interface CsvTableDefinition {
 export const CSV_TABLES: CsvTableDefinition[] = [
 	{
 		name: 'owners',
-		columns: ['id', 'name', 'avatar_blob', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code', 'additional_information', 'created_at', 'updated_at', 'deleted_at', 'purge_after'],
+		columns: ['id', 'name', 'avatar_blob', 'additional_information', 'created_at', 'updated_at', 'deleted_at', 'purge_after'],
 		binaryColumns: ['avatar_blob'],
 		orderBy: 'id'
+	},
+	{
+		name: 'owner_addresses',
+		columns: ['owner_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code', 'created_at', 'updated_at'],
+		orderBy: 'owner_id'
 	},
 	{
 		name: 'owner_additional_responsibles',
