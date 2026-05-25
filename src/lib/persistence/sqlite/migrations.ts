@@ -97,7 +97,8 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS owner_contacts (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			owner_id INTEGER NOT NULL,
+			owner_id INTEGER,
+			responsible_id INTEGER,
 			kind TEXT NOT NULL CHECK(kind IN ('phone', 'mobile', 'email', 'other')),
 			label TEXT NOT NULL DEFAULT '' CHECK(length(label) <= ${FIELD_LIMITS.ownerContactLabel} AND (kind = 'other' OR label = '')),
 			value TEXT NOT NULL CHECK(length(trim(value)) > 0 AND ((kind IN ('phone', 'mobile') AND length(value) <= ${FIELD_LIMITS.ownerContactPhoneValue}) OR (kind = 'email' AND length(value) <= ${FIELD_LIMITS.ownerContactEmailValue}) OR (kind = 'other' AND length(value) <= ${FIELD_LIMITS.ownerContactOtherValue}))),
@@ -105,7 +106,10 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
 			FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE,
-			UNIQUE(owner_id, kind, label, value)
+			FOREIGN KEY (responsible_id) REFERENCES owner_additional_responsibles(id) ON DELETE CASCADE,
+			CHECK((owner_id IS NOT NULL AND responsible_id IS NULL) OR (owner_id IS NULL AND responsible_id IS NOT NULL)),
+			UNIQUE(owner_id, kind, label, value),
+			UNIQUE(responsible_id, kind, label, value)
 		)
 	`);
 
@@ -119,21 +123,6 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
 			FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE
-		)
-	`);
-
-	await database.execute(`
-		CREATE TABLE IF NOT EXISTS owner_additional_responsible_contacts (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			responsible_id INTEGER NOT NULL,
-			kind TEXT NOT NULL CHECK(kind IN ('phone', 'mobile', 'email', 'other')),
-			label TEXT NOT NULL DEFAULT '' CHECK(length(label) <= ${FIELD_LIMITS.ownerContactLabel} AND (kind = 'other' OR label = '')),
-			value TEXT NOT NULL CHECK(length(trim(value)) > 0 AND ((kind IN ('phone', 'mobile') AND length(value) <= ${FIELD_LIMITS.ownerContactPhoneValue}) OR (kind = 'email' AND length(value) <= ${FIELD_LIMITS.ownerContactEmailValue}) OR (kind = 'other' AND length(value) <= ${FIELD_LIMITS.ownerContactOtherValue}))),
-			sort_order INTEGER NOT NULL DEFAULT 0,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
-			FOREIGN KEY (responsible_id) REFERENCES owner_additional_responsibles(id) ON DELETE CASCADE,
-			UNIQUE(responsible_id, kind, label, value)
 		)
 	`);
 
@@ -264,13 +253,11 @@ async function createCurrentSchema(database: Database): Promise<void> {
 export async function createCurrentIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owners_name ON owners(name)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_owner_id ON owner_contacts(owner_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_responsible_id ON owner_contacts(responsible_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_label ON owner_contacts(label)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_value ON owner_contacts(value)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_additional_responsibles_owner_id ON owner_additional_responsibles(owner_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_additional_responsibles_name ON owner_additional_responsibles(name)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_additional_responsible_contacts_responsible_id ON owner_additional_responsible_contacts(responsible_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_additional_responsible_contacts_label ON owner_additional_responsible_contacts(label)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_additional_responsible_contacts_value ON owner_additional_responsible_contacts(value)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_owners_pet_id ON pet_owners(pet_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_owners_owner_id ON pet_owners(owner_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pets_name ON pets(name)');

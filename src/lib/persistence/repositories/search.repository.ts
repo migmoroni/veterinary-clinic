@@ -90,8 +90,8 @@ const ownerSearchPredicates: SearchTermPredicate[] = [
 	)`,
 	(placeholder) => `EXISTS (
 		SELECT 1 FROM owner_additional_responsibles
-		JOIN owner_additional_responsible_contacts ON owner_additional_responsible_contacts.responsible_id = owner_additional_responsibles.id
-		WHERE owner_additional_responsibles.owner_id = owners.id AND (owner_additional_responsible_contacts.value LIKE ${placeholder} OR owner_additional_responsible_contacts.label LIKE ${placeholder})
+		JOIN owner_contacts ON owner_contacts.responsible_id = owner_additional_responsibles.id
+		WHERE owner_additional_responsibles.owner_id = owners.id AND (owner_contacts.value LIKE ${placeholder} OR owner_contacts.label LIKE ${placeholder})
 	)`
 ];
 
@@ -171,6 +171,7 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 				END
 				FROM owner_contacts
 				WHERE owner_contacts.owner_id = owners.id
+					AND owner_contacts.responsible_id IS NULL
 				ORDER BY owner_contacts.sort_order, owner_contacts.id
 				LIMIT 1
 			), (

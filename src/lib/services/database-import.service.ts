@@ -31,9 +31,8 @@ async function validateDatabaseFile(fileName: string): Promise<void> {
 	try {
 		const valid =
 			(await tableHasColumns(database, 'owners', ['id', 'name', 'additional_information'])) &&
-			(await tableHasColumns(database, 'owner_contacts', ['id', 'owner_id', 'kind', 'label', 'value'])) &&
+			(await tableHasColumns(database, 'owner_contacts', ['id', 'owner_id', 'responsible_id', 'kind', 'label', 'value'])) &&
 			(await tableHasColumns(database, 'owner_additional_responsibles', ['id', 'owner_id', 'name', 'avatar_blob'])) &&
-			(await tableHasColumns(database, 'owner_additional_responsible_contacts', ['id', 'responsible_id', 'kind', 'label', 'value'])) &&
 			(await tableHasColumns(database, 'pets', ['id', 'name', 'species', 'breed'])) &&
 			(await tableHasColumns(database, 'pet_owners', ['id', 'pet_id', 'owner_id'])) &&
 			(await tableHasColumns(database, 'medical_records', ['id', 'pet_id', 'description', 'admitted_at', 'discharged_at'])) &&

@@ -192,7 +192,6 @@ db.exec(`
   DROP TABLE IF EXISTS medical_records;
   DROP TABLE IF EXISTS pet_owners;
   DROP TABLE IF EXISTS pets;
-  DROP TABLE IF EXISTS owner_additional_responsible_contacts;
   DROP TABLE IF EXISTS owner_additional_responsibles;
   DROP TABLE IF EXISTS owner_contacts;
   DROP TABLE IF EXISTS owners;
@@ -218,7 +217,8 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS owner_contacts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    owner_id INTEGER NOT NULL,
+    owner_id INTEGER,
+    responsible_id INTEGER,
     kind TEXT NOT NULL CHECK(kind IN ('phone', 'mobile', 'email', 'other')),
     label TEXT NOT NULL DEFAULT '' CHECK(length(label) <= ${FIELD_LIMITS.ownerContactLabel} AND (kind = 'other' OR label = '')),
     value TEXT NOT NULL CHECK(length(trim(value)) > 0 AND ((kind IN ('phone', 'mobile') AND length(value) <= ${FIELD_LIMITS.ownerContactPhoneValue}) OR (kind = 'email' AND length(value) <= ${FIELD_LIMITS.ownerContactEmailValue}) OR (kind = 'other' AND length(value) <= ${FIELD_LIMITS.ownerContactOtherValue}))),
@@ -226,7 +226,10 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
     FOREIGN KEY (owner_id) REFERENCES owners (id) ON DELETE CASCADE,
-    UNIQUE(owner_id, kind, label, value)
+    FOREIGN KEY (responsible_id) REFERENCES owner_additional_responsibles (id) ON DELETE CASCADE,
+    CHECK((owner_id IS NOT NULL AND responsible_id IS NULL) OR (owner_id IS NULL AND responsible_id IS NOT NULL)),
+    UNIQUE(owner_id, kind, label, value),
+    UNIQUE(responsible_id, kind, label, value)
   );
 
   CREATE TABLE IF NOT EXISTS owner_additional_responsibles (
@@ -238,19 +241,6 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
     FOREIGN KEY (owner_id) REFERENCES owners (id) ON DELETE CASCADE
-  );
-
-  CREATE TABLE IF NOT EXISTS owner_additional_responsible_contacts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    responsible_id INTEGER NOT NULL,
-    kind TEXT NOT NULL CHECK(kind IN ('phone', 'mobile', 'email', 'other')),
-    label TEXT NOT NULL DEFAULT '' CHECK(length(label) <= ${FIELD_LIMITS.ownerContactLabel} AND (kind = 'other' OR label = '')),
-    value TEXT NOT NULL CHECK(length(trim(value)) > 0 AND ((kind IN ('phone', 'mobile') AND length(value) <= ${FIELD_LIMITS.ownerContactPhoneValue}) OR (kind = 'email' AND length(value) <= ${FIELD_LIMITS.ownerContactEmailValue}) OR (kind = 'other' AND length(value) <= ${FIELD_LIMITS.ownerContactOtherValue}))),
-    sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT,
-    FOREIGN KEY (responsible_id) REFERENCES owner_additional_responsibles (id) ON DELETE CASCADE,
-    UNIQUE(responsible_id, kind, label, value)
   );
 
   CREATE TABLE IF NOT EXISTS pets (
@@ -359,13 +349,11 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_owners_name ON owners(name);
   CREATE INDEX IF NOT EXISTS idx_owner_contacts_owner_id ON owner_contacts(owner_id);
+  CREATE INDEX IF NOT EXISTS idx_owner_contacts_responsible_id ON owner_contacts(responsible_id);
   CREATE INDEX IF NOT EXISTS idx_owner_contacts_label ON owner_contacts(label);
   CREATE INDEX IF NOT EXISTS idx_owner_contacts_value ON owner_contacts(value);
   CREATE INDEX IF NOT EXISTS idx_owner_additional_responsibles_owner_id ON owner_additional_responsibles(owner_id);
   CREATE INDEX IF NOT EXISTS idx_owner_additional_responsibles_name ON owner_additional_responsibles(name);
-  CREATE INDEX IF NOT EXISTS idx_owner_additional_responsible_contacts_responsible_id ON owner_additional_responsible_contacts(responsible_id);
-  CREATE INDEX IF NOT EXISTS idx_owner_additional_responsible_contacts_label ON owner_additional_responsible_contacts(label);
-  CREATE INDEX IF NOT EXISTS idx_owner_additional_responsible_contacts_value ON owner_additional_responsible_contacts(value);
   CREATE INDEX IF NOT EXISTS idx_pet_owners_pet_id ON pet_owners(pet_id);
   CREATE INDEX IF NOT EXISTS idx_pet_owners_owner_id ON pet_owners(owner_id);
   CREATE INDEX IF NOT EXISTS idx_pets_name ON pets(name);
@@ -402,7 +390,7 @@ const insertOwnerAdditionalResponsible = db.prepare(`
 `);
 
 const insertOwnerAdditionalResponsibleContact = db.prepare(`
-  INSERT OR IGNORE INTO owner_additional_responsible_contacts (responsible_id, kind, label, value, sort_order, updated_at)
+  INSERT OR IGNORE INTO owner_contacts (responsible_id, kind, label, value, sort_order, updated_at)
   VALUES (@responsibleId, @kind, @label, @value, @sortOrder, CURRENT_TIMESTAMP)
 `);
 
@@ -1295,12 +1283,13 @@ const printDatabaseReport = () => {
   const vaccinationsWithoutNormalizedName = (db.prepare("SELECT COUNT(*) AS total FROM pet_vaccinations WHERE vaccine_normalized_name IS NULL OR length(trim(vaccine_normalized_name)) = 0").get() as CountRow).total;
   const vaccinationsWithInvalidDose = (db.prepare(`SELECT COUNT(*) AS total FROM pet_vaccinations WHERE dose_type IS NULL OR length(trim(dose_type)) = 0 OR (dose_number IS NOT NULL AND (dose_number < 1 OR dose_number > ${FIELD_LIMITS.vaccineDoseNumber}))`).get() as CountRow).total;
   const vaccinationsWithInvalidValidity = (db.prepare("SELECT COUNT(*) AS total FROM pet_vaccinations WHERE validity_value <= 0 OR validity_unit NOT IN ('days', 'months')").get() as CountRow).total;
+  const additionalResponsibleContacts = (db.prepare('SELECT COUNT(*) AS total FROM owner_contacts WHERE responsible_id IS NOT NULL').get() as CountRow).total;
 
   console.log('\nConferência do SQLite gerado:');
   console.log(`- owners: ${countRows('owners')}`);
   console.log(`- owner_contacts: ${countRows('owner_contacts')}`);
   console.log(`- owner_additional_responsibles: ${countRows('owner_additional_responsibles')}`);
-  console.log(`- owner_additional_responsible_contacts: ${countRows('owner_additional_responsible_contacts')}`);
+  console.log(`- owner_contacts de responsáveis adicionais: ${additionalResponsibleContacts}`);
   console.log(`- pets: ${countRows('pets')}`);
   console.log(`- pet_owners: ${countRows('pet_owners')}`);
   console.log(`- medical_records: ${countRows('medical_records')}`);

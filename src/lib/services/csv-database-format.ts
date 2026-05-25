@@ -13,20 +13,15 @@ export const CSV_TABLES: CsvTableDefinition[] = [
 		orderBy: 'id'
 	},
 	{
-		name: 'owner_contacts',
-		columns: ['id', 'owner_id', 'kind', 'label', 'value', 'sort_order', 'created_at', 'updated_at'],
-		orderBy: 'owner_id, sort_order, id'
-	},
-	{
 		name: 'owner_additional_responsibles',
 		columns: ['id', 'owner_id', 'name', 'avatar_blob', 'sort_order', 'created_at', 'updated_at'],
 		binaryColumns: ['avatar_blob'],
 		orderBy: 'owner_id, sort_order, id'
 	},
 	{
-		name: 'owner_additional_responsible_contacts',
-		columns: ['id', 'responsible_id', 'kind', 'label', 'value', 'sort_order', 'created_at', 'updated_at'],
-		orderBy: 'responsible_id, sort_order, id'
+		name: 'owner_contacts',
+		columns: ['id', 'owner_id', 'responsible_id', 'kind', 'label', 'value', 'sort_order', 'created_at', 'updated_at'],
+		orderBy: 'owner_id, responsible_id, sort_order, id'
 	},
 	{
 		name: 'pets',
