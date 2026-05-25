@@ -23,7 +23,6 @@ import {
 	todayIsoDate
 } from '$lib/domain/vaccine/analytics.js';
 import type { VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
-import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { selectMany } from '$lib/persistence/sqlite/client.js';
 import { listOwnerAssociatedContactsByOwnerIds } from './owner.repository.js';
 
@@ -31,7 +30,6 @@ interface LatestVaccinationRow {
 	id: number;
 	pet_id: number;
 	pet_name: string;
-	pet_avatar_blob: unknown | null;
 	owner_id: number | null;
 	owner_ids: string | null;
 	owner_name: string | null;
@@ -142,35 +140,47 @@ function normalizeVaccineFilter(value: string | null | undefined): string | null
 
 async function listLatestVaccinationRows(): Promise<LatestVaccinationRow[]> {
 	const rows = await selectMany<LatestVaccinationRow>(
-		`SELECT
-			pet_vaccinations.id,
-			pet_vaccinations.pet_id,
-			pets.name AS pet_name,
-			pets.avatar_blob AS pet_avatar_blob,
-			${firstOwnerIdSql} AS owner_id,
-			${ownerIdsSql} AS owner_ids,
-			${ownerNamesSql} AS owner_name,
-			pet_vaccinations.applied_at,
-			pet_vaccinations.vaccine_name,
-			pet_vaccinations.vaccine_normalized_name,
-			pet_vaccinations.validity_value,
-			pet_vaccinations.validity_unit
-		 FROM pet_vaccinations
-		 JOIN pets ON pets.id = pet_vaccinations.pet_id
-		 WHERE pet_vaccinations.deleted_at IS NULL
-			AND pet_vaccinations.validity_ignored_at IS NULL
-			AND pets.deleted_at IS NULL
-		 ORDER BY pet_vaccinations.pet_id, pet_vaccinations.vaccine_normalized_name, pet_vaccinations.applied_at DESC, pet_vaccinations.id DESC`
+		`SELECT id,
+			pet_id,
+			pet_name,
+			owner_id,
+			owner_ids,
+			owner_name,
+			applied_at,
+			vaccine_name,
+			vaccine_normalized_name,
+			validity_value,
+			validity_unit
+		 FROM (
+			SELECT
+				pet_vaccinations.id,
+				pet_vaccinations.pet_id,
+				pets.name AS pet_name,
+				${firstOwnerIdSql} AS owner_id,
+				${ownerIdsSql} AS owner_ids,
+				${ownerNamesSql} AS owner_name,
+				pet_vaccinations.applied_at,
+				pet_vaccinations.vaccine_name,
+				pet_vaccinations.vaccine_normalized_name,
+				pet_vaccinations.validity_value,
+				pet_vaccinations.validity_unit,
+				ROW_NUMBER() OVER (
+					PARTITION BY pet_vaccinations.pet_id, pet_vaccinations.vaccine_normalized_name
+					ORDER BY pet_vaccinations.applied_at DESC, pet_vaccinations.id DESC
+				) AS latest_rank
+			 FROM pet_vaccinations
+			 JOIN pets ON pets.id = pet_vaccinations.pet_id
+			 WHERE pet_vaccinations.deleted_at IS NULL
+				AND pet_vaccinations.validity_ignored_at IS NULL
+				AND pets.deleted_at IS NULL
+				AND date(pet_vaccinations.applied_at) IS NOT NULL
+				AND pet_vaccinations.applied_at <= date('now', 'localtime')
+		 )
+		 WHERE latest_rank = 1
+		 ORDER BY pet_id, vaccine_normalized_name`
 	);
 
-	const latest = new Map<string, LatestVaccinationRow>();
-	for (const row of rows) {
-		if (!isPlausibleVaccineAppliedAt(row.applied_at)) continue;
-		const key = `${row.pet_id}:${row.vaccine_normalized_name}`;
-		if (!latest.has(key)) latest.set(key, row);
-	}
-
-	const latestRows = [...latest.values()];
+	const latestRows = rows.filter((row) => isPlausibleVaccineAppliedAt(row.applied_at));
 	const ownerIdsByRow = new Map<LatestVaccinationRow, number[]>();
 	const allOwnerIds: number[] = [];
 	for (const row of latestRows) {
@@ -196,7 +206,7 @@ function mapStatusItem(row: LatestVaccinationRow, now = new Date()): VaccineStat
 		ownerContacts: row.owner_contacts,
 		petId: row.pet_id,
 		petName: row.pet_name,
-		petAvatarBytes: normalizeByteArray(row.pet_avatar_blob),
+		petAvatarBytes: null,
 		vaccineName: row.vaccine_name,
 		vaccineNormalizedName: row.vaccine_normalized_name,
 		appliedAt: row.applied_at,

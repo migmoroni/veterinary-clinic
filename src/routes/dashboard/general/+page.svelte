@@ -9,6 +9,7 @@
 		type DashboardPetStudyVaccine,
 		type DashboardVaccineStatusKey
 	} from '$lib/domain/dashboard/analytics.js';
+	import { dashboardAgeBandYear } from '$lib/domain/dashboard/age-bands.js';
 	import { formatDateForDisplay } from '$lib/domain/shared/date-input.js';
 	import { getPetBreedOption, getPetSpeciesOption, isPetBreed, isPetSpecies } from '$lib/domain/pet/taxonomy.js';
 	import { formatDoseNumberLabel } from '$lib/domain/vaccine/vaccine.js';
@@ -181,7 +182,7 @@
 	}
 
 	function studyAgeOptions() {
-		return [{ value: '', label: studyAllOptionLabel() }, ...studyBuckets(allStudyPets, (pet) => pet.age).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(t(ageLabelKey(bucket.key)), bucket.count) }))];
+		return [{ value: '', label: studyAllOptionLabel() }, ...studyBuckets(allStudyPets, (pet) => pet.age).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(ageBandLabel(bucket.key), bucket.count) }))];
 	}
 
 	function studyVaccineOptions() {
@@ -362,7 +363,7 @@
 		if (studySpecies) factors.push({ label: t('analysis.study.species'), value: speciesLabel(studySpecies), count: countStudyTargetForFactor('species') });
 		if (studyBreed) factors.push({ label: t('analysis.study.breed'), value: breedLabel(studyBreed), count: countStudyTargetForFactor('breed') });
 		if (studySex) factors.push({ label: t('analysis.study.sex'), value: sexLabel(studySex), count: countStudyTargetForFactor('sex') });
-		if (studyAge) factors.push({ label: t('analysis.study.age'), value: t(ageLabelKey(studyAge)), count: countStudyTargetForFactor('age') });
+		if (studyAge) factors.push({ label: t('analysis.study.age'), value: ageBandLabel(studyAge), count: countStudyTargetForFactor('age') });
 		if (studyCity) factors.push({ label: t('analysis.study.city'), value: selectedCityLabel(), count: countStudyTargetForFactor('city') });
 		if (studyOwnerPetCount) factors.push({ label: t('analysis.study.ownerPetCount'), value: t(petCountLabelKey(studyOwnerPetCount)), count: countStudyTargetForFactor('ownerPetCount') });
 		return factors;
@@ -440,7 +441,7 @@
 		if (dimension === 'petSpecies') return [speciesLabel(pet.species)];
 		if (dimension === 'petBreed') return [breedLabel(pet.breed)];
 		if (dimension === 'petSex') return [sexLabel(pet.sex)];
-		if (dimension === 'petAge') return [t(ageLabelKey(pet.age))];
+		if (dimension === 'petAge') return [ageBandLabel(pet.age)];
 		if (dimension === 'petVaccineStatus') return [vaccineStatusLabel(pet.vaccineStatus)];
 		if (dimension === 'ownerCity') return uniqueStudyLabels(pet.ownerCityLabels);
 		if (dimension === 'ownerPetCount') return uniqueStudyLabels(pet.owners.map((owner) => {
@@ -454,7 +455,7 @@
 		if (dimension === 'petSpecies') return [speciesLabel(pet.species)];
 		if (dimension === 'petBreed') return [breedLabel(pet.breed)];
 		if (dimension === 'petSex') return [sexLabel(pet.sex)];
-		if (dimension === 'petAge') return [t(ageLabelKey(pet.age))];
+		if (dimension === 'petAge') return [ageBandLabel(pet.age)];
 		if (dimension === 'petVaccineStatus') return [vaccineStatusLabel(pet.vaccineStatus)];
 		if (dimension === 'vaccine') return uniqueStudyLabels(pet.vaccineNames.length > 0 ? pet.vaccineNames : [t('analysis.vaccineStatus.untracked')]);
 		if (dimension === 'vaccineStatus') return uniqueStudyLabels(pet.vaccines.length > 0 ? pet.vaccines.map((vaccine) => vaccineStatusLabel(vaccine.status)) : [t('analysis.vaccineStatus.untracked')]);
@@ -585,8 +586,16 @@
 		return t('pet.sexUnknown');
 	}
 
-	function ageLabelKey(key: string): TranslationKey {
-		return `analysis.age.${key}` as TranslationKey;
+	function ageBandLabel(key: string): string {
+		if (key === 'months0To3') return `0-3 ${t('pet.ageMonthPlural')}`;
+		if (key === 'months3To6') return `3-6 ${t('pet.ageMonthPlural')}`;
+		if (key === 'months6To12') return `6-12 ${t('pet.ageMonthPlural')}`;
+		if (key === 'unknown') return t('analysis.age.unknown');
+
+		const year = dashboardAgeBandYear(key);
+		if (year !== null) return `${metricFormatter(year)} ${t(year === 1 ? 'pet.ageYearSingular' : 'pet.ageYearPlural')}`;
+
+		return t('common.notInformed');
 	}
 
 	function petCountLabelKey(key: string): TranslationKey {

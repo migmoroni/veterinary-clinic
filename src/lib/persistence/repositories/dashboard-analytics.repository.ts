@@ -15,6 +15,7 @@ import type {
 	DashboardStudyAnalytics,
 	DashboardVaccineStatusKey
 } from '$lib/domain/dashboard/analytics.js';
+import { dashboardAgeBand, dashboardAgeBandYear, dashboardAgeMonthBandKeys } from '$lib/domain/dashboard/age-bands.js';
 import type { PetBreed, PetSex, PetSpecies } from '$lib/domain/pet/pet.js';
 import type { VaccineStatusKey } from '$lib/domain/vaccine/analytics.js';
 import { buildVaccineStatus, isPlausibleVaccineAppliedAt } from '$lib/domain/vaccine/analytics.js';
@@ -86,44 +87,23 @@ function incrementNamedBucket(buckets: Map<string, { label: string | null; count
 	buckets.set(key, current);
 }
 
-function parseIsoDate(value: string | null | undefined): { year: number; month: number; day: number } | null {
-	const match = value?.match(/^(\d{4})-(\d{2})-(\d{2})/);
-	if (!match) return null;
-
-	const year = Number(match[1]);
-	const month = Number(match[2]);
-	const day = Number(match[3]);
-	const date = new Date(year, month - 1, day);
-	if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
-
-	return { year, month, day };
-}
-
-function ageInYears(value: string | null | undefined, now = new Date()): number | null {
-	const parsed = parseIsoDate(value);
-	if (!parsed) return null;
-
-	let years = now.getFullYear() - parsed.year;
-	const birthdayPassed = now.getMonth() + 1 > parsed.month || (now.getMonth() + 1 === parsed.month && now.getDate() >= parsed.day);
-	if (!birthdayPassed) years -= 1;
-
-	return years >= 0 ? years : null;
-}
-
-function ageBand(value: string | null | undefined): DashboardAgeBandKey {
-	const years = ageInYears(value);
-	if (years === null) return 'unknown';
-	if (years < 1) return 'underOne';
-	if (years <= 3) return 'oneToThree';
-	if (years <= 7) return 'fourToSeven';
-	return 'eightPlus';
-}
-
 function petCountBand(value: number): DashboardPetCountBandKey {
 	if (value <= 0) return 'none';
 	if (value === 1) return 'one';
 	if (value === 2) return 'two';
 	return 'threePlus';
+}
+
+function completeAgeBuckets(buckets: Map<DashboardAgeBandKey, number>, maxYear: number | null): void {
+	if (maxYear === null && !dashboardAgeMonthBandKeys.some((key) => buckets.has(key))) return;
+
+	for (const key of dashboardAgeMonthBandKeys) buckets.set(key, buckets.get(key) ?? 0);
+	if (maxYear === null) return;
+
+	for (let year = 1; year <= maxYear; year += 1) {
+		const key = `year:${year}` as DashboardAgeBandKey;
+		buckets.set(key, buckets.get(key) ?? 0);
+	}
 }
 
 function worstVaccineStatus(first: DashboardVaccineStatusKey, second: DashboardVaccineStatusKey): DashboardVaccineStatusKey {
@@ -175,31 +155,40 @@ async function listPetOwnerRows(): Promise<PetOwnerAnalyticsRow[]> {
 
 async function listLatestVaccinationRows(): Promise<LatestVaccinationAnalyticsRow[]> {
 	const rows = await selectMany<LatestVaccinationAnalyticsRow>(
-		`SELECT pet_vaccinations.pet_id,
-			pet_vaccinations.vaccine_name,
-			pet_vaccinations.vaccine_normalized_name,
-			pet_vaccinations.dose_type,
-			pet_vaccinations.dose_number,
-			pet_vaccinations.applied_at,
-			pet_vaccinations.validity_value,
-			pet_vaccinations.validity_unit
-		 FROM pet_vaccinations
-		 JOIN pets ON pets.id = pet_vaccinations.pet_id
-		 WHERE pet_vaccinations.deleted_at IS NULL
-			AND pet_vaccinations.validity_ignored_at IS NULL
-			AND pets.deleted_at IS NULL
-		 ORDER BY pet_vaccinations.pet_id, pet_vaccinations.vaccine_normalized_name, pet_vaccinations.applied_at DESC, pet_vaccinations.id DESC`
+		`SELECT pet_id,
+			vaccine_name,
+			vaccine_normalized_name,
+			dose_type,
+			dose_number,
+			applied_at,
+			validity_value,
+			validity_unit
+		 FROM (
+			SELECT pet_vaccinations.pet_id,
+				pet_vaccinations.vaccine_name,
+				pet_vaccinations.vaccine_normalized_name,
+				pet_vaccinations.dose_type,
+				pet_vaccinations.dose_number,
+				pet_vaccinations.applied_at,
+				pet_vaccinations.validity_value,
+				pet_vaccinations.validity_unit,
+				ROW_NUMBER() OVER (
+					PARTITION BY pet_vaccinations.pet_id, pet_vaccinations.vaccine_normalized_name
+					ORDER BY pet_vaccinations.applied_at DESC, pet_vaccinations.id DESC
+				) AS latest_rank
+			 FROM pet_vaccinations
+			 JOIN pets ON pets.id = pet_vaccinations.pet_id
+			 WHERE pet_vaccinations.deleted_at IS NULL
+				AND pet_vaccinations.validity_ignored_at IS NULL
+				AND pets.deleted_at IS NULL
+				AND date(pet_vaccinations.applied_at) IS NOT NULL
+				AND pet_vaccinations.applied_at <= date('now', 'localtime')
+		 )
+		 WHERE latest_rank = 1
+		 ORDER BY pet_id, vaccine_normalized_name`
 	);
 
-	const latest = new Map<string, LatestVaccinationAnalyticsRow>();
-	for (const row of rows) {
-		if (!isPlausibleVaccineAppliedAt(row.applied_at)) continue;
-
-		const key = `${row.pet_id}:${row.vaccine_normalized_name}`;
-		if (!latest.has(key)) latest.set(key, row);
-	}
-
-	return [...latest.values()];
+	return rows.filter((row) => isPlausibleVaccineAppliedAt(row.applied_at));
 }
 
 function buildPetVaccineStatusMap(rows: LatestVaccinationAnalyticsRow[]): Map<number, DashboardVaccineStatusKey> {
@@ -246,14 +235,20 @@ function buildPetAnalytics(pets: PetAnalyticsRow[], statusByPetId: Map<number, D
 	const bySex = new Map<DashboardSexKey, number>();
 	const byAge = new Map<DashboardAgeBandKey, number>();
 	const byVaccineStatus = new Map<DashboardVaccineStatusKey, number>();
+	let maxYear: number | null = null;
 
 	for (const pet of pets) {
+		const age = dashboardAgeBand(pet.birth_date);
+		const ageYear = dashboardAgeBandYear(age);
+		if (ageYear !== null) maxYear = Math.max(maxYear ?? ageYear, ageYear);
+
 		incrementBucket(bySpecies, pet.species ?? 'unknown');
 		incrementBucket(byBreed, pet.breed ?? 'unknown');
 		incrementBucket(bySex, pet.sex ?? 'unknown');
-		incrementBucket(byAge, ageBand(pet.birth_date));
+		incrementBucket(byAge, age);
 		incrementBucket(byVaccineStatus, statusByPetId.get(pet.id) ?? 'untracked');
 	}
+	completeAgeBuckets(byAge, maxYear);
 
 	return {
 		total: pets.length,
@@ -320,6 +315,7 @@ function toOwnerStudyPet(pet: DashboardPetStudyItem): DashboardOwnerStudyPet {
 	return {
 		id: pet.id,
 		name: pet.name,
+		avatarBytes: pet.avatarBytes,
 		species: pet.species,
 		breed: pet.breed,
 		sex: pet.sex,
@@ -404,10 +400,11 @@ function buildStudyAnalytics(
 		studyPets.push({
 			id: pet.id,
 			name: pet.name,
+			avatarBytes: null,
 			species: pet.species ?? 'unknown',
 			breed: pet.breed ?? 'unknown',
 			sex: pet.sex ?? 'unknown',
-			age: ageBand(pet.birth_date),
+			age: dashboardAgeBand(pet.birth_date),
 			vaccineStatus: statusByPetId.get(pet.id) ?? 'untracked',
 			vaccineNormalizedNames,
 			vaccineNames,

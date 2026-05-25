@@ -5,7 +5,7 @@ export type DashboardAnalysisView = 'general' | 'vaccines' | 'pets' | 'owners';
 export type DashboardSpeciesKey = PetSpecies | 'unknown';
 export type DashboardBreedKey = PetBreed | 'unknown';
 export type DashboardSexKey = Exclude<PetSex, null> | 'unknown';
-export type DashboardAgeBandKey = 'underOne' | 'oneToThree' | 'fourToSeven' | 'eightPlus' | 'unknown';
+export type DashboardAgeBandKey = 'months0To3' | 'months3To6' | 'months6To12' | `year:${number}` | 'unknown';
 export type DashboardPetCountBandKey = 'none' | 'one' | 'two' | 'threePlus';
 export type DashboardVaccineStatusKey = VaccineStatusKey | 'untracked';
 
@@ -53,6 +53,7 @@ export interface DashboardPetStudyVaccine {
 export interface DashboardOwnerStudyPet {
 	id: number;
 	name: string;
+	avatarBytes: Uint8Array | null;
 	species: DashboardSpeciesKey;
 	breed: DashboardBreedKey;
 	sex: DashboardSexKey;
@@ -72,6 +73,7 @@ export interface DashboardOwnerStudyItem extends DashboardPetStudyOwner {
 export interface DashboardPetStudyItem {
 	id: number;
 	name: string;
+	avatarBytes: Uint8Array | null;
 	species: DashboardSpeciesKey;
 	breed: DashboardBreedKey;
 	sex: DashboardSexKey;

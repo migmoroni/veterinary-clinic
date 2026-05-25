@@ -16,6 +16,7 @@
 		loadVaccineHistory,
 		loadVaccineStatusItems
 	} from '$lib/services/vaccine-analytics.service.js';
+	import { loadPetAvatarsByPetIds } from '$lib/services/avatar.service.js';
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import Phone from '@lucide/svelte/icons/phone';
 	import RotateCw from '@lucide/svelte/icons/rotate-cw';
@@ -50,6 +51,7 @@
 	let historyOrder = $state<SortOrder>('recent');
 	let items = $state<VaccineStatusItem[]>([]);
 	let visibleItems = $state<VaccineStatusItem[]>([]);
+	let avatarBytesByPetId = $state(new Map<number, Uint8Array | null>());
 	let statusSummary = $state<VaccineStatusSummary>(emptyVaccineStatusSummary());
 	let statusTotalTracked = $state(0);
 	let history = $state<HistoryPoint[]>([]);
@@ -158,6 +160,10 @@
 		return `/pets/${item.petId}`;
 	}
 
+	function petAvatarBytes(item: VaccineStatusItem): Uint8Array | null {
+		return avatarBytesByPetId.get(item.petId) ?? item.petAvatarBytes;
+	}
+
 	function sortHistoryPoints(source: HistoryPoint[], order: SortOrder): HistoryPoint[] {
 		return [...source].sort((first, second) => (order === 'recent' ? second.key.localeCompare(first.key) : first.key.localeCompare(second.key)));
 	}
@@ -204,6 +210,20 @@
 		}
 
 		if (requestId === statusRenderRequestId) statusListLoading = false;
+	}
+
+	async function loadVisiblePetAvatars(source: VaccineStatusItem[]): Promise<void> {
+		const missingIds = [...new Set(source.map((item) => item.petId))].filter((id) => !avatarBytesByPetId.has(id));
+		if (missingIds.length === 0) return;
+
+		try {
+			const loadedAvatars = await loadPetAvatarsByPetIds(missingIds);
+			const nextAvatars = new Map(avatarBytesByPetId);
+			for (const id of missingIds) nextAvatars.set(id, loadedAvatars.get(id) ?? null);
+			avatarBytesByPetId = nextAvatars;
+		} catch (error) {
+			console.error(error);
+		}
 	}
 
 	function cancelStatusListRender() {
@@ -435,6 +455,10 @@
 		}
 		loadInitialTab();
 	});
+
+	$effect(() => {
+		void loadVisiblePetAvatars(visibleItems);
+	});
 </script>
 
 <svelte:head>
@@ -574,7 +598,7 @@
 
 				{#if statusLoading || (statusListLoading && visibleItems.length === 0)}
 					<div class="mt-4 space-y-3">
-						{#each Array(5) as _}
+						{#each [0, 1, 2, 3, 4] as placeholderIndex (placeholderIndex)}
 							<div class="h-24 animate-pulse rounded-md bg-muted"></div>
 						{/each}
 					</div>
@@ -582,10 +606,10 @@
 					<p class="mt-4 rounded-md border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">{t('vaccine.analytics.emptyStatus')}</p>
 				{:else}
 					<div class="mt-4 divide-y divide-border rounded-md border border-border">
-						{#each visibleItems as item}
+						{#each visibleItems as item (`${item.petId}:${item.vaccineNormalizedName}`)}
 							<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-4">
 								<div class="flex min-w-0 items-start gap-3">
-									<PetAvatar avatarBytes={item.petAvatarBytes} petName={item.petName} className="size-11" iconClass="size-5 text-primary" />
+									<PetAvatar avatarBytes={petAvatarBytes(item)} petName={item.petName} className="size-11" iconClass="size-5 text-primary" />
 									<div class="min-w-0">
 										<p class="wrap-break-word text-sm font-semibold">{item.petName} · {item.vaccineName}</p>
 										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{ownerDisplayName(item)}</p>
