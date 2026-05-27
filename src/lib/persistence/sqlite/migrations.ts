@@ -198,13 +198,17 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	`);
 
 	await database.execute(`
-		CREATE TABLE IF NOT EXISTS vaccines (
+		CREATE TABLE IF NOT EXISTS preventive_catalog_items (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.vaccineName)}),
-			normalized_name TEXT NOT NULL UNIQUE CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedName)}),
+			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'dewormer')),
+			name TEXT NOT NULL,
+			normalized_name TEXT NOT NULL,
 			hidden_at TEXT,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT
+			updated_at TEXT,
+			UNIQUE(kind, normalized_name),
+			CHECK((kind = 'vaccine' AND ${requiredTextCheck('name', FIELD_LIMITS.vaccineName)}) OR (kind = 'dewormer' AND ${requiredTextCheck('name', FIELD_LIMITS.dewormerName)})),
+			CHECK((kind = 'vaccine' AND ${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedName)}) OR (kind = 'dewormer' AND ${requiredTextCheck('normalized_name', FIELD_LIMITS.dewormerNormalizedName)}))
 		)
 	`);
 
@@ -257,6 +261,27 @@ async function createCurrentSchema(database: Database): Promise<void> {
 		)
 	`);
 
+	await database.execute(`
+		CREATE TABLE IF NOT EXISTS pet_dewormings (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			pet_id INTEGER NOT NULL,
+			applied_at TEXT NOT NULL DEFAULT CURRENT_DATE CHECK(length(applied_at) <= ${FIELD_LIMITS.isoDate}),
+			dewormer_name TEXT NOT NULL CHECK(${requiredTextCheck('dewormer_name', FIELD_LIMITS.dewormerName)}),
+			dewormer_normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('dewormer_normalized_name', FIELD_LIMITS.dewormerNormalizedName)}),
+			dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', FIELD_LIMITS.dewormingDose)}),
+			validity_value INTEGER NOT NULL CHECK(validity_value > 0),
+			validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months')),
+			observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.dewormingObservation)}),
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			validity_ignored_at TEXT,
+			updated_at TEXT,
+			deleted_at TEXT,
+			purge_after TEXT,
+			FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE RESTRICT,
+			CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.dewormingValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.dewormingValidityMonths}))
+		)
+	`);
+
 }
 
 export async function createCurrentIndexes(database: Database): Promise<void> {
@@ -276,8 +301,9 @@ export async function createCurrentIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pets_breed ON pets(breed)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_pet_id ON medical_records(pet_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_deleted_at ON medical_records(deleted_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccines_normalized_name ON vaccines(normalized_name)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccines_hidden_at ON vaccines(hidden_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_preventive_catalog_items_kind_name ON preventive_catalog_items(kind, name COLLATE NOCASE)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_preventive_catalog_items_kind_normalized_name ON preventive_catalog_items(kind, normalized_name)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_preventive_catalog_items_hidden_at ON preventive_catalog_items(hidden_at)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccine_dose_types_normalized_name ON vaccine_dose_types(normalized_name)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccine_dose_types_hidden_at ON vaccine_dose_types(hidden_at)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_vaccine_validity_options_value_unit ON vaccine_validity_options(validity_value, validity_unit)');
@@ -288,6 +314,12 @@ export async function createCurrentIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_latest_active ON pet_vaccinations(pet_id, vaccine_normalized_name, applied_at DESC, id DESC) WHERE deleted_at IS NULL AND validity_ignored_at IS NULL');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_validity_ignored_at ON pet_vaccinations(validity_ignored_at)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_deleted_at ON pet_vaccinations(deleted_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_dewormings_pet_id ON pet_dewormings(pet_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_dewormings_applied_at ON pet_dewormings(applied_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_dewormings_dewormer_normalized_name ON pet_dewormings(dewormer_normalized_name)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_dewormings_latest_active ON pet_dewormings(pet_id, dewormer_normalized_name, applied_at DESC, id DESC) WHERE deleted_at IS NULL AND validity_ignored_at IS NULL');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_dewormings_validity_ignored_at ON pet_dewormings(validity_ignored_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_dewormings_deleted_at ON pet_dewormings(deleted_at)');
 }
 
 export async function runMigrations(database: Database, options: RunMigrationsOptions = {}): Promise<void> {

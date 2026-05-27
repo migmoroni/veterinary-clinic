@@ -8,6 +8,7 @@ type OwnerContactKind = 'phone' | 'mobile' | 'email' | 'other';
 type PetSex = 'M' | 'F' | null;
 type PetSpecies = 'canine' | 'feline';
 type VaccineValidityUnit = 'days' | 'months';
+type DewormingValidityUnit = 'days' | 'months';
 
 interface BreedAlias {
   id: string;
@@ -35,7 +36,20 @@ interface ExtractedVaccination {
   doseLabel: string;
 }
 
+interface ExtractedDeworming {
+  appliedAt: string;
+  dewormer: string;
+  dose: string;
+  validityValue: number;
+  validityUnit: DewormingValidityUnit;
+}
+
 interface VaccineMatch {
+  name: string;
+  index: number;
+}
+
+interface DewormerMatch {
   name: string;
   index: number;
 }
@@ -53,6 +67,11 @@ interface VaccineIdRow {
 }
 
 interface ImportedVaccinationReference {
+  id: number;
+  appliedAt: string;
+}
+
+interface ImportedDewormingReference {
   id: number;
   appliedAt: string;
 }
@@ -129,6 +148,8 @@ interface ImportReport {
   rowsWithoutMedicalRecord: number;
   vaccinationsCreated: number;
   vaccinationsIgnoredForValidity: number;
+  dewormingsCreated: number;
+  dewormingsIgnoredForValidity: number;
   vaccinationDatesDiscarded: number;
   vaccinationDateDiscardSamples: string[];
   duplicatePetCandidates: Map<string, DuplicatePetCandidate>;
@@ -174,6 +195,12 @@ const FIELD_LIMITS = {
   vaccineValidityDays: 3650,
   vaccineValidityMonths: 120,
   vaccinationObservation: 2000,
+  dewormerName: 80,
+  dewormerNormalizedName: 80,
+  dewormingDose: 120,
+  dewormingValidityDays: 3650,
+  dewormingValidityMonths: 120,
+  dewormingObservation: 2000,
   searchQuery: 160
 } as const;
 
@@ -183,10 +210,11 @@ const backupPolicyIntervalSettingKey = 'backup.policyIntervalMinutes';
 const defaultBackupPolicyIntervalMinutes = 7 * 24 * 60;
 
 db.exec(`
+  DROP TABLE IF EXISTS pet_dewormings;
   DROP TABLE IF EXISTS pet_vaccinations;
   DROP TABLE IF EXISTS vaccine_validity_options;
   DROP TABLE IF EXISTS vaccine_dose_types;
-  DROP TABLE IF EXISTS vaccines;
+  DROP TABLE IF EXISTS preventive_catalog_items;
   DROP TABLE IF EXISTS backup_history;
   DROP TABLE IF EXISTS app_settings;
   DROP TABLE IF EXISTS medical_records;
@@ -303,13 +331,17 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
-  CREATE TABLE IF NOT EXISTS vaccines (
+  CREATE TABLE IF NOT EXISTS preventive_catalog_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.vaccineName)}),
-    normalized_name TEXT NOT NULL UNIQUE CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedName)}),
+    kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'dewormer')),
+    name TEXT NOT NULL,
+    normalized_name TEXT NOT NULL,
     hidden_at TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT
+    updated_at TEXT,
+    UNIQUE(kind, normalized_name),
+    CHECK((kind = 'vaccine' AND ${requiredTextCheck('name', FIELD_LIMITS.vaccineName)}) OR (kind = 'dewormer' AND ${requiredTextCheck('name', FIELD_LIMITS.dewormerName)})),
+    CHECK((kind = 'vaccine' AND ${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedName)}) OR (kind = 'dewormer' AND ${requiredTextCheck('normalized_name', FIELD_LIMITS.dewormerNormalizedName)}))
   );
 
   CREATE TABLE IF NOT EXISTS vaccine_dose_types (
@@ -355,6 +387,25 @@ db.exec(`
     CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.vaccineValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.vaccineValidityMonths}))
   );
 
+  CREATE TABLE IF NOT EXISTS pet_dewormings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pet_id INTEGER NOT NULL,
+    applied_at TEXT NOT NULL DEFAULT CURRENT_DATE CHECK(length(applied_at) <= ${FIELD_LIMITS.isoDate}),
+    dewormer_name TEXT NOT NULL CHECK(${requiredTextCheck('dewormer_name', FIELD_LIMITS.dewormerName)}),
+    dewormer_normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('dewormer_normalized_name', FIELD_LIMITS.dewormerNormalizedName)}),
+    dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', FIELD_LIMITS.dewormingDose)}),
+    validity_value INTEGER NOT NULL CHECK(validity_value > 0),
+    validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months')),
+    observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.dewormingObservation)}),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    validity_ignored_at TEXT,
+    updated_at TEXT,
+    deleted_at TEXT,
+    purge_after TEXT,
+    FOREIGN KEY (pet_id) REFERENCES pets (id) ON DELETE RESTRICT,
+    CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.dewormingValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.dewormingValidityMonths}))
+  );
+
   CREATE INDEX IF NOT EXISTS idx_owners_name ON owners(name);
   CREATE INDEX IF NOT EXISTS idx_owner_addresses_city ON owner_addresses(city);
   CREATE INDEX IF NOT EXISTS idx_owner_addresses_state ON owner_addresses(state);
@@ -371,8 +422,9 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_pets_breed ON pets(breed);
   CREATE INDEX IF NOT EXISTS idx_medical_records_pet_id ON medical_records(pet_id);
   CREATE INDEX IF NOT EXISTS idx_medical_records_deleted_at ON medical_records(deleted_at);
-  CREATE INDEX IF NOT EXISTS idx_vaccines_normalized_name ON vaccines(normalized_name);
-  CREATE INDEX IF NOT EXISTS idx_vaccines_hidden_at ON vaccines(hidden_at);
+  CREATE INDEX IF NOT EXISTS idx_preventive_catalog_items_kind_name ON preventive_catalog_items(kind, name COLLATE NOCASE);
+  CREATE INDEX IF NOT EXISTS idx_preventive_catalog_items_kind_normalized_name ON preventive_catalog_items(kind, normalized_name);
+  CREATE INDEX IF NOT EXISTS idx_preventive_catalog_items_hidden_at ON preventive_catalog_items(hidden_at);
   CREATE INDEX IF NOT EXISTS idx_vaccine_dose_types_normalized_name ON vaccine_dose_types(normalized_name);
   CREATE INDEX IF NOT EXISTS idx_vaccine_dose_types_hidden_at ON vaccine_dose_types(hidden_at);
   CREATE INDEX IF NOT EXISTS idx_vaccine_validity_options_value_unit ON vaccine_validity_options(validity_value, validity_unit);
@@ -380,8 +432,15 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_pet_id ON pet_vaccinations(pet_id);
   CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_applied_at ON pet_vaccinations(applied_at);
   CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_vaccine_normalized_name ON pet_vaccinations(vaccine_normalized_name);
+  CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_latest_active ON pet_vaccinations(pet_id, vaccine_normalized_name, applied_at DESC, id DESC) WHERE deleted_at IS NULL AND validity_ignored_at IS NULL;
   CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_validity_ignored_at ON pet_vaccinations(validity_ignored_at);
   CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_deleted_at ON pet_vaccinations(deleted_at);
+  CREATE INDEX IF NOT EXISTS idx_pet_dewormings_pet_id ON pet_dewormings(pet_id);
+  CREATE INDEX IF NOT EXISTS idx_pet_dewormings_applied_at ON pet_dewormings(applied_at);
+  CREATE INDEX IF NOT EXISTS idx_pet_dewormings_dewormer_normalized_name ON pet_dewormings(dewormer_normalized_name);
+  CREATE INDEX IF NOT EXISTS idx_pet_dewormings_latest_active ON pet_dewormings(pet_id, dewormer_normalized_name, applied_at DESC, id DESC) WHERE deleted_at IS NULL AND validity_ignored_at IS NULL;
+  CREATE INDEX IF NOT EXISTS idx_pet_dewormings_validity_ignored_at ON pet_dewormings(validity_ignored_at);
+  CREATE INDEX IF NOT EXISTS idx_pet_dewormings_deleted_at ON pet_dewormings(deleted_at);
 `);
 
 const insertOwner = db.prepare(`
@@ -425,9 +484,9 @@ const insertMedicalRecord = db.prepare(`
   VALUES (@petId, @description, @admittedAt, @dischargedAt, CURRENT_TIMESTAMP)
 `);
 
-const insertVaccine = db.prepare(`
-  INSERT OR IGNORE INTO vaccines (name, normalized_name, updated_at)
-  VALUES (@name, @normalizedName, CURRENT_TIMESTAMP)
+const insertPreventiveCatalogItem = db.prepare(`
+  INSERT OR IGNORE INTO preventive_catalog_items (kind, name, normalized_name, updated_at)
+  VALUES (@kind, @name, @normalizedName, CURRENT_TIMESTAMP)
 `);
 
 const insertDoseType = db.prepare(`
@@ -450,8 +509,21 @@ const insertPetVaccination = db.prepare(`
   VALUES (@petId, @appliedAt, @vaccineName, @vaccineNormalizedName, @doseType, @doseNumber, @validityValue, @validityUnit, @observation, CURRENT_TIMESTAMP)
 `);
 
+const insertPetDeworming = db.prepare(`
+  INSERT INTO pet_dewormings (pet_id, applied_at, dewormer_name, dewormer_normalized_name, dose, validity_value, validity_unit, observation, updated_at)
+  VALUES (@petId, @appliedAt, @dewormerName, @dewormerNormalizedName, @dose, @validityValue, @validityUnit, @observation, CURRENT_TIMESTAMP)
+`);
+
 const markVaccinationValidityIgnored = db.prepare(`
   UPDATE pet_vaccinations
+  SET validity_ignored_at = COALESCE(validity_ignored_at, CURRENT_TIMESTAMP),
+      updated_at = CURRENT_TIMESTAMP
+  WHERE id = @id
+    AND deleted_at IS NULL
+`);
+
+const markDewormingValidityIgnored = db.prepare(`
+  UPDATE pet_dewormings
   SET validity_ignored_at = COALESCE(validity_ignored_at, CURRENT_TIMESTAMP),
       updated_at = CURRENT_TIMESTAMP
   WHERE id = @id
@@ -465,6 +537,8 @@ const normalizeVaccineName = (value: string | undefined): string => {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '');
 };
+
+const normalizeDewormerName = normalizeVaccineName;
 const initialDoseTypeLabel = 'Dose inicial';
 const boosterDoseTypeLabel = 'Reforço';
 const boosterDoseLabel = 'Dose de reforço';
@@ -482,7 +556,7 @@ const defaultValidityOptions = [
 ];
 
 for (const name of defaultVaccineNames) {
-  insertVaccine.run({ name, normalizedName: normalizeVaccineName(name) });
+  insertPreventiveCatalogItem.run({ kind: 'vaccine', name, normalizedName: normalizeVaccineName(name) });
 }
 
 for (const doseType of defaultDoseTypes) {
@@ -496,14 +570,27 @@ for (const option of defaultValidityOptions) {
 insertSetting.run({ key: backupPolicyIntervalSettingKey, value: String(defaultBackupPolicyIntervalMinutes) });
 
 const vaccineIds = new Map(
-  (db.prepare('SELECT id, normalized_name FROM vaccines').all() as VaccineIdRow[]).map((vaccine) => [normalizeVaccineName(vaccine.normalized_name), vaccine.id])
+  (db.prepare("SELECT id, normalized_name FROM preventive_catalog_items WHERE kind = 'vaccine'").all() as VaccineIdRow[]).map((vaccine) => [normalizeVaccineName(vaccine.normalized_name), vaccine.id])
+);
+
+const dewormerIds = new Map(
+  (db.prepare("SELECT id, normalized_name FROM preventive_catalog_items WHERE kind = 'dewormer'").all() as VaccineIdRow[]).map((dewormer) => [normalizeDewormerName(dewormer.normalized_name), dewormer.id])
 );
 
 const ensureVaccineName = (name: string): string => {
   const normalizedName = normalizeVaccineName(name);
   if (!vaccineIds.has(normalizedName)) {
-    const result = insertVaccine.run({ name, normalizedName });
+    const result = insertPreventiveCatalogItem.run({ kind: 'vaccine', name, normalizedName });
     vaccineIds.set(normalizedName, Number(result.lastInsertRowid));
+  }
+  return normalizedName;
+};
+
+const ensureDewormerName = (name: string): string => {
+  const normalizedName = normalizeDewormerName(name);
+  if (!dewormerIds.has(normalizedName)) {
+    const result = insertPreventiveCatalogItem.run({ kind: 'dewormer', name, normalizedName });
+    dewormerIds.set(normalizedName, Number(result.lastInsertRowid));
   }
   return normalizedName;
 };
@@ -686,6 +773,21 @@ const vaccineMatchers: VaccineMatcher[] = [
   { name: 'Gripe', pattern: /\bgripe\b/ },
   { name: 'Nobivac', pattern: /\bnobivac\b/ },
   { name: 'Imunocan', pattern: /\bimunocan\b/ }
+];
+
+const dewormerMatchers: VaccineMatcher[] = [
+  { name: 'Drontal', pattern: /\bdrontal\b/ },
+  { name: 'Endogard', pattern: /\bendogard\b/ },
+  { name: 'Milbemax', pattern: /\bmilbemax\b/ },
+  { name: 'Milprazon', pattern: /\bmilprazon\b/ },
+  { name: 'Canex', pattern: /\bcanex\b/ },
+  { name: 'Chemital', pattern: /\bchemital\b/ },
+  { name: 'Vetmax', pattern: /\bvetmax\b/ },
+  { name: 'Top Dog', pattern: /\btop\s*dog\b/ },
+  { name: 'NexGard Spectra', pattern: /\bnex\s*gard\s*spectra\b|\bnexgard\s*spectra\b/ },
+  { name: 'Simparic Trio', pattern: /\bsimparic\s*trio\b/ },
+  { name: 'Advocate', pattern: /\badvocate\b/ },
+  { name: 'Profender', pattern: /\bprofender\b/ }
 ];
 
 const numberedDoseMatchers = [
@@ -1223,6 +1325,8 @@ const createImportReport = (rows: CsvRow[]): ImportReport => {
     rowsWithoutMedicalRecord: 0,
     vaccinationsCreated: 0,
     vaccinationsIgnoredForValidity: 0,
+    dewormingsCreated: 0,
+    dewormingsIgnoredForValidity: 0,
     vaccinationDatesDiscarded: 0,
     vaccinationDateDiscardSamples: [],
     duplicatePetCandidates: new Map()
@@ -1287,6 +1391,8 @@ const printImportReport = (report: ImportReport) => {
   console.log(`- Pets sem texto de prontuário: ${report.rowsWithoutMedicalRecord}`);
   console.log(`- Aplicações de vacina importadas: ${report.vaccinationsCreated}`);
   console.log(`- Aplicações anteriores iguais desmarcadas para vencimento: ${report.vaccinationsIgnoredForValidity}`);
+  console.log(`- Aplicações de vermífugo importadas: ${report.dewormingsCreated}`);
+  console.log(`- Aplicações anteriores iguais de vermífugo desmarcadas para vencimento: ${report.dewormingsIgnoredForValidity}`);
   console.log(`- Datas de vacinação futuras descartadas: ${report.vaccinationDatesDiscarded}${report.vaccinationDateDiscardSamples.length > 0 ? ` (exemplos: ${report.vaccinationDateDiscardSamples.join(', ')})` : ''}`);
 };
 
@@ -1294,10 +1400,17 @@ const countRows = (table: string): number => {
   return (db.prepare(`SELECT COUNT(*) AS total FROM ${table}`).get() as CountRow).total;
 };
 
+const countWhere = (table: string, where: string): number => {
+  return (db.prepare(`SELECT COUNT(*) AS total FROM ${table} WHERE ${where}`).get() as CountRow).total;
+};
+
 const printDatabaseReport = () => {
   const vaccinationsWithoutNormalizedName = (db.prepare("SELECT COUNT(*) AS total FROM pet_vaccinations WHERE vaccine_normalized_name IS NULL OR length(trim(vaccine_normalized_name)) = 0").get() as CountRow).total;
   const vaccinationsWithInvalidDose = (db.prepare(`SELECT COUNT(*) AS total FROM pet_vaccinations WHERE dose_type IS NULL OR length(trim(dose_type)) = 0 OR (dose_number IS NOT NULL AND (dose_number < 1 OR dose_number > ${FIELD_LIMITS.vaccineDoseNumber}))`).get() as CountRow).total;
   const vaccinationsWithInvalidValidity = (db.prepare("SELECT COUNT(*) AS total FROM pet_vaccinations WHERE validity_value <= 0 OR validity_unit NOT IN ('days', 'months')").get() as CountRow).total;
+  const dewormingsWithoutNormalizedName = (db.prepare("SELECT COUNT(*) AS total FROM pet_dewormings WHERE dewormer_normalized_name IS NULL OR length(trim(dewormer_normalized_name)) = 0").get() as CountRow).total;
+  const dewormingsWithInvalidDose = (db.prepare('SELECT COUNT(*) AS total FROM pet_dewormings WHERE dose IS NULL OR length(trim(dose)) = 0').get() as CountRow).total;
+  const dewormingsWithInvalidValidity = (db.prepare("SELECT COUNT(*) AS total FROM pet_dewormings WHERE validity_value <= 0 OR validity_unit NOT IN ('days', 'months')").get() as CountRow).total;
   const ownerContacts = (db.prepare('SELECT COUNT(*) AS total FROM owner_contacts WHERE owner_id IS NOT NULL AND responsible_id IS NULL').get() as CountRow).total;
   const additionalResponsibleContacts = (db.prepare('SELECT COUNT(*) AS total FROM owner_contacts WHERE responsible_id IS NOT NULL AND owner_id IS NULL').get() as CountRow).total;
 
@@ -1310,13 +1423,18 @@ const printDatabaseReport = () => {
   console.log(`- pets: ${countRows('pets')}`);
   console.log(`- pet_owners: ${countRows('pet_owners')}`);
   console.log(`- medical_records: ${countRows('medical_records')}`);
-  console.log(`- vaccines: ${countRows('vaccines')}`);
+  console.log(`- preventive_catalog_items (vacinas): ${countWhere('preventive_catalog_items', "kind = 'vaccine'")}`);
   console.log(`- vaccine_dose_types: ${countRows('vaccine_dose_types')}`);
   console.log(`- vaccine_validity_options: ${countRows('vaccine_validity_options')}`);
   console.log(`- pet_vaccinations: ${countRows('pet_vaccinations')}`);
+  console.log(`- preventive_catalog_items (vermífugos): ${countWhere('preventive_catalog_items', "kind = 'dewormer'")}`);
+  console.log(`- pet_dewormings: ${countRows('pet_dewormings')}`);
   console.log(`- pet_vaccinations sem nome normalizado: ${vaccinationsWithoutNormalizedName}`);
   console.log(`- pet_vaccinations com dose inválida: ${vaccinationsWithInvalidDose}`);
   console.log(`- pet_vaccinations com validade inválida: ${vaccinationsWithInvalidValidity}`);
+  console.log(`- pet_dewormings sem nome normalizado: ${dewormingsWithoutNormalizedName}`);
+  console.log(`- pet_dewormings com dose inválida: ${dewormingsWithInvalidDose}`);
+  console.log(`- pet_dewormings com validade inválida: ${dewormingsWithInvalidValidity}`);
 };
 
 const isTruthy = (value: string | undefined) => {
@@ -1519,6 +1637,63 @@ const extractVaccinationsFromRecord = (description: string, report: ImportReport
   return extracted;
 };
 
+const hasPositiveDewormingSignal = (normalizedLine: string): boolean => {
+  return /\b(?:vermifug\w*|antiparasitari\w*|endoparasit\w*|drontal|endogard|milbemax|milprazon|canex|chemital|vetmax|nex\s*gard\s*spectra|nexgard\s*spectra|simparic\s*trio|advocate|profender)\b/.test(normalizedLine);
+};
+
+const hasNegativeDewormingSignal = (normalizedLine: string): boolean => {
+  return /\b(?:nao|sem)\s+(?:esta\s+|estava\s+|foi\s+)?(?:vermifugad[ao]s?|vermifugo|antiparasitari\w*)\b/.test(normalizedLine) || /\bsem\s+vermes\b/.test(normalizedLine);
+};
+
+const findDewormerMatches = (normalizedLine: string): DewormerMatch[] => {
+  const matches: DewormerMatch[] = [];
+  for (const matcher of dewormerMatchers) {
+    const match = normalizedLine.match(matcher.pattern);
+    if (match?.index !== undefined) matches.push({ name: matcher.name, index: match.index });
+  }
+  return matches.sort((first, second) => first.index - second.index);
+};
+
+const extractDewormingDose = (line: string): string => {
+  const match = line.match(/\b(\d+(?:[,.]\d+)?)\s*(ml|mL|comprimidos?|comp\.?|cp|cps|gotas?|doses?)\b/i);
+  if (!match) return 'Não especificada';
+
+  const value = match[1].replace(',', '.');
+  const rawUnit = match[2].replace(/\.$/, '').toLowerCase();
+  const unit = rawUnit === 'cp' || rawUnit === 'cps' || rawUnit.startsWith('comp') ? 'comprimido' : rawUnit;
+  return `${value} ${unit}`;
+};
+
+const extractDewormingsFromLine = (line: string): Omit<ExtractedDeworming, 'appliedAt'>[] => {
+  const normalizedLine = normalizeText(line);
+  if (!hasPositiveDewormingSignal(normalizedLine) || hasNegativeDewormingSignal(normalizedLine)) return [];
+
+  const dose = extractDewormingDose(line);
+  const dewormerMatches = findDewormerMatches(normalizedLine);
+  const matchedDewormers = dewormerMatches.length > 0 ? dewormerMatches.map((match) => match.name) : ['Vermífugo'];
+
+  return [...new Set(matchedDewormers)].map((dewormer) => ({ dewormer, dose, validityValue: 6, validityUnit: 'months' }));
+};
+
+const extractDewormingsFromRecord = (description: string, report: ImportReport): ExtractedDeworming[] => {
+  const extracted: ExtractedDeworming[] = [];
+
+  for (const block of getDatedRecordBlocks(description, report)) {
+    const seen = new Set<string>();
+
+    for (const line of block.text.split(/\r?\n/)) {
+      for (const deworming of extractDewormingsFromLine(line)) {
+        const key = `${deworming.dewormer}:${deworming.dose}`;
+        if (seen.has(key)) continue;
+        extracted.push({ appliedAt: block.appliedAt, ...deworming });
+        seen.add(key);
+      }
+    }
+  }
+
+  return extracted;
+};
+
 const detectSpecies = (rawBreed: string | undefined): PetSpecies => {
   const normalized = normalizeText(rawBreed);
   const padded = ` ${normalized} `;
@@ -1556,9 +1731,19 @@ const isAtLeastAsRecentVaccination = (candidate: ImportedVaccinationReference, c
   return candidate.id > current.id;
 };
 
+const isAtLeastAsRecentDeworming = (candidate: ImportedDewormingReference, current: ImportedDewormingReference): boolean => {
+  if (candidate.appliedAt !== current.appliedAt) return candidate.appliedAt > current.appliedAt;
+  return candidate.id > current.id;
+};
+
 const ignoreVaccinationValidity = (report: ImportReport, id: number) => {
   const result = markVaccinationValidityIgnored.run({ id });
   report.vaccinationsIgnoredForValidity += result.changes;
+};
+
+const ignoreDewormingValidity = (report: ImportReport, id: number) => {
+  const result = markDewormingValidityIgnored.run({ id });
+  report.dewormingsIgnoredForValidity += result.changes;
 };
 
 const processarMigracao = () => {
@@ -1574,6 +1759,7 @@ const processarMigracao = () => {
   const migrateRows = db.transaction((records: CsvRow[]) => {
     console.log('Iniciando processamento...');
     const latestVaccinationByPetAndVaccine = new Map<string, ImportedVaccinationReference>();
+    const latestDewormingByPetAndDewormer = new Map<string, ImportedDewormingReference>();
 
     for (const row of records) {
       const parsedOwnerName = parseLegacyOwnerName(row['NOME PROPRIETÁRIO']);
@@ -1660,6 +1846,7 @@ const processarMigracao = () => {
         if (period.dischargedAt) report.medicalRecordPeriodsWithDischarge += 1;
 
         const extractedVaccinations = extractVaccinationsFromRecord(fullDescription, report);
+        const extractedDewormings = extractDewormingsFromRecord(fullDescription, report);
         const v10HasFourthDose = extractedVaccinations.some((v) => v.vaccine === 'V 10' && v.doseLabel === '4ª dose');
         const v10HasThirdDose = extractedVaccinations.some((v) => v.vaccine === 'V 10' && v.doseLabel === '3ª dose');
         const v10ThreeDoseFinal = !v10HasFourthDose && v10HasThirdDose;
@@ -1690,6 +1877,31 @@ const processarMigracao = () => {
             latestVaccinationByPetAndVaccine.set(vaccineKey, vaccinationReference);
           } else {
             ignoreVaccinationValidity(report, vaccinationReference.id);
+          }
+        }
+
+        for (const deworming of extractedDewormings) {
+          const dewormerNormalizedName = ensureDewormerName(deworming.dewormer);
+          const dewormingRes = insertPetDeworming.run({
+            petId: petRes.lastInsertRowid,
+            appliedAt: deworming.appliedAt,
+            dewormerName: deworming.dewormer,
+            dewormerNormalizedName,
+            dose: deworming.dose,
+            validityValue: deworming.validityValue,
+            validityUnit: deworming.validityUnit,
+            observation: null
+          });
+          report.dewormingsCreated += 1;
+          const dewormingReference = { id: Number(dewormingRes.lastInsertRowid), appliedAt: deworming.appliedAt };
+          const dewormerKey = `${petRes.lastInsertRowid}:${dewormerNormalizedName}`;
+          const currentLatest = latestDewormingByPetAndDewormer.get(dewormerKey);
+
+          if (!currentLatest || isAtLeastAsRecentDeworming(dewormingReference, currentLatest)) {
+            if (currentLatest) ignoreDewormingValidity(report, currentLatest.id);
+            latestDewormingByPetAndDewormer.set(dewormerKey, dewormingReference);
+          } else {
+            ignoreDewormingValidity(report, dewormingReference.id);
           }
         }
       } else {

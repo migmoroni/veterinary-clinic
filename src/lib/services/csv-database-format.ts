@@ -55,9 +55,9 @@ export const CSV_TABLES: CsvTableDefinition[] = [
 		orderBy: 'id'
 	},
 	{
-		name: 'vaccines',
-		columns: ['id', 'name', 'normalized_name', 'hidden_at', 'created_at', 'updated_at'],
-		orderBy: 'name, id'
+		name: 'preventive_catalog_items',
+		columns: ['id', 'kind', 'name', 'normalized_name', 'hidden_at', 'created_at', 'updated_at'],
+		orderBy: 'kind, name, id'
 	},
 	{
 		name: 'vaccine_dose_types',
@@ -72,6 +72,11 @@ export const CSV_TABLES: CsvTableDefinition[] = [
 	{
 		name: 'pet_vaccinations',
 		columns: ['id', 'pet_id', 'applied_at', 'vaccine_name', 'vaccine_normalized_name', 'dose_type', 'dose_number', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after'],
+		orderBy: 'pet_id, applied_at, id'
+	},
+	{
+		name: 'pet_dewormings',
+		columns: ['id', 'pet_id', 'applied_at', 'dewormer_name', 'dewormer_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after'],
 		orderBy: 'pet_id, applied_at, id'
 	}
 ];

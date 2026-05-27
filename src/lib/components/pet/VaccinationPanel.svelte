@@ -20,7 +20,12 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import X from '@lucide/svelte/icons/x';
 
-	let { petId, vaccinations = [], vaccines = [] }: { petId: number; vaccinations?: PetVaccination[]; vaccines?: Vaccine[] } = $props();
+	let {
+		petId,
+		vaccinations = [],
+		vaccines = [],
+		onChange
+	}: { petId: number; vaccinations?: PetVaccination[]; vaccines?: Vaccine[]; onChange?: (vaccinations: PetVaccination[]) => void } = $props();
 
 	const today = new Date();
 	const todayInput = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -202,6 +207,11 @@
 		pendingApplications = pendingApplications.filter((_, itemIndex) => itemIndex !== index);
 	}
 
+	function setCurrentVaccinations(vaccinations: PetVaccination[]) {
+		currentVaccinations = vaccinations;
+		onChange?.(vaccinations);
+	}
+
 	async function reloadCatalogs() {
 		const [loadedVaccines, loadedDoseTypes, loadedValidityOptions] = await Promise.all([loadVaccines(), loadVaccineDoseTypes(), loadVaccineValidityOptions()]);
 		currentVaccines = loadedVaccines;
@@ -228,7 +238,7 @@
 			}
 
 			const updated = await saveNewVaccinations(petId, applications);
-			currentVaccinations = updated;
+			setCurrentVaccinations(updated);
 			pendingApplications = [];
 			resetVaccineFields();
 			await reloadCatalogs();
@@ -252,7 +262,7 @@
 
 		try {
 			const updated = await setVaccinationValidity(vaccination.id, ignored);
-			currentVaccinations = currentVaccinations.map((item) => (item.id === updated.id ? updated : item));
+			setCurrentVaccinations(currentVaccinations.map((item) => (item.id === updated.id ? updated : item)));
 			statusKey = ignored ? 'vaccine.validityIgnoredSaved' : 'vaccine.validityRestoredSaved';
 		} catch {
 			errorKey = 'vaccine.saveFailed';
@@ -275,7 +285,7 @@
 
 		try {
 			await removeVaccination(vaccination.id);
-			currentVaccinations = currentVaccinations.filter((item) => item.id !== vaccination.id);
+			setCurrentVaccinations(currentVaccinations.filter((item) => item.id !== vaccination.id));
 			vaccinationPendingRemoval = null;
 			statusKey = 'status.deleted';
 		} catch {

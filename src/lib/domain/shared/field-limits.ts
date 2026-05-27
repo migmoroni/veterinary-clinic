@@ -33,6 +33,12 @@ export const FIELD_LIMITS = {
 	vaccineValidityDays: 3650,
 	vaccineValidityMonths: 120,
 	vaccinationObservation: 2000,
+	dewormerName: 80,
+	dewormerNormalizedName: 80,
+	dewormingDose: 120,
+	dewormingValidityDays: 3650,
+	dewormingValidityMonths: 120,
+	dewormingObservation: 2000,
 	searchQuery: 160
 } as const;
 

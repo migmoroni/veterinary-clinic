@@ -18,6 +18,7 @@
 		{ kind: 'owner', titleKey: 'trash.owners' },
 		{ kind: 'pet', titleKey: 'trash.pets' },
 		{ kind: 'vaccination', titleKey: 'trash.vaccinations' },
+		{ kind: 'deworming', titleKey: 'trash.dewormings' },
 		{ kind: 'record', titleKey: 'trash.records' }
 	];
 	const activeGroup = $derived(groups.find((group) => group.kind === activeKind) ?? groups[0]);

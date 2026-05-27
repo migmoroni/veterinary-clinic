@@ -42,10 +42,11 @@ const requiredSchema = {
   medical_records: ['id', 'pet_id', 'title', 'description', 'admitted_at', 'discharged_at', 'updated_at', 'deleted_at', 'purge_after'],
   app_settings: ['key', 'value', 'updated_at'],
   backup_history: ['id', 'path', 'kind', 'created_at'],
-  vaccines: ['id', 'name', 'normalized_name', 'hidden_at', 'created_at', 'updated_at'],
+  preventive_catalog_items: ['id', 'kind', 'name', 'normalized_name', 'hidden_at', 'created_at', 'updated_at'],
   vaccine_dose_types: ['id', 'name', 'normalized_name', 'requires_dose_number', 'sort_order', 'hidden_at', 'created_at', 'updated_at'],
   vaccine_validity_options: ['id', 'validity_value', 'validity_unit', 'sort_order', 'hidden_at', 'created_at', 'updated_at'],
-  pet_vaccinations: ['id', 'pet_id', 'applied_at', 'vaccine_name', 'vaccine_normalized_name', 'dose_type', 'dose_number', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after']
+  pet_vaccinations: ['id', 'pet_id', 'applied_at', 'vaccine_name', 'vaccine_normalized_name', 'dose_type', 'dose_number', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after'],
+  pet_dewormings: ['id', 'pet_id', 'applied_at', 'dewormer_name', 'dewormer_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after']
 } as const;
 
 type TableName = keyof typeof requiredSchema;

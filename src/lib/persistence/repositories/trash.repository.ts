@@ -1,6 +1,6 @@
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
-export type TrashKind = 'owner' | 'pet' | 'record' | 'vaccination';
+export type TrashKind = 'owner' | 'pet' | 'record' | 'vaccination' | 'deworming';
 
 export interface TrashItem {
 	kind: TrashKind;
@@ -91,6 +91,23 @@ export async function listTrashItems(): Promise<TrashItem[]> {
 
 		 UNION ALL
 
+		 SELECT 'deworming' AS kind,
+			pet_dewormings.id,
+			pet_dewormings.dewormer_name AS title,
+			COALESCE(
+				pets.name || ' · ' || ${ownerNamesForPetSql} || ' · ' || pet_dewormings.applied_at,
+				pets.name || ' · ' || pet_dewormings.applied_at,
+				pet_dewormings.applied_at,
+				''
+			) AS subtitle,
+			pet_dewormings.deleted_at,
+			pet_dewormings.purge_after
+		 FROM pet_dewormings
+		 LEFT JOIN pets ON pets.id = pet_dewormings.pet_id
+		 WHERE pet_dewormings.deleted_at IS NOT NULL
+
+		 UNION ALL
+
 		 SELECT 'record' AS kind,
 			medical_records.id,
 			COALESCE(medical_records.title, 'Prontuario ' || medical_records.id) AS title,
@@ -117,6 +134,7 @@ export async function restoreTrashItem(kind: TrashKind, id: number): Promise<voi
 		await execute('UPDATE pets SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
 		await execute('UPDATE medical_records SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE pet_id = $1', [id]);
 		await execute('UPDATE pet_vaccinations SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE pet_id = $1', [id]);
+		await execute('UPDATE pet_dewormings SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE pet_id = $1', [id]);
 		return;
 	}
 
@@ -131,13 +149,24 @@ export async function restoreTrashItem(kind: TrashKind, id: number): Promise<voi
 		return;
 	}
 
+	if (kind === 'vaccination') {
+		await execute(
+			`UPDATE pets
+			 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
+			 WHERE id = (SELECT pet_id FROM pet_vaccinations WHERE id = $1)`,
+			[id]
+		);
+		await execute('UPDATE pet_vaccinations SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
+		return;
+	}
+
 	await execute(
 		`UPDATE pets
 		 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
-		 WHERE id = (SELECT pet_id FROM pet_vaccinations WHERE id = $1)`,
+		 WHERE id = (SELECT pet_id FROM pet_dewormings WHERE id = $1)`,
 		[id]
 	);
-	await execute('UPDATE pet_vaccinations SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
+	await execute('UPDATE pet_dewormings SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
 }
 
 export async function hardDeleteTrashItem(kind: TrashKind, id: number): Promise<void> {
@@ -152,6 +181,7 @@ export async function hardDeleteTrashItem(kind: TrashKind, id: number): Promise<
 
 	if (kind === 'pet') {
 		await execute('DELETE FROM pet_vaccinations WHERE pet_id = $1', [id]);
+		await execute('DELETE FROM pet_dewormings WHERE pet_id = $1', [id]);
 		await execute('DELETE FROM medical_records WHERE pet_id = $1', [id]);
 		await execute('DELETE FROM pet_owners WHERE pet_id = $1', [id]);
 		await execute('DELETE FROM pets WHERE id = $1', [id]);
@@ -163,12 +193,26 @@ export async function hardDeleteTrashItem(kind: TrashKind, id: number): Promise<
 		return;
 	}
 
-	await execute('DELETE FROM pet_vaccinations WHERE id = $1', [id]);
+	if (kind === 'vaccination') {
+		await execute('DELETE FROM pet_vaccinations WHERE id = $1', [id]);
+		return;
+	}
+
+	await execute('DELETE FROM pet_dewormings WHERE id = $1', [id]);
 }
 
 export async function purgeExpiredTrash(now = new Date().toISOString()): Promise<void> {
 	await execute(
 		`DELETE FROM pet_vaccinations
+		 WHERE deleted_at IS NOT NULL
+			AND (
+				purge_after <= $1
+				OR pet_id IN (SELECT id FROM pets WHERE deleted_at IS NOT NULL AND purge_after <= $1)
+			)`,
+		[now]
+	);
+	await execute(
+		`DELETE FROM pet_dewormings
 		 WHERE deleted_at IS NOT NULL
 			AND (
 				purge_after <= $1

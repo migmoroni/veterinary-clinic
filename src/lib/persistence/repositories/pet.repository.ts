@@ -216,6 +216,12 @@ export async function softDeletePet(id: number): Promise<void> {
 		[id, deletedAt, purgeAfter]
 	);
 	await execute(
+		`UPDATE pet_dewormings
+		 SET deleted_at = $2, purge_after = $3, updated_at = CURRENT_TIMESTAMP
+		 WHERE pet_id = $1 AND deleted_at IS NULL`,
+		[id, deletedAt, purgeAfter]
+	);
+	await execute(
 		`UPDATE medical_records
 		 SET deleted_at = $2, purge_after = $3, updated_at = CURRENT_TIMESTAMP
 		 WHERE pet_id = $1 AND deleted_at IS NULL`,
@@ -248,10 +254,17 @@ export async function restorePet(id: number): Promise<void> {
 		 WHERE pet_id = $1`,
 		[id]
 	);
+	await execute(
+		`UPDATE pet_dewormings
+		 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
+		 WHERE pet_id = $1`,
+		[id]
+	);
 }
 
 export async function hardDeletePet(id: number): Promise<void> {
 	await execute('DELETE FROM pet_vaccinations WHERE pet_id = $1', [id]);
+	await execute('DELETE FROM pet_dewormings WHERE pet_id = $1', [id]);
 	await execute('DELETE FROM medical_records WHERE pet_id = $1', [id]);
 	await execute('DELETE FROM pet_owners WHERE pet_id = $1', [id]);
 	await execute('DELETE FROM pets WHERE id = $1', [id]);
