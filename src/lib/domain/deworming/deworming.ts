@@ -1,4 +1,4 @@
-export type DewormingValidityUnit = 'days' | 'months';
+export type DewormingValidityUnit = 'days' | 'months' | 'years';
 
 export interface Dewormer {
 	id: number;
@@ -84,7 +84,7 @@ export function computeDewormingDueAt(appliedAt: string, validity: Pick<PetDewor
 		return formatIsoDate(date);
 	}
 
-	const totalMonths = applied.year * 12 + applied.month - 1 + validity.validityValue;
+	const totalMonths = applied.year * 12 + applied.month - 1 + (validity.validityUnit === 'years' ? validity.validityValue * 12 : validity.validityValue);
 	const year = Math.floor(totalMonths / 12);
 	const month = (totalMonths % 12) + 1;
 	const day = Math.min(applied.day, daysInMonth(year, month));

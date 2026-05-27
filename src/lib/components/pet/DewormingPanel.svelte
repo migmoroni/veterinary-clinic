@@ -2,15 +2,18 @@
 	import { onMount } from 'svelte';
 	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
+	import PeriodField from '$lib/components/forms/PeriodField.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import type { Dewormer, DewormingValidityUnit, PetDeworming, PetDewormingInput } from '$lib/domain/deworming/deworming.js';
 	import { getDewormingDueStatus } from '$lib/domain/deworming/deworming.js';
+	import type { PreventiveProtocol } from '$lib/domain/preventive/protocol.js';
 	import { formatDateForDisplay, normalizeDateInput } from '$lib/domain/shared/date-input.js';
 	import { FIELD_LIMITS, textLength } from '$lib/domain/shared/field-limits.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
 	import { loadDewormers, removeDeworming, saveNewDewormings, setDewormingValidity } from '$lib/services/deworming.service.js';
+	import { loadPreventiveProtocols } from '$lib/services/preventive-protocol.service.js';
 	import Bell from '@lucide/svelte/icons/bell';
 	import BellOff from '@lucide/svelte/icons/bell-off';
 	import Pill from '@lucide/svelte/icons/pill';
@@ -32,11 +35,14 @@
 
 	let currentDewormings = $state<PetDeworming[]>([]);
 	let currentDewormers = $state<Dewormer[]>([]);
+	let currentProtocols = $state<PreventiveProtocol[]>([]);
 	let loadedPetId = $state<number | null>(null);
 	let appliedAt = $state(todayInput);
 	let dewormerName = $state('');
+	let protocolId = $state(0);
+	let protocolDoseId = $state(0);
 	let dose = $state('');
-	let validityValueText = $state('6');
+	let validityValue = $state(6);
 	let validityUnit = $state<DewormingValidityUnit>('months');
 	let observation = $state('');
 	let pendingApplications = $state<PetDewormingInput[]>([]);
@@ -48,6 +54,12 @@
 	const sortedDewormings = $derived([...currentDewormings].sort((first, second) => second.appliedAt.localeCompare(first.appliedAt) || second.id - first.id));
 	const visibleDewormers = $derived(currentDewormers.filter((dewormer) => !dewormer.hiddenAt));
 	const knownDewormerNames = $derived([...new Set(visibleDewormers.map((dewormer) => dewormer.name))].sort((first, second) => first.localeCompare(second)));
+	const selectedDewormer = $derived(visibleDewormers.find((dewormer) => dewormer.name === dewormerName) ?? null);
+	const visibleProtocols = $derived(selectedDewormer ? currentProtocols.filter((protocol) => !protocol.hiddenAt && protocol.items.some((item) => item.id === selectedDewormer.id)) : []);
+	const selectedProtocol = $derived(visibleProtocols.find((protocol) => protocol.id === protocolId) ?? null);
+	const visibleProtocolDoses = $derived(selectedProtocol ? selectedProtocol.doses : []);
+	const selectedProtocolDose = $derived(visibleProtocolDoses.find((protocolDose) => protocolDose.id === protocolDoseId) ?? null);
+	const protocolFieldsLocked = $derived(Boolean(selectedProtocolDose));
 
 	$effect(() => {
 		if (loadedPetId === petId) return;
@@ -56,42 +68,57 @@
 		loadedPetId = petId;
 	});
 
-	function validityUnitOptions() {
-		return [
-			{ value: 'months' as const, label: t('deworming.validityUnit.months') },
-			{ value: 'days' as const, label: t('deworming.validityUnit.days') }
-		];
-	}
-
 	function dewormerNameOptions() {
 		return [{ value: '', label: t('deworming.namePlaceholder') }, ...knownDewormerNames.map((name) => ({ value: name, label: name }))];
 	}
 
-	function maxValidityValue(unit = validityUnit): number {
-		return unit === 'days' ? FIELD_LIMITS.dewormingValidityDays : FIELD_LIMITS.dewormingValidityMonths;
+	function protocolOptions() {
+		return [{ value: 0, label: t('protocol.none') }, ...visibleProtocols.map((protocol) => ({ value: protocol.id, label: protocol.name }))];
 	}
 
-	function normalizePositiveIntegerInput(value: string, max: number): string {
-		const digits = value.replace(/\D/g, '').replace(/^0+/, '');
-		if (!digits) return '';
-		const number = Number(digits);
-		return String(Math.min(number, max));
-	}
-
-	function currentValidityValue(): number {
-		const number = Number(validityValueText.trim());
-		return Number.isInteger(number) && number > 0 ? number : 0;
+	function protocolDoseOptions() {
+		return [{ value: 0, label: t('protocol.dosePlaceholder') }, ...visibleProtocolDoses.map((protocolDose) => ({ value: protocolDose.id, label: protocolDoseLabel(protocolDose) }))];
 	}
 
 	function validityLabel(value: number, unit: DewormingValidityUnit): string {
-		const unitKey = unit === 'days' ? (value === 1 ? 'pet.ageDaySingular' : 'pet.ageDayPlural') : value === 1 ? 'pet.ageMonthSingular' : 'pet.ageMonthPlural';
+		const unitKey = unit === 'days' ? (value === 1 ? 'pet.ageDaySingular' : 'pet.ageDayPlural') : unit === 'months' ? (value === 1 ? 'pet.ageMonthSingular' : 'pet.ageMonthPlural') : value === 1 ? 'pet.ageYearSingular' : 'pet.ageYearPlural';
 		return `${value} ${t(unitKey)}`;
+	}
+
+	function protocolDoseLabel(protocolDose: { dose: string; validityValue: number; validityUnit: DewormingValidityUnit }): string {
+		return `${protocolDose.dose} · ${validityLabel(protocolDose.validityValue, protocolDose.validityUnit)}`;
 	}
 
 	function pendingLabel(input: PetDewormingInput): string {
 		const baseLabel = `${input.dewormerName} · ${input.dose} · ${validityLabel(input.validityValue, input.validityUnit)}`;
 		const observationSummary = input.observation?.replace(/\s+/g, ' ').trim();
 		return observationSummary ? `${baseLabel} · ${observationSummary}` : baseLabel;
+	}
+
+	function clearProtocolSelection() {
+		protocolId = 0;
+		protocolDoseId = 0;
+	}
+
+	function handleDewormerChange(value: string) {
+		dewormerName = value;
+		clearProtocolSelection();
+	}
+
+	function handleProtocolChange(value: number) {
+		protocolId = value;
+		protocolDoseId = 0;
+	}
+
+	function handleProtocolDoseChange(value: number) {
+		protocolDoseId = value;
+		const protocolDose = visibleProtocolDoses.find((item) => item.id === value);
+		if (!protocolDose) return;
+
+		dose = protocolDose.dose;
+		validityValue = protocolDose.validityValue;
+		validityUnit = protocolDose.validityUnit;
+		observation = selectedProtocol?.observation ?? '';
 	}
 
 	function validateCurrentInput(): PetDewormingInput | null {
@@ -121,8 +148,7 @@
 			return null;
 		}
 
-		const validityValue = currentValidityValue();
-		if (validityValue <= 0 || validityValue > maxValidityValue()) {
+		if (validityValue <= 0) {
 			errorKey = 'deworming.validityRequired';
 			return null;
 		}
@@ -145,8 +171,9 @@
 
 	function resetDewormingFields() {
 		dewormerName = '';
+		clearProtocolSelection();
 		dose = '';
-		validityValueText = '6';
+		validityValue = 6;
 		validityUnit = 'months';
 		observation = '';
 	}
@@ -171,7 +198,10 @@
 	}
 
 	async function reloadDewormers() {
-		currentDewormers = await loadDewormers();
+		const [loadedDewormers, loadedProtocols] = await Promise.all([loadDewormers(), loadPreventiveProtocols('dewormer')]);
+		currentDewormers = loadedDewormers;
+		currentProtocols = loadedProtocols;
+		if (protocolId && !visibleProtocols.some((protocol) => protocol.id === protocolId)) clearProtocolSelection();
 	}
 
 	async function submitDewormings(event: SubmitEvent) {
@@ -269,12 +299,6 @@
 		return `${deworming.dewormerName} · ${deworming.dose}`;
 	}
 
-	$effect(() => {
-		const max = maxValidityValue();
-		const currentValue = currentValidityValue();
-		if (currentValue > max) validityValueText = String(max);
-	});
-
 	onMount(() => {
 		void reloadDewormers();
 	});
@@ -309,40 +333,47 @@
 
 			<div class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 				<label for={`deworming-name-${petId}`}>{t('deworming.step.dewormer')}</label>
-				<Select id={`deworming-name-${petId}`} bind:value={dewormerName} options={dewormerNameOptions()} disabled={knownDewormerNames.length === 0} />
+				<Select id={`deworming-name-${petId}`} bind:value={dewormerName} options={dewormerNameOptions()} disabled={knownDewormerNames.length === 0} onchange={handleDewormerChange} />
 			</div>
+
+			<div class="grid gap-3 md:col-span-2 sm:grid-cols-2">
+				<div class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+					<label for={`deworming-protocol-${petId}`}>{t('protocol.label')}</label>
+					<Select id={`deworming-protocol-${petId}`} bind:value={protocolId} options={protocolOptions()} disabled={!selectedDewormer || visibleProtocols.length === 0} onchange={handleProtocolChange} />
+				</div>
+
+				<div class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+					<label for={`deworming-protocol-dose-${petId}`}>{t('protocol.dose')}</label>
+					<Select id={`deworming-protocol-dose-${petId}`} bind:value={protocolDoseId} options={protocolDoseOptions()} disabled={!selectedProtocol || visibleProtocolDoses.length === 0} onchange={handleProtocolDoseChange} />
+				</div>
+			</div>
+
+			{#if protocolFieldsLocked}
+				<div class="md:col-span-2 flex flex-wrap items-center justify-between gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+					<span>{t('protocol.lockedFields')}</span>
+					<button type="button" class="inline-flex h-8 items-center justify-center gap-2 rounded-md border border-border bg-background px-2 text-xs font-medium hover:bg-accent" onclick={clearProtocolSelection}>
+						<X class="size-3" />
+						{t('protocol.clear')}
+					</button>
+				</div>
+			{/if}
 
 			<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 				<span class="flex min-w-0 items-baseline justify-between gap-2">
 					<span>{t('deworming.step.dose')}</span>
 					<CharacterLimitHint value={dose} max={FIELD_LIMITS.dewormingDose} />
 				</span>
-				<input id={`deworming-dose-${petId}`} class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={dose} maxlength={FIELD_LIMITS.dewormingDose} placeholder={t('deworming.dosePlaceholder')} />
+				<input id={`deworming-dose-${petId}`} class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 read-only:opacity-70" bind:value={dose} maxlength={FIELD_LIMITS.dewormingDose} placeholder={t('deworming.dosePlaceholder')} readonly={protocolFieldsLocked} />
 			</label>
 
-			<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem]">
-				<label class="flex flex-col gap-1 text-sm font-medium">
-					<span>{t('deworming.validityValue')}</span>
-					<input
-						id={`deworming-validity-value-${petId}`}
-						class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
-						type="text"
-						inputmode="numeric"
-						pattern="[0-9]*"
-						maxlength={String(maxValidityValue()).length}
-						value={validityValueText}
-						oninput={(event) => (validityValueText = normalizePositiveIntegerInput(event.currentTarget.value, maxValidityValue()))}
-					/>
-				</label>
-				<div class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-					<label for={`deworming-validity-unit-${petId}`}>{t('deworming.validityUnit')}</label>
-					<Select id={`deworming-validity-unit-${petId}`} bind:value={validityUnit} options={validityUnitOptions()} />
-				</div>
-			</div>
+			<label class="flex flex-col gap-1 text-sm font-medium">
+				<span>{t('deworming.step.validity')}</span>
+				<PeriodField bind:value={validityValue} bind:unit={validityUnit} ariaLabel={t('deworming.step.validity')} disabled={protocolFieldsLocked} />
+			</label>
 
 			<div class="flex min-w-0 flex-col gap-1 text-sm font-medium md:col-span-2">
 				<label for={`deworming-observation-${petId}`}>{t('deworming.observation')}</label>
-				<Textarea id={`deworming-observation-${petId}`} bind:value={observation} ariaLabel={t('deworming.observation')} maxLength={FIELD_LIMITS.dewormingObservation} class="min-h-24" />
+				<Textarea id={`deworming-observation-${petId}`} bind:value={observation} ariaLabel={t('deworming.observation')} maxLength={FIELD_LIMITS.dewormingObservation} readonly={protocolFieldsLocked} class="min-h-24" />
 			</div>
 		</div>
 

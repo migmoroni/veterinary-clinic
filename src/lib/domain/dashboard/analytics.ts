@@ -42,8 +42,7 @@ export interface DashboardPetStudyOwner {
 export interface DashboardPetStudyVaccine {
 	vaccineNormalizedName: string;
 	vaccineName: string;
-	doseType: string;
-	doseNumber: number | null;
+	dose: string;
 	appliedAt: string;
 	dueAt: string;
 	daysUntilDue: number;

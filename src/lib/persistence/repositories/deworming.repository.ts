@@ -34,13 +34,13 @@ function requiredIsoDate(value: string): string {
 }
 
 function normalizeValidityUnit(value: string): DewormingValidityUnit {
-	if (value === 'days' || value === 'months') return value;
+	if (value === 'days' || value === 'months' || value === 'years') return value;
 	throw new Error('deworming_validity_required');
 }
 
 function normalizeValidityValue(value: number, unit: DewormingValidityUnit): number {
 	const normalized = Number.isFinite(value) ? Math.trunc(value) : 0;
-	const max = unit === 'days' ? FIELD_LIMITS.dewormingValidityDays : FIELD_LIMITS.dewormingValidityMonths;
+	const max = unit === 'days' ? FIELD_LIMITS.dewormingValidityDays : unit === 'months' ? FIELD_LIMITS.dewormingValidityMonths : FIELD_LIMITS.dewormingValidityYears;
 	if (normalized <= 0 || normalized > max) throw new Error('deworming_validity_required');
 	return normalized;
 }

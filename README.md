@@ -2,7 +2,7 @@
 
 Local-first veterinary clinic app built with SvelteKit, Tailwind CSS and Tauri 2.
 
-On first launch, the app asks whether to import an existing compatible SQLite database or start a new clinic database with default dose and validity catalogs. After setup, the MVP opens directly on the latest medical record, supports global search, and includes real CRUD flows for owners, pets, medical records, catalog-assisted pet vaccinations, owner/pet profile screens, ViaCEP address lookup, a functional trash screen, and manual backup/export/import actions.
+On first launch, the app asks whether to import an existing compatible SQLite database or start a new clinic database with the current preventive catalog schema. After setup, the MVP opens directly on the latest medical record, supports global search, and includes real CRUD flows for owners, pets, medical records, catalog-assisted pet vaccinations and dewormings, owner/pet profile screens, ViaCEP address lookup, a functional trash screen, and manual backup/export/import actions.
 
 SQLite access goes through `tauri-plugin-sql`; the app does not depend on `rusqlite` directly.
 

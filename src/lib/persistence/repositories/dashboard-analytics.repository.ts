@@ -49,8 +49,7 @@ interface LatestVaccinationAnalyticsRow {
 	pet_id: number;
 	vaccine_name: string;
 	vaccine_normalized_name: string;
-	dose_type: string;
-	dose_number: number | null;
+	dose: string;
 	applied_at: string;
 	validity_value: number;
 	validity_unit: VaccineValidityUnit;
@@ -158,8 +157,7 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationAnalyticsRo
 		`SELECT pet_id,
 			vaccine_name,
 			vaccine_normalized_name,
-			dose_type,
-			dose_number,
+			dose,
 			applied_at,
 			validity_value,
 			validity_unit
@@ -167,8 +165,7 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationAnalyticsRo
 			SELECT pet_vaccinations.pet_id,
 				pet_vaccinations.vaccine_name,
 				pet_vaccinations.vaccine_normalized_name,
-				pet_vaccinations.dose_type,
-				pet_vaccinations.dose_number,
+				pet_vaccinations.dose,
 				pet_vaccinations.applied_at,
 				pet_vaccinations.validity_value,
 				pet_vaccinations.validity_unit,
@@ -216,8 +213,7 @@ function buildPetVaccinesMap(rows: LatestVaccinationAnalyticsRow[]): Map<number,
 		vaccines.push({
 			vaccineNormalizedName: row.vaccine_normalized_name,
 			vaccineName: row.vaccine_name,
-			doseType: row.dose_type,
-			doseNumber: row.dose_number,
+			dose: row.dose,
 			appliedAt: row.applied_at,
 			dueAt: status.dueAt,
 			daysUntilDue: status.daysUntilDue,

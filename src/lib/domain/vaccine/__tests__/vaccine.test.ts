@@ -8,8 +8,7 @@ function vaccination(input: Partial<PetVaccination> = {}): PetVaccination {
 		appliedAt: '2026-05-08',
 		vaccineName: 'V 10',
 		vaccineNormalizedName: 'v10',
-		doseType: 'Dose inicial',
-		doseNumber: 1,
+		dose: '1a dose',
 		validityValue: 21,
 		validityUnit: 'days',
 		observation: null,
@@ -35,6 +34,7 @@ describe('vaccine helpers', () => {
 		expect(computeVaccineDueAt('2026-05-08', { validityValue: 21, validityUnit: 'days' })).toBe('2026-05-29');
 		expect(computeVaccineDueAt('2024-01-31', { validityValue: 1, validityUnit: 'months' })).toBe('2024-02-29');
 		expect(computeVaccineDueAt('2025-01-31', { validityValue: 1, validityUnit: 'months' })).toBe('2025-02-28');
+		expect(computeVaccineDueAt('2024-02-29', { validityValue: 1, validityUnit: 'years' })).toBe('2025-02-28');
 	});
 
 	it('returns null for invalid, trailing, or non-positive due date inputs', () => {

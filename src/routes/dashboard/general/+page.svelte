@@ -12,7 +12,6 @@
 	import { dashboardAgeBandYear } from '$lib/domain/dashboard/age-bands.js';
 	import { formatDateForDisplay } from '$lib/domain/shared/date-input.js';
 	import { getPetBreedOption, getPetSpeciesOption, isPetBreed, isPetSpecies } from '$lib/domain/pet/taxonomy.js';
-	import { formatDoseNumberLabel } from '$lib/domain/vaccine/vaccine.js';
 	import { clinic } from '$lib/stores/clinic.svelte.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
 	import ChartColumn from '@lucide/svelte/icons/chart-column';
@@ -608,7 +607,7 @@
 	}
 
 	function vaccineDoseLabel(vaccine: DashboardPetStudyVaccine): string {
-		return vaccine.doseNumber ? `${vaccine.doseType} · ${formatDoseNumberLabel(vaccine.doseNumber, t('vaccine.dose').toLocaleLowerCase(i18n.locale))}` : vaccine.doseType;
+		return vaccine.dose;
 	}
 
 	function renderBucketLabel(bucket: DashboardNamedBucket): string {

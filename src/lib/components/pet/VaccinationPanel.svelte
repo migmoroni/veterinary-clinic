@@ -1,18 +1,21 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
+	import PeriodField from '$lib/components/forms/PeriodField.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
-	import type { PetVaccination, PetVaccinationInput, Vaccine, VaccineDoseType, VaccineValidityOption, VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
-	import { formatDoseNumberLabel, getVaccineDueStatus } from '$lib/domain/vaccine/vaccine.js';
+	import type { PreventiveProtocol } from '$lib/domain/preventive/protocol.js';
+	import type { PetVaccination, PetVaccinationInput, Vaccine, VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
+	import { getVaccineDueStatus } from '$lib/domain/vaccine/vaccine.js';
 	import { FIELD_LIMITS, textLength } from '$lib/domain/shared/field-limits.js';
 	import { formatDateForDisplay, normalizeDateInput } from '$lib/domain/shared/date-input.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
-	import { loadVaccines, loadVaccineDoseTypes, loadVaccineValidityOptions, removeVaccination, saveNewVaccinations, setVaccinationValidity } from '$lib/services/vaccine.service.js';
+	import { loadPreventiveProtocols } from '$lib/services/preventive-protocol.service.js';
+	import { loadVaccines, removeVaccination, saveNewVaccinations, setVaccinationValidity } from '$lib/services/vaccine.service.js';
 	import Bell from '@lucide/svelte/icons/bell';
 	import BellOff from '@lucide/svelte/icons/bell-off';
-	import Minus from '@lucide/svelte/icons/minus';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Save from '@lucide/svelte/icons/save';
 	import Settings2 from '@lucide/svelte/icons/settings-2';
@@ -32,14 +35,15 @@
 
 	let currentVaccinations = $state<PetVaccination[]>([]);
 	let currentVaccines = $state<Vaccine[]>([]);
-	let currentDoseTypes = $state<VaccineDoseType[]>([]);
-	let currentValidityOptions = $state<VaccineValidityOption[]>([]);
+	let currentProtocols = $state<PreventiveProtocol[]>([]);
 	let loadedPetId = $state<number | null>(null);
 	let appliedAt = $state(todayInput);
 	let vaccineName = $state('');
-	let doseType = $state('');
-	let doseNumberText = $state('1');
-	let validityOptionId = $state(0);
+	let protocolId = $state(0);
+	let protocolDoseId = $state(0);
+	let dose = $state('');
+	let validityValue = $state(12);
+	let validityUnit = $state<VaccineValidityUnit>('months');
 	let observation = $state('');
 	let pendingApplications = $state<PetVaccinationInput[]>([]);
 	let vaccinationPendingRemoval = $state<PetVaccination | null>(null);
@@ -49,13 +53,13 @@
 
 	const sortedVaccinations = $derived([...currentVaccinations].sort((first, second) => second.appliedAt.localeCompare(first.appliedAt) || second.id - first.id));
 	const visibleVaccines = $derived(currentVaccines.filter((vaccine) => !vaccine.hiddenAt));
-	const visibleDoseTypes = $derived(currentDoseTypes.filter((dose) => !dose.hiddenAt));
-	const visibleValidityOptions = $derived(currentValidityOptions.filter((option) => !option.hiddenAt));
 	const knownVaccineNames = $derived([...new Set(visibleVaccines.map((vaccine) => vaccine.name))].sort((first, second) => first.localeCompare(second)));
-	const knownDoseTypeNames = $derived(visibleDoseTypes.map((item) => item.name));
-	const selectedDoseType = $derived(visibleDoseTypes.find((item) => item.name === doseType) ?? null);
-	const selectedValidityOption = $derived(visibleValidityOptions.find((option) => option.id === validityOptionId) ?? null);
-	const doseNumberRequired = $derived(selectedDoseType?.requiresDoseNumber ?? true);
+	const selectedVaccine = $derived(visibleVaccines.find((vaccine) => vaccine.name === vaccineName) ?? null);
+	const visibleProtocols = $derived(selectedVaccine ? currentProtocols.filter((protocol) => !protocol.hiddenAt && protocol.items.some((item) => item.id === selectedVaccine.id)) : []);
+	const selectedProtocol = $derived(visibleProtocols.find((protocol) => protocol.id === protocolId) ?? null);
+	const visibleProtocolDoses = $derived(selectedProtocol ? selectedProtocol.doses : []);
+	const selectedProtocolDose = $derived(visibleProtocolDoses.find((protocolDose) => protocolDose.id === protocolDoseId) ?? null);
+	const protocolFieldsLocked = $derived(Boolean(selectedProtocolDose));
 
 	$effect(() => {
 		if (loadedPetId === petId) return;
@@ -68,65 +72,53 @@
 		return [{ value: '', label: t('vaccine.namePlaceholder') }, ...knownVaccineNames.map((name) => ({ value: name, label: name }))];
 	}
 
-	function doseTypeOptions() {
-		return [{ value: '', label: t('vaccine.doseType.placeholder') }, ...visibleDoseTypes.map((item) => ({ value: item.name, label: item.name }))];
+	function protocolOptions() {
+		return [{ value: 0, label: t('protocol.none') }, ...visibleProtocols.map((protocol) => ({ value: protocol.id, label: protocol.name }))];
 	}
 
-	function validityOptionOptions() {
-		return [{ value: 0, label: t('vaccine.validityOption.placeholder') }, ...visibleValidityOptions.map((option) => ({ value: option.id, label: validityLabel(option.validityValue, option.validityUnit) }))];
-	}
-
-	function doseLabel(type: string, doseNumber: number | null): string {
-		return doseNumber ? `${type} · ${formatDoseNumberLabel(doseNumber, t('vaccine.dose').toLocaleLowerCase(i18n.locale))}` : type;
+	function protocolDoseOptions() {
+		return [{ value: 0, label: t('protocol.dosePlaceholder') }, ...visibleProtocolDoses.map((protocolDose) => ({ value: protocolDose.id, label: protocolDoseLabel(protocolDose) }))];
 	}
 
 	function validityLabel(value: number, unit: VaccineValidityUnit): string {
-		const unitKey = unit === 'days' ? (value === 1 ? 'pet.ageDaySingular' : 'pet.ageDayPlural') : value === 1 ? 'pet.ageMonthSingular' : 'pet.ageMonthPlural';
+		const unitKey = unit === 'days' ? (value === 1 ? 'pet.ageDaySingular' : 'pet.ageDayPlural') : unit === 'months' ? (value === 1 ? 'pet.ageMonthSingular' : 'pet.ageMonthPlural') : value === 1 ? 'pet.ageYearSingular' : 'pet.ageYearPlural';
 		return `${value} ${t(unitKey)}`;
 	}
 
+	function protocolDoseLabel(protocolDose: { dose: string; validityValue: number; validityUnit: VaccineValidityUnit }): string {
+		return `${protocolDose.dose} · ${validityLabel(protocolDose.validityValue, protocolDose.validityUnit)}`;
+	}
+
 	function pendingLabel(input: PetVaccinationInput): string {
-		const baseLabel = `${input.vaccineName} · ${doseLabel(input.doseType, input.doseNumber)} · ${validityLabel(input.validityValue, input.validityUnit)}`;
+		const baseLabel = `${input.vaccineName} · ${input.dose} · ${validityLabel(input.validityValue, input.validityUnit)}`;
 		const observationSummary = input.observation?.replace(/\s+/g, ' ').trim();
 		return observationSummary ? `${baseLabel} · ${observationSummary}` : baseLabel;
 	}
 
-	function requiresDoseNumberFor(type: string): boolean {
-		return visibleDoseTypes.find((item) => item.name === type)?.requiresDoseNumber ?? true;
+	function clearProtocolSelection() {
+		protocolId = 0;
+		protocolDoseId = 0;
 	}
 
-	function defaultDoseType(): string {
-		return visibleDoseTypes[0]?.name ?? '';
+	function handleVaccineChange(value: string) {
+		vaccineName = value;
+		clearProtocolSelection();
 	}
 
-	function defaultValidityOptionId(): number {
-		return visibleValidityOptions[0]?.id ?? 0;
+	function handleProtocolChange(value: number) {
+		protocolId = value;
+		protocolDoseId = 0;
 	}
 
-	function normalizeDoseNumberInput(value: string): string {
-		const digits = value.replace(/\D/g, '').replace(/^0+/, '');
-		if (!digits) return '';
-		const number = Number(digits);
-		return String(Math.min(number, FIELD_LIMITS.vaccineDoseNumber));
-	}
+	function handleProtocolDoseChange(value: number) {
+		protocolDoseId = value;
+		const protocolDose = visibleProtocolDoses.find((item) => item.id === value);
+		if (!protocolDose) return;
 
-	function currentDoseNumber(): number {
-		const number = Number(doseNumberText.trim());
-		return Number.isInteger(number) && number > 0 ? number : 0;
-	}
-
-	function setDoseNumberValue(value: number) {
-		if (!doseNumberRequired) return;
-		doseNumberText = String(Math.min(Math.max(value, 1), FIELD_LIMITS.vaccineDoseNumber));
-	}
-
-	function changeDoseNumber(delta: number) {
-		setDoseNumberValue(currentDoseNumber() + delta);
-	}
-
-	function resetDoseFields() {
-		doseType = defaultDoseType();
-		doseNumberText = requiresDoseNumberFor(doseType) ? '1' : '';
+		dose = protocolDose.dose;
+		validityValue = protocolDose.validityValue;
+		validityUnit = protocolDose.validityUnit;
+		observation = selectedProtocol?.observation ?? '';
 	}
 
 	function validateCurrentInput(): PetVaccinationInput | null {
@@ -147,26 +139,19 @@
 			return null;
 		}
 
-		const validityOption = selectedValidityOption;
-		if (!validityOption) {
+		const trimmedDose = dose.trim();
+		if (!trimmedDose) {
+			errorKey = 'vaccine.doseRequired';
+			return null;
+		}
+		if (textLength(trimmedDose) > FIELD_LIMITS.vaccineDose) {
+			errorKey = 'form.limitExceeded';
+			return null;
+		}
+
+		if (validityValue <= 0) {
 			errorKey = 'vaccine.validityRequired';
 			return null;
-		}
-
-		const trimmedDoseType = doseType.trim();
-		if (!trimmedDoseType || !knownDoseTypeNames.includes(trimmedDoseType)) {
-			errorKey = 'vaccine.doseTypeRequired';
-			return null;
-		}
-
-		let doseNumber: number | null = null;
-		if (requiresDoseNumberFor(trimmedDoseType)) {
-			const normalizedDoseNumber = Number(doseNumberText.trim());
-			if (!Number.isInteger(normalizedDoseNumber) || normalizedDoseNumber <= 0 || normalizedDoseNumber > FIELD_LIMITS.vaccineDoseNumber) {
-				errorKey = 'vaccine.doseNumberRequired';
-				return null;
-			}
-			doseNumber = normalizedDoseNumber;
 		}
 
 		const normalizedObservation = observation.trim() ? observation : null;
@@ -178,18 +163,19 @@
 		return {
 			appliedAt: normalizedAppliedAt,
 			vaccineName: trimmedName,
-			doseType: trimmedDoseType,
-			doseNumber,
-			validityValue: validityOption.validityValue,
-			validityUnit: validityOption.validityUnit,
+			dose: trimmedDose,
+			validityValue,
+			validityUnit,
 			observation: normalizedObservation
 		};
 	}
 
 	function resetVaccineFields() {
 		vaccineName = '';
-		resetDoseFields();
-		validityOptionId = defaultValidityOptionId();
+		clearProtocolSelection();
+		dose = '';
+		validityValue = 12;
+		validityUnit = 'months';
 		observation = '';
 	}
 
@@ -213,14 +199,10 @@
 	}
 
 	async function reloadCatalogs() {
-		const [loadedVaccines, loadedDoseTypes, loadedValidityOptions] = await Promise.all([loadVaccines(), loadVaccineDoseTypes(), loadVaccineValidityOptions()]);
+		const [loadedVaccines, loadedProtocols] = await Promise.all([loadVaccines(), loadPreventiveProtocols('vaccine')]);
 		currentVaccines = loadedVaccines;
-		currentDoseTypes = loadedDoseTypes;
-		currentValidityOptions = loadedValidityOptions;
-		if (!doseType || !loadedDoseTypes.some((item) => !item.hiddenAt && item.name === doseType)) resetDoseFields();
-		else if (!requiresDoseNumberFor(doseType)) doseNumberText = '';
-		else if (!doseNumberText.trim()) doseNumberText = '1';
-		if (!validityOptionId || !loadedValidityOptions.some((option) => !option.hiddenAt && option.id === validityOptionId)) validityOptionId = loadedValidityOptions.find((option) => !option.hiddenAt)?.id ?? 0;
+		currentProtocols = loadedProtocols;
+		if (protocolId && !visibleProtocols.some((protocol) => protocol.id === protocolId)) clearProtocolSelection();
 	}
 
 	async function submitVaccinations(event: SubmitEvent) {
@@ -315,12 +297,8 @@
 	}
 
 	function vaccinationName(vaccination: PetVaccination): string {
-		return `${vaccination.vaccineName} · ${doseLabel(vaccination.doseType, vaccination.doseNumber)}`;
+		return `${vaccination.vaccineName} · ${vaccination.dose}`;
 	}
-
-	$effect(() => {
-		if (!doseNumberRequired && doseNumberText) doseNumberText = '';
-	});
 
 	onMount(() => {
 		void reloadCatalogs();
@@ -356,60 +334,47 @@
 
 			<div class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 				<label for={`vaccine-name-${petId}`}>{t('vaccine.step.vaccine')}</label>
-				<Select id={`vaccine-name-${petId}`} bind:value={vaccineName} options={vaccineNameOptions()} disabled={knownVaccineNames.length === 0} />
+				<Select id={`vaccine-name-${petId}`} bind:value={vaccineName} options={vaccineNameOptions()} disabled={knownVaccineNames.length === 0} onchange={handleVaccineChange} />
 			</div>
 
-			<div class="grid gap-3 sm:grid-cols-2">
-				<div class="flex flex-col gap-1 text-sm font-medium">
-					<label for={`vaccine-dose-type-${petId}`}>{t('vaccine.doseType.label')}</label>
-					<Select id={`vaccine-dose-type-${petId}`} bind:value={doseType} options={doseTypeOptions()} disabled={knownDoseTypeNames.length === 0} />
+			<div class="grid gap-3 md:col-span-2 sm:grid-cols-2">
+				<div class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+					<label for={`vaccine-protocol-${petId}`}>{t('protocol.label')}</label>
+					<Select id={`vaccine-protocol-${petId}`} bind:value={protocolId} options={protocolOptions()} disabled={!selectedVaccine || visibleProtocols.length === 0} onchange={handleProtocolChange} />
 				</div>
-				<div class="flex flex-col gap-1 text-sm font-medium">
-					<label for={`vaccine-dose-number-${petId}`}>{t('vaccine.doseNumber.label')}</label>
-					<div class="flex items-center gap-1">
-						<button
-							type="button"
-							class="flex size-5 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
-							aria-label={t('vaccine.doseNumber.decrease')}
-							title={t('vaccine.doseNumber.decrease')}
-							disabled={!doseNumberRequired || currentDoseNumber() <= 1}
-							onclick={() => changeDoseNumber(-1)}
-						>
-							<Minus class="size-4" />
-						</button>
-						<input
-							id={`vaccine-dose-number-${petId}`}
-							class="h-10 w-12 rounded-md border border-input bg-background px-2 text-center text-sm outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
-							type="text"
-							inputmode="numeric"
-							pattern="[0-9]*"
-							maxlength={String(FIELD_LIMITS.vaccineDoseNumber).length}
-							value={doseNumberText}
-							disabled={!doseNumberRequired}
-							oninput={(event) => (doseNumberText = normalizeDoseNumberInput(event.currentTarget.value))}
-						/>
-						<button
-							type="button"
-							class="flex size-5 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
-							aria-label={t('vaccine.doseNumber.increase')}
-							title={t('vaccine.doseNumber.increase')}
-							disabled={!doseNumberRequired || currentDoseNumber() >= FIELD_LIMITS.vaccineDoseNumber}
-							onclick={() => changeDoseNumber(1)}
-						>
-							<Plus class="size-4" />
-						</button>
-					</div>
+
+				<div class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+					<label for={`vaccine-protocol-dose-${petId}`}>{t('protocol.dose')}</label>
+					<Select id={`vaccine-protocol-dose-${petId}`} bind:value={protocolDoseId} options={protocolDoseOptions()} disabled={!selectedProtocol || visibleProtocolDoses.length === 0} onchange={handleProtocolDoseChange} />
 				</div>
 			</div>
 
-			<div class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-				<label for={`vaccine-validity-${petId}`}>{t('vaccine.step.validity')}</label>
-				<Select id={`vaccine-validity-${petId}`} bind:value={validityOptionId} options={validityOptionOptions()} disabled={visibleValidityOptions.length === 0} />
-			</div>
+			{#if protocolFieldsLocked}
+				<div class="md:col-span-2 flex flex-wrap items-center justify-between gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+					<span>{t('protocol.lockedFields')}</span>
+					<button type="button" class="inline-flex h-8 items-center justify-center gap-2 rounded-md border border-border bg-background px-2 text-xs font-medium hover:bg-accent" onclick={clearProtocolSelection}>
+						<X class="size-3" />
+						{t('protocol.clear')}
+					</button>
+				</div>
+			{/if}
+
+			<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+				<span class="flex min-w-0 items-baseline justify-between gap-2">
+					<span>{t('vaccine.step.dose')}</span>
+					<CharacterLimitHint value={dose} max={FIELD_LIMITS.vaccineDose} />
+				</span>
+				<input id={`vaccine-dose-${petId}`} class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 read-only:opacity-70" bind:value={dose} maxlength={FIELD_LIMITS.vaccineDose} placeholder={t('vaccine.dosePlaceholder')} readonly={protocolFieldsLocked} />
+			</label>
+
+			<label class="flex flex-col gap-1 text-sm font-medium">
+				<span>{t('vaccine.step.validity')}</span>
+				<PeriodField bind:value={validityValue} bind:unit={validityUnit} ariaLabel={t('vaccine.step.validity')} disabled={protocolFieldsLocked} />
+			</label>
 
 			<div class="flex min-w-0 flex-col gap-1 text-sm font-medium md:col-span-2">
 				<label for={`vaccine-observation-${petId}`}>{t('vaccine.observation')}</label>
-				<Textarea id={`vaccine-observation-${petId}`} bind:value={observation} ariaLabel={t('vaccine.observation')} maxLength={FIELD_LIMITS.vaccinationObservation} class="min-h-24" />
+				<Textarea id={`vaccine-observation-${petId}`} bind:value={observation} ariaLabel={t('vaccine.observation')} maxLength={FIELD_LIMITS.vaccinationObservation} readonly={protocolFieldsLocked} class="min-h-24" />
 			</div>
 		</div>
 

@@ -31,6 +31,7 @@ describe('deworming helpers', () => {
 		expect(computeDewormingDueAt('2026-05-08', { validityValue: 30, validityUnit: 'days' })).toBe('2026-06-07');
 		expect(computeDewormingDueAt('2024-01-31', { validityValue: 1, validityUnit: 'months' })).toBe('2024-02-29');
 		expect(computeDewormingDueAt('2025-01-31', { validityValue: 1, validityUnit: 'months' })).toBe('2025-02-28');
+		expect(computeDewormingDueAt('2024-02-29', { validityValue: 1, validityUnit: 'years' })).toBe('2025-02-28');
 	});
 
 	it('returns null for invalid or non-positive due date inputs', () => {

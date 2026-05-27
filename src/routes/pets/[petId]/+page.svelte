@@ -138,8 +138,7 @@
 	}
 
 	function vaccinationOverviewLabel(vaccination: PetVaccination): string {
-		if (!vaccination.doseNumber) return vaccination.doseType;
-		return `${vaccination.doseType} · ${vaccination.doseNumber} ${t('vaccine.dose').toLocaleLowerCase(i18n.locale)}`;
+		return vaccination.dose;
 	}
 
 	let profile = $state<PetProfile | null>(null);

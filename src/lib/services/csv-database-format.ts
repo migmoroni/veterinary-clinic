@@ -60,18 +60,23 @@ export const CSV_TABLES: CsvTableDefinition[] = [
 		orderBy: 'kind, name, id'
 	},
 	{
-		name: 'vaccine_dose_types',
-		columns: ['id', 'name', 'normalized_name', 'requires_dose_number', 'sort_order', 'hidden_at', 'created_at', 'updated_at'],
-		orderBy: 'sort_order, name, id'
+		name: 'preventive_protocols',
+		columns: ['id', 'kind', 'name', 'normalized_name', 'observation', 'sort_order', 'hidden_at', 'created_at', 'updated_at', 'deleted_at', 'purge_after'],
+		orderBy: 'kind, sort_order, name, id'
 	},
 	{
-		name: 'vaccine_validity_options',
-		columns: ['id', 'validity_value', 'validity_unit', 'sort_order', 'hidden_at', 'created_at', 'updated_at'],
-		orderBy: 'sort_order, validity_unit, validity_value, id'
+		name: 'preventive_protocol_items',
+		columns: ['id', 'protocol_id', 'catalog_item_id', 'sort_order', 'created_at', 'updated_at'],
+		orderBy: 'protocol_id, sort_order, id'
+	},
+	{
+		name: 'preventive_protocol_doses',
+		columns: ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order', 'created_at', 'updated_at'],
+		orderBy: 'protocol_id, sort_order, id'
 	},
 	{
 		name: 'pet_vaccinations',
-		columns: ['id', 'pet_id', 'applied_at', 'vaccine_name', 'vaccine_normalized_name', 'dose_type', 'dose_number', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after'],
+		columns: ['id', 'pet_id', 'applied_at', 'vaccine_name', 'vaccine_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after'],
 		orderBy: 'pet_id, applied_at, id'
 	},
 	{

@@ -19,6 +19,7 @@
 		{ kind: 'pet', titleKey: 'trash.pets' },
 		{ kind: 'vaccination', titleKey: 'trash.vaccinations' },
 		{ kind: 'deworming', titleKey: 'trash.dewormings' },
+		{ kind: 'protocol', titleKey: 'trash.protocols' },
 		{ kind: 'record', titleKey: 'trash.records' }
 	];
 	const activeGroup = $derived(groups.find((group) => group.kind === activeKind) ?? groups[0]);
@@ -144,7 +145,7 @@
 	{#if loading}
 		<div class="h-64 animate-pulse rounded-md bg-muted"></div>
 	{:else}
-		<div class="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1 sm:grid-cols-4" role="tablist" aria-label={t('trash.title')}>
+		<div class="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1 sm:grid-cols-3 xl:grid-cols-6" role="tablist" aria-label={t('trash.title')}>
 			{#each groups as group}
 				{@const count = itemCount(group.kind)}
 				<button class="inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-sm px-3 text-sm font-medium transition-colors {activeKind === group.kind ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}" type="button" role="tab" aria-selected={activeKind === group.kind} onclick={() => selectTab(group.kind)}>

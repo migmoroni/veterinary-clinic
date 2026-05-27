@@ -1,4 +1,4 @@
-export type VaccineValidityUnit = 'days' | 'months';
+export type VaccineValidityUnit = 'days' | 'months' | 'years';
 
 export interface Vaccine {
 	id: number;
@@ -12,43 +12,13 @@ export interface VaccineInput {
 	name: string;
 }
 
-export interface VaccineDoseType {
-	id: number;
-	name: string;
-	normalizedName: string;
-	requiresDoseNumber: boolean;
-	sortOrder: number;
-	hiddenAt: string | null;
-	updatedAt: string | null;
-}
-
-export interface VaccineDoseTypeInput {
-	name: string;
-	requiresDoseNumber: boolean;
-}
-
-export interface VaccineValidityOption {
-	id: number;
-	validityValue: number;
-	validityUnit: VaccineValidityUnit;
-	sortOrder: number;
-	hiddenAt: string | null;
-	updatedAt: string | null;
-}
-
-export interface VaccineValidityOptionInput {
-	validityValue: number;
-	validityUnit: VaccineValidityUnit;
-}
-
 export interface PetVaccination {
 	id: number;
 	petId: number;
 	appliedAt: string;
 	vaccineName: string;
 	vaccineNormalizedName: string;
-	doseType: string;
-	doseNumber: number | null;
+	dose: string;
 	validityValue: number;
 	validityUnit: VaccineValidityUnit;
 	observation: string | null;
@@ -61,8 +31,7 @@ export interface PetVaccination {
 export interface PetVaccinationInput {
 	appliedAt: string;
 	vaccineName: string;
-	doseType: string;
-	doseNumber: number | null;
+	dose: string;
 	validityValue: number;
 	validityUnit: VaccineValidityUnit;
 	observation: string | null;
@@ -84,10 +53,6 @@ export function normalizeVaccineName(value: string): string {
 		.replace(/[\u0300-\u036f]/g, '')
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, '');
-}
-
-export function formatDoseNumberLabel(doseNumber: number, doseLabel: string): string {
-	return `${doseNumber}\u00aa ${doseLabel.trim()}`;
 }
 
 function parseIsoDate(value: string): { year: number; month: number; day: number } | null {
@@ -123,7 +88,7 @@ export function computeVaccineDueAt(appliedAt: string, validity: Pick<PetVaccina
 		return formatIsoDate(date);
 	}
 
-	const totalMonths = applied.year * 12 + applied.month - 1 + validity.validityValue;
+	const totalMonths = applied.year * 12 + applied.month - 1 + (validity.validityUnit === 'years' ? validity.validityValue * 12 : validity.validityValue);
 	const year = Math.floor(totalMonths / 12);
 	const month = (totalMonths % 12) + 1;
 	const day = Math.min(applied.day, daysInMonth(year, month));

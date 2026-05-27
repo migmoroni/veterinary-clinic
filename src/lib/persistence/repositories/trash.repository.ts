@@ -1,6 +1,6 @@
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
-export type TrashKind = 'owner' | 'pet' | 'record' | 'vaccination' | 'deworming';
+export type TrashKind = 'owner' | 'pet' | 'record' | 'vaccination' | 'deworming' | 'protocol';
 
 export interface TrashItem {
 	kind: TrashKind;
@@ -108,6 +108,17 @@ export async function listTrashItems(): Promise<TrashItem[]> {
 
 		 UNION ALL
 
+		 SELECT 'protocol' AS kind,
+			preventive_protocols.id,
+			preventive_protocols.name AS title,
+			COALESCE(preventive_protocols.observation, '') AS subtitle,
+			preventive_protocols.deleted_at,
+			preventive_protocols.purge_after
+		 FROM preventive_protocols
+		 WHERE preventive_protocols.deleted_at IS NOT NULL
+
+		 UNION ALL
+
 		 SELECT 'record' AS kind,
 			medical_records.id,
 			COALESCE(medical_records.title, 'Prontuario ' || medical_records.id) AS title,
@@ -160,6 +171,11 @@ export async function restoreTrashItem(kind: TrashKind, id: number): Promise<voi
 		return;
 	}
 
+	if (kind === 'protocol') {
+		await execute('UPDATE preventive_protocols SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
+		return;
+	}
+
 	await execute(
 		`UPDATE pets
 		 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
@@ -198,10 +214,21 @@ export async function hardDeleteTrashItem(kind: TrashKind, id: number): Promise<
 		return;
 	}
 
+	if (kind === 'protocol') {
+		await execute('DELETE FROM preventive_protocols WHERE id = $1', [id]);
+		return;
+	}
+
 	await execute('DELETE FROM pet_dewormings WHERE id = $1', [id]);
 }
 
 export async function purgeExpiredTrash(now = new Date().toISOString()): Promise<void> {
+	await execute(
+		`DELETE FROM preventive_protocols
+		 WHERE deleted_at IS NOT NULL
+			AND purge_after <= $1`,
+		[now]
+	);
 	await execute(
 		`DELETE FROM pet_vaccinations
 		 WHERE deleted_at IS NOT NULL

@@ -38,9 +38,10 @@ async function validateDatabaseFile(fileName: string): Promise<void> {
 			(await tableHasColumns(database, 'pet_owners', ['id', 'pet_id', 'owner_id'])) &&
 			(await tableHasColumns(database, 'medical_records', ['id', 'pet_id', 'description', 'admitted_at', 'discharged_at'])) &&
 			(await tableHasColumns(database, 'preventive_catalog_items', ['id', 'kind', 'name', 'normalized_name', 'hidden_at'])) &&
-			(await tableHasColumns(database, 'vaccine_dose_types', ['id', 'name', 'normalized_name', 'requires_dose_number', 'sort_order', 'hidden_at'])) &&
-			(await tableHasColumns(database, 'vaccine_validity_options', ['id', 'validity_value', 'validity_unit', 'sort_order', 'hidden_at'])) &&
-			(await tableHasColumns(database, 'pet_vaccinations', ['id', 'pet_id', 'applied_at', 'vaccine_name', 'vaccine_normalized_name', 'dose_type', 'dose_number', 'validity_value', 'validity_unit', 'observation', 'validity_ignored_at'])) &&
+			(await tableHasColumns(database, 'preventive_protocols', ['id', 'kind', 'name', 'normalized_name', 'observation', 'sort_order', 'hidden_at', 'deleted_at', 'purge_after'])) &&
+			(await tableHasColumns(database, 'preventive_protocol_items', ['id', 'protocol_id', 'catalog_item_id', 'sort_order'])) &&
+			(await tableHasColumns(database, 'preventive_protocol_doses', ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order'])) &&
+			(await tableHasColumns(database, 'pet_vaccinations', ['id', 'pet_id', 'applied_at', 'vaccine_name', 'vaccine_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'validity_ignored_at'])) &&
 			(await tableHasColumns(database, 'pet_dewormings', ['id', 'pet_id', 'applied_at', 'dewormer_name', 'dewormer_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'validity_ignored_at'])) &&
 			(await tableHasColumns(database, 'backup_history', ['id', 'path', 'kind', 'created_at']));
 

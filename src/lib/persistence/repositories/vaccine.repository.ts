@@ -1,5 +1,4 @@
-import type { PetVaccination, PetVaccinationInput, Vaccine, VaccineDoseType, VaccineDoseTypeInput, VaccineInput, VaccineValidityOption, VaccineValidityOptionInput, VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
-import { normalizeVaccineName } from '$lib/domain/vaccine/vaccine.js';
+import type { PetVaccination, PetVaccinationInput, Vaccine, VaccineInput, VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
 import { FIELD_LIMITS, assertTextLimit, nullableMultilineText } from '$lib/domain/shared/field-limits.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { deletePreventiveCatalogItem, ensurePreventiveCatalogItem, listPreventiveCatalogItems, normalizePreventiveCatalogInput, savePreventiveCatalogItem, setPreventiveCatalogItemHidden } from '$lib/persistence/repositories/preventive-catalog.repository.js';
@@ -11,8 +10,7 @@ interface PetVaccinationRow {
 	applied_at: string;
 	vaccine_name: string;
 	vaccine_normalized_name: string;
-	dose_type: string;
-	dose_number: number | null;
+	dose: string;
 	validity_value: number;
 	validity_unit: VaccineValidityUnit;
 	observation: string | null;
@@ -20,25 +18,6 @@ interface PetVaccinationRow {
 	updated_at: string | null;
 	deleted_at: string | null;
 	purge_after: string | null;
-}
-
-interface VaccineDoseTypeRow {
-	id: number;
-	name: string;
-	normalized_name: string;
-	hidden_at: string | null;
-	updated_at: string | null;
-	requires_dose_number: number;
-	sort_order: number;
-}
-
-interface VaccineValidityOptionRow {
-	id: number;
-	validity_value: number;
-	validity_unit: VaccineValidityUnit;
-	sort_order: number;
-	hidden_at: string | null;
-	updated_at: string | null;
 }
 
 function requiredText(value: string, error: string, maxLength?: number): string {
@@ -55,67 +34,23 @@ function requiredIsoDate(value: string): string {
 }
 
 function normalizeValidityUnit(value: string): VaccineValidityUnit {
-	if (value === 'days' || value === 'months') return value;
+	if (value === 'days' || value === 'months' || value === 'years') return value;
 	throw new Error('vaccine_validity_required');
 }
 
 function normalizeValidityValue(value: number, unit: VaccineValidityUnit): number {
 	const normalized = Number.isFinite(value) ? Math.trunc(value) : 0;
-	const max = unit === 'days' ? FIELD_LIMITS.vaccineValidityDays : FIELD_LIMITS.vaccineValidityMonths;
+	const max = unit === 'days' ? FIELD_LIMITS.vaccineValidityDays : unit === 'months' ? FIELD_LIMITS.vaccineValidityMonths : FIELD_LIMITS.vaccineValidityYears;
 	if (normalized <= 0 || normalized > max) throw new Error('vaccine_validity_required');
 	return normalized;
-}
-
-function normalizeCatalogName(value: string, error: string, maxLength: number): { name: string; normalizedName: string } {
-	const name = requiredText(value, error, maxLength);
-	const normalizedName = normalizeVaccineName(name);
-	if (!normalizedName) throw new Error(error);
-	assertTextLimit(normalizedName, FIELD_LIMITS.vaccineNormalizedName);
-	return { name, normalizedName };
 }
 
 function normalizeVaccineInputName(value: string): { name: string; normalizedName: string } {
 	return normalizePreventiveCatalogInput('vaccine', value);
 }
 
-function normalizeDoseType(value: string): string {
-	return requiredText(value, 'vaccine_dose_required', FIELD_LIMITS.vaccineDoseType);
-}
-
-function normalizeDoseNumber(value: number | null | undefined): number | null {
-	if (value === null || value === undefined) return null;
-	const normalized = Number.isInteger(value) ? value : 0;
-	if (normalized <= 0 || normalized > FIELD_LIMITS.vaccineDoseNumber) throw new Error('vaccine_dose_required');
-	return normalized;
-}
-
-function normalizeValidityOptionInput(input: VaccineValidityOptionInput): { validityValue: number; validityUnit: VaccineValidityUnit } {
-	const validityUnit = normalizeValidityUnit(input.validityUnit);
-	const validityValue = normalizeValidityValue(Number(input.validityValue), validityUnit);
-	return { validityValue, validityUnit };
-}
-
-function mapDoseType(row: VaccineDoseTypeRow): VaccineDoseType {
-	return {
-		id: row.id,
-		name: row.name,
-		normalizedName: row.normalized_name,
-		requiresDoseNumber: row.requires_dose_number === 1,
-		sortOrder: row.sort_order,
-		hiddenAt: row.hidden_at,
-		updatedAt: row.updated_at
-	};
-}
-
-function mapValidityOption(row: VaccineValidityOptionRow): VaccineValidityOption {
-	return {
-		id: row.id,
-		validityValue: row.validity_value,
-		validityUnit: row.validity_unit,
-		sortOrder: row.sort_order,
-		hiddenAt: row.hidden_at,
-		updatedAt: row.updated_at
-	};
+function normalizeDose(value: string): string {
+	return requiredText(value, 'vaccine_dose_required', FIELD_LIMITS.vaccineDose);
 }
 
 function mapVaccination(row: PetVaccinationRow): PetVaccination {
@@ -125,8 +60,7 @@ function mapVaccination(row: PetVaccinationRow): PetVaccination {
 		appliedAt: row.applied_at,
 		vaccineName: row.vaccine_name,
 		vaccineNormalizedName: row.vaccine_normalized_name,
-		doseType: row.dose_type,
-		doseNumber: row.dose_number,
+		dose: row.dose,
 		validityValue: row.validity_value,
 		validityUnit: row.validity_unit,
 		observation: row.observation,
@@ -137,14 +71,9 @@ function mapVaccination(row: PetVaccinationRow): PetVaccination {
 	};
 }
 
-async function nextSortOrder(table: 'vaccine_dose_types' | 'vaccine_validity_options'): Promise<number> {
-	const rows = await selectMany<{ next_order: number }>(`SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_order FROM ${table}`);
-	return rows[0]?.next_order ?? 0;
-}
-
 async function getVaccinationRow(id: number): Promise<PetVaccinationRow | null> {
 	const rows = await selectMany<PetVaccinationRow>(
-		`SELECT id, pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose_type, dose_number, validity_value, validity_unit, observation, validity_ignored_at, updated_at, deleted_at, purge_after
+		`SELECT id, pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose, validity_value, validity_unit, observation, validity_ignored_at, updated_at, deleted_at, purge_after
 		 FROM pet_vaccinations
 		 WHERE id = $1
 		 LIMIT 1`,
@@ -198,149 +127,9 @@ export async function deleteVaccine(id: number): Promise<void> {
 	await deletePreventiveCatalogItem('vaccine', id);
 }
 
-export async function listVaccineDoseTypes(includeHidden = false): Promise<VaccineDoseType[]> {
-	const rows = await selectMany<VaccineDoseTypeRow>(
-		`SELECT id, name, normalized_name, requires_dose_number, sort_order, hidden_at, updated_at
-		 FROM vaccine_dose_types
-		 WHERE ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}
-		 ORDER BY sort_order, name COLLATE NOCASE`
-	);
-
-	return rows.map(mapDoseType);
-}
-
-export async function saveVaccineDoseType(input: VaccineDoseTypeInput, id?: number): Promise<VaccineDoseType> {
-	const { name, normalizedName } = normalizeCatalogName(input.name, 'vaccine_dose_required', FIELD_LIMITS.vaccineDoseType);
-	const requiresDoseNumber = input.requiresDoseNumber ? 1 : 0;
-
-	if (id) {
-		await execute(
-			`UPDATE vaccine_dose_types
-			 SET name = $2,
-				normalized_name = $3,
-				requires_dose_number = $4,
-				updated_at = CURRENT_TIMESTAMP
-			 WHERE id = $1`,
-			[id, name, normalizedName, requiresDoseNumber]
-		);
-	} else {
-		await execute(
-			`INSERT INTO vaccine_dose_types (name, normalized_name, requires_dose_number, sort_order, updated_at)
-			 VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
-			 ON CONFLICT(normalized_name) DO UPDATE SET
-				name = excluded.name,
-				requires_dose_number = excluded.requires_dose_number,
-				updated_at = CURRENT_TIMESTAMP`,
-			[name, normalizedName, requiresDoseNumber, await nextSortOrder('vaccine_dose_types')]
-		);
-	}
-
-	const rows = await selectMany<VaccineDoseTypeRow>(
-		`SELECT id, name, normalized_name, requires_dose_number, sort_order, hidden_at, updated_at
-		 FROM vaccine_dose_types
-		 WHERE normalized_name = $1
-		 LIMIT 1`,
-		[normalizedName]
-	);
-	if (!rows[0]) throw new Error('vaccine_save_failed');
-	return mapDoseType(rows[0]);
-}
-
-export async function setVaccineDoseTypeHidden(id: number, hidden: boolean): Promise<VaccineDoseType> {
-	await execute(
-		`UPDATE vaccine_dose_types
-		 SET hidden_at = ${hidden ? 'COALESCE(hidden_at, CURRENT_TIMESTAMP)' : 'NULL'},
-			updated_at = CURRENT_TIMESTAMP
-		 WHERE id = $1`,
-		[id]
-	);
-
-	const rows = await selectMany<VaccineDoseTypeRow>(
-		`SELECT id, name, normalized_name, requires_dose_number, sort_order, hidden_at, updated_at
-		 FROM vaccine_dose_types
-		 WHERE id = $1
-		 LIMIT 1`,
-		[id]
-	);
-	if (!rows[0]) throw new Error('vaccine_save_failed');
-	return mapDoseType(rows[0]);
-}
-
-export async function deleteVaccineDoseType(id: number): Promise<void> {
-	await execute('DELETE FROM vaccine_dose_types WHERE id = $1', [id]);
-}
-
-export async function listVaccineValidityOptions(includeHidden = false): Promise<VaccineValidityOption[]> {
-	const rows = await selectMany<VaccineValidityOptionRow>(
-		`SELECT id, validity_value, validity_unit, sort_order, hidden_at, updated_at
-		 FROM vaccine_validity_options
-		 WHERE ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}
-		 ORDER BY sort_order, validity_unit, validity_value`
-	);
-
-	return rows.map(mapValidityOption);
-}
-
-export async function saveVaccineValidityOption(input: VaccineValidityOptionInput, id?: number): Promise<VaccineValidityOption> {
-	const { validityValue, validityUnit } = normalizeValidityOptionInput(input);
-
-	if (id) {
-		await execute(
-			`UPDATE vaccine_validity_options
-			 SET validity_value = $2,
-				validity_unit = $3,
-				updated_at = CURRENT_TIMESTAMP
-			 WHERE id = $1`,
-			[id, validityValue, validityUnit]
-		);
-	} else {
-		await execute(
-			`INSERT INTO vaccine_validity_options (validity_value, validity_unit, sort_order, updated_at)
-			 VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
-			 ON CONFLICT(validity_value, validity_unit) DO UPDATE SET
-				updated_at = CURRENT_TIMESTAMP`,
-			[validityValue, validityUnit, await nextSortOrder('vaccine_validity_options')]
-		);
-	}
-
-	const rows = await selectMany<VaccineValidityOptionRow>(
-		`SELECT id, validity_value, validity_unit, sort_order, hidden_at, updated_at
-		 FROM vaccine_validity_options
-		 WHERE validity_value = $1 AND validity_unit = $2
-		 LIMIT 1`,
-		[validityValue, validityUnit]
-	);
-	if (!rows[0]) throw new Error('vaccine_save_failed');
-	return mapValidityOption(rows[0]);
-}
-
-export async function setVaccineValidityOptionHidden(id: number, hidden: boolean): Promise<VaccineValidityOption> {
-	await execute(
-		`UPDATE vaccine_validity_options
-		 SET hidden_at = ${hidden ? 'COALESCE(hidden_at, CURRENT_TIMESTAMP)' : 'NULL'},
-			updated_at = CURRENT_TIMESTAMP
-		 WHERE id = $1`,
-		[id]
-	);
-
-	const rows = await selectMany<VaccineValidityOptionRow>(
-		`SELECT id, validity_value, validity_unit, sort_order, hidden_at, updated_at
-		 FROM vaccine_validity_options
-		 WHERE id = $1
-		 LIMIT 1`,
-		[id]
-	);
-	if (!rows[0]) throw new Error('vaccine_save_failed');
-	return mapValidityOption(rows[0]);
-}
-
-export async function deleteVaccineValidityOption(id: number): Promise<void> {
-	await execute('DELETE FROM vaccine_validity_options WHERE id = $1', [id]);
-}
-
 export async function listVaccinationsByPet(petId: number, includeDeleted = false): Promise<PetVaccination[]> {
 	const rows = await selectMany<PetVaccinationRow>(
-		`SELECT id, pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose_type, dose_number, validity_value, validity_unit, observation, validity_ignored_at, updated_at, deleted_at, purge_after
+		`SELECT id, pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose, validity_value, validity_unit, observation, validity_ignored_at, updated_at, deleted_at, purge_after
 		 FROM pet_vaccinations
 		 WHERE pet_id = $1 ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
 		 ORDER BY applied_at DESC, id DESC`,
@@ -356,17 +145,16 @@ export async function createVaccinations(petId: number, inputs: PetVaccinationIn
 	for (const input of inputs) {
 		const appliedAt = requiredIsoDate(input.appliedAt);
 		const { name, normalizedName } = normalizeVaccineInputName(input.vaccineName);
-		const doseType = normalizeDoseType(input.doseType);
-		const doseNumber = normalizeDoseNumber(input.doseNumber);
+		const dose = normalizeDose(input.dose);
 		const validityUnit = normalizeValidityUnit(input.validityUnit);
 		const validityValue = normalizeValidityValue(Number(input.validityValue), validityUnit);
 		const observation = nullableMultilineText(input.observation, FIELD_LIMITS.vaccinationObservation);
 
 		await ensureVaccine(name, normalizedName);
 		await execute(
-			`INSERT INTO pet_vaccinations (pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose_type, dose_number, validity_value, validity_unit, observation, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)`,
-			[petId, appliedAt, name, normalizedName, doseType, doseNumber, validityValue, validityUnit, observation]
+			`INSERT INTO pet_vaccinations (pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose, validity_value, validity_unit, observation, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
+			[petId, appliedAt, name, normalizedName, dose, validityValue, validityUnit, observation]
 		);
 		affectedVaccines.add(normalizedName);
 	}
