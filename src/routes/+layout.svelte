@@ -13,8 +13,8 @@
 	} from '$lib/services/preferences.service.js';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
+	import Plus from '@lucide/svelte/icons/plus';
 	import Search from '@lucide/svelte/icons/search';
-	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import Settings from '@lucide/svelte/icons/settings';
 
 	let { children } = $props();
@@ -22,7 +22,7 @@
 	const navItems = [
 		{ href: '/', labelKey: 'nav.records', icon: LayoutDashboard },
 		{ href: '/search', labelKey: 'nav.search', icon: Search },
-		{ href: '/owners/new', labelKey: 'nav.newOwner', icon: UserPlus },
+		{ href: '/new', labelKey: 'nav.new', icon: Plus },
 		{ href: '/settings', labelKey: 'nav.settings', icon: Settings }
 	] as const;
 
@@ -32,6 +32,7 @@
 
 	function isActive(href: string) {
 		const path = page.url.pathname;
+		if (href === '/new') return path === '/new' || path === '/owners/new' || path === '/pets/new';
 		return href === '/' ? path === '/' || path === '/dashboard' : path.startsWith(href);
 	}
 
