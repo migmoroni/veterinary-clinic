@@ -21,6 +21,7 @@
 	}: { value?: string; min?: string; max?: string; ariaLabel?: string; onChange?: (value: string) => void } = $props();
 
 	let root: HTMLDivElement | null = null;
+	let panel = $state<HTMLDivElement | null>(null);
 	let open = $state(false);
 	let viewYear = $state(new Date().getFullYear());
 	let viewMonth = $state(new Date().getMonth());
@@ -69,9 +70,9 @@
 		viewMonth = initial.month;
 	}
 
-	function toggleOpen() {
+	function openField() {
 		if (!open) syncView();
-		open = !open;
+		open = true;
 	}
 
 	function close() {
@@ -145,8 +146,27 @@
 		close();
 	}
 
+	function isInsideElement(element: HTMLElement | null, event: Event): boolean {
+		if (!element) return false;
+		if (event.composedPath().includes(element)) return true;
+		if (event.target instanceof Node && element.contains(event.target)) return true;
+
+		if ('clientX' in event && 'clientY' in event) {
+			const rect = element.getBoundingClientRect();
+			const clientX = Number(event.clientX);
+			const clientY = Number(event.clientY);
+			return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+		}
+
+		return false;
+	}
+
+	function isInsideField(event: Event): boolean {
+		return isInsideElement(root, event) || isInsideElement(panel, event);
+	}
+
 	function closeIfOutside(event: Event) {
-		if (event.target instanceof Node && root?.contains(event.target)) return;
+		if (isInsideField(event)) return;
 		close();
 	}
 
@@ -156,12 +176,10 @@
 
 	onMount(() => {
 		document.addEventListener('pointerdown', closeIfOutside, true);
-		document.addEventListener('focusin', closeIfOutside, true);
 		window.addEventListener('keydown', closeOnEscape);
 
 		return () => {
 			document.removeEventListener('pointerdown', closeIfOutside, true);
-			document.removeEventListener('focusin', closeIfOutside, true);
 			window.removeEventListener('keydown', closeOnEscape);
 		};
 	});
@@ -169,7 +187,7 @@
 
 <div class="relative" bind:this={root}>
 	<div class="flex h-10 w-full rounded-md border border-input bg-background shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/30">
-		<button type="button" aria-label={`${ariaLabel}: ${displayValue}`} aria-haspopup="dialog" aria-expanded={open} class="flex min-w-0 flex-1 items-center gap-2 rounded-l-md px-3 text-left text-sm outline-none" onclick={toggleOpen}>
+		<button type="button" aria-label={`${ariaLabel}: ${displayValue}`} aria-haspopup="dialog" aria-expanded={open} class="flex min-w-0 flex-1 items-center gap-2 rounded-l-md px-3 text-left text-sm outline-none" onclick={openField}>
 			<CalendarDays class="size-4 shrink-0 text-muted-foreground" />
 			<span class="truncate {value ? 'text-foreground' : 'text-muted-foreground'}">{displayValue}</span>
 		</button>
@@ -182,7 +200,7 @@
 	</div>
 
 	{#if open}
-		<div role="dialog" aria-label={t('date.calendar')} class="absolute left-0 top-full z-50 mt-2 w-72 rounded-md border border-border bg-card p-3 shadow-lg">
+		<div bind:this={panel} role="dialog" aria-label={t('date.calendar')} class="absolute left-0 top-full z-50 mt-2 w-72 rounded-md border border-border bg-card p-3 shadow-lg">
 			<div class="flex items-center justify-between gap-2">
 				<button type="button" aria-label={t('date.previousYear')} title={t('date.previousYear')} class="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-40" disabled={!canShiftYear(-1)} onclick={() => shiftYear(-1)}>
 					<ChevronsLeft class="size-4" />
