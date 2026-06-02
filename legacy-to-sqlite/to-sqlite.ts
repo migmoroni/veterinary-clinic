@@ -25,6 +25,13 @@ interface VaccineMatcher {
   pattern: RegExp;
 }
 
+interface PreventiveCatalogSeed {
+  kind: 'vaccine' | 'dewormer';
+  name: string;
+  species: PetSpecies[];
+  aliases: string[];
+}
+
 interface DatedRecordBlock {
   appliedAt: string;
   text: string;
@@ -202,6 +209,9 @@ const FIELD_LIMITS = {
   dewormingValidityMonths: 120,
   dewormingValidityYears: 10,
   dewormingObservation: 2000,
+  preventiveSpeciesJson: 256,
+  preventiveAlias: 80,
+  preventiveAliasesJson: 1000,
   preventiveProtocolName: 120,
   preventiveProtocolNormalizedName: 120,
   preventiveProtocolDose: 120,
@@ -342,6 +352,8 @@ db.exec(`
     kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'dewormer')),
     name TEXT NOT NULL,
     normalized_name TEXT NOT NULL,
+    species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.preventiveSpeciesJson)}),
+    aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.preventiveAliasesJson)}),
     hidden_at TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
@@ -355,6 +367,7 @@ db.exec(`
     kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'dewormer')),
     name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.preventiveProtocolName)}),
     normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.preventiveProtocolNormalizedName)}),
+    species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.preventiveSpeciesJson)}),
     observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.preventiveProtocolObservation)}),
     sort_order INTEGER NOT NULL DEFAULT 0,
     hidden_at TEXT,
@@ -510,8 +523,8 @@ const insertMedicalRecord = db.prepare(`
 `);
 
 const insertPreventiveCatalogItem = db.prepare(`
-  INSERT OR IGNORE INTO preventive_catalog_items (kind, name, normalized_name, updated_at)
-  VALUES (@kind, @name, @normalizedName, CURRENT_TIMESTAMP)
+  INSERT OR IGNORE INTO preventive_catalog_items (kind, name, normalized_name, species, aliases, updated_at)
+  VALUES (@kind, @name, @normalizedName, @species, @aliases, CURRENT_TIMESTAMP)
 `);
 
 const insertSetting = db.prepare(`
@@ -555,11 +568,53 @@ const normalizeVaccineName = (value: string | undefined): string => {
 
 const normalizeDewormerName = normalizeVaccineName;
 const boosterDoseLabel = 'Dose de reforço';
+const legacyV10VaccineName = 'DHPPI+L';
 
-const defaultVaccineNames = ['V 10', 'V 8', 'Antirrábica', 'Recombitek', 'Quadrupla', 'Quíntupla', 'Giardia', 'Gripe', 'Nobivac', 'Imunocan'];
+const defaultPreventiveCatalogItems: PreventiveCatalogSeed[] = [
+  { kind: 'vaccine', name: legacyV10VaccineName, species: ['canine'], aliases: ['V 10', 'V10', 'V 8', 'V8', 'polivalente canina', 'multipla canina', 'dhppi l', 'dhppil'] },
+  { kind: 'vaccine', name: 'DHPPI', species: ['canine'], aliases: ['quintupla canina', 'multipla sem lepto', 'dhppi'] },
+  { kind: 'vaccine', name: 'Puppy DP', species: ['canine'], aliases: ['puppy', 'filhote', 'cinomose parvovirose'] },
+  { kind: 'vaccine', name: 'Giardia inativada', species: ['canine'], aliases: ['giardia', 'giardiase', 'giardiavax'] },
+  { kind: 'vaccine', name: 'Traqueobronquite infecciosa canina', species: ['canine'], aliases: ['gripe canina', 'tosse dos canis', 'kennel cough', 'kc', 'bronchiguard'] },
+  { kind: 'vaccine', name: 'Leishmaniose canina', species: ['canine'], aliases: ['leishtec', 'leishmaniose', 'calazar'] },
+  { kind: 'vaccine', name: 'Antirrábica inativada', species: ['canine', 'feline'], aliases: ['antirrabica', 'raiva', 'rabies', 'rabisin', 'defensor', 'nobivac rabies'] },
+  { kind: 'vaccine', name: 'Tríplice felina FVRCP', species: ['feline'], aliases: ['tríplice felina', 'triplice felina', 'v3', 'fvrcp', 'rinotraqueite calicivirose panleucopenia'] },
+  { kind: 'vaccine', name: 'Quádrupla felina FVRCP+Ch', species: ['feline'], aliases: ['quádrupla felina', 'quadrupla felina', 'v4', 'clamidiose'] },
+  { kind: 'vaccine', name: 'Quíntupla felina FVRCP+Ch+FeLV', species: ['feline'], aliases: ['quíntupla felina', 'quintupla felina', 'v5', 'felv', 'leucemia felina'] },
+  { kind: 'vaccine', name: 'FeLV recombinante', species: ['feline'], aliases: ['leucemia felina', 'felv', 'leucogen', 'purevax felv'] },
+  { kind: 'vaccine', name: 'Nobivac DHPPi', species: ['canine'], aliases: ['nobivac', 'nobivac dhppi', 'dhppi'] },
+  { kind: 'vaccine', name: 'Nobivac L4', species: ['canine'], aliases: ['nobivac lepto', 'l4', 'leptospirose'] },
+  { kind: 'vaccine', name: 'Recombitek C6', species: ['canine'], aliases: ['recombitek', 'recombitek c6', 'v10'] },
+  { kind: 'vaccine', name: 'Vanguard Plus', species: ['canine'], aliases: ['vanguard', 'vanguard plus', 'polivalente canina'] },
+  { kind: 'vaccine', name: 'Nobivac Tricat Trio', species: ['feline'], aliases: ['tricat', 'tricat trio', 'tríplice felina', 'triplice felina'] },
+  { kind: 'vaccine', name: 'Felocell CVR', species: ['feline'], aliases: ['felocell', 'felocell cvr', 'tríplice felina', 'triplice felina'] },
+  { kind: 'vaccine', name: 'Versifel FeLV', species: ['feline'], aliases: ['versifel', 'versifel felv', 'leucemia felina'] },
+  { kind: 'dewormer', name: 'Praziquantel + Pamoato de pirantel + Febantel', species: ['canine'], aliases: ['drontal plus', 'endogard', 'canex premium', 'vermifugo amplo espectro', 'tenicida'] },
+  { kind: 'dewormer', name: 'Praziquantel + Pamoato de pirantel', species: ['feline'], aliases: ['drontal gatos', 'drontal cats', 'vermifugo gatos', 'tenicida'] },
+  { kind: 'dewormer', name: 'Milbemicina oxima + Praziquantel', species: ['canine', 'feline'], aliases: ['milbemax', 'milpro', 'milbemicina', 'praziquantel'] },
+  { kind: 'dewormer', name: 'Febantel + Pamoato de pirantel + Praziquantel', species: ['canine'], aliases: ['drontal', 'drontal plus sabor', 'endoparasitas'] },
+  { kind: 'dewormer', name: 'Fenbendazol', species: ['canine', 'feline'], aliases: ['panacur', 'fembendazol', 'giardia', 'nematódeos', 'nematodeos'] },
+  { kind: 'dewormer', name: 'Febantel', species: ['canine'], aliases: ['giardicid', 'giardia', 'verme redondo'] },
+  { kind: 'dewormer', name: 'Selamectina', species: ['canine', 'feline'], aliases: ['revolution', 'stronghold', 'endectocida'] },
+  { kind: 'dewormer', name: 'Moxidectina + Imidacloprida', species: ['canine', 'feline'], aliases: ['advocate', 'advantage multi', 'endectocida'] },
+  { kind: 'dewormer', name: 'Emodepsida + Praziquantel', species: ['feline'], aliases: ['profender', 'vermifugo topico gatos'] },
+  { kind: 'dewormer', name: 'Afoxolaner + Milbemicina oxima', species: ['canine'], aliases: ['nexgard spectra', 'endectocida', 'milbemicina'] },
+  { kind: 'dewormer', name: 'Sarolaner + Moxidectina + Pirantel', species: ['canine'], aliases: ['simparic trio', 'endectocida', 'pirantel'] },
+  { kind: 'dewormer', name: 'Ivermectina', species: ['canine'], aliases: ['ivermectina oral', 'endectocida'] }
+];
 
-for (const name of defaultVaccineNames) {
-  insertPreventiveCatalogItem.run({ kind: 'vaccine', name, normalizedName: normalizeVaccineName(name) });
+const preventiveCatalogDefaultsByKindAndName = new Map(defaultPreventiveCatalogItems.map((item) => [`${item.kind}:${normalizeVaccineName(item.name)}`, item]));
+
+const metadataForCatalogItem = (kind: 'vaccine' | 'dewormer', name: string): { species: string; aliases: string } => {
+  const item = preventiveCatalogDefaultsByKindAndName.get(`${kind}:${normalizeVaccineName(name)}`);
+  return {
+    species: JSON.stringify(item?.species ?? ['canine', 'feline']),
+    aliases: JSON.stringify(item?.aliases ?? [])
+  };
+};
+
+for (const item of defaultPreventiveCatalogItems) {
+  insertPreventiveCatalogItem.run({ kind: item.kind, name: item.name, normalizedName: normalizeVaccineName(item.name), species: JSON.stringify(item.species), aliases: JSON.stringify(item.aliases) });
 }
 
 insertSetting.run({ key: backupPolicyIntervalSettingKey, value: String(defaultBackupPolicyIntervalMinutes) });
@@ -575,7 +630,8 @@ const dewormerIds = new Map(
 const ensureVaccineName = (name: string): string => {
   const normalizedName = normalizeVaccineName(name);
   if (!vaccineIds.has(normalizedName)) {
-    const result = insertPreventiveCatalogItem.run({ kind: 'vaccine', name, normalizedName });
+    const metadata = metadataForCatalogItem('vaccine', name);
+    const result = insertPreventiveCatalogItem.run({ kind: 'vaccine', name, normalizedName, species: metadata.species, aliases: metadata.aliases });
     vaccineIds.set(normalizedName, Number(result.lastInsertRowid));
   }
   return normalizedName;
@@ -584,7 +640,8 @@ const ensureVaccineName = (name: string): string => {
 const ensureDewormerName = (name: string): string => {
   const normalizedName = normalizeDewormerName(name);
   if (!dewormerIds.has(normalizedName)) {
-    const result = insertPreventiveCatalogItem.run({ kind: 'dewormer', name, normalizedName });
+    const metadata = metadataForCatalogItem('dewormer', name);
+    const result = insertPreventiveCatalogItem.run({ kind: 'dewormer', name, normalizedName, species: metadata.species, aliases: metadata.aliases });
     dewormerIds.set(normalizedName, Number(result.lastInsertRowid));
   }
   return normalizedName;
@@ -758,31 +815,27 @@ const breedAliases: Record<PetSpecies, BreedAlias[]> = {
 };
 
 const vaccineMatchers: VaccineMatcher[] = [
-  { name: 'V 10', pattern: /\b(?:v\s*10|v10|v\s*1o|v1o|dhppi(?:\s*l)?|dhppil)\b/ },
-  { name: 'V 8', pattern: /\b(?:v\s*8|v8)\b/ },
-  { name: 'Antirrábica', pattern: /\banti\s*r*abic[ao]?\b|\braiva\b/ },
-  { name: 'Recombitek', pattern: /\brecombite[ck]\b/ },
-  { name: 'Quadrupla', pattern: /\bquadrupla\b/ },
-  { name: 'Quíntupla', pattern: /\bquintupla\b/ },
-  { name: 'Giardia', pattern: /\bgiardia\b/ },
-  { name: 'Gripe', pattern: /\bgripe\b/ },
-  { name: 'Nobivac', pattern: /\bnobivac\b/ },
-  { name: 'Imunocan', pattern: /\bimunocan\b/ }
+  { name: legacyV10VaccineName, pattern: /\b(?:v\s*10|v10|v\s*1o|v1o|v\s*8|v8|dhppi(?:\s*l)?|dhppil)\b/ },
+  { name: 'Antirrábica inativada', pattern: /\banti\s*r*abic[ao]?\b|\braiva\b/ },
+  { name: 'Recombitek C6', pattern: /\brecombite[ck]\b/ },
+  { name: 'Quádrupla felina FVRCP+Ch', pattern: /\bquadrupla\b/ },
+  { name: 'Quíntupla felina FVRCP+Ch+FeLV', pattern: /\bquintupla\b/ },
+  { name: 'Giardia inativada', pattern: /\bgiardia\b/ },
+  { name: 'Traqueobronquite infecciosa canina', pattern: /\bgripe\b/ },
+  { name: 'Nobivac DHPPi', pattern: /\bnobivac\b/ },
+  { name: 'Vanguard Plus', pattern: /\bimunocan\b|\bvanguard\b/ }
 ];
 
 const dewormerMatchers: VaccineMatcher[] = [
-  { name: 'Drontal', pattern: /\bdrontal\b/ },
-  { name: 'Endogard', pattern: /\bendogard\b/ },
-  { name: 'Milbemax', pattern: /\bmilbemax\b/ },
-  { name: 'Milprazon', pattern: /\bmilprazon\b/ },
-  { name: 'Canex', pattern: /\bcanex\b/ },
+  { name: 'Febantel + Pamoato de pirantel + Praziquantel', pattern: /\bdrontal\b|\bendogard\b|\bcanex\b/ },
+  { name: 'Milbemicina oxima + Praziquantel', pattern: /\bmilbemax\b|\bmilprazon\b/ },
   { name: 'Chemital', pattern: /\bchemital\b/ },
   { name: 'Vetmax', pattern: /\bvetmax\b/ },
   { name: 'Top Dog', pattern: /\btop\s*dog\b/ },
-  { name: 'NexGard Spectra', pattern: /\bnex\s*gard\s*spectra\b|\bnexgard\s*spectra\b/ },
-  { name: 'Simparic Trio', pattern: /\bsimparic\s*trio\b/ },
-  { name: 'Advocate', pattern: /\badvocate\b/ },
-  { name: 'Profender', pattern: /\bprofender\b/ }
+  { name: 'Afoxolaner + Milbemicina oxima', pattern: /\bnex\s*gard\s*spectra\b|\bnexgard\s*spectra\b/ },
+  { name: 'Sarolaner + Moxidectina + Pirantel', pattern: /\bsimparic\s*trio\b/ },
+  { name: 'Moxidectina + Imidacloprida', pattern: /\badvocate\b/ },
+  { name: 'Emodepsida + Praziquantel', pattern: /\bprofender\b/ }
 ];
 
 const numberedDoseMatchers = [
@@ -792,7 +845,7 @@ const numberedDoseMatchers = [
   { label: '4ª dose', sortOrder: 3, pattern: /\b(?:4\s*(?:a|o)?|quart[ao])\s*dose\b/ }
 ];
 
-const boosterOnlyVaccines = new Set(['Antirrábica']);
+const boosterOnlyVaccines = new Set(['Antirrábica inativada']);
 
 const dateHeaderPattern = /(^|\n)\s*(\d{1,2}\s*\/\s*\d{1,2}\s*\/\s*(?:\d{2}|\d{4}))\s*:/g;
 
@@ -1839,13 +1892,13 @@ const processarMigracao = () => {
 
         const extractedVaccinations = extractVaccinationsFromRecord(fullDescription, report);
         const extractedDewormings = extractDewormingsFromRecord(fullDescription, report);
-        const v10HasFourthDose = extractedVaccinations.some((v) => v.vaccine === 'V 10' && v.doseLabel === '4ª dose');
-        const v10HasThirdDose = extractedVaccinations.some((v) => v.vaccine === 'V 10' && v.doseLabel === '3ª dose');
+        const v10HasFourthDose = extractedVaccinations.some((v) => v.vaccine === legacyV10VaccineName && v.doseLabel === '4ª dose');
+        const v10HasThirdDose = extractedVaccinations.some((v) => v.vaccine === legacyV10VaccineName && v.doseLabel === '3ª dose');
         const v10ThreeDoseFinal = !v10HasFourthDose && v10HasThirdDose;
 
         for (const vaccination of extractedVaccinations) {
           const vaccineNormalizedName = ensureVaccineName(vaccination.vaccine);
-          const validity = doseValidity(vaccination.doseLabel, { v10ThreeDoseFinal: vaccination.vaccine === 'V 10' && v10ThreeDoseFinal });
+          const validity = doseValidity(vaccination.doseLabel, { v10ThreeDoseFinal: vaccination.vaccine === legacyV10VaccineName && v10ThreeDoseFinal });
 
           const vaccinationRes = insertPetVaccination.run({
             petId: petRes.lastInsertRowid,

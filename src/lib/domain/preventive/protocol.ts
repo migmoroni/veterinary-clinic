@@ -1,3 +1,5 @@
+import type { KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
+
 export type PreventiveProtocolKind = 'vaccine' | 'dewormer';
 export type PreventiveValidityUnit = 'days' | 'months' | 'years';
 
@@ -5,6 +7,7 @@ export interface PreventiveProtocolCatalogItem {
 	id: number;
 	name: string;
 	normalizedName: string;
+	species: KnownPetSpecies[];
 }
 
 export interface PreventiveProtocolDose {
@@ -22,6 +25,7 @@ export interface PreventiveProtocol {
 	kind: PreventiveProtocolKind;
 	name: string;
 	normalizedName: string;
+	species: KnownPetSpecies[];
 	observation: string | null;
 	sortOrder: number;
 	hiddenAt: string | null;
@@ -35,6 +39,7 @@ export interface PreventiveProtocol {
 export interface PreventiveProtocolInput {
 	kind: PreventiveProtocolKind;
 	name: string;
+	species?: KnownPetSpecies[];
 	catalogItemIds: number[];
 	observation: string | null;
 }

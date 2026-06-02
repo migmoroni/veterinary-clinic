@@ -1,4 +1,5 @@
 import type { PreventiveProtocol, PreventiveProtocolCatalogItem, PreventiveProtocolDose, PreventiveProtocolDoseInput, PreventiveProtocolInput, PreventiveProtocolKind, PreventiveValidityUnit } from '$lib/domain/preventive/protocol.js';
+import { parsePreventiveSpecies, stringifyPreventiveSpecies } from '$lib/domain/preventive/catalog.js';
 import { normalizePreventiveProtocolName } from '$lib/domain/preventive/protocol.js';
 import { FIELD_LIMITS, assertTextLimit, nullableMultilineText } from '$lib/domain/shared/field-limits.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
@@ -9,6 +10,7 @@ interface PreventiveProtocolRow {
 	kind: PreventiveProtocolKind;
 	name: string;
 	normalized_name: string;
+	species: string;
 	observation: string | null;
 	sort_order: number;
 	hidden_at: string | null;
@@ -22,6 +24,7 @@ interface PreventiveProtocolItemRow {
 	id: number;
 	name: string;
 	normalized_name: string;
+	species: string;
 }
 
 interface PreventiveProtocolDoseRow {
@@ -75,7 +78,8 @@ function mapItem(row: PreventiveProtocolItemRow): PreventiveProtocolCatalogItem 
 	return {
 		id: row.id,
 		name: row.name,
-		normalizedName: row.normalized_name
+		normalizedName: row.normalized_name,
+		species: parsePreventiveSpecies(row.species)
 	};
 }
 
@@ -97,6 +101,7 @@ function mapProtocol(row: PreventiveProtocolRow, items: PreventiveProtocolCatalo
 		kind: row.kind,
 		name: row.name,
 		normalizedName: row.normalized_name,
+		species: parsePreventiveSpecies(row.species),
 		observation: row.observation,
 		sortOrder: row.sort_order,
 		hiddenAt: row.hidden_at,
@@ -136,7 +141,8 @@ async function loadProtocolDetails(rows: PreventiveProtocolRow[]): Promise<Preve
 		`SELECT preventive_protocol_items.protocol_id,
 			preventive_catalog_items.id,
 			preventive_catalog_items.name,
-			preventive_catalog_items.normalized_name
+			preventive_catalog_items.normalized_name,
+			preventive_catalog_items.species
 		 FROM preventive_protocol_items
 		 JOIN preventive_catalog_items ON preventive_catalog_items.id = preventive_protocol_items.catalog_item_id
 		 WHERE preventive_protocol_items.protocol_id IN (${idPlaceholders})
@@ -170,7 +176,7 @@ async function loadProtocolDetails(rows: PreventiveProtocolRow[]): Promise<Preve
 
 async function getProtocolById(id: number): Promise<PreventiveProtocol> {
 	const rows = await selectMany<PreventiveProtocolRow>(
-		`SELECT id, kind, name, normalized_name, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
+		`SELECT id, kind, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
 		 FROM preventive_protocols
 		 WHERE id = $1 AND deleted_at IS NULL
 		 LIMIT 1`,
@@ -207,14 +213,14 @@ async function saveProtocolItems(protocolId: number, catalogItemIds: number[]): 
 export async function listPreventiveProtocols(kind?: PreventiveProtocolKind, includeHidden = false): Promise<PreventiveProtocol[]> {
 	const rows = kind
 		? await selectMany<PreventiveProtocolRow>(
-				`SELECT id, kind, name, normalized_name, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
+				`SELECT id, kind, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
 				 FROM preventive_protocols
 				 WHERE kind = $1 AND deleted_at IS NULL AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}
 				 ORDER BY sort_order, name COLLATE NOCASE`,
 				[kind]
 			)
 		: await selectMany<PreventiveProtocolRow>(
-				`SELECT id, kind, name, normalized_name, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
+				`SELECT id, kind, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
 				 FROM preventive_protocols
 				 WHERE deleted_at IS NULL AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}
 				 ORDER BY kind, sort_order, name COLLATE NOCASE`
@@ -226,6 +232,8 @@ export async function listPreventiveProtocols(kind?: PreventiveProtocolKind, inc
 export async function savePreventiveProtocol(input: PreventiveProtocolInput, id?: number): Promise<PreventiveProtocol> {
 	const kind = normalizeKind(input.kind);
 	const { name, normalizedName } = normalizeName(input.name);
+	const species = stringifyPreventiveSpecies(input.species);
+	assertTextLimit(species, FIELD_LIMITS.preventiveSpeciesJson);
 	const observation = nullableMultilineText(input.observation, FIELD_LIMITS.preventiveProtocolObservation);
 	const catalogItemIds = await resolveProtocolItemIds(kind, input.catalogItemIds);
 
@@ -236,22 +244,24 @@ export async function savePreventiveProtocol(input: PreventiveProtocolInput, id?
 			 SET kind = $2,
 				name = $3,
 				normalized_name = $4,
-				observation = $5,
+				species = $5,
+				observation = $6,
 				updated_at = CURRENT_TIMESTAMP
 			 WHERE id = $1 AND deleted_at IS NULL`,
-			[protocolId, kind, name, normalizedName, observation]
+			[protocolId, kind, name, normalizedName, species, observation]
 		);
 	} else {
 		await execute(
-			`INSERT INTO preventive_protocols (kind, name, normalized_name, observation, sort_order, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+			`INSERT INTO preventive_protocols (kind, name, normalized_name, species, observation, sort_order, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
 			 ON CONFLICT(kind, normalized_name) DO UPDATE SET
 				name = excluded.name,
+				species = excluded.species,
 				observation = excluded.observation,
 				deleted_at = NULL,
 				purge_after = NULL,
 				updated_at = CURRENT_TIMESTAMP`,
-			[kind, name, normalizedName, observation, await nextProtocolSortOrder(kind)]
+			[kind, name, normalizedName, species, observation, await nextProtocolSortOrder(kind)]
 		);
 
 		const rows = await selectMany<{ id: number }>('SELECT id FROM preventive_protocols WHERE kind = $1 AND normalized_name = $2 AND deleted_at IS NULL LIMIT 1', [kind, normalizedName]);

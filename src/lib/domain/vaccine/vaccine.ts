@@ -1,15 +1,21 @@
+import type { KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
+
 export type VaccineValidityUnit = 'days' | 'months' | 'years';
 
 export interface Vaccine {
 	id: number;
 	name: string;
 	normalizedName: string;
+	species: KnownPetSpecies[];
+	aliases: string[];
 	hiddenAt: string | null;
 	updatedAt: string | null;
 }
 
 export interface VaccineInput {
 	name: string;
+	species?: KnownPetSpecies[];
+	aliases?: string[];
 }
 
 export interface PetVaccination {

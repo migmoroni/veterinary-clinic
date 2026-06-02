@@ -6,6 +6,7 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import type { Dewormer } from '$lib/domain/deworming/deworming.js';
+	import { petSpeciesOptions, type KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
 	import type { PreventiveProtocol, PreventiveProtocolDose, PreventiveProtocolKind, PreventiveValidityUnit } from '$lib/domain/preventive/protocol.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import type { Vaccine } from '$lib/domain/vaccine/vaccine.js';
@@ -36,8 +37,13 @@
 	let protocols = $state<PreventiveProtocol[]>([]);
 	let activeTab = $state<VaccineSettingsTab>('vaccines');
 	let vaccineDraftNames = $state<Record<number, string>>({});
+	let vaccineDraftAliases = $state<Record<number, string>>({});
+	let vaccineDraftSpecies = $state<Record<number, KnownPetSpecies[]>>({});
 	let dewormerDraftNames = $state<Record<number, string>>({});
+	let dewormerDraftAliases = $state<Record<number, string>>({});
+	let dewormerDraftSpecies = $state<Record<number, KnownPetSpecies[]>>({});
 	let protocolDraftNames = $state<Record<number, string>>({});
+	let protocolDraftSpecies = $state<Record<number, KnownPetSpecies[]>>({});
 	let protocolDraftObservations = $state<Record<number, string>>({});
 	let protocolDraftItemIds = $state<Record<number, number[]>>({});
 	let doseDraftDoses = $state<Record<number, string>>({});
@@ -47,9 +53,14 @@
 	let newDoseValidityValues = $state<Record<number, number>>({});
 	let newDoseValidityUnits = $state<Record<number, PreventiveValidityUnit>>({});
 	let newVaccineName = $state('');
+	let newVaccineAliases = $state('');
+	let newVaccineSpecies = $state<KnownPetSpecies[]>(defaultSpeciesDraft());
 	let newDewormerName = $state('');
+	let newDewormerAliases = $state('');
+	let newDewormerSpecies = $state<KnownPetSpecies[]>(defaultSpeciesDraft());
 	let newProtocolKind = $state<PreventiveProtocolKind>('vaccine');
 	let newProtocolName = $state('');
+	let newProtocolSpecies = $state<KnownPetSpecies[]>(defaultSpeciesDraft());
 	let newProtocolObservation = $state('');
 	let newProtocolItemIds = $state<number[]>([]);
 	let loading = $state(true);
@@ -74,6 +85,71 @@
 		return (event.currentTarget as HTMLInputElement).value;
 	}
 
+	function defaultSpeciesDraft(): KnownPetSpecies[] {
+		return petSpeciesOptions.map((option) => option.id);
+	}
+
+	function parseAliases(value: string): string[] {
+		return value
+			.split(',')
+			.map((alias) => alias.trim())
+			.filter(Boolean);
+	}
+
+	function aliasDraft(aliases: string[]): string {
+		return aliases.join(', ');
+	}
+
+	function toggleSpeciesDraft(values: KnownPetSpecies[], species: KnownPetSpecies): KnownPetSpecies[] {
+		if (values.includes(species)) return values.length > 1 ? values.filter((value) => value !== species) : values;
+		return [...values, species];
+	}
+
+	function speciesLabel(species: KnownPetSpecies): string {
+		const option = petSpeciesOptions.find((item) => item.id === species);
+		return option ? t(option.labelKey) : species;
+	}
+
+	function speciesSummary(species: KnownPetSpecies[]): string {
+		return species.map(speciesLabel).join(', ');
+	}
+
+	function vaccineDraftSpeciesValue(vaccine: Vaccine): KnownPetSpecies[] {
+		return vaccineDraftSpecies[vaccine.id] ?? vaccine.species;
+	}
+
+	function dewormerDraftSpeciesValue(dewormer: Dewormer): KnownPetSpecies[] {
+		return dewormerDraftSpecies[dewormer.id] ?? dewormer.species;
+	}
+
+	function protocolDraftSpeciesValue(protocol: PreventiveProtocol): KnownPetSpecies[] {
+		return protocolDraftSpecies[protocol.id] ?? protocol.species;
+	}
+
+	function setVaccineSpecies(vaccine: Vaccine, species: KnownPetSpecies) {
+		vaccineDraftSpecies = { ...vaccineDraftSpecies, [vaccine.id]: toggleSpeciesDraft(vaccineDraftSpeciesValue(vaccine), species) };
+	}
+
+	function setDewormerSpecies(dewormer: Dewormer, species: KnownPetSpecies) {
+		dewormerDraftSpecies = { ...dewormerDraftSpecies, [dewormer.id]: toggleSpeciesDraft(dewormerDraftSpeciesValue(dewormer), species) };
+	}
+
+	function itemMatchesSpecies(kind: PreventiveProtocolKind, itemId: number, species: KnownPetSpecies[]): boolean {
+		return catalogItems(kind).some((item) => item.id === itemId && speciesOverlap(item.species, species));
+	}
+
+	function setNewProtocolSpecies(species: KnownPetSpecies) {
+		const nextSpecies = toggleSpeciesDraft(newProtocolSpecies, species);
+		newProtocolSpecies = nextSpecies;
+		newProtocolItemIds = newProtocolItemIds.filter((itemId) => itemMatchesSpecies(newProtocolKind, itemId, nextSpecies));
+	}
+
+	function setProtocolSpecies(protocol: PreventiveProtocol, species: KnownPetSpecies) {
+		const nextSpecies = toggleSpeciesDraft(protocolDraftSpeciesValue(protocol), species);
+		protocolDraftSpecies = { ...protocolDraftSpecies, [protocol.id]: nextSpecies };
+		protocolDraftItemIds = { ...protocolDraftItemIds, [protocol.id]: selectedItemIds(protocol).filter((itemId) => itemMatchesSpecies(protocol.kind, itemId, nextSpecies)) };
+	}
+
 	function itemCount(tab: VaccineSettingsTab): number {
 		if (tab === 'vaccines') return vaccines.length;
 		if (tab === 'dewormers') return dewormers.length;
@@ -93,6 +169,19 @@
 
 	function visibleCatalogItems(kind: PreventiveProtocolKind): CatalogItem[] {
 		return catalogItems(kind).filter((item) => !item.hiddenAt);
+	}
+
+	function speciesOverlap(left: KnownPetSpecies[], right: KnownPetSpecies[]): boolean {
+		return left.some((species) => right.includes(species));
+	}
+
+	function visibleCatalogItemsForSpecies(kind: PreventiveProtocolKind, species: KnownPetSpecies[]): CatalogItem[] {
+		return visibleCatalogItems(kind).filter((item) => speciesOverlap(item.species, species));
+	}
+
+	function protocolCatalogItems(protocol: PreventiveProtocol): CatalogItem[] {
+		const selected = selectedItemIds(protocol);
+		return catalogItems(protocol.kind).filter((item) => selected.includes(item.id) || speciesOverlap(item.species, protocolDraftSpeciesValue(protocol)));
 	}
 
 	function kindLabel(kind: PreventiveProtocolKind): string {
@@ -118,6 +207,7 @@
 
 	function syncProtocolDraft(protocol: PreventiveProtocol) {
 		protocolDraftNames = { ...protocolDraftNames, [protocol.id]: protocol.name };
+		protocolDraftSpecies = { ...protocolDraftSpecies, [protocol.id]: protocol.species };
 		protocolDraftObservations = { ...protocolDraftObservations, [protocol.id]: protocol.observation ?? '' };
 		protocolDraftItemIds = { ...protocolDraftItemIds, [protocol.id]: protocol.items.map((item) => item.id) };
 
@@ -135,11 +225,15 @@
 	function upsertVaccine(vaccine: Vaccine) {
 		vaccines = sortedVaccines([...vaccines.filter((item) => item.id !== vaccine.id && item.normalizedName !== vaccine.normalizedName), vaccine]);
 		vaccineDraftNames = { ...vaccineDraftNames, [vaccine.id]: vaccine.name };
+		vaccineDraftAliases = { ...vaccineDraftAliases, [vaccine.id]: aliasDraft(vaccine.aliases) };
+		vaccineDraftSpecies = { ...vaccineDraftSpecies, [vaccine.id]: vaccine.species };
 	}
 
 	function upsertDewormer(dewormer: Dewormer) {
 		dewormers = sortedDewormers([...dewormers.filter((item) => item.id !== dewormer.id && item.normalizedName !== dewormer.normalizedName), dewormer]);
 		dewormerDraftNames = { ...dewormerDraftNames, [dewormer.id]: dewormer.name };
+		dewormerDraftAliases = { ...dewormerDraftAliases, [dewormer.id]: aliasDraft(dewormer.aliases) };
+		dewormerDraftSpecies = { ...dewormerDraftSpecies, [dewormer.id]: dewormer.species };
 	}
 
 	function upsertProtocol(protocol: PreventiveProtocol) {
@@ -169,7 +263,11 @@
 			dewormers = sortedDewormers(loadedDewormers);
 			protocols = sortedProtocols(loadedProtocols);
 			vaccineDraftNames = Object.fromEntries(vaccines.map((vaccine) => [vaccine.id, vaccine.name]));
+			vaccineDraftAliases = Object.fromEntries(vaccines.map((vaccine) => [vaccine.id, aliasDraft(vaccine.aliases)]));
+			vaccineDraftSpecies = Object.fromEntries(vaccines.map((vaccine) => [vaccine.id, vaccine.species]));
 			dewormerDraftNames = Object.fromEntries(dewormers.map((dewormer) => [dewormer.id, dewormer.name]));
+			dewormerDraftAliases = Object.fromEntries(dewormers.map((dewormer) => [dewormer.id, aliasDraft(dewormer.aliases)]));
+			dewormerDraftSpecies = Object.fromEntries(dewormers.map((dewormer) => [dewormer.id, dewormer.species]));
 			for (const protocol of protocols) syncProtocolDraft(protocol);
 		} catch {
 			errorKey = 'protocol.saveFailed';
@@ -185,9 +283,11 @@
 		errorKey = null;
 
 		try {
-			const saved = await saveVaccineName({ name: newVaccineName });
+			const saved = await saveVaccineName({ name: newVaccineName, species: newVaccineSpecies, aliases: parseAliases(newVaccineAliases) });
 			upsertVaccine(saved);
 			newVaccineName = '';
+			newVaccineAliases = '';
+			newVaccineSpecies = defaultSpeciesDraft();
 			statusKey = 'vaccine.saved';
 		} catch (exception) {
 			setFailure(exception);
@@ -203,9 +303,11 @@
 		errorKey = null;
 
 		try {
-			const saved = await saveDewormerName({ name: newDewormerName });
+			const saved = await saveDewormerName({ name: newDewormerName, species: newDewormerSpecies, aliases: parseAliases(newDewormerAliases) });
 			upsertDewormer(saved);
 			newDewormerName = '';
+			newDewormerAliases = '';
+			newDewormerSpecies = defaultSpeciesDraft();
 			statusKey = 'deworming.saved';
 		} catch (exception) {
 			setFailure(exception);
@@ -221,9 +323,10 @@
 		errorKey = null;
 
 		try {
-			const saved = await saveProtocol({ kind: newProtocolKind, name: newProtocolName, catalogItemIds: newProtocolItemIds, observation: newProtocolObservation || null });
+			const saved = await saveProtocol({ kind: newProtocolKind, name: newProtocolName, species: newProtocolSpecies, catalogItemIds: newProtocolItemIds, observation: newProtocolObservation || null });
 			upsertProtocol(saved);
 			newProtocolName = '';
+			newProtocolSpecies = defaultSpeciesDraft();
 			newProtocolObservation = '';
 			newProtocolItemIds = [];
 			statusKey = 'protocol.saved';
@@ -240,7 +343,7 @@
 		errorKey = null;
 
 		try {
-			const saved = await saveVaccineName({ name: vaccineDraftNames[vaccine.id] ?? vaccine.name }, vaccine.id);
+			const saved = await saveVaccineName({ name: vaccineDraftNames[vaccine.id] ?? vaccine.name, species: vaccineDraftSpeciesValue(vaccine), aliases: parseAliases(vaccineDraftAliases[vaccine.id] ?? aliasDraft(vaccine.aliases)) }, vaccine.id);
 			upsertVaccine(saved);
 			statusKey = 'vaccine.saved';
 		} catch (exception) {
@@ -256,7 +359,7 @@
 		errorKey = null;
 
 		try {
-			const saved = await saveDewormerName({ name: dewormerDraftNames[dewormer.id] ?? dewormer.name }, dewormer.id);
+			const saved = await saveDewormerName({ name: dewormerDraftNames[dewormer.id] ?? dewormer.name, species: dewormerDraftSpeciesValue(dewormer), aliases: parseAliases(dewormerDraftAliases[dewormer.id] ?? aliasDraft(dewormer.aliases)) }, dewormer.id);
 			upsertDewormer(saved);
 			statusKey = 'deworming.saved';
 		} catch (exception) {
@@ -276,6 +379,7 @@
 				{
 					kind: protocol.kind,
 					name: protocolDraftName(protocol),
+					species: protocolDraftSpeciesValue(protocol),
 					catalogItemIds: selectedItemIds(protocol),
 					observation: protocolDraftObservation(protocol) || null
 				},
@@ -349,6 +453,10 @@
 			vaccines = vaccines.filter((item) => item.id !== vaccine.id);
 			const { [vaccine.id]: _removed, ...remainingDrafts } = vaccineDraftNames;
 			vaccineDraftNames = remainingDrafts;
+			const { [vaccine.id]: _removedAliases, ...remainingAliases } = vaccineDraftAliases;
+			const { [vaccine.id]: _removedSpecies, ...remainingSpecies } = vaccineDraftSpecies;
+			vaccineDraftAliases = remainingAliases;
+			vaccineDraftSpecies = remainingSpecies;
 			statusKey = 'status.deleted';
 		} catch {
 			errorKey = 'vaccine.saveFailed';
@@ -368,6 +476,10 @@
 			dewormers = dewormers.filter((item) => item.id !== dewormer.id);
 			const { [dewormer.id]: _removed, ...remainingDrafts } = dewormerDraftNames;
 			dewormerDraftNames = remainingDrafts;
+			const { [dewormer.id]: _removedAliases, ...remainingAliases } = dewormerDraftAliases;
+			const { [dewormer.id]: _removedSpecies, ...remainingSpecies } = dewormerDraftSpecies;
+			dewormerDraftAliases = remainingAliases;
+			dewormerDraftSpecies = remainingSpecies;
 			statusKey = 'status.deleted';
 		} catch {
 			errorKey = 'deworming.saveFailed';
@@ -548,7 +660,7 @@
 				</span>
 				<div class="min-w-0 flex-1">
 					<h3 class="text-base font-semibold">{t('vaccine.list.title')}</h3>
-					<form class="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-start" onsubmit={submitNewVaccine}>
+					<form class="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-start" onsubmit={submitNewVaccine}>
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
 								<span>{t('vaccine.name')}</span>
@@ -556,6 +668,24 @@
 							</span>
 							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newVaccineName} maxlength={FIELD_LIMITS.vaccineName} required />
 						</label>
+						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+							<span class="flex min-w-0 items-baseline justify-between gap-2">
+								<span>{t('preventive.aliases')}</span>
+								<CharacterLimitHint value={newVaccineAliases} max={FIELD_LIMITS.preventiveAliasesJson} />
+							</span>
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newVaccineAliases} maxlength={FIELD_LIMITS.preventiveAliasesJson} placeholder={t('preventive.aliasesPlaceholder')} />
+						</label>
+						<div class="flex min-w-0 flex-col gap-2 text-sm font-medium lg:col-span-2">
+							<span>{t('preventive.species')}</span>
+							<div class="flex flex-wrap gap-2">
+								{#each petSpeciesOptions as option}
+									<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
+										<input type="checkbox" class="size-4 accent-primary" checked={newVaccineSpecies.includes(option.id)} onchange={() => (newVaccineSpecies = toggleSpeciesDraft(newVaccineSpecies, option.id))} />
+										<span>{t(option.labelKey)}</span>
+									</label>
+								{/each}
+							</div>
+						</div>
 						<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={saving}>
 							<Plus class="size-4" />
 							{t('vaccine.list.add')}
@@ -569,13 +699,20 @@
 					<div class="h-28 animate-pulse rounded-md bg-muted"></div>
 				{:else}
 					{#each vaccines as vaccine (vaccine.id)}
-						<form class="grid gap-3 rounded-md border border-border bg-background p-3 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-start" onsubmit={(event) => { event.preventDefault(); void saveExistingVaccine(vaccine); }}>
+						<form class="grid gap-3 rounded-md border border-border bg-background p-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto] xl:items-start" onsubmit={(event) => { event.preventDefault(); void saveExistingVaccine(vaccine); }}>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
 									<span>{t('vaccine.name')}</span>
 									<CharacterLimitHint value={vaccineDraftNames[vaccine.id] ?? vaccine.name} max={FIELD_LIMITS.vaccineName} />
 								</span>
 								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={vaccineDraftNames[vaccine.id] ?? vaccine.name} maxlength={FIELD_LIMITS.vaccineName} required oninput={(event) => (vaccineDraftNames = { ...vaccineDraftNames, [vaccine.id]: inputValue(event) })} />
+							</label>
+							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+								<span class="flex min-w-0 items-baseline justify-between gap-2">
+									<span>{t('preventive.aliases')}</span>
+									<CharacterLimitHint value={vaccineDraftAliases[vaccine.id] ?? aliasDraft(vaccine.aliases)} max={FIELD_LIMITS.preventiveAliasesJson} />
+								</span>
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={vaccineDraftAliases[vaccine.id] ?? aliasDraft(vaccine.aliases)} maxlength={FIELD_LIMITS.preventiveAliasesJson} placeholder={t('preventive.aliasesPlaceholder')} oninput={(event) => (vaccineDraftAliases = { ...vaccineDraftAliases, [vaccine.id]: inputValue(event) })} />
 							</label>
 							<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
 								<Save class="size-4" />
@@ -594,6 +731,17 @@
 								<Trash2 class="size-4" />
 								{t('actions.delete')}
 							</button>
+							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-5">
+								<span>{t('preventive.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(vaccineDraftSpeciesValue(vaccine))}</span></span>
+								<div class="flex flex-wrap gap-2">
+									{#each petSpeciesOptions as option}
+										<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
+											<input type="checkbox" class="size-4 accent-primary" checked={vaccineDraftSpeciesValue(vaccine).includes(option.id)} onchange={() => setVaccineSpecies(vaccine, option.id)} />
+											<span>{t(option.labelKey)}</span>
+										</label>
+									{/each}
+								</div>
+							</div>
 						</form>
 					{:else}
 						<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('vaccine.emptyVaccines')}</p>
@@ -609,7 +757,7 @@
 				</span>
 				<div class="min-w-0 flex-1">
 					<h3 class="text-base font-semibold">{t('deworming.list.title')}</h3>
-					<form class="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-start" onsubmit={submitNewDewormer}>
+					<form class="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-start" onsubmit={submitNewDewormer}>
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
 								<span>{t('deworming.name')}</span>
@@ -617,6 +765,24 @@
 							</span>
 							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newDewormerName} maxlength={FIELD_LIMITS.dewormerName} required />
 						</label>
+						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+							<span class="flex min-w-0 items-baseline justify-between gap-2">
+								<span>{t('preventive.aliases')}</span>
+								<CharacterLimitHint value={newDewormerAliases} max={FIELD_LIMITS.preventiveAliasesJson} />
+							</span>
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newDewormerAliases} maxlength={FIELD_LIMITS.preventiveAliasesJson} placeholder={t('preventive.aliasesPlaceholder')} />
+						</label>
+						<div class="flex min-w-0 flex-col gap-2 text-sm font-medium lg:col-span-2">
+							<span>{t('preventive.species')}</span>
+							<div class="flex flex-wrap gap-2">
+								{#each petSpeciesOptions as option}
+									<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
+										<input type="checkbox" class="size-4 accent-primary" checked={newDewormerSpecies.includes(option.id)} onchange={() => (newDewormerSpecies = toggleSpeciesDraft(newDewormerSpecies, option.id))} />
+										<span>{t(option.labelKey)}</span>
+									</label>
+								{/each}
+							</div>
+						</div>
 						<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={saving}>
 							<Plus class="size-4" />
 							{t('deworming.list.add')}
@@ -630,13 +796,20 @@
 					<div class="h-28 animate-pulse rounded-md bg-muted"></div>
 				{:else}
 					{#each dewormers as dewormer (dewormer.id)}
-						<form class="grid gap-3 rounded-md border border-border bg-background p-3 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-start" onsubmit={(event) => { event.preventDefault(); void saveExistingDewormer(dewormer); }}>
+						<form class="grid gap-3 rounded-md border border-border bg-background p-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto] xl:items-start" onsubmit={(event) => { event.preventDefault(); void saveExistingDewormer(dewormer); }}>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
 									<span>{t('deworming.name')}</span>
 									<CharacterLimitHint value={dewormerDraftNames[dewormer.id] ?? dewormer.name} max={FIELD_LIMITS.dewormerName} />
 								</span>
 								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={dewormerDraftNames[dewormer.id] ?? dewormer.name} maxlength={FIELD_LIMITS.dewormerName} required oninput={(event) => (dewormerDraftNames = { ...dewormerDraftNames, [dewormer.id]: inputValue(event) })} />
+							</label>
+							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+								<span class="flex min-w-0 items-baseline justify-between gap-2">
+									<span>{t('preventive.aliases')}</span>
+									<CharacterLimitHint value={dewormerDraftAliases[dewormer.id] ?? aliasDraft(dewormer.aliases)} max={FIELD_LIMITS.preventiveAliasesJson} />
+								</span>
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={dewormerDraftAliases[dewormer.id] ?? aliasDraft(dewormer.aliases)} maxlength={FIELD_LIMITS.preventiveAliasesJson} placeholder={t('preventive.aliasesPlaceholder')} oninput={(event) => (dewormerDraftAliases = { ...dewormerDraftAliases, [dewormer.id]: inputValue(event) })} />
 							</label>
 							<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
 								<Save class="size-4" />
@@ -655,6 +828,17 @@
 								<Trash2 class="size-4" />
 								{t('actions.delete')}
 							</button>
+							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-5">
+								<span>{t('preventive.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(dewormerDraftSpeciesValue(dewormer))}</span></span>
+								<div class="flex flex-wrap gap-2">
+									{#each petSpeciesOptions as option}
+										<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
+											<input type="checkbox" class="size-4 accent-primary" checked={dewormerDraftSpeciesValue(dewormer).includes(option.id)} onchange={() => setDewormerSpecies(dewormer, option.id)} />
+											<span>{t(option.labelKey)}</span>
+										</label>
+									{/each}
+								</div>
+							</div>
 						</form>
 					{:else}
 						<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('deworming.emptyDewormers')}</p>
@@ -684,9 +868,21 @@
 						</label>
 
 						<div class="lg:col-span-2 flex min-w-0 flex-col gap-2 text-sm font-medium">
+							<span>{t('preventive.species')}</span>
+							<div class="flex flex-wrap gap-2">
+								{#each petSpeciesOptions as option}
+									<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
+										<input type="checkbox" class="size-4 accent-primary" checked={newProtocolSpecies.includes(option.id)} onchange={() => setNewProtocolSpecies(option.id)} />
+										<span>{t(option.labelKey)}</span>
+									</label>
+								{/each}
+							</div>
+						</div>
+
+						<div class="lg:col-span-2 flex min-w-0 flex-col gap-2 text-sm font-medium">
 							<span>{t('protocol.items')}</span>
 							<div class="flex flex-wrap gap-2">
-								{#each visibleCatalogItems(newProtocolKind) as item (item.id)}
+								{#each visibleCatalogItemsForSpecies(newProtocolKind, newProtocolSpecies) as item (item.id)}
 									<button type="button" class="inline-flex h-8 max-w-full items-center rounded-md border px-3 text-sm transition-colors {newProtocolItemIds.includes(item.id) ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background hover:bg-accent'}" aria-pressed={newProtocolItemIds.includes(item.id)} onclick={() => toggleNewProtocolItem(item.id)}>
 										<span class="truncate">{item.name}</span>
 									</button>
@@ -743,9 +939,21 @@
 								</button>
 
 								<div class="lg:col-span-5 flex min-w-0 flex-col gap-2 text-sm font-medium">
+									<span>{t('preventive.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(protocolDraftSpeciesValue(protocol))}</span></span>
+									<div class="flex flex-wrap gap-2">
+										{#each petSpeciesOptions as option}
+											<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
+												<input type="checkbox" class="size-4 accent-primary" checked={protocolDraftSpeciesValue(protocol).includes(option.id)} onchange={() => setProtocolSpecies(protocol, option.id)} />
+												<span>{t(option.labelKey)}</span>
+											</label>
+										{/each}
+									</div>
+								</div>
+
+								<div class="lg:col-span-5 flex min-w-0 flex-col gap-2 text-sm font-medium">
 									<span>{t('protocol.items')}</span>
 									<div class="flex flex-wrap gap-2">
-										{#each catalogItems(protocol.kind) as item (item.id)}
+										{#each protocolCatalogItems(protocol) as item (item.id)}
 											{@const selected = selectedItemIds(protocol).includes(item.id)}
 											<button type="button" class="inline-flex h-8 max-w-full items-center rounded-md border px-3 text-sm transition-colors {selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background hover:bg-accent'} {item.hiddenAt ? 'opacity-60' : ''}" aria-pressed={selected} onclick={() => toggleProtocolItem(protocol, item.id)}>
 												<span class="truncate">{item.name}</span>

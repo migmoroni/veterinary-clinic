@@ -3,9 +3,12 @@
 	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
 	import PeriodField from '$lib/components/forms/PeriodField.svelte';
+	import SearchableSelect from '$lib/components/ui/SearchableSelect.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
+	import type { PetSpecies } from '$lib/domain/pet/taxonomy.js';
+	import { preventiveItemMatchesSpecies } from '$lib/domain/preventive/catalog.js';
 	import type { PreventiveProtocol } from '$lib/domain/preventive/protocol.js';
 	import type { PetVaccination, PetVaccinationInput, Vaccine, VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
 	import { getVaccineDueStatus } from '$lib/domain/vaccine/vaccine.js';
@@ -25,10 +28,11 @@
 
 	let {
 		petId,
+		petSpecies = null,
 		vaccinations = [],
 		vaccines = [],
 		onChange
-	}: { petId: number; vaccinations?: PetVaccination[]; vaccines?: Vaccine[]; onChange?: (vaccinations: PetVaccination[]) => void } = $props();
+	}: { petId: number; petSpecies?: PetSpecies | null; vaccinations?: PetVaccination[]; vaccines?: Vaccine[]; onChange?: (vaccinations: PetVaccination[]) => void } = $props();
 
 	const today = new Date();
 	const todayInput = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -52,10 +56,10 @@
 	let errorKey = $state<TranslationKey | null>(null);
 
 	const sortedVaccinations = $derived([...currentVaccinations].sort((first, second) => second.appliedAt.localeCompare(first.appliedAt) || second.id - first.id));
-	const visibleVaccines = $derived(currentVaccines.filter((vaccine) => !vaccine.hiddenAt));
+	const visibleVaccines = $derived(currentVaccines.filter((vaccine) => !vaccine.hiddenAt && preventiveItemMatchesSpecies(vaccine.species, petSpecies)));
 	const knownVaccineNames = $derived([...new Set(visibleVaccines.map((vaccine) => vaccine.name))].sort((first, second) => first.localeCompare(second)));
 	const selectedVaccine = $derived(visibleVaccines.find((vaccine) => vaccine.name === vaccineName) ?? null);
-	const visibleProtocols = $derived(selectedVaccine ? currentProtocols.filter((protocol) => !protocol.hiddenAt && protocol.items.some((item) => item.id === selectedVaccine.id)) : []);
+	const visibleProtocols = $derived(selectedVaccine ? currentProtocols.filter((protocol) => !protocol.hiddenAt && preventiveItemMatchesSpecies(protocol.species, petSpecies) && protocol.items.some((item) => item.id === selectedVaccine.id)) : []);
 	const selectedProtocol = $derived(visibleProtocols.find((protocol) => protocol.id === protocolId) ?? null);
 	const visibleProtocolDoses = $derived(selectedProtocol ? selectedProtocol.doses : []);
 	const selectedProtocolDose = $derived(visibleProtocolDoses.find((protocolDose) => protocolDose.id === protocolDoseId) ?? null);
@@ -69,7 +73,7 @@
 	});
 
 	function vaccineNameOptions() {
-		return [{ value: '', label: t('vaccine.namePlaceholder') }, ...knownVaccineNames.map((name) => ({ value: name, label: name }))];
+		return visibleVaccines.map((vaccine) => ({ value: vaccine.name, label: vaccine.name, description: vaccine.aliases.join(', '), searchText: vaccine.aliases.join(' ') }));
 	}
 
 	function protocolOptions() {
@@ -334,7 +338,7 @@
 
 			<div class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 				<label for={`vaccine-name-${petId}`}>{t('vaccine.step.vaccine')}</label>
-				<Select id={`vaccine-name-${petId}`} bind:value={vaccineName} options={vaccineNameOptions()} disabled={knownVaccineNames.length === 0} onchange={handleVaccineChange} />
+				<SearchableSelect id={`vaccine-name-${petId}`} bind:value={vaccineName} emptyValue="" options={vaccineNameOptions()} placeholder={t('vaccine.namePlaceholder')} emptyLabel={t('form.noOptions')} disabled={knownVaccineNames.length === 0} onchange={handleVaccineChange} />
 			</div>
 
 			<div class="grid gap-3 md:col-span-2 sm:grid-cols-2">

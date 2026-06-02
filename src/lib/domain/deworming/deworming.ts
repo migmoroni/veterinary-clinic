@@ -1,11 +1,21 @@
+import type { KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
+
 export type DewormingValidityUnit = 'days' | 'months' | 'years';
 
 export interface Dewormer {
 	id: number;
 	name: string;
 	normalizedName: string;
+	species: KnownPetSpecies[];
+	aliases: string[];
 	hiddenAt: string | null;
 	updatedAt: string | null;
+}
+
+export interface DewormerInput {
+	name: string;
+	species?: KnownPetSpecies[];
+	aliases?: string[];
 }
 
 export interface PetDeworming {

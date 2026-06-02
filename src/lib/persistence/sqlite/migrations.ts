@@ -14,6 +14,66 @@ interface RunMigrationsOptions {
 	createIndexes?: boolean;
 }
 
+type DefaultPreventiveKind = 'vaccine' | 'dewormer';
+
+interface DefaultPreventiveCatalogItem {
+	kind: DefaultPreventiveKind;
+	name: string;
+	species: string[];
+	aliases: string[];
+}
+
+const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
+	{ kind: 'vaccine', name: 'DHPPI+L', species: ['canine'], aliases: ['V 10', 'V10', 'V 8', 'V8', 'polivalente canina', 'multipla canina', 'dhppi l', 'dhppil'] },
+	{ kind: 'vaccine', name: 'DHPPI', species: ['canine'], aliases: ['quintupla canina', 'multipla sem lepto', 'dhppi'] },
+	{ kind: 'vaccine', name: 'Puppy DP', species: ['canine'], aliases: ['puppy', 'filhote', 'cinomose parvovirose'] },
+	{ kind: 'vaccine', name: 'Giardia inativada', species: ['canine'], aliases: ['giardia', 'giardiase', 'giardiavax'] },
+	{ kind: 'vaccine', name: 'Traqueobronquite infecciosa canina', species: ['canine'], aliases: ['gripe canina', 'tosse dos canis', 'kennel cough', 'kc', 'bronchiguard'] },
+	{ kind: 'vaccine', name: 'Leishmaniose canina', species: ['canine'], aliases: ['leishtec', 'leishmaniose', 'calazar'] },
+	{ kind: 'vaccine', name: 'Antirrábica inativada', species: ['canine', 'feline'], aliases: ['antirrabica', 'raiva', 'rabies', 'rabisin', 'defensor', 'nobivac rabies'] },
+	{ kind: 'vaccine', name: 'Tríplice felina FVRCP', species: ['feline'], aliases: ['tríplice felina', 'triplice felina', 'v3', 'fvrcp', 'rinotraqueite calicivirose panleucopenia'] },
+	{ kind: 'vaccine', name: 'Quádrupla felina FVRCP+Ch', species: ['feline'], aliases: ['quádrupla felina', 'quadrupla felina', 'v4', 'clamidiose'] },
+	{ kind: 'vaccine', name: 'Quíntupla felina FVRCP+Ch+FeLV', species: ['feline'], aliases: ['quíntupla felina', 'quintupla felina', 'v5', 'felv', 'leucemia felina'] },
+	{ kind: 'vaccine', name: 'FeLV recombinante', species: ['feline'], aliases: ['leucemia felina', 'felv', 'leucogen', 'purevax felv'] },
+	{ kind: 'vaccine', name: 'Nobivac DHPPi', species: ['canine'], aliases: ['nobivac', 'nobivac dhppi', 'dhppi'] },
+	{ kind: 'vaccine', name: 'Nobivac L4', species: ['canine'], aliases: ['nobivac lepto', 'l4', 'leptospirose'] },
+	{ kind: 'vaccine', name: 'Recombitek C6', species: ['canine'], aliases: ['recombitek', 'recombitek c6', 'v10'] },
+	{ kind: 'vaccine', name: 'Vanguard Plus', species: ['canine'], aliases: ['vanguard', 'vanguard plus', 'polivalente canina'] },
+	{ kind: 'vaccine', name: 'Nobivac Tricat Trio', species: ['feline'], aliases: ['tricat', 'tricat trio', 'tríplice felina', 'triplice felina'] },
+	{ kind: 'vaccine', name: 'Felocell CVR', species: ['feline'], aliases: ['felocell', 'felocell cvr', 'tríplice felina', 'triplice felina'] },
+	{ kind: 'vaccine', name: 'Versifel FeLV', species: ['feline'], aliases: ['versifel', 'versifel felv', 'leucemia felina'] },
+	{ kind: 'dewormer', name: 'Praziquantel + Pamoato de pirantel + Febantel', species: ['canine'], aliases: ['drontal plus', 'endogard', 'canex premium', 'vermifugo amplo espectro', 'tenicida'] },
+	{ kind: 'dewormer', name: 'Praziquantel + Pamoato de pirantel', species: ['feline'], aliases: ['drontal gatos', 'drontal cats', 'vermifugo gatos', 'tenicida'] },
+	{ kind: 'dewormer', name: 'Milbemicina oxima + Praziquantel', species: ['canine', 'feline'], aliases: ['milbemax', 'milpro', 'milbemicina', 'praziquantel'] },
+	{ kind: 'dewormer', name: 'Febantel + Pamoato de pirantel + Praziquantel', species: ['canine'], aliases: ['drontal', 'drontal plus sabor', 'endoparasitas'] },
+	{ kind: 'dewormer', name: 'Fenbendazol', species: ['canine', 'feline'], aliases: ['panacur', 'fembendazol', 'giardia', 'nematódeos', 'nematodeos'] },
+	{ kind: 'dewormer', name: 'Febantel', species: ['canine'], aliases: ['giardicid', 'giardia', 'verme redondo'] },
+	{ kind: 'dewormer', name: 'Selamectina', species: ['canine', 'feline'], aliases: ['revolution', 'stronghold', 'endectocida'] },
+	{ kind: 'dewormer', name: 'Moxidectina + Imidacloprida', species: ['canine', 'feline'], aliases: ['advocate', 'advantage multi', 'endectocida'] },
+	{ kind: 'dewormer', name: 'Emodepsida + Praziquantel', species: ['feline'], aliases: ['profender', 'vermifugo topico gatos'] },
+	{ kind: 'dewormer', name: 'Afoxolaner + Milbemicina oxima', species: ['canine'], aliases: ['nexgard spectra', 'endectocida', 'milbemicina'] },
+	{ kind: 'dewormer', name: 'Sarolaner + Moxidectina + Pirantel', species: ['canine'], aliases: ['simparic trio', 'endectocida', 'pirantel'] },
+	{ kind: 'dewormer', name: 'Ivermectina', species: ['canine'], aliases: ['ivermectina oral', 'endectocida'] }
+];
+
+function normalizePreventiveCatalogName(value: string): string {
+	return value
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '');
+}
+
+async function seedDefaultPreventiveCatalog(database: Database): Promise<void> {
+	for (const item of defaultPreventiveCatalogItems) {
+		await database.execute(
+			`INSERT OR IGNORE INTO preventive_catalog_items (kind, name, normalized_name, species, aliases, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`,
+			[item.kind, item.name, normalizePreventiveCatalogName(item.name), JSON.stringify(item.species), JSON.stringify(item.aliases)]
+		);
+	}
+}
+
 async function createCurrentSchema(database: Database): Promise<void> {
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS owners (
@@ -145,6 +205,8 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'dewormer')),
 			name TEXT NOT NULL,
 			normalized_name TEXT NOT NULL,
+			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.preventiveSpeciesJson)}),
+			aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.preventiveAliasesJson)}),
 			hidden_at TEXT,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
@@ -160,6 +222,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'dewormer')),
 			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.preventiveProtocolName)}),
 			normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.preventiveProtocolNormalizedName)}),
+			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.preventiveSpeciesJson)}),
 			observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.preventiveProtocolObservation)}),
 			sort_order INTEGER NOT NULL DEFAULT 0,
 			hidden_at TEXT,
@@ -286,11 +349,12 @@ export async function createCurrentIndexes(database: Database): Promise<void> {
 }
 
 export async function runMigrations(database: Database, options: RunMigrationsOptions = {}): Promise<void> {
-	const { createIndexes = true } = options;
+	const { createIndexes = true, seedDefaultData = false } = options;
 
 	await database.execute('BEGIN IMMEDIATE');
 	try {
 		await createCurrentSchema(database);
+		if (seedDefaultData) await seedDefaultPreventiveCatalog(database);
 		if (createIndexes) await createCurrentIndexes(database);
 		await database.execute('COMMIT');
 	} catch (error) {

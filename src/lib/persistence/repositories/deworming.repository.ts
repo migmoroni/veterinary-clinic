@@ -1,4 +1,4 @@
-import type { Dewormer, DewormingValidityUnit, PetDeworming, PetDewormingInput } from '$lib/domain/deworming/deworming.js';
+import type { Dewormer, DewormerInput, DewormingValidityUnit, PetDeworming, PetDewormingInput } from '$lib/domain/deworming/deworming.js';
 import { FIELD_LIMITS, assertTextLimit, nullableMultilineText } from '$lib/domain/shared/field-limits.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { deletePreventiveCatalogItem, ensurePreventiveCatalogItem, listPreventiveCatalogItems, normalizePreventiveCatalogInput, savePreventiveCatalogItem, setPreventiveCatalogItemHidden } from '$lib/persistence/repositories/preventive-catalog.repository.js';
@@ -115,7 +115,7 @@ export async function listDewormers(includeHidden = false): Promise<Dewormer[]> 
 	return listPreventiveCatalogItems('dewormer', includeHidden) as Promise<Dewormer[]>;
 }
 
-export async function saveDewormer(input: { name: string }, id?: number): Promise<Dewormer> {
+export async function saveDewormer(input: DewormerInput, id?: number): Promise<Dewormer> {
 	return savePreventiveCatalogItem('dewormer', input, id) as Promise<Dewormer>;
 }
 

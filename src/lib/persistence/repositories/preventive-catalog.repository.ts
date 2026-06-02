@@ -1,5 +1,6 @@
 import type { Dewormer } from '$lib/domain/deworming/deworming.js';
 import { normalizeDewormerName } from '$lib/domain/deworming/deworming.js';
+import { parsePreventiveAliases, parsePreventiveSpecies, stringifyPreventiveAliases, stringifyPreventiveSpecies } from '$lib/domain/preventive/catalog.js';
 import { FIELD_LIMITS, assertTextLimit } from '$lib/domain/shared/field-limits.js';
 import type { Vaccine } from '$lib/domain/vaccine/vaccine.js';
 import { normalizeVaccineName } from '$lib/domain/vaccine/vaccine.js';
@@ -13,8 +14,16 @@ interface PreventiveCatalogItemRow {
 	kind: PreventiveCatalogKind;
 	name: string;
 	normalized_name: string;
+	species: string;
+	aliases: string;
 	hidden_at: string | null;
 	updated_at: string | null;
+}
+
+interface PreventiveCatalogItemInput {
+	name: string;
+	species?: string[];
+	aliases?: string[];
 }
 
 interface PreventiveCatalogConfig {
@@ -47,13 +56,25 @@ function configFor(kind: PreventiveCatalogKind): PreventiveCatalogConfig {
 }
 
 function mapCatalogItem(row: PreventiveCatalogItemRow): PreventiveCatalogItem {
+	const config = configFor(row.kind);
 	return {
 		id: row.id,
 		name: row.name,
 		normalizedName: row.normalized_name,
+		species: parsePreventiveSpecies(row.species),
+		aliases: parsePreventiveAliases(row.aliases, FIELD_LIMITS.preventiveAlias, config.normalize, row.normalized_name),
 		hiddenAt: row.hidden_at,
 		updatedAt: row.updated_at
 	};
+}
+
+function normalizePreventiveCatalogMetadata(kind: PreventiveCatalogKind, input: Pick<PreventiveCatalogItemInput, 'species' | 'aliases'>, normalizedName: string): { species: string; aliases: string } {
+	const config = configFor(kind);
+	const species = stringifyPreventiveSpecies(input.species);
+	const aliases = stringifyPreventiveAliases(input.aliases, FIELD_LIMITS.preventiveAlias, config.normalize, normalizedName);
+	assertTextLimit(species, FIELD_LIMITS.preventiveSpeciesJson);
+	assertTextLimit(aliases, FIELD_LIMITS.preventiveAliasesJson);
+	return { species, aliases };
 }
 
 export function normalizePreventiveCatalogInput(kind: PreventiveCatalogKind, value: string): { name: string; normalizedName: string } {
@@ -71,7 +92,7 @@ export function normalizePreventiveCatalogInput(kind: PreventiveCatalogKind, val
 
 async function getPreventiveCatalogItemByNormalizedName(kind: PreventiveCatalogKind, normalizedName: string): Promise<PreventiveCatalogItem | null> {
 	const rows = await selectMany<PreventiveCatalogItemRow>(
-		`SELECT id, kind, name, normalized_name, hidden_at, updated_at
+		`SELECT id, kind, name, normalized_name, species, aliases, hidden_at, updated_at
 		 FROM preventive_catalog_items
 		 WHERE kind = $1 AND normalized_name = $2
 		 LIMIT 1`,
@@ -82,13 +103,14 @@ async function getPreventiveCatalogItemByNormalizedName(kind: PreventiveCatalogK
 }
 
 export async function ensurePreventiveCatalogItem(kind: PreventiveCatalogKind, name: string, normalizedName: string): Promise<PreventiveCatalogItem> {
+	const metadata = normalizePreventiveCatalogMetadata(kind, {}, normalizedName);
 	await execute(
-		`INSERT INTO preventive_catalog_items (kind, name, normalized_name, updated_at)
-		 VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+		`INSERT INTO preventive_catalog_items (kind, name, normalized_name, species, aliases, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
 		 ON CONFLICT(kind, normalized_name) DO UPDATE SET
 			name = excluded.name,
 			updated_at = CURRENT_TIMESTAMP`,
-		[kind, name, normalizedName]
+		[kind, name, normalizedName, metadata.species, metadata.aliases]
 	);
 
 	const item = await getPreventiveCatalogItemByNormalizedName(kind, normalizedName);
@@ -98,7 +120,7 @@ export async function ensurePreventiveCatalogItem(kind: PreventiveCatalogKind, n
 
 export async function listPreventiveCatalogItems(kind: PreventiveCatalogKind, includeHidden = false): Promise<PreventiveCatalogItem[]> {
 	const rows = await selectMany<PreventiveCatalogItemRow>(
-		`SELECT id, kind, name, normalized_name, hidden_at, updated_at
+		`SELECT id, kind, name, normalized_name, species, aliases, hidden_at, updated_at
 		 FROM preventive_catalog_items
 		 WHERE kind = $1 AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}
 		 ORDER BY name COLLATE NOCASE`,
@@ -108,21 +130,24 @@ export async function listPreventiveCatalogItems(kind: PreventiveCatalogKind, in
 	return rows.map(mapCatalogItem);
 }
 
-export async function savePreventiveCatalogItem(kind: PreventiveCatalogKind, input: { name: string }, id?: number): Promise<PreventiveCatalogItem> {
+export async function savePreventiveCatalogItem(kind: PreventiveCatalogKind, input: PreventiveCatalogItemInput, id?: number): Promise<PreventiveCatalogItem> {
 	const { name, normalizedName } = normalizePreventiveCatalogInput(kind, input.name);
+	const metadata = normalizePreventiveCatalogMetadata(kind, input, normalizedName);
 
 	if (id) {
 		await execute(
 			`UPDATE preventive_catalog_items
 			 SET name = $3,
 				normalized_name = $4,
+				species = $5,
+				aliases = $6,
 				updated_at = CURRENT_TIMESTAMP
 			 WHERE id = $1 AND kind = $2`,
-			[id, kind, name, normalizedName]
+			[id, kind, name, normalizedName, metadata.species, metadata.aliases]
 		);
 
 		const rows = await selectMany<PreventiveCatalogItemRow>(
-			`SELECT id, kind, name, normalized_name, hidden_at, updated_at
+			`SELECT id, kind, name, normalized_name, species, aliases, hidden_at, updated_at
 			 FROM preventive_catalog_items
 			 WHERE id = $1 AND kind = $2
 			 LIMIT 1`,
@@ -132,7 +157,21 @@ export async function savePreventiveCatalogItem(kind: PreventiveCatalogKind, inp
 		throw new Error(configFor(kind).saveFailedError);
 	}
 
-	return ensurePreventiveCatalogItem(kind, name, normalizedName);
+	await execute(
+		`INSERT INTO preventive_catalog_items (kind, name, normalized_name, species, aliases, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+		 ON CONFLICT(kind, normalized_name) DO UPDATE SET
+			name = excluded.name,
+			species = excluded.species,
+			aliases = excluded.aliases,
+			hidden_at = NULL,
+			updated_at = CURRENT_TIMESTAMP`,
+		[kind, name, normalizedName, metadata.species, metadata.aliases]
+	);
+
+	const item = await getPreventiveCatalogItemByNormalizedName(kind, normalizedName);
+	if (!item) throw new Error(configFor(kind).saveFailedError);
+	return item;
 }
 
 export async function setPreventiveCatalogItemHidden(kind: PreventiveCatalogKind, id: number, hidden: boolean): Promise<PreventiveCatalogItem> {
@@ -145,7 +184,7 @@ export async function setPreventiveCatalogItemHidden(kind: PreventiveCatalogKind
 	);
 
 	const rows = await selectMany<PreventiveCatalogItemRow>(
-		`SELECT id, kind, name, normalized_name, hidden_at, updated_at
+		`SELECT id, kind, name, normalized_name, species, aliases, hidden_at, updated_at
 		 FROM preventive_catalog_items
 		 WHERE id = $1 AND kind = $2
 		 LIMIT 1`,

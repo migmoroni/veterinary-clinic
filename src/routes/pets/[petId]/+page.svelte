@@ -645,11 +645,11 @@
 					</section>
 				{:else if activePanel === 'vaccines'}
 					<div role="tabpanel">
-						<VaccinationPanel petId={petId} vaccinations={profile.vaccinations} vaccines={profile.vaccines} onChange={updateVaccinations} />
+						<VaccinationPanel petId={petId} petSpecies={profile.pet.species} vaccinations={profile.vaccinations} vaccines={profile.vaccines} onChange={updateVaccinations} />
 					</div>
 				{:else}
 					<div role="tabpanel">
-						<DewormingPanel petId={petId} dewormings={profile.dewormings} dewormers={profile.dewormers} onChange={updateDewormings} />
+						<DewormingPanel petId={petId} petSpecies={profile.pet.species} dewormings={profile.dewormings} dewormers={profile.dewormers} onChange={updateDewormings} />
 					</div>
 				{/if}
 			</div>

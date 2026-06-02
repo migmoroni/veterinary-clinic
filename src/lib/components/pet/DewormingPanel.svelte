@@ -4,10 +4,13 @@
 	import DateField from '$lib/components/forms/DateField.svelte';
 	import PeriodField from '$lib/components/forms/PeriodField.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
+	import SearchableSelect from '$lib/components/ui/SearchableSelect.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import type { Dewormer, DewormingValidityUnit, PetDeworming, PetDewormingInput } from '$lib/domain/deworming/deworming.js';
 	import { getDewormingDueStatus } from '$lib/domain/deworming/deworming.js';
+	import type { PetSpecies } from '$lib/domain/pet/taxonomy.js';
+	import { preventiveItemMatchesSpecies } from '$lib/domain/preventive/catalog.js';
 	import type { PreventiveProtocol } from '$lib/domain/preventive/protocol.js';
 	import { formatDateForDisplay, normalizeDateInput } from '$lib/domain/shared/date-input.js';
 	import { FIELD_LIMITS, textLength } from '$lib/domain/shared/field-limits.js';
@@ -25,10 +28,11 @@
 
 	let {
 		petId,
+		petSpecies = null,
 		dewormings = [],
 		dewormers = [],
 		onChange
-	}: { petId: number; dewormings?: PetDeworming[]; dewormers?: Dewormer[]; onChange?: (dewormings: PetDeworming[]) => void } = $props();
+	}: { petId: number; petSpecies?: PetSpecies | null; dewormings?: PetDeworming[]; dewormers?: Dewormer[]; onChange?: (dewormings: PetDeworming[]) => void } = $props();
 
 	const today = new Date();
 	const todayInput = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -52,10 +56,10 @@
 	let errorKey = $state<TranslationKey | null>(null);
 
 	const sortedDewormings = $derived([...currentDewormings].sort((first, second) => second.appliedAt.localeCompare(first.appliedAt) || second.id - first.id));
-	const visibleDewormers = $derived(currentDewormers.filter((dewormer) => !dewormer.hiddenAt));
+	const visibleDewormers = $derived(currentDewormers.filter((dewormer) => !dewormer.hiddenAt && preventiveItemMatchesSpecies(dewormer.species, petSpecies)));
 	const knownDewormerNames = $derived([...new Set(visibleDewormers.map((dewormer) => dewormer.name))].sort((first, second) => first.localeCompare(second)));
 	const selectedDewormer = $derived(visibleDewormers.find((dewormer) => dewormer.name === dewormerName) ?? null);
-	const visibleProtocols = $derived(selectedDewormer ? currentProtocols.filter((protocol) => !protocol.hiddenAt && protocol.items.some((item) => item.id === selectedDewormer.id)) : []);
+	const visibleProtocols = $derived(selectedDewormer ? currentProtocols.filter((protocol) => !protocol.hiddenAt && preventiveItemMatchesSpecies(protocol.species, petSpecies) && protocol.items.some((item) => item.id === selectedDewormer.id)) : []);
 	const selectedProtocol = $derived(visibleProtocols.find((protocol) => protocol.id === protocolId) ?? null);
 	const visibleProtocolDoses = $derived(selectedProtocol ? selectedProtocol.doses : []);
 	const selectedProtocolDose = $derived(visibleProtocolDoses.find((protocolDose) => protocolDose.id === protocolDoseId) ?? null);
@@ -69,7 +73,7 @@
 	});
 
 	function dewormerNameOptions() {
-		return [{ value: '', label: t('deworming.namePlaceholder') }, ...knownDewormerNames.map((name) => ({ value: name, label: name }))];
+		return visibleDewormers.map((dewormer) => ({ value: dewormer.name, label: dewormer.name, description: dewormer.aliases.join(', '), searchText: dewormer.aliases.join(' ') }));
 	}
 
 	function protocolOptions() {
@@ -333,7 +337,7 @@
 
 			<div class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 				<label for={`deworming-name-${petId}`}>{t('deworming.step.dewormer')}</label>
-				<Select id={`deworming-name-${petId}`} bind:value={dewormerName} options={dewormerNameOptions()} disabled={knownDewormerNames.length === 0} onchange={handleDewormerChange} />
+				<SearchableSelect id={`deworming-name-${petId}`} bind:value={dewormerName} emptyValue="" options={dewormerNameOptions()} placeholder={t('deworming.namePlaceholder')} emptyLabel={t('form.noOptions')} disabled={knownDewormerNames.length === 0} onchange={handleDewormerChange} />
 			</div>
 
 			<div class="grid gap-3 md:col-span-2 sm:grid-cols-2">

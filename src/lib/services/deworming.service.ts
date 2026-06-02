@@ -1,4 +1,4 @@
-import type { Dewormer, PetDeworming, PetDewormingInput } from '$lib/domain/deworming/deworming.js';
+import type { Dewormer, DewormerInput, PetDeworming, PetDewormingInput } from '$lib/domain/deworming/deworming.js';
 import { createDewormings, deleteDewormer, listDewormers, saveDewormer, setDewormerHidden, setDewormingValidityIgnored, softDeleteDeworming } from '$lib/persistence/repositories/deworming.repository.js';
 
 export async function saveNewDewormings(petId: number, inputs: PetDewormingInput[]): Promise<PetDeworming[]> {
@@ -17,7 +17,7 @@ export async function loadDewormers(includeHidden = false): Promise<Dewormer[]> 
 	return listDewormers(includeHidden);
 }
 
-export async function saveDewormerName(input: { name: string }, id?: number): Promise<Dewormer> {
+export async function saveDewormerName(input: DewormerInput, id?: number): Promise<Dewormer> {
 	return saveDewormer(input, id);
 }
 
