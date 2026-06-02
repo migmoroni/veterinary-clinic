@@ -45,6 +45,8 @@ export const esEs = {
 	'period.days': 'Días',
 	'period.months': 'Meses',
 	'period.years': 'Años',
+	'period.customValue': 'Valor manual',
+	'period.customValuePlaceholder': 'Escribe el valor',
 	'actions.refresh': 'Actualizar',
 	'actions.save': 'Guardar',
 	'actions.edit': 'Editar',

@@ -45,6 +45,8 @@ export const enUs = {
 	'period.days': 'Days',
 	'period.months': 'Months',
 	'period.years': 'Years',
+	'period.customValue': 'Manual value',
+	'period.customValuePlaceholder': 'Type the value',
 	'actions.refresh': 'Refresh',
 	'actions.save': 'Save',
 	'actions.edit': 'Edit',

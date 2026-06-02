@@ -44,6 +44,8 @@ export const ptBr = {
 	'period.days': 'Dias',
 	'period.months': 'Meses',
 	'period.years': 'Anos',
+	'period.customValue': 'Valor manual',
+	'period.customValuePlaceholder': 'Digite o valor',
 	'actions.refresh': 'Atualizar',
 	'actions.save': 'Salvar',
 	'actions.edit': 'Editar',

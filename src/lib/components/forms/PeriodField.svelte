@@ -15,10 +15,10 @@
 	}: { value?: number; unit?: PeriodUnit; disabled?: boolean; ariaLabel?: string; onChange?: (value: number, unit: PeriodUnit) => void } = $props();
 
 	let root: HTMLDivElement | null = null;
+	let panel = $state<HTMLDivElement | null>(null);
 	let open = $state(false);
+	let manualValue = $state('');
 
-	const numbers = Array.from({ length: 30 }, (_, index) => index + 1);
-	const yearNumbers = Array.from({ length: 10 }, (_, index) => index + 1);
 	const displayValue = $derived(value > 0 ? periodLabel(value, unit) : t('common.notInformed'));
 
 	function periodLabel(periodValue: number, periodUnit: PeriodUnit): string {
@@ -37,40 +37,65 @@
 		return `${periodValue} ${t(unitKey)}`;
 	}
 
-	function toggleOpen() {
+	function openField() {
 		if (disabled) return;
-		open = !open;
+		open = true;
 	}
 
 	function close() {
 		open = false;
 	}
 
-	function visibleNumbers(periodUnit: PeriodUnit): number[] {
-		return periodUnit === 'years' ? yearNumbers : numbers;
+	function syncManualValue() {
+		manualValue = value > 0 ? String(value) : '';
 	}
 
-	function selectValue(nextValue: number) {
+	function setManualValue(event: Event) {
+		manualValue = (event.currentTarget as HTMLInputElement).value;
+		if (!manualValue) return;
+
+		const nextValue = Math.trunc(Number(manualValue));
+		if (!Number.isFinite(nextValue) || nextValue <= 0) return;
+
 		value = nextValue;
 		onChange?.(value, unit);
-		close();
 	}
 
 	function selectUnit(nextUnit: PeriodUnit) {
 		unit = nextUnit;
 		if (value <= 0) value = 1;
-		if (unit === 'years' && value > yearNumbers.length) value = yearNumbers.length;
+		syncManualValue();
 		onChange?.(value, unit);
 	}
 
 	function clearValue() {
 		value = 0;
+		syncManualValue();
 		onChange?.(value, unit);
 		close();
 	}
 
+	function isInsideElement(element: HTMLElement | null, event: Event): boolean {
+		if (!element) return false;
+		if (event.composedPath().includes(element)) return true;
+		if (event.target instanceof Node && element.contains(event.target)) return true;
+
+		if ('clientX' in event && 'clientY' in event) {
+			const rect = element.getBoundingClientRect();
+			const clientX = Number(event.clientX);
+			const clientY = Number(event.clientY);
+			return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+		}
+
+		return false;
+	}
+
+	function isInsideField(event: Event): boolean {
+		return isInsideElement(root, event) || isInsideElement(panel, event);
+	}
+
 	function closeIfOutside(event: Event) {
-		if (event.target instanceof Node && root?.contains(event.target)) return;
+		if (isInsideField(event)) return;
 		close();
 	}
 
@@ -80,20 +105,22 @@
 
 	onMount(() => {
 		document.addEventListener('pointerdown', closeIfOutside, true);
-		document.addEventListener('focusin', closeIfOutside, true);
 		window.addEventListener('keydown', closeOnEscape);
 
 		return () => {
 			document.removeEventListener('pointerdown', closeIfOutside, true);
-			document.removeEventListener('focusin', closeIfOutside, true);
 			window.removeEventListener('keydown', closeOnEscape);
 		};
+	});
+
+	$effect(() => {
+		if (open) syncManualValue();
 	});
 </script>
 
 <div class="relative" bind:this={root}>
 	<div class="flex h-10 w-full rounded-md border border-input bg-background shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/30 {disabled ? 'opacity-60' : ''}">
-		<button type="button" aria-label={`${ariaLabel}: ${displayValue}`} aria-haspopup="dialog" aria-expanded={open} class="flex min-w-0 flex-1 items-center gap-2 rounded-l-md px-3 text-left text-sm outline-none disabled:cursor-not-allowed" {disabled} onclick={toggleOpen}>
+		<button type="button" aria-label={`${ariaLabel}: ${displayValue}`} aria-haspopup="dialog" aria-expanded={open} class="flex min-w-0 flex-1 items-center gap-2 rounded-l-md px-3 text-left text-sm outline-none disabled:cursor-not-allowed" {disabled} onclick={openField}>
 			<CalendarClock class="size-4 shrink-0 text-muted-foreground" />
 			<span class="truncate {value > 0 ? 'text-foreground' : 'text-muted-foreground'}">{displayValue}</span>
 		</button>
@@ -106,16 +133,15 @@
 	</div>
 
 	{#if open}
-		<div role="dialog" aria-label={t('period.dialog')} class="absolute left-0 top-full z-50 mt-2 grid w-80 grid-cols-[minmax(0,1fr)_6rem] gap-3 rounded-md border border-border bg-card p-3 shadow-lg">
-			<div class="grid grid-cols-5 gap-1">
-				{#each visibleNumbers(unit) as number}
-					<button type="button" aria-label={periodLabel(number, unit)} class="flex h-8 items-center justify-center rounded-md text-sm transition-colors hover:bg-accent {number === value ? 'bg-primary text-primary-foreground hover:bg-primary' : 'text-foreground'}" onclick={() => selectValue(number)}>
-						{number}
-					</button>
-				{/each}
+		<div bind:this={panel} role="dialog" aria-label={t('period.dialog')} class="absolute left-0 top-full z-50 mt-2 flex w-80 flex-col gap-3 rounded-md border border-border bg-card p-3 shadow-lg">
+			<div class="rounded-md border border-border bg-muted/40 p-3">
+				<label class="flex min-w-0 flex-col gap-2 text-xs font-medium text-muted-foreground">
+					<span>{t('period.customValue')}</span>
+					<input type="number" min="1" step="1" inputmode="numeric" class="h-12 rounded-md border border-input bg-background px-3 text-base font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={manualValue} placeholder={t('period.customValuePlaceholder')} aria-label={t('period.customValue')} oninput={setManualValue} />
+				</label>
 			</div>
 
-			<div class="flex flex-col gap-2">
+			<div class="grid grid-cols-3 gap-2">
 				<button type="button" class="h-10 rounded-md border border-border px-3 text-sm font-medium transition-colors hover:bg-accent {unit === 'days' ? 'bg-primary text-primary-foreground hover:bg-primary' : 'bg-background'}" aria-pressed={unit === 'days'} onclick={() => selectUnit('days')}>
 					{t('period.days')}
 				</button>

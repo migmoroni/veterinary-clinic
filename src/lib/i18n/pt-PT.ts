@@ -44,6 +44,8 @@ export const ptPt = {
 	'period.days': 'Dias',
 	'period.months': 'Meses',
 	'period.years': 'Anos',
+	'period.customValue': 'Valor manual',
+	'period.customValuePlaceholder': 'Introduza o valor',
 	'actions.refresh': 'Atualizar',
 	'actions.save': 'Guardar',
 	'actions.edit': 'Editar',

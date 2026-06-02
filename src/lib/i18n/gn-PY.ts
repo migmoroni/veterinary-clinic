@@ -44,6 +44,8 @@ export const gnPy = {
 	'period.days': 'Ára',
 	'period.months': 'Jasy',
 	'period.years': 'Ary',
+	'period.customValue': 'Tepykue nde voi',
+	'period.customValuePlaceholder': 'Ehai tepykue',
 	'actions.refresh': 'Mbohekopyahu',
 	'actions.save': 'Ñongatu',
 	'actions.edit': 'Moambue',
