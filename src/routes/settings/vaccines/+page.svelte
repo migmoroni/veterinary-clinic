@@ -68,6 +68,7 @@
 	let protocolPendingRemoval = $state<PreventiveProtocol | null>(null);
 	let statusKey = $state<TranslationKey | null>(null);
 	let errorKey = $state<TranslationKey | null>(null);
+	let newProtocolSelectableItems = $derived(visibleCatalogItemsForSpecies(newProtocolKind, newProtocolSpecies));
 
 	function sortedVaccines(source: Vaccine[]): Vaccine[] {
 		return [...source].sort((first, second) => first.name.localeCompare(second.name));
@@ -79,6 +80,10 @@
 
 	function sortedProtocols(source: PreventiveProtocol[]): PreventiveProtocol[] {
 		return [...source].sort((first, second) => first.kind.localeCompare(second.kind) || first.sortOrder - second.sortOrder || first.name.localeCompare(second.name));
+	}
+
+	function sortedCatalogItems(source: CatalogItem[]): CatalogItem[] {
+		return [...source].sort((first, second) => first.name.localeCompare(second.name) || first.id - second.id);
 	}
 
 	function inputValue(event: Event): string {
@@ -100,8 +105,8 @@
 		return aliases.join(', ');
 	}
 
-	function toggleSpeciesDraft(values: KnownPetSpecies[], species: KnownPetSpecies): KnownPetSpecies[] {
-		if (values.includes(species)) return values.length > 1 ? values.filter((value) => value !== species) : values;
+	function toggleSpeciesDraft(values: KnownPetSpecies[], species: KnownPetSpecies, allowEmpty = false): KnownPetSpecies[] {
+		if (values.includes(species)) return values.length > 1 || allowEmpty ? values.filter((value) => value !== species) : [...values];
 		return [...values, species];
 	}
 
@@ -139,13 +144,13 @@
 	}
 
 	function setNewProtocolSpecies(species: KnownPetSpecies) {
-		const nextSpecies = toggleSpeciesDraft(newProtocolSpecies, species);
+		const nextSpecies = toggleSpeciesDraft(newProtocolSpecies, species, true);
 		newProtocolSpecies = nextSpecies;
 		newProtocolItemIds = newProtocolItemIds.filter((itemId) => itemMatchesSpecies(newProtocolKind, itemId, nextSpecies));
 	}
 
 	function setProtocolSpecies(protocol: PreventiveProtocol, species: KnownPetSpecies) {
-		const nextSpecies = toggleSpeciesDraft(protocolDraftSpeciesValue(protocol), species);
+		const nextSpecies = toggleSpeciesDraft(protocolDraftSpeciesValue(protocol), species, true);
 		protocolDraftSpecies = { ...protocolDraftSpecies, [protocol.id]: nextSpecies };
 		protocolDraftItemIds = { ...protocolDraftItemIds, [protocol.id]: selectedItemIds(protocol).filter((itemId) => itemMatchesSpecies(protocol.kind, itemId, nextSpecies)) };
 	}
@@ -176,13 +181,25 @@
 	}
 
 	function visibleCatalogItemsForSpecies(kind: PreventiveProtocolKind, species: KnownPetSpecies[]): CatalogItem[] {
-		return visibleCatalogItems(kind).filter((item) => speciesOverlap(item.species, species));
+		if (species.length === 0) return [];
+		return sortedCatalogItems(visibleCatalogItems(kind).filter((item) => speciesOverlap(item.species, species)));
 	}
 
 	function protocolCatalogItems(protocol: PreventiveProtocol): CatalogItem[] {
-		const selected = selectedItemIds(protocol);
-		return catalogItems(protocol.kind).filter((item) => selected.includes(item.id) || speciesOverlap(item.species, protocolDraftSpeciesValue(protocol)));
+		const species = protocolDraftSpeciesValue(protocol);
+		if (species.length === 0) return [];
+		return sortedCatalogItems(catalogItems(protocol.kind).filter((item) => speciesOverlap(item.species, species)));
 	}
+
+	function visibleNewProtocolItemIds(): Set<number> {
+		return new Set(newProtocolSelectableItems.map((item) => item.id));
+	}
+
+	$effect(() => {
+		const visibleIds = visibleNewProtocolItemIds();
+		const nextItemIds = newProtocolItemIds.filter((itemId) => visibleIds.has(itemId));
+		if (nextItemIds.length !== newProtocolItemIds.length) newProtocolItemIds = nextItemIds;
+	});
 
 	function kindLabel(kind: PreventiveProtocolKind): string {
 		return kind === 'vaccine' ? t('protocol.kind.vaccine') : t('protocol.kind.dewormer');
@@ -518,6 +535,7 @@
 	}
 
 	function toggleNewProtocolItem(itemId: number) {
+		if (!visibleNewProtocolItemIds().has(itemId)) return;
 		newProtocolItemIds = newProtocolItemIds.includes(itemId) ? newProtocolItemIds.filter((id) => id !== itemId) : [...newProtocolItemIds, itemId];
 	}
 
@@ -528,6 +546,7 @@
 
 	function toggleProtocolItem(protocol: PreventiveProtocol, itemId: number) {
 		const selected = selectedItemIds(protocol);
+		if (!selected.includes(itemId) && !itemMatchesSpecies(protocol.kind, itemId, protocolDraftSpeciesValue(protocol))) return;
 		protocolDraftItemIds = {
 			...protocolDraftItemIds,
 			[protocol.id]: selected.includes(itemId) ? selected.filter((id) => id !== itemId) : [...selected, itemId]
@@ -882,7 +901,7 @@
 						<div class="lg:col-span-2 flex min-w-0 flex-col gap-2 text-sm font-medium">
 							<span>{t('protocol.items')}</span>
 							<div class="flex flex-wrap gap-2">
-								{#each visibleCatalogItemsForSpecies(newProtocolKind, newProtocolSpecies) as item (item.id)}
+								{#each newProtocolSelectableItems as item (item.id)}
 									<button type="button" class="inline-flex h-8 max-w-full items-center rounded-md border px-3 text-sm transition-colors {newProtocolItemIds.includes(item.id) ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background hover:bg-accent'}" aria-pressed={newProtocolItemIds.includes(item.id)} onclick={() => toggleNewProtocolItem(item.id)}>
 										<span class="truncate">{item.name}</span>
 									</button>
