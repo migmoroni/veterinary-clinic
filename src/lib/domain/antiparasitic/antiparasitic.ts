@@ -1,8 +1,8 @@
 import type { KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
 
-export type DewormingValidityUnit = 'days' | 'months' | 'years';
+export type AntiparasiticValidityUnit = 'days' | 'months' | 'years';
 
-export interface Dewormer {
+export interface Antiparasitic {
 	id: number;
 	name: string;
 	normalizedName: string;
@@ -12,21 +12,21 @@ export interface Dewormer {
 	updatedAt: string | null;
 }
 
-export interface DewormerInput {
+export interface AntiparasiticInput {
 	name: string;
 	species?: KnownPetSpecies[];
 	aliases?: string[];
 }
 
-export interface PetDeworming {
+export interface PetAntiparasiticTreatment {
 	id: number;
 	petId: number;
 	appliedAt: string;
-	dewormerName: string;
-	dewormerNormalizedName: string;
+	antiparasiticName: string;
+	antiparasiticNormalizedName: string;
 	dose: string;
 	validityValue: number;
-	validityUnit: DewormingValidityUnit;
+	validityUnit: AntiparasiticValidityUnit;
 	observation: string | null;
 	validityIgnoredAt: string | null;
 	updatedAt: string | null;
@@ -34,16 +34,16 @@ export interface PetDeworming {
 	purgeAfter: string | null;
 }
 
-export interface PetDewormingInput {
+export interface PetAntiparasiticTreatmentInput {
 	appliedAt: string;
-	dewormerName: string;
+	antiparasiticName: string;
 	dose: string;
 	validityValue: number;
-	validityUnit: DewormingValidityUnit;
+	validityUnit: AntiparasiticValidityUnit;
 	observation: string | null;
 }
 
-export interface DewormingDueStatus {
+export interface AntiparasiticTreatmentDueStatus {
 	dueAt: string | null;
 	daysUntilDue: number | null;
 	expired: boolean;
@@ -53,7 +53,7 @@ export interface DewormingDueStatus {
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export function normalizeDewormerName(value: string): string {
+export function normalizeAntiparasiticName(value: string): string {
 	return value
 		.normalize('NFD')
 		.replace(/[\u0300-\u036f]/g, '')
@@ -83,7 +83,7 @@ function daysInMonth(year: number, month: number): number {
 	return new Date(year, month, 0).getDate();
 }
 
-export function computeDewormingDueAt(appliedAt: string, validity: Pick<PetDeworming, 'validityValue' | 'validityUnit'> | null): string | null {
+export function computeAntiparasiticTreatmentDueAt(appliedAt: string, validity: Pick<PetAntiparasiticTreatment, 'validityValue' | 'validityUnit'> | null): string | null {
 	if (!validity) return null;
 	if (validity.validityValue <= 0) return null;
 	const applied = parseIsoDate(appliedAt);
@@ -102,10 +102,10 @@ export function computeDewormingDueAt(appliedAt: string, validity: Pick<PetDewor
 	return formatIsoDate(new Date(year, month - 1, day));
 }
 
-export function getDewormingDueStatus(deworming: PetDeworming, now = new Date()): DewormingDueStatus {
-	if (deworming.validityIgnoredAt) return { dueAt: null, daysUntilDue: null, expired: false, validityIgnored: true };
+export function getAntiparasiticTreatmentDueStatus(antiparasiticTreatment: PetAntiparasiticTreatment, now = new Date()): AntiparasiticTreatmentDueStatus {
+	if (antiparasiticTreatment.validityIgnoredAt) return { dueAt: null, daysUntilDue: null, expired: false, validityIgnored: true };
 
-	const dueAt = computeDewormingDueAt(deworming.appliedAt, deworming);
+	const dueAt = computeAntiparasiticTreatmentDueAt(antiparasiticTreatment.appliedAt, antiparasiticTreatment);
 	if (!dueAt) return { dueAt: null, daysUntilDue: null, expired: false, validityIgnored: false };
 
 	const due = parseIsoDate(dueAt);

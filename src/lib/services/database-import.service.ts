@@ -42,7 +42,7 @@ async function validateDatabaseFile(fileName: string): Promise<void> {
 			(await tableHasColumns(database, 'preventive_protocol_items', ['id', 'protocol_id', 'catalog_item_id', 'sort_order'])) &&
 			(await tableHasColumns(database, 'preventive_protocol_doses', ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order'])) &&
 			(await tableHasColumns(database, 'pet_vaccinations', ['id', 'pet_id', 'applied_at', 'vaccine_name', 'vaccine_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'validity_ignored_at'])) &&
-			(await tableHasColumns(database, 'pet_dewormings', ['id', 'pet_id', 'applied_at', 'dewormer_name', 'dewormer_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'validity_ignored_at'])) &&
+			(await tableHasColumns(database, 'pet_antiparasitic_treatments', ['id', 'pet_id', 'applied_at', 'antiparasitic_name', 'antiparasitic_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'validity_ignored_at'])) &&
 			(await tableHasColumns(database, 'backup_history', ['id', 'path', 'kind', 'created_at']));
 
 		if (!valid) throw new Error('database_schema_invalid');

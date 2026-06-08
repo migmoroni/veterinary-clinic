@@ -8,7 +8,7 @@ type OwnerContactKind = 'phone' | 'mobile' | 'email' | 'other';
 type PetSex = 'M' | 'F' | null;
 type PetSpecies = 'canine' | 'feline';
 type VaccineValidityUnit = 'days' | 'months' | 'years';
-type DewormingValidityUnit = 'days' | 'months' | 'years';
+type AntiparasiticValidityUnit = 'days' | 'months' | 'years';
 
 interface BreedAlias {
   id: string;
@@ -26,7 +26,7 @@ interface VaccineMatcher {
 }
 
 interface PreventiveCatalogSeed {
-  kind: 'vaccine' | 'dewormer';
+  kind: 'vaccine' | 'antiparasitic';
   name: string;
   species: PetSpecies[];
   aliases: string[];
@@ -48,7 +48,7 @@ interface ExtractedDeworming {
   dewormer: string;
   dose: string;
   validityValue: number;
-  validityUnit: DewormingValidityUnit;
+  validityUnit: AntiparasiticValidityUnit;
 }
 
 interface VaccineMatch {
@@ -202,13 +202,13 @@ const FIELD_LIMITS = {
   vaccineValidityMonths: 120,
   vaccineValidityYears: 10,
   vaccinationObservation: 2000,
-  dewormerName: 80,
-  dewormerNormalizedName: 80,
-  dewormingDose: 120,
-  dewormingValidityDays: 3650,
-  dewormingValidityMonths: 120,
-  dewormingValidityYears: 10,
-  dewormingObservation: 2000,
+  antiparasiticName: 80,
+  antiparasiticNormalizedName: 80,
+  antiparasiticTreatmentDose: 120,
+  antiparasiticTreatmentValidityDays: 3650,
+  antiparasiticTreatmentValidityMonths: 120,
+  antiparasiticTreatmentValidityYears: 10,
+  antiparasiticTreatmentObservation: 2000,
   preventiveSpeciesJson: 256,
   preventiveAlias: 80,
   preventiveAliasesJson: 1000,
@@ -225,6 +225,7 @@ const backupPolicyIntervalSettingKey = 'backup.policyIntervalMinutes';
 const defaultBackupPolicyIntervalMinutes = 7 * 24 * 60;
 
 db.exec(`
+  DROP TABLE IF EXISTS pet_antiparasitic_treatments;
   DROP TABLE IF EXISTS pet_dewormings;
   DROP TABLE IF EXISTS pet_vaccinations;
   DROP TABLE IF EXISTS preventive_protocol_doses;
@@ -349,7 +350,7 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS preventive_catalog_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'dewormer')),
+    kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
     name TEXT NOT NULL,
     normalized_name TEXT NOT NULL,
     species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.preventiveSpeciesJson)}),
@@ -358,13 +359,13 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
     UNIQUE(kind, normalized_name),
-    CHECK((kind = 'vaccine' AND ${requiredTextCheck('name', FIELD_LIMITS.vaccineName)}) OR (kind = 'dewormer' AND ${requiredTextCheck('name', FIELD_LIMITS.dewormerName)})),
-    CHECK((kind = 'vaccine' AND ${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedName)}) OR (kind = 'dewormer' AND ${requiredTextCheck('normalized_name', FIELD_LIMITS.dewormerNormalizedName)}))
+    CHECK((kind = 'vaccine' AND ${requiredTextCheck('name', FIELD_LIMITS.vaccineName)}) OR (kind = 'antiparasitic' AND ${requiredTextCheck('name', FIELD_LIMITS.antiparasiticName)})),
+    CHECK((kind = 'vaccine' AND ${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedName)}) OR (kind = 'antiparasitic' AND ${requiredTextCheck('normalized_name', FIELD_LIMITS.antiparasiticNormalizedName)}))
   );
 
   CREATE TABLE IF NOT EXISTS preventive_protocols (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'dewormer')),
+    kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
     name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.preventiveProtocolName)}),
     normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.preventiveProtocolNormalizedName)}),
     species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.preventiveSpeciesJson)}),
@@ -400,7 +401,7 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
     FOREIGN KEY (protocol_id) REFERENCES preventive_protocols (id) ON DELETE CASCADE,
-    CHECK((validity_unit = 'days' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityDays, FIELD_LIMITS.dewormingValidityDays)}) OR (validity_unit = 'months' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityMonths, FIELD_LIMITS.dewormingValidityMonths)}) OR (validity_unit = 'years' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityYears, FIELD_LIMITS.dewormingValidityYears)}))
+    CHECK((validity_unit = 'days' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityDays, FIELD_LIMITS.antiparasiticTreatmentValidityDays)}) OR (validity_unit = 'months' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityMonths, FIELD_LIMITS.antiparasiticTreatmentValidityMonths)}) OR (validity_unit = 'years' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityYears, FIELD_LIMITS.antiparasiticTreatmentValidityYears)}))
   );
 
   CREATE TABLE IF NOT EXISTS pet_vaccinations (
@@ -422,23 +423,23 @@ db.exec(`
     CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.vaccineValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.vaccineValidityMonths}) OR (validity_unit = 'years' AND validity_value <= ${FIELD_LIMITS.vaccineValidityYears}))
   );
 
-  CREATE TABLE IF NOT EXISTS pet_dewormings (
+  CREATE TABLE IF NOT EXISTS pet_antiparasitic_treatments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     pet_id INTEGER NOT NULL,
     applied_at TEXT NOT NULL DEFAULT CURRENT_DATE CHECK(length(applied_at) <= ${FIELD_LIMITS.isoDate}),
-    dewormer_name TEXT NOT NULL CHECK(${requiredTextCheck('dewormer_name', FIELD_LIMITS.dewormerName)}),
-    dewormer_normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('dewormer_normalized_name', FIELD_LIMITS.dewormerNormalizedName)}),
-    dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', FIELD_LIMITS.dewormingDose)}),
+    antiparasitic_name TEXT NOT NULL CHECK(${requiredTextCheck('antiparasitic_name', FIELD_LIMITS.antiparasiticName)}),
+    antiparasitic_normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('antiparasitic_normalized_name', FIELD_LIMITS.antiparasiticNormalizedName)}),
+    dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', FIELD_LIMITS.antiparasiticTreatmentDose)}),
     validity_value INTEGER NOT NULL CHECK(validity_value > 0),
     validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months', 'years')),
-    observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.dewormingObservation)}),
+    observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.antiparasiticTreatmentObservation)}),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     validity_ignored_at TEXT,
     updated_at TEXT,
     deleted_at TEXT,
     purge_after TEXT,
     FOREIGN KEY (pet_id) REFERENCES pets (id) ON DELETE RESTRICT,
-    CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.dewormingValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.dewormingValidityMonths}) OR (validity_unit = 'years' AND validity_value <= ${FIELD_LIMITS.dewormingValidityYears}))
+    CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.antiparasiticTreatmentValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.antiparasiticTreatmentValidityMonths}) OR (validity_unit = 'years' AND validity_value <= ${FIELD_LIMITS.antiparasiticTreatmentValidityYears}))
   );
 
   CREATE INDEX IF NOT EXISTS idx_owners_name ON owners(name);
@@ -473,12 +474,12 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_latest_active ON pet_vaccinations(pet_id, vaccine_normalized_name, applied_at DESC, id DESC) WHERE deleted_at IS NULL AND validity_ignored_at IS NULL;
   CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_validity_ignored_at ON pet_vaccinations(validity_ignored_at);
   CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_deleted_at ON pet_vaccinations(deleted_at);
-  CREATE INDEX IF NOT EXISTS idx_pet_dewormings_pet_id ON pet_dewormings(pet_id);
-  CREATE INDEX IF NOT EXISTS idx_pet_dewormings_applied_at ON pet_dewormings(applied_at);
-  CREATE INDEX IF NOT EXISTS idx_pet_dewormings_dewormer_normalized_name ON pet_dewormings(dewormer_normalized_name);
-  CREATE INDEX IF NOT EXISTS idx_pet_dewormings_latest_active ON pet_dewormings(pet_id, dewormer_normalized_name, applied_at DESC, id DESC) WHERE deleted_at IS NULL AND validity_ignored_at IS NULL;
-  CREATE INDEX IF NOT EXISTS idx_pet_dewormings_validity_ignored_at ON pet_dewormings(validity_ignored_at);
-  CREATE INDEX IF NOT EXISTS idx_pet_dewormings_deleted_at ON pet_dewormings(deleted_at);
+  CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_pet_id ON pet_antiparasitic_treatments(pet_id);
+  CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_applied_at ON pet_antiparasitic_treatments(applied_at);
+  CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_antiparasitic_normalized_name ON pet_antiparasitic_treatments(antiparasitic_normalized_name);
+  CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_latest_active ON pet_antiparasitic_treatments(pet_id, antiparasitic_normalized_name, applied_at DESC, id DESC) WHERE deleted_at IS NULL AND validity_ignored_at IS NULL;
+  CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_validity_ignored_at ON pet_antiparasitic_treatments(validity_ignored_at);
+  CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_deleted_at ON pet_antiparasitic_treatments(deleted_at);
 `);
 
 const insertOwner = db.prepare(`
@@ -538,7 +539,7 @@ const insertPetVaccination = db.prepare(`
 `);
 
 const insertPetDeworming = db.prepare(`
-  INSERT INTO pet_dewormings (pet_id, applied_at, dewormer_name, dewormer_normalized_name, dose, validity_value, validity_unit, observation, updated_at)
+  INSERT INTO pet_antiparasitic_treatments (pet_id, applied_at, antiparasitic_name, antiparasitic_normalized_name, dose, validity_value, validity_unit, observation, updated_at)
   VALUES (@petId, @appliedAt, @dewormerName, @dewormerNormalizedName, @dose, @validityValue, @validityUnit, @observation, CURRENT_TIMESTAMP)
 `);
 
@@ -551,7 +552,7 @@ const markVaccinationValidityIgnored = db.prepare(`
 `);
 
 const markDewormingValidityIgnored = db.prepare(`
-  UPDATE pet_dewormings
+  UPDATE pet_antiparasitic_treatments
   SET validity_ignored_at = COALESCE(validity_ignored_at, CURRENT_TIMESTAMP),
       updated_at = CURRENT_TIMESTAMP
   WHERE id = @id
@@ -589,23 +590,23 @@ const defaultPreventiveCatalogItems: PreventiveCatalogSeed[] = [
   { kind: 'vaccine', name: 'Nobivac Tricat Trio', species: ['feline'], aliases: ['tricat', 'tricat trio', 'tríplice felina', 'triplice felina'] },
   { kind: 'vaccine', name: 'Felocell CVR', species: ['feline'], aliases: ['felocell', 'felocell cvr', 'tríplice felina', 'triplice felina'] },
   { kind: 'vaccine', name: 'Versifel FeLV', species: ['feline'], aliases: ['versifel', 'versifel felv', 'leucemia felina'] },
-  { kind: 'dewormer', name: 'Praziquantel + Pamoato de pirantel + Febantel', species: ['canine'], aliases: ['drontal plus', 'endogard', 'canex premium', 'vermifugo amplo espectro', 'tenicida'] },
-  { kind: 'dewormer', name: 'Praziquantel + Pamoato de pirantel', species: ['feline'], aliases: ['drontal gatos', 'drontal cats', 'vermifugo gatos', 'tenicida'] },
-  { kind: 'dewormer', name: 'Milbemicina oxima + Praziquantel', species: ['canine', 'feline'], aliases: ['milbemax', 'milpro', 'milbemicina', 'praziquantel'] },
-  { kind: 'dewormer', name: 'Febantel + Pamoato de pirantel + Praziquantel', species: ['canine'], aliases: ['drontal', 'drontal plus sabor', 'endoparasitas'] },
-  { kind: 'dewormer', name: 'Fenbendazol', species: ['canine', 'feline'], aliases: ['panacur', 'fembendazol', 'giardia', 'nematódeos', 'nematodeos'] },
-  { kind: 'dewormer', name: 'Febantel', species: ['canine'], aliases: ['giardicid', 'giardia', 'verme redondo'] },
-  { kind: 'dewormer', name: 'Selamectina', species: ['canine', 'feline'], aliases: ['revolution', 'stronghold', 'endectocida'] },
-  { kind: 'dewormer', name: 'Moxidectina + Imidacloprida', species: ['canine', 'feline'], aliases: ['advocate', 'advantage multi', 'endectocida'] },
-  { kind: 'dewormer', name: 'Emodepsida + Praziquantel', species: ['feline'], aliases: ['profender', 'vermifugo topico gatos'] },
-  { kind: 'dewormer', name: 'Afoxolaner + Milbemicina oxima', species: ['canine'], aliases: ['nexgard spectra', 'endectocida', 'milbemicina'] },
-  { kind: 'dewormer', name: 'Sarolaner + Moxidectina + Pirantel', species: ['canine'], aliases: ['simparic trio', 'endectocida', 'pirantel'] },
-  { kind: 'dewormer', name: 'Ivermectina', species: ['canine'], aliases: ['ivermectina oral', 'endectocida'] }
+  { kind: 'antiparasitic', name: 'Praziquantel + Pamoato de pirantel + Febantel', species: ['canine'], aliases: ['drontal plus', 'endogard', 'canex premium', 'antiparasitario amplo espectro', 'tenicida'] },
+  { kind: 'antiparasitic', name: 'Praziquantel + Pamoato de pirantel', species: ['feline'], aliases: ['drontal gatos', 'drontal cats', 'antiparasitario gatos', 'tenicida'] },
+  { kind: 'antiparasitic', name: 'Milbemicina oxima + Praziquantel', species: ['canine', 'feline'], aliases: ['milbemax', 'milpro', 'milbemicina', 'praziquantel'] },
+  { kind: 'antiparasitic', name: 'Febantel + Pamoato de pirantel + Praziquantel', species: ['canine'], aliases: ['drontal', 'drontal plus sabor', 'endoparasitas'] },
+  { kind: 'antiparasitic', name: 'Fenbendazol', species: ['canine', 'feline'], aliases: ['panacur', 'fembendazol', 'giardia', 'nematódeos', 'nematodeos'] },
+  { kind: 'antiparasitic', name: 'Febantel', species: ['canine'], aliases: ['giardicid', 'giardia', 'verme redondo'] },
+  { kind: 'antiparasitic', name: 'Selamectina', species: ['canine', 'feline'], aliases: ['revolution', 'stronghold', 'endectocida'] },
+  { kind: 'antiparasitic', name: 'Moxidectina + Imidacloprida', species: ['canine', 'feline'], aliases: ['advocate', 'advantage multi', 'endectocida'] },
+  { kind: 'antiparasitic', name: 'Emodepsida + Praziquantel', species: ['feline'], aliases: ['profender', 'antiparasitario topico gatos'] },
+  { kind: 'antiparasitic', name: 'Afoxolaner + Milbemicina oxima', species: ['canine'], aliases: ['nexgard spectra', 'endectocida', 'milbemicina'] },
+  { kind: 'antiparasitic', name: 'Sarolaner + Moxidectina + Pirantel', species: ['canine'], aliases: ['simparic trio', 'endectocida', 'pirantel'] },
+  { kind: 'antiparasitic', name: 'Ivermectina', species: ['canine'], aliases: ['ivermectina oral', 'endectocida'] }
 ];
 
 const preventiveCatalogDefaultsByKindAndName = new Map(defaultPreventiveCatalogItems.map((item) => [`${item.kind}:${normalizeVaccineName(item.name)}`, item]));
 
-const metadataForCatalogItem = (kind: 'vaccine' | 'dewormer', name: string): { species: string; aliases: string } => {
+const metadataForCatalogItem = (kind: 'vaccine' | 'antiparasitic', name: string): { species: string; aliases: string } => {
   const item = preventiveCatalogDefaultsByKindAndName.get(`${kind}:${normalizeVaccineName(name)}`);
   return {
     species: JSON.stringify(item?.species ?? ['canine', 'feline']),
@@ -624,7 +625,7 @@ const vaccineIds = new Map(
 );
 
 const dewormerIds = new Map(
-  (db.prepare("SELECT id, normalized_name FROM preventive_catalog_items WHERE kind = 'dewormer'").all() as VaccineIdRow[]).map((dewormer) => [normalizeDewormerName(dewormer.normalized_name), dewormer.id])
+  (db.prepare("SELECT id, normalized_name FROM preventive_catalog_items WHERE kind = 'antiparasitic'").all() as VaccineIdRow[]).map((dewormer) => [normalizeDewormerName(dewormer.normalized_name), dewormer.id])
 );
 
 const ensureVaccineName = (name: string): string => {
@@ -640,8 +641,8 @@ const ensureVaccineName = (name: string): string => {
 const ensureDewormerName = (name: string): string => {
   const normalizedName = normalizeDewormerName(name);
   if (!dewormerIds.has(normalizedName)) {
-    const metadata = metadataForCatalogItem('dewormer', name);
-    const result = insertPreventiveCatalogItem.run({ kind: 'dewormer', name, normalizedName, species: metadata.species, aliases: metadata.aliases });
+    const metadata = metadataForCatalogItem('antiparasitic', name);
+    const result = insertPreventiveCatalogItem.run({ kind: 'antiparasitic', name, normalizedName, species: metadata.species, aliases: metadata.aliases });
     dewormerIds.set(normalizedName, Number(result.lastInsertRowid));
   }
   return normalizedName;
@@ -1439,8 +1440,8 @@ const printImportReport = (report: ImportReport) => {
   console.log(`- Pets sem texto de prontuário: ${report.rowsWithoutMedicalRecord}`);
   console.log(`- Aplicações de vacina importadas: ${report.vaccinationsCreated}`);
   console.log(`- Aplicações anteriores iguais desmarcadas para vencimento: ${report.vaccinationsIgnoredForValidity}`);
-  console.log(`- Aplicações de vermífugo importadas: ${report.dewormingsCreated}`);
-  console.log(`- Aplicações anteriores iguais de vermífugo desmarcadas para vencimento: ${report.dewormingsIgnoredForValidity}`);
+  console.log(`- Aplicações de antiparasitário importadas: ${report.dewormingsCreated}`);
+  console.log(`- Aplicações anteriores iguais de antiparasitário desmarcadas para vencimento: ${report.dewormingsIgnoredForValidity}`);
   console.log(`- Datas de vacinação futuras descartadas: ${report.vaccinationDatesDiscarded}${report.vaccinationDateDiscardSamples.length > 0 ? ` (exemplos: ${report.vaccinationDateDiscardSamples.join(', ')})` : ''}`);
 };
 
@@ -1455,10 +1456,10 @@ const countWhere = (table: string, where: string): number => {
 const printDatabaseReport = () => {
   const vaccinationsWithoutNormalizedName = (db.prepare("SELECT COUNT(*) AS total FROM pet_vaccinations WHERE vaccine_normalized_name IS NULL OR length(trim(vaccine_normalized_name)) = 0").get() as CountRow).total;
   const vaccinationsWithInvalidDose = (db.prepare('SELECT COUNT(*) AS total FROM pet_vaccinations WHERE dose IS NULL OR length(trim(dose)) = 0').get() as CountRow).total;
-  const vaccinationsWithInvalidValidity = (db.prepare("SELECT COUNT(*) AS total FROM pet_vaccinations WHERE validity_value <= 0 OR validity_unit NOT IN ('days', 'months')").get() as CountRow).total;
-  const dewormingsWithoutNormalizedName = (db.prepare("SELECT COUNT(*) AS total FROM pet_dewormings WHERE dewormer_normalized_name IS NULL OR length(trim(dewormer_normalized_name)) = 0").get() as CountRow).total;
-  const dewormingsWithInvalidDose = (db.prepare('SELECT COUNT(*) AS total FROM pet_dewormings WHERE dose IS NULL OR length(trim(dose)) = 0').get() as CountRow).total;
-  const dewormingsWithInvalidValidity = (db.prepare("SELECT COUNT(*) AS total FROM pet_dewormings WHERE validity_value <= 0 OR validity_unit NOT IN ('days', 'months')").get() as CountRow).total;
+  const vaccinationsWithInvalidValidity = (db.prepare("SELECT COUNT(*) AS total FROM pet_vaccinations WHERE validity_value <= 0 OR validity_unit NOT IN ('days', 'months', 'years')").get() as CountRow).total;
+  const dewormingsWithoutNormalizedName = (db.prepare("SELECT COUNT(*) AS total FROM pet_antiparasitic_treatments WHERE antiparasitic_normalized_name IS NULL OR length(trim(antiparasitic_normalized_name)) = 0").get() as CountRow).total;
+  const dewormingsWithInvalidDose = (db.prepare('SELECT COUNT(*) AS total FROM pet_antiparasitic_treatments WHERE dose IS NULL OR length(trim(dose)) = 0').get() as CountRow).total;
+  const dewormingsWithInvalidValidity = (db.prepare("SELECT COUNT(*) AS total FROM pet_antiparasitic_treatments WHERE validity_value <= 0 OR validity_unit NOT IN ('days', 'months', 'years')").get() as CountRow).total;
   const ownerContacts = (db.prepare('SELECT COUNT(*) AS total FROM owner_contacts WHERE owner_id IS NOT NULL AND responsible_id IS NULL').get() as CountRow).total;
   const additionalResponsibleContacts = (db.prepare('SELECT COUNT(*) AS total FROM owner_contacts WHERE responsible_id IS NOT NULL AND owner_id IS NULL').get() as CountRow).total;
 
@@ -1476,14 +1477,14 @@ const printDatabaseReport = () => {
   console.log(`- preventive_protocol_items: ${countRows('preventive_protocol_items')}`);
   console.log(`- preventive_protocol_doses: ${countRows('preventive_protocol_doses')}`);
   console.log(`- pet_vaccinations: ${countRows('pet_vaccinations')}`);
-  console.log(`- preventive_catalog_items (vermífugos): ${countWhere('preventive_catalog_items', "kind = 'dewormer'")}`);
-  console.log(`- pet_dewormings: ${countRows('pet_dewormings')}`);
+  console.log(`- preventive_catalog_items (antiparasitários): ${countWhere('preventive_catalog_items', "kind = 'antiparasitic'")}`);
+  console.log(`- pet_antiparasitic_treatments: ${countRows('pet_antiparasitic_treatments')}`);
   console.log(`- pet_vaccinations sem nome normalizado: ${vaccinationsWithoutNormalizedName}`);
   console.log(`- pet_vaccinations com dose inválida: ${vaccinationsWithInvalidDose}`);
   console.log(`- pet_vaccinations com validade inválida: ${vaccinationsWithInvalidValidity}`);
-  console.log(`- pet_dewormings sem nome normalizado: ${dewormingsWithoutNormalizedName}`);
-  console.log(`- pet_dewormings com dose inválida: ${dewormingsWithInvalidDose}`);
-  console.log(`- pet_dewormings com validade inválida: ${dewormingsWithInvalidValidity}`);
+  console.log(`- pet_antiparasitic_treatments sem nome normalizado: ${dewormingsWithoutNormalizedName}`);
+  console.log(`- pet_antiparasitic_treatments com dose inválida: ${dewormingsWithInvalidDose}`);
+  console.log(`- pet_antiparasitic_treatments com validade inválida: ${dewormingsWithInvalidValidity}`);
 };
 
 const isTruthy = (value: string | undefined) => {

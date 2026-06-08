@@ -5,13 +5,13 @@
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
-	import type { Dewormer } from '$lib/domain/deworming/deworming.js';
+	import type { Antiparasitic } from '$lib/domain/antiparasitic/antiparasitic.js';
 	import { petSpeciesOptions, type KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
 	import type { PreventiveProtocol, PreventiveProtocolDose, PreventiveProtocolKind, PreventiveValidityUnit } from '$lib/domain/preventive/protocol.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import type { Vaccine } from '$lib/domain/vaccine/vaccine.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
-	import { loadDewormers, removeDewormerName, saveDewormerName, setDewormerNameHidden } from '$lib/services/deworming.service.js';
+	import { loadAntiparasitics, removeAntiparasiticName, saveAntiparasiticName, setAntiparasiticNameHidden } from '$lib/services/antiparasitic.service.js';
 	import { loadPreventiveProtocols, removeProtocol, removeProtocolDose, saveProtocol, saveProtocolDose, setProtocolHidden } from '$lib/services/preventive-protocol.service.js';
 	import { loadVaccines, removeVaccineName, saveVaccineName, setVaccineNameHidden } from '$lib/services/vaccine.service.js';
 	import Eye from '@lucide/svelte/icons/eye';
@@ -23,25 +23,25 @@
 	import Syringe from '@lucide/svelte/icons/syringe';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
-	type VaccineSettingsTab = 'vaccines' | 'dewormers' | 'protocols';
-	type CatalogItem = Vaccine | Dewormer;
+	type VaccineSettingsTab = 'vaccines' | 'antiparasitics' | 'protocols';
+	type CatalogItem = Vaccine | Antiparasitic;
 
 	const tabs: { id: VaccineSettingsTab; labelKey: TranslationKey }[] = [
 		{ id: 'vaccines', labelKey: 'vaccine.catalog.tab.vaccines' },
-		{ id: 'dewormers', labelKey: 'deworming.catalog.tab.dewormers' },
+		{ id: 'antiparasitics', labelKey: 'antiparasiticTreatment.catalog.tab.antiparasitics' },
 		{ id: 'protocols', labelKey: 'protocol.tab' }
 	];
 
 	let vaccines = $state<Vaccine[]>([]);
-	let dewormers = $state<Dewormer[]>([]);
+	let antiparasitics = $state<Antiparasitic[]>([]);
 	let protocols = $state<PreventiveProtocol[]>([]);
 	let activeTab = $state<VaccineSettingsTab>('vaccines');
 	let vaccineDraftNames = $state<Record<number, string>>({});
 	let vaccineDraftAliases = $state<Record<number, string>>({});
 	let vaccineDraftSpecies = $state<Record<number, KnownPetSpecies[]>>({});
-	let dewormerDraftNames = $state<Record<number, string>>({});
-	let dewormerDraftAliases = $state<Record<number, string>>({});
-	let dewormerDraftSpecies = $state<Record<number, KnownPetSpecies[]>>({});
+	let antiparasiticDraftNames = $state<Record<number, string>>({});
+	let antiparasiticDraftAliases = $state<Record<number, string>>({});
+	let antiparasiticDraftSpecies = $state<Record<number, KnownPetSpecies[]>>({});
 	let protocolDraftNames = $state<Record<number, string>>({});
 	let protocolDraftSpecies = $state<Record<number, KnownPetSpecies[]>>({});
 	let protocolDraftObservations = $state<Record<number, string>>({});
@@ -55,9 +55,9 @@
 	let newVaccineName = $state('');
 	let newVaccineAliases = $state('');
 	let newVaccineSpecies = $state<KnownPetSpecies[]>(defaultSpeciesDraft());
-	let newDewormerName = $state('');
-	let newDewormerAliases = $state('');
-	let newDewormerSpecies = $state<KnownPetSpecies[]>(defaultSpeciesDraft());
+	let newAntiparasiticName = $state('');
+	let newAntiparasiticAliases = $state('');
+	let newAntiparasiticSpecies = $state<KnownPetSpecies[]>(defaultSpeciesDraft());
 	let newProtocolKind = $state<PreventiveProtocolKind>('vaccine');
 	let newProtocolName = $state('');
 	let newProtocolSpecies = $state<KnownPetSpecies[]>(defaultSpeciesDraft());
@@ -74,7 +74,7 @@
 		return [...source].sort((first, second) => first.name.localeCompare(second.name));
 	}
 
-	function sortedDewormers(source: Dewormer[]): Dewormer[] {
+	function sortedAntiparasitics(source: Antiparasitic[]): Antiparasitic[] {
 		return [...source].sort((first, second) => first.name.localeCompare(second.name));
 	}
 
@@ -123,8 +123,8 @@
 		return vaccineDraftSpecies[vaccine.id] ?? vaccine.species;
 	}
 
-	function dewormerDraftSpeciesValue(dewormer: Dewormer): KnownPetSpecies[] {
-		return dewormerDraftSpecies[dewormer.id] ?? dewormer.species;
+	function antiparasiticDraftSpeciesValue(antiparasitic: Antiparasitic): KnownPetSpecies[] {
+		return antiparasiticDraftSpecies[antiparasitic.id] ?? antiparasitic.species;
 	}
 
 	function protocolDraftSpeciesValue(protocol: PreventiveProtocol): KnownPetSpecies[] {
@@ -135,8 +135,8 @@
 		vaccineDraftSpecies = { ...vaccineDraftSpecies, [vaccine.id]: toggleSpeciesDraft(vaccineDraftSpeciesValue(vaccine), species) };
 	}
 
-	function setDewormerSpecies(dewormer: Dewormer, species: KnownPetSpecies) {
-		dewormerDraftSpecies = { ...dewormerDraftSpecies, [dewormer.id]: toggleSpeciesDraft(dewormerDraftSpeciesValue(dewormer), species) };
+	function setAntiparasiticSpecies(antiparasitic: Antiparasitic, species: KnownPetSpecies) {
+		antiparasiticDraftSpecies = { ...antiparasiticDraftSpecies, [antiparasitic.id]: toggleSpeciesDraft(antiparasiticDraftSpeciesValue(antiparasitic), species) };
 	}
 
 	function itemMatchesSpecies(kind: PreventiveProtocolKind, itemId: number, species: KnownPetSpecies[]): boolean {
@@ -157,19 +157,19 @@
 
 	function itemCount(tab: VaccineSettingsTab): number {
 		if (tab === 'vaccines') return vaccines.length;
-		if (tab === 'dewormers') return dewormers.length;
+		if (tab === 'antiparasitics') return antiparasitics.length;
 		return protocols.length;
 	}
 
 	function kindOptions() {
 		return [
 			{ value: 'vaccine' as const, label: t('protocol.kind.vaccine') },
-			{ value: 'dewormer' as const, label: t('protocol.kind.dewormer') }
+			{ value: 'antiparasitic' as const, label: t('protocol.kind.antiparasitic') }
 		];
 	}
 
 	function catalogItems(kind: PreventiveProtocolKind): CatalogItem[] {
-		return kind === 'vaccine' ? vaccines : dewormers;
+		return kind === 'vaccine' ? vaccines : antiparasitics;
 	}
 
 	function visibleCatalogItems(kind: PreventiveProtocolKind): CatalogItem[] {
@@ -202,7 +202,7 @@
 	});
 
 	function kindLabel(kind: PreventiveProtocolKind): string {
-		return kind === 'vaccine' ? t('protocol.kind.vaccine') : t('protocol.kind.dewormer');
+		return kind === 'vaccine' ? t('protocol.kind.vaccine') : t('protocol.kind.antiparasitic');
 	}
 
 	function validityLabel(value: number, unit: PreventiveValidityUnit): string {
@@ -246,11 +246,11 @@
 		vaccineDraftSpecies = { ...vaccineDraftSpecies, [vaccine.id]: vaccine.species };
 	}
 
-	function upsertDewormer(dewormer: Dewormer) {
-		dewormers = sortedDewormers([...dewormers.filter((item) => item.id !== dewormer.id && item.normalizedName !== dewormer.normalizedName), dewormer]);
-		dewormerDraftNames = { ...dewormerDraftNames, [dewormer.id]: dewormer.name };
-		dewormerDraftAliases = { ...dewormerDraftAliases, [dewormer.id]: aliasDraft(dewormer.aliases) };
-		dewormerDraftSpecies = { ...dewormerDraftSpecies, [dewormer.id]: dewormer.species };
+	function upsertAntiparasitic(antiparasitic: Antiparasitic) {
+		antiparasitics = sortedAntiparasitics([...antiparasitics.filter((item) => item.id !== antiparasitic.id && item.normalizedName !== antiparasitic.normalizedName), antiparasitic]);
+		antiparasiticDraftNames = { ...antiparasiticDraftNames, [antiparasitic.id]: antiparasitic.name };
+		antiparasiticDraftAliases = { ...antiparasiticDraftAliases, [antiparasitic.id]: aliasDraft(antiparasitic.aliases) };
+		antiparasiticDraftSpecies = { ...antiparasiticDraftSpecies, [antiparasitic.id]: antiparasitic.species };
 	}
 
 	function upsertProtocol(protocol: PreventiveProtocol) {
@@ -262,7 +262,7 @@
 		if (exception instanceof Error && exception.message === 'field_limit_exceeded') errorKey = 'form.limitExceeded';
 		else if (exception instanceof Error && exception.message === 'field_required') errorKey = 'form.fieldRequired';
 		else if (exception instanceof Error && exception.message === 'vaccine_name_required') errorKey = 'vaccine.nameRequired';
-		else if (exception instanceof Error && exception.message === 'deworming_name_required') errorKey = 'deworming.nameRequired';
+		else if (exception instanceof Error && exception.message === 'antiparasitic_name_required') errorKey = 'antiparasiticTreatment.nameRequired';
 		else if (exception instanceof Error && exception.message === 'protocol_name_required') errorKey = 'protocol.nameRequired';
 		else if (exception instanceof Error && exception.message === 'protocol_item_required') errorKey = 'protocol.itemRequired';
 		else if (exception instanceof Error && exception.message === 'protocol_dose_required') errorKey = 'protocol.doseRequired';
@@ -275,16 +275,16 @@
 		errorKey = null;
 
 		try {
-			const [loadedVaccines, loadedDewormers, loadedProtocols] = await Promise.all([loadVaccines(true), loadDewormers(true), loadPreventiveProtocols(undefined, true)]);
+			const [loadedVaccines, loadedAntiparasitics, loadedProtocols] = await Promise.all([loadVaccines(true), loadAntiparasitics(true), loadPreventiveProtocols(undefined, true)]);
 			vaccines = sortedVaccines(loadedVaccines);
-			dewormers = sortedDewormers(loadedDewormers);
+			antiparasitics = sortedAntiparasitics(loadedAntiparasitics);
 			protocols = sortedProtocols(loadedProtocols);
 			vaccineDraftNames = Object.fromEntries(vaccines.map((vaccine) => [vaccine.id, vaccine.name]));
 			vaccineDraftAliases = Object.fromEntries(vaccines.map((vaccine) => [vaccine.id, aliasDraft(vaccine.aliases)]));
 			vaccineDraftSpecies = Object.fromEntries(vaccines.map((vaccine) => [vaccine.id, vaccine.species]));
-			dewormerDraftNames = Object.fromEntries(dewormers.map((dewormer) => [dewormer.id, dewormer.name]));
-			dewormerDraftAliases = Object.fromEntries(dewormers.map((dewormer) => [dewormer.id, aliasDraft(dewormer.aliases)]));
-			dewormerDraftSpecies = Object.fromEntries(dewormers.map((dewormer) => [dewormer.id, dewormer.species]));
+			antiparasiticDraftNames = Object.fromEntries(antiparasitics.map((antiparasitic) => [antiparasitic.id, antiparasitic.name]));
+			antiparasiticDraftAliases = Object.fromEntries(antiparasitics.map((antiparasitic) => [antiparasitic.id, aliasDraft(antiparasitic.aliases)]));
+			antiparasiticDraftSpecies = Object.fromEntries(antiparasitics.map((antiparasitic) => [antiparasitic.id, antiparasitic.species]));
 			for (const protocol of protocols) syncProtocolDraft(protocol);
 		} catch {
 			errorKey = 'protocol.saveFailed';
@@ -313,19 +313,19 @@
 		}
 	}
 
-	async function submitNewDewormer(event: SubmitEvent) {
+	async function submitNewAntiparasitic(event: SubmitEvent) {
 		event.preventDefault();
 		saving = true;
 		statusKey = null;
 		errorKey = null;
 
 		try {
-			const saved = await saveDewormerName({ name: newDewormerName, species: newDewormerSpecies, aliases: parseAliases(newDewormerAliases) });
-			upsertDewormer(saved);
-			newDewormerName = '';
-			newDewormerAliases = '';
-			newDewormerSpecies = defaultSpeciesDraft();
-			statusKey = 'deworming.saved';
+			const saved = await saveAntiparasiticName({ name: newAntiparasiticName, species: newAntiparasiticSpecies, aliases: parseAliases(newAntiparasiticAliases) });
+			upsertAntiparasitic(saved);
+			newAntiparasiticName = '';
+			newAntiparasiticAliases = '';
+			newAntiparasiticSpecies = defaultSpeciesDraft();
+			statusKey = 'antiparasiticTreatment.saved';
 		} catch (exception) {
 			setFailure(exception);
 		} finally {
@@ -370,15 +370,15 @@
 		}
 	}
 
-	async function saveExistingDewormer(dewormer: Dewormer) {
+	async function saveExistingAntiparasitic(antiparasitic: Antiparasitic) {
 		saving = true;
 		statusKey = null;
 		errorKey = null;
 
 		try {
-			const saved = await saveDewormerName({ name: dewormerDraftNames[dewormer.id] ?? dewormer.name, species: dewormerDraftSpeciesValue(dewormer), aliases: parseAliases(dewormerDraftAliases[dewormer.id] ?? aliasDraft(dewormer.aliases)) }, dewormer.id);
-			upsertDewormer(saved);
-			statusKey = 'deworming.saved';
+			const saved = await saveAntiparasiticName({ name: antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name, species: antiparasiticDraftSpeciesValue(antiparasitic), aliases: parseAliases(antiparasiticDraftAliases[antiparasitic.id] ?? aliasDraft(antiparasitic.aliases)) }, antiparasitic.id);
+			upsertAntiparasitic(saved);
+			statusKey = 'antiparasiticTreatment.saved';
 		} catch (exception) {
 			setFailure(exception);
 		} finally {
@@ -427,17 +427,17 @@
 		}
 	}
 
-	async function toggleDewormerHidden(dewormer: Dewormer) {
+	async function toggleAntiparasiticHidden(antiparasitic: Antiparasitic) {
 		saving = true;
 		statusKey = null;
 		errorKey = null;
 
 		try {
-			const saved = await setDewormerNameHidden(dewormer.id, !dewormer.hiddenAt);
-			upsertDewormer(saved);
-			statusKey = saved.hiddenAt ? 'deworming.hiddenSaved' : 'deworming.shownSaved';
+			const saved = await setAntiparasiticNameHidden(antiparasitic.id, !antiparasitic.hiddenAt);
+			upsertAntiparasitic(saved);
+			statusKey = saved.hiddenAt ? 'antiparasiticTreatment.hiddenSaved' : 'antiparasiticTreatment.shownSaved';
 		} catch {
-			errorKey = 'deworming.saveFailed';
+			errorKey = 'antiparasiticTreatment.saveFailed';
 		} finally {
 			saving = false;
 		}
@@ -482,24 +482,24 @@
 		}
 	}
 
-	async function deleteDewormer(dewormer: Dewormer) {
-		if (!window.confirm(t('deworming.list.deleteConfirm'))) return;
+	async function deleteAntiparasitic(antiparasitic: Antiparasitic) {
+		if (!window.confirm(t('antiparasiticTreatment.list.deleteConfirm'))) return;
 		saving = true;
 		statusKey = null;
 		errorKey = null;
 
 		try {
-			await removeDewormerName(dewormer.id);
-			dewormers = dewormers.filter((item) => item.id !== dewormer.id);
-			const { [dewormer.id]: _removed, ...remainingDrafts } = dewormerDraftNames;
-			dewormerDraftNames = remainingDrafts;
-			const { [dewormer.id]: _removedAliases, ...remainingAliases } = dewormerDraftAliases;
-			const { [dewormer.id]: _removedSpecies, ...remainingSpecies } = dewormerDraftSpecies;
-			dewormerDraftAliases = remainingAliases;
-			dewormerDraftSpecies = remainingSpecies;
+			await removeAntiparasiticName(antiparasitic.id);
+			antiparasitics = antiparasitics.filter((item) => item.id !== antiparasitic.id);
+			const { [antiparasitic.id]: _removed, ...remainingDrafts } = antiparasiticDraftNames;
+			antiparasiticDraftNames = remainingDrafts;
+			const { [antiparasitic.id]: _removedAliases, ...remainingAliases } = antiparasiticDraftAliases;
+			const { [antiparasitic.id]: _removedSpecies, ...remainingSpecies } = antiparasiticDraftSpecies;
+			antiparasiticDraftAliases = remainingAliases;
+			antiparasiticDraftSpecies = remainingSpecies;
 			statusKey = 'status.deleted';
 		} catch {
-			errorKey = 'deworming.saveFailed';
+			errorKey = 'antiparasiticTreatment.saveFailed';
 		} finally {
 			saving = false;
 		}
@@ -768,35 +768,35 @@
 				{/if}
 			</div>
 		</section>
-	{:else if activeTab === 'dewormers'}
+	{:else if activeTab === 'antiparasitics'}
 		<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
 			<div class="flex items-start gap-3">
 				<span class="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
 					<Pill class="size-5" />
 				</span>
 				<div class="min-w-0 flex-1">
-					<h3 class="text-base font-semibold">{t('deworming.list.title')}</h3>
-					<form class="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-start" onsubmit={submitNewDewormer}>
+					<h3 class="text-base font-semibold">{t('antiparasiticTreatment.list.title')}</h3>
+					<form class="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-start" onsubmit={submitNewAntiparasitic}>
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
-								<span>{t('deworming.name')}</span>
-								<CharacterLimitHint value={newDewormerName} max={FIELD_LIMITS.dewormerName} />
+								<span>{t('antiparasiticTreatment.name')}</span>
+								<CharacterLimitHint value={newAntiparasiticName} max={FIELD_LIMITS.antiparasiticName} />
 							</span>
-							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newDewormerName} maxlength={FIELD_LIMITS.dewormerName} required />
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newAntiparasiticName} maxlength={FIELD_LIMITS.antiparasiticName} required />
 						</label>
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
 								<span>{t('preventive.aliases')}</span>
-								<CharacterLimitHint value={newDewormerAliases} max={FIELD_LIMITS.preventiveAliasesJson} />
+								<CharacterLimitHint value={newAntiparasiticAliases} max={FIELD_LIMITS.preventiveAliasesJson} />
 							</span>
-							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newDewormerAliases} maxlength={FIELD_LIMITS.preventiveAliasesJson} placeholder={t('preventive.aliasesPlaceholder')} />
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newAntiparasiticAliases} maxlength={FIELD_LIMITS.preventiveAliasesJson} placeholder={t('preventive.aliasesPlaceholder')} />
 						</label>
 						<div class="flex min-w-0 flex-col gap-2 text-sm font-medium lg:col-span-2">
 							<span>{t('preventive.species')}</span>
 							<div class="flex flex-wrap gap-2">
 								{#each petSpeciesOptions as option}
 									<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
-										<input type="checkbox" class="size-4 accent-primary" checked={newDewormerSpecies.includes(option.id)} onchange={() => (newDewormerSpecies = toggleSpeciesDraft(newDewormerSpecies, option.id))} />
+										<input type="checkbox" class="size-4 accent-primary" checked={newAntiparasiticSpecies.includes(option.id)} onchange={() => (newAntiparasiticSpecies = toggleSpeciesDraft(newAntiparasiticSpecies, option.id))} />
 										<span>{t(option.labelKey)}</span>
 									</label>
 								{/each}
@@ -804,7 +804,7 @@
 						</div>
 						<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={saving}>
 							<Plus class="size-4" />
-							{t('deworming.list.add')}
+							{t('antiparasiticTreatment.list.add')}
 						</button>
 					</form>
 				</div>
@@ -814,45 +814,45 @@
 				{#if loading}
 					<div class="h-28 animate-pulse rounded-md bg-muted"></div>
 				{:else}
-					{#each dewormers as dewormer (dewormer.id)}
-						<form class="grid gap-3 rounded-md border border-border bg-background p-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto] xl:items-start" onsubmit={(event) => { event.preventDefault(); void saveExistingDewormer(dewormer); }}>
+					{#each antiparasitics as antiparasitic (antiparasitic.id)}
+						<form class="grid gap-3 rounded-md border border-border bg-background p-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto] xl:items-start" onsubmit={(event) => { event.preventDefault(); void saveExistingAntiparasitic(antiparasitic); }}>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
-									<span>{t('deworming.name')}</span>
-									<CharacterLimitHint value={dewormerDraftNames[dewormer.id] ?? dewormer.name} max={FIELD_LIMITS.dewormerName} />
+									<span>{t('antiparasiticTreatment.name')}</span>
+									<CharacterLimitHint value={antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name} max={FIELD_LIMITS.antiparasiticName} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={dewormerDraftNames[dewormer.id] ?? dewormer.name} maxlength={FIELD_LIMITS.dewormerName} required oninput={(event) => (dewormerDraftNames = { ...dewormerDraftNames, [dewormer.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name} maxlength={FIELD_LIMITS.antiparasiticName} required oninput={(event) => (antiparasiticDraftNames = { ...antiparasiticDraftNames, [antiparasitic.id]: inputValue(event) })} />
 							</label>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
 									<span>{t('preventive.aliases')}</span>
-									<CharacterLimitHint value={dewormerDraftAliases[dewormer.id] ?? aliasDraft(dewormer.aliases)} max={FIELD_LIMITS.preventiveAliasesJson} />
+									<CharacterLimitHint value={antiparasiticDraftAliases[antiparasitic.id] ?? aliasDraft(antiparasitic.aliases)} max={FIELD_LIMITS.preventiveAliasesJson} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={dewormerDraftAliases[dewormer.id] ?? aliasDraft(dewormer.aliases)} maxlength={FIELD_LIMITS.preventiveAliasesJson} placeholder={t('preventive.aliasesPlaceholder')} oninput={(event) => (dewormerDraftAliases = { ...dewormerDraftAliases, [dewormer.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={antiparasiticDraftAliases[antiparasitic.id] ?? aliasDraft(antiparasitic.aliases)} maxlength={FIELD_LIMITS.preventiveAliasesJson} placeholder={t('preventive.aliasesPlaceholder')} oninput={(event) => (antiparasiticDraftAliases = { ...antiparasiticDraftAliases, [antiparasitic.id]: inputValue(event) })} />
 							</label>
 							<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
 								<Save class="size-4" />
 								{t('actions.save')}
 							</button>
-							<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} title={dewormer.hiddenAt ? t('deworming.list.show') : t('deworming.list.hide')} onclick={() => void toggleDewormerHidden(dewormer)}>
-								{#if dewormer.hiddenAt}
+							<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} title={antiparasitic.hiddenAt ? t('antiparasiticTreatment.list.show') : t('antiparasiticTreatment.list.hide')} onclick={() => void toggleAntiparasiticHidden(antiparasitic)}>
+								{#if antiparasitic.hiddenAt}
 									<Eye class="size-4" />
-									{t('deworming.list.show')}
+									{t('antiparasiticTreatment.list.show')}
 								{:else}
 									<EyeOff class="size-4" />
-									{t('deworming.list.hide')}
+									{t('antiparasiticTreatment.list.hide')}
 								{/if}
 							</button>
-							<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={() => void deleteDewormer(dewormer)}>
+							<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={() => void deleteAntiparasitic(antiparasitic)}>
 								<Trash2 class="size-4" />
 								{t('actions.delete')}
 							</button>
 							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-5">
-								<span>{t('preventive.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(dewormerDraftSpeciesValue(dewormer))}</span></span>
+								<span>{t('preventive.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(antiparasiticDraftSpeciesValue(antiparasitic))}</span></span>
 								<div class="flex flex-wrap gap-2">
 									{#each petSpeciesOptions as option}
 										<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
-											<input type="checkbox" class="size-4 accent-primary" checked={dewormerDraftSpeciesValue(dewormer).includes(option.id)} onchange={() => setDewormerSpecies(dewormer, option.id)} />
+											<input type="checkbox" class="size-4 accent-primary" checked={antiparasiticDraftSpeciesValue(antiparasitic).includes(option.id)} onchange={() => setAntiparasiticSpecies(antiparasitic, option.id)} />
 											<span>{t(option.labelKey)}</span>
 										</label>
 									{/each}
@@ -860,7 +860,7 @@
 							</div>
 						</form>
 					{:else}
-						<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('deworming.emptyDewormers')}</p>
+						<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('antiparasiticTreatment.emptyAntiparasitics')}</p>
 					{/each}
 				{/if}
 			</div>

@@ -5,14 +5,14 @@
 	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
 	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
-	import DewormingPanel from '$lib/components/pet/DewormingPanel.svelte';
+	import AntiparasiticPanel from '$lib/components/pet/AntiparasiticPanel.svelte';
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import PetAvatarEditorDialog from '$lib/components/pet/PetAvatarEditorDialog.svelte';
 	import PetTaxonomyPicker from '$lib/components/pet/PetTaxonomyPicker.svelte';
 	import VaccinationPanel from '$lib/components/pet/VaccinationPanel.svelte';
 	import UnsavedChangesDialog from '$lib/components/records/UnsavedChangesDialog.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
-	import type { PetDeworming } from '$lib/domain/deworming/deworming.js';
+	import type { PetAntiparasiticTreatment } from '$lib/domain/antiparasitic/antiparasitic.js';
 	import type { MedicalRecord } from '$lib/domain/medical-record/medical-record.js';
 	import type { Pet, PetInput, PetSex } from '$lib/domain/pet/pet.js';
 	import { getPetBreedOption, getPetSpeciesOption } from '$lib/domain/pet/taxonomy.js';
@@ -32,14 +32,14 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
 	type PetForm = Omit<PetInput, 'sex' | 'avatarBytes'> & { sex: '' | Exclude<PetSex, null>; avatarBytes: Uint8Array | null };
-	type PetPanel = 'overview' | 'records' | 'vaccines' | 'dewormings';
+	type PetPanel = 'overview' | 'records' | 'vaccines' | 'antiparasiticTreatments';
 
 	const petId = $derived(Number(page.params.petId));
 	const panelItems = [
 		{ id: 'overview', titleKey: 'pet.overviewSection', descriptionKey: 'pet.overviewDescription', icon: Info },
 		{ id: 'records', titleKey: 'pet.recordsSection', descriptionKey: 'pet.recordsDescription', icon: ClipboardPenLine },
 		{ id: 'vaccines', titleKey: 'pet.vaccinesSection', descriptionKey: 'pet.vaccinesDescription', icon: Syringe },
-		{ id: 'dewormings', titleKey: 'pet.dewormingsSection', descriptionKey: 'pet.dewormingsDescription', icon: Pill }
+		{ id: 'antiparasiticTreatments', titleKey: 'pet.antiparasiticsSection', descriptionKey: 'pet.antiparasiticsDescription', icon: Pill }
 	] satisfies { id: PetPanel; titleKey: TranslationKey; descriptionKey: TranslationKey; icon: typeof Info }[];
 
 	function avatarSnapshotValue(bytes: Uint8Array | null | undefined): string {
@@ -170,10 +170,10 @@
 			? profile.vaccinations.filter((vaccination) => vaccination.appliedAt === latestVaccinationDate).sort((first, second) => first.vaccineName.localeCompare(second.vaccineName) || first.id - second.id)
 			: []
 	);
-	const latestDewormingDate = $derived(profile ? latestAppliedDate(profile.dewormings) : null);
-	const latestDewormings = $derived(
-		profile && latestDewormingDate
-			? profile.dewormings.filter((deworming) => deworming.appliedAt === latestDewormingDate).sort((first, second) => first.dewormerName.localeCompare(second.dewormerName) || first.id - second.id)
+	const latestAntiparasiticTreatmentDate = $derived(profile ? latestAppliedDate(profile.antiparasiticTreatments) : null);
+	const latestAntiparasiticTreatments = $derived(
+		profile && latestAntiparasiticTreatmentDate
+			? profile.antiparasiticTreatments.filter((antiparasiticTreatment) => antiparasiticTreatment.appliedAt === latestAntiparasiticTreatmentDate).sort((first, second) => first.antiparasiticName.localeCompare(second.antiparasiticName) || first.id - second.id)
 			: []
 	);
 
@@ -358,9 +358,9 @@
 		profile = { ...profile, vaccinations };
 	}
 
-	function updateDewormings(dewormings: PetDeworming[]) {
+	function updateAntiparasiticTreatments(antiparasiticTreatments: PetAntiparasiticTreatment[]) {
 		if (!profile) return;
-		profile = { ...profile, dewormings };
+		profile = { ...profile, antiparasiticTreatments };
 	}
 
 	function selectPanel(panel: PetPanel) {
@@ -599,22 +599,22 @@
 							</section>
 
 							<section class="rounded-md border border-border bg-card p-4 shadow-sm">
-								<h3 class="text-sm font-semibold">{t('pet.latestDewormings')}</h3>
-								{#if latestDewormingDate && latestDewormings.length > 0}
-									<p class="mt-2 text-xs font-medium text-muted-foreground">{formatDateForDisplay(latestDewormingDate, i18n.locale)}</p>
+								<h3 class="text-sm font-semibold">{t('pet.latestAntiparasitics')}</h3>
+								{#if latestAntiparasiticTreatmentDate && latestAntiparasiticTreatments.length > 0}
+									<p class="mt-2 text-xs font-medium text-muted-foreground">{formatDateForDisplay(latestAntiparasiticTreatmentDate, i18n.locale)}</p>
 									<div class="mt-3 flex flex-col gap-2">
-										{#each latestDewormings as deworming}
+										{#each latestAntiparasiticTreatments as antiparasiticTreatment}
 											<div class="flex items-start gap-3 rounded-md border border-border bg-background p-3">
 												<Pill class="mt-0.5 size-4 shrink-0 text-primary" />
 												<span class="min-w-0">
-													<span class="block truncate text-sm font-medium">{deworming.dewormerName}</span>
-													<span class="block truncate text-xs text-muted-foreground">{deworming.dose}</span>
+													<span class="block truncate text-sm font-medium">{antiparasiticTreatment.antiparasiticName}</span>
+													<span class="block truncate text-xs text-muted-foreground">{antiparasiticTreatment.dose}</span>
 												</span>
 											</div>
 										{/each}
 									</div>
 								{:else}
-									<p class="mt-3 rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('pet.noRecentDewormings')}</p>
+									<p class="mt-3 rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('pet.noRecentAntiparasitics')}</p>
 								{/if}
 							</section>
 						</div>
@@ -649,7 +649,7 @@
 					</div>
 				{:else}
 					<div role="tabpanel">
-						<DewormingPanel petId={petId} petSpecies={profile.pet.species} dewormings={profile.dewormings} dewormers={profile.dewormers} onChange={updateDewormings} />
+						<AntiparasiticPanel petId={petId} petSpecies={profile.pet.species} antiparasiticTreatments={profile.antiparasiticTreatments} antiparasitics={profile.antiparasitics} onChange={updateAntiparasiticTreatments} />
 					</div>
 				{/if}
 			</div>

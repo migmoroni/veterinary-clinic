@@ -1,13 +1,13 @@
-import type { Dewormer } from '$lib/domain/deworming/deworming.js';
-import { normalizeDewormerName } from '$lib/domain/deworming/deworming.js';
+import type { Antiparasitic } from '$lib/domain/antiparasitic/antiparasitic.js';
+import { normalizeAntiparasiticName } from '$lib/domain/antiparasitic/antiparasitic.js';
 import { parsePreventiveAliases, parsePreventiveSpecies, stringifyPreventiveAliases, stringifyPreventiveSpecies } from '$lib/domain/preventive/catalog.js';
 import { FIELD_LIMITS, assertTextLimit } from '$lib/domain/shared/field-limits.js';
 import type { Vaccine } from '$lib/domain/vaccine/vaccine.js';
 import { normalizeVaccineName } from '$lib/domain/vaccine/vaccine.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
-export type PreventiveCatalogKind = 'vaccine' | 'dewormer';
-export type PreventiveCatalogItem = Vaccine | Dewormer;
+export type PreventiveCatalogKind = 'vaccine' | 'antiparasitic';
+export type PreventiveCatalogItem = Vaccine | Antiparasitic;
 
 interface PreventiveCatalogItemRow {
 	id: number;
@@ -42,12 +42,12 @@ const catalogConfigs: Record<PreventiveCatalogKind, PreventiveCatalogConfig> = {
 		saveFailedError: 'vaccine_save_failed',
 		normalize: normalizeVaccineName
 	},
-	dewormer: {
-		nameLimit: FIELD_LIMITS.dewormerName,
-		normalizedNameLimit: FIELD_LIMITS.dewormerNormalizedName,
-		requiredError: 'deworming_name_required',
-		saveFailedError: 'deworming_save_failed',
-		normalize: normalizeDewormerName
+	antiparasitic: {
+		nameLimit: FIELD_LIMITS.antiparasiticName,
+		normalizedNameLimit: FIELD_LIMITS.antiparasiticNormalizedName,
+		requiredError: 'antiparasitic_name_required',
+		saveFailedError: 'antiparasitic_save_failed',
+		normalize: normalizeAntiparasiticName
 	}
 };
 

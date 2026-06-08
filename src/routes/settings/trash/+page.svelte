@@ -18,7 +18,7 @@
 		{ kind: 'owner', titleKey: 'trash.owners' },
 		{ kind: 'pet', titleKey: 'trash.pets' },
 		{ kind: 'vaccination', titleKey: 'trash.vaccinations' },
-		{ kind: 'deworming', titleKey: 'trash.dewormings' },
+		{ kind: 'antiparasiticTreatment', titleKey: 'trash.antiparasiticTreatments' },
 		{ kind: 'protocol', titleKey: 'trash.protocols' },
 		{ kind: 'record', titleKey: 'trash.records' }
 	];

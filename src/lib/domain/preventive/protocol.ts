@@ -1,6 +1,6 @@
 import type { KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
 
-export type PreventiveProtocolKind = 'vaccine' | 'dewormer';
+export type PreventiveProtocolKind = 'vaccine' | 'antiparasitic';
 export type PreventiveValidityUnit = 'days' | 'months' | 'years';
 
 export interface PreventiveProtocolCatalogItem {

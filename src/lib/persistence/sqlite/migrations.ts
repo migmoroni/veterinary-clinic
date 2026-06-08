@@ -14,7 +14,7 @@ interface RunMigrationsOptions {
 	createIndexes?: boolean;
 }
 
-type DefaultPreventiveKind = 'vaccine' | 'dewormer';
+type DefaultPreventiveKind = 'vaccine' | 'antiparasitic';
 
 interface DefaultPreventiveCatalogItem {
 	kind: DefaultPreventiveKind;
@@ -42,18 +42,18 @@ const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 	{ kind: 'vaccine', name: 'Nobivac Tricat Trio', species: ['feline'], aliases: ['tricat', 'tricat trio', 'tríplice felina', 'triplice felina'] },
 	{ kind: 'vaccine', name: 'Felocell CVR', species: ['feline'], aliases: ['felocell', 'felocell cvr', 'tríplice felina', 'triplice felina'] },
 	{ kind: 'vaccine', name: 'Versifel FeLV', species: ['feline'], aliases: ['versifel', 'versifel felv', 'leucemia felina'] },
-	{ kind: 'dewormer', name: 'Praziquantel + Pamoato de pirantel + Febantel', species: ['canine'], aliases: ['drontal plus', 'endogard', 'canex premium', 'vermifugo amplo espectro', 'tenicida'] },
-	{ kind: 'dewormer', name: 'Praziquantel + Pamoato de pirantel', species: ['feline'], aliases: ['drontal gatos', 'drontal cats', 'vermifugo gatos', 'tenicida'] },
-	{ kind: 'dewormer', name: 'Milbemicina oxima + Praziquantel', species: ['canine', 'feline'], aliases: ['milbemax', 'milpro', 'milbemicina', 'praziquantel'] },
-	{ kind: 'dewormer', name: 'Febantel + Pamoato de pirantel + Praziquantel', species: ['canine'], aliases: ['drontal', 'drontal plus sabor', 'endoparasitas'] },
-	{ kind: 'dewormer', name: 'Fenbendazol', species: ['canine', 'feline'], aliases: ['panacur', 'fembendazol', 'giardia', 'nematódeos', 'nematodeos'] },
-	{ kind: 'dewormer', name: 'Febantel', species: ['canine'], aliases: ['giardicid', 'giardia', 'verme redondo'] },
-	{ kind: 'dewormer', name: 'Selamectina', species: ['canine', 'feline'], aliases: ['revolution', 'stronghold', 'endectocida'] },
-	{ kind: 'dewormer', name: 'Moxidectina + Imidacloprida', species: ['canine', 'feline'], aliases: ['advocate', 'advantage multi', 'endectocida'] },
-	{ kind: 'dewormer', name: 'Emodepsida + Praziquantel', species: ['feline'], aliases: ['profender', 'vermifugo topico gatos'] },
-	{ kind: 'dewormer', name: 'Afoxolaner + Milbemicina oxima', species: ['canine'], aliases: ['nexgard spectra', 'endectocida', 'milbemicina'] },
-	{ kind: 'dewormer', name: 'Sarolaner + Moxidectina + Pirantel', species: ['canine'], aliases: ['simparic trio', 'endectocida', 'pirantel'] },
-	{ kind: 'dewormer', name: 'Ivermectina', species: ['canine'], aliases: ['ivermectina oral', 'endectocida'] }
+	{ kind: 'antiparasitic', name: 'Praziquantel + Pamoato de pirantel + Febantel', species: ['canine'], aliases: ['drontal plus', 'endogard', 'canex premium', 'antiparasitario amplo espectro', 'tenicida'] },
+	{ kind: 'antiparasitic', name: 'Praziquantel + Pamoato de pirantel', species: ['feline'], aliases: ['drontal gatos', 'drontal cats', 'antiparasitario gatos', 'tenicida'] },
+	{ kind: 'antiparasitic', name: 'Milbemicina oxima + Praziquantel', species: ['canine', 'feline'], aliases: ['milbemax', 'milpro', 'milbemicina', 'praziquantel'] },
+	{ kind: 'antiparasitic', name: 'Febantel + Pamoato de pirantel + Praziquantel', species: ['canine'], aliases: ['drontal', 'drontal plus sabor', 'endoparasitas'] },
+	{ kind: 'antiparasitic', name: 'Fenbendazol', species: ['canine', 'feline'], aliases: ['panacur', 'fembendazol', 'giardia', 'nematódeos', 'nematodeos'] },
+	{ kind: 'antiparasitic', name: 'Febantel', species: ['canine'], aliases: ['giardicid', 'giardia', 'verme redondo'] },
+	{ kind: 'antiparasitic', name: 'Selamectina', species: ['canine', 'feline'], aliases: ['revolution', 'stronghold', 'endectocida'] },
+	{ kind: 'antiparasitic', name: 'Moxidectina + Imidacloprida', species: ['canine', 'feline'], aliases: ['advocate', 'advantage multi', 'endectocida'] },
+	{ kind: 'antiparasitic', name: 'Emodepsida + Praziquantel', species: ['feline'], aliases: ['profender', 'antiparasitario topico gatos'] },
+	{ kind: 'antiparasitic', name: 'Afoxolaner + Milbemicina oxima', species: ['canine'], aliases: ['nexgard spectra', 'endectocida', 'milbemicina'] },
+	{ kind: 'antiparasitic', name: 'Sarolaner + Moxidectina + Pirantel', species: ['canine'], aliases: ['simparic trio', 'endectocida', 'pirantel'] },
+	{ kind: 'antiparasitic', name: 'Ivermectina', species: ['canine'], aliases: ['ivermectina oral', 'endectocida'] }
 ];
 
 function normalizePreventiveCatalogName(value: string): string {
@@ -202,7 +202,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS preventive_catalog_items (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'dewormer')),
+			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
 			name TEXT NOT NULL,
 			normalized_name TEXT NOT NULL,
 			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.preventiveSpeciesJson)}),
@@ -211,15 +211,15 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
 			UNIQUE(kind, normalized_name),
-			CHECK((kind = 'vaccine' AND ${requiredTextCheck('name', FIELD_LIMITS.vaccineName)}) OR (kind = 'dewormer' AND ${requiredTextCheck('name', FIELD_LIMITS.dewormerName)})),
-			CHECK((kind = 'vaccine' AND ${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedName)}) OR (kind = 'dewormer' AND ${requiredTextCheck('normalized_name', FIELD_LIMITS.dewormerNormalizedName)}))
+			CHECK((kind = 'vaccine' AND ${requiredTextCheck('name', FIELD_LIMITS.vaccineName)}) OR (kind = 'antiparasitic' AND ${requiredTextCheck('name', FIELD_LIMITS.antiparasiticName)})),
+			CHECK((kind = 'vaccine' AND ${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedName)}) OR (kind = 'antiparasitic' AND ${requiredTextCheck('normalized_name', FIELD_LIMITS.antiparasiticNormalizedName)}))
 		)
 	`);
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS preventive_protocols (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'dewormer')),
+			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
 			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.preventiveProtocolName)}),
 			normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.preventiveProtocolNormalizedName)}),
 			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.preventiveSpeciesJson)}),
@@ -259,7 +259,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
 			FOREIGN KEY (protocol_id) REFERENCES preventive_protocols(id) ON DELETE CASCADE,
-			CHECK((validity_unit = 'days' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityDays, FIELD_LIMITS.dewormingValidityDays)}) OR (validity_unit = 'months' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityMonths, FIELD_LIMITS.dewormingValidityMonths)}) OR (validity_unit = 'years' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityYears, FIELD_LIMITS.dewormingValidityYears)}))
+			CHECK((validity_unit = 'days' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityDays, FIELD_LIMITS.antiparasiticTreatmentValidityDays)}) OR (validity_unit = 'months' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityMonths, FIELD_LIMITS.antiparasiticTreatmentValidityMonths)}) OR (validity_unit = 'years' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityYears, FIELD_LIMITS.antiparasiticTreatmentValidityYears)}))
 		)
 	`);
 
@@ -285,23 +285,23 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	`);
 
 	await database.execute(`
-		CREATE TABLE IF NOT EXISTS pet_dewormings (
+		CREATE TABLE IF NOT EXISTS pet_antiparasitic_treatments (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			pet_id INTEGER NOT NULL,
 			applied_at TEXT NOT NULL DEFAULT CURRENT_DATE CHECK(length(applied_at) <= ${FIELD_LIMITS.isoDate}),
-			dewormer_name TEXT NOT NULL CHECK(${requiredTextCheck('dewormer_name', FIELD_LIMITS.dewormerName)}),
-			dewormer_normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('dewormer_normalized_name', FIELD_LIMITS.dewormerNormalizedName)}),
-			dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', FIELD_LIMITS.dewormingDose)}),
+			antiparasitic_name TEXT NOT NULL CHECK(${requiredTextCheck('antiparasitic_name', FIELD_LIMITS.antiparasiticName)}),
+			antiparasitic_normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('antiparasitic_normalized_name', FIELD_LIMITS.antiparasiticNormalizedName)}),
+			dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', FIELD_LIMITS.antiparasiticTreatmentDose)}),
 			validity_value INTEGER NOT NULL CHECK(validity_value > 0),
 			validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months', 'years')),
-			observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.dewormingObservation)}),
+			observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.antiparasiticTreatmentObservation)}),
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			validity_ignored_at TEXT,
 			updated_at TEXT,
 			deleted_at TEXT,
 			purge_after TEXT,
 			FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE RESTRICT,
-			CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.dewormingValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.dewormingValidityMonths}) OR (validity_unit = 'years' AND validity_value <= ${FIELD_LIMITS.dewormingValidityYears}))
+			CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.antiparasiticTreatmentValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.antiparasiticTreatmentValidityMonths}) OR (validity_unit = 'years' AND validity_value <= ${FIELD_LIMITS.antiparasiticTreatmentValidityYears}))
 		)
 	`);
 
@@ -340,12 +340,12 @@ export async function createCurrentIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_latest_active ON pet_vaccinations(pet_id, vaccine_normalized_name, applied_at DESC, id DESC) WHERE deleted_at IS NULL AND validity_ignored_at IS NULL');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_validity_ignored_at ON pet_vaccinations(validity_ignored_at)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_deleted_at ON pet_vaccinations(deleted_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_dewormings_pet_id ON pet_dewormings(pet_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_dewormings_applied_at ON pet_dewormings(applied_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_dewormings_dewormer_normalized_name ON pet_dewormings(dewormer_normalized_name)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_dewormings_latest_active ON pet_dewormings(pet_id, dewormer_normalized_name, applied_at DESC, id DESC) WHERE deleted_at IS NULL AND validity_ignored_at IS NULL');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_dewormings_validity_ignored_at ON pet_dewormings(validity_ignored_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_dewormings_deleted_at ON pet_dewormings(deleted_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_pet_id ON pet_antiparasitic_treatments(pet_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_applied_at ON pet_antiparasitic_treatments(applied_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_antiparasitic_normalized_name ON pet_antiparasitic_treatments(antiparasitic_normalized_name)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_latest_active ON pet_antiparasitic_treatments(pet_id, antiparasitic_normalized_name, applied_at DESC, id DESC) WHERE deleted_at IS NULL AND validity_ignored_at IS NULL');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_validity_ignored_at ON pet_antiparasitic_treatments(validity_ignored_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_deleted_at ON pet_antiparasitic_treatments(deleted_at)');
 }
 
 export async function runMigrations(database: Database, options: RunMigrationsOptions = {}): Promise<void> {

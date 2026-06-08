@@ -80,8 +80,8 @@ export const CSV_TABLES: CsvTableDefinition[] = [
 		orderBy: 'pet_id, applied_at, id'
 	},
 	{
-		name: 'pet_dewormings',
-		columns: ['id', 'pet_id', 'applied_at', 'dewormer_name', 'dewormer_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after'],
+		name: 'pet_antiparasitic_treatments',
+		columns: ['id', 'pet_id', 'applied_at', 'antiparasitic_name', 'antiparasitic_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after'],
 		orderBy: 'pet_id, applied_at, id'
 	}
 ];

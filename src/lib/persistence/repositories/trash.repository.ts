@@ -1,6 +1,6 @@
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
-export type TrashKind = 'owner' | 'pet' | 'record' | 'vaccination' | 'deworming' | 'protocol';
+export type TrashKind = 'owner' | 'pet' | 'record' | 'vaccination' | 'antiparasiticTreatment' | 'protocol';
 
 export interface TrashItem {
 	kind: TrashKind;
@@ -91,20 +91,20 @@ export async function listTrashItems(): Promise<TrashItem[]> {
 
 		 UNION ALL
 
-		 SELECT 'deworming' AS kind,
-			pet_dewormings.id,
-			pet_dewormings.dewormer_name AS title,
+		 SELECT 'antiparasiticTreatment' AS kind,
+			pet_antiparasitic_treatments.id,
+			pet_antiparasitic_treatments.antiparasitic_name AS title,
 			COALESCE(
-				pets.name || ' · ' || ${ownerNamesForPetSql} || ' · ' || pet_dewormings.applied_at,
-				pets.name || ' · ' || pet_dewormings.applied_at,
-				pet_dewormings.applied_at,
+				pets.name || ' · ' || ${ownerNamesForPetSql} || ' · ' || pet_antiparasitic_treatments.applied_at,
+				pets.name || ' · ' || pet_antiparasitic_treatments.applied_at,
+				pet_antiparasitic_treatments.applied_at,
 				''
 			) AS subtitle,
-			pet_dewormings.deleted_at,
-			pet_dewormings.purge_after
-		 FROM pet_dewormings
-		 LEFT JOIN pets ON pets.id = pet_dewormings.pet_id
-		 WHERE pet_dewormings.deleted_at IS NOT NULL
+			pet_antiparasitic_treatments.deleted_at,
+			pet_antiparasitic_treatments.purge_after
+		 FROM pet_antiparasitic_treatments
+		 LEFT JOIN pets ON pets.id = pet_antiparasitic_treatments.pet_id
+		 WHERE pet_antiparasitic_treatments.deleted_at IS NOT NULL
 
 		 UNION ALL
 
@@ -145,7 +145,7 @@ export async function restoreTrashItem(kind: TrashKind, id: number): Promise<voi
 		await execute('UPDATE pets SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
 		await execute('UPDATE medical_records SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE pet_id = $1', [id]);
 		await execute('UPDATE pet_vaccinations SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE pet_id = $1', [id]);
-		await execute('UPDATE pet_dewormings SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE pet_id = $1', [id]);
+		await execute('UPDATE pet_antiparasitic_treatments SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE pet_id = $1', [id]);
 		return;
 	}
 
@@ -179,10 +179,10 @@ export async function restoreTrashItem(kind: TrashKind, id: number): Promise<voi
 	await execute(
 		`UPDATE pets
 		 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
-		 WHERE id = (SELECT pet_id FROM pet_dewormings WHERE id = $1)`,
+		 WHERE id = (SELECT pet_id FROM pet_antiparasitic_treatments WHERE id = $1)`,
 		[id]
 	);
-	await execute('UPDATE pet_dewormings SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
+	await execute('UPDATE pet_antiparasitic_treatments SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
 }
 
 export async function hardDeleteTrashItem(kind: TrashKind, id: number): Promise<void> {
@@ -197,7 +197,7 @@ export async function hardDeleteTrashItem(kind: TrashKind, id: number): Promise<
 
 	if (kind === 'pet') {
 		await execute('DELETE FROM pet_vaccinations WHERE pet_id = $1', [id]);
-		await execute('DELETE FROM pet_dewormings WHERE pet_id = $1', [id]);
+		await execute('DELETE FROM pet_antiparasitic_treatments WHERE pet_id = $1', [id]);
 		await execute('DELETE FROM medical_records WHERE pet_id = $1', [id]);
 		await execute('DELETE FROM pet_owners WHERE pet_id = $1', [id]);
 		await execute('DELETE FROM pets WHERE id = $1', [id]);
@@ -219,7 +219,7 @@ export async function hardDeleteTrashItem(kind: TrashKind, id: number): Promise<
 		return;
 	}
 
-	await execute('DELETE FROM pet_dewormings WHERE id = $1', [id]);
+	await execute('DELETE FROM pet_antiparasitic_treatments WHERE id = $1', [id]);
 }
 
 export async function purgeExpiredTrash(now = new Date().toISOString()): Promise<void> {
@@ -239,7 +239,7 @@ export async function purgeExpiredTrash(now = new Date().toISOString()): Promise
 		[now]
 	);
 	await execute(
-		`DELETE FROM pet_dewormings
+		`DELETE FROM pet_antiparasitic_treatments
 		 WHERE deleted_at IS NOT NULL
 			AND (
 				purge_after <= $1

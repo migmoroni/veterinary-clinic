@@ -38,7 +38,7 @@ interface PreventiveProtocolDoseRow {
 }
 
 function normalizeKind(value: string): PreventiveProtocolKind {
-	if (value === 'vaccine' || value === 'dewormer') return value;
+	if (value === 'vaccine' || value === 'antiparasitic') return value;
 	throw new Error('protocol_kind_required');
 }
 
@@ -66,10 +66,10 @@ function normalizeValidityValue(value: number, unit: PreventiveValidityUnit): nu
 	const normalized = Number.isFinite(value) ? Math.trunc(value) : 0;
 	const max =
 		unit === 'days'
-			? Math.max(FIELD_LIMITS.vaccineValidityDays, FIELD_LIMITS.dewormingValidityDays)
+			? Math.max(FIELD_LIMITS.vaccineValidityDays, FIELD_LIMITS.antiparasiticTreatmentValidityDays)
 			: unit === 'months'
-				? Math.max(FIELD_LIMITS.vaccineValidityMonths, FIELD_LIMITS.dewormingValidityMonths)
-				: Math.max(FIELD_LIMITS.vaccineValidityYears, FIELD_LIMITS.dewormingValidityYears);
+				? Math.max(FIELD_LIMITS.vaccineValidityMonths, FIELD_LIMITS.antiparasiticTreatmentValidityMonths)
+				: Math.max(FIELD_LIMITS.vaccineValidityYears, FIELD_LIMITS.antiparasiticTreatmentValidityYears);
 	if (normalized <= 0 || normalized > max) throw new Error('protocol_validity_required');
 	return normalized;
 }
