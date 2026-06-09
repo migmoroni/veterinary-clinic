@@ -1,4 +1,5 @@
 import type { OwnerContact, OwnerContactInput } from '$lib/domain/owner/owner.js';
+import type { ImageCollectionItem, ImageCollectionItemInput } from '$lib/domain/image-collection/image-collection.js';
 
 export interface VeterinarianProfile {
 	id: number;
@@ -30,6 +31,7 @@ export interface Workplace {
 	country: string;
 	postalCode: string | null;
 	contacts: OwnerContact[];
+	images: ImageCollectionItem[];
 	createdAt: string | null;
 	updatedAt: string | null;
 }
@@ -46,6 +48,7 @@ export interface WorkplaceInput {
 	country: string;
 	postalCode: string;
 	contacts: OwnerContactInput[];
+	images: ImageCollectionItemInput[];
 }
 
 export interface PracticeProfiles {

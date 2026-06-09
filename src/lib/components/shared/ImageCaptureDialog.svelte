@@ -8,41 +8,24 @@
 	const DEFAULT_MAX_BYTES = 1_000_000;
 	const DEFAULT_PREVIEW_SIZE = 320;
 	const DEFAULT_MIN_EXPORT_SIZE = 256;
-	const DESKTOP_CAMERA_CONSTRAINTS_CANDIDATES: MediaStreamConstraints[] = [{ audio: false, video: true }];
-	const MOBILE_CAMERA_CONSTRAINTS_CANDIDATES: MediaStreamConstraints[] = [
-		{
-			audio: false,
-			video: {
-				width: { ideal: 1280 },
-				height: { ideal: 720 },
-				facingMode: { exact: 'environment' }
-			}
-		},
-		{
-			audio: false,
-			video: {
-				width: { ideal: 1280 },
-				height: { ideal: 720 },
-				facingMode: { ideal: 'environment' }
-			}
-		},
-		{
-			audio: false,
-			video: {
-				width: { ideal: 1280 },
-				height: { ideal: 720 },
-				facingMode: { ideal: 'user' }
-			}
-		},
-		...DESKTOP_CAMERA_CONSTRAINTS_CANDIDATES
-	];
-
 	type CameraDevice = { deviceId: string; label: string };
 	type VideoFrameCallbackMetadata = { width?: number; height?: number; presentedFrames?: number };
 	type VideoFrameCallback = (now: number, metadata: VideoFrameCallbackMetadata) => void;
 	type VideoFrameElement = HTMLVideoElement & {
 		requestVideoFrameCallback?: (callback: VideoFrameCallback) => number;
 		cancelVideoFrameCallback?: (handle: number) => void;
+	};
+	type CameraImageCapture = {
+		takePhoto: () => Promise<Blob>;
+	};
+	type CameraImageCaptureConstructor = new (track: MediaStreamTrack) => CameraImageCapture;
+	type ImageFrameOption = {
+		id: string;
+		label: TranslationKey;
+		frameWidth: number;
+		frameHeight: number;
+		previewWidth: number;
+		previewHeight: number;
 	};
 	type ImageCaptureDialogLabels = {
 		title: TranslationKey;
@@ -67,10 +50,12 @@
 		tooLarge: TranslationKey;
 		saving: TranslationKey;
 		cancel: TranslationKey;
+		frameOption?: TranslationKey;
 	};
 
 	let {
 		initialImageBytes = null,
+		initialOriginalImageBytes = null,
 		canRemove = false,
 		frameSize = DEFAULT_FRAME_SIZE,
 		maxBytes = DEFAULT_MAX_BYTES,
@@ -78,12 +63,23 @@
 		minExportSize = DEFAULT_MIN_EXPORT_SIZE,
 		outputMimeType = 'image/png',
 		outputQuality = undefined,
+		frameOptions = [],
+		initialFrameOptionId = '',
+		frameClass = 'rounded-full',
+		previewContainerClass = 'max-w-88',
+		preserveOriginal = false,
+		originalMaxBytes = 15_000_000,
+		originalMaxDimension = 3200,
+		originalMinDimension = 1400,
+		cameraIdealWidth = 1280,
+		cameraIdealHeight = 720,
 		labels,
 		onApply,
 		onRemove,
 		onClose
 	}: {
 		initialImageBytes?: Uint8Array | null;
+		initialOriginalImageBytes?: Uint8Array | null;
 		canRemove?: boolean;
 		frameSize?: number;
 		maxBytes?: number;
@@ -91,8 +87,18 @@
 		minExportSize?: number;
 		outputMimeType?: string;
 		outputQuality?: number;
+		frameOptions?: readonly ImageFrameOption[];
+		initialFrameOptionId?: string;
+		frameClass?: string;
+		previewContainerClass?: string;
+		preserveOriginal?: boolean;
+		originalMaxBytes?: number;
+		originalMaxDimension?: number;
+		originalMinDimension?: number;
+		cameraIdealWidth?: number;
+		cameraIdealHeight?: number;
 		labels: ImageCaptureDialogLabels;
-		onApply: (bytes: Uint8Array) => void;
+		onApply: (bytes: Uint8Array, originalBytes: Uint8Array) => void;
 		onRemove?: () => void;
 		onClose: () => void;
 	} = $props();
@@ -105,6 +111,7 @@
 	let sourceWidth = $state(0);
 	let sourceHeight = $state(0);
 	let sourceObjectUrl = $state<string | null>(null);
+	let preservedOriginalBytes = $state<Uint8Array | null>(null);
 
 	let zoom = $state(1);
 	let offsetX = $state(0);
@@ -117,6 +124,8 @@
 	let selectedCameraDeviceId = $state('');
 	let processing = $state(false);
 	let errorKey = $state<TranslationKey | null>(null);
+	let selectedFrameOptionId = $state('');
+	let frameOptionWasSelected = $state(false);
 
 	let dragPointerId = $state<number | null>(null);
 	let dragStartX = 0;
@@ -126,6 +135,11 @@
 
 	const hasImage = $derived(Boolean(sourceImage && sourceWidth > 0 && sourceHeight > 0));
 	const hasRemoveAction = $derived(Boolean(canRemove && onRemove));
+	const selectedFrameOption = $derived(frameOptions.find((option) => option.id === selectedFrameOptionId) ?? frameOptions[0] ?? null);
+	const effectiveFrameWidth = $derived(selectedFrameOption?.frameWidth ?? frameSize);
+	const effectiveFrameHeight = $derived(selectedFrameOption?.frameHeight ?? frameSize);
+	const effectivePreviewWidth = $derived(selectedFrameOption?.previewWidth ?? previewSize);
+	const effectivePreviewHeight = $derived(selectedFrameOption?.previewHeight ?? previewSize);
 
 	function bytesToArrayBuffer(bytes: Uint8Array): ArrayBuffer {
 		const buffer = new ArrayBuffer(bytes.byteLength);
@@ -138,11 +152,15 @@
 	}
 
 	function cameraConstraintsCandidates(): MediaStreamConstraints[] {
-		if (typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-			return MOBILE_CAMERA_CONSTRAINTS_CANDIDATES;
-		}
+		const desktopCandidates: MediaStreamConstraints[] = [{ audio: false, video: true }];
 
-		return DESKTOP_CAMERA_CONSTRAINTS_CANDIDATES;
+		if (typeof navigator === 'undefined' || !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) return desktopCandidates;
+
+		return [
+			{ audio: false, video: { facingMode: { ideal: 'environment' } } },
+			{ audio: false, video: { facingMode: { ideal: 'user' } } },
+			...desktopCandidates
+		];
 	}
 
 	function cameraConstraintKey(constraints: MediaStreamConstraints): string {
@@ -312,20 +330,32 @@
 		return waitForCameraVideo(cameraVideo);
 	}
 
-	function computeDrawMetrics(currentFrameSize: number) {
+	async function improveCameraResolution(stream: MediaStream): Promise<void> {
+		const videoTrack = stream.getVideoTracks()[0];
+		if (!videoTrack?.applyConstraints) return;
+
+		await videoTrack
+			.applyConstraints({
+				width: { ideal: cameraIdealWidth },
+				height: { ideal: cameraIdealHeight }
+			})
+			.catch(() => undefined);
+	}
+
+	function computeDrawMetrics(currentFrameWidth: number, currentFrameHeight: number) {
 		if (!sourceImage || sourceWidth <= 0 || sourceHeight <= 0) return null;
 
-		const baseScale = Math.max(currentFrameSize / sourceWidth, currentFrameSize / sourceHeight);
+		const baseScale = Math.max(currentFrameWidth / sourceWidth, currentFrameHeight / sourceHeight);
 		const drawWidth = sourceWidth * baseScale * zoom;
 		const drawHeight = sourceHeight * baseScale * zoom;
-		const maxOffsetX = Math.max(0, (drawWidth - currentFrameSize) / 2);
-		const maxOffsetY = Math.max(0, (drawHeight - currentFrameSize) / 2);
+		const maxOffsetX = Math.max(0, (drawWidth - currentFrameWidth) / 2);
+		const maxOffsetY = Math.max(0, (drawHeight - currentFrameHeight) / 2);
 
 		return { drawWidth, drawHeight, maxOffsetX, maxOffsetY };
 	}
 
-	function clampOffsets(currentFrameSize: number, nextOffsetX: number, nextOffsetY: number) {
-		const metrics = computeDrawMetrics(currentFrameSize);
+	function clampOffsets(currentFrameWidth: number, currentFrameHeight: number, nextOffsetX: number, nextOffsetY: number) {
+		const metrics = computeDrawMetrics(currentFrameWidth, currentFrameHeight);
 		if (!metrics) return { x: 0, y: 0 };
 
 		return {
@@ -341,15 +371,15 @@
 		const context = canvas.getContext('2d');
 		if (!context) return;
 
-		context.clearRect(0, 0, previewSize, previewSize);
+		context.clearRect(0, 0, effectivePreviewWidth, effectivePreviewHeight);
 		if (!sourceImage) return;
 
-		const metrics = computeDrawMetrics(previewSize);
+		const metrics = computeDrawMetrics(effectivePreviewWidth, effectivePreviewHeight);
 		if (!metrics) return;
 
-		const clampedOffsets = clampOffsets(previewSize, offsetX, offsetY);
-		const left = (previewSize - metrics.drawWidth) / 2 + clampedOffsets.x;
-		const top = (previewSize - metrics.drawHeight) / 2 + clampedOffsets.y;
+		const clampedOffsets = clampOffsets(effectivePreviewWidth, effectivePreviewHeight, offsetX, offsetY);
+		const left = (effectivePreviewWidth - metrics.drawWidth) / 2 + clampedOffsets.x;
+		const top = (effectivePreviewHeight - metrics.drawHeight) / 2 + clampedOffsets.y;
 
 		context.imageSmoothingEnabled = true;
 		context.imageSmoothingQuality = 'high';
@@ -364,9 +394,30 @@
 		zoom;
 		offsetX;
 		offsetY;
-		previewSize;
+		effectivePreviewWidth;
+		effectivePreviewHeight;
 		renderPreview();
 	});
+
+	function selectClosestFrameOption(width: number, height: number) {
+		if (frameOptionWasSelected || frameOptions.length === 0 || width <= 0 || height <= 0) return;
+
+		const sourceRatio = width / height;
+		const closest = frameOptions.reduce((best, option) => {
+			const difference = Math.abs(option.frameWidth / option.frameHeight - sourceRatio);
+			const bestDifference = Math.abs(best.frameWidth / best.frameHeight - sourceRatio);
+			return difference < bestDifference ? option : best;
+		});
+		selectedFrameOptionId = closest.id;
+	}
+
+	function selectFrameOption(id: string) {
+		selectedFrameOptionId = id;
+		frameOptionWasSelected = true;
+		zoom = 1;
+		offsetX = 0;
+		offsetY = 0;
+	}
 
 	async function loadImage(url: string): Promise<HTMLImageElement> {
 		const image = new Image();
@@ -387,7 +438,7 @@
 		sourceObjectUrl = null;
 	}
 
-	async function setSourceFromBlob(blob: Blob): Promise<void> {
+	async function setSourceFromBlob(blob: Blob, originalBytesToPreserve: Uint8Array | null = null): Promise<void> {
 		if (typeof URL === 'undefined') throw new Error('image_url_unavailable');
 
 		const nextUrl = URL.createObjectURL(blob);
@@ -399,6 +450,8 @@
 			sourceImage = image;
 			sourceWidth = image.naturalWidth;
 			sourceHeight = image.naturalHeight;
+			preservedOriginalBytes = originalBytesToPreserve;
+			selectClosestFrameOption(sourceWidth, sourceHeight);
 			zoom = 1;
 			offsetX = 0;
 			offsetY = 0;
@@ -409,9 +462,31 @@
 		}
 	}
 
-	async function loadSourceFromBytes(bytes: Uint8Array): Promise<void> {
+	async function loadSourceFromBytes(bytes: Uint8Array, preserveAsOriginal = false): Promise<void> {
 		if (typeof Blob === 'undefined') return;
-		await setSourceFromBlob(new Blob([bytesToArrayBuffer(bytes)], { type: outputMimeType }));
+		await setSourceFromBlob(new Blob([bytesToArrayBuffer(bytes)], { type: outputMimeType }), preserveAsOriginal ? bytes : null);
+	}
+
+	async function selectInitialFrameFromBytes(bytes: Uint8Array): Promise<void> {
+		if (frameOptions.length === 0 || typeof Blob === 'undefined' || typeof URL === 'undefined') return;
+
+		const url = URL.createObjectURL(new Blob([bytesToArrayBuffer(bytes)], { type: outputMimeType }));
+		try {
+			const image = await loadImage(url);
+			selectClosestFrameOption(image.naturalWidth, image.naturalHeight);
+			frameOptionWasSelected = true;
+		} finally {
+			URL.revokeObjectURL(url);
+		}
+	}
+
+	async function loadInitialImage(): Promise<void> {
+		const originalBytes = initialOriginalImageBytes?.length ? initialOriginalImageBytes : null;
+		const croppedBytes = initialImageBytes?.length ? initialImageBytes : null;
+		if (!originalBytes && !croppedBytes) return;
+
+		if (originalBytes && croppedBytes) await selectInitialFrameFromBytes(croppedBytes);
+		await loadSourceFromBytes(originalBytes ?? croppedBytes!, Boolean(originalBytes));
 	}
 
 	function closeDialog() {
@@ -536,36 +611,62 @@
 		});
 	}
 
-	async function captureCamera() {
-		if (!cameraVideo) {
-			errorKey = labels.cameraUnavailable;
-			return;
+	async function takeNativeCameraPhoto(): Promise<Blob | null> {
+		const videoTrack = cameraStream?.getVideoTracks()[0];
+		if (!videoTrack) return null;
+
+		const ImageCaptureApi = (globalThis as typeof globalThis & { ImageCapture?: CameraImageCaptureConstructor }).ImageCapture;
+		if (!ImageCaptureApi) return null;
+
+		try {
+			const blob = await new ImageCaptureApi(videoTrack).takePhoto();
+			return blob.size > 0 ? blob : null;
+		} catch {
+			return null;
 		}
+	}
+
+	async function captureCurrentVideoFrame(): Promise<Blob> {
+		if (!cameraVideo || !cameraStream) throw new Error('camera_unavailable');
+
+		await improveCameraResolution(cameraStream);
+		await cameraVideo.play().catch(() => undefined);
+		await waitForCameraVideo(cameraVideo, 2000);
 
 		const width = cameraVideo.videoWidth;
 		const height = cameraVideo.videoHeight;
-		if (width <= 0 || height <= 0) {
+		if (width <= 0 || height <= 0) throw new Error('camera_unavailable');
+
+		const canvas = document.createElement('canvas');
+		canvas.width = width;
+		canvas.height = height;
+
+		const context = canvas.getContext('2d');
+		if (!context) throw new Error('image_context_failed');
+
+		context.imageSmoothingEnabled = true;
+		context.imageSmoothingQuality = 'high';
+		context.drawImage(cameraVideo, 0, 0, width, height);
+
+		// Keep the camera frame lossless until the final crop and original are encoded.
+		return canvasToBlob(canvas, 'image/png');
+	}
+
+	async function captureCamera() {
+		if (!cameraVideo || !cameraStream) {
 			errorKey = labels.cameraUnavailable;
 			return;
 		}
 
+		cameraBusy = true;
 		try {
-			const canvas = document.createElement('canvas');
-			canvas.width = width;
-			canvas.height = height;
-
-			const context = canvas.getContext('2d');
-			if (!context) throw new Error('image_context_failed');
-
-			context.imageSmoothingEnabled = true;
-			context.imageSmoothingQuality = 'high';
-			context.drawImage(cameraVideo, 0, 0, width, height);
-
-			const blob = await canvasToBlob(canvas, outputMimeType, outputQuality);
+			const blob = (await takeNativeCameraPhoto()) ?? (await captureCurrentVideoFrame());
 			await setSourceFromBlob(blob);
 			stopCamera();
 		} catch {
 			errorKey = labels.processingError;
+		} finally {
+			cameraBusy = false;
 		}
 	}
 
@@ -587,7 +688,7 @@
 
 		const deltaX = event.clientX - dragStartX;
 		const deltaY = event.clientY - dragStartY;
-		const nextOffsets = clampOffsets(previewSize, dragStartOffsetX + deltaX, dragStartOffsetY + deltaY);
+		const nextOffsets = clampOffsets(effectivePreviewWidth, effectivePreviewHeight, dragStartOffsetX + deltaX, dragStartOffsetY + deltaY);
 		offsetX = nextOffsets.x;
 		offsetY = nextOffsets.y;
 	}
@@ -609,23 +710,25 @@
 		if (!Number.isFinite(parsed)) return;
 
 		zoom = clamp(parsed, 1, 4);
-		const nextOffsets = clampOffsets(previewSize, offsetX, offsetY);
+		const nextOffsets = clampOffsets(effectivePreviewWidth, effectivePreviewHeight, offsetX, offsetY);
 		offsetX = nextOffsets.x;
 		offsetY = nextOffsets.y;
 	}
 
-	async function renderImageBlob(exportSize: number): Promise<Blob> {
+	async function renderImageBlob(exportWidth: number, exportHeight: number): Promise<Blob> {
 		if (!sourceImage) throw new Error('image_source_missing');
 
-		const metrics = computeDrawMetrics(previewSize);
-		if (!metrics) throw new Error('image_metrics_missing');
+		const previewMetrics = computeDrawMetrics(effectivePreviewWidth, effectivePreviewHeight);
+		const exportMetrics = computeDrawMetrics(exportWidth, exportHeight);
+		if (!previewMetrics || !exportMetrics) throw new Error('image_metrics_missing');
 
-		const clamped = clampOffsets(previewSize, offsetX, offsetY);
-		const scale = exportSize / previewSize;
+		const clamped = clampOffsets(effectivePreviewWidth, effectivePreviewHeight, offsetX, offsetY);
+		const normalizedOffsetX = previewMetrics.maxOffsetX > 0 ? clamped.x / previewMetrics.maxOffsetX : 0;
+		const normalizedOffsetY = previewMetrics.maxOffsetY > 0 ? clamped.y / previewMetrics.maxOffsetY : 0;
 
 		const canvas = document.createElement('canvas');
-		canvas.width = exportSize;
-		canvas.height = exportSize;
+		canvas.width = exportWidth;
+		canvas.height = exportHeight;
 
 		const context = canvas.getContext('2d');
 		if (!context) throw new Error('image_context_failed');
@@ -633,26 +736,68 @@
 		context.imageSmoothingEnabled = true;
 		context.imageSmoothingQuality = 'high';
 
-		const drawWidth = metrics.drawWidth * scale;
-		const drawHeight = metrics.drawHeight * scale;
-		const left = ((previewSize - metrics.drawWidth) / 2 + clamped.x) * scale;
-		const top = ((previewSize - metrics.drawHeight) / 2 + clamped.y) * scale;
+		const left = (exportWidth - exportMetrics.drawWidth) / 2 + normalizedOffsetX * exportMetrics.maxOffsetX;
+		const top = (exportHeight - exportMetrics.drawHeight) / 2 + normalizedOffsetY * exportMetrics.maxOffsetY;
 
-		context.drawImage(sourceImage, left, top, drawWidth, drawHeight);
+		context.drawImage(sourceImage, left, top, exportMetrics.drawWidth, exportMetrics.drawHeight);
+		return canvasToBlob(canvas, outputMimeType, outputQuality);
+	}
+
+	async function renderOriginalImageBlob(exportWidth: number, exportHeight: number): Promise<Blob> {
+		if (!sourceImage) throw new Error('image_source_missing');
+
+		const canvas = document.createElement('canvas');
+		canvas.width = exportWidth;
+		canvas.height = exportHeight;
+
+		const context = canvas.getContext('2d');
+		if (!context) throw new Error('image_context_failed');
+
+		context.imageSmoothingEnabled = true;
+		context.imageSmoothingQuality = 'high';
+		context.drawImage(sourceImage, 0, 0, exportWidth, exportHeight);
 		return canvasToBlob(canvas, outputMimeType, outputQuality);
 	}
 
 	async function buildImageBytes(): Promise<Uint8Array> {
-		let exportSize = frameSize;
+		let exportWidth = effectiveFrameWidth;
+		let exportHeight = effectiveFrameHeight;
 
 		for (let attempt = 0; attempt < 12; attempt += 1) {
-			const blob = await renderImageBlob(exportSize);
+			const blob = await renderImageBlob(exportWidth, exportHeight);
 			if (blob.size <= maxBytes) {
 				return new Uint8Array(await blob.arrayBuffer());
 			}
 
-			if (exportSize <= minExportSize) break;
-			exportSize = Math.max(minExportSize, Math.floor(exportSize * 0.85));
+			const shortestSide = Math.min(exportWidth, exportHeight);
+			if (shortestSide <= minExportSize) break;
+
+			const scale = Math.max(0.85, minExportSize / shortestSide);
+			exportWidth = Math.max(1, Math.floor(exportWidth * scale));
+			exportHeight = Math.max(1, Math.floor(exportHeight * scale));
+		}
+
+		throw new Error('image_too_large');
+	}
+
+	async function buildOriginalImageBytes(): Promise<Uint8Array> {
+		if (!sourceImage || sourceWidth <= 0 || sourceHeight <= 0) throw new Error('image_source_missing');
+
+		const initialScale = Math.min(1, originalMaxDimension / Math.max(sourceWidth, sourceHeight));
+		let exportWidth = Math.max(1, Math.round(sourceWidth * initialScale));
+		let exportHeight = Math.max(1, Math.round(sourceHeight * initialScale));
+		const minimumLongestSide = Math.min(originalMinDimension, Math.max(exportWidth, exportHeight));
+
+		for (let attempt = 0; attempt < 12; attempt += 1) {
+			const blob = await renderOriginalImageBlob(exportWidth, exportHeight);
+			if (blob.size <= originalMaxBytes) return new Uint8Array(await blob.arrayBuffer());
+
+			const longestSide = Math.max(exportWidth, exportHeight);
+			if (longestSide <= minimumLongestSide) break;
+
+			const scale = Math.max(0.85, minimumLongestSide / longestSide);
+			exportWidth = Math.max(1, Math.floor(exportWidth * scale));
+			exportHeight = Math.max(1, Math.floor(exportHeight * scale));
 		}
 
 		throw new Error('image_too_large');
@@ -669,7 +814,8 @@
 
 		try {
 			const bytes = await buildImageBytes();
-			onApply(bytes);
+			const originalBytes = preserveOriginal ? preservedOriginalBytes ?? (await buildOriginalImageBytes()) : bytes;
+			onApply(bytes, originalBytes);
 			closeDialog();
 		} catch (error) {
 			errorKey = error instanceof Error && error.message === 'image_too_large' ? labels.tooLarge : labels.processingError;
@@ -684,10 +830,11 @@
 	}
 
 	onMount(() => {
+		selectedFrameOptionId = initialFrameOptionId || frameOptions[0]?.id || '';
 		void refreshCameraDevices();
 
-		if (initialImageBytes && initialImageBytes.length > 0) {
-			void loadSourceFromBytes(initialImageBytes).catch(() => {
+		if (initialOriginalImageBytes?.length || initialImageBytes?.length) {
+			void loadInitialImage().catch(() => {
 				errorKey = labels.processingError;
 			});
 		}
@@ -714,13 +861,13 @@
 
 		<div class="grid gap-4 overflow-y-auto p-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
 			<section class="space-y-3">
-				<div class="mx-auto w-full max-w-88">
-					<div class="relative aspect-square overflow-hidden rounded-full border-2 border-primary/50 bg-muted shadow-inner">
+				<div class={`mx-auto w-full ${previewContainerClass}`}>
+					<div class={`relative overflow-hidden border-2 border-primary/50 bg-muted shadow-inner ${frameClass}`} style:aspect-ratio={`${effectivePreviewWidth} / ${effectivePreviewHeight}`}>
 						<canvas
 							bind:this={previewCanvas}
 							class="h-full w-full touch-none select-none {hasImage ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}"
-							width={previewSize}
-							height={previewSize}
+							width={effectivePreviewWidth}
+							height={effectivePreviewHeight}
 							onpointerdown={startDrag}
 							onpointermove={onDrag}
 							onpointerup={endDrag}
@@ -745,6 +892,25 @@
 			</section>
 
 			<aside class="space-y-3">
+				{#if frameOptions.length > 1 && labels.frameOption}
+					<fieldset class="space-y-2">
+						<legend class="text-sm font-medium">{t(labels.frameOption)}</legend>
+						<div class="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1">
+							{#each frameOptions as option (option.id)}
+								<button
+									type="button"
+									class="min-h-9 rounded-md px-3 py-2 text-sm font-medium transition-colors {selectedFrameOptionId === option.id ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
+									aria-pressed={selectedFrameOptionId === option.id}
+									disabled={processing}
+									onclick={() => selectFrameOption(option.id)}
+								>
+									{t(option.label)}
+								</button>
+							{/each}
+						</div>
+					</fieldset>
+				{/if}
+
 				<div class="grid gap-2">
 					<button type="button" class="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={processing} onclick={pickFile}>
 						{t(labels.selectFile)}
@@ -780,8 +946,8 @@
 					<div class="rounded-md border border-border bg-background p-2">
 						<video bind:this={cameraVideo} class="aspect-video w-full rounded-md bg-black" autoplay playsinline muted></video>
 						<div class="mt-2 grid gap-2 sm:grid-cols-2">
-							<button type="button" class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={processing} onclick={() => void captureCamera()}>
-								{t(labels.capture)}
+							<button type="button" class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={cameraBusy || processing} onclick={() => void captureCamera()}>
+								{cameraBusy ? t('common.loading') : t(labels.capture)}
 							</button>
 							<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={processing} onclick={stopCamera}>
 								{t(labels.stopCamera)}

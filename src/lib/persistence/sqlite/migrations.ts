@@ -144,6 +144,34 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	`);
 
 	await database.execute(`
+		CREATE TABLE IF NOT EXISTS image_collections (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			entity_type TEXT NOT NULL CHECK(${requiredTextCheck('entity_type', FIELD_LIMITS.imageCollectionEntityType)}),
+			entity_id INTEGER NOT NULL,
+			primary_required INTEGER NOT NULL DEFAULT 0 CHECK(primary_required IN (0, 1)),
+			max_items INTEGER CHECK(max_items IS NULL OR max_items > 0),
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			UNIQUE(entity_type, entity_id)
+		)
+	`);
+
+	await database.execute(`
+		CREATE TABLE IF NOT EXISTS image_collection_items (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			collection_id INTEGER NOT NULL,
+			image_blob BLOB NOT NULL CHECK(length(image_blob) > 0),
+			original_image_blob BLOB NOT NULL CHECK(length(original_image_blob) > 0),
+			description TEXT CHECK(${optionalTextCheck('description', FIELD_LIMITS.imageDescription)}),
+			is_primary INTEGER NOT NULL DEFAULT 0 CHECK(is_primary IN (0, 1)),
+			sort_order INTEGER NOT NULL DEFAULT 0,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			FOREIGN KEY (collection_id) REFERENCES image_collections(id) ON DELETE CASCADE
+		)
+	`);
+
+	await database.execute(`
 		CREATE TABLE IF NOT EXISTS owner_contacts (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			owner_id INTEGER,
@@ -368,6 +396,9 @@ export async function createCurrentIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_value ON owner_contacts(value)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_workplace_addresses_city ON workplace_addresses(city)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_workplace_addresses_state ON workplace_addresses(state)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_image_collections_entity ON image_collections(entity_type, entity_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_image_collection_items_collection_id ON image_collection_items(collection_id, sort_order, id)');
+	await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_image_collection_items_primary ON image_collection_items(collection_id) WHERE is_primary = 1');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_additional_responsibles_owner_id ON owner_additional_responsibles(owner_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_additional_responsibles_name ON owner_additional_responsibles(name)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_owners_pet_id ON pet_owners(pet_id)');

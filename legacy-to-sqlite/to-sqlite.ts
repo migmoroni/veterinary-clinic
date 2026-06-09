@@ -187,6 +187,8 @@ const FIELD_LIMITS = {
   veterinarianProfessionalRegistration: 80,
   workplaceName: 160,
   workplaceServicesDescription: 6000,
+  imageCollectionEntityType: 80,
+  imageDescription: 2000,
   petName: 80,
   petBirthDate: 10,
   petSpecies: 80,
@@ -243,6 +245,8 @@ db.exec(`
   DROP TABLE IF EXISTS pets;
   DROP TABLE IF EXISTS owner_additional_responsibles;
   DROP TABLE IF EXISTS owner_contacts;
+  DROP TABLE IF EXISTS image_collection_items;
+  DROP TABLE IF EXISTS image_collections;
   DROP TABLE IF EXISTS workplace_addresses;
   DROP TABLE IF EXISTS workplaces;
   DROP TABLE IF EXISTS veterinarian_profiles;
@@ -305,6 +309,30 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
     FOREIGN KEY (workplace_id) REFERENCES workplaces (id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS image_collections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity_type TEXT NOT NULL CHECK(${requiredTextCheck('entity_type', FIELD_LIMITS.imageCollectionEntityType)}),
+    entity_id INTEGER NOT NULL,
+    primary_required INTEGER NOT NULL DEFAULT 0 CHECK(primary_required IN (0, 1)),
+    max_items INTEGER CHECK(max_items IS NULL OR max_items > 0),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT,
+    UNIQUE(entity_type, entity_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS image_collection_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    collection_id INTEGER NOT NULL,
+    image_blob BLOB NOT NULL CHECK(length(image_blob) > 0),
+    original_image_blob BLOB NOT NULL CHECK(length(original_image_blob) > 0),
+    description TEXT CHECK(${optionalTextCheck('description', FIELD_LIMITS.imageDescription)}),
+    is_primary INTEGER NOT NULL DEFAULT 0 CHECK(is_primary IN (0, 1)),
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT,
+    FOREIGN KEY (collection_id) REFERENCES image_collections (id) ON DELETE CASCADE
   );
 
   CREATE TABLE IF NOT EXISTS owner_contacts (
@@ -503,6 +531,9 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_owner_contacts_value ON owner_contacts(value);
   CREATE INDEX IF NOT EXISTS idx_workplace_addresses_city ON workplace_addresses(city);
   CREATE INDEX IF NOT EXISTS idx_workplace_addresses_state ON workplace_addresses(state);
+  CREATE INDEX IF NOT EXISTS idx_image_collections_entity ON image_collections(entity_type, entity_id);
+  CREATE INDEX IF NOT EXISTS idx_image_collection_items_collection_id ON image_collection_items(collection_id, sort_order, id);
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_image_collection_items_primary ON image_collection_items(collection_id) WHERE is_primary = 1;
   CREATE INDEX IF NOT EXISTS idx_owner_additional_responsibles_owner_id ON owner_additional_responsibles(owner_id);
   CREATE INDEX IF NOT EXISTS idx_owner_additional_responsibles_name ON owner_additional_responsibles(name);
   CREATE INDEX IF NOT EXISTS idx_pet_owners_pet_id ON pet_owners(pet_id);
@@ -1523,6 +1554,8 @@ const printDatabaseReport = () => {
   console.log(`- veterinarian_profiles: ${countRows('veterinarian_profiles')}`);
   console.log(`- workplaces: ${countRows('workplaces')}`);
   console.log(`- workplace_addresses: ${countRows('workplace_addresses')}`);
+  console.log(`- image_collections: ${countRows('image_collections')}`);
+  console.log(`- image_collection_items: ${countRows('image_collection_items')}`);
   console.log(`- owner_contacts de tutores: ${ownerContacts}`);
   console.log(`- owner_additional_responsibles: ${countRows('owner_additional_responsibles')}`);
   console.log(`- owner_contacts de responsáveis adicionais: ${additionalResponsibleContacts}`);

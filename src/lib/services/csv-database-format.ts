@@ -34,6 +34,17 @@ export const CSV_TABLES: CsvTableDefinition[] = [
 		orderBy: 'workplace_id'
 	},
 	{
+		name: 'image_collections',
+		columns: ['id', 'entity_type', 'entity_id', 'primary_required', 'max_items', 'created_at', 'updated_at'],
+		orderBy: 'entity_type, entity_id, id'
+	},
+	{
+		name: 'image_collection_items',
+		columns: ['id', 'collection_id', 'image_blob', 'original_image_blob', 'description', 'is_primary', 'sort_order', 'created_at', 'updated_at'],
+		binaryColumns: ['image_blob', 'original_image_blob'],
+		orderBy: 'collection_id, sort_order, id'
+	},
+	{
 		name: 'owner_additional_responsibles',
 		columns: ['id', 'owner_id', 'name', 'avatar_blob', 'sort_order', 'created_at', 'updated_at'],
 		binaryColumns: ['avatar_blob'],

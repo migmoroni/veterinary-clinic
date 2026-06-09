@@ -18,6 +18,8 @@ export const FIELD_LIMITS = {
 	veterinarianProfessionalRegistration: 80,
 	workplaceName: 160,
 	workplaceServicesDescription: 6000,
+	imageCollectionEntityType: 80,
+	imageDescription: 2000,
 	petName: 80,
 	petBirthDate: 10,
 	petSpecies: 80,

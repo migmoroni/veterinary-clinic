@@ -1,5 +1,6 @@
 import { countryPhoneFormat, countryPhoneFormats, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '$lib/domain/geo/location.js';
 import { DEFAULT_OWNER_COUNTRY, type OwnerContact, type OwnerContactInput, type OwnerContactKind } from '$lib/domain/owner/owner.js';
+import { validateImageCollectionItems } from '$lib/domain/image-collection/image-collection.js';
 import type {
 	PracticeIdentity,
 	PracticeProfiles,
@@ -12,6 +13,7 @@ import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { formatEmailForInput } from '$lib/domain/shared/email.js';
 import { FIELD_LIMITS, assertTextLimit, nullableLimitedText, nullableMultilineText } from '$lib/domain/shared/field-limits.js';
 import { formatPhoneForStorage } from '$lib/domain/shared/phone.js';
+import { getImageCollection, replaceImageCollection } from '$lib/persistence/repositories/image-collection.repository.js';
 import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
 
 interface VeterinarianProfileRow {
@@ -49,6 +51,8 @@ interface ContactRow {
 }
 
 const phoneFormats = countryPhoneFormats();
+const WORKPLACE_IMAGE_COLLECTION_TYPE = 'workplace';
+const WORKPLACE_IMAGE_POLICY = { primaryRequired: true, maxItems: 9 } as const;
 
 function nullable(value: string | null | undefined): string | null {
 	const trimmed = value?.trim() ?? '';
@@ -166,7 +170,7 @@ function normalizeWorkplaceAddress(input: WorkplaceInput): { country: string; st
 }
 
 export async function getPracticeProfiles(): Promise<PracticeProfiles> {
-	const [veterinarianRow, workplaceRow, veterinarianContacts, workplaceContacts] = await Promise.all([
+	const [veterinarianRow, workplaceRow, veterinarianContacts, workplaceContacts, workplaceImages] = await Promise.all([
 		selectOne<VeterinarianProfileRow>(
 			`SELECT id, name, professional_registration, avatar_blob, created_at, updated_at
 			 FROM veterinarian_profiles WHERE id = 1`
@@ -182,7 +186,8 @@ export async function getPracticeProfiles(): Promise<PracticeProfiles> {
 			 WHERE workplaces.id = 1`
 		),
 		listVeterinarianContacts(),
-		listWorkplaceContacts()
+		listWorkplaceContacts(),
+		getImageCollection(WORKPLACE_IMAGE_COLLECTION_TYPE, 1)
 	]);
 
 	const veterinarian: VeterinarianProfile | null = veterinarianRow
@@ -211,6 +216,7 @@ export async function getPracticeProfiles(): Promise<PracticeProfiles> {
 				country: workplaceRow.country ?? DEFAULT_OWNER_COUNTRY,
 				postalCode: workplaceRow.postal_code,
 				contacts: workplaceContacts,
+				images: workplaceImages?.items ?? [],
 				createdAt: workplaceRow.created_at,
 				updatedAt: workplaceRow.updated_at
 			}
@@ -254,6 +260,7 @@ export async function saveVeterinarianProfile(input: VeterinarianProfileInput): 
 }
 
 export async function saveWorkplace(input: WorkplaceInput): Promise<Workplace> {
+	validateImageCollectionItems(input.images, WORKPLACE_IMAGE_POLICY);
 	const address = normalizeWorkplaceAddress(input);
 	await execute(
 		`INSERT INTO workplaces (id, name, services_description, updated_at)
@@ -294,6 +301,7 @@ export async function saveWorkplace(input: WorkplaceInput): Promise<Workplace> {
 		]
 	);
 	await replaceContacts('workplace_id', input.contacts, address.country);
+	await replaceImageCollection(WORKPLACE_IMAGE_COLLECTION_TYPE, 1, input.images, WORKPLACE_IMAGE_POLICY);
 
 	const profiles = await getPracticeProfiles();
 	if (!profiles.workplace) throw new Error('workplace_save_failed');

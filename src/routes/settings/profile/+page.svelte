@@ -4,7 +4,11 @@
 	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import OwnerAvatarEditorDialog from '$lib/components/owner/OwnerAvatarEditorDialog.svelte';
 	import OwnerContactEditorList from '$lib/components/owner/OwnerContactEditorList.svelte';
+	import WorkplaceImageCaptureDialog from '$lib/components/practice/WorkplaceImageCaptureDialog.svelte';
 	import WorkplaceAddressFields from '$lib/components/practice/WorkplaceAddressFields.svelte';
+	import ImageCollectionOrganizer from '$lib/components/shared/ImageCollectionOrganizer.svelte';
+	import ImageCollectionSummary from '$lib/components/shared/ImageCollectionSummary.svelte';
+	import type { ImageCollectionItem, ImageCollectionItemInput } from '$lib/domain/image-collection/image-collection.js';
 	import { DEFAULT_OWNER_COUNTRY, type OwnerContactInput } from '$lib/domain/owner/owner.js';
 	import type { VeterinarianProfileInput, WorkplaceInput } from '$lib/domain/practice-profile/practice-profile.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
@@ -18,6 +22,20 @@
 
 	function contactInputs(contacts: { kind: OwnerContactInput['kind']; label: string; value: string }[] = []): OwnerContactInput[] {
 		return contacts.map((contact) => ({ kind: contact.kind, label: contact.label, value: contact.value }));
+	}
+
+	function imageInputs(images: ImageCollectionItem[] = []): ImageCollectionItemInput[] {
+		return images.map((image) => ({
+			clientId: `saved-${image.id}`,
+			imageBytes: image.imageBytes,
+			originalImageBytes: image.originalImageBytes,
+			description: image.description ?? '',
+			isPrimary: image.isPrimary
+		}));
+	}
+
+	function newImageClientId(): string {
+		return typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `image-${Date.now()}-${Math.random()}`;
 	}
 
 	function emptyVeterinarian(): VeterinarianProfileInput {
@@ -36,7 +54,8 @@
 			state: '',
 			country: DEFAULT_OWNER_COUNTRY,
 			postalCode: '',
-			contacts: []
+			contacts: [],
+			images: []
 		};
 	}
 
@@ -46,6 +65,9 @@
 	let loading = $state(true);
 	let saving = $state(false);
 	let avatarDialogOpen = $state(false);
+	let workplaceImageDialogOpen = $state(false);
+	let workplaceImageManagerOpen = $state(false);
+	let workplaceImageEditIndex = $state<number | null>(null);
 	let statusKey = $state<TranslationKey | null>(null);
 	let error = $state<string | null>(null);
 
@@ -53,6 +75,8 @@
 		if (exception instanceof Error && exception.message === 'owner_contact_required') return t('owner.contactRequired');
 		if (exception instanceof Error && exception.message === 'owner_location_invalid') return t('owner.locationInvalid');
 		if (exception instanceof Error && exception.message === 'field_limit_exceeded') return t('form.limitExceeded');
+		if (exception instanceof Error && exception.message === 'image_collection_limit_exceeded') return t('practiceProfile.imageLimitExceeded');
+		if (exception instanceof Error && exception.message === 'image_collection_primary_required') return t('practiceProfile.primaryImageRequiredError');
 		return exception instanceof Error ? exception.message : String(exception);
 	}
 
@@ -81,7 +105,8 @@
 					state: profiles.workplace.state ?? '',
 					country: profiles.workplace.country || DEFAULT_OWNER_COUNTRY,
 					postalCode: profiles.workplace.postalCode ?? '',
-					contacts: contactInputs(profiles.workplace.contacts)
+					contacts: contactInputs(profiles.workplace.contacts),
+					images: imageInputs(profiles.workplace.images)
 				};
 			}
 		} catch (exception) {
@@ -106,6 +131,42 @@
 	function removeAvatar() {
 		veterinarianForm = { ...veterinarianForm, avatarBytes: null };
 		avatarDialogOpen = false;
+		statusKey = null;
+	}
+
+	function openNewWorkplaceImage() {
+		workplaceImageEditIndex = null;
+		workplaceImageDialogOpen = true;
+	}
+
+	function openWorkplaceImageEditor(index: number) {
+		workplaceImageEditIndex = index;
+		workplaceImageDialogOpen = true;
+	}
+
+	function closeWorkplaceImageEditor() {
+		workplaceImageDialogOpen = false;
+		workplaceImageEditIndex = null;
+	}
+
+	function applyWorkplaceImage(bytes: Uint8Array, originalBytes: Uint8Array) {
+		if (workplaceImageEditIndex === null) {
+			workplaceForm.images = [
+				...workplaceForm.images,
+				{
+					clientId: newImageClientId(),
+					imageBytes: bytes,
+					originalImageBytes: originalBytes,
+					description: '',
+					isPrimary: workplaceForm.images.length === 0
+				}
+			];
+		} else {
+			workplaceForm.images = workplaceForm.images.map((image, index) =>
+				index === workplaceImageEditIndex ? { ...image, imageBytes: bytes, originalImageBytes: originalBytes } : image
+			);
+		}
+		closeWorkplaceImageEditor();
 		statusKey = null;
 	}
 
@@ -148,7 +209,8 @@
 				state: saved.state ?? '',
 				country: saved.country,
 				postalCode: saved.postalCode ?? '',
-				contacts: contactInputs(saved.contacts)
+				contacts: contactInputs(saved.contacts),
+				images: imageInputs(saved.images)
 			};
 			statusKey = 'practiceProfile.workplaceSaved';
 		} catch (exception) {
@@ -234,6 +296,14 @@
 	{:else}
 		<form class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5" onsubmit={saveWorkplace}>
 			<div class="grid gap-5">
+				<ImageCollectionSummary
+					images={workplaceForm.images}
+					maxItems={9}
+					primaryRequired
+					disabled={saving}
+					onManage={() => (workplaceImageManagerOpen = true)}
+				/>
+
 				<label class="flex flex-col gap-1 text-sm font-medium">
 					<span class="flex min-w-0 items-baseline justify-between gap-2">
 						<span>{t('practiceProfile.workplaceName')}</span>
@@ -276,5 +346,26 @@
 		onApply={applyAvatar}
 		onRemove={removeAvatar}
 		onClose={() => (avatarDialogOpen = false)}
+	/>
+{/if}
+
+{#if workplaceImageManagerOpen}
+	<ImageCollectionOrganizer
+		bind:images={workplaceForm.images}
+		maxItems={9}
+		primaryRequired
+		disabled={saving}
+		onAdd={openNewWorkplaceImage}
+		onEdit={openWorkplaceImageEditor}
+		onClose={() => (workplaceImageManagerOpen = false)}
+	/>
+{/if}
+
+{#if workplaceImageDialogOpen}
+	<WorkplaceImageCaptureDialog
+		initialImageBytes={workplaceImageEditIndex === null ? null : workplaceForm.images[workplaceImageEditIndex]?.imageBytes}
+		initialOriginalImageBytes={workplaceImageEditIndex === null ? null : workplaceForm.images[workplaceImageEditIndex]?.originalImageBytes}
+		onApply={applyWorkplaceImage}
+		onClose={closeWorkplaceImageEditor}
 	/>
 {/if}
