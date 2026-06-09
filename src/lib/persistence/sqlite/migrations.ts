@@ -106,10 +106,50 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	`);
 
 	await database.execute(`
+		CREATE TABLE IF NOT EXISTS veterinarian_profiles (
+			id INTEGER PRIMARY KEY CHECK(id = 1),
+			name TEXT CHECK(${optionalTextCheck('name', FIELD_LIMITS.veterinarianName)}),
+			professional_registration TEXT CHECK(${optionalTextCheck('professional_registration', FIELD_LIMITS.veterinarianProfessionalRegistration)}),
+			avatar_blob BLOB,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT
+		)
+	`);
+
+	await database.execute(`
+		CREATE TABLE IF NOT EXISTS workplaces (
+			id INTEGER PRIMARY KEY CHECK(id = 1),
+			name TEXT CHECK(${optionalTextCheck('name', FIELD_LIMITS.workplaceName)}),
+			services_description TEXT CHECK(${optionalTextCheck('services_description', FIELD_LIMITS.workplaceServicesDescription)}),
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT
+		)
+	`);
+
+	await database.execute(`
+		CREATE TABLE IF NOT EXISTS workplace_addresses (
+			workplace_id INTEGER PRIMARY KEY,
+			street TEXT CHECK(${optionalTextCheck('street', FIELD_LIMITS.ownerStreet)}),
+			street_number TEXT CHECK(${optionalTextCheck('street_number', FIELD_LIMITS.ownerStreetNumber)}),
+			address_complement TEXT CHECK(${optionalTextCheck('address_complement', FIELD_LIMITS.ownerAddressComplement)}),
+			neighborhood TEXT CHECK(${optionalTextCheck('neighborhood', FIELD_LIMITS.ownerNeighborhood)}),
+			city TEXT CHECK(${optionalTextCheck('city', FIELD_LIMITS.ownerCity)}),
+			state TEXT CHECK(${optionalTextCheck('state', FIELD_LIMITS.ownerState)}),
+			country TEXT NOT NULL DEFAULT 'BRA' CHECK(length(country) = ${FIELD_LIMITS.ownerCountry}),
+			postal_code TEXT CHECK(${optionalTextCheck('postal_code', FIELD_LIMITS.ownerPostalCode)}),
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			FOREIGN KEY (workplace_id) REFERENCES workplaces(id) ON DELETE CASCADE
+		)
+	`);
+
+	await database.execute(`
 		CREATE TABLE IF NOT EXISTS owner_contacts (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			owner_id INTEGER,
 			responsible_id INTEGER,
+			veterinarian_profile_id INTEGER,
+			workplace_id INTEGER,
 			kind TEXT NOT NULL CHECK(kind IN ('phone', 'mobile', 'email', 'other')),
 			label TEXT NOT NULL DEFAULT '' CHECK(length(label) <= ${FIELD_LIMITS.ownerContactLabel} AND (kind = 'other' OR label = '')),
 			value TEXT NOT NULL CHECK(length(trim(value)) > 0 AND ((kind IN ('phone', 'mobile') AND length(value) <= ${FIELD_LIMITS.ownerContactPhoneValue}) OR (kind = 'email' AND length(value) <= ${FIELD_LIMITS.ownerContactEmailValue}) OR (kind = 'other' AND length(value) <= ${FIELD_LIMITS.ownerContactOtherValue}))),
@@ -118,9 +158,18 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			updated_at TEXT,
 			FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE,
 			FOREIGN KEY (responsible_id) REFERENCES owner_additional_responsibles(id) ON DELETE CASCADE,
-			CHECK((owner_id IS NOT NULL AND responsible_id IS NULL) OR (owner_id IS NULL AND responsible_id IS NOT NULL)),
+			FOREIGN KEY (veterinarian_profile_id) REFERENCES veterinarian_profiles(id) ON DELETE CASCADE,
+			FOREIGN KEY (workplace_id) REFERENCES workplaces(id) ON DELETE CASCADE,
+			CHECK(
+				(owner_id IS NOT NULL) +
+				(responsible_id IS NOT NULL) +
+				(veterinarian_profile_id IS NOT NULL) +
+				(workplace_id IS NOT NULL) = 1
+			),
 			UNIQUE(owner_id, kind, label, value),
-			UNIQUE(responsible_id, kind, label, value)
+			UNIQUE(responsible_id, kind, label, value),
+			UNIQUE(veterinarian_profile_id, kind, label, value),
+			UNIQUE(workplace_id, kind, label, value)
 		)
 	`);
 
@@ -313,8 +362,12 @@ export async function createCurrentIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_addresses_state ON owner_addresses(state)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_owner_id ON owner_contacts(owner_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_responsible_id ON owner_contacts(responsible_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_veterinarian_profile_id ON owner_contacts(veterinarian_profile_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_workplace_id ON owner_contacts(workplace_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_label ON owner_contacts(label)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_value ON owner_contacts(value)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_workplace_addresses_city ON workplace_addresses(city)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_workplace_addresses_state ON workplace_addresses(state)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_additional_responsibles_owner_id ON owner_additional_responsibles(owner_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_additional_responsibles_name ON owner_additional_responsibles(name)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_owners_pet_id ON pet_owners(pet_id)');

@@ -1,0 +1,59 @@
+import type { OwnerContact, OwnerContactInput } from '$lib/domain/owner/owner.js';
+
+export interface VeterinarianProfile {
+	id: number;
+	name: string | null;
+	professionalRegistration: string | null;
+	avatarBytes: Uint8Array | null;
+	contacts: OwnerContact[];
+	createdAt: string | null;
+	updatedAt: string | null;
+}
+
+export interface VeterinarianProfileInput {
+	name: string;
+	professionalRegistration: string;
+	avatarBytes?: Uint8Array | null;
+	contacts: OwnerContactInput[];
+}
+
+export interface Workplace {
+	id: number;
+	name: string | null;
+	servicesDescription: string | null;
+	street: string | null;
+	streetNumber: string | null;
+	addressComplement: string | null;
+	neighborhood: string | null;
+	city: string | null;
+	state: string | null;
+	country: string;
+	postalCode: string | null;
+	contacts: OwnerContact[];
+	createdAt: string | null;
+	updatedAt: string | null;
+}
+
+export interface WorkplaceInput {
+	name: string;
+	servicesDescription: string;
+	street: string;
+	streetNumber: string;
+	addressComplement: string;
+	neighborhood: string;
+	city: string;
+	state: string;
+	country: string;
+	postalCode: string;
+	contacts: OwnerContactInput[];
+}
+
+export interface PracticeProfiles {
+	veterinarian: VeterinarianProfile | null;
+	workplace: Workplace | null;
+}
+
+export interface PracticeIdentity {
+	workplaceName: string | null;
+	veterinarianName: string | null;
+}

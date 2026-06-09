@@ -14,6 +14,7 @@ import { importDatabase } from './database-import.service.js';
 import { shouldResetOverviewLastRecordOnce } from './client-state.service.js';
 import { loadVaccineAnalyticsOverview, loadVaccineHistory } from './vaccine-analytics.service.js';
 import { loadDashboardAnalytics } from './dashboard-analytics.service.js';
+import { requestPracticeIdentityRefresh } from './practice-profile.service.js';
 
 export { loadOwnerAvatarsByOwnerIds, loadPetAvatarsByPetIds } from './avatar.service.js';
 
@@ -43,10 +44,12 @@ export async function hasClinicDatabase(): Promise<boolean> {
 
 export async function createNewClinicDatabase(): Promise<void> {
 	await createEmptyDatabase();
+	requestPracticeIdentityRefresh();
 }
 
 export async function importClinicDatabase(title: string): Promise<boolean> {
 	const result = await importDatabase(title);
+	if (result) requestPracticeIdentityRefresh();
 	return result !== null;
 }
 

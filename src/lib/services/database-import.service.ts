@@ -32,7 +32,10 @@ async function validateDatabaseFile(fileName: string): Promise<void> {
 		const valid =
 			(await tableHasColumns(database, 'owners', ['id', 'name', 'additional_information'])) &&
 			(await tableHasColumns(database, 'owner_addresses', ['owner_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code'])) &&
-			(await tableHasColumns(database, 'owner_contacts', ['id', 'owner_id', 'responsible_id', 'kind', 'label', 'value'])) &&
+			(await tableHasColumns(database, 'veterinarian_profiles', ['id', 'name', 'professional_registration', 'avatar_blob'])) &&
+			(await tableHasColumns(database, 'workplaces', ['id', 'name', 'services_description'])) &&
+			(await tableHasColumns(database, 'workplace_addresses', ['workplace_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code'])) &&
+			(await tableHasColumns(database, 'owner_contacts', ['id', 'owner_id', 'responsible_id', 'veterinarian_profile_id', 'workplace_id', 'kind', 'label', 'value'])) &&
 			(await tableHasColumns(database, 'owner_additional_responsibles', ['id', 'owner_id', 'name', 'avatar_blob'])) &&
 			(await tableHasColumns(database, 'pets', ['id', 'name', 'species', 'breed'])) &&
 			(await tableHasColumns(database, 'pet_owners', ['id', 'pet_id', 'owner_id'])) &&

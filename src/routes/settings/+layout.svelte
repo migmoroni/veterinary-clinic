@@ -6,11 +6,18 @@
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import Syringe from '@lucide/svelte/icons/syringe';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import UserCog from '@lucide/svelte/icons/user-cog';
 	import type { Component, Snippet } from 'svelte';
 
 	const { children } = $props<{ children: Snippet }>();
 
 	const settingsItems: { href: string; titleKey: Parameters<typeof t>[0]; descriptionKey: Parameters<typeof t>[0]; icon: Component }[] = [
+		{
+			href: '/settings/profile',
+			titleKey: 'settings.profile.title',
+			descriptionKey: 'settings.profile.description',
+			icon: UserCog
+		},
 		{
 			href: '/settings/backups',
 			titleKey: 'settings.backups.title',

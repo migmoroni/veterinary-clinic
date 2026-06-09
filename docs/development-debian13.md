@@ -233,6 +233,8 @@ npm run tauri:msi
 
 O conversor legado fica em `legacy-to-sqlite/`. Ele le `dist/old-clinic.csv` dentro desse diretorio e grava `build/veterinary_clinic.db`.
 
+O banco gerado segue sempre o schema canonico atual, incluindo os perfis locais vazios de veterinario e local de trabalho, o endereco da clinica e os vinculos compartilhados de contato em `owner_contacts`.
+
 Preparacao e execucao:
 
 ```sh

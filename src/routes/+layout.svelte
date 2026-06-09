@@ -11,6 +11,10 @@
 		loadLocalePreference,
 		loadTypographyPreference
 	} from '$lib/services/preferences.service.js';
+	import {
+		loadPracticeIdentity,
+		PRACTICE_IDENTITY_CHANGED_EVENT
+	} from '$lib/services/practice-profile.service.js';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -29,6 +33,7 @@
 	const showBackButton = $derived(page.url.pathname !== '/');
 	let adjustingTypographyShortcut = false;
 	let automaticBackupTimer: number | undefined;
+	let brandName = $state('');
 
 	function isActive(href: string) {
 		const path = page.url.pathname;
@@ -54,6 +59,19 @@
 			}
 		} catch {
 			// The setup screen can render before the local database exists.
+		}
+	}
+
+	async function loadBrandName() {
+		try {
+			if (!(await hasDatabaseFile())) {
+				brandName = '';
+				return;
+			}
+			const identity = await loadPracticeIdentity();
+			brandName = identity.workplaceName ?? identity.veterinarianName ?? '';
+		} catch {
+			brandName = '';
 		}
 	}
 
@@ -105,12 +123,15 @@
 
 	onMount(() => {
 		void loadDatabasePreferences();
+		void loadBrandName();
 		automaticBackupTimer = window.setInterval(() => void checkAutomaticBackupPolicy(), AUTOMATIC_BACKUP_CHECK_INTERVAL_MS);
 		window.addEventListener('keydown', handleTypographyShortcut);
+		window.addEventListener(PRACTICE_IDENTITY_CHANGED_EVENT, loadBrandName);
 
 		return () => {
 			if (automaticBackupTimer) window.clearInterval(automaticBackupTimer);
 			window.removeEventListener('keydown', handleTypographyShortcut);
+			window.removeEventListener(PRACTICE_IDENTITY_CHANGED_EVENT, loadBrandName);
 		};
 	});
 </script>
@@ -120,7 +141,7 @@
 		<div class="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-6 px-6 lg:px-8">
 			<div class="min-w-0">
 				<p class="text-xs font-semibold uppercase text-muted-foreground">{t('app.brandKicker')}</p>
-				<h1 class="truncate text-lg font-semibold">{t('app.name')}</h1>
+				<h1 class="truncate text-lg font-semibold">{brandName || t('app.name')}</h1>
 			</div>
 
 			<div class="flex w-full max-w-3xl items-center justify-end gap-2">

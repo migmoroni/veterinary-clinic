@@ -18,6 +18,22 @@ export const CSV_TABLES: CsvTableDefinition[] = [
 		orderBy: 'owner_id'
 	},
 	{
+		name: 'veterinarian_profiles',
+		columns: ['id', 'name', 'professional_registration', 'avatar_blob', 'created_at', 'updated_at'],
+		binaryColumns: ['avatar_blob'],
+		orderBy: 'id'
+	},
+	{
+		name: 'workplaces',
+		columns: ['id', 'name', 'services_description', 'created_at', 'updated_at'],
+		orderBy: 'id'
+	},
+	{
+		name: 'workplace_addresses',
+		columns: ['workplace_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code', 'created_at', 'updated_at'],
+		orderBy: 'workplace_id'
+	},
+	{
 		name: 'owner_additional_responsibles',
 		columns: ['id', 'owner_id', 'name', 'avatar_blob', 'sort_order', 'created_at', 'updated_at'],
 		binaryColumns: ['avatar_blob'],
@@ -25,8 +41,8 @@ export const CSV_TABLES: CsvTableDefinition[] = [
 	},
 	{
 		name: 'owner_contacts',
-		columns: ['id', 'owner_id', 'responsible_id', 'kind', 'label', 'value', 'sort_order', 'created_at', 'updated_at'],
-		orderBy: 'owner_id, responsible_id, sort_order, id'
+		columns: ['id', 'owner_id', 'responsible_id', 'veterinarian_profile_id', 'workplace_id', 'kind', 'label', 'value', 'sort_order', 'created_at', 'updated_at'],
+		orderBy: 'owner_id, responsible_id, veterinarian_profile_id, workplace_id, sort_order, id'
 	},
 	{
 		name: 'pets',
