@@ -1,3 +1,9 @@
+<!--
+@component
+Displays image bytes through a short-lived object URL and revokes that URL when
+the bytes change or the component is destroyed. Renders a neutral placeholder
+when no valid byte array is available.
+-->
 <script lang="ts">
 	import { bytesToArrayBuffer } from '$lib/domain/shared/binary.js';
 	import ImageIcon from '@lucide/svelte/icons/image';

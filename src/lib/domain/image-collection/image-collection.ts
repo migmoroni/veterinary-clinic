@@ -1,3 +1,7 @@
+/**
+ * Persisted image entry. `imageBytes` is ready for display, while
+ * `originalImageBytes` is the source retained for later editing.
+ */
 export interface ImageCollectionItem {
 	id: number;
 	imageBytes: Uint8Array;
@@ -9,6 +13,10 @@ export interface ImageCollectionItem {
 	updatedAt: string | null;
 }
 
+/**
+ * Client-side image entry used while organizing a collection before saving.
+ * Array order is authoritative and becomes `sortOrder` during persistence.
+ */
 export interface ImageCollectionItemInput {
 	clientId: string;
 	imageBytes: Uint8Array;
@@ -17,6 +25,7 @@ export interface ImageCollectionItemInput {
 	isPrimary: boolean;
 }
 
+/** A generic image collection owned by an entity identified by type and id. */
 export interface ImageCollection {
 	id: number;
 	entityType: string;
@@ -28,11 +37,21 @@ export interface ImageCollection {
 	updatedAt: string | null;
 }
 
+/**
+ * Collection rules are stored with the collection so different consumers can
+ * require a primary image, impose a limit, or allow unlimited images.
+ */
 export interface ImageCollectionPolicy {
 	primaryRequired: boolean;
 	maxItems: number | null;
 }
 
+/**
+ * Enforces collection-wide invariants before persistence.
+ *
+ * Empty collections are valid even when a primary image is required. Once an
+ * item exists, exactly one primary must be selected under that policy.
+ */
 export function validateImageCollectionItems(items: ImageCollectionItemInput[], policy: ImageCollectionPolicy): void {
 	if (policy.maxItems !== null && items.length > policy.maxItems) throw new Error('image_collection_limit_exceeded');
 	if (items.some((item) => item.imageBytes.length === 0)) throw new Error('image_required');

@@ -1,3 +1,13 @@
+<!--
+@component
+Workplace-specific configuration of `ImageCaptureDialog`.
+
+Keeps the complete photo in its captured portrait or landscape orientation and
+offers only right-angle rotation. The saved display and editable source are the
+same full-resolution, moderately compressed JPEG, so this workflow never crops
+or independently degrades a second image. Diagnostic exams must still use the
+unprocessed policy because even moderate JPEG encoding changes image data.
+-->
 <script lang="ts">
 	import ImageCaptureDialog from '$lib/components/shared/ImageCaptureDialog.svelte';
 
@@ -24,27 +34,9 @@
 		tooLarge: 'practiceProfile.imageTooLarge',
 		saving: 'record.saving',
 		cancel: 'actions.cancel',
-		frameOption: 'practiceProfile.imageOrientation'
+		rotateLeft: 'practiceProfile.imageRotateLeft',
+		rotateRight: 'practiceProfile.imageRotateRight'
 	} as const;
-
-	const frameOptions = [
-		{
-			id: 'landscape',
-			label: 'practiceProfile.imageOrientationLandscape',
-			frameWidth: 3200,
-			frameHeight: 2400,
-			previewWidth: 480,
-			previewHeight: 360
-		},
-		{
-			id: 'portrait',
-			label: 'practiceProfile.imageOrientationPortrait',
-			frameWidth: 2400,
-			frameHeight: 3200,
-			previewWidth: 315,
-			previewHeight: 420
-		}
-	] as const;
 
 	let {
 		initialImageBytes = null,
@@ -62,18 +54,12 @@
 <ImageCaptureDialog
 	{initialImageBytes}
 	{initialOriginalImageBytes}
-	{frameOptions}
-	initialFrameOptionId="landscape"
+	editMode="rotate"
 	frameClass="rounded-md"
 	previewContainerClass="max-w-xl"
-	maxBytes={20_000_000}
-	minExportSize={2000}
+	previewSize={480}
 	outputMimeType="image/jpeg"
-	outputQuality={0.99}
-	preserveOriginal
-	originalMaxBytes={30_000_000}
-	originalMaxDimension={4800}
-	originalMinDimension={2800}
+	originalOutputQuality={0.9}
 	cameraIdealWidth={4096}
 	cameraIdealHeight={3072}
 	{labels}

@@ -52,6 +52,7 @@ function mapItem(row: ImageCollectionItemRow): ImageCollectionItem {
 	};
 }
 
+/** Validates policy invariants and normalizes optional descriptions. */
 function normalizeItems(items: ImageCollectionItemInput[], policy: ImageCollectionPolicy): ImageCollectionItemInput[] {
 	validateImageCollectionItems(items, policy);
 
@@ -64,6 +65,11 @@ function normalizeItems(items: ImageCollectionItemInput[], policy: ImageCollecti
 	}));
 }
 
+/**
+ * Loads a collection and its ordered items for the owning entity.
+ *
+ * @returns `null` when the entity has no collection record.
+ */
 export async function getImageCollection(entityType: string, entityId: number): Promise<ImageCollection | null> {
 	const normalizedEntityType = requireLimitedText(entityType, FIELD_LIMITS.imageCollectionEntityType);
 	const collection = await selectOne<ImageCollectionRow>(
@@ -94,6 +100,10 @@ export async function getImageCollection(entityType: string, entityId: number): 
 	};
 }
 
+/**
+ * Replaces the complete ordered contents and policy of an entity's collection.
+ * The input array order is persisted as `sortOrder`.
+ */
 export async function replaceImageCollection(
 	entityType: string,
 	entityId: number,

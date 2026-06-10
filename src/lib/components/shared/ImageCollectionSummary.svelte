@@ -1,3 +1,9 @@
+<!--
+@component
+Compact collection overview used before opening `ImageCollectionOrganizer`.
+Shows at most four thumbnails, the primary marker, total/limit information, and
+a single management action so large collections do not expand the parent form.
+-->
 <script lang="ts">
 	import BinaryImage from '$lib/components/shared/BinaryImage.svelte';
 	import type { ImageCollectionItemInput } from '$lib/domain/image-collection/image-collection.js';

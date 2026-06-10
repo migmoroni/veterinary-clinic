@@ -1,3 +1,13 @@
+<!--
+@component
+Reusable modal organizer for an image collection. It edits the bindable list in
+memory, including order, descriptions, primary selection, replacement, and
+removal; persistence remains the parent component's responsibility.
+
+`primaryRequired` controls whether removing the current primary automatically
+promotes the first remaining image. `maxItems = null` represents an unlimited
+collection, which is suitable for future clinical records and examinations.
+-->
 <script lang="ts">
 	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
 	import BinaryImage from '$lib/components/shared/BinaryImage.svelte';
