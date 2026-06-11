@@ -227,11 +227,9 @@
 	<title>{t('settings.profile.title')} · {t('app.name')}</title>
 </svelte:head>
 
-<section class="flex w-full flex-col gap-5">
+<section class="flex w-full min-w-0 flex-col gap-5">
 	<header class="border-b border-border pb-5">
-		<p class="text-sm font-medium text-muted-foreground">{t('settings.title')}</p>
-		<h2 class="mt-1 text-2xl font-semibold sm:text-3xl">{t('settings.profile.title')}</h2>
-		<p class="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{t('settings.profile.description')}</p>
+		<h2 class="text-2xl font-semibold sm:text-3xl">{t('settings.profile.title')}</h2>
 	</header>
 
 	<div class="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1" role="tablist" aria-label={t('settings.profile.title')}>
@@ -294,8 +292,8 @@
 			</button>
 		</form>
 	{:else}
-		<form class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5" onsubmit={saveWorkplace}>
-			<div class="grid gap-5">
+		<form class="w-full min-w-0 max-w-full rounded-md border border-border bg-card p-4 shadow-sm sm:p-5" onsubmit={saveWorkplace}>
+			<div class="grid w-full min-w-0 gap-5">
 				<ImageCollectionSummary
 					images={workplaceForm.images}
 					maxItems={9}
@@ -304,28 +302,28 @@
 					onManage={() => (workplaceImageManagerOpen = true)}
 				/>
 
-				<label class="flex flex-col gap-1 text-sm font-medium">
+				<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 					<span class="flex min-w-0 items-baseline justify-between gap-2">
 						<span>{t('practiceProfile.workplaceName')}</span>
 						<CharacterLimitHint value={workplaceForm.name} max={FIELD_LIMITS.workplaceName} />
 					</span>
-					<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={workplaceForm.name} maxlength={FIELD_LIMITS.workplaceName} disabled={saving} />
+					<input class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={workplaceForm.name} maxlength={FIELD_LIMITS.workplaceName} disabled={saving} />
 				</label>
 
-				<label class="flex flex-col gap-1 text-sm font-medium">
+				<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 					<span class="flex min-w-0 items-baseline justify-between gap-2">
 						<span>{t('practiceProfile.servicesDescription')}</span>
 						<CharacterLimitHint value={workplaceForm.servicesDescription} max={FIELD_LIMITS.workplaceServicesDescription} />
 					</span>
-					<textarea class="min-h-32 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={workplaceForm.servicesDescription} maxlength={FIELD_LIMITS.workplaceServicesDescription} disabled={saving}></textarea>
+					<textarea class="min-h-32 w-full min-w-0 resize-y rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={workplaceForm.servicesDescription} maxlength={FIELD_LIMITS.workplaceServicesDescription} disabled={saving}></textarea>
 				</label>
 
-				<div class="border-t border-border pt-5">
+				<div class="min-w-0 border-t border-border pt-5">
 					<h3 class="mb-4 text-sm font-semibold">{t('practiceProfile.address')}</h3>
 					<WorkplaceAddressFields bind:form={workplaceForm} disabled={saving} />
 				</div>
 
-				<div class="border-t border-border pt-5">
+				<div class="min-w-0 border-t border-border pt-5">
 					<OwnerContactEditorList bind:contacts={workplaceForm.contacts} country={workplaceForm.country} titleKey="practiceProfile.contacts" />
 				</div>
 			</div>

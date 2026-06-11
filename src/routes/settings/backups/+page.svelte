@@ -98,11 +98,7 @@
 
 <section class="flex w-full flex-col gap-5">
 	<header class="flex flex-col gap-3 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
-		<div>
-			<p class="text-sm font-medium text-muted-foreground">{t('settings.title')}</p>
-			<h2 class="mt-1 text-2xl font-semibold sm:text-3xl">{t('backup.title')}</h2>
-			<p class="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{t('backup.description')}</p>
-		</div>
+		<h2 class="text-2xl font-semibold sm:text-3xl">{t('backup.title')}</h2>
 		<div class="flex flex-wrap gap-2">
 			<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-medium hover:bg-accent" onclick={() => void load()}>
 				<RotateCw class="size-4" />
@@ -125,12 +121,10 @@
 
 	<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
 		<h3 class="text-base font-semibold">{t('backup.policyTitle')}</h3>
-		<p class="mt-2 text-sm leading-6 text-muted-foreground">{t('backup.policyDescription')}</p>
 		<div class="mt-4 flex max-w-sm flex-col gap-2 text-sm font-medium">
 			<p>{t('backup.policySelectLabel')}</p>
 			<Select id="backup-policy-interval" bind:value={policyIntervalMinutes} options={policyOptions} disabled={savingPolicy || busy} ariaLabel={t('backup.policySelectLabel')} onchange={(value) => void changeBackupPolicy(value)} />
 		</div>
-		<p class="mt-3 text-xs leading-5 text-muted-foreground">{t('backup.policyRequired')}</p>
 	</section>
 
 	<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">

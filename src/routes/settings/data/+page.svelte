@@ -102,9 +102,7 @@
 
 <section class="flex w-full flex-col gap-5">
 	<header class="border-b border-border pb-5">
-		<p class="text-sm font-medium text-muted-foreground">{t('settings.title')}</p>
-		<h2 class="mt-1 text-2xl font-semibold sm:text-3xl">{t('data.title')}</h2>
-		<p class="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{t('data.description')}</p>
+		<h2 class="text-2xl font-semibold sm:text-3xl">{t('data.title')}</h2>
 	</header>
 
 	{#if statusKey}
@@ -121,7 +119,6 @@
 				<Archive class="size-5" />
 			</div>
 			<h3 class="mt-4 text-base font-semibold">{t('actions.exportDatabase')}</h3>
-			<p class="mt-2 text-sm leading-6 text-muted-foreground">{t('data.exportDatabaseDescription')}</p>
 			<div class="mt-4 flex flex-wrap gap-2">
 				<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={busy} onclick={() => void exportCopy()}>
 					<Archive class="size-4" />
@@ -132,7 +129,6 @@
 					{t('actions.exportCsv')}
 				</button>
 			</div>
-			<p class="mt-3 text-xs leading-5 text-muted-foreground">{t('data.exportCsvDescription')}</p>
 		</section>
 
 		<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
