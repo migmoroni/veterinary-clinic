@@ -50,15 +50,31 @@
 		manualValue = value > 0 ? String(value) : '';
 	}
 
-	function setManualValue(event: Event) {
-		manualValue = (event.currentTarget as HTMLInputElement).value;
-		if (!manualValue) return;
+	function applyManualValue(): boolean {
+		if (!manualValue) return false;
 
 		const nextValue = Math.trunc(Number(manualValue));
-		if (!Number.isFinite(nextValue) || nextValue <= 0) return;
+		if (!Number.isFinite(nextValue) || nextValue <= 0) return false;
 
 		value = nextValue;
 		onChange?.(value, unit);
+		return true;
+	}
+
+	function setManualValue(event: Event) {
+		manualValue = (event.currentTarget as HTMLInputElement).value;
+		applyManualValue();
+	}
+
+	function confirmManualValue(event: KeyboardEvent) {
+		if (event.key !== 'Enter' || event.isComposing) return;
+
+		event.preventDefault();
+		event.stopPropagation();
+
+		if (!applyManualValue()) return;
+		syncManualValue();
+		close();
 	}
 
 	function selectUnit(nextUnit: PeriodUnit) {
@@ -137,7 +153,7 @@
 			<div class="rounded-md border border-border bg-muted/40 p-3">
 				<label class="flex min-w-0 flex-col gap-2 text-xs font-medium text-muted-foreground">
 					<span>{t('period.customValue')}</span>
-					<input type="number" min="1" step="1" inputmode="numeric" class="h-12 rounded-md border border-input bg-background px-3 text-base font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={manualValue} placeholder={t('period.customValuePlaceholder')} aria-label={t('period.customValue')} oninput={setManualValue} />
+					<input type="number" min="1" step="1" inputmode="numeric" class="h-12 rounded-md border border-input bg-background px-3 text-base font-medium text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={manualValue} placeholder={t('period.customValuePlaceholder')} aria-label={t('period.customValue')} oninput={setManualValue} onkeydown={confirmManualValue} />
 				</label>
 			</div>
 
