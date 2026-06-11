@@ -132,13 +132,13 @@ async function listPetRows(): Promise<PetAnalyticsRow[]> {
 
 async function listOwnerRows(): Promise<OwnerAnalyticsRow[]> {
 	return selectMany<OwnerAnalyticsRow>(
-		`SELECT owners.id, owners.name, owner_addresses.city, owner_addresses.state, owner_addresses.country, COUNT(DISTINCT pets.id) AS pet_count
+		`SELECT owners.id, owners.name, owner_address.city, owner_address.state, owner_address.country, COUNT(DISTINCT pets.id) AS pet_count
 		 FROM owners
-		 LEFT JOIN owner_addresses ON owner_addresses.owner_id = owners.id
+		 LEFT JOIN addresses AS owner_address ON owner_address.owner_id = owners.id
 		 LEFT JOIN pet_owners ON pet_owners.owner_id = owners.id
 		 LEFT JOIN pets ON pets.id = pet_owners.pet_id AND pets.deleted_at IS NULL
 		 WHERE owners.deleted_at IS NULL
-		 GROUP BY owners.id, owners.name, owner_addresses.city, owner_addresses.state, owner_addresses.country`
+		 GROUP BY owners.id, owners.name, owner_address.city, owner_address.state, owner_address.country`
 	);
 }
 

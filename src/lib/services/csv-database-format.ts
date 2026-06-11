@@ -13,9 +13,9 @@ export const CSV_TABLES: CsvTableDefinition[] = [
 		orderBy: 'id'
 	},
 	{
-		name: 'owner_addresses',
-		columns: ['owner_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code', 'created_at', 'updated_at'],
-		orderBy: 'owner_id'
+		name: 'addresses',
+		columns: ['id', 'owner_id', 'workplace_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code', 'created_at', 'updated_at'],
+		orderBy: 'owner_id, workplace_id, id'
 	},
 	{
 		name: 'veterinarian_profiles',
@@ -27,11 +27,6 @@ export const CSV_TABLES: CsvTableDefinition[] = [
 		name: 'workplaces',
 		columns: ['id', 'name', 'services_description', 'created_at', 'updated_at'],
 		orderBy: 'id'
-	},
-	{
-		name: 'workplace_addresses',
-		columns: ['workplace_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code', 'created_at', 'updated_at'],
-		orderBy: 'workplace_id'
 	},
 	{
 		name: 'image_collections',

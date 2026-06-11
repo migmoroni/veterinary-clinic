@@ -247,6 +247,7 @@ db.exec(`
   DROP TABLE IF EXISTS owner_contacts;
   DROP TABLE IF EXISTS image_collection_items;
   DROP TABLE IF EXISTS image_collections;
+  DROP TABLE IF EXISTS addresses;
   DROP TABLE IF EXISTS workplace_addresses;
   DROP TABLE IF EXISTS workplaces;
   DROP TABLE IF EXISTS veterinarian_profiles;
@@ -262,21 +263,6 @@ db.exec(`
     updated_at TEXT,
     deleted_at TEXT,
     purge_after TEXT
-  );
-
-  CREATE TABLE IF NOT EXISTS owner_addresses (
-    owner_id INTEGER PRIMARY KEY,
-    street TEXT CHECK(${optionalTextCheck('street', FIELD_LIMITS.ownerStreet)}),
-    street_number TEXT CHECK(${optionalTextCheck('street_number', FIELD_LIMITS.ownerStreetNumber)}),
-    address_complement TEXT CHECK(${optionalTextCheck('address_complement', FIELD_LIMITS.ownerAddressComplement)}),
-    neighborhood TEXT CHECK(${optionalTextCheck('neighborhood', FIELD_LIMITS.ownerNeighborhood)}),
-    city TEXT CHECK(${optionalTextCheck('city', FIELD_LIMITS.ownerCity)}),
-    state TEXT CHECK(${optionalTextCheck('state', FIELD_LIMITS.ownerState)}),
-    country TEXT NOT NULL DEFAULT 'BRA' CHECK(length(country) = ${FIELD_LIMITS.ownerCountry}),
-    postal_code TEXT CHECK(${optionalTextCheck('postal_code', FIELD_LIMITS.ownerPostalCode)}),
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT,
-    FOREIGN KEY (owner_id) REFERENCES owners (id) ON DELETE CASCADE
   );
 
   CREATE TABLE IF NOT EXISTS veterinarian_profiles (
@@ -296,8 +282,10 @@ db.exec(`
     updated_at TEXT
   );
 
-  CREATE TABLE IF NOT EXISTS workplace_addresses (
-    workplace_id INTEGER PRIMARY KEY,
+  CREATE TABLE IF NOT EXISTS addresses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    owner_id INTEGER,
+    workplace_id INTEGER,
     street TEXT CHECK(${optionalTextCheck('street', FIELD_LIMITS.ownerStreet)}),
     street_number TEXT CHECK(${optionalTextCheck('street_number', FIELD_LIMITS.ownerStreetNumber)}),
     address_complement TEXT CHECK(${optionalTextCheck('address_complement', FIELD_LIMITS.ownerAddressComplement)}),
@@ -308,7 +296,11 @@ db.exec(`
     postal_code TEXT CHECK(${optionalTextCheck('postal_code', FIELD_LIMITS.ownerPostalCode)}),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
-    FOREIGN KEY (workplace_id) REFERENCES workplaces (id) ON DELETE CASCADE
+    FOREIGN KEY (owner_id) REFERENCES owners (id) ON DELETE CASCADE,
+    FOREIGN KEY (workplace_id) REFERENCES workplaces (id) ON DELETE CASCADE,
+    CHECK((owner_id IS NOT NULL) + (workplace_id IS NOT NULL) = 1),
+    UNIQUE(owner_id),
+    UNIQUE(workplace_id)
   );
 
   CREATE TABLE IF NOT EXISTS image_collections (
@@ -521,16 +513,16 @@ db.exec(`
   );
 
   CREATE INDEX IF NOT EXISTS idx_owners_name ON owners(name);
-  CREATE INDEX IF NOT EXISTS idx_owner_addresses_city ON owner_addresses(city);
-  CREATE INDEX IF NOT EXISTS idx_owner_addresses_state ON owner_addresses(state);
+  CREATE INDEX IF NOT EXISTS idx_addresses_owner_id ON addresses(owner_id);
+  CREATE INDEX IF NOT EXISTS idx_addresses_workplace_id ON addresses(workplace_id);
+  CREATE INDEX IF NOT EXISTS idx_addresses_city ON addresses(city);
+  CREATE INDEX IF NOT EXISTS idx_addresses_state ON addresses(state);
   CREATE INDEX IF NOT EXISTS idx_owner_contacts_owner_id ON owner_contacts(owner_id);
   CREATE INDEX IF NOT EXISTS idx_owner_contacts_responsible_id ON owner_contacts(responsible_id);
   CREATE INDEX IF NOT EXISTS idx_owner_contacts_veterinarian_profile_id ON owner_contacts(veterinarian_profile_id);
   CREATE INDEX IF NOT EXISTS idx_owner_contacts_workplace_id ON owner_contacts(workplace_id);
   CREATE INDEX IF NOT EXISTS idx_owner_contacts_label ON owner_contacts(label);
   CREATE INDEX IF NOT EXISTS idx_owner_contacts_value ON owner_contacts(value);
-  CREATE INDEX IF NOT EXISTS idx_workplace_addresses_city ON workplace_addresses(city);
-  CREATE INDEX IF NOT EXISTS idx_workplace_addresses_state ON workplace_addresses(state);
   CREATE INDEX IF NOT EXISTS idx_image_collections_entity ON image_collections(entity_type, entity_id);
   CREATE INDEX IF NOT EXISTS idx_image_collection_items_collection_id ON image_collection_items(collection_id, sort_order, id);
   CREATE UNIQUE INDEX IF NOT EXISTS idx_image_collection_items_primary ON image_collection_items(collection_id) WHERE is_primary = 1;
@@ -573,7 +565,7 @@ const insertOwner = db.prepare(`
 `);
 
 const insertOwnerAddress = db.prepare(`
-  INSERT INTO owner_addresses (owner_id, street, street_number, address_complement, neighborhood, city, state, country, postal_code, updated_at)
+  INSERT INTO addresses (owner_id, street, street_number, address_complement, neighborhood, city, state, country, postal_code, updated_at)
   VALUES (@ownerId, @street, @streetNumber, @addressComplement, @neighborhood, @city, @state, @country, @postalCode, CURRENT_TIMESTAMP)
 `);
 
@@ -1550,10 +1542,10 @@ const printDatabaseReport = () => {
 
   console.log('\nConferência do SQLite gerado:');
   console.log(`- owners: ${countRows('owners')}`);
-  console.log(`- owner_addresses: ${countRows('owner_addresses')}`);
+  console.log(`- addresses de tutores: ${countWhere('addresses', 'owner_id IS NOT NULL')}`);
   console.log(`- veterinarian_profiles: ${countRows('veterinarian_profiles')}`);
   console.log(`- workplaces: ${countRows('workplaces')}`);
-  console.log(`- workplace_addresses: ${countRows('workplace_addresses')}`);
+  console.log(`- addresses de locais de trabalho: ${countWhere('addresses', 'workplace_id IS NOT NULL')}`);
   console.log(`- image_collections: ${countRows('image_collections')}`);
   console.log(`- image_collection_items: ${countRows('image_collection_items')}`);
   console.log(`- owner_contacts de tutores: ${ownerContacts}`);

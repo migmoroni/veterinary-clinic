@@ -177,12 +177,12 @@ export async function getPracticeProfiles(): Promise<PracticeProfiles> {
 		),
 		selectOne<WorkplaceRow>(
 			`SELECT workplaces.id, workplaces.name, workplaces.services_description,
-				workplace_addresses.street, workplace_addresses.street_number, workplace_addresses.address_complement,
-				workplace_addresses.neighborhood, workplace_addresses.city, workplace_addresses.state,
-				workplace_addresses.country, workplace_addresses.postal_code,
+				workplace_address.street, workplace_address.street_number, workplace_address.address_complement,
+				workplace_address.neighborhood, workplace_address.city, workplace_address.state,
+				workplace_address.country, workplace_address.postal_code,
 				workplaces.created_at, workplaces.updated_at
 			 FROM workplaces
-			 LEFT JOIN workplace_addresses ON workplace_addresses.workplace_id = workplaces.id
+			 LEFT JOIN addresses AS workplace_address ON workplace_address.workplace_id = workplaces.id
 			 WHERE workplaces.id = 1`
 		),
 		listVeterinarianContacts(),
@@ -275,7 +275,7 @@ export async function saveWorkplace(input: WorkplaceInput): Promise<Workplace> {
 		]
 	);
 	await execute(
-		`INSERT INTO workplace_addresses (
+		`INSERT INTO addresses (
 			workplace_id, street, street_number, address_complement, neighborhood, city, state, country, postal_code, updated_at
 		)
 		 VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)

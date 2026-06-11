@@ -54,11 +54,11 @@ export async function listTrashItems(): Promise<TrashItem[]> {
 				WHERE owner_contacts.owner_id = owners.id AND owner_contacts.responsible_id IS NULL
 				ORDER BY owner_contacts.sort_order, owner_contacts.id
 				LIMIT 1
-			), owner_addresses.city, '') AS subtitle,
+			), owner_address.city, '') AS subtitle,
 			owners.deleted_at AS deleted_at,
 			owners.purge_after AS purge_after
 		 FROM owners
-		 LEFT JOIN owner_addresses ON owner_addresses.owner_id = owners.id
+		 LEFT JOIN addresses AS owner_address ON owner_address.owner_id = owners.id
 		 WHERE owners.deleted_at IS NOT NULL
 
 		 UNION ALL
@@ -190,7 +190,7 @@ export async function hardDeleteTrashItem(kind: TrashKind, id: number): Promise<
 		await execute('DELETE FROM pet_owners WHERE owner_id = $1', [id]);
 		await execute('DELETE FROM owner_contacts WHERE owner_id = $1 OR responsible_id IN (SELECT id FROM owner_additional_responsibles WHERE owner_id = $1)', [id]);
 		await execute('DELETE FROM owner_additional_responsibles WHERE owner_id = $1', [id]);
-		await execute('DELETE FROM owner_addresses WHERE owner_id = $1', [id]);
+		await execute('DELETE FROM addresses WHERE owner_id = $1', [id]);
 		await execute('DELETE FROM owners WHERE id = $1', [id]);
 		return;
 	}
@@ -268,6 +268,6 @@ export async function purgeExpiredTrash(now = new Date().toISOString()): Promise
 		[now]
 	);
 	await execute('DELETE FROM owner_additional_responsibles WHERE owner_id IN (SELECT id FROM owners WHERE deleted_at IS NOT NULL AND purge_after <= $1)', [now]);
-	await execute('DELETE FROM owner_addresses WHERE owner_id IN (SELECT id FROM owners WHERE deleted_at IS NOT NULL AND purge_after <= $1)', [now]);
+	await execute('DELETE FROM addresses WHERE owner_id IN (SELECT id FROM owners WHERE deleted_at IS NOT NULL AND purge_after <= $1)', [now]);
 	await execute('DELETE FROM owners WHERE deleted_at IS NOT NULL AND purge_after <= $1', [now]);
 }

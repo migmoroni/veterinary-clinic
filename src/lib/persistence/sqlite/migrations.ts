@@ -89,23 +89,6 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	`);
 
 	await database.execute(`
-		CREATE TABLE IF NOT EXISTS owner_addresses (
-			owner_id INTEGER PRIMARY KEY,
-			street TEXT CHECK(${optionalTextCheck('street', FIELD_LIMITS.ownerStreet)}),
-			street_number TEXT CHECK(${optionalTextCheck('street_number', FIELD_LIMITS.ownerStreetNumber)}),
-			address_complement TEXT CHECK(${optionalTextCheck('address_complement', FIELD_LIMITS.ownerAddressComplement)}),
-			neighborhood TEXT CHECK(${optionalTextCheck('neighborhood', FIELD_LIMITS.ownerNeighborhood)}),
-			city TEXT CHECK(${optionalTextCheck('city', FIELD_LIMITS.ownerCity)}),
-			state TEXT CHECK(${optionalTextCheck('state', FIELD_LIMITS.ownerState)}),
-			country TEXT NOT NULL DEFAULT 'BRA' CHECK(length(country) = ${FIELD_LIMITS.ownerCountry}),
-			postal_code TEXT CHECK(${optionalTextCheck('postal_code', FIELD_LIMITS.ownerPostalCode)}),
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
-			FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE
-		)
-	`);
-
-	await database.execute(`
 		CREATE TABLE IF NOT EXISTS veterinarian_profiles (
 			id INTEGER PRIMARY KEY CHECK(id = 1),
 			name TEXT CHECK(${optionalTextCheck('name', FIELD_LIMITS.veterinarianName)}),
@@ -127,8 +110,10 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	`);
 
 	await database.execute(`
-		CREATE TABLE IF NOT EXISTS workplace_addresses (
-			workplace_id INTEGER PRIMARY KEY,
+		CREATE TABLE IF NOT EXISTS addresses (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			owner_id INTEGER,
+			workplace_id INTEGER,
 			street TEXT CHECK(${optionalTextCheck('street', FIELD_LIMITS.ownerStreet)}),
 			street_number TEXT CHECK(${optionalTextCheck('street_number', FIELD_LIMITS.ownerStreetNumber)}),
 			address_complement TEXT CHECK(${optionalTextCheck('address_complement', FIELD_LIMITS.ownerAddressComplement)}),
@@ -139,7 +124,11 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			postal_code TEXT CHECK(${optionalTextCheck('postal_code', FIELD_LIMITS.ownerPostalCode)}),
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
-			FOREIGN KEY (workplace_id) REFERENCES workplaces(id) ON DELETE CASCADE
+			FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE,
+			FOREIGN KEY (workplace_id) REFERENCES workplaces(id) ON DELETE CASCADE,
+			CHECK((owner_id IS NOT NULL) + (workplace_id IS NOT NULL) = 1),
+			UNIQUE(owner_id),
+			UNIQUE(workplace_id)
 		)
 	`);
 
@@ -386,16 +375,16 @@ async function createCurrentSchema(database: Database): Promise<void> {
 
 export async function createCurrentIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owners_name ON owners(name)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_addresses_city ON owner_addresses(city)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_addresses_state ON owner_addresses(state)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_addresses_owner_id ON addresses(owner_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_addresses_workplace_id ON addresses(workplace_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_addresses_city ON addresses(city)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_addresses_state ON addresses(state)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_owner_id ON owner_contacts(owner_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_responsible_id ON owner_contacts(responsible_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_veterinarian_profile_id ON owner_contacts(veterinarian_profile_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_workplace_id ON owner_contacts(workplace_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_label ON owner_contacts(label)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_value ON owner_contacts(value)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_workplace_addresses_city ON workplace_addresses(city)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_workplace_addresses_state ON workplace_addresses(state)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_image_collections_entity ON image_collections(entity_type, entity_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_image_collection_items_collection_id ON image_collection_items(collection_id, sort_order, id)');
 	await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_image_collection_items_primary ON image_collection_items(collection_id) WHERE is_primary = 1');

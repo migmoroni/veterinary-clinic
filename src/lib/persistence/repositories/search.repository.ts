@@ -79,7 +79,7 @@ function buildSearchFilter(predicates: SearchTermPredicate[], termCount: number)
 const ownerSearchPredicates: SearchTermPredicate[] = [
 	(placeholder) => `owners.name LIKE ${placeholder}`,
 	(placeholder) => `owners.additional_information LIKE ${placeholder}`,
-	(placeholder) => `owner_addresses.city LIKE ${placeholder}`,
+	(placeholder) => `owner_address.city LIKE ${placeholder}`,
 	(placeholder) => `EXISTS (
 		SELECT 1 FROM owner_contacts
 		WHERE owner_contacts.owner_id = owners.id AND (owner_contacts.value LIKE ${placeholder} OR owner_contacts.label LIKE ${placeholder})
@@ -102,10 +102,10 @@ const petSearchPredicates: SearchTermPredicate[] = [
 	(placeholder) => `EXISTS (
 		SELECT 1 FROM pet_owners
 		JOIN owners ON owners.id = pet_owners.owner_id
-		LEFT JOIN owner_addresses ON owner_addresses.owner_id = owners.id
+		LEFT JOIN addresses AS pet_owner_address ON pet_owner_address.owner_id = owners.id
 		WHERE pet_owners.pet_id = pets.id
 			AND owners.deleted_at IS NULL
-			AND (owners.name LIKE ${placeholder} OR owner_addresses.city LIKE ${placeholder})
+			AND (owners.name LIKE ${placeholder} OR pet_owner_address.city LIKE ${placeholder})
 	)`,
 	(placeholder) => `EXISTS (
 		SELECT 1 FROM pet_owners
@@ -126,10 +126,10 @@ const recordSearchPredicates: SearchTermPredicate[] = [
 	(placeholder) => `EXISTS (
 		SELECT 1 FROM pet_owners
 		JOIN owners ON owners.id = pet_owners.owner_id
-		LEFT JOIN owner_addresses ON owner_addresses.owner_id = owners.id
+		LEFT JOIN addresses AS record_owner_address ON record_owner_address.owner_id = owners.id
 		WHERE pet_owners.pet_id = pets.id
 			AND owners.deleted_at IS NULL
-			AND (owners.name LIKE ${placeholder} OR owner_addresses.city LIKE ${placeholder})
+			AND (owners.name LIKE ${placeholder} OR record_owner_address.city LIKE ${placeholder})
 	)`,
 	(placeholder) => `EXISTS (
 		SELECT 1 FROM pet_owners
@@ -182,9 +182,9 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 				WHERE owner_additional_responsibles.owner_id = owners.id
 				ORDER BY owner_additional_responsibles.sort_order, owner_additional_responsibles.id
 				LIMIT 1
-			), owners.additional_information, owner_addresses.city, '') AS subtitle
+			), owners.additional_information, owner_address.city, '') AS subtitle
 		 FROM owners
-		 LEFT JOIN owner_addresses ON owner_addresses.owner_id = owners.id
+		 LEFT JOIN addresses AS owner_address ON owner_address.owner_id = owners.id
 		 WHERE owners.deleted_at IS NULL
 			AND ${ownerSearchFilter}
 
