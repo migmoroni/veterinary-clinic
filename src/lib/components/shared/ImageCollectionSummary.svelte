@@ -33,7 +33,7 @@ a single management action so large collections do not expand the parent form.
 	const visibleImages = $derived(images.slice(0, 4));
 </script>
 
-<section class="rounded-md border border-border bg-background">
+<section class="w-full min-w-0 max-w-full overflow-hidden rounded-md border border-border bg-background">
 	<header class="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
 		<div class="min-w-0">
 			<h3 class="text-sm font-semibold">{t(titleKey)}</h3>
@@ -41,7 +41,7 @@ a single management action so large collections do not expand the parent form.
 				{images.length}{maxItems !== null ? `/${maxItems}` : ''} · {primaryRequired ? t('practiceProfile.primaryRequired') : t('practiceProfile.primaryOptional')}
 			</p>
 		</div>
-		<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={disabled} onclick={onManage}>
+		<button type="button" class="inline-flex h-9 max-w-full items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={disabled} onclick={onManage}>
 			<Settings2 class="size-4" />
 			{t('practiceProfile.manageImages')}
 		</button>

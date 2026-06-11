@@ -63,7 +63,7 @@
 
 </script>
 
-<div class="sm:col-span-5 pt-2">
+<div class="min-w-0 max-w-full pt-2 sm:col-span-5">
 	<div class="flex flex-wrap items-center justify-between gap-3">
 		<h4 class="text-sm font-semibold">{t('owner.additionalResponsibles')}</h4>
 		<button
@@ -78,10 +78,10 @@
 		</button>
 	</div>
 
-	<div class="mt-4 flex flex-col gap-3">
+	<div class="mt-4 flex min-w-0 flex-col gap-3">
 		{#each responsibles as responsible, responsibleIndex}
-			<article class="rounded-md border border-border bg-background/50 p-3">
-				<div class="grid gap-3 sm:grid-cols-[auto_minmax(0,1fr)_2.5rem] sm:items-end">
+			<article class="min-w-0 max-w-full rounded-md border border-border bg-background/50 p-3">
+				<div class="grid min-w-0 gap-3 sm:grid-cols-[auto_minmax(0,1fr)_2.5rem] sm:items-end">
 					<div class="flex min-w-0 items-center gap-3">
 						<OwnerAvatar
 							avatarBytes={responsible.avatarBytes ?? null}
@@ -101,13 +101,13 @@
 						</div>
 					</div>
 
-					<label class="flex flex-col gap-1 text-sm font-medium">
+					<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 						<span class="flex min-w-0 items-baseline justify-between gap-2">
 							<span>{t('owner.additionalResponsibleName')}</span>
 							<CharacterLimitHint value={responsible.name} max={FIELD_LIMITS.ownerAdditionalResponsibleName} />
 						</span>
 						<input
-							class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
+							class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
 							value={responsible.name}
 							maxlength={FIELD_LIMITS.ownerAdditionalResponsibleName}
 							oninput={(event) => updateResponsibleName(responsibleIndex, event.currentTarget.value)}
@@ -128,7 +128,7 @@
 					</button>
 				</div>
 
-				<div class="mt-4">
+				<div class="mt-4 min-w-0">
 					<OwnerContactEditorList
 						contacts={responsible.contacts}
 						country={country}

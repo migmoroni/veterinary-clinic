@@ -72,18 +72,18 @@
 	}
 </script>
 
-<div class="grid gap-4 sm:grid-cols-5">
-	<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
+<div class="grid w-full min-w-0 gap-4 sm:grid-cols-5">
+	<label class="flex min-w-0 flex-col gap-1 text-sm font-medium sm:col-span-2">
 		<span>{t('owner.country')}</span>
 		<Select id="workplace-country" value={form.country} options={countrySelectOptions} disabled={disabled} ariaLabel={t('owner.country')} onchange={updateCountry} />
 	</label>
 
-	<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-3">
+	<label class="flex min-w-0 flex-col gap-1 text-sm font-medium sm:col-span-3">
 		<span class="flex min-w-0 items-baseline justify-between gap-2">
 			<span>{t('owner.postalCode')}</span>
 			<CharacterLimitHint value={form.postalCode} max={FIELD_LIMITS.ownerPostalCode} />
 		</span>
-		<span class="flex gap-2">
+		<span class="flex min-w-0 gap-2">
 			<input class="h-10 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.postalCode} maxlength={FIELD_LIMITS.ownerPostalCode} disabled={disabled} />
 			<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={disabled || cepLoading || !isCountrySupportedForCepLookup(form.country)} onclick={() => void fillAddressFromCep()} aria-label={t('actions.searchCep')}>
 				<Search class="size-4" />
@@ -92,39 +92,39 @@
 		</span>
 	</label>
 
-	<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-3">
+	<label class="flex min-w-0 flex-col gap-1 text-sm font-medium sm:col-span-3">
 		<span class="flex min-w-0 items-baseline justify-between gap-2">
 			<span>{t('owner.street')}</span>
 			<CharacterLimitHint value={form.street} max={FIELD_LIMITS.ownerStreet} />
 		</span>
-		<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.street} maxlength={FIELD_LIMITS.ownerStreet} disabled={disabled} />
+		<input class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.street} maxlength={FIELD_LIMITS.ownerStreet} disabled={disabled} />
 	</label>
 
-	<label class="flex flex-col gap-1 text-sm font-medium">
+	<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 		<span class="flex min-w-0 items-baseline justify-between gap-2">
 			<span>{t('owner.streetNumber')}</span>
 			<CharacterLimitHint value={form.streetNumber} max={FIELD_LIMITS.ownerStreetNumber} />
 		</span>
-		<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.streetNumber} maxlength={FIELD_LIMITS.ownerStreetNumber} disabled={disabled} />
+		<input class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.streetNumber} maxlength={FIELD_LIMITS.ownerStreetNumber} disabled={disabled} />
 	</label>
 
-	<label class="flex flex-col gap-1 text-sm font-medium">
+	<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 		<span class="flex min-w-0 items-baseline justify-between gap-2">
 			<span>{t('owner.addressComplement')}</span>
 			<CharacterLimitHint value={form.addressComplement} max={FIELD_LIMITS.ownerAddressComplement} />
 		</span>
-		<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.addressComplement} maxlength={FIELD_LIMITS.ownerAddressComplement} disabled={disabled} />
+		<input class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.addressComplement} maxlength={FIELD_LIMITS.ownerAddressComplement} disabled={disabled} />
 	</label>
 
-	<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
+	<label class="flex min-w-0 flex-col gap-1 text-sm font-medium sm:col-span-2">
 		<span class="flex min-w-0 items-baseline justify-between gap-2">
 			<span>{t('owner.neighborhood')}</span>
 			<CharacterLimitHint value={form.neighborhood} max={FIELD_LIMITS.ownerNeighborhood} />
 		</span>
-		<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.neighborhood} maxlength={FIELD_LIMITS.ownerNeighborhood} disabled={disabled} />
+		<input class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.neighborhood} maxlength={FIELD_LIMITS.ownerNeighborhood} disabled={disabled} />
 	</label>
 
-	<label class="flex flex-col gap-1 text-sm font-medium">
+	<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 		<span class="flex min-w-0 items-baseline justify-between gap-2">
 			<span>{t('owner.state')}</span>
 			{#if !hasStructuredLocations}<CharacterLimitHint value={form.state} max={FIELD_LIMITS.ownerState} />{/if}
@@ -132,11 +132,11 @@
 		{#if hasStructuredLocations}
 			<Select id="workplace-state" value={form.state} options={stateSelectOptions} disabled={disabled} ariaLabel={t('owner.state')} onchange={updateState} />
 		{:else}
-			<input id="workplace-state" class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.state} maxlength={FIELD_LIMITS.ownerState} disabled={disabled} autocomplete="address-level1" />
+			<input id="workplace-state" class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.state} maxlength={FIELD_LIMITS.ownerState} disabled={disabled} autocomplete="address-level1" />
 		{/if}
 	</label>
 
-	<label class="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
+	<label class="flex min-w-0 flex-col gap-1 text-sm font-medium sm:col-span-2">
 		<span class="flex min-w-0 items-baseline justify-between gap-2">
 			<span>{t('owner.city')}</span>
 			{#if !hasStructuredLocations}<CharacterLimitHint value={form.city} max={FIELD_LIMITS.ownerCity} />{/if}
@@ -144,7 +144,7 @@
 		{#if hasStructuredLocations}
 			<Select id="workplace-city" value={form.city} options={citySelectOptions} disabled={disabled || !form.state} ariaLabel={t('owner.city')} onchange={updateCity} />
 		{:else}
-			<input id="workplace-city" class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.city} maxlength={FIELD_LIMITS.ownerCity} disabled={disabled} autocomplete="address-level2" />
+			<input id="workplace-city" class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.city} maxlength={FIELD_LIMITS.ownerCity} disabled={disabled} autocomplete="address-level2" />
 		{/if}
 	</label>
 </div>

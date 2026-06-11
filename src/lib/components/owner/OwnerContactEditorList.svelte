@@ -94,7 +94,7 @@
 	}
 </script>
 
-<div class="flex flex-wrap items-center justify-between gap-3">
+<div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
 	<svelte:element this={headingTag} class="text-sm font-semibold">{t(titleKey)}</svelte:element>
 	<button
 		type="button"
@@ -108,9 +108,9 @@
 	</button>
 </div>
 
-<div class={listClass}>
+<div class={cn('min-w-0 max-w-full', listClass)}>
 	{#each contacts as contact, index}
-		<div class={cn('rounded-md border border-border p-2', itemClass)}>
+		<div class={cn('min-w-0 max-w-full rounded-md border border-border p-2', itemClass)}>
 			{#if ownerContactHasLimitHint(contact)}
 				<div class="mb-2 flex flex-wrap items-center justify-end gap-2 px-1">
 					{#if contact.kind === 'other'}
@@ -120,8 +120,8 @@
 				</div>
 			{/if}
 
-			<div class={cn('grid gap-2 items-center', contact.kind === 'other' ? 'sm:grid-cols-[10rem_minmax(0,1fr)_minmax(0,1fr)_2.5rem]' : 'sm:grid-cols-[10rem_minmax(0,1fr)_2.5rem]')}>
-				<div class="flex flex-col gap-1 text-sm font-medium m-0">
+			<div class={cn('grid min-w-0 gap-2 items-center', contact.kind === 'other' ? 'sm:grid-cols-[10rem_minmax(0,1fr)_minmax(0,1fr)_2.5rem]' : 'sm:grid-cols-[10rem_minmax(0,1fr)_2.5rem]')}>
+				<div class="m-0 flex min-w-0 flex-col gap-1 text-sm font-medium">
 					<span class="sr-only">{t('owner.contactType')}</span>
 					<Select
 						value={contact.kind}
@@ -132,13 +132,13 @@
 				</div>
 
 				{#if contact.kind === 'other'}
-					<label class="flex flex-col gap-1 text-sm font-medium m-0">
+					<label class="m-0 flex min-w-0 flex-col gap-1 text-sm font-medium">
 						<span class="sr-only">{t('owner.contactLabel')}</span>
 						<input
 							type="text"
 							inputmode="text"
 							autocomplete="off"
-							class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
+							class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
 							value={contact.label ?? ''}
 							maxlength={FIELD_LIMITS.ownerContactLabel}
 							oninput={(event) => updateContactLabel(index, event.currentTarget.value)}
@@ -148,13 +148,13 @@
 						/>
 					</label>
 
-					<label class="flex flex-col gap-1 text-sm font-medium m-0">
+					<label class="m-0 flex min-w-0 flex-col gap-1 text-sm font-medium">
 						<span class="sr-only">{t('owner.contactOtherValue')}</span>
 						<input
 							type="text"
 							inputmode="text"
 							autocomplete="off"
-							class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
+							class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
 							value={contact.value}
 							maxlength={ownerContactValueLimit(contact.kind)}
 							oninput={(event) => void updateContactValueFromInput(index, contact.kind, event.currentTarget)}
@@ -164,13 +164,13 @@
 						/>
 					</label>
 				{:else}
-					<label class="flex flex-col gap-1 text-sm font-medium m-0">
+					<label class="m-0 flex min-w-0 flex-col gap-1 text-sm font-medium">
 						<span class="sr-only">{t('owner.contactValue')}</span>
 						<input
 							type={contact.kind === 'email' ? 'email' : 'tel'}
 							inputmode={contact.kind === 'email' ? 'email' : 'tel'}
 							autocomplete={contact.kind === 'email' ? 'email' : 'tel'}
-							class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
+							class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
 							value={contact.value}
 							maxlength={ownerContactValueLimit(contact.kind)}
 							oninput={(event) => void updateContactValueFromInput(index, contact.kind, event.currentTarget)}
