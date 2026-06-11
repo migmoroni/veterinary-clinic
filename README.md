@@ -48,7 +48,7 @@ npm run build:csv
 npm run csv
 ```
 
-The converter reads `legacy-to-sqlite/dist/old-clinic.csv` and writes `legacy-to-sqlite/build/veterinary_clinic.db` using the app's current canonical schema. Legacy `TELEFONE` values become `owner_contacts.kind = 'phone'`, and `CELULAR` values become `owner_contacts.kind = 'mobile'`. Medical record periods are derived from dated entries in the legacy record text: the earliest valid date becomes `admitted_at`, and the latest valid date becomes `discharged_at` when there is more than one dated entry. Legacy vaccination rows are imported with vaccine names plus dose and validity snapshots backed by the editable catalogs.
+The converter reads `legacy-to-sqlite/dist/old-clinic.csv` and writes `legacy-to-sqlite/build/veterinary_clinic.db` using the app's current canonical schema. Legacy `TELEFONE` values become `contacts.kind = 'phone'`, and `CELULAR` values become `contacts.kind = 'mobile'`. Medical record periods are derived from dated entries in the legacy record text: the earliest valid date becomes `admitted_at`, and the latest valid date becomes `discharged_at` when there is more than one dated entry. Legacy vaccination rows are imported with vaccine names plus dose and validity snapshots backed by the editable catalogs.
 
 ### Exported app database rebuild
 

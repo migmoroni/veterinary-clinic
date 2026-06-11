@@ -122,7 +122,7 @@ function mapContact(row: ContactRow): OwnerContact {
 async function listVeterinarianContacts(): Promise<OwnerContact[]> {
 	const rows = await selectMany<ContactRow>(
 		`SELECT id, kind, label, value, created_at, updated_at
-		 FROM owner_contacts
+		 FROM contacts
 		 WHERE veterinarian_profile_id = 1
 		 ORDER BY sort_order, id`
 	);
@@ -132,7 +132,7 @@ async function listVeterinarianContacts(): Promise<OwnerContact[]> {
 async function listWorkplaceContacts(): Promise<OwnerContact[]> {
 	const rows = await selectMany<ContactRow>(
 		`SELECT id, kind, label, value, created_at, updated_at
-		 FROM owner_contacts
+		 FROM contacts
 		 WHERE workplace_id = 1
 		 ORDER BY sort_order, id`
 	);
@@ -144,10 +144,10 @@ async function replaceContacts(
 	contacts: OwnerContactInput[],
 	country: string
 ): Promise<void> {
-	await execute(`DELETE FROM owner_contacts WHERE ${target} = 1`);
+	await execute(`DELETE FROM contacts WHERE ${target} = 1`);
 	for (const [index, contact] of normalizeContacts(contacts, country).entries()) {
 		await execute(
-			`INSERT INTO owner_contacts (${target}, kind, label, value, sort_order, updated_at)
+			`INSERT INTO contacts (${target}, kind, label, value, sort_order, updated_at)
 			 VALUES (1, $1, $2, $3, $4, CURRENT_TIMESTAMP)`,
 			[contact.kind, contact.label ?? '', contact.value, index]
 		);

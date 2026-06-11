@@ -218,7 +218,7 @@ function mapOwner(row: OwnerRow, contacts: OwnerContact[] = [], additionalRespon
 export async function listOwnerContacts(ownerId: number): Promise<OwnerContact[]> {
 	const rows = await selectMany<OwnerContactRow>(
 		`SELECT id, owner_id, kind, label, value, created_at, updated_at
-		 FROM owner_contacts
+		 FROM contacts
 		 WHERE owner_id = $1 AND responsible_id IS NULL
 		 ORDER BY sort_order, id`,
 		[ownerId]
@@ -235,7 +235,7 @@ export async function listOwnerContactsByOwnerIds(ownerIds: number[]): Promise<M
 	const placeholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
 	const rows = await selectMany<OwnerContactRow>(
 		`SELECT id, owner_id, kind, label, value, created_at, updated_at
-		 FROM owner_contacts
+		 FROM contacts
 		 WHERE owner_id IN (${placeholders}) AND responsible_id IS NULL
 		 ORDER BY owner_id, sort_order, id`,
 		uniqueIds
@@ -259,25 +259,25 @@ export async function listOwnerAssociatedContactsByOwnerIds(ownerIds: number[]):
 	const responsibleContactPlaceholders = uniqueIds.map((_, index) => `$${uniqueIds.length + index + 1}`).join(', ');
 	const rows = await selectMany<OwnerAssociatedContactRow>(
 		`SELECT id, owner_id, kind, label, value, created_at, updated_at, NULL AS responsible_id, NULL AS responsible_name, 0 AS source_order, sort_order AS owner_sort_order, sort_order AS contact_sort_order
-		 FROM owner_contacts
+		 FROM contacts
 		 WHERE owner_id IN (${ownerContactPlaceholders}) AND responsible_id IS NULL
 
 		 UNION ALL
 
-		 SELECT owner_contacts.id,
+		 SELECT contacts.id,
 			owner_additional_responsibles.owner_id,
-			owner_contacts.kind,
-			owner_contacts.label,
-			owner_contacts.value,
-			owner_contacts.created_at,
-			owner_contacts.updated_at,
+			contacts.kind,
+			contacts.label,
+			contacts.value,
+			contacts.created_at,
+			contacts.updated_at,
 			owner_additional_responsibles.id AS responsible_id,
 			owner_additional_responsibles.name AS responsible_name,
 			1 AS source_order,
 			owner_additional_responsibles.sort_order AS owner_sort_order,
-			owner_contacts.sort_order AS contact_sort_order
+			contacts.sort_order AS contact_sort_order
 		 FROM owner_additional_responsibles
-		 JOIN owner_contacts ON owner_contacts.responsible_id = owner_additional_responsibles.id
+		 JOIN contacts ON contacts.responsible_id = owner_additional_responsibles.id
 		 WHERE owner_additional_responsibles.owner_id IN (${responsibleContactPlaceholders})
 		 ORDER BY owner_id, source_order, owner_sort_order, contact_sort_order, id`,
 		[...uniqueIds, ...uniqueIds]
@@ -306,7 +306,7 @@ export async function listOwnerAdditionalResponsibleContactsByResponsibleIds(res
 	const placeholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
 	const rows = await selectMany<OwnerAdditionalResponsibleContactRow>(
 		`SELECT id, responsible_id, kind, label, value, created_at, updated_at
-		 FROM owner_contacts
+		 FROM contacts
 		 WHERE responsible_id IN (${placeholders}) AND owner_id IS NULL
 		 ORDER BY responsible_id, sort_order, id`,
 		uniqueIds
@@ -359,12 +359,12 @@ async function listOwnerAdditionalResponsiblesByOwnerIds(ownerIds: number[]): Pr
 }
 
 async function replaceOwnerContacts(ownerId: number, contacts: OwnerContactInput[] = [], country: string = DEFAULT_OWNER_COUNTRY): Promise<void> {
-	await execute('DELETE FROM owner_contacts WHERE owner_id = $1 AND responsible_id IS NULL', [ownerId]);
+	await execute('DELETE FROM contacts WHERE owner_id = $1 AND responsible_id IS NULL', [ownerId]);
 
 	const normalizedContacts = normalizeContacts(contacts, country);
 	for (const [index, contact] of normalizedContacts.entries()) {
 		await execute(
-			`INSERT INTO owner_contacts (owner_id, kind, label, value, sort_order, updated_at)
+			`INSERT INTO contacts (owner_id, kind, label, value, sort_order, updated_at)
 			 VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`,
 			[ownerId, contact.kind, contact.label ?? '', contact.value, index]
 		);
@@ -372,7 +372,7 @@ async function replaceOwnerContacts(ownerId: number, contacts: OwnerContactInput
 }
 
 async function replaceOwnerAdditionalResponsibles(ownerId: number, responsibles: OwnerAdditionalResponsibleInput[] = [], country: string = DEFAULT_OWNER_COUNTRY): Promise<void> {
-	await execute('DELETE FROM owner_contacts WHERE responsible_id IN (SELECT id FROM owner_additional_responsibles WHERE owner_id = $1) AND owner_id IS NULL', [ownerId]);
+	await execute('DELETE FROM contacts WHERE responsible_id IN (SELECT id FROM owner_additional_responsibles WHERE owner_id = $1) AND owner_id IS NULL', [ownerId]);
 	await execute('DELETE FROM owner_additional_responsibles WHERE owner_id = $1', [ownerId]);
 
 	const normalizedResponsibles = normalizeAdditionalResponsibles(responsibles, country);
@@ -387,7 +387,7 @@ async function replaceOwnerAdditionalResponsibles(ownerId: number, responsibles:
 
 		for (const [contactIndex, contact] of responsible.contacts.entries()) {
 			await execute(
-				`INSERT OR IGNORE INTO owner_contacts (responsible_id, kind, label, value, sort_order, updated_at)
+				`INSERT OR IGNORE INTO contacts (responsible_id, kind, label, value, sort_order, updated_at)
 				 VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`,
 				[responsibleId, contact.kind, contact.label ?? '', contact.value, contactIndex]
 			);
@@ -440,15 +440,15 @@ export async function listOwners(query = ''): Promise<Owner[]> {
 	const filter =
 		normalized.length > 0
 			? `AND (owners.name LIKE $1 OR owner_address.city LIKE $1 OR owners.additional_information LIKE $1 OR EXISTS (
-				SELECT 1 FROM owner_contacts
-				WHERE owner_contacts.owner_id = owners.id AND (owner_contacts.value LIKE $1 OR owner_contacts.label LIKE $1)
+				SELECT 1 FROM contacts
+				WHERE contacts.owner_id = owners.id AND (contacts.value LIKE $1 OR contacts.label LIKE $1)
 			) OR EXISTS (
 				SELECT 1 FROM owner_additional_responsibles
 				WHERE owner_additional_responsibles.owner_id = owners.id AND owner_additional_responsibles.name LIKE $1
 			) OR EXISTS (
 				SELECT 1 FROM owner_additional_responsibles
-				JOIN owner_contacts ON owner_contacts.responsible_id = owner_additional_responsibles.id
-				WHERE owner_additional_responsibles.owner_id = owners.id AND (owner_contacts.value LIKE $1 OR owner_contacts.label LIKE $1)
+				JOIN contacts ON contacts.responsible_id = owner_additional_responsibles.id
+				WHERE owner_additional_responsibles.owner_id = owners.id AND (contacts.value LIKE $1 OR contacts.label LIKE $1)
 			))`
 			: '';
 
@@ -591,7 +591,7 @@ export async function restoreOwner(id: number): Promise<void> {
 
 export async function hardDeleteOwner(id: number): Promise<void> {
 	await execute('DELETE FROM pet_owners WHERE owner_id = $1', [id]);
-	await execute('DELETE FROM owner_contacts WHERE owner_id = $1 OR responsible_id IN (SELECT id FROM owner_additional_responsibles WHERE owner_id = $1)', [id]);
+	await execute('DELETE FROM contacts WHERE owner_id = $1 OR responsible_id IN (SELECT id FROM owner_additional_responsibles WHERE owner_id = $1)', [id]);
 	await execute('DELETE FROM owner_additional_responsibles WHERE owner_id = $1', [id]);
 	await execute('DELETE FROM addresses WHERE owner_id = $1', [id]);
 	await execute('DELETE FROM owners WHERE id = $1', [id]);

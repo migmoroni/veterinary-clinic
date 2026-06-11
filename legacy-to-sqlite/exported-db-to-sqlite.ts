@@ -39,7 +39,7 @@ const requiredSchema = {
   workplaces: ['id', 'name', 'services_description', 'created_at', 'updated_at'],
   image_collections: ['id', 'entity_type', 'entity_id', 'primary_required', 'max_items', 'created_at', 'updated_at'],
   image_collection_items: ['id', 'collection_id', 'image_blob', 'original_image_blob', 'description', 'is_primary', 'sort_order', 'created_at', 'updated_at'],
-  owner_contacts: ['id', 'owner_id', 'responsible_id', 'veterinarian_profile_id', 'workplace_id', 'kind', 'label', 'value', 'sort_order', 'created_at', 'updated_at'],
+  contacts: ['id', 'owner_id', 'responsible_id', 'veterinarian_profile_id', 'workplace_id', 'kind', 'label', 'value', 'sort_order', 'created_at', 'updated_at'],
   owner_additional_responsibles: ['id', 'owner_id', 'name', 'avatar_blob', 'sort_order', 'created_at', 'updated_at'],
   pets: ['id', 'name', 'birth_date', 'species', 'breed', 'sex', 'avatar_blob', 'updated_at', 'deleted_at', 'purge_after'],
   pet_owners: ['id', 'pet_id', 'owner_id', 'sort_order', 'created_at', 'updated_at'],
@@ -56,14 +56,6 @@ const requiredSchema = {
 
 type TableName = keyof typeof requiredSchema;
 type SchemaDefinition = Record<string, readonly string[]>;
-type SourceSchemaKind = 'current' | 'split-addresses';
-
-const { addresses: _addresses, ...schemaWithoutAddresses } = requiredSchema;
-const splitAddressSchema = {
-  ...schemaWithoutAddresses,
-  owner_addresses: ['owner_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code', 'created_at', 'updated_at'],
-  workplace_addresses: ['workplace_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code', 'created_at', 'updated_at']
-} as const;
 
 const copySidecarSuffixes = ['', '-wal', '-shm'];
 
@@ -194,10 +186,6 @@ function tableColumns(database: Database.Database, table: string): Set<string> {
   return new Set(rows.map((row) => row.name));
 }
 
-function hasTable(database: Database.Database, table: string): boolean {
-  return Boolean(database.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?").get(table));
-}
-
 function assertCompatibleSchema(database: Database.Database, schema: SchemaDefinition): void {
   const existingTables = new Set(
     (database.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all() as { name: string }[]).map((row) => row.name)
@@ -217,16 +205,6 @@ function assertCompatibleSchema(database: Database.Database, schema: SchemaDefin
   if (missingColumns.length > 0) throw new Error(`Banco de origem não tem as colunas esperadas: ${missingColumns.join(', ')}`);
 }
 
-function detectSourceSchema(database: Database.Database): SourceSchemaKind {
-  if (hasTable(database, 'addresses')) {
-    assertCompatibleSchema(database, requiredSchema);
-    return 'current';
-  }
-
-  assertCompatibleSchema(database, splitAddressSchema);
-  return 'split-addresses';
-}
-
 function assertIntegrity(database: Database.Database): void {
   const integrityRows = database.prepare('PRAGMA integrity_check').all() as IntegrityCheckRow[];
   const integrityProblems = integrityRows.map((row) => row.integrity_check).filter((value) => value !== 'ok');
@@ -243,14 +221,9 @@ function countRows(database: Database.Database, table: string): number {
   return (database.prepare(`SELECT COUNT(*) AS total FROM ${quoteIdentifier(table)}`).get() as CountRow).total;
 }
 
-function tableCounts(database: Database.Database, schemaKind: SourceSchemaKind = 'current'): Map<TableName, number> {
+function tableCounts(database: Database.Database): Map<TableName, number> {
   return new Map(
-    (Object.keys(requiredSchema) as TableName[]).map((table) => [
-      table,
-      table === 'addresses' && schemaKind === 'split-addresses'
-        ? countRows(database, 'owner_addresses') + countRows(database, 'workplace_addresses')
-        : countRows(database, table)
-    ])
+    (Object.keys(requiredSchema) as TableName[]).map((table) => [table, countRows(database, table)])
   );
 }
 
@@ -261,70 +234,10 @@ function assertCountsMatch(inputCounts: Map<TableName, number>, outputCounts: Ma
   }
 }
 
-function transformSplitAddresses(database: Database.Database): void {
-  database.pragma('foreign_keys = OFF');
-  const transform = database.transaction(() => {
-    database.exec(`
-      CREATE TABLE addresses (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        owner_id INTEGER,
-        workplace_id INTEGER,
-        street TEXT CHECK(street IS NULL OR length(street) <= 160),
-        street_number TEXT CHECK(street_number IS NULL OR length(street_number) <= 32),
-        address_complement TEXT CHECK(address_complement IS NULL OR length(address_complement) <= 80),
-        neighborhood TEXT CHECK(neighborhood IS NULL OR length(neighborhood) <= 120),
-        city TEXT CHECK(city IS NULL OR length(city) <= 120),
-        state TEXT CHECK(state IS NULL OR length(state) <= 80),
-        country TEXT NOT NULL DEFAULT 'BRA' CHECK(length(country) = 3),
-        postal_code TEXT CHECK(postal_code IS NULL OR length(postal_code) <= 32),
-        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT,
-        FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE,
-        FOREIGN KEY (workplace_id) REFERENCES workplaces(id) ON DELETE CASCADE,
-        CHECK((owner_id IS NOT NULL) + (workplace_id IS NOT NULL) = 1),
-        UNIQUE(owner_id),
-        UNIQUE(workplace_id)
-      );
-
-      INSERT INTO addresses (
-        owner_id, workplace_id, street, street_number, address_complement,
-        neighborhood, city, state, country, postal_code, created_at, updated_at
-      )
-      SELECT owner_id, NULL, street, street_number, address_complement,
-        neighborhood, city, state, country, postal_code, created_at, updated_at
-      FROM owner_addresses;
-
-      INSERT INTO addresses (
-        owner_id, workplace_id, street, street_number, address_complement,
-        neighborhood, city, state, country, postal_code, created_at, updated_at
-      )
-      SELECT NULL, workplace_id, street, street_number, address_complement,
-        neighborhood, city, state, country, postal_code, created_at, updated_at
-      FROM workplace_addresses;
-
-      DROP TABLE workplace_addresses;
-      DROP TABLE owner_addresses;
-
-      CREATE INDEX idx_addresses_owner_id ON addresses(owner_id);
-      CREATE INDEX idx_addresses_workplace_id ON addresses(workplace_id);
-      CREATE INDEX idx_addresses_city ON addresses(city);
-      CREATE INDEX idx_addresses_state ON addresses(state);
-    `);
-  });
-
-  try {
-    transform();
-  } finally {
-    database.pragma('foreign_keys = ON');
-  }
-}
-
-function printReport(inputPath: string, outputPath: string, counts: Map<TableName, number>, schemaKind: SourceSchemaKind): void {
+function printReport(inputPath: string, outputPath: string, counts: Map<TableName, number>): void {
   console.log('\nRebuild de banco exportado concluído:');
   console.log(`- Origem: ${inputPath}`);
   console.log(`- Destino: ${outputPath}`);
-  console.log(`- Transformações estruturais aplicadas: ${schemaKind === 'split-addresses' ? 1 : 0}`);
-  if (schemaKind === 'split-addresses') console.log('  - owner_addresses + workplace_addresses -> addresses');
   console.log('- Tabelas copiadas e validadas:');
   for (const [table, count] of counts.entries()) {
     console.log(`  - ${table}: ${count}`);
@@ -346,21 +259,20 @@ function rebuildExportedDatabase(): void {
   source.pragma('foreign_keys = ON');
 
   try {
-    const sourceSchemaKind = detectSourceSchema(source);
+    assertCompatibleSchema(source, requiredSchema);
     assertIntegrity(source);
-    const inputCounts = tableCounts(source, sourceSchemaKind);
+    const inputCounts = tableCounts(source);
 
     source.exec(`VACUUM INTO ${quoteSqlString(outputPath)}`);
 
     const output = new Database(outputPath, { fileMustExist: true });
     output.pragma('foreign_keys = ON');
     try {
-      if (sourceSchemaKind === 'split-addresses') transformSplitAddresses(output);
       assertCompatibleSchema(output, requiredSchema);
       assertIntegrity(output);
       const outputCounts = tableCounts(output);
       assertCountsMatch(inputCounts, outputCounts);
-      printReport(inputPath, outputPath, outputCounts, sourceSchemaKind);
+      printReport(inputPath, outputPath, outputCounts);
     } finally {
       output.close();
     }

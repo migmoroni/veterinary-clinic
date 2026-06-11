@@ -81,8 +81,8 @@ const ownerSearchPredicates: SearchTermPredicate[] = [
 	(placeholder) => `owners.additional_information LIKE ${placeholder}`,
 	(placeholder) => `owner_address.city LIKE ${placeholder}`,
 	(placeholder) => `EXISTS (
-		SELECT 1 FROM owner_contacts
-		WHERE owner_contacts.owner_id = owners.id AND (owner_contacts.value LIKE ${placeholder} OR owner_contacts.label LIKE ${placeholder})
+		SELECT 1 FROM contacts
+		WHERE contacts.owner_id = owners.id AND (contacts.value LIKE ${placeholder} OR contacts.label LIKE ${placeholder})
 	)`,
 	(placeholder) => `EXISTS (
 		SELECT 1 FROM owner_additional_responsibles
@@ -90,8 +90,8 @@ const ownerSearchPredicates: SearchTermPredicate[] = [
 	)`,
 	(placeholder) => `EXISTS (
 		SELECT 1 FROM owner_additional_responsibles
-		JOIN owner_contacts ON owner_contacts.responsible_id = owner_additional_responsibles.id
-		WHERE owner_additional_responsibles.owner_id = owners.id AND (owner_contacts.value LIKE ${placeholder} OR owner_contacts.label LIKE ${placeholder})
+		JOIN contacts ON contacts.responsible_id = owner_additional_responsibles.id
+		WHERE owner_additional_responsibles.owner_id = owners.id AND (contacts.value LIKE ${placeholder} OR contacts.label LIKE ${placeholder})
 	)`
 ];
 
@@ -110,10 +110,10 @@ const petSearchPredicates: SearchTermPredicate[] = [
 	(placeholder) => `EXISTS (
 		SELECT 1 FROM pet_owners
 		JOIN owners ON owners.id = pet_owners.owner_id
-		JOIN owner_contacts ON owner_contacts.owner_id = owners.id
+		JOIN contacts ON contacts.owner_id = owners.id
 		WHERE pet_owners.pet_id = pets.id
 			AND owners.deleted_at IS NULL
-			AND (owner_contacts.value LIKE ${placeholder} OR owner_contacts.label LIKE ${placeholder})
+			AND (contacts.value LIKE ${placeholder} OR contacts.label LIKE ${placeholder})
 	)`
 ];
 
@@ -134,10 +134,10 @@ const recordSearchPredicates: SearchTermPredicate[] = [
 	(placeholder) => `EXISTS (
 		SELECT 1 FROM pet_owners
 		JOIN owners ON owners.id = pet_owners.owner_id
-		JOIN owner_contacts ON owner_contacts.owner_id = owners.id
+		JOIN contacts ON contacts.owner_id = owners.id
 		WHERE pet_owners.pet_id = pets.id
 			AND owners.deleted_at IS NULL
-			AND (owner_contacts.value LIKE ${placeholder} OR owner_contacts.label LIKE ${placeholder})
+			AND (contacts.value LIKE ${placeholder} OR contacts.label LIKE ${placeholder})
 	)`
 ];
 
@@ -168,13 +168,13 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 			owners.name AS title,
 			COALESCE((
 				SELECT CASE
-					WHEN owner_contacts.kind = 'other' AND owner_contacts.label <> '' THEN owner_contacts.label || ': ' || owner_contacts.value
-					ELSE owner_contacts.value
+					WHEN contacts.kind = 'other' AND contacts.label <> '' THEN contacts.label || ': ' || contacts.value
+					ELSE contacts.value
 				END
-				FROM owner_contacts
-				WHERE owner_contacts.owner_id = owners.id
-					AND owner_contacts.responsible_id IS NULL
-				ORDER BY owner_contacts.sort_order, owner_contacts.id
+				FROM contacts
+				WHERE contacts.owner_id = owners.id
+					AND contacts.responsible_id IS NULL
+				ORDER BY contacts.sort_order, contacts.id
 				LIMIT 1
 			), (
 				SELECT owner_additional_responsibles.name

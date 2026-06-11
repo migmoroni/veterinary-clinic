@@ -161,7 +161,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	`);
 
 	await database.execute(`
-		CREATE TABLE IF NOT EXISTS owner_contacts (
+		CREATE TABLE IF NOT EXISTS contacts (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			owner_id INTEGER,
 			responsible_id INTEGER,
@@ -379,12 +379,12 @@ export async function createCurrentIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_addresses_workplace_id ON addresses(workplace_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_addresses_city ON addresses(city)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_addresses_state ON addresses(state)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_owner_id ON owner_contacts(owner_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_responsible_id ON owner_contacts(responsible_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_veterinarian_profile_id ON owner_contacts(veterinarian_profile_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_workplace_id ON owner_contacts(workplace_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_label ON owner_contacts(label)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_contacts_value ON owner_contacts(value)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_contacts_owner_id ON contacts(owner_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_contacts_responsible_id ON contacts(responsible_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_contacts_veterinarian_profile_id ON contacts(veterinarian_profile_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_contacts_workplace_id ON contacts(workplace_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_contacts_label ON contacts(label)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_contacts_value ON contacts(value)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_image_collections_entity ON image_collections(entity_type, entity_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_image_collection_items_collection_id ON image_collection_items(collection_id, sort_order, id)');
 	await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_image_collection_items_primary ON image_collection_items(collection_id) WHERE is_primary = 1');

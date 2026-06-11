@@ -244,6 +244,7 @@ db.exec(`
   DROP TABLE IF EXISTS pet_owners;
   DROP TABLE IF EXISTS pets;
   DROP TABLE IF EXISTS owner_additional_responsibles;
+  DROP TABLE IF EXISTS contacts;
   DROP TABLE IF EXISTS owner_contacts;
   DROP TABLE IF EXISTS image_collection_items;
   DROP TABLE IF EXISTS image_collections;
@@ -327,7 +328,7 @@ db.exec(`
     FOREIGN KEY (collection_id) REFERENCES image_collections (id) ON DELETE CASCADE
   );
 
-  CREATE TABLE IF NOT EXISTS owner_contacts (
+  CREATE TABLE IF NOT EXISTS contacts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     owner_id INTEGER,
     responsible_id INTEGER,
@@ -517,12 +518,12 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_addresses_workplace_id ON addresses(workplace_id);
   CREATE INDEX IF NOT EXISTS idx_addresses_city ON addresses(city);
   CREATE INDEX IF NOT EXISTS idx_addresses_state ON addresses(state);
-  CREATE INDEX IF NOT EXISTS idx_owner_contacts_owner_id ON owner_contacts(owner_id);
-  CREATE INDEX IF NOT EXISTS idx_owner_contacts_responsible_id ON owner_contacts(responsible_id);
-  CREATE INDEX IF NOT EXISTS idx_owner_contacts_veterinarian_profile_id ON owner_contacts(veterinarian_profile_id);
-  CREATE INDEX IF NOT EXISTS idx_owner_contacts_workplace_id ON owner_contacts(workplace_id);
-  CREATE INDEX IF NOT EXISTS idx_owner_contacts_label ON owner_contacts(label);
-  CREATE INDEX IF NOT EXISTS idx_owner_contacts_value ON owner_contacts(value);
+  CREATE INDEX IF NOT EXISTS idx_contacts_owner_id ON contacts(owner_id);
+  CREATE INDEX IF NOT EXISTS idx_contacts_responsible_id ON contacts(responsible_id);
+  CREATE INDEX IF NOT EXISTS idx_contacts_veterinarian_profile_id ON contacts(veterinarian_profile_id);
+  CREATE INDEX IF NOT EXISTS idx_contacts_workplace_id ON contacts(workplace_id);
+  CREATE INDEX IF NOT EXISTS idx_contacts_label ON contacts(label);
+  CREATE INDEX IF NOT EXISTS idx_contacts_value ON contacts(value);
   CREATE INDEX IF NOT EXISTS idx_image_collections_entity ON image_collections(entity_type, entity_id);
   CREATE INDEX IF NOT EXISTS idx_image_collection_items_collection_id ON image_collection_items(collection_id, sort_order, id);
   CREATE UNIQUE INDEX IF NOT EXISTS idx_image_collection_items_primary ON image_collection_items(collection_id) WHERE is_primary = 1;
@@ -570,7 +571,7 @@ const insertOwnerAddress = db.prepare(`
 `);
 
 const insertOwnerContact = db.prepare(`
-  INSERT OR IGNORE INTO owner_contacts (owner_id, kind, label, value, sort_order, updated_at)
+  INSERT OR IGNORE INTO contacts (owner_id, kind, label, value, sort_order, updated_at)
   VALUES (@ownerId, @kind, @label, @value, @sortOrder, CURRENT_TIMESTAMP)
 `);
 
@@ -580,7 +581,7 @@ const insertOwnerAdditionalResponsible = db.prepare(`
 `);
 
 const insertOwnerAdditionalResponsibleContact = db.prepare(`
-  INSERT OR IGNORE INTO owner_contacts (responsible_id, kind, label, value, sort_order, updated_at)
+  INSERT OR IGNORE INTO contacts (responsible_id, kind, label, value, sort_order, updated_at)
   VALUES (@responsibleId, @kind, @label, @value, @sortOrder, CURRENT_TIMESTAMP)
 `);
 
@@ -1498,7 +1499,7 @@ const printImportReport = (report: ImportReport) => {
   if (report.skippedRows.length > 10) console.log(`  - ... mais ${report.skippedRows.length - 10} linhas puladas`);
   console.log(`- Tutores criados: ${report.ownersCreated}`);
   console.log(`- Linhas que reaproveitaram tutor pelo mesmo nome: ${report.ownersReused}`);
-  console.log(`- Contatos convertidos para owner_contacts: ${report.ownerContactsCreated}`);
+  console.log(`- Contatos convertidos para contacts: ${report.ownerContactsCreated}`);
   console.log(`- Contatos duplicados ignorados: ${report.ownerContactsReused}`);
   console.log(`- Responsáveis adicionais convertidos: ${report.ownerAdditionalResponsiblesCreated}`);
   console.log(`- Responsáveis adicionais duplicados ignorados: ${report.ownerAdditionalResponsiblesReused}`);
@@ -1537,8 +1538,8 @@ const printDatabaseReport = () => {
   const dewormingsWithoutNormalizedName = (db.prepare("SELECT COUNT(*) AS total FROM pet_antiparasitic_treatments WHERE antiparasitic_normalized_name IS NULL OR length(trim(antiparasitic_normalized_name)) = 0").get() as CountRow).total;
   const dewormingsWithInvalidDose = (db.prepare('SELECT COUNT(*) AS total FROM pet_antiparasitic_treatments WHERE dose IS NULL OR length(trim(dose)) = 0').get() as CountRow).total;
   const dewormingsWithInvalidValidity = (db.prepare("SELECT COUNT(*) AS total FROM pet_antiparasitic_treatments WHERE validity_value <= 0 OR validity_unit NOT IN ('days', 'months', 'years')").get() as CountRow).total;
-  const ownerContacts = (db.prepare('SELECT COUNT(*) AS total FROM owner_contacts WHERE owner_id IS NOT NULL AND responsible_id IS NULL').get() as CountRow).total;
-  const additionalResponsibleContacts = (db.prepare('SELECT COUNT(*) AS total FROM owner_contacts WHERE responsible_id IS NOT NULL AND owner_id IS NULL').get() as CountRow).total;
+  const ownerContacts = (db.prepare('SELECT COUNT(*) AS total FROM contacts WHERE owner_id IS NOT NULL AND responsible_id IS NULL').get() as CountRow).total;
+  const additionalResponsibleContacts = (db.prepare('SELECT COUNT(*) AS total FROM contacts WHERE responsible_id IS NOT NULL AND owner_id IS NULL').get() as CountRow).total;
 
   console.log('\nConferência do SQLite gerado:');
   console.log(`- owners: ${countRows('owners')}`);
@@ -1548,9 +1549,9 @@ const printDatabaseReport = () => {
   console.log(`- addresses de locais de trabalho: ${countWhere('addresses', 'workplace_id IS NOT NULL')}`);
   console.log(`- image_collections: ${countRows('image_collections')}`);
   console.log(`- image_collection_items: ${countRows('image_collection_items')}`);
-  console.log(`- owner_contacts de tutores: ${ownerContacts}`);
+  console.log(`- contacts de tutores: ${ownerContacts}`);
   console.log(`- owner_additional_responsibles: ${countRows('owner_additional_responsibles')}`);
-  console.log(`- owner_contacts de responsáveis adicionais: ${additionalResponsibleContacts}`);
+  console.log(`- contacts de responsáveis adicionais: ${additionalResponsibleContacts}`);
   console.log(`- pets: ${countRows('pets')}`);
   console.log(`- pet_owners: ${countRows('pet_owners')}`);
   console.log(`- medical_records: ${countRows('medical_records')}`);

@@ -36,7 +36,7 @@ async function validateDatabaseFile(fileName: string): Promise<void> {
 			(await tableHasColumns(database, 'workplaces', ['id', 'name', 'services_description'])) &&
 			(await tableHasColumns(database, 'image_collections', ['id', 'entity_type', 'entity_id', 'primary_required', 'max_items'])) &&
 			(await tableHasColumns(database, 'image_collection_items', ['id', 'collection_id', 'image_blob', 'original_image_blob', 'description', 'is_primary', 'sort_order'])) &&
-			(await tableHasColumns(database, 'owner_contacts', ['id', 'owner_id', 'responsible_id', 'veterinarian_profile_id', 'workplace_id', 'kind', 'label', 'value'])) &&
+			(await tableHasColumns(database, 'contacts', ['id', 'owner_id', 'responsible_id', 'veterinarian_profile_id', 'workplace_id', 'kind', 'label', 'value'])) &&
 			(await tableHasColumns(database, 'owner_additional_responsibles', ['id', 'owner_id', 'name', 'avatar_blob'])) &&
 			(await tableHasColumns(database, 'pets', ['id', 'name', 'species', 'breed'])) &&
 			(await tableHasColumns(database, 'pet_owners', ['id', 'pet_id', 'owner_id'])) &&

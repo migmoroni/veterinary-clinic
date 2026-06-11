@@ -46,7 +46,7 @@ export const CSV_TABLES: CsvTableDefinition[] = [
 		orderBy: 'owner_id, sort_order, id'
 	},
 	{
-		name: 'owner_contacts',
+		name: 'contacts',
 		columns: ['id', 'owner_id', 'responsible_id', 'veterinarian_profile_id', 'workplace_id', 'kind', 'label', 'value', 'sort_order', 'created_at', 'updated_at'],
 		orderBy: 'owner_id, responsible_id, veterinarian_profile_id, workplace_id, sort_order, id'
 	},
