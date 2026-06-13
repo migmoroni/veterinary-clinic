@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "rootDir": "..",
+    "outDir": "build/generated"
+  },
+  "include": [
+    "to-sqlite.ts",
+    "../src/lib/domain/preventive/default-catalog.ts",
+    "../src/lib/i18n/locales.ts",
+    "../src/lib/i18n/preventive-aliases/**/*.ts"
+  ],
+  "exclude": [
+    "../src/lib/i18n/preventive-aliases/**/__tests__/**"
+  ]
+}

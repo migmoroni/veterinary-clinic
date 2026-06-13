@@ -1,8 +1,8 @@
 {
   "type": "module",
   "scripts": {
-    "build:csv": "tsc to-sqlite.ts --ignoreConfig",
-    "csv": "node to-sqlite.js",
+    "build:csv": "tsc -p tsconfig.csv.json",
+    "csv": "node build/generated/legacy-to-sqlite/to-sqlite.js",
     "build:exported-db": "tsc exported-db-to-sqlite.ts --ignoreConfig",
     "exported-db": "node exported-db-to-sqlite.js"
   },

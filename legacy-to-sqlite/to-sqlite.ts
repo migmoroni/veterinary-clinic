@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { parse } from 'csv-parse/sync';
 import Database from 'better-sqlite3';
+import { defaultPreventiveCatalogItems } from '../src/lib/domain/preventive/default-catalog.js';
 
 type CsvRow = Record<string, string | undefined>;
 type OwnerContactKind = 'phone' | 'mobile' | 'email' | 'other';
@@ -20,16 +21,15 @@ interface PetTaxonomy {
   breed: string;
 }
 
-interface VaccineMatcher {
-  name: string;
+interface LegacyCsvPreventiveRule {
+  catalogName: string;
   pattern: RegExp;
 }
 
-interface PreventiveCatalogSeed {
+interface LegacyCsvCatalogMetadata {
   kind: 'vaccine' | 'antiparasitic';
   name: string;
   species: PetSpecies[];
-  aliases: string[];
 }
 
 interface DatedRecordBlock {
@@ -647,47 +647,43 @@ const normalizeVaccineName = (value: string | undefined): string => {
 
 const normalizeDewormerName = normalizeVaccineName;
 const boosterDoseLabel = 'Dose de reforço';
-const legacyV10VaccineName = 'DHPPI+L';
+const legacyV10VaccineName = 'Vanguard Plus';
+const legacyDhppiLVaccineName = 'Nobivac DHPPI+L';
+const legacyRabiesVaccineName = 'Nobivac Raiva';
+const genericNobivacVaccineName = 'Nobivac DHPPi';
+const legacySpecificPolyvalentVaccineNames = new Set([
+  legacyDhppiLVaccineName,
+  'Recombitek C6',
+  'Duramune Max 5-CvK/4L',
+  'Canigen MHA2PPi/L',
+  'Imunocan V8',
+  'Nobivac Canine 1-DAPPVL2+CV'
+]);
+const legacySpecificNobivacVaccineNames = new Set([
+  legacyDhppiLVaccineName,
+  'Nobivac Puppy DP',
+  'Nobivac KC',
+  'Nobivac Canine 1-DAPPVL2+CV',
+  'Nobivac Feline 1-HCPCh'
+]);
 
-const defaultPreventiveCatalogItems: PreventiveCatalogSeed[] = [
-  { kind: 'vaccine', name: legacyV10VaccineName, species: ['canine'], aliases: ['V 10', 'V10', 'V 8', 'V8', 'polivalente canina', 'multipla canina', 'dhppi l', 'dhppil'] },
-  { kind: 'vaccine', name: 'DHPPI', species: ['canine'], aliases: ['quintupla canina', 'multipla sem lepto', 'dhppi'] },
-  { kind: 'vaccine', name: 'Puppy DP', species: ['canine'], aliases: ['puppy', 'filhote', 'cinomose parvovirose'] },
-  { kind: 'vaccine', name: 'Giardia inativada', species: ['canine'], aliases: ['giardia', 'giardiase', 'giardiavax'] },
-  { kind: 'vaccine', name: 'Traqueobronquite infecciosa canina', species: ['canine'], aliases: ['gripe canina', 'tosse dos canis', 'kennel cough', 'kc', 'bronchiguard'] },
-  { kind: 'vaccine', name: 'Leishmaniose canina', species: ['canine'], aliases: ['leishtec', 'leishmaniose', 'calazar'] },
-  { kind: 'vaccine', name: 'Antirrábica inativada', species: ['canine', 'feline'], aliases: ['antirrabica', 'raiva', 'rabies', 'rabisin', 'defensor', 'nobivac rabies'] },
-  { kind: 'vaccine', name: 'Tríplice felina FVRCP', species: ['feline'], aliases: ['tríplice felina', 'triplice felina', 'v3', 'fvrcp', 'rinotraqueite calicivirose panleucopenia'] },
-  { kind: 'vaccine', name: 'Quádrupla felina FVRCP+Ch', species: ['feline'], aliases: ['quádrupla felina', 'quadrupla felina', 'v4', 'clamidiose'] },
-  { kind: 'vaccine', name: 'Quíntupla felina FVRCP+Ch+FeLV', species: ['feline'], aliases: ['quíntupla felina', 'quintupla felina', 'v5', 'felv', 'leucemia felina'] },
-  { kind: 'vaccine', name: 'FeLV recombinante', species: ['feline'], aliases: ['leucemia felina', 'felv', 'leucogen', 'purevax felv'] },
-  { kind: 'vaccine', name: 'Nobivac DHPPi', species: ['canine'], aliases: ['nobivac', 'nobivac dhppi', 'dhppi'] },
-  { kind: 'vaccine', name: 'Nobivac L4', species: ['canine'], aliases: ['nobivac lepto', 'l4', 'leptospirose'] },
-  { kind: 'vaccine', name: 'Recombitek C6', species: ['canine'], aliases: ['recombitek', 'recombitek c6', 'v10'] },
-  { kind: 'vaccine', name: 'Vanguard Plus', species: ['canine'], aliases: ['vanguard', 'vanguard plus', 'polivalente canina'] },
-  { kind: 'vaccine', name: 'Nobivac Tricat Trio', species: ['feline'], aliases: ['tricat', 'tricat trio', 'tríplice felina', 'triplice felina'] },
-  { kind: 'vaccine', name: 'Felocell CVR', species: ['feline'], aliases: ['felocell', 'felocell cvr', 'tríplice felina', 'triplice felina'] },
-  { kind: 'vaccine', name: 'Versifel FeLV', species: ['feline'], aliases: ['versifel', 'versifel felv', 'leucemia felina'] },
-  { kind: 'antiparasitic', name: 'Praziquantel + Pamoato de pirantel + Febantel', species: ['canine'], aliases: ['drontal plus', 'endogard', 'canex premium', 'antiparasitario amplo espectro', 'tenicida'] },
-  { kind: 'antiparasitic', name: 'Praziquantel + Pamoato de pirantel', species: ['feline'], aliases: ['drontal gatos', 'drontal cats', 'antiparasitario gatos', 'tenicida'] },
-  { kind: 'antiparasitic', name: 'Milbemicina oxima + Praziquantel', species: ['canine', 'feline'], aliases: ['milbemax', 'milpro', 'milbemicina', 'praziquantel'] },
-  { kind: 'antiparasitic', name: 'Febantel + Pamoato de pirantel + Praziquantel', species: ['canine'], aliases: ['drontal', 'drontal plus sabor', 'endoparasitas'] },
-  { kind: 'antiparasitic', name: 'Fenbendazol', species: ['canine', 'feline'], aliases: ['panacur', 'fembendazol', 'giardia', 'nematódeos', 'nematodeos'] },
-  { kind: 'antiparasitic', name: 'Febantel', species: ['canine'], aliases: ['giardicid', 'giardia', 'verme redondo'] },
-  { kind: 'antiparasitic', name: 'Selamectina', species: ['canine', 'feline'], aliases: ['revolution', 'stronghold', 'endectocida'] },
-  { kind: 'antiparasitic', name: 'Moxidectina + Imidacloprida', species: ['canine', 'feline'], aliases: ['advocate', 'advantage multi', 'endectocida'] },
-  { kind: 'antiparasitic', name: 'Emodepsida + Praziquantel', species: ['feline'], aliases: ['profender', 'antiparasitario topico gatos'] },
-  { kind: 'antiparasitic', name: 'Afoxolaner + Milbemicina oxima', species: ['canine'], aliases: ['nexgard spectra', 'endectocida', 'milbemicina'] },
-  { kind: 'antiparasitic', name: 'Sarolaner + Moxidectina + Pirantel', species: ['canine'], aliases: ['simparic trio', 'endectocida', 'pirantel'] },
-  { kind: 'antiparasitic', name: 'Ivermectina', species: ['canine'], aliases: ['ivermectina oral', 'endectocida'] }
+const legacyCsvCatalogMetadataItems: LegacyCsvCatalogMetadata[] = [
+  { kind: 'vaccine', name: genericNobivacVaccineName, species: ['canine'] },
+  { kind: 'vaccine', name: 'Quádrupla felina FVRCP+Ch', species: ['feline'] },
+  { kind: 'vaccine', name: 'Quíntupla felina FVRCP+Ch+FeLV', species: ['feline'] },
+  { kind: 'vaccine', name: 'Giardia inativada', species: ['canine'] },
+  { kind: 'vaccine', name: 'Traqueobronquite infecciosa canina', species: ['canine'] }
 ];
 
 const preventiveCatalogDefaultsByKindAndName = new Map(defaultPreventiveCatalogItems.map((item) => [`${item.kind}:${normalizeVaccineName(item.name)}`, item]));
+const legacyCsvCatalogMetadataByKindAndName = new Map(legacyCsvCatalogMetadataItems.map((item) => [`${item.kind}:${normalizeVaccineName(item.name)}`, item]));
 
 const metadataForCatalogItem = (kind: 'vaccine' | 'antiparasitic', name: string): { species: string; aliases: string } => {
-  const item = preventiveCatalogDefaultsByKindAndName.get(`${kind}:${normalizeVaccineName(name)}`);
+  const key = `${kind}:${normalizeVaccineName(name)}`;
+  const item = preventiveCatalogDefaultsByKindAndName.get(key);
+  const legacyItem = legacyCsvCatalogMetadataByKindAndName.get(key);
   return {
-    species: JSON.stringify(item?.species ?? ['canine', 'feline']),
+    species: JSON.stringify(item?.species ?? legacyItem?.species ?? ['canine', 'feline']),
     aliases: JSON.stringify(item?.aliases ?? [])
   };
 };
@@ -893,28 +889,50 @@ const breedAliases: Record<PetSpecies, BreedAlias[]> = {
   feline: felineBreedAliases
 };
 
-const vaccineMatchers: VaccineMatcher[] = [
-  { name: legacyV10VaccineName, pattern: /\b(?:v\s*10|v10|v\s*1o|v1o|v\s*8|v8|dhppi(?:\s*l)?|dhppil)\b/ },
-  { name: 'Antirrábica inativada', pattern: /\banti\s*r*abic[ao]?\b|\braiva\b/ },
-  { name: 'Recombitek C6', pattern: /\brecombite[ck]\b/ },
-  { name: 'Quádrupla felina FVRCP+Ch', pattern: /\bquadrupla\b/ },
-  { name: 'Quíntupla felina FVRCP+Ch+FeLV', pattern: /\bquintupla\b/ },
-  { name: 'Giardia inativada', pattern: /\bgiardia\b/ },
-  { name: 'Traqueobronquite infecciosa canina', pattern: /\bgripe\b/ },
-  { name: 'Nobivac DHPPi', pattern: /\bnobivac\b/ },
-  { name: 'Vanguard Plus', pattern: /\bimunocan\b|\bvanguard\b/ }
+// These rules describe this CSV's vocabulary. Catalog aliases are intentionally
+// excluded because they are broad search terms and may belong to several items.
+const legacyCsvVaccineRules: LegacyCsvPreventiveRule[] = [
+  { catalogName: 'Duramune Max 5-CvK/4L', pattern: /\bduramune\b/ },
+  { catalogName: 'Canigen MHA2PPi/L', pattern: /\bcanigen\b/ },
+  { catalogName: 'Imunocan V8', pattern: /\bimunocan\b/ },
+  { catalogName: 'Nobivac Puppy DP', pattern: /\bnobivac\s+puppy(?:\s+dp)?\b/ },
+  { catalogName: 'Nobivac KC', pattern: /\bnobivac\s+kc\b/ },
+  { catalogName: 'Nobivac Canine 1-DAPPVL2+CV', pattern: /\bnobivac\s+(?:canine|multipla)\b/ },
+  { catalogName: 'Nobivac Feline 1-HCPCh', pattern: /\bnobivac\s+feline\s*1?\s*-?\s*hcpch\b/ },
+  { catalogName: 'BronchiGuard', pattern: /\bbronchi\s*guard\b/ },
+  { catalogName: legacyV10VaccineName, pattern: /\b(?:v\s*10|v10|v\s*1o|v1o|v\s*8|v8|vanguard)\b/ },
+  { catalogName: legacyDhppiLVaccineName, pattern: /\b(?:dhppi\s+l|dhppil)\b/ },
+  { catalogName: legacyRabiesVaccineName, pattern: /\banti\s*r*abic[ao]?\b|\braiva\b/ },
+  { catalogName: 'Recombitek C6', pattern: /\brecombite[ck]\b/ },
+  { catalogName: 'Quádrupla felina FVRCP+Ch', pattern: /\bquadrupla\b/ },
+  { catalogName: 'Quíntupla felina FVRCP+Ch+FeLV', pattern: /\bquintupla\b/ },
+  { catalogName: 'Giardia inativada', pattern: /\bgiardia\b/ },
+  { catalogName: 'Traqueobronquite infecciosa canina', pattern: /\bgripe\b/ },
+  { catalogName: genericNobivacVaccineName, pattern: /\bnobivac\b/ }
 ];
 
-const dewormerMatchers: VaccineMatcher[] = [
-  { name: 'Febantel + Pamoato de pirantel + Praziquantel', pattern: /\bdrontal\b|\bendogard\b|\bcanex\b/ },
-  { name: 'Milbemicina oxima + Praziquantel', pattern: /\bmilbemax\b|\bmilprazon\b/ },
-  { name: 'Chemital', pattern: /\bchemital\b/ },
-  { name: 'Vetmax', pattern: /\bvetmax\b/ },
-  { name: 'Top Dog', pattern: /\btop\s*dog\b/ },
-  { name: 'Afoxolaner + Milbemicina oxima', pattern: /\bnex\s*gard\s*spectra\b|\bnexgard\s*spectra\b/ },
-  { name: 'Sarolaner + Moxidectina + Pirantel', pattern: /\bsimparic\s*trio\b/ },
-  { name: 'Moxidectina + Imidacloprida', pattern: /\badvocate\b/ },
-  { name: 'Emodepsida + Praziquantel', pattern: /\bprofender\b/ }
+const legacyCsvAntiparasiticRules: LegacyCsvPreventiveRule[] = [
+  { catalogName: 'Drontal Puppy', pattern: /\bdrontal\s+puppy\b/ },
+  { catalogName: 'Endogard', pattern: /\bendogard\b/ },
+  { catalogName: 'Canex Premium', pattern: /\bcanex\b/ },
+  { catalogName: 'Milbemax', pattern: /\bmilbemax\b/ },
+  { catalogName: 'Chemital', pattern: /\bchemital\b/ },
+  { catalogName: 'Top Dog', pattern: /\btop\s*dog\b/ },
+  { catalogName: 'NexGard Spectra', pattern: /\bnex\s*gard\s*spectra\b/ },
+  { catalogName: 'NexGard', pattern: /\bnex\s*gard\b(?!\s*spectra)/ },
+  { catalogName: 'Simparic Trio', pattern: /\bsimparic\s*trio\b/ },
+  { catalogName: 'Simparic', pattern: /\bsimparic\b(?!\s*trio)/ },
+  { catalogName: 'Bravecto', pattern: /\bbravecto\b/ },
+  { catalogName: 'Capstar', pattern: /\bcapstar\b/ },
+  { catalogName: 'Effipro', pattern: /\beffipro\b/ },
+  { catalogName: 'Fiprolex', pattern: /\bfiprolex\b/ },
+  { catalogName: 'Frontline', pattern: /\bfront\s*line\b/ },
+  { catalogName: 'Defenza', pattern: /\bdefenza\b/ },
+  { catalogName: 'Mectimax', pattern: /\bmectimax\b/ },
+  { catalogName: 'Ivercanis', pattern: /\bivercanis\b/ },
+  { catalogName: 'Advocate', pattern: /\badvocate\b/ },
+  { catalogName: 'Panacur 10%', pattern: /\bpanacur\b/ },
+  { catalogName: 'Giardicid', pattern: /\bgiardicid\b/ }
 ];
 
 const numberedDoseMatchers = [
@@ -924,7 +942,7 @@ const numberedDoseMatchers = [
   { label: '4ª dose', sortOrder: 3, pattern: /\b(?:4\s*(?:a|o)?|quart[ao])\s*dose\b/ }
 ];
 
-const boosterOnlyVaccines = new Set(['Antirrábica inativada']);
+const boosterOnlyVaccines = new Set([legacyRabiesVaccineName]);
 
 const dateHeaderPattern = /(^|\n)\s*(\d{1,2}\s*\/\s*\d{1,2}\s*\/\s*(?:\d{2}|\d{4}))\s*:/g;
 
@@ -1691,11 +1709,25 @@ const getMedicalRecordPeriod = (description: string): { admittedAt: string | nul
 
 const findVaccineMatches = (normalizedLine: string): VaccineMatch[] => {
   const matches: VaccineMatch[] = [];
-  for (const matcher of vaccineMatchers) {
-    const match = normalizedLine.match(matcher.pattern);
-    if (match?.index !== undefined) matches.push({ name: matcher.name, index: match.index });
+  for (const rule of legacyCsvVaccineRules) {
+    const match = normalizedLine.match(rule.pattern);
+    if (match?.index !== undefined) matches.push({ name: rule.catalogName, index: match.index });
   }
-  return matches.sort((first, second) => first.index - second.index);
+
+  const hasSpecificPolyvalentVaccine = matches.some((match) => legacySpecificPolyvalentVaccineNames.has(match.name));
+  const hasSpecificNobivacVaccine = matches.some((match) => legacySpecificNobivacVaccineNames.has(match.name));
+  const hasSpecificKennelCoughVaccine = matches.some((match) => match.name === 'BronchiGuard' || match.name === 'Nobivac KC');
+  const hasSpecificFelineQuadrupleVaccine = matches.some((match) => match.name === 'Nobivac Feline 1-HCPCh');
+
+  return matches
+    .filter((match) => {
+      if (match.name === legacyV10VaccineName && hasSpecificPolyvalentVaccine) return false;
+      if (match.name === genericNobivacVaccineName && (hasSpecificPolyvalentVaccine || hasSpecificNobivacVaccine)) return false;
+      if (match.name === 'Traqueobronquite infecciosa canina' && hasSpecificKennelCoughVaccine) return false;
+      if (match.name === 'Quádrupla felina FVRCP+Ch' && hasSpecificFelineQuadrupleVaccine) return false;
+      return true;
+    })
+    .sort((first, second) => first.index - second.index);
 };
 
 const findDoseSignals = (normalizedLine: string): DoseSignal[] => {
@@ -1766,8 +1798,8 @@ const extractVaccinationsFromRecord = (description: string, report: ImportReport
   return extracted;
 };
 
-const hasPositiveDewormingSignal = (normalizedLine: string): boolean => {
-  return /\b(?:vermifug\w*|antiparasitari\w*|endoparasit\w*|drontal|endogard|milbemax|milprazon|canex|chemital|vetmax|nex\s*gard\s*spectra|nexgard\s*spectra|simparic\s*trio|advocate|profender)\b/.test(normalizedLine);
+const hasGenericDewormingSignal = (normalizedLine: string): boolean => {
+  return /\b(?:vermifug\w*|antiparasitari\w*|endoparasit\w*)\b/.test(normalizedLine);
 };
 
 const hasNegativeDewormingSignal = (normalizedLine: string): boolean => {
@@ -1776,9 +1808,9 @@ const hasNegativeDewormingSignal = (normalizedLine: string): boolean => {
 
 const findDewormerMatches = (normalizedLine: string): DewormerMatch[] => {
   const matches: DewormerMatch[] = [];
-  for (const matcher of dewormerMatchers) {
-    const match = normalizedLine.match(matcher.pattern);
-    if (match?.index !== undefined) matches.push({ name: matcher.name, index: match.index });
+  for (const rule of legacyCsvAntiparasiticRules) {
+    const match = normalizedLine.match(rule.pattern);
+    if (match?.index !== undefined) matches.push({ name: rule.catalogName, index: match.index });
   }
   return matches.sort((first, second) => first.index - second.index);
 };
@@ -1795,10 +1827,10 @@ const extractDewormingDose = (line: string): string => {
 
 const extractDewormingsFromLine = (line: string): Omit<ExtractedDeworming, 'appliedAt'>[] => {
   const normalizedLine = normalizeText(line);
-  if (!hasPositiveDewormingSignal(normalizedLine) || hasNegativeDewormingSignal(normalizedLine)) return [];
+  const dewormerMatches = findDewormerMatches(normalizedLine);
+  if ((!hasGenericDewormingSignal(normalizedLine) && dewormerMatches.length === 0) || hasNegativeDewormingSignal(normalizedLine)) return [];
 
   const dose = extractDewormingDose(line);
-  const dewormerMatches = findDewormerMatches(normalizedLine);
   const matchedDewormers = dewormerMatches.length > 0 ? dewormerMatches.map((match) => match.name) : ['Vermífugo'];
 
   return [...new Set(matchedDewormers)].map((dewormer) => ({ dewormer, dose, validityValue: 6, validityUnit: 'months' }));

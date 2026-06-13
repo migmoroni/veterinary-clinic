@@ -1,4 +1,5 @@
 import type Database from '@tauri-apps/plugin-sql';
+import { defaultPreventiveCatalogItems } from '$lib/domain/preventive/default-catalog.js';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 
 function optionalTextCheck(column: string, maxLength: number): string {
@@ -13,48 +14,6 @@ interface RunMigrationsOptions {
 	seedDefaultData?: boolean;
 	createIndexes?: boolean;
 }
-
-type DefaultPreventiveKind = 'vaccine' | 'antiparasitic';
-
-interface DefaultPreventiveCatalogItem {
-	kind: DefaultPreventiveKind;
-	name: string;
-	species: string[];
-	aliases: string[];
-}
-
-const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
-	{ kind: 'vaccine', name: 'DHPPI+L', species: ['canine'], aliases: ['V 10', 'V10', 'V 8', 'V8', 'polivalente canina', 'multipla canina', 'dhppi l', 'dhppil'] },
-	{ kind: 'vaccine', name: 'DHPPI', species: ['canine'], aliases: ['quintupla canina', 'multipla sem lepto', 'dhppi'] },
-	{ kind: 'vaccine', name: 'Puppy DP', species: ['canine'], aliases: ['puppy', 'filhote', 'cinomose parvovirose'] },
-	{ kind: 'vaccine', name: 'Giardia inativada', species: ['canine'], aliases: ['giardia', 'giardiase', 'giardiavax'] },
-	{ kind: 'vaccine', name: 'Traqueobronquite infecciosa canina', species: ['canine'], aliases: ['gripe canina', 'tosse dos canis', 'kennel cough', 'kc', 'bronchiguard'] },
-	{ kind: 'vaccine', name: 'Leishmaniose canina', species: ['canine'], aliases: ['leishtec', 'leishmaniose', 'calazar'] },
-	{ kind: 'vaccine', name: 'Antirrábica inativada', species: ['canine', 'feline'], aliases: ['antirrabica', 'raiva', 'rabies', 'rabisin', 'defensor', 'nobivac rabies'] },
-	{ kind: 'vaccine', name: 'Tríplice felina FVRCP', species: ['feline'], aliases: ['tríplice felina', 'triplice felina', 'v3', 'fvrcp', 'rinotraqueite calicivirose panleucopenia'] },
-	{ kind: 'vaccine', name: 'Quádrupla felina FVRCP+Ch', species: ['feline'], aliases: ['quádrupla felina', 'quadrupla felina', 'v4', 'clamidiose'] },
-	{ kind: 'vaccine', name: 'Quíntupla felina FVRCP+Ch+FeLV', species: ['feline'], aliases: ['quíntupla felina', 'quintupla felina', 'v5', 'felv', 'leucemia felina'] },
-	{ kind: 'vaccine', name: 'FeLV recombinante', species: ['feline'], aliases: ['leucemia felina', 'felv', 'leucogen', 'purevax felv'] },
-	{ kind: 'vaccine', name: 'Nobivac DHPPi', species: ['canine'], aliases: ['nobivac', 'nobivac dhppi', 'dhppi'] },
-	{ kind: 'vaccine', name: 'Nobivac L4', species: ['canine'], aliases: ['nobivac lepto', 'l4', 'leptospirose'] },
-	{ kind: 'vaccine', name: 'Recombitek C6', species: ['canine'], aliases: ['recombitek', 'recombitek c6', 'v10'] },
-	{ kind: 'vaccine', name: 'Vanguard Plus', species: ['canine'], aliases: ['vanguard', 'vanguard plus', 'polivalente canina'] },
-	{ kind: 'vaccine', name: 'Nobivac Tricat Trio', species: ['feline'], aliases: ['tricat', 'tricat trio', 'tríplice felina', 'triplice felina'] },
-	{ kind: 'vaccine', name: 'Felocell CVR', species: ['feline'], aliases: ['felocell', 'felocell cvr', 'tríplice felina', 'triplice felina'] },
-	{ kind: 'vaccine', name: 'Versifel FeLV', species: ['feline'], aliases: ['versifel', 'versifel felv', 'leucemia felina'] },
-	{ kind: 'antiparasitic', name: 'Praziquantel + Pamoato de pirantel + Febantel', species: ['canine'], aliases: ['drontal plus', 'endogard', 'canex premium', 'antiparasitario amplo espectro', 'tenicida'] },
-	{ kind: 'antiparasitic', name: 'Praziquantel + Pamoato de pirantel', species: ['feline'], aliases: ['drontal gatos', 'drontal cats', 'antiparasitario gatos', 'tenicida'] },
-	{ kind: 'antiparasitic', name: 'Milbemicina oxima + Praziquantel', species: ['canine', 'feline'], aliases: ['milbemax', 'milpro', 'milbemicina', 'praziquantel'] },
-	{ kind: 'antiparasitic', name: 'Febantel + Pamoato de pirantel + Praziquantel', species: ['canine'], aliases: ['drontal', 'drontal plus sabor', 'endoparasitas'] },
-	{ kind: 'antiparasitic', name: 'Fenbendazol', species: ['canine', 'feline'], aliases: ['panacur', 'fembendazol', 'giardia', 'nematódeos', 'nematodeos'] },
-	{ kind: 'antiparasitic', name: 'Febantel', species: ['canine'], aliases: ['giardicid', 'giardia', 'verme redondo'] },
-	{ kind: 'antiparasitic', name: 'Selamectina', species: ['canine', 'feline'], aliases: ['revolution', 'stronghold', 'endectocida'] },
-	{ kind: 'antiparasitic', name: 'Moxidectina + Imidacloprida', species: ['canine', 'feline'], aliases: ['advocate', 'advantage multi', 'endectocida'] },
-	{ kind: 'antiparasitic', name: 'Emodepsida + Praziquantel', species: ['feline'], aliases: ['profender', 'antiparasitario topico gatos'] },
-	{ kind: 'antiparasitic', name: 'Afoxolaner + Milbemicina oxima', species: ['canine'], aliases: ['nexgard spectra', 'endectocida', 'milbemicina'] },
-	{ kind: 'antiparasitic', name: 'Sarolaner + Moxidectina + Pirantel', species: ['canine'], aliases: ['simparic trio', 'endectocida', 'pirantel'] },
-	{ kind: 'antiparasitic', name: 'Ivermectina', species: ['canine'], aliases: ['ivermectina oral', 'endectocida'] }
-];
 
 function normalizePreventiveCatalogName(value: string): string {
 	return value
