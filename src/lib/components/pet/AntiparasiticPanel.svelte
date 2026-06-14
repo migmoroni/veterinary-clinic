@@ -73,7 +73,12 @@
 	});
 
 	function antiparasiticNameOptions() {
-		return visibleAntiparasitics.map((antiparasitic) => ({ value: antiparasitic.name, label: antiparasitic.name, description: antiparasitic.aliases.join(', '), searchText: antiparasitic.aliases.join(' ') }));
+		return visibleAntiparasitics.map((antiparasitic) => ({
+			value: antiparasitic.name,
+			label: antiparasitic.name,
+			description: [antiparasitic.manufacturer, ...antiparasitic.aliases].filter(Boolean).join(' · '),
+			searchText: [antiparasitic.manufacturer, ...antiparasitic.aliases, ...antiparasitic.regions].filter(Boolean).join(' ')
+		}));
 	}
 
 	function protocolOptions() {

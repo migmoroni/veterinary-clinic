@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
 	import PeriodField from '$lib/components/forms/PeriodField.svelte';
+	import PreventiveRegionsField from '$lib/components/preventive/PreventiveRegionsField.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
@@ -38,9 +39,13 @@
 	let activeTab = $state<VaccineSettingsTab>('vaccines');
 	let vaccineDraftNames = $state<Record<number, string>>({});
 	let vaccineDraftAliases = $state<Record<number, string>>({});
+	let vaccineDraftManufacturers = $state<Record<number, string>>({});
+	let vaccineDraftRegions = $state<Record<number, string[]>>({});
 	let vaccineDraftSpecies = $state<Record<number, KnownPetSpecies[]>>({});
 	let antiparasiticDraftNames = $state<Record<number, string>>({});
 	let antiparasiticDraftAliases = $state<Record<number, string>>({});
+	let antiparasiticDraftManufacturers = $state<Record<number, string>>({});
+	let antiparasiticDraftRegions = $state<Record<number, string[]>>({});
 	let antiparasiticDraftSpecies = $state<Record<number, KnownPetSpecies[]>>({});
 	let protocolDraftNames = $state<Record<number, string>>({});
 	let protocolDraftSpecies = $state<Record<number, KnownPetSpecies[]>>({});
@@ -54,9 +59,13 @@
 	let newDoseValidityUnits = $state<Record<number, PreventiveValidityUnit>>({});
 	let newVaccineName = $state('');
 	let newVaccineAliases = $state('');
+	let newVaccineManufacturer = $state('');
+	let newVaccineRegions = $state<string[]>(['BRA']);
 	let newVaccineSpecies = $state<KnownPetSpecies[]>(defaultSpeciesDraft());
 	let newAntiparasiticName = $state('');
 	let newAntiparasiticAliases = $state('');
+	let newAntiparasiticManufacturer = $state('');
+	let newAntiparasiticRegions = $state<string[]>(['BRA']);
 	let newAntiparasiticSpecies = $state<KnownPetSpecies[]>(defaultSpeciesDraft());
 	let newProtocolKind = $state<PreventiveProtocolKind>('vaccine');
 	let newProtocolName = $state('');
@@ -123,8 +132,16 @@
 		return vaccineDraftSpecies[vaccine.id] ?? vaccine.species;
 	}
 
+	function vaccineDraftRegionsValue(vaccine: Vaccine): string[] {
+		return vaccineDraftRegions[vaccine.id] ?? vaccine.regions;
+	}
+
 	function antiparasiticDraftSpeciesValue(antiparasitic: Antiparasitic): KnownPetSpecies[] {
 		return antiparasiticDraftSpecies[antiparasitic.id] ?? antiparasitic.species;
+	}
+
+	function antiparasiticDraftRegionsValue(antiparasitic: Antiparasitic): string[] {
+		return antiparasiticDraftRegions[antiparasitic.id] ?? antiparasitic.regions;
 	}
 
 	function protocolDraftSpeciesValue(protocol: PreventiveProtocol): KnownPetSpecies[] {
@@ -137,6 +154,14 @@
 
 	function setAntiparasiticSpecies(antiparasitic: Antiparasitic, species: KnownPetSpecies) {
 		antiparasiticDraftSpecies = { ...antiparasiticDraftSpecies, [antiparasitic.id]: toggleSpeciesDraft(antiparasiticDraftSpeciesValue(antiparasitic), species) };
+	}
+
+	function setVaccineRegions(vaccineId: number, regions: string[]) {
+		vaccineDraftRegions = { ...vaccineDraftRegions, [vaccineId]: regions };
+	}
+
+	function setAntiparasiticRegions(antiparasiticId: number, regions: string[]) {
+		antiparasiticDraftRegions = { ...antiparasiticDraftRegions, [antiparasiticId]: regions };
 	}
 
 	function itemMatchesSpecies(kind: PreventiveProtocolKind, itemId: number, species: KnownPetSpecies[]): boolean {
@@ -243,6 +268,8 @@
 		vaccines = sortedVaccines([...vaccines.filter((item) => item.id !== vaccine.id && item.normalizedName !== vaccine.normalizedName), vaccine]);
 		vaccineDraftNames = { ...vaccineDraftNames, [vaccine.id]: vaccine.name };
 		vaccineDraftAliases = { ...vaccineDraftAliases, [vaccine.id]: aliasDraft(vaccine.aliases) };
+		vaccineDraftManufacturers = { ...vaccineDraftManufacturers, [vaccine.id]: vaccine.manufacturer ?? '' };
+		vaccineDraftRegions = { ...vaccineDraftRegions, [vaccine.id]: vaccine.regions };
 		vaccineDraftSpecies = { ...vaccineDraftSpecies, [vaccine.id]: vaccine.species };
 	}
 
@@ -250,6 +277,8 @@
 		antiparasitics = sortedAntiparasitics([...antiparasitics.filter((item) => item.id !== antiparasitic.id && item.normalizedName !== antiparasitic.normalizedName), antiparasitic]);
 		antiparasiticDraftNames = { ...antiparasiticDraftNames, [antiparasitic.id]: antiparasitic.name };
 		antiparasiticDraftAliases = { ...antiparasiticDraftAliases, [antiparasitic.id]: aliasDraft(antiparasitic.aliases) };
+		antiparasiticDraftManufacturers = { ...antiparasiticDraftManufacturers, [antiparasitic.id]: antiparasitic.manufacturer ?? '' };
+		antiparasiticDraftRegions = { ...antiparasiticDraftRegions, [antiparasitic.id]: antiparasitic.regions };
 		antiparasiticDraftSpecies = { ...antiparasiticDraftSpecies, [antiparasitic.id]: antiparasitic.species };
 	}
 
@@ -281,9 +310,13 @@
 			protocols = sortedProtocols(loadedProtocols);
 			vaccineDraftNames = Object.fromEntries(vaccines.map((vaccine) => [vaccine.id, vaccine.name]));
 			vaccineDraftAliases = Object.fromEntries(vaccines.map((vaccine) => [vaccine.id, aliasDraft(vaccine.aliases)]));
+			vaccineDraftManufacturers = Object.fromEntries(vaccines.map((vaccine) => [vaccine.id, vaccine.manufacturer ?? '']));
+			vaccineDraftRegions = Object.fromEntries(vaccines.map((vaccine) => [vaccine.id, vaccine.regions]));
 			vaccineDraftSpecies = Object.fromEntries(vaccines.map((vaccine) => [vaccine.id, vaccine.species]));
 			antiparasiticDraftNames = Object.fromEntries(antiparasitics.map((antiparasitic) => [antiparasitic.id, antiparasitic.name]));
 			antiparasiticDraftAliases = Object.fromEntries(antiparasitics.map((antiparasitic) => [antiparasitic.id, aliasDraft(antiparasitic.aliases)]));
+			antiparasiticDraftManufacturers = Object.fromEntries(antiparasitics.map((antiparasitic) => [antiparasitic.id, antiparasitic.manufacturer ?? '']));
+			antiparasiticDraftRegions = Object.fromEntries(antiparasitics.map((antiparasitic) => [antiparasitic.id, antiparasitic.regions]));
 			antiparasiticDraftSpecies = Object.fromEntries(antiparasitics.map((antiparasitic) => [antiparasitic.id, antiparasitic.species]));
 			for (const protocol of protocols) syncProtocolDraft(protocol);
 		} catch {
@@ -300,10 +333,18 @@
 		errorKey = null;
 
 		try {
-			const saved = await saveVaccineName({ name: newVaccineName, species: newVaccineSpecies, aliases: parseAliases(newVaccineAliases) });
+			const saved = await saveVaccineName({
+				name: newVaccineName,
+				species: newVaccineSpecies,
+				aliases: parseAliases(newVaccineAliases),
+				manufacturer: newVaccineManufacturer,
+				regions: newVaccineRegions
+			});
 			upsertVaccine(saved);
 			newVaccineName = '';
 			newVaccineAliases = '';
+			newVaccineManufacturer = '';
+			newVaccineRegions = ['BRA'];
 			newVaccineSpecies = defaultSpeciesDraft();
 			statusKey = 'vaccine.saved';
 		} catch (exception) {
@@ -320,10 +361,18 @@
 		errorKey = null;
 
 		try {
-			const saved = await saveAntiparasiticName({ name: newAntiparasiticName, species: newAntiparasiticSpecies, aliases: parseAliases(newAntiparasiticAliases) });
+			const saved = await saveAntiparasiticName({
+				name: newAntiparasiticName,
+				species: newAntiparasiticSpecies,
+				aliases: parseAliases(newAntiparasiticAliases),
+				manufacturer: newAntiparasiticManufacturer,
+				regions: newAntiparasiticRegions
+			});
 			upsertAntiparasitic(saved);
 			newAntiparasiticName = '';
 			newAntiparasiticAliases = '';
+			newAntiparasiticManufacturer = '';
+			newAntiparasiticRegions = ['BRA'];
 			newAntiparasiticSpecies = defaultSpeciesDraft();
 			statusKey = 'antiparasiticTreatment.saved';
 		} catch (exception) {
@@ -360,7 +409,16 @@
 		errorKey = null;
 
 		try {
-			const saved = await saveVaccineName({ name: vaccineDraftNames[vaccine.id] ?? vaccine.name, species: vaccineDraftSpeciesValue(vaccine), aliases: parseAliases(vaccineDraftAliases[vaccine.id] ?? aliasDraft(vaccine.aliases)) }, vaccine.id);
+			const saved = await saveVaccineName(
+				{
+					name: vaccineDraftNames[vaccine.id] ?? vaccine.name,
+					species: vaccineDraftSpeciesValue(vaccine),
+					aliases: parseAliases(vaccineDraftAliases[vaccine.id] ?? aliasDraft(vaccine.aliases)),
+					manufacturer: vaccineDraftManufacturers[vaccine.id] ?? vaccine.manufacturer,
+					regions: vaccineDraftRegionsValue(vaccine)
+				},
+				vaccine.id
+			);
 			upsertVaccine(saved);
 			statusKey = 'vaccine.saved';
 		} catch (exception) {
@@ -376,7 +434,16 @@
 		errorKey = null;
 
 		try {
-			const saved = await saveAntiparasiticName({ name: antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name, species: antiparasiticDraftSpeciesValue(antiparasitic), aliases: parseAliases(antiparasiticDraftAliases[antiparasitic.id] ?? aliasDraft(antiparasitic.aliases)) }, antiparasitic.id);
+			const saved = await saveAntiparasiticName(
+				{
+					name: antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name,
+					species: antiparasiticDraftSpeciesValue(antiparasitic),
+					aliases: parseAliases(antiparasiticDraftAliases[antiparasitic.id] ?? aliasDraft(antiparasitic.aliases)),
+					manufacturer: antiparasiticDraftManufacturers[antiparasitic.id] ?? antiparasitic.manufacturer,
+					regions: antiparasiticDraftRegionsValue(antiparasitic)
+				},
+				antiparasitic.id
+			);
 			upsertAntiparasitic(saved);
 			statusKey = 'antiparasiticTreatment.saved';
 		} catch (exception) {
@@ -471,8 +538,12 @@
 			const { [vaccine.id]: _removed, ...remainingDrafts } = vaccineDraftNames;
 			vaccineDraftNames = remainingDrafts;
 			const { [vaccine.id]: _removedAliases, ...remainingAliases } = vaccineDraftAliases;
+			const { [vaccine.id]: _removedManufacturer, ...remainingManufacturers } = vaccineDraftManufacturers;
+			const { [vaccine.id]: _removedRegions, ...remainingRegions } = vaccineDraftRegions;
 			const { [vaccine.id]: _removedSpecies, ...remainingSpecies } = vaccineDraftSpecies;
 			vaccineDraftAliases = remainingAliases;
+			vaccineDraftManufacturers = remainingManufacturers;
+			vaccineDraftRegions = remainingRegions;
 			vaccineDraftSpecies = remainingSpecies;
 			statusKey = 'status.deleted';
 		} catch {
@@ -494,8 +565,12 @@
 			const { [antiparasitic.id]: _removed, ...remainingDrafts } = antiparasiticDraftNames;
 			antiparasiticDraftNames = remainingDrafts;
 			const { [antiparasitic.id]: _removedAliases, ...remainingAliases } = antiparasiticDraftAliases;
+			const { [antiparasitic.id]: _removedManufacturer, ...remainingManufacturers } = antiparasiticDraftManufacturers;
+			const { [antiparasitic.id]: _removedRegions, ...remainingRegions } = antiparasiticDraftRegions;
 			const { [antiparasitic.id]: _removedSpecies, ...remainingSpecies } = antiparasiticDraftSpecies;
 			antiparasiticDraftAliases = remainingAliases;
+			antiparasiticDraftManufacturers = remainingManufacturers;
+			antiparasiticDraftRegions = remainingRegions;
 			antiparasiticDraftSpecies = remainingSpecies;
 			statusKey = 'status.deleted';
 		} catch {
@@ -677,7 +752,7 @@
 				</span>
 				<div class="min-w-0 flex-1">
 					<h3 class="text-base font-semibold">{t('vaccine.list.title')}</h3>
-					<form class="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-start" onsubmit={submitNewVaccine}>
+					<form class="mt-4 grid gap-3 lg:grid-cols-2 lg:items-start" onsubmit={submitNewVaccine}>
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
 								<span>{t('vaccine.name')}</span>
@@ -687,12 +762,19 @@
 						</label>
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
+								<span>{t('preventive.manufacturer')}</span>
+								<CharacterLimitHint value={newVaccineManufacturer} max={FIELD_LIMITS.preventiveManufacturer} />
+							</span>
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newVaccineManufacturer} maxlength={FIELD_LIMITS.preventiveManufacturer} />
+						</label>
+						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+							<span class="flex min-w-0 items-baseline justify-between gap-2">
 								<span>{t('preventive.aliases')}</span>
 								<CharacterLimitHint value={newVaccineAliases} max={FIELD_LIMITS.preventiveAliasesJson} />
 							</span>
 							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newVaccineAliases} maxlength={FIELD_LIMITS.preventiveAliasesJson} placeholder={t('preventive.aliasesPlaceholder')} />
 						</label>
-						<div class="flex min-w-0 flex-col gap-2 text-sm font-medium lg:col-span-2">
+						<div class="flex min-w-0 flex-col gap-2 text-sm font-medium">
 							<span>{t('preventive.species')}</span>
 							<div class="flex flex-wrap gap-2">
 								{#each petSpeciesOptions as option}
@@ -703,7 +785,11 @@
 								{/each}
 							</div>
 						</div>
-						<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={saving}>
+						<div class="flex min-w-0 flex-col gap-2 text-sm font-medium">
+							<span>{t('preventive.regions')}</span>
+							<PreventiveRegionsField id="new-vaccine-regions" value={newVaccineRegions} disabled={saving} onchange={(regions) => (newVaccineRegions = regions)} />
+						</div>
+						<button type="submit" class="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50 lg:col-span-2" disabled={saving}>
 							<Plus class="size-4" />
 							{t('vaccine.list.add')}
 						</button>
@@ -716,13 +802,20 @@
 					<div class="h-28 animate-pulse rounded-md bg-muted"></div>
 				{:else}
 					{#each vaccines as vaccine (vaccine.id)}
-						<form class="grid gap-3 rounded-md border border-border bg-background p-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto] xl:items-start" onsubmit={(event) => { event.preventDefault(); void saveExistingVaccine(vaccine); }}>
+						<form class="grid gap-3 rounded-md border border-border bg-background p-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto] xl:items-start" onsubmit={(event) => { event.preventDefault(); void saveExistingVaccine(vaccine); }}>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
 									<span>{t('vaccine.name')}</span>
 									<CharacterLimitHint value={vaccineDraftNames[vaccine.id] ?? vaccine.name} max={FIELD_LIMITS.vaccineName} />
 								</span>
 								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={vaccineDraftNames[vaccine.id] ?? vaccine.name} maxlength={FIELD_LIMITS.vaccineName} required oninput={(event) => (vaccineDraftNames = { ...vaccineDraftNames, [vaccine.id]: inputValue(event) })} />
+							</label>
+							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+								<span class="flex min-w-0 items-baseline justify-between gap-2">
+									<span>{t('preventive.manufacturer')}</span>
+									<CharacterLimitHint value={vaccineDraftManufacturers[vaccine.id] ?? vaccine.manufacturer ?? ''} max={FIELD_LIMITS.preventiveManufacturer} />
+								</span>
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={vaccineDraftManufacturers[vaccine.id] ?? vaccine.manufacturer ?? ''} maxlength={FIELD_LIMITS.preventiveManufacturer} oninput={(event) => (vaccineDraftManufacturers = { ...vaccineDraftManufacturers, [vaccine.id]: inputValue(event) })} />
 							</label>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
@@ -748,7 +841,7 @@
 								<Trash2 class="size-4" />
 								{t('actions.delete')}
 							</button>
-							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-5">
+							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-3">
 								<span>{t('preventive.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(vaccineDraftSpeciesValue(vaccine))}</span></span>
 								<div class="flex flex-wrap gap-2">
 									{#each petSpeciesOptions as option}
@@ -758,6 +851,10 @@
 										</label>
 									{/each}
 								</div>
+							</div>
+							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-3">
+								<span>{t('preventive.regions')}</span>
+								<PreventiveRegionsField id={`vaccine-regions-${vaccine.id}`} value={vaccineDraftRegionsValue(vaccine)} disabled={saving} onchange={(regions) => setVaccineRegions(vaccine.id, regions)} />
 							</div>
 						</form>
 					{:else}
@@ -774,7 +871,7 @@
 				</span>
 				<div class="min-w-0 flex-1">
 					<h3 class="text-base font-semibold">{t('antiparasiticTreatment.list.title')}</h3>
-					<form class="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-start" onsubmit={submitNewAntiparasitic}>
+					<form class="mt-4 grid gap-3 lg:grid-cols-2 lg:items-start" onsubmit={submitNewAntiparasitic}>
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
 								<span>{t('antiparasiticTreatment.name')}</span>
@@ -784,12 +881,19 @@
 						</label>
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
+								<span>{t('preventive.manufacturer')}</span>
+								<CharacterLimitHint value={newAntiparasiticManufacturer} max={FIELD_LIMITS.preventiveManufacturer} />
+							</span>
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newAntiparasiticManufacturer} maxlength={FIELD_LIMITS.preventiveManufacturer} />
+						</label>
+						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+							<span class="flex min-w-0 items-baseline justify-between gap-2">
 								<span>{t('preventive.aliases')}</span>
 								<CharacterLimitHint value={newAntiparasiticAliases} max={FIELD_LIMITS.preventiveAliasesJson} />
 							</span>
 							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newAntiparasiticAliases} maxlength={FIELD_LIMITS.preventiveAliasesJson} placeholder={t('preventive.aliasesPlaceholder')} />
 						</label>
-						<div class="flex min-w-0 flex-col gap-2 text-sm font-medium lg:col-span-2">
+						<div class="flex min-w-0 flex-col gap-2 text-sm font-medium">
 							<span>{t('preventive.species')}</span>
 							<div class="flex flex-wrap gap-2">
 								{#each petSpeciesOptions as option}
@@ -800,7 +904,11 @@
 								{/each}
 							</div>
 						</div>
-						<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={saving}>
+						<div class="flex min-w-0 flex-col gap-2 text-sm font-medium">
+							<span>{t('preventive.regions')}</span>
+							<PreventiveRegionsField id="new-antiparasitic-regions" value={newAntiparasiticRegions} disabled={saving} onchange={(regions) => (newAntiparasiticRegions = regions)} />
+						</div>
+						<button type="submit" class="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50 lg:col-span-2" disabled={saving}>
 							<Plus class="size-4" />
 							{t('antiparasiticTreatment.list.add')}
 						</button>
@@ -813,13 +921,20 @@
 					<div class="h-28 animate-pulse rounded-md bg-muted"></div>
 				{:else}
 					{#each antiparasitics as antiparasitic (antiparasitic.id)}
-						<form class="grid gap-3 rounded-md border border-border bg-background p-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto] xl:items-start" onsubmit={(event) => { event.preventDefault(); void saveExistingAntiparasitic(antiparasitic); }}>
+						<form class="grid gap-3 rounded-md border border-border bg-background p-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto] xl:items-start" onsubmit={(event) => { event.preventDefault(); void saveExistingAntiparasitic(antiparasitic); }}>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
 									<span>{t('antiparasiticTreatment.name')}</span>
 									<CharacterLimitHint value={antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name} max={FIELD_LIMITS.antiparasiticName} />
 								</span>
 								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name} maxlength={FIELD_LIMITS.antiparasiticName} required oninput={(event) => (antiparasiticDraftNames = { ...antiparasiticDraftNames, [antiparasitic.id]: inputValue(event) })} />
+							</label>
+							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+								<span class="flex min-w-0 items-baseline justify-between gap-2">
+									<span>{t('preventive.manufacturer')}</span>
+									<CharacterLimitHint value={antiparasiticDraftManufacturers[antiparasitic.id] ?? antiparasitic.manufacturer ?? ''} max={FIELD_LIMITS.preventiveManufacturer} />
+								</span>
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={antiparasiticDraftManufacturers[antiparasitic.id] ?? antiparasitic.manufacturer ?? ''} maxlength={FIELD_LIMITS.preventiveManufacturer} oninput={(event) => (antiparasiticDraftManufacturers = { ...antiparasiticDraftManufacturers, [antiparasitic.id]: inputValue(event) })} />
 							</label>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
@@ -845,7 +960,7 @@
 								<Trash2 class="size-4" />
 								{t('actions.delete')}
 							</button>
-							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-5">
+							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-3">
 								<span>{t('preventive.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(antiparasiticDraftSpeciesValue(antiparasitic))}</span></span>
 								<div class="flex flex-wrap gap-2">
 									{#each petSpeciesOptions as option}
@@ -855,6 +970,10 @@
 										</label>
 									{/each}
 								</div>
+							</div>
+							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-3">
+								<span>{t('preventive.regions')}</span>
+								<PreventiveRegionsField id={`antiparasitic-regions-${antiparasitic.id}`} value={antiparasiticDraftRegionsValue(antiparasitic)} disabled={saving} onchange={(regions) => setAntiparasiticRegions(antiparasitic.id, regions)} />
 							</div>
 						</form>
 					{:else}

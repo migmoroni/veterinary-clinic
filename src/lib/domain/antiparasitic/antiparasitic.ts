@@ -8,6 +8,8 @@ export interface Antiparasitic {
 	normalizedName: string;
 	species: KnownPetSpecies[];
 	aliases: string[];
+	manufacturer: string | null;
+	regions: string[];
 	hiddenAt: string | null;
 	updatedAt: string | null;
 }
@@ -16,6 +18,8 @@ export interface AntiparasiticInput {
 	name: string;
 	species?: KnownPetSpecies[];
 	aliases?: string[];
+	manufacturer?: string | null;
+	regions?: string[];
 }
 
 export interface PetAntiparasiticTreatment {

@@ -73,7 +73,12 @@
 	});
 
 	function vaccineNameOptions() {
-		return visibleVaccines.map((vaccine) => ({ value: vaccine.name, label: vaccine.name, description: vaccine.aliases.join(', '), searchText: vaccine.aliases.join(' ') }));
+		return visibleVaccines.map((vaccine) => ({
+			value: vaccine.name,
+			label: vaccine.name,
+			description: [vaccine.manufacturer, ...vaccine.aliases].filter(Boolean).join(' · '),
+			searchText: [vaccine.manufacturer, ...vaccine.aliases, ...vaccine.regions].filter(Boolean).join(' ')
+		}));
 	}
 
 	function protocolOptions() {

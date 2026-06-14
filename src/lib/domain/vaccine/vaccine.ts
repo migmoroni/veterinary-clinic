@@ -8,6 +8,8 @@ export interface Vaccine {
 	normalizedName: string;
 	species: KnownPetSpecies[];
 	aliases: string[];
+	manufacturer: string | null;
+	regions: string[];
 	hiddenAt: string | null;
 	updatedAt: string | null;
 }
@@ -16,6 +18,8 @@ export interface VaccineInput {
 	name: string;
 	species?: KnownPetSpecies[];
 	aliases?: string[];
+	manufacturer?: string | null;
+	regions?: string[];
 }
 
 export interface PetVaccination {

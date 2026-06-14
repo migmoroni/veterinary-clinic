@@ -48,6 +48,21 @@ describe('default preventive catalog', () => {
 		expect(new Set(keys).size).toBe(keys.length);
 	});
 
+	it('provides manufacturer and market metadata for every bundled product', () => {
+		for (const item of defaultPreventiveCatalogItems) {
+			expect(item.manufacturer.trim().length).toBeGreaterThan(0);
+			expect(item.manufacturer.length).toBeLessThanOrEqual(FIELD_LIMITS.preventiveManufacturer);
+			expect(item.regions.length).toBeGreaterThan(0);
+			expect(JSON.stringify(item.regions).length).toBeLessThanOrEqual(FIELD_LIMITS.preventiveRegionsJson);
+		}
+
+		expect(vaccine('Nobivac Raiva').manufacturer).toBe('MSD Animal Health');
+		expect(vaccine('Nobivac DHPPi').regions).toContain('ZAF');
+		expect(vaccine('Vanguard Plus').manufacturer).toBe('Zoetis');
+		expect(antiparasitic('NexGard').manufacturer).toBe('Boehringer Ingelheim Animal Health');
+		expect(antiparasitic('Bravecto').manufacturer).toBe('MSD Animal Health');
+	});
+
 	it('uses commercial products instead of generic legacy descriptions', () => {
 		const names = new Set(defaultPreventiveCatalogItems.map((item) => item.name));
 		const legacyDescriptions = [
@@ -67,6 +82,7 @@ describe('default preventive catalog', () => {
 
 		for (const description of legacyDescriptions) expect(names).not.toContain(description);
 		for (const product of [
+			'Nobivac DHPPi',
 			'Nobivac Puppy DP',
 			'Nobivac Raiva',
 			'Duramune Max 5-CvK/4L',

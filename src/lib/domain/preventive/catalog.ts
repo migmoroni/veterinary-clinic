@@ -7,6 +7,8 @@ export const defaultPreventiveSpecies = petSpeciesOptions.map((option) => option
 
 export interface PreventiveCatalogMetadata {
 	aliases: string[];
+	manufacturer: string | null;
+	regions: string[];
 	species: PreventiveSpecies[];
 }
 
@@ -32,6 +34,36 @@ export function parsePreventiveSpecies(value: string | null | undefined): Preven
 
 export function stringifyPreventiveSpecies(values: readonly string[] | null | undefined): string {
 	return JSON.stringify(normalizePreventiveSpecies(values));
+}
+
+/**
+ * Normalizes product markets as unique ISO 3166-1 alpha-3 country codes.
+ */
+export function normalizePreventiveRegions(values: readonly string[] | null | undefined): string[] {
+	const regions: string[] = [];
+
+	for (const value of values ?? []) {
+		const candidate = value.trim().toUpperCase();
+		if (!/^[A-Z]{3}$/.test(candidate) || regions.includes(candidate)) continue;
+		regions.push(candidate);
+	}
+
+	return regions;
+}
+
+export function parsePreventiveRegions(value: string | null | undefined): string[] {
+	if (!value) return [];
+
+	try {
+		const parsed = JSON.parse(value);
+		return Array.isArray(parsed) ? normalizePreventiveRegions(parsed.filter((item): item is string => typeof item === 'string')) : [];
+	} catch {
+		return [];
+	}
+}
+
+export function stringifyPreventiveRegions(values: readonly string[] | null | undefined): string {
+	return JSON.stringify(normalizePreventiveRegions(values));
 }
 
 export function normalizePreventiveAliases(values: readonly string[] | null | undefined, maxLength: number, normalize: (value: string) => string, canonicalNormalizedName = ''): string[] {

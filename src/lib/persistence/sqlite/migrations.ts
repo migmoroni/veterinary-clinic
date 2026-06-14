@@ -26,9 +26,9 @@ function normalizePreventiveCatalogName(value: string): string {
 async function seedDefaultPreventiveCatalog(database: Database): Promise<void> {
 	for (const item of defaultPreventiveCatalogItems) {
 		await database.execute(
-			`INSERT OR IGNORE INTO preventive_catalog_items (kind, name, normalized_name, species, aliases, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`,
-			[item.kind, item.name, normalizePreventiveCatalogName(item.name), JSON.stringify(item.species), JSON.stringify(item.aliases)]
+			`INSERT OR IGNORE INTO preventive_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, regions, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)`,
+			[item.kind, item.name, normalizePreventiveCatalogName(item.name), JSON.stringify(item.species), JSON.stringify(item.aliases), item.manufacturer, JSON.stringify(item.regions)]
 		);
 	}
 }
@@ -232,6 +232,8 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			normalized_name TEXT NOT NULL,
 			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.preventiveSpeciesJson)}),
 			aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.preventiveAliasesJson)}),
+			manufacturer TEXT CHECK(${optionalTextCheck('manufacturer', FIELD_LIMITS.preventiveManufacturer)}),
+			regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.preventiveRegionsJson)}),
 			hidden_at TEXT,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,

@@ -8,6 +8,8 @@ export interface DefaultPreventiveCatalogItem {
 	name: string;
 	species: DefaultPreventiveSpecies[];
 	aliases: string[];
+	manufacturer: string;
+	regions: string[];
 }
 
 interface PreventiveAliasDefinitions {
@@ -44,11 +46,13 @@ const fleaAndTickControl: PreventiveAliasTranslationKey[] = [
  * classified. Source-specific spellings and import heuristics belong only to
  * their respective importers.
  */
-export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
+const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	{
 		kind: 'vaccine',
 		name: 'Nobivac Canine 1-DAPPVL2+CV',
 		species: ['canine'],
+		manufacturer: 'MSD Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['DAPPVL2+CV'],
 			localized: [
@@ -67,6 +71,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'Nobivac DHPPI+L',
 		species: ['canine'],
+		manufacturer: 'MSD Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['DHPPI+L', 'V 8', 'V8'],
 			localized: [
@@ -79,8 +85,21 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		name: 'Nobivac DHPPi',
+		species: ['canine'],
+		manufacturer: 'MSD Animal Health',
+		regions: ['ZAF'],
+		aliases: searchAliases({
+			technical: ['DHPPi'],
+			localized: ['preventiveAlias.polyvalent', 'preventiveAlias.canineMultiple', ...polyvalentCanineDiseases]
+		})
+	},
+	{
+		kind: 'vaccine',
 		name: 'Duramune Max 5-CvK/4L',
 		species: ['canine'],
+		manufacturer: 'Elanco',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['DAPPi+CV+L4', 'V 10', 'V10'],
 			localized: [
@@ -99,6 +118,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'Canigen MHA2PPi/L',
 		species: ['canine'],
+		manufacturer: 'Virbac',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['MHA2PPi/L', 'V 8', 'V8'],
 			localized: [
@@ -114,6 +135,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'Imunocan V8',
 		species: ['canine'],
+		manufacturer: 'Vaxxinova',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['V 8', 'V8'],
 			localized: [
@@ -130,6 +153,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'Versican Plus DHPPi/L4R',
 		species: ['canine'],
+		manufacturer: 'Zoetis',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['DHPPi/L4R'],
 			localized: [
@@ -148,6 +173,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'Nobivac Puppy DP',
 		species: ['canine'],
+		manufacturer: 'MSD Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['DP'],
 			localized: ['preventiveAlias.puppy', 'preventiveAlias.canineDistemper', 'preventiveAlias.canineParvovirus']
@@ -157,12 +184,16 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'GiardiaVax',
 		species: ['canine'],
+		manufacturer: 'Zoetis',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.giardia', 'preventiveAlias.giardiasis'] })
 	},
 	{
 		kind: 'vaccine',
 		name: 'BronchiGuard',
 		species: ['canine'],
+		manufacturer: 'Zoetis',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['Bordetella bronchiseptica'],
 			localized: ['preventiveAlias.canineInfectiousTracheobronchitis', 'preventiveAlias.kennelCough']
@@ -172,6 +203,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'Nobivac Intra-Trac Oral Bb',
 		species: ['canine'],
+		manufacturer: 'MSD Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['Bb', 'Bordetella bronchiseptica'],
 			localized: ['preventiveAlias.canineInfectiousTracheobronchitis', 'preventiveAlias.kennelCough']
@@ -181,6 +214,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'Nobivac KC',
 		species: ['canine'],
+		manufacturer: 'MSD Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['KC', 'Bordetella bronchiseptica'],
 			localized: [
@@ -194,36 +229,48 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'Leish-Tec',
 		species: ['canine'],
+		manufacturer: 'Ceva Saúde Animal',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.leishmaniasis', 'preventiveAlias.kalaAzar'] })
 	},
 	{
 		kind: 'vaccine',
 		name: 'Eurican Herpes 205',
 		species: ['canine'],
+		manufacturer: 'Boehringer Ingelheim Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.canineHerpesvirus'] })
 	},
 	{
 		kind: 'vaccine',
 		name: 'Nobivac Raiva',
 		species: ['canine', 'feline'],
+		manufacturer: 'MSD Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.rabies'] })
 	},
 	{
 		kind: 'vaccine',
 		name: 'Rabisin',
 		species: ['canine', 'feline'],
+		manufacturer: 'Boehringer Ingelheim Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.rabies'] })
 	},
 	{
 		kind: 'vaccine',
 		name: 'Defensor',
 		species: ['canine', 'feline'],
+		manufacturer: 'Zoetis',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.rabies'] })
 	},
 	{
 		kind: 'vaccine',
 		name: 'Nobivac Feline 1-HCP',
 		species: ['feline'],
+		manufacturer: 'MSD Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['V 3', 'V3', 'HCP', 'FVRCP'],
 			localized: ['preventiveAlias.felineTriple', ...coreFelineDiseases]
@@ -233,6 +280,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'Nobivac Feline 1-HCPCh',
 		species: ['feline'],
+		manufacturer: 'MSD Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['V 4', 'V4', 'HCPCh', 'FVRCP+Ch'],
 			localized: ['preventiveAlias.felineQuadruple', ...coreFelineDiseases, 'preventiveAlias.felineChlamydiosis']
@@ -242,6 +291,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'Nobivac Feline 1-HCPCh + FeLV',
 		species: ['feline'],
+		manufacturer: 'MSD Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['V 5', 'V5', 'HCPCh+FeLV', 'FVRCP+Ch+FeLV', 'FeLV'],
 			localized: [
@@ -256,12 +307,16 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'Nobivac L4',
 		species: ['canine'],
+		manufacturer: 'MSD Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({ technical: ['L4'], localized: ['preventiveAlias.canineLeptospirosis'] })
 	},
 	{
 		kind: 'vaccine',
 		name: 'Recombitek C6',
 		species: ['canine'],
+		manufacturer: 'Boehringer Ingelheim Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['C6', 'V 10', 'V10'],
 			localized: ['preventiveAlias.polyvalent', 'preventiveAlias.canineMultiple']
@@ -271,6 +326,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'Vanguard Plus',
 		species: ['canine'],
+		manufacturer: 'Zoetis',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['V 10', 'V10'],
 			localized: ['preventiveAlias.polyvalent', 'preventiveAlias.canineMultiple']
@@ -280,6 +337,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'Nobivac Tricat Trio',
 		species: ['feline'],
+		manufacturer: 'MSD Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['V 3', 'V3', 'FVRCP'],
 			localized: ['preventiveAlias.felineTriple', ...coreFelineDiseases]
@@ -289,6 +348,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'Felocell CVR',
 		species: ['feline'],
+		manufacturer: 'Zoetis',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['V 3', 'V3', 'FVRCP'],
 			localized: ['preventiveAlias.felineTriple', ...coreFelineDiseases]
@@ -298,6 +359,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'Purevax RCP',
 		species: ['feline'],
+		manufacturer: 'Boehringer Ingelheim Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['V 3', 'V3', 'RCP', 'FVRCP'],
 			localized: ['preventiveAlias.felineTriple', ...coreFelineDiseases]
@@ -307,6 +370,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'Purevax RCPCh',
 		species: ['feline'],
+		manufacturer: 'Boehringer Ingelheim Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['V 4', 'V4', 'RCPCh', 'FVRCP+Ch'],
 			localized: ['preventiveAlias.felineQuadruple', ...coreFelineDiseases, 'preventiveAlias.felineChlamydiosis']
@@ -316,6 +381,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'Purevax RCPCh FeLV',
 		species: ['feline'],
+		manufacturer: 'Boehringer Ingelheim Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			technical: ['V 5', 'V5', 'RCPCh FeLV', 'FVRCP+Ch+FeLV', 'FeLV'],
 			localized: [
@@ -330,30 +397,40 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'vaccine',
 		name: 'Purevax FeLV',
 		species: ['feline'],
+		manufacturer: 'Boehringer Ingelheim Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({ technical: ['FeLV'], localized: ['preventiveAlias.felineLeukemia'] })
 	},
 	{
 		kind: 'vaccine',
 		name: 'Purevax Rabies',
 		species: ['feline'],
+		manufacturer: 'Boehringer Ingelheim Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.rabies'] })
 	},
 	{
 		kind: 'vaccine',
 		name: 'Leucogen',
 		species: ['feline'],
+		manufacturer: 'Boehringer Ingelheim Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({ technical: ['FeLV'], localized: ['preventiveAlias.felineLeukemia'] })
 	},
 	{
 		kind: 'vaccine',
 		name: 'Versifel FeLV',
 		species: ['feline'],
+		manufacturer: 'Zoetis',
+		regions: ['BRA'],
 		aliases: searchAliases({ technical: ['FeLV'], localized: ['preventiveAlias.felineLeukemia'] })
 	},
 	{
 		kind: 'antiparasitic',
 		name: 'Drontal Plus',
 		species: ['canine'],
+		manufacturer: 'Elanco',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			localized: [
 				'preventiveAlias.praziquantelPyrantelPamoateFebantel',
@@ -366,6 +443,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'antiparasitic',
 		name: 'Drontal Puppy',
 		species: ['canine'],
+		manufacturer: 'Elanco',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			localized: ['preventiveAlias.pyrantelPamoateFebantel', 'preventiveAlias.broadSpectrumAntiparasitic']
 		})
@@ -374,6 +453,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'antiparasitic',
 		name: 'Endogard',
 		species: ['canine'],
+		manufacturer: 'Virbac',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			localized: ['preventiveAlias.praziquantelPyrantelPamoateFebantel', 'preventiveAlias.broadSpectrumAntiparasitic']
 		})
@@ -382,6 +463,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'antiparasitic',
 		name: 'Canex Premium',
 		species: ['canine'],
+		manufacturer: 'Ceva Saúde Animal',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			localized: ['preventiveAlias.praziquantelPyrantelPamoateFebantel', 'preventiveAlias.broadSpectrumAntiparasitic']
 		})
@@ -390,6 +473,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'antiparasitic',
 		name: 'Endal Plus',
 		species: ['canine'],
+		manufacturer: 'Ourofino Saúde Animal',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			localized: ['preventiveAlias.praziquantelPyrantelPamoateFebantel', 'preventiveAlias.broadSpectrumAntiparasitic']
 		})
@@ -398,6 +483,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'antiparasitic',
 		name: 'Chemital',
 		species: ['canine', 'feline'],
+		manufacturer: 'Chemitec',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			localized: ['preventiveAlias.broadSpectrumAntiparasitic', 'preventiveAlias.endoparasites']
 		})
@@ -406,6 +493,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'antiparasitic',
 		name: 'Top Dog',
 		species: ['canine'],
+		manufacturer: 'Ourofino Saúde Animal',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			localized: ['preventiveAlias.broadSpectrumAntiparasitic', 'preventiveAlias.endoparasites']
 		})
@@ -414,6 +503,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'antiparasitic',
 		name: 'Drontal Gatos',
 		species: ['feline'],
+		manufacturer: 'Elanco',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			localized: ['preventiveAlias.praziquantelPyrantelPamoate', 'preventiveAlias.tapewormTreatment']
 		})
@@ -422,6 +513,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'antiparasitic',
 		name: 'Milbemax',
 		species: ['canine', 'feline'],
+		manufacturer: 'Elanco',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			localized: ['preventiveAlias.milbemycinOximePraziquantel', 'preventiveAlias.broadSpectrumAntiparasitic']
 		})
@@ -430,6 +523,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'antiparasitic',
 		name: 'Milpro',
 		species: ['canine', 'feline'],
+		manufacturer: 'Virbac',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			localized: ['preventiveAlias.milbemycinOximePraziquantel', 'preventiveAlias.broadSpectrumAntiparasitic']
 		})
@@ -438,6 +533,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'antiparasitic',
 		name: 'Panacur 10%',
 		species: ['canine'],
+		manufacturer: 'MSD Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			localized: ['preventiveAlias.fenbendazole', 'preventiveAlias.endoparasites', 'preventiveAlias.giardia', 'preventiveAlias.nematodes']
 		})
@@ -446,6 +543,8 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'antiparasitic',
 		name: 'Giardicid',
 		species: ['canine'],
+		manufacturer: 'Agener União Saúde Animal',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			localized: ['preventiveAlias.febantel', 'preventiveAlias.giardia', 'preventiveAlias.roundworm']
 		})
@@ -454,24 +553,32 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'antiparasitic',
 		name: 'Bravecto',
 		species: ['canine', 'feline'],
+		manufacturer: 'MSD Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.fluralaner', ...fleaAndTickControl] })
 	},
 	{
 		kind: 'antiparasitic',
 		name: 'NexGard',
 		species: ['canine'],
+		manufacturer: 'Boehringer Ingelheim Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.afoxolaner', ...fleaAndTickControl] })
 	},
 	{
 		kind: 'antiparasitic',
 		name: 'Simparic',
 		species: ['canine'],
+		manufacturer: 'Zoetis',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.sarolaner', ...fleaAndTickControl] })
 	},
 	{
 		kind: 'antiparasitic',
 		name: 'Capstar',
 		species: ['canine', 'feline'],
+		manufacturer: 'Elanco',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			localized: ['preventiveAlias.nitenpyram', 'preventiveAlias.ectoparasiticide', 'preventiveAlias.fleaTreatment']
 		})
@@ -480,66 +587,88 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'antiparasitic',
 		name: 'Effipro',
 		species: ['canine', 'feline'],
+		manufacturer: 'Virbac',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.fipronil', ...fleaAndTickControl] })
 	},
 	{
 		kind: 'antiparasitic',
 		name: 'Fiprolex',
 		species: ['canine', 'feline'],
+		manufacturer: 'Ceva Saúde Animal',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.fipronil', ...fleaAndTickControl] })
 	},
 	{
 		kind: 'antiparasitic',
 		name: 'Frontline',
 		species: ['canine', 'feline'],
+		manufacturer: 'Boehringer Ingelheim Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.fipronil', ...fleaAndTickControl] })
 	},
 	{
 		kind: 'antiparasitic',
 		name: 'Defenza',
 		species: ['canine'],
+		manufacturer: 'Ourofino Saúde Animal',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: fleaAndTickControl })
 	},
 	{
 		kind: 'antiparasitic',
 		name: 'Mectimax',
 		species: ['canine'],
+		manufacturer: 'Agener União Saúde Animal',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.ivermectin', 'preventiveAlias.endectocide'] })
 	},
 	{
 		kind: 'antiparasitic',
 		name: 'Ivercanis',
 		species: ['canine'],
+		manufacturer: 'World Veterinária',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.ivermectin', 'preventiveAlias.endectocide'] })
 	},
 	{
 		kind: 'antiparasitic',
 		name: 'Revolution',
 		species: ['canine', 'feline'],
+		manufacturer: 'Zoetis',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.selamectin', 'preventiveAlias.endectocide'] })
 	},
 	{
 		kind: 'antiparasitic',
 		name: 'Stronghold',
 		species: ['canine', 'feline'],
+		manufacturer: 'Zoetis',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.selamectin', 'preventiveAlias.endectocide'] })
 	},
 	{
 		kind: 'antiparasitic',
 		name: 'Advocate',
 		species: ['canine', 'feline'],
+		manufacturer: 'Elanco',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.moxidectinImidacloprid', 'preventiveAlias.endectocide'] })
 	},
 	{
 		kind: 'antiparasitic',
 		name: 'Advantage Multi',
 		species: ['canine', 'feline'],
+		manufacturer: 'Elanco',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.moxidectinImidacloprid', 'preventiveAlias.endectocide'] })
 	},
 	{
 		kind: 'antiparasitic',
 		name: 'Profender',
 		species: ['feline'],
+		manufacturer: 'Elanco',
+		regions: ['BRA'],
 		aliases: searchAliases({
 			localized: [
 				'preventiveAlias.emodepsidePraziquantel',
@@ -552,12 +681,18 @@ export const defaultPreventiveCatalogItems: DefaultPreventiveCatalogItem[] = [
 		kind: 'antiparasitic',
 		name: 'NexGard Spectra',
 		species: ['canine'],
+		manufacturer: 'Boehringer Ingelheim Animal Health',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.afoxolanerMilbemycinOxime', 'preventiveAlias.endectocide'] })
 	},
 	{
 		kind: 'antiparasitic',
 		name: 'Simparic Trio',
 		species: ['canine'],
+		manufacturer: 'Zoetis',
+		regions: ['BRA'],
 		aliases: searchAliases({ localized: ['preventiveAlias.sarolanerMoxidectinPyrantel', 'preventiveAlias.endectocide'] })
 	}
 ];
+
+export const defaultPreventiveCatalogItems = defaultPreventiveCatalogDefinitions;
