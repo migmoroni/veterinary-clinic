@@ -426,6 +426,7 @@ export const ptBr = {
 	'preventive.species': 'Espécies',
 	'preventive.aliases': 'Termos de busca',
 	'preventive.aliasesPlaceholder': 'V10, raiva, produto comercial',
+	'preventive.systemItemReadOnly': 'Itens do sistema só podem ser ocultados.',
 	'protocol.tab': 'Protocolos',
 	'protocol.title': 'Protocolos cadastrados',
 	'protocol.label': 'Protocolo',

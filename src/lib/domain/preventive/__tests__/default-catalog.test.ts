@@ -48,6 +48,10 @@ describe('default preventive catalog', () => {
 		expect(new Set(keys).size).toBe(keys.length);
 	});
 
+	it('identifies every bundled product as system-owned', () => {
+		for (const item of defaultPreventiveCatalogItems) expect(item.origin).toBe('system');
+	});
+
 	it('provides manufacturer and market metadata for every bundled product', () => {
 		for (const item of defaultPreventiveCatalogItems) {
 			expect(item.manufacturer.trim().length).toBeGreaterThan(0);

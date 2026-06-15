@@ -427,6 +427,7 @@ export const enUs = {
 	'preventive.species': 'Species',
 	'preventive.aliases': 'Search terms',
 	'preventive.aliasesPlaceholder': 'V10, rabies, trade name',
+	'preventive.systemItemReadOnly': 'System items can only be hidden.',
 	'protocol.tab': 'Protocols',
 	'protocol.title': 'Saved protocols',
 	'protocol.label': 'Protocol',

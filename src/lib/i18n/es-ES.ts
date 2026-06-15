@@ -427,6 +427,7 @@ export const esEs = {
 	'preventive.species': 'Especies',
 	'preventive.aliases': 'Términos de búsqueda',
 	'preventive.aliasesPlaceholder': 'V10, rabia, nombre comercial',
+	'preventive.systemItemReadOnly': 'Los elementos del sistema solo se pueden ocultar.',
 	'protocol.tab': 'Protocolos',
 	'protocol.title': 'Protocolos guardados',
 	'protocol.label': 'Protocolo',

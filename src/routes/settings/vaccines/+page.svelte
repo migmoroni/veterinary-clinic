@@ -8,6 +8,7 @@
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import type { Antiparasitic } from '$lib/domain/antiparasitic/antiparasitic.js';
 	import { petSpeciesOptions, type KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
+	import { canDeletePreventiveCatalogItem, canEditPreventiveCatalogItem } from '$lib/domain/preventive/catalog.js';
 	import type { PreventiveProtocol, PreventiveProtocolDose, PreventiveProtocolKind, PreventiveValidityUnit } from '$lib/domain/preventive/protocol.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import type { Vaccine } from '$lib/domain/vaccine/vaccine.js';
@@ -290,6 +291,7 @@
 	function setFailure(exception: unknown) {
 		if (exception instanceof Error && exception.message === 'field_limit_exceeded') errorKey = 'form.limitExceeded';
 		else if (exception instanceof Error && exception.message === 'field_required') errorKey = 'form.fieldRequired';
+		else if (exception instanceof Error && exception.message === 'preventive_catalog_system_item') errorKey = 'preventive.systemItemReadOnly';
 		else if (exception instanceof Error && exception.message === 'vaccine_name_required') errorKey = 'vaccine.nameRequired';
 		else if (exception instanceof Error && exception.message === 'antiparasitic_name_required') errorKey = 'antiparasiticTreatment.nameRequired';
 		else if (exception instanceof Error && exception.message === 'protocol_name_required') errorKey = 'protocol.nameRequired';
@@ -404,6 +406,7 @@
 	}
 
 	async function saveExistingVaccine(vaccine: Vaccine) {
+		if (!canEditPreventiveCatalogItem(vaccine)) return;
 		saving = true;
 		statusKey = null;
 		errorKey = null;
@@ -429,6 +432,7 @@
 	}
 
 	async function saveExistingAntiparasitic(antiparasitic: Antiparasitic) {
+		if (!canEditPreventiveCatalogItem(antiparasitic)) return;
 		saving = true;
 		statusKey = null;
 		errorKey = null;
@@ -527,6 +531,7 @@
 	}
 
 	async function deleteVaccine(vaccine: Vaccine) {
+		if (!canDeletePreventiveCatalogItem(vaccine)) return;
 		if (!window.confirm(t('vaccine.list.deleteConfirm'))) return;
 		saving = true;
 		statusKey = null;
@@ -554,6 +559,7 @@
 	}
 
 	async function deleteAntiparasitic(antiparasitic: Antiparasitic) {
+		if (!canDeletePreventiveCatalogItem(antiparasitic)) return;
 		if (!window.confirm(t('antiparasiticTreatment.list.deleteConfirm'))) return;
 		saving = true;
 		statusKey = null;
@@ -808,26 +814,28 @@
 									<span>{t('vaccine.name')}</span>
 									<CharacterLimitHint value={vaccineDraftNames[vaccine.id] ?? vaccine.name} max={FIELD_LIMITS.vaccineName} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={vaccineDraftNames[vaccine.id] ?? vaccine.name} maxlength={FIELD_LIMITS.vaccineName} required oninput={(event) => (vaccineDraftNames = { ...vaccineDraftNames, [vaccine.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={vaccineDraftNames[vaccine.id] ?? vaccine.name} maxlength={FIELD_LIMITS.vaccineName} disabled={!canEditPreventiveCatalogItem(vaccine)} required oninput={(event) => (vaccineDraftNames = { ...vaccineDraftNames, [vaccine.id]: inputValue(event) })} />
 							</label>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
 									<span>{t('preventive.manufacturer')}</span>
 									<CharacterLimitHint value={vaccineDraftManufacturers[vaccine.id] ?? vaccine.manufacturer ?? ''} max={FIELD_LIMITS.preventiveManufacturer} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={vaccineDraftManufacturers[vaccine.id] ?? vaccine.manufacturer ?? ''} maxlength={FIELD_LIMITS.preventiveManufacturer} oninput={(event) => (vaccineDraftManufacturers = { ...vaccineDraftManufacturers, [vaccine.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={vaccineDraftManufacturers[vaccine.id] ?? vaccine.manufacturer ?? ''} maxlength={FIELD_LIMITS.preventiveManufacturer} disabled={!canEditPreventiveCatalogItem(vaccine)} oninput={(event) => (vaccineDraftManufacturers = { ...vaccineDraftManufacturers, [vaccine.id]: inputValue(event) })} />
 							</label>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
 									<span>{t('preventive.aliases')}</span>
 									<CharacterLimitHint value={vaccineDraftAliases[vaccine.id] ?? aliasDraft(vaccine.aliases)} max={FIELD_LIMITS.preventiveAliasesJson} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={vaccineDraftAliases[vaccine.id] ?? aliasDraft(vaccine.aliases)} maxlength={FIELD_LIMITS.preventiveAliasesJson} placeholder={t('preventive.aliasesPlaceholder')} oninput={(event) => (vaccineDraftAliases = { ...vaccineDraftAliases, [vaccine.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={vaccineDraftAliases[vaccine.id] ?? aliasDraft(vaccine.aliases)} maxlength={FIELD_LIMITS.preventiveAliasesJson} placeholder={t('preventive.aliasesPlaceholder')} disabled={!canEditPreventiveCatalogItem(vaccine)} oninput={(event) => (vaccineDraftAliases = { ...vaccineDraftAliases, [vaccine.id]: inputValue(event) })} />
 							</label>
-							<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
-								<Save class="size-4" />
-								{t('actions.save')}
-							</button>
+							{#if canEditPreventiveCatalogItem(vaccine)}
+								<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
+									<Save class="size-4" />
+									{t('actions.save')}
+								</button>
+							{/if}
 							<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} title={vaccine.hiddenAt ? t('vaccine.list.show') : t('vaccine.list.hide')} onclick={() => void toggleVaccineHidden(vaccine)}>
 								{#if vaccine.hiddenAt}
 									<Eye class="size-4" />
@@ -837,16 +845,18 @@
 									{t('vaccine.list.hide')}
 								{/if}
 							</button>
-							<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={() => void deleteVaccine(vaccine)}>
-								<Trash2 class="size-4" />
-								{t('actions.delete')}
-							</button>
+							{#if canDeletePreventiveCatalogItem(vaccine)}
+								<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={() => void deleteVaccine(vaccine)}>
+									<Trash2 class="size-4" />
+									{t('actions.delete')}
+								</button>
+							{/if}
 							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-3">
 								<span>{t('preventive.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(vaccineDraftSpeciesValue(vaccine))}</span></span>
 								<div class="flex flex-wrap gap-2">
 									{#each petSpeciesOptions as option}
 										<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
-											<input type="checkbox" class="size-4 accent-primary" checked={vaccineDraftSpeciesValue(vaccine).includes(option.id)} onchange={() => setVaccineSpecies(vaccine, option.id)} />
+											<input type="checkbox" class="size-4 accent-primary" checked={vaccineDraftSpeciesValue(vaccine).includes(option.id)} disabled={!canEditPreventiveCatalogItem(vaccine)} onchange={() => setVaccineSpecies(vaccine, option.id)} />
 											<span>{t(option.labelKey)}</span>
 										</label>
 									{/each}
@@ -854,7 +864,7 @@
 							</div>
 							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-3">
 								<span>{t('preventive.regions')}</span>
-								<PreventiveRegionsField id={`vaccine-regions-${vaccine.id}`} value={vaccineDraftRegionsValue(vaccine)} disabled={saving} onchange={(regions) => setVaccineRegions(vaccine.id, regions)} />
+								<PreventiveRegionsField id={`vaccine-regions-${vaccine.id}`} value={vaccineDraftRegionsValue(vaccine)} disabled={saving || !canEditPreventiveCatalogItem(vaccine)} onchange={(regions) => setVaccineRegions(vaccine.id, regions)} />
 							</div>
 						</form>
 					{:else}
@@ -927,26 +937,28 @@
 									<span>{t('antiparasiticTreatment.name')}</span>
 									<CharacterLimitHint value={antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name} max={FIELD_LIMITS.antiparasiticName} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name} maxlength={FIELD_LIMITS.antiparasiticName} required oninput={(event) => (antiparasiticDraftNames = { ...antiparasiticDraftNames, [antiparasitic.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name} maxlength={FIELD_LIMITS.antiparasiticName} disabled={!canEditPreventiveCatalogItem(antiparasitic)} required oninput={(event) => (antiparasiticDraftNames = { ...antiparasiticDraftNames, [antiparasitic.id]: inputValue(event) })} />
 							</label>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
 									<span>{t('preventive.manufacturer')}</span>
 									<CharacterLimitHint value={antiparasiticDraftManufacturers[antiparasitic.id] ?? antiparasitic.manufacturer ?? ''} max={FIELD_LIMITS.preventiveManufacturer} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={antiparasiticDraftManufacturers[antiparasitic.id] ?? antiparasitic.manufacturer ?? ''} maxlength={FIELD_LIMITS.preventiveManufacturer} oninput={(event) => (antiparasiticDraftManufacturers = { ...antiparasiticDraftManufacturers, [antiparasitic.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={antiparasiticDraftManufacturers[antiparasitic.id] ?? antiparasitic.manufacturer ?? ''} maxlength={FIELD_LIMITS.preventiveManufacturer} disabled={!canEditPreventiveCatalogItem(antiparasitic)} oninput={(event) => (antiparasiticDraftManufacturers = { ...antiparasiticDraftManufacturers, [antiparasitic.id]: inputValue(event) })} />
 							</label>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
 									<span>{t('preventive.aliases')}</span>
 									<CharacterLimitHint value={antiparasiticDraftAliases[antiparasitic.id] ?? aliasDraft(antiparasitic.aliases)} max={FIELD_LIMITS.preventiveAliasesJson} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={antiparasiticDraftAliases[antiparasitic.id] ?? aliasDraft(antiparasitic.aliases)} maxlength={FIELD_LIMITS.preventiveAliasesJson} placeholder={t('preventive.aliasesPlaceholder')} oninput={(event) => (antiparasiticDraftAliases = { ...antiparasiticDraftAliases, [antiparasitic.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={antiparasiticDraftAliases[antiparasitic.id] ?? aliasDraft(antiparasitic.aliases)} maxlength={FIELD_LIMITS.preventiveAliasesJson} placeholder={t('preventive.aliasesPlaceholder')} disabled={!canEditPreventiveCatalogItem(antiparasitic)} oninput={(event) => (antiparasiticDraftAliases = { ...antiparasiticDraftAliases, [antiparasitic.id]: inputValue(event) })} />
 							</label>
-							<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
-								<Save class="size-4" />
-								{t('actions.save')}
-							</button>
+							{#if canEditPreventiveCatalogItem(antiparasitic)}
+								<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
+									<Save class="size-4" />
+									{t('actions.save')}
+								</button>
+							{/if}
 							<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} title={antiparasitic.hiddenAt ? t('antiparasiticTreatment.list.show') : t('antiparasiticTreatment.list.hide')} onclick={() => void toggleAntiparasiticHidden(antiparasitic)}>
 								{#if antiparasitic.hiddenAt}
 									<Eye class="size-4" />
@@ -956,16 +968,18 @@
 									{t('antiparasiticTreatment.list.hide')}
 								{/if}
 							</button>
-							<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={() => void deleteAntiparasitic(antiparasitic)}>
-								<Trash2 class="size-4" />
-								{t('actions.delete')}
-							</button>
+							{#if canDeletePreventiveCatalogItem(antiparasitic)}
+								<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={() => void deleteAntiparasitic(antiparasitic)}>
+									<Trash2 class="size-4" />
+									{t('actions.delete')}
+								</button>
+							{/if}
 							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-3">
 								<span>{t('preventive.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(antiparasiticDraftSpeciesValue(antiparasitic))}</span></span>
 								<div class="flex flex-wrap gap-2">
 									{#each petSpeciesOptions as option}
 										<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
-											<input type="checkbox" class="size-4 accent-primary" checked={antiparasiticDraftSpeciesValue(antiparasitic).includes(option.id)} onchange={() => setAntiparasiticSpecies(antiparasitic, option.id)} />
+											<input type="checkbox" class="size-4 accent-primary" checked={antiparasiticDraftSpeciesValue(antiparasitic).includes(option.id)} disabled={!canEditPreventiveCatalogItem(antiparasitic)} onchange={() => setAntiparasiticSpecies(antiparasitic, option.id)} />
 											<span>{t(option.labelKey)}</span>
 										</label>
 									{/each}
@@ -973,7 +987,7 @@
 							</div>
 							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-3">
 								<span>{t('preventive.regions')}</span>
-								<PreventiveRegionsField id={`antiparasitic-regions-${antiparasitic.id}`} value={antiparasiticDraftRegionsValue(antiparasitic)} disabled={saving} onchange={(regions) => setAntiparasiticRegions(antiparasitic.id, regions)} />
+								<PreventiveRegionsField id={`antiparasitic-regions-${antiparasitic.id}`} value={antiparasiticDraftRegionsValue(antiparasitic)} disabled={saving || !canEditPreventiveCatalogItem(antiparasitic)} onchange={(regions) => setAntiparasiticRegions(antiparasitic.id, regions)} />
 							</div>
 						</form>
 					{:else}

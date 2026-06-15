@@ -426,6 +426,7 @@ export const gnPy = {
 	'preventive.species': 'Mymba rehegua',
 	'preventive.aliases': 'Jeheka ñe’ẽ',
 	'preventive.aliasesPlaceholder': 'V10, rabia, produto réra',
+	'preventive.systemItemReadOnly': 'Sistema mba’ekuéra ikatu oñeñomi añoite.',
 	'protocol.tab': 'Protocolo',
 	'protocol.title': 'Protocolo oñeñongatúva',
 	'protocol.label': 'Protocolo',

@@ -1,4 +1,5 @@
 import type { KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
+import type { PreventiveCatalogOrigin } from '$lib/domain/preventive/catalog.js';
 
 export type VaccineValidityUnit = 'days' | 'months' | 'years';
 
@@ -9,6 +10,7 @@ export interface Vaccine {
 	species: KnownPetSpecies[];
 	aliases: string[];
 	manufacturer: string | null;
+	origin: PreventiveCatalogOrigin;
 	regions: string[];
 	hiddenAt: string | null;
 	updatedAt: string | null;

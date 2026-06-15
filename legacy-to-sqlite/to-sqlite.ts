@@ -429,6 +429,7 @@ db.exec(`
     species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.preventiveSpeciesJson)}),
     aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.preventiveAliasesJson)}),
     manufacturer TEXT CHECK(${optionalTextCheck('manufacturer', FIELD_LIMITS.preventiveManufacturer)}),
+    origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
     regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.preventiveRegionsJson)}),
     hidden_at TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -606,8 +607,8 @@ const insertMedicalRecord = db.prepare(`
 `);
 
 const insertPreventiveCatalogItem = db.prepare(`
-  INSERT OR IGNORE INTO preventive_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, regions, updated_at)
-  VALUES (@kind, @name, @normalizedName, @species, @aliases, @manufacturer, @regions, CURRENT_TIMESTAMP)
+  INSERT OR IGNORE INTO preventive_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at)
+  VALUES (@kind, @name, @normalizedName, @species, @aliases, @manufacturer, @origin, @regions, CURRENT_TIMESTAMP)
 `);
 
 const insertSetting = db.prepare(`
@@ -691,6 +692,7 @@ for (const item of defaultPreventiveCatalogItems) {
     species: JSON.stringify(item.species),
     aliases: JSON.stringify(item.aliases),
     manufacturer: item.manufacturer,
+    origin: item.origin,
     regions: JSON.stringify(item.regions)
   });
 }

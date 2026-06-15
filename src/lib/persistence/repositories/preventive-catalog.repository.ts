@@ -1,6 +1,6 @@
 import type { Antiparasitic } from '$lib/domain/antiparasitic/antiparasitic.js';
 import { normalizeAntiparasiticName } from '$lib/domain/antiparasitic/antiparasitic.js';
-import { parsePreventiveAliases, parsePreventiveRegions, parsePreventiveSpecies, stringifyPreventiveAliases, stringifyPreventiveRegions, stringifyPreventiveSpecies } from '$lib/domain/preventive/catalog.js';
+import { canEditPreventiveCatalogItem, parsePreventiveAliases, parsePreventiveRegions, parsePreventiveSpecies, stringifyPreventiveAliases, stringifyPreventiveRegions, stringifyPreventiveSpecies, type PreventiveCatalogOrigin } from '$lib/domain/preventive/catalog.js';
 import { FIELD_LIMITS, assertTextLimit, nullableLimitedText } from '$lib/domain/shared/field-limits.js';
 import type { Vaccine } from '$lib/domain/vaccine/vaccine.js';
 import { normalizeVaccineName } from '$lib/domain/vaccine/vaccine.js';
@@ -17,6 +17,7 @@ interface PreventiveCatalogItemRow {
 	species: string;
 	aliases: string;
 	manufacturer: string | null;
+	origin: PreventiveCatalogOrigin;
 	regions: string;
 	hidden_at: string | null;
 	updated_at: string | null;
@@ -68,6 +69,7 @@ function mapCatalogItem(row: PreventiveCatalogItemRow): PreventiveCatalogItem {
 		species: parsePreventiveSpecies(row.species),
 		aliases: parsePreventiveAliases(row.aliases, FIELD_LIMITS.preventiveAlias, config.normalize, row.normalized_name),
 		manufacturer: row.manufacturer,
+		origin: row.origin,
 		regions: parsePreventiveRegions(row.regions),
 		hiddenAt: row.hidden_at,
 		updatedAt: row.updated_at
@@ -105,7 +107,7 @@ export function normalizePreventiveCatalogInput(kind: PreventiveCatalogKind, val
 
 async function getPreventiveCatalogItemByNormalizedName(kind: PreventiveCatalogKind, normalizedName: string): Promise<PreventiveCatalogItem | null> {
 	const rows = await selectMany<PreventiveCatalogItemRow>(
-		`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, regions, hidden_at, updated_at
+		`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, hidden_at, updated_at
 		 FROM preventive_catalog_items
 		 WHERE kind = $1 AND normalized_name = $2
 		 LIMIT 1`,
@@ -115,11 +117,25 @@ async function getPreventiveCatalogItemByNormalizedName(kind: PreventiveCatalogK
 	return rows[0] ? mapCatalogItem(rows[0]) : null;
 }
 
+async function assertPreventiveCatalogItemEditable(kind: PreventiveCatalogKind, id: number): Promise<void> {
+	const rows = await selectMany<Pick<PreventiveCatalogItemRow, 'origin'>>(
+		`SELECT origin
+		 FROM preventive_catalog_items
+		 WHERE id = $1 AND kind = $2
+		 LIMIT 1`,
+		[id, kind]
+	);
+	if (rows[0] && !canEditPreventiveCatalogItem(rows[0])) throw new Error('preventive_catalog_system_item');
+}
+
 export async function ensurePreventiveCatalogItem(kind: PreventiveCatalogKind, name: string, normalizedName: string): Promise<PreventiveCatalogItem> {
+	const existingItem = await getPreventiveCatalogItemByNormalizedName(kind, normalizedName);
+	if (existingItem?.origin === 'system') return existingItem;
+
 	const metadata = normalizePreventiveCatalogMetadata(kind, {}, normalizedName);
 	await execute(
-		`INSERT INTO preventive_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, regions, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
+		`INSERT INTO preventive_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, 'user', $7, CURRENT_TIMESTAMP)
 		 ON CONFLICT(kind, normalized_name) DO UPDATE SET
 			name = excluded.name,
 			updated_at = CURRENT_TIMESTAMP`,
@@ -133,7 +149,7 @@ export async function ensurePreventiveCatalogItem(kind: PreventiveCatalogKind, n
 
 export async function listPreventiveCatalogItems(kind: PreventiveCatalogKind, includeHidden = false): Promise<PreventiveCatalogItem[]> {
 	const rows = await selectMany<PreventiveCatalogItemRow>(
-		`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, regions, hidden_at, updated_at
+		`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, hidden_at, updated_at
 		 FROM preventive_catalog_items
 		 WHERE kind = $1 AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}
 		 ORDER BY name COLLATE NOCASE`,
@@ -148,6 +164,7 @@ export async function savePreventiveCatalogItem(kind: PreventiveCatalogKind, inp
 	const metadata = normalizePreventiveCatalogMetadata(kind, input, normalizedName);
 
 	if (id) {
+		await assertPreventiveCatalogItemEditable(kind, id);
 		await execute(
 			`UPDATE preventive_catalog_items
 			 SET name = $3,
@@ -162,7 +179,7 @@ export async function savePreventiveCatalogItem(kind: PreventiveCatalogKind, inp
 		);
 
 		const rows = await selectMany<PreventiveCatalogItemRow>(
-			`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, regions, hidden_at, updated_at
+			`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, hidden_at, updated_at
 			 FROM preventive_catalog_items
 			 WHERE id = $1 AND kind = $2
 			 LIMIT 1`,
@@ -172,9 +189,12 @@ export async function savePreventiveCatalogItem(kind: PreventiveCatalogKind, inp
 		throw new Error(configFor(kind).saveFailedError);
 	}
 
+	const existingItem = await getPreventiveCatalogItemByNormalizedName(kind, normalizedName);
+	if (existingItem && !canEditPreventiveCatalogItem(existingItem)) throw new Error('preventive_catalog_system_item');
+
 	await execute(
-		`INSERT INTO preventive_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, regions, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
+		`INSERT INTO preventive_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, 'user', $7, CURRENT_TIMESTAMP)
 		 ON CONFLICT(kind, normalized_name) DO UPDATE SET
 			name = excluded.name,
 			species = excluded.species,
@@ -201,7 +221,7 @@ export async function setPreventiveCatalogItemHidden(kind: PreventiveCatalogKind
 	);
 
 	const rows = await selectMany<PreventiveCatalogItemRow>(
-		`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, regions, hidden_at, updated_at
+		`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, hidden_at, updated_at
 		 FROM preventive_catalog_items
 		 WHERE id = $1 AND kind = $2
 		 LIMIT 1`,
@@ -212,5 +232,6 @@ export async function setPreventiveCatalogItemHidden(kind: PreventiveCatalogKind
 }
 
 export async function deletePreventiveCatalogItem(kind: PreventiveCatalogKind, id: number): Promise<void> {
+	await assertPreventiveCatalogItemEditable(kind, id);
 	await execute('DELETE FROM preventive_catalog_items WHERE id = $1 AND kind = $2', [id, kind]);
 }

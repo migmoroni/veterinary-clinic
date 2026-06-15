@@ -5,6 +5,7 @@ export type DefaultPreventiveSpecies = 'canine' | 'feline';
 
 export interface DefaultPreventiveCatalogItem {
 	kind: DefaultPreventiveKind;
+	origin: 'system';
 	name: string;
 	species: DefaultPreventiveSpecies[];
 	aliases: string[];
@@ -49,6 +50,7 @@ const fleaAndTickControl: PreventiveAliasTranslationKey[] = [
 const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Nobivac Canine 1-DAPPVL2+CV',
 		species: ['canine'],
 		manufacturer: 'MSD Animal Health',
@@ -69,6 +71,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Nobivac DHPPI+L',
 		species: ['canine'],
 		manufacturer: 'MSD Animal Health',
@@ -85,6 +88,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Nobivac DHPPi',
 		species: ['canine'],
 		manufacturer: 'MSD Animal Health',
@@ -96,6 +100,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Duramune Max 5-CvK/4L',
 		species: ['canine'],
 		manufacturer: 'Elanco',
@@ -116,6 +121,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Canigen MHA2PPi/L',
 		species: ['canine'],
 		manufacturer: 'Virbac',
@@ -133,6 +139,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Imunocan V8',
 		species: ['canine'],
 		manufacturer: 'Vaxxinova',
@@ -151,6 +158,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Versican Plus DHPPi/L4R',
 		species: ['canine'],
 		manufacturer: 'Zoetis',
@@ -171,6 +179,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Nobivac Puppy DP',
 		species: ['canine'],
 		manufacturer: 'MSD Animal Health',
@@ -182,6 +191,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'GiardiaVax',
 		species: ['canine'],
 		manufacturer: 'Zoetis',
@@ -190,6 +200,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'BronchiGuard',
 		species: ['canine'],
 		manufacturer: 'Zoetis',
@@ -201,6 +212,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Nobivac Intra-Trac Oral Bb',
 		species: ['canine'],
 		manufacturer: 'MSD Animal Health',
@@ -212,6 +224,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Nobivac KC',
 		species: ['canine'],
 		manufacturer: 'MSD Animal Health',
@@ -227,6 +240,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Leish-Tec',
 		species: ['canine'],
 		manufacturer: 'Ceva Saúde Animal',
@@ -235,6 +249,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Eurican Herpes 205',
 		species: ['canine'],
 		manufacturer: 'Boehringer Ingelheim Animal Health',
@@ -243,6 +258,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Nobivac Raiva',
 		species: ['canine', 'feline'],
 		manufacturer: 'MSD Animal Health',
@@ -251,6 +267,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Rabisin',
 		species: ['canine', 'feline'],
 		manufacturer: 'Boehringer Ingelheim Animal Health',
@@ -259,6 +276,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Defensor',
 		species: ['canine', 'feline'],
 		manufacturer: 'Zoetis',
@@ -267,6 +285,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Nobivac Feline 1-HCP',
 		species: ['feline'],
 		manufacturer: 'MSD Animal Health',
@@ -278,6 +297,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Nobivac Feline 1-HCPCh',
 		species: ['feline'],
 		manufacturer: 'MSD Animal Health',
@@ -289,6 +309,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Nobivac Feline 1-HCPCh + FeLV',
 		species: ['feline'],
 		manufacturer: 'MSD Animal Health',
@@ -305,6 +326,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Nobivac L4',
 		species: ['canine'],
 		manufacturer: 'MSD Animal Health',
@@ -313,6 +335,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Recombitek C6',
 		species: ['canine'],
 		manufacturer: 'Boehringer Ingelheim Animal Health',
@@ -324,6 +347,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Vanguard Plus',
 		species: ['canine'],
 		manufacturer: 'Zoetis',
@@ -335,6 +359,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Nobivac Tricat Trio',
 		species: ['feline'],
 		manufacturer: 'MSD Animal Health',
@@ -346,6 +371,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Felocell CVR',
 		species: ['feline'],
 		manufacturer: 'Zoetis',
@@ -357,6 +383,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Purevax RCP',
 		species: ['feline'],
 		manufacturer: 'Boehringer Ingelheim Animal Health',
@@ -368,6 +395,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Purevax RCPCh',
 		species: ['feline'],
 		manufacturer: 'Boehringer Ingelheim Animal Health',
@@ -379,6 +407,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Purevax RCPCh FeLV',
 		species: ['feline'],
 		manufacturer: 'Boehringer Ingelheim Animal Health',
@@ -395,6 +424,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Purevax FeLV',
 		species: ['feline'],
 		manufacturer: 'Boehringer Ingelheim Animal Health',
@@ -403,6 +433,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Purevax Rabies',
 		species: ['feline'],
 		manufacturer: 'Boehringer Ingelheim Animal Health',
@@ -411,6 +442,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Leucogen',
 		species: ['feline'],
 		manufacturer: 'Boehringer Ingelheim Animal Health',
@@ -419,6 +451,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'vaccine',
+		origin: 'system',
 		name: 'Versifel FeLV',
 		species: ['feline'],
 		manufacturer: 'Zoetis',
@@ -427,6 +460,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Drontal Plus',
 		species: ['canine'],
 		manufacturer: 'Elanco',
@@ -441,6 +475,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Drontal Puppy',
 		species: ['canine'],
 		manufacturer: 'Elanco',
@@ -451,6 +486,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Endogard',
 		species: ['canine'],
 		manufacturer: 'Virbac',
@@ -461,6 +497,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Canex Premium',
 		species: ['canine'],
 		manufacturer: 'Ceva Saúde Animal',
@@ -471,6 +508,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Endal Plus',
 		species: ['canine'],
 		manufacturer: 'Ourofino Saúde Animal',
@@ -481,6 +519,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Chemital',
 		species: ['canine', 'feline'],
 		manufacturer: 'Chemitec',
@@ -491,6 +530,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Top Dog',
 		species: ['canine'],
 		manufacturer: 'Ourofino Saúde Animal',
@@ -501,6 +541,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Drontal Gatos',
 		species: ['feline'],
 		manufacturer: 'Elanco',
@@ -511,6 +552,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Milbemax',
 		species: ['canine', 'feline'],
 		manufacturer: 'Elanco',
@@ -521,6 +563,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Milpro',
 		species: ['canine', 'feline'],
 		manufacturer: 'Virbac',
@@ -531,6 +574,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Panacur 10%',
 		species: ['canine'],
 		manufacturer: 'MSD Animal Health',
@@ -541,6 +585,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Giardicid',
 		species: ['canine'],
 		manufacturer: 'Agener União Saúde Animal',
@@ -551,6 +596,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Bravecto',
 		species: ['canine', 'feline'],
 		manufacturer: 'MSD Animal Health',
@@ -559,6 +605,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'NexGard',
 		species: ['canine'],
 		manufacturer: 'Boehringer Ingelheim Animal Health',
@@ -567,6 +614,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Simparic',
 		species: ['canine'],
 		manufacturer: 'Zoetis',
@@ -575,6 +623,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Capstar',
 		species: ['canine', 'feline'],
 		manufacturer: 'Elanco',
@@ -585,6 +634,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Effipro',
 		species: ['canine', 'feline'],
 		manufacturer: 'Virbac',
@@ -593,6 +643,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Fiprolex',
 		species: ['canine', 'feline'],
 		manufacturer: 'Ceva Saúde Animal',
@@ -601,6 +652,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Frontline',
 		species: ['canine', 'feline'],
 		manufacturer: 'Boehringer Ingelheim Animal Health',
@@ -609,6 +661,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Defenza',
 		species: ['canine'],
 		manufacturer: 'Ourofino Saúde Animal',
@@ -617,6 +670,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Mectimax',
 		species: ['canine'],
 		manufacturer: 'Agener União Saúde Animal',
@@ -625,6 +679,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Ivercanis',
 		species: ['canine'],
 		manufacturer: 'World Veterinária',
@@ -633,6 +688,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Revolution',
 		species: ['canine', 'feline'],
 		manufacturer: 'Zoetis',
@@ -641,6 +697,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Stronghold',
 		species: ['canine', 'feline'],
 		manufacturer: 'Zoetis',
@@ -649,6 +706,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Advocate',
 		species: ['canine', 'feline'],
 		manufacturer: 'Elanco',
@@ -657,6 +715,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Advantage Multi',
 		species: ['canine', 'feline'],
 		manufacturer: 'Elanco',
@@ -665,6 +724,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Profender',
 		species: ['feline'],
 		manufacturer: 'Elanco',
@@ -679,6 +739,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'NexGard Spectra',
 		species: ['canine'],
 		manufacturer: 'Boehringer Ingelheim Animal Health',
@@ -687,6 +748,7 @@ const defaultPreventiveCatalogDefinitions: DefaultPreventiveCatalogItem[] = [
 	},
 	{
 		kind: 'antiparasitic',
+		origin: 'system',
 		name: 'Simparic Trio',
 		species: ['canine'],
 		manufacturer: 'Zoetis',

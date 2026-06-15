@@ -46,7 +46,7 @@ const requiredSchema = {
   medical_records: ['id', 'pet_id', 'title', 'description', 'admitted_at', 'discharged_at', 'updated_at', 'deleted_at', 'purge_after'],
   app_settings: ['key', 'value', 'updated_at'],
   backup_history: ['id', 'path', 'kind', 'created_at'],
-  preventive_catalog_items: ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'regions', 'hidden_at', 'created_at', 'updated_at'],
+  preventive_catalog_items: ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'hidden_at', 'created_at', 'updated_at'],
   preventive_protocols: ['id', 'kind', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'created_at', 'updated_at', 'deleted_at', 'purge_after'],
   preventive_protocol_items: ['id', 'protocol_id', 'catalog_item_id', 'sort_order', 'created_at', 'updated_at'],
   preventive_protocol_doses: ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order', 'created_at', 'updated_at'],

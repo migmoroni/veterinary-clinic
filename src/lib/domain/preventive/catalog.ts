@@ -2,14 +2,24 @@ import { isPetSpecies, petSpeciesOptions, type KnownPetSpecies } from '$lib/doma
 import { assertTextLimit } from '$lib/domain/shared/field-limits.js';
 
 export type PreventiveSpecies = KnownPetSpecies;
+export type PreventiveCatalogOrigin = 'system' | 'user';
 
 export const defaultPreventiveSpecies = petSpeciesOptions.map((option) => option.id) as PreventiveSpecies[];
 
 export interface PreventiveCatalogMetadata {
 	aliases: string[];
 	manufacturer: string | null;
+	origin: PreventiveCatalogOrigin;
 	regions: string[];
 	species: PreventiveSpecies[];
+}
+
+export function canEditPreventiveCatalogItem(item: Pick<PreventiveCatalogMetadata, 'origin'>): boolean {
+	return item.origin === 'user';
+}
+
+export function canDeletePreventiveCatalogItem(item: Pick<PreventiveCatalogMetadata, 'origin'>): boolean {
+	return canEditPreventiveCatalogItem(item);
 }
 
 export function normalizePreventiveSpecies(values: readonly string[] | null | undefined): PreventiveSpecies[] {

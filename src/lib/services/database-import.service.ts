@@ -41,7 +41,7 @@ async function validateDatabaseFile(fileName: string): Promise<void> {
 			(await tableHasColumns(database, 'pets', ['id', 'name', 'species', 'breed'])) &&
 			(await tableHasColumns(database, 'pet_owners', ['id', 'pet_id', 'owner_id'])) &&
 			(await tableHasColumns(database, 'medical_records', ['id', 'pet_id', 'description', 'admitted_at', 'discharged_at'])) &&
-			(await tableHasColumns(database, 'preventive_catalog_items', ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'regions', 'hidden_at'])) &&
+			(await tableHasColumns(database, 'preventive_catalog_items', ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'hidden_at'])) &&
 			(await tableHasColumns(database, 'preventive_protocols', ['id', 'kind', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'deleted_at', 'purge_after'])) &&
 			(await tableHasColumns(database, 'preventive_protocol_items', ['id', 'protocol_id', 'catalog_item_id', 'sort_order'])) &&
 			(await tableHasColumns(database, 'preventive_protocol_doses', ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order'])) &&
