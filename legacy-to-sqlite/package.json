@@ -4,7 +4,7 @@
     "build:csv": "tsc -p tsconfig.csv.json",
     "csv": "node build/generated/legacy-to-sqlite/to-sqlite.js",
     "build:exported-db": "tsc exported-db-to-sqlite.ts --ignoreConfig",
-    "exported-db": "node exported-db-to-sqlite.js"
+    "exported-db": "npm run build:exported-db && node exported-db-to-sqlite.js"
   },
   "dependencies": {
     "better-sqlite3": "^12.9.0",
