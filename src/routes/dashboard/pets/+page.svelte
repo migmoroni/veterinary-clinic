@@ -313,9 +313,8 @@
 			<PawPrint class="size-4" />
 			{t('analysis.pets.title')}
 		</div>
-		<p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{t('analysis.pets.description')}</p>
 
-		<div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5" role="tablist" aria-label={t('analysis.pets.title')}>
+		<div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5" role="tablist" aria-label={t('analysis.pets.title')}>
 			{#each analysisKinds as kind}
 				{@const top = topBucket(kind)}
 				<button
@@ -405,14 +404,11 @@
 
 			<section class="min-w-0 rounded-md border border-border bg-background p-4">
 				<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-					<div class="min-w-0">
-						<div class="flex flex-wrap items-center gap-2">
-							<h3 class="flex items-center gap-2 text-sm font-semibold"><List class="size-4" />{t('analysis.study.relatedPets')}</h3>
-							<span class="inline-flex max-w-full items-center rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-								<span class="truncate">{t('analysis.study.currentFocus')}: {analysisLabel(activeAnalysis)}</span>
-							</span>
-						</div>
-						<p class="mt-1 text-sm leading-6 text-muted-foreground">{t('analysis.study.relatedPetsDescription')}</p>
+					<div class="flex min-w-0 flex-wrap items-center gap-2">
+						<h3 class="flex items-center gap-2 text-sm font-semibold"><List class="size-4" />{t('analysis.study.relatedPets')}</h3>
+						<span class="inline-flex max-w-full items-center rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+							<span class="truncate">{analysisLabel(activeAnalysis)}</span>
+						</span>
 					</div>
 					<div class="flex flex-col gap-2 sm:items-end">
 						<label class="text-sm font-medium" for="pet-analysis-order">{t('vaccine.analytics.order')}</label>

@@ -189,7 +189,6 @@
 			</span>
 			<div class="min-w-0 flex-1">
 				<h3 class="text-base font-semibold">{t('pet.ownerSelectTitle')}</h3>
-				<p class="mt-1 text-sm leading-6 text-muted-foreground">{t('pet.ownerSelectDescription')}</p>
 
 				<div class="mt-4">
 					<div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">

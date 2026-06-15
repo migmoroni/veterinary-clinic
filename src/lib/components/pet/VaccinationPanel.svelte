@@ -3,6 +3,7 @@
 	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
 	import PeriodField from '$lib/components/forms/PeriodField.svelte';
+	import PreventiveDueBadge from '$lib/components/pet/PreventiveDueBadge.svelte';
 	import SearchableSelect from '$lib/components/ui/SearchableSelect.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
@@ -286,25 +287,6 @@
 		}
 	}
 
-	function dueLabel(vaccination: PetVaccination): string {
-		const status = getVaccineDueStatus(vaccination);
-		if (status.validityIgnored) return t('vaccine.validityIgnored');
-		if (!status.dueAt || status.daysUntilDue === null) return t('vaccine.validityUnknown');
-
-		const formattedDueAt = formatDateForDisplay(status.dueAt, i18n.locale);
-		if (status.expired) return `${t('vaccine.expiredOn')} ${formattedDueAt}`;
-		if (status.daysUntilDue === 0) return `${t('vaccine.expiresToday')} ${formattedDueAt}`;
-		return `${t('vaccine.validUntil')} ${formattedDueAt} · ${t('vaccine.expiresIn')} ${status.daysUntilDue} ${t(status.daysUntilDue === 1 ? 'pet.ageDaySingular' : 'pet.ageDayPlural')}`;
-	}
-
-	function dueBadgeClass(vaccination: PetVaccination): string {
-		const status = getVaccineDueStatus(vaccination);
-		if (status.validityIgnored) return 'border-border bg-muted text-muted-foreground';
-		if (status.expired) return 'border-destructive/30 bg-destructive/10 text-destructive';
-		if (status.daysUntilDue !== null && status.daysUntilDue <= 30) return 'border-amber-300 bg-amber-50 text-amber-800';
-		return 'border-primary/20 bg-primary/10 text-primary';
-	}
-
 	function vaccinationName(vaccination: PetVaccination): string {
 		return `${vaccination.vaccineName} · ${vaccination.dose}`;
 	}
@@ -316,10 +298,7 @@
 
 <section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
 	<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-		<div class="min-w-0">
-			<h3 class="text-base font-semibold">{t('vaccine.sectionTitle')}</h3>
-			<p class="mt-1 text-sm leading-6 text-muted-foreground">{t('vaccine.sectionDescription')}</p>
-		</div>
+		<h3 class="min-w-0 text-base font-semibold">{t('vaccine.sectionTitle')}</h3>
 		<a href="/settings/vaccines" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={t('vaccine.manageVaccines')}>
 			<Settings2 class="size-4" />
 			{t('vaccine.manageVaccines')}
@@ -425,9 +404,7 @@
 					{#if vaccination.observation}
 						<span class="mt-1 block whitespace-pre-wrap wrap-break-word text-xs text-muted-foreground"><span class="font-medium text-foreground">{t('vaccine.observation')}:</span> {vaccination.observation}</span>
 					{/if}
-					<span class="mt-2 inline-flex max-w-full items-center rounded-md border px-2 py-1 text-xs font-semibold leading-5 shadow-sm {dueBadgeClass(vaccination)}">
-						<span class="truncate">{dueLabel(vaccination)}</span>
-					</span>
+					<PreventiveDueBadge kind="vaccine" status={getVaccineDueStatus(vaccination)} className="mt-2" />
 				</span>
 				<span class="flex shrink-0 gap-1">
 					{#if vaccination.validityIgnoredAt}

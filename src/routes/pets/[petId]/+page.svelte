@@ -9,17 +9,18 @@
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import PetAvatarEditorDialog from '$lib/components/pet/PetAvatarEditorDialog.svelte';
 	import PetTaxonomyPicker from '$lib/components/pet/PetTaxonomyPicker.svelte';
+	import PreventiveDueBadge from '$lib/components/pet/PreventiveDueBadge.svelte';
 	import VaccinationPanel from '$lib/components/pet/VaccinationPanel.svelte';
 	import UnsavedChangesDialog from '$lib/components/records/UnsavedChangesDialog.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
-	import type { PetAntiparasiticTreatment } from '$lib/domain/antiparasitic/antiparasitic.js';
+	import { getAntiparasiticTreatmentDueStatus, type PetAntiparasiticTreatment } from '$lib/domain/antiparasitic/antiparasitic.js';
 	import type { MedicalRecord } from '$lib/domain/medical-record/medical-record.js';
 	import type { Pet, PetInput, PetSex } from '$lib/domain/pet/pet.js';
 	import { getPetBreedOption, getPetSpeciesOption } from '$lib/domain/pet/taxonomy.js';
 	import { formatDateForDisplay, formatDateForInput, normalizeDateInput } from '$lib/domain/shared/date-input.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import { computeAgeFromBirthDate } from '$lib/domain/shared/time.js';
-	import type { PetVaccination } from '$lib/domain/vaccine/vaccine.js';
+	import { getVaccineDueStatus, type PetVaccination } from '$lib/domain/vaccine/vaccine.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
 	import type { PetProfile } from '$lib/services/pet.service.js';
 	import { loadPetProfile, removePet, savePet } from '$lib/services/pet.service.js';
@@ -36,11 +37,11 @@
 
 	const petId = $derived(Number(page.params.petId));
 	const panelItems = [
-		{ id: 'overview', titleKey: 'pet.overviewSection', descriptionKey: 'pet.overviewDescription', icon: Info },
-		{ id: 'records', titleKey: 'pet.recordsSection', descriptionKey: 'pet.recordsDescription', icon: ClipboardPenLine },
-		{ id: 'vaccines', titleKey: 'pet.vaccinesSection', descriptionKey: 'pet.vaccinesDescription', icon: Syringe },
-		{ id: 'antiparasiticTreatments', titleKey: 'pet.antiparasiticsSection', descriptionKey: 'pet.antiparasiticsDescription', icon: Pill }
-	] satisfies { id: PetPanel; titleKey: TranslationKey; descriptionKey: TranslationKey; icon: typeof Info }[];
+		{ id: 'overview', titleKey: 'pet.overviewSection', icon: Info },
+		{ id: 'records', titleKey: 'pet.recordsSection', icon: ClipboardPenLine },
+		{ id: 'vaccines', titleKey: 'pet.vaccinesSection', icon: Syringe },
+		{ id: 'antiparasiticTreatments', titleKey: 'pet.antiparasiticsSection', icon: Pill }
+	] satisfies { id: PetPanel; titleKey: TranslationKey; icon: typeof Info }[];
 
 	function avatarSnapshotValue(bytes: Uint8Array | null | undefined): string {
 		if (!bytes || bytes.length === 0) return 'none';
@@ -454,24 +455,21 @@
 		<div class="h-64 animate-pulse rounded-md bg-muted"></div>
 	{:else if profile}
 		<div class="grid min-w-0 gap-5 lg:grid-cols-[16rem_minmax(0,1fr)] lg:items-start">
-			<aside class="rounded-md border border-border bg-card p-2 shadow-sm lg:sticky lg:top-5 lg:border-r lg:border-l-0 lg:border-y-0 lg:bg-transparent lg:p-0 lg:pr-3 lg:shadow-none">
+			<aside class="border border-border bg-card p-2 shadow-sm lg:sticky lg:top-5 lg:border-r lg:border-l-0 lg:border-y-0 lg:bg-transparent lg:p-0 lg:pr-3 lg:shadow-none">
 				<div class="grid gap-1" role="tablist" aria-label={t('pet.profileSections')}>
 					{#each panelItems as item}
 						{@const Icon = item.icon}
 						<button
-							class="flex w-full items-start gap-3 rounded-md px-3 py-3 text-left transition-colors {activePanel === item.id ? 'bg-primary/10 text-foreground' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}"
+							class="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors {activePanel === item.id ? 'bg-primary/10 text-foreground' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}"
 							type="button"
 							role="tab"
 							aria-selected={activePanel === item.id}
 							onclick={() => selectPanel(item.id)}
 						>
-							<span class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-background {activePanel === item.id ? 'text-primary' : 'text-muted-foreground'}">
+							<span class="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-background {activePanel === item.id ? 'text-primary' : 'text-muted-foreground'}">
 								<Icon class="size-4" />
 							</span>
-							<span class="min-w-0">
-								<span class="block text-sm font-semibold">{t(item.titleKey)}</span>
-								<span class="mt-0.5 block text-xs leading-5">{t(item.descriptionKey)}</span>
-							</span>
+							<span class="min-w-0 truncate text-sm font-semibold">{t(item.titleKey)}</span>
 						</button>
 					{/each}
 				</div>
@@ -589,6 +587,7 @@
 												<span class="min-w-0">
 													<span class="block truncate text-sm font-medium">{vaccination.vaccineName}</span>
 													<span class="block truncate text-xs text-muted-foreground">{vaccinationOverviewLabel(vaccination)}</span>
+													<PreventiveDueBadge kind="vaccine" status={getVaccineDueStatus(vaccination)} className="mt-2" />
 												</span>
 											</div>
 										{/each}
@@ -609,6 +608,7 @@
 												<span class="min-w-0">
 													<span class="block truncate text-sm font-medium">{antiparasiticTreatment.antiparasiticName}</span>
 													<span class="block truncate text-xs text-muted-foreground">{antiparasiticTreatment.dose}</span>
+													<PreventiveDueBadge kind="antiparasitic" status={getAntiparasiticTreatmentDueStatus(antiparasiticTreatment)} className="mt-2" />
 												</span>
 											</div>
 										{/each}
