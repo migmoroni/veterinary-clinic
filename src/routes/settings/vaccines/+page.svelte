@@ -9,7 +9,7 @@
 	import type { Antiparasitic } from '$lib/domain/antiparasitic/antiparasitic.js';
 	import { petSpeciesOptions, type KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
 	import { canDeletePreventiveCatalogItem, canEditPreventiveCatalogItem } from '$lib/domain/preventive/catalog.js';
-	import type { PreventiveProtocol, PreventiveProtocolDose, PreventiveProtocolKind, PreventiveValidityUnit } from '$lib/domain/preventive/protocol.js';
+	import { canDeletePreventiveProtocol, canEditPreventiveProtocol, type PreventiveProtocol, type PreventiveProtocolDose, type PreventiveProtocolKind, type PreventiveValidityUnit } from '$lib/domain/preventive/protocol.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import type { Vaccine } from '$lib/domain/vaccine/vaccine.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
@@ -212,6 +212,11 @@
 	}
 
 	function protocolCatalogItems(protocol: PreventiveProtocol): CatalogItem[] {
+		if (!canEditPreventiveProtocol(protocol)) {
+			const linkedItemIds = new Set(protocol.items.map((item) => item.id));
+			return sortedCatalogItems(catalogItems(protocol.kind).filter((item) => linkedItemIds.has(item.id)));
+		}
+
 		const species = protocolDraftSpeciesValue(protocol);
 		if (species.length === 0) return [];
 		return sortedCatalogItems(catalogItems(protocol.kind).filter((item) => speciesOverlap(item.species, species)));
@@ -291,7 +296,7 @@
 	function setFailure(exception: unknown) {
 		if (exception instanceof Error && exception.message === 'field_limit_exceeded') errorKey = 'form.limitExceeded';
 		else if (exception instanceof Error && exception.message === 'field_required') errorKey = 'form.fieldRequired';
-		else if (exception instanceof Error && exception.message === 'preventive_catalog_system_item') errorKey = 'preventive.systemItemReadOnly';
+		else if (exception instanceof Error && (exception.message === 'preventive_catalog_system_item' || exception.message === 'preventive_protocol_system_item')) errorKey = 'preventive.systemItemReadOnly';
 		else if (exception instanceof Error && exception.message === 'vaccine_name_required') errorKey = 'vaccine.nameRequired';
 		else if (exception instanceof Error && exception.message === 'antiparasitic_name_required') errorKey = 'antiparasiticTreatment.nameRequired';
 		else if (exception instanceof Error && exception.message === 'protocol_name_required') errorKey = 'protocol.nameRequired';
@@ -458,6 +463,7 @@
 	}
 
 	async function saveExistingProtocol(protocol: PreventiveProtocol) {
+		if (!canEditPreventiveProtocol(protocol)) return;
 		saving = true;
 		statusKey = null;
 		errorKey = null;
@@ -587,13 +593,13 @@
 	}
 
 	function deleteProtocol(protocol: PreventiveProtocol) {
-		if (saving) return;
+		if (saving || !canDeletePreventiveProtocol(protocol)) return;
 		protocolPendingRemoval = protocol;
 	}
 
 	async function confirmProtocolRemoval() {
 		const protocol = protocolPendingRemoval;
-		if (!protocol || saving) return;
+		if (!protocol || saving || !canDeletePreventiveProtocol(protocol)) return;
 
 		saving = true;
 		statusKey = null;
@@ -626,6 +632,7 @@
 	}
 
 	function toggleProtocolItem(protocol: PreventiveProtocol, itemId: number) {
+		if (!canEditPreventiveProtocol(protocol)) return;
 		const selected = selectedItemIds(protocol);
 		if (!selected.includes(itemId) && !itemMatchesSpecies(protocol.kind, itemId, protocolDraftSpeciesValue(protocol))) return;
 		protocolDraftItemIds = {
@@ -634,8 +641,9 @@
 		};
 	}
 
-	function setProtocolObservation(protocolId: number, value: string) {
-		protocolDraftObservations = { ...protocolDraftObservations, [protocolId]: value };
+	function setProtocolObservation(protocol: PreventiveProtocol, value: string) {
+		if (!canEditPreventiveProtocol(protocol)) return;
+		protocolDraftObservations = { ...protocolDraftObservations, [protocol.id]: value };
 	}
 
 	function setNewDose(protocolId: number, value: string) {
@@ -654,6 +662,7 @@
 
 	async function addProtocolDose(event: SubmitEvent, protocol: PreventiveProtocol) {
 		event.preventDefault();
+		if (!canEditPreventiveProtocol(protocol)) return;
 		saving = true;
 		statusKey = null;
 		errorKey = null;
@@ -678,6 +687,7 @@
 
 	async function saveExistingProtocolDose(event: SubmitEvent, protocol: PreventiveProtocol, dose: PreventiveProtocolDose) {
 		event.preventDefault();
+		if (!canEditPreventiveProtocol(protocol)) return;
 		saving = true;
 		statusKey = null;
 		errorKey = null;
@@ -702,6 +712,7 @@
 	}
 
 	async function deleteProtocolDose(protocol: PreventiveProtocol, dose: PreventiveProtocolDose) {
+		if (!canEditPreventiveProtocol(protocol)) return;
 		if (!window.confirm(t('protocol.doseDeleteConfirm'))) return;
 		saving = true;
 		statusKey = null;
@@ -1068,12 +1079,14 @@
 										<span>{t('protocol.name')}</span>
 										<CharacterLimitHint value={protocolDraftName(protocol)} max={FIELD_LIMITS.preventiveProtocolName} />
 									</span>
-									<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={protocolDraftName(protocol)} maxlength={FIELD_LIMITS.preventiveProtocolName} required oninput={(event) => (protocolDraftNames = { ...protocolDraftNames, [protocol.id]: inputValue(event) })} />
+									<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-70" value={protocolDraftName(protocol)} maxlength={FIELD_LIMITS.preventiveProtocolName} required disabled={!canEditPreventiveProtocol(protocol)} oninput={(event) => (protocolDraftNames = { ...protocolDraftNames, [protocol.id]: inputValue(event) })} />
 								</label>
-								<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
-									<Save class="size-4" />
-									{t('actions.save')}
-								</button>
+								{#if canEditPreventiveProtocol(protocol)}
+									<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
+										<Save class="size-4" />
+										{t('actions.save')}
+									</button>
+								{/if}
 								<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} title={protocol.hiddenAt ? t('protocol.show') : t('protocol.hide')} onclick={() => void toggleProtocolHidden(protocol)}>
 									{#if protocol.hiddenAt}
 										<Eye class="size-4" />
@@ -1083,29 +1096,31 @@
 										{t('protocol.hide')}
 									{/if}
 								</button>
-								<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={() => void deleteProtocol(protocol)}>
-									<Trash2 class="size-4" />
-									{t('actions.delete')}
-								</button>
+								{#if canDeletePreventiveProtocol(protocol)}
+									<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={() => void deleteProtocol(protocol)}>
+										<Trash2 class="size-4" />
+										{t('actions.delete')}
+									</button>
+								{/if}
 
-								<div class="lg:col-span-5 flex min-w-0 flex-col gap-2 text-sm font-medium">
+								<div class="lg:col-span-full flex min-w-0 flex-col gap-2 text-sm font-medium">
 									<span>{t('preventive.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(protocolDraftSpeciesValue(protocol))}</span></span>
 									<div class="flex flex-wrap gap-2">
 										{#each petSpeciesOptions as option}
 											<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
-												<input type="checkbox" class="size-4 accent-primary" checked={protocolDraftSpeciesValue(protocol).includes(option.id)} onchange={() => setProtocolSpecies(protocol, option.id)} />
+												<input type="checkbox" class="size-4 accent-primary" checked={protocolDraftSpeciesValue(protocol).includes(option.id)} disabled={!canEditPreventiveProtocol(protocol)} onchange={() => setProtocolSpecies(protocol, option.id)} />
 												<span>{t(option.labelKey)}</span>
 											</label>
 										{/each}
 									</div>
 								</div>
 
-								<div class="lg:col-span-5 flex min-w-0 flex-col gap-2 text-sm font-medium">
+								<div class="lg:col-span-full flex min-w-0 flex-col gap-2 text-sm font-medium">
 									<span>{t('protocol.items')}</span>
 									<div class="flex flex-wrap gap-2">
 										{#each protocolCatalogItems(protocol) as item (item.id)}
 											{@const selected = selectedItemIds(protocol).includes(item.id)}
-											<button type="button" class="inline-flex h-8 max-w-full items-center rounded-md border px-3 text-sm transition-colors {selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background hover:bg-accent'} {item.hiddenAt ? 'opacity-60' : ''}" aria-pressed={selected} onclick={() => toggleProtocolItem(protocol, item.id)}>
+											<button type="button" class="inline-flex h-8 max-w-full items-center rounded-md border px-3 text-sm transition-colors disabled:cursor-default {selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background hover:bg-accent'} {item.hiddenAt ? 'opacity-60' : ''}" aria-pressed={selected} disabled={!canEditPreventiveProtocol(protocol)} onclick={() => toggleProtocolItem(protocol, item.id)}>
 												<span class="truncate">{item.name}</span>
 											</button>
 										{:else}
@@ -1114,48 +1129,52 @@
 									</div>
 								</div>
 
-								<div class="lg:col-span-5 flex min-w-0 flex-col gap-1 text-sm font-medium">
+								<div class="lg:col-span-full flex min-w-0 flex-col gap-1 text-sm font-medium">
 									<label for={`protocol-observation-${protocol.id}`}>{t('protocol.observation')}</label>
-									<Textarea id={`protocol-observation-${protocol.id}`} value={protocolDraftObservation(protocol)} oninput={(value) => setProtocolObservation(protocol.id, value)} ariaLabel={t('protocol.observation')} maxLength={FIELD_LIMITS.preventiveProtocolObservation} class="min-h-20" />
+									<Textarea id={`protocol-observation-${protocol.id}`} value={protocolDraftObservation(protocol)} oninput={(value) => setProtocolObservation(protocol, value)} readonly={!canEditPreventiveProtocol(protocol)} ariaLabel={t('protocol.observation')} maxLength={FIELD_LIMITS.preventiveProtocolObservation} class="min-h-20" />
 								</div>
 							</form>
 
 							<div class="mt-4 border-t border-border pt-4">
 								<h4 class="text-sm font-semibold">{t('protocol.doseTitle')}</h4>
-								<form class="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_12rem_auto] lg:items-end" onsubmit={(event) => void addProtocolDose(event, protocol)}>
-									<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-										<span>{t('protocol.doseText')}</span>
-										<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={newDoseDoses[protocol.id] ?? ''} maxlength={FIELD_LIMITS.preventiveProtocolDose} required oninput={(event) => setNewDose(protocol.id, inputValue(event))} />
-									</label>
-									<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-										<span>{t('protocol.doseValidity')}</span>
-										<PeriodField value={newDoseValidityValues[protocol.id] ?? 12} unit={newDoseValidityUnits[protocol.id] ?? 'months'} ariaLabel={t('protocol.doseValidity')} onChange={(value, unit) => setNewDoseValidity(protocol.id, value, unit)} />
-									</label>
-									<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={saving}>
-										<Plus class="size-4" />
-										{t('protocol.doseAdd')}
-									</button>
-								</form>
+								{#if canEditPreventiveProtocol(protocol)}
+									<form class="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_12rem_auto] lg:items-end" onsubmit={(event) => void addProtocolDose(event, protocol)}>
+										<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+											<span>{t('protocol.doseText')}</span>
+											<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={newDoseDoses[protocol.id] ?? ''} maxlength={FIELD_LIMITS.preventiveProtocolDose} required oninput={(event) => setNewDose(protocol.id, inputValue(event))} />
+										</label>
+										<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+											<span>{t('protocol.doseValidity')}</span>
+											<PeriodField value={newDoseValidityValues[protocol.id] ?? 12} unit={newDoseValidityUnits[protocol.id] ?? 'months'} ariaLabel={t('protocol.doseValidity')} onChange={(value, unit) => setNewDoseValidity(protocol.id, value, unit)} />
+										</label>
+										<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={saving}>
+											<Plus class="size-4" />
+											{t('protocol.doseAdd')}
+										</button>
+									</form>
+								{/if}
 
 								<div class="mt-3 flex flex-col gap-3">
 									{#each protocol.doses as protocolDose (protocolDose.id)}
 										<form class="grid gap-3 rounded-md border border-border p-3 lg:grid-cols-[minmax(0,1fr)_12rem_auto_auto] lg:items-end" onsubmit={(event) => void saveExistingProtocolDose(event, protocol, protocolDose)}>
 											<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 												<span>{t('protocol.doseText')}</span>
-												<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={doseDraftDoses[protocolDose.id] ?? protocolDose.dose} maxlength={FIELD_LIMITS.preventiveProtocolDose} required oninput={(event) => (doseDraftDoses = { ...doseDraftDoses, [protocolDose.id]: inputValue(event) })} />
+												<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-70" value={doseDraftDoses[protocolDose.id] ?? protocolDose.dose} maxlength={FIELD_LIMITS.preventiveProtocolDose} required disabled={!canEditPreventiveProtocol(protocol)} oninput={(event) => (doseDraftDoses = { ...doseDraftDoses, [protocolDose.id]: inputValue(event) })} />
 											</label>
 											<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 												<span>{t('protocol.doseValidity')}</span>
-												<PeriodField value={doseDraftValidityValues[protocolDose.id] ?? protocolDose.validityValue} unit={doseDraftValidityUnits[protocolDose.id] ?? protocolDose.validityUnit} ariaLabel={t('protocol.doseValidity')} onChange={(value, unit) => setDoseValidity(protocolDose.id, value, unit)} />
+												<PeriodField value={doseDraftValidityValues[protocolDose.id] ?? protocolDose.validityValue} unit={doseDraftValidityUnits[protocolDose.id] ?? protocolDose.validityUnit} disabled={!canEditPreventiveProtocol(protocol)} ariaLabel={t('protocol.doseValidity')} onChange={(value, unit) => setDoseValidity(protocolDose.id, value, unit)} />
 											</label>
-											<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
-												<Save class="size-4" />
-												{t('actions.save')}
-											</button>
-											<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={() => void deleteProtocolDose(protocol, protocolDose)}>
-												<Trash2 class="size-4" />
-												{t('actions.delete')}
-											</button>
+											{#if canEditPreventiveProtocol(protocol)}
+												<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
+													<Save class="size-4" />
+													{t('actions.save')}
+												</button>
+												<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={() => void deleteProtocolDose(protocol, protocolDose)}>
+													<Trash2 class="size-4" />
+													{t('actions.delete')}
+												</button>
+											{/if}
 										</form>
 									{:else}
 										<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('protocol.doseEmpty')}</p>

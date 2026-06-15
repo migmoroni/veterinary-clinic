@@ -13,6 +13,7 @@
   "include": [
     "to-sqlite.ts",
     "../src/lib/domain/preventive/default-catalog.ts",
+    "../src/lib/domain/preventive/default-protocol.ts",
     "../src/lib/i18n/locales.ts",
     "../src/lib/i18n/preventive-aliases/**/*.ts"
   ],

@@ -3,6 +3,7 @@ import path from 'path';
 import { parse } from 'csv-parse/sync';
 import Database from 'better-sqlite3';
 import { defaultPreventiveCatalogItems } from '../src/lib/domain/preventive/default-catalog.js';
+import { defaultPreventiveProtocols } from '../src/lib/domain/preventive/default-protocol.js';
 
 type CsvRow = Record<string, string | undefined>;
 type OwnerContactKind = 'phone' | 'mobile' | 'email' | 'other';
@@ -71,6 +72,10 @@ interface DoseSignal {
 interface VaccineIdRow {
   id: number;
   normalized_name: string;
+}
+
+interface ProtocolIdRow {
+  id: number;
 }
 
 interface ImportedVaccinationReference {
@@ -442,6 +447,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS preventive_protocols (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
+    origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
     name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.preventiveProtocolName)}),
     normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.preventiveProtocolNormalizedName)}),
     species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.preventiveSpeciesJson)}),
@@ -611,6 +617,27 @@ const insertPreventiveCatalogItem = db.prepare(`
   VALUES (@kind, @name, @normalizedName, @species, @aliases, @manufacturer, @origin, @regions, CURRENT_TIMESTAMP)
 `);
 
+const insertPreventiveProtocol = db.prepare(`
+  INSERT OR IGNORE INTO preventive_protocols (kind, origin, name, normalized_name, species, observation, sort_order, updated_at)
+  VALUES (@kind, @origin, @name, @normalizedName, @species, @observation, @sortOrder, CURRENT_TIMESTAMP)
+`);
+
+const selectPreventiveProtocolId = db.prepare(`
+  SELECT id FROM preventive_protocols
+  WHERE kind = @kind AND normalized_name = @normalizedName
+  LIMIT 1
+`);
+
+const insertPreventiveProtocolItem = db.prepare(`
+  INSERT OR IGNORE INTO preventive_protocol_items (protocol_id, catalog_item_id, sort_order, updated_at)
+  VALUES (@protocolId, @catalogItemId, @sortOrder, CURRENT_TIMESTAMP)
+`);
+
+const insertPreventiveProtocolDose = db.prepare(`
+  INSERT INTO preventive_protocol_doses (protocol_id, dose, validity_value, validity_unit, sort_order, updated_at)
+  VALUES (@protocolId, @dose, @validityValue, @validityUnit, @sortOrder, CURRENT_TIMESTAMP)
+`);
+
 const insertSetting = db.prepare(`
   INSERT INTO app_settings (key, value, updated_at)
   VALUES (@key, @value, CURRENT_TIMESTAMP)
@@ -706,6 +733,39 @@ const vaccineIds = new Map(
 const dewormerIds = new Map(
   (db.prepare("SELECT id, normalized_name FROM preventive_catalog_items WHERE kind = 'antiparasitic'").all() as VaccineIdRow[]).map((dewormer) => [normalizeDewormerName(dewormer.normalized_name), dewormer.id])
 );
+
+for (const [protocolSortOrder, protocol] of defaultPreventiveProtocols.entries()) {
+  const normalizedName = normalizeVaccineName(protocol.name);
+  insertPreventiveProtocol.run({
+    kind: protocol.kind,
+    origin: protocol.origin,
+    name: protocol.name,
+    normalizedName,
+    species: JSON.stringify(protocol.species),
+    observation: protocol.observation,
+    sortOrder: protocolSortOrder
+  });
+
+  const protocolId = (selectPreventiveProtocolId.get({ kind: protocol.kind, normalizedName }) as ProtocolIdRow | undefined)?.id;
+  if (!protocolId) throw new Error(`Não foi possível criar o protocolo padrão: ${protocol.name}`);
+
+  const catalogIds = protocol.kind === 'vaccine' ? vaccineIds : dewormerIds;
+  for (const [sortOrder, catalogItemName] of protocol.catalogItemNames.entries()) {
+    const catalogItemId = catalogIds.get(normalizeVaccineName(catalogItemName));
+    if (!catalogItemId) throw new Error(`Protocolo padrão aponta para item fora do catálogo oficial: ${catalogItemName}`);
+    insertPreventiveProtocolItem.run({ protocolId, catalogItemId, sortOrder });
+  }
+
+  for (const [sortOrder, dose] of protocol.doses.entries()) {
+    insertPreventiveProtocolDose.run({
+      protocolId,
+      dose: dose.dose,
+      validityValue: dose.validityValue,
+      validityUnit: dose.validityUnit,
+      sortOrder
+    });
+  }
+}
 
 const ensureVaccineName = (name: string): string => {
   const normalizedName = normalizeVaccineName(name);

@@ -1,6 +1,6 @@
-import type { PreventiveProtocol, PreventiveProtocolCatalogItem, PreventiveProtocolDose, PreventiveProtocolDoseInput, PreventiveProtocolInput, PreventiveProtocolKind, PreventiveValidityUnit } from '$lib/domain/preventive/protocol.js';
+import type { PreventiveProtocol, PreventiveProtocolCatalogItem, PreventiveProtocolDose, PreventiveProtocolDoseInput, PreventiveProtocolInput, PreventiveProtocolKind, PreventiveProtocolOrigin, PreventiveValidityUnit } from '$lib/domain/preventive/protocol.js';
 import { parsePreventiveSpecies, stringifyPreventiveSpecies } from '$lib/domain/preventive/catalog.js';
-import { normalizePreventiveProtocolName } from '$lib/domain/preventive/protocol.js';
+import { canEditPreventiveProtocol, normalizePreventiveProtocolName } from '$lib/domain/preventive/protocol.js';
 import { FIELD_LIMITS, assertTextLimit, nullableMultilineText } from '$lib/domain/shared/field-limits.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
@@ -8,6 +8,7 @@ import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 interface PreventiveProtocolRow {
 	id: number;
 	kind: PreventiveProtocolKind;
+	origin: PreventiveProtocolOrigin;
 	name: string;
 	normalized_name: string;
 	species: string;
@@ -99,6 +100,7 @@ function mapProtocol(row: PreventiveProtocolRow, items: PreventiveProtocolCatalo
 	return {
 		id: row.id,
 		kind: row.kind,
+		origin: row.origin,
 		name: row.name,
 		normalizedName: row.normalized_name,
 		species: parsePreventiveSpecies(row.species),
@@ -131,6 +133,13 @@ async function protocolKind(protocolId: number): Promise<PreventiveProtocolKind>
 	const rows = await selectMany<{ kind: PreventiveProtocolKind }>('SELECT kind FROM preventive_protocols WHERE id = $1 AND deleted_at IS NULL LIMIT 1', [protocolId]);
 	if (!rows[0]) throw new Error('protocol_not_found');
 	return rows[0].kind;
+}
+
+async function assertPreventiveProtocolEditable(protocolId: number): Promise<void> {
+	const rows = await selectMany<{ origin: PreventiveProtocolOrigin }>('SELECT origin FROM preventive_protocols WHERE id = $1 AND deleted_at IS NULL LIMIT 1', [protocolId]);
+	const protocol = rows[0];
+	if (!protocol) throw new Error('protocol_not_found');
+	if (!canEditPreventiveProtocol(protocol)) throw new Error('preventive_protocol_system_item');
 }
 
 async function loadProtocolDetails(rows: PreventiveProtocolRow[]): Promise<PreventiveProtocol[]> {
@@ -176,7 +185,7 @@ async function loadProtocolDetails(rows: PreventiveProtocolRow[]): Promise<Preve
 
 async function getProtocolById(id: number): Promise<PreventiveProtocol> {
 	const rows = await selectMany<PreventiveProtocolRow>(
-		`SELECT id, kind, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
+		`SELECT id, kind, origin, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
 		 FROM preventive_protocols
 		 WHERE id = $1 AND deleted_at IS NULL
 		 LIMIT 1`,
@@ -213,14 +222,14 @@ async function saveProtocolItems(protocolId: number, catalogItemIds: number[]): 
 export async function listPreventiveProtocols(kind?: PreventiveProtocolKind, includeHidden = false): Promise<PreventiveProtocol[]> {
 	const rows = kind
 		? await selectMany<PreventiveProtocolRow>(
-				`SELECT id, kind, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
+				`SELECT id, kind, origin, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
 				 FROM preventive_protocols
 				 WHERE kind = $1 AND deleted_at IS NULL AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}
 				 ORDER BY sort_order, name COLLATE NOCASE`,
 				[kind]
 			)
 		: await selectMany<PreventiveProtocolRow>(
-				`SELECT id, kind, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
+				`SELECT id, kind, origin, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
 				 FROM preventive_protocols
 				 WHERE deleted_at IS NULL AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}
 				 ORDER BY kind, sort_order, name COLLATE NOCASE`
@@ -239,6 +248,7 @@ export async function savePreventiveProtocol(input: PreventiveProtocolInput, id?
 
 	let protocolId = id ?? 0;
 	if (protocolId) {
+		await assertPreventiveProtocolEditable(protocolId);
 		await execute(
 			`UPDATE preventive_protocols
 			 SET kind = $2,
@@ -251,9 +261,15 @@ export async function savePreventiveProtocol(input: PreventiveProtocolInput, id?
 			[protocolId, kind, name, normalizedName, species, observation]
 		);
 	} else {
+		const existingRows = await selectMany<{ id: number; origin: PreventiveProtocolOrigin }>(
+			'SELECT id, origin FROM preventive_protocols WHERE kind = $1 AND normalized_name = $2 LIMIT 1',
+			[kind, normalizedName]
+		);
+		if (existingRows[0] && !canEditPreventiveProtocol(existingRows[0])) throw new Error('preventive_protocol_system_item');
+
 		await execute(
-			`INSERT INTO preventive_protocols (kind, name, normalized_name, species, observation, sort_order, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
+			`INSERT INTO preventive_protocols (kind, origin, name, normalized_name, species, observation, sort_order, updated_at)
+			 VALUES ($1, 'user', $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
 			 ON CONFLICT(kind, normalized_name) DO UPDATE SET
 				name = excluded.name,
 				species = excluded.species,
@@ -285,6 +301,7 @@ export async function setPreventiveProtocolHidden(id: number, hidden: boolean): 
 }
 
 export async function deletePreventiveProtocol(id: number): Promise<void> {
+	await assertPreventiveProtocolEditable(id);
 	const deletedAt = nowIso();
 	await execute(
 		`UPDATE preventive_protocols
@@ -298,6 +315,7 @@ export async function deletePreventiveProtocol(id: number): Promise<void> {
 
 export async function savePreventiveProtocolDose(protocolId: number, input: PreventiveProtocolDoseInput, id?: number): Promise<PreventiveProtocol> {
 	await protocolKind(protocolId);
+	await assertPreventiveProtocolEditable(protocolId);
 	const dose = requiredText(input.dose, 'protocol_dose_required', FIELD_LIMITS.preventiveProtocolDose);
 	const validityUnit = normalizeValidityUnit(input.validityUnit);
 	const validityValue = normalizeValidityValue(Number(input.validityValue), validityUnit);
@@ -324,6 +342,7 @@ export async function savePreventiveProtocolDose(protocolId: number, input: Prev
 }
 
 export async function deletePreventiveProtocolDose(protocolId: number, doseId: number): Promise<PreventiveProtocol> {
+	await assertPreventiveProtocolEditable(protocolId);
 	await execute('DELETE FROM preventive_protocol_doses WHERE id = $1 AND protocol_id = $2', [doseId, protocolId]);
 	return getProtocolById(protocolId);
 }

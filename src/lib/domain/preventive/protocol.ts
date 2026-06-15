@@ -1,6 +1,7 @@
 import type { KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
 
 export type PreventiveProtocolKind = 'vaccine' | 'antiparasitic';
+export type PreventiveProtocolOrigin = 'system' | 'user';
 export type PreventiveValidityUnit = 'days' | 'months' | 'years';
 
 export interface PreventiveProtocolCatalogItem {
@@ -23,6 +24,7 @@ export interface PreventiveProtocolDose {
 export interface PreventiveProtocol {
 	id: number;
 	kind: PreventiveProtocolKind;
+	origin: PreventiveProtocolOrigin;
 	name: string;
 	normalizedName: string;
 	species: KnownPetSpecies[];
@@ -56,4 +58,12 @@ export function normalizePreventiveProtocolName(value: string): string {
 		.replace(/[\u0300-\u036f]/g, '')
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, '');
+}
+
+export function canEditPreventiveProtocol(protocol: Pick<PreventiveProtocol, 'origin'>): boolean {
+	return protocol.origin === 'user';
+}
+
+export function canDeletePreventiveProtocol(protocol: Pick<PreventiveProtocol, 'origin'>): boolean {
+	return canEditPreventiveProtocol(protocol);
 }

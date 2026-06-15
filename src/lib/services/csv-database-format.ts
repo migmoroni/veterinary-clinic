@@ -83,7 +83,7 @@ export const CSV_TABLES: CsvTableDefinition[] = [
 	},
 	{
 		name: 'preventive_protocols',
-		columns: ['id', 'kind', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'created_at', 'updated_at', 'deleted_at', 'purge_after'],
+		columns: ['id', 'kind', 'origin', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'created_at', 'updated_at', 'deleted_at', 'purge_after'],
 		orderBy: 'kind, sort_order, name, id'
 	},
 	{

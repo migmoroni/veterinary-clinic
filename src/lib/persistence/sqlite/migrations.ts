@@ -1,5 +1,6 @@
 import type Database from '@tauri-apps/plugin-sql';
 import { defaultPreventiveCatalogItems } from '$lib/domain/preventive/default-catalog.js';
+import { defaultPreventiveProtocols } from '$lib/domain/preventive/default-protocol.js';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 
 function optionalTextCheck(column: string, maxLength: number): string {
@@ -30,6 +31,50 @@ async function seedDefaultPreventiveCatalog(database: Database): Promise<void> {
 			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
 			[item.kind, item.name, normalizePreventiveCatalogName(item.name), JSON.stringify(item.species), JSON.stringify(item.aliases), item.manufacturer, item.origin, JSON.stringify(item.regions)]
 		);
+	}
+}
+
+async function seedDefaultPreventiveProtocols(database: Database): Promise<void> {
+	for (const protocol of defaultPreventiveProtocols) {
+		const normalizedName = normalizePreventiveCatalogName(protocol.name);
+		await database.execute(
+			`INSERT OR IGNORE INTO preventive_protocols (kind, origin, name, normalized_name, species, observation, sort_order, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, COALESCE((SELECT MAX(sort_order) + 1 FROM preventive_protocols WHERE kind = $1), 0), CURRENT_TIMESTAMP)`,
+			[protocol.kind, protocol.origin, protocol.name, normalizedName, JSON.stringify(protocol.species), protocol.observation]
+		);
+
+		const protocolRows = await database.select<{ id: number }[]>(
+			'SELECT id FROM preventive_protocols WHERE kind = $1 AND normalized_name = $2 LIMIT 1',
+			[protocol.kind, normalizedName]
+		);
+		const protocolId = protocolRows[0]?.id;
+		if (!protocolId) throw new Error(`default_protocol_not_found:${protocol.name}`);
+
+		for (const [sortOrder, catalogItemName] of protocol.catalogItemNames.entries()) {
+			const catalogRows = await database.select<{ id: number }[]>(
+				'SELECT id FROM preventive_catalog_items WHERE kind = $1 AND normalized_name = $2 LIMIT 1',
+				[protocol.kind, normalizePreventiveCatalogName(catalogItemName)]
+			);
+			const catalogItemId = catalogRows[0]?.id;
+			if (!catalogItemId) throw new Error(`default_protocol_catalog_item_not_found:${catalogItemName}`);
+
+			await database.execute(
+				`INSERT OR IGNORE INTO preventive_protocol_items (protocol_id, catalog_item_id, sort_order, updated_at)
+				 VALUES ($1, $2, $3, CURRENT_TIMESTAMP)`,
+				[protocolId, catalogItemId, sortOrder]
+			);
+		}
+
+		for (const [sortOrder, dose] of protocol.doses.entries()) {
+			await database.execute(
+				`INSERT INTO preventive_protocol_doses (protocol_id, dose, validity_value, validity_unit, sort_order, updated_at)
+				 SELECT $1, $2, $3, $4, $5, CURRENT_TIMESTAMP
+				 WHERE NOT EXISTS (
+					SELECT 1 FROM preventive_protocol_doses WHERE protocol_id = $1 AND sort_order = $5
+				 )`,
+				[protocolId, dose.dose, dose.validityValue, dose.validityUnit, sortOrder]
+			);
+		}
 	}
 }
 
@@ -248,6 +293,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 		CREATE TABLE IF NOT EXISTS preventive_protocols (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
+			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
 			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.preventiveProtocolName)}),
 			normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.preventiveProtocolNormalizedName)}),
 			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.preventiveSpeciesJson)}),
@@ -389,7 +435,10 @@ export async function runMigrations(database: Database, options: RunMigrationsOp
 	await database.execute('BEGIN IMMEDIATE');
 	try {
 		await createCurrentSchema(database);
-		if (seedDefaultData) await seedDefaultPreventiveCatalog(database);
+		if (seedDefaultData) {
+			await seedDefaultPreventiveCatalog(database);
+			await seedDefaultPreventiveProtocols(database);
+		}
 		if (createIndexes) await createCurrentIndexes(database);
 		await database.execute('COMMIT');
 	} catch (error) {
