@@ -8,9 +8,11 @@ The app does not depend on `rusqlite` directly. Data access flows through TypeSc
 UI -> stores -> services -> repositories -> tauri-plugin-sql -> SQLite
 ```
 
-The runtime database is `sqlite:veterinary_clinic.db` in the Tauri app config directory. On first launch, the app detects that the file is missing and shows a setup screen with two choices: import an existing SQLite file or create a new local database. Creating a new database uses the current TypeScript schema setup through `tauri-plugin-sql`. Version `0.2.0` is the first single-client production test baseline.
+The runtime database is `sqlite:veterinary_clinic.db` in the Tauri app config directory. On first launch, the app detects that the file is missing and shows a setup screen with two choices: import an existing SQLite file or create a new local database. Creating a new database uses the current TypeScript schema setup through `tauri-plugin-sql`.
 
-The app currently has no multi-client database migration contract. `PRAGMA user_version` intentionally stays at `0` during the `0.2.0` single-client production test, and the main app expects imported databases to already follow the current canonical SQLite schema. Version-to-version data adaptation belongs outside the runtime app: `legacy-to-sqlite/to-sqlite.ts` converts the original CSV export, and `legacy-to-sqlite/exported-db-to-sqlite.ts` rebuilds an exported app SQLite database into a validated `build/veterinary_clinic.db`. Future schema update logic for production exports should be added to those external converters instead of adding compatibility branches to the app runtime migrations.
+The app has a formal SQLite schema migration contract. `PRAGMA user_version` stores the authoritative integer schema version, and `schema_migrations` records the applied migration names, app versions, and timestamps. The current baseline is schema `v1`, representing the first formally versioned version of the current app schema. Runtime migrations are for databases that already belong to the current app schema lineage; one-off external data conversions should stay outside the app runtime.
+
+For the full migration and release ritual, see [Database Versioning And Release Ritual](database-versioning.md).
 
 Implemented workflows:
 
@@ -24,12 +26,13 @@ Implemented workflows:
 - Soft delete for owners, pets, medical records, preventive applications, and preventive protocols with a 90-day purge window.
 - Trash restore, permanent delete, and expired-item purge actions.
 - First-run database import/new database setup.
+- Versioned SQLite migrations with `PRAGMA user_version`, `schema_migrations`, pre-migration local backups, and integrity validation.
 - Manual database backup/export/import using Tauri dialog/fs plugins and `tauri-plugin-sql` validation.
 
 Main folders:
 
 - `src/lib/domain` — TypeScript domain types and pure helpers.
-- `src/lib/persistence/sqlite` — SQLite connection and current schema setup.
+- `src/lib/persistence/sqlite` — SQLite connection, current schema setup, and versioned runtime migrations.
 - `src/lib/persistence/repositories` — typed SQL repositories.
 - `src/lib/services` — workflow services consumed by stores.
 - `src/lib/stores` — Svelte 5 rune stores.

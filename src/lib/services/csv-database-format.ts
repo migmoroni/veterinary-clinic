@@ -5,6 +5,14 @@ export interface CsvTableDefinition {
 	orderBy: string;
 }
 
+export const CSV_SCHEMA_METADATA_PATH = '_metadata/schema.json';
+
+export interface CsvSchemaMetadata {
+	format: 'veterinary-clinic-csv';
+	schemaVersion: number;
+	exportedAt: string;
+}
+
 export const CSV_TABLES: CsvTableDefinition[] = [
 	{
 		name: 'owners',

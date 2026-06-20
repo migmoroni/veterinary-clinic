@@ -700,6 +700,7 @@ export const esEs = {
 	'placeholder.settings.description': 'Aquí estarán exportación, importación, copias automáticas y preferencias locales.',
 	'settings.title': 'Ajustes',
 	'settings.description': 'Subpantallas administrativas del app, incluyendo copias, importación, exportación y papelera.',
+	'settings.about.version': 'Versión de la app',
 	'settings.profile.title': 'Información personal',
 	'settings.profile.description': 'Datos profesionales del veterinario e información del lugar de trabajo.',
 	'settings.backups.title': 'Copias de seguridad',

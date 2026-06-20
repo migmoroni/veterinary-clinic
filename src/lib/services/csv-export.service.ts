@@ -4,11 +4,16 @@ import { writeFile } from '@tauri-apps/plugin-fs';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { addBackupHistory } from '$lib/persistence/repositories/backup.repository.js';
 import { getDatabase } from '$lib/persistence/sqlite/client.js';
-import { CSV_TABLES, type CsvTableDefinition } from './csv-database-format.js';
+import { CURRENT_SCHEMA_VERSION } from '$lib/persistence/sqlite/migrations.js';
+import { CSV_SCHEMA_METADATA_PATH, CSV_TABLES, type CsvSchemaMetadata, type CsvTableDefinition } from './csv-database-format.js';
 
 interface ZipEntry {
 	path: string;
 	data: Uint8Array;
+}
+
+interface UserVersionRow {
+	user_version: number;
 }
 
 const textEncoder = new TextEncoder();
@@ -183,6 +188,21 @@ async function exportTableCsv(database: Database, table: CsvTableDefinition): Pr
 	return [{ path: `${table.name}.csv`, data: textEncoder.encode(`\ufeff${lines.join('\n')}\n`) }, ...entries];
 }
 
+async function exportSchemaMetadata(database: Database): Promise<ZipEntry> {
+	const rows = await database.select<UserVersionRow[]>('PRAGMA user_version');
+	const schemaVersion = rows[0]?.user_version ?? CURRENT_SCHEMA_VERSION;
+	const metadata: CsvSchemaMetadata = {
+		format: 'veterinary-clinic-csv',
+		schemaVersion,
+		exportedAt: new Date().toISOString()
+	};
+
+	return {
+		path: CSV_SCHEMA_METADATA_PATH,
+		data: textEncoder.encode(`${JSON.stringify(metadata, null, 2)}\n`)
+	};
+}
+
 export async function exportDatabaseAsCsv(title: string): Promise<string | null> {
 	const destinationPath = await save({
 		title,
@@ -194,6 +214,7 @@ export async function exportDatabaseAsCsv(title: string): Promise<string | null>
 
 	const database = await getDatabase();
 	const entries: ZipEntry[] = [];
+	entries.push(await exportSchemaMetadata(database));
 
 	for (const table of CSV_TABLES) {
 		entries.push(...(await exportTableCsv(database, table)));

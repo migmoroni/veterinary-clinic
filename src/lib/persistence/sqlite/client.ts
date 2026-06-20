@@ -1,6 +1,6 @@
 import Database from '@tauri-apps/plugin-sql';
-import { DATABASE_URL, ensureDatabaseDirectory, requireDatabaseFile } from '$lib/native/database-file.js';
-import { runMigrations } from './migrations.js';
+import { copyDatabaseToAppConfigBackup, DATABASE_URL, ensureDatabaseDirectory, requireDatabaseFile } from '$lib/native/database-file.js';
+import { getSchemaStatus, runMigrations } from './migrations.js';
 
 let cached: Database | null = null;
 let pending: Promise<Database> | null = null;
@@ -11,9 +11,20 @@ export async function getDatabase(): Promise<Database> {
 
 	pending = (async () => {
 		await requireDatabaseFile();
-		const database = await Database.load(DATABASE_URL);
+		let database = await Database.load(DATABASE_URL);
 		try {
 			await database.execute('PRAGMA foreign_keys = ON');
+			const status = await getSchemaStatus(database);
+
+			if (status.migrationRequired) {
+				await database.execute('PRAGMA wal_checkpoint(TRUNCATE)').catch(() => undefined);
+				await database.close(DATABASE_URL).catch(() => undefined);
+				await copyDatabaseToAppConfigBackup('pre-migration-veterinary-clinic');
+
+				database = await Database.load(DATABASE_URL);
+				await database.execute('PRAGMA foreign_keys = ON');
+			}
+
 			await runMigrations(database);
 			cached = database;
 			return database;

@@ -699,6 +699,7 @@ export const ptPt = {
 	'placeholder.settings.description': 'Aqui ficarão exportação, importação, cópias automáticas e preferências locais.',
 	'settings.title': 'Definições',
 	'settings.description': 'Subecrãs administrativos da aplicação, incluindo cópias de segurança, importação, exportação e lixo.',
+	'settings.about.version': 'Versão da aplicação',
 	'settings.profile.title': 'Informações pessoais',
 	'settings.profile.description': 'Dados profissionais do veterinário e informações do local de trabalho.',
 	'settings.backups.title': 'Cópias de segurança',

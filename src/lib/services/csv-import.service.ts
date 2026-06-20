@@ -3,10 +3,10 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { readFile } from '@tauri-apps/plugin-fs';
 import { addBackupHistory } from '$lib/persistence/repositories/backup.repository.js';
 import { closeDatabase, getDatabase } from '$lib/persistence/sqlite/client.js';
-import { createCurrentIndexes, runMigrations } from '$lib/persistence/sqlite/migrations.js';
+import { createCurrentIndexes, CURRENT_SCHEMA_VERSION, runMigrations } from '$lib/persistence/sqlite/migrations.js';
 import { ensureDatabaseDirectory, makeDatabaseCopyName, removeAppConfigFile, replaceDatabaseWithAppConfigFile } from '$lib/native/database-file.js';
 import { clearClientStateAfterDatabaseImport } from './client-state.service.js';
-import { CSV_TABLES, type CsvTableDefinition } from './csv-database-format.js';
+import { CSV_SCHEMA_METADATA_PATH, CSV_TABLES, type CsvSchemaMetadata, type CsvTableDefinition } from './csv-database-format.js';
 
 interface TableColumnInfo {
 	name: string;
@@ -104,6 +104,30 @@ function readZipEntries(bytes: Uint8Array): Map<string, Uint8Array> {
 	}
 
 	return entries;
+}
+
+function readSchemaMetadata(entries: Map<string, Uint8Array>): CsvSchemaMetadata | null {
+	const metadataBytes = entries.get(CSV_SCHEMA_METADATA_PATH);
+	if (!metadataBytes) return null;
+
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(textDecoder.decode(metadataBytes));
+	} catch {
+		throw new Error('csv_schema_metadata_invalid');
+	}
+
+	if (!parsed || typeof parsed !== 'object') throw new Error('csv_schema_metadata_invalid');
+	const metadata = parsed as Partial<CsvSchemaMetadata>;
+	const schemaVersion = metadata.schemaVersion;
+	if (metadata.format !== 'veterinary-clinic-csv' || typeof schemaVersion !== 'number' || !Number.isInteger(schemaVersion)) throw new Error('csv_schema_metadata_invalid');
+	if (schemaVersion > CURRENT_SCHEMA_VERSION) throw new Error(`csv_schema_from_future:${schemaVersion}`);
+
+	return {
+		format: 'veterinary-clinic-csv',
+		schemaVersion,
+		exportedAt: typeof metadata.exportedAt === 'string' ? metadata.exportedAt : ''
+	};
 }
 
 function parseCsv(bytes: Uint8Array, path: string): string[][] {
@@ -323,6 +347,12 @@ async function createIndexesAfterImport(database: Database): Promise<void> {
 	}
 }
 
+async function restoreCsvSchemaVersion(database: Database, metadata: CsvSchemaMetadata | null): Promise<void> {
+	const schemaVersion = metadata?.schemaVersion ?? CURRENT_SCHEMA_VERSION;
+	if (!Number.isInteger(schemaVersion) || schemaVersion < 1 || schemaVersion > CURRENT_SCHEMA_VERSION) throw new Error(`csv_schema_version_unsupported:${schemaVersion}`);
+	await database.execute(`PRAGMA user_version = ${schemaVersion}`);
+}
+
 async function buildDatabaseFromCsvZip(tempName: string, archive: Uint8Array): Promise<void> {
 	const databaseUrl = `sqlite:${tempName}`;
 	await ensureDatabaseDirectory();
@@ -334,8 +364,10 @@ async function buildDatabaseFromCsvZip(tempName: string, archive: Uint8Array): P
 		await runMigrations(database, { seedDefaultData: false, createIndexes: false });
 
 		const entries = readZipEntries(archive);
+		const schemaMetadata = readSchemaMetadata(entries);
 		await importTables(database, entries);
 		await createIndexesAfterImport(database);
+		await restoreCsvSchemaVersion(database, schemaMetadata);
 	} finally {
 		await database.close(databaseUrl);
 	}

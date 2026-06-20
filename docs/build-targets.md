@@ -2,6 +2,8 @@
 
 Current app version: `0.2.0`.
 
+Schema migration and release rules are documented in [Database Versioning And Release Ritual](database-versioning.md).
+
 ## Development
 
 ```sh
@@ -26,21 +28,16 @@ npm run build:csv
 
 The generated `to-sqlite.js` is the script used to create a compatible `veterinary_clinic.db` from the legacy clinic export.
 
-When changing version-to-version update rules for exported app databases, rebuild and run the exported database converter:
+When changing the runtime SQLite schema, add a new app migration, increment `CURRENT_SCHEMA_VERSION`, and bump the public app version:
 
 ```sh
-cd legacy-to-sqlite
-npm run build:exported-db
-npm run exported-db
+npm run version:bump -- 2.1.0
+npm run check
+npm run test:run
+npm run build
 ```
 
-`exported-db-to-sqlite.ts` reads a SQLite export from `legacy-to-sqlite/dist` and writes `legacy-to-sqlite/build/veterinary_clinic.db`. For `0.2.0`, it is a validated rebuild with no structural transformations.
-
-When more than one exported database exists in `dist`, pass the source after npm's argument separator:
-
-```sh
-npm run exported-db -- --source dist/exported.db
-```
+Before release, also test migration from the previous production database and run the target Tauri bundle for the client platform.
 
 ## Desktop bundles
 

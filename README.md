@@ -6,7 +6,7 @@ On first launch, the app asks whether to import an existing compatible SQLite da
 
 SQLite access goes through `tauri-plugin-sql`; the app does not depend on `rusqlite` directly.
 
-The app uses a current canonical SQLite schema and intentionally keeps `PRAGMA user_version` at `0` during the `0.2.0` single-client production test. Database adaptation is handled outside the runtime app by `legacy-to-sqlite`, which generates a compatible `veterinary_clinic.db` before import.
+The app uses versioned SQLite runtime migrations. `PRAGMA user_version` stores the schema version, `schema_migrations` records applied migrations, and the current baseline schema is `v1`. See [docs/database-versioning.md](docs/database-versioning.md) for the migration and release ritual.
 
 ## Stack
 
@@ -38,6 +38,12 @@ npm run test:run
 npm run build
 ```
 
+When changing the SQLite schema, add an incremental runtime migration and use the version bump script:
+
+```sh
+npm run version:bump -- 2.1.0
+```
+
 ## External database converters
 
 ### Legacy CSV converter
@@ -58,7 +64,7 @@ npm run build:exported-db
 npm run exported-db
 ```
 
-The rebuild converter reads an exported SQLite database from `legacy-to-sqlite/dist` and writes a validated `legacy-to-sqlite/build/veterinary_clinic.db`. If there is more than one `.db`, `.sqlite`, or `.sqlite3` file in `dist`, pass the source explicitly: `npm run exported-db -- --source dist/exported.db`. A bare filename such as `--source exported.db` is resolved inside `dist` when present. For version `0.2.0`, no structural transformation is applied; the converter validates the exported app schema, runs SQLite integrity checks, and creates a clean database copy for import/testing. Future version-to-version update logic should live in this external converter, not in the app runtime migrations.
+The rebuild converter reads an exported SQLite database from `legacy-to-sqlite/dist` and writes a validated `legacy-to-sqlite/build/veterinary_clinic.db`. If there is more than one `.db`, `.sqlite`, or `.sqlite3` file in `dist`, pass the source explicitly: `npm run exported-db -- --source dist/exported.db`. A bare filename such as `--source exported.db` is resolved inside `dist` when present. These tools are for external data preparation; normal app schema upgrades belong to the runtime migration system documented in `docs/database-versioning.md`.
 
 ## Desktop bundles
 

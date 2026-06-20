@@ -2,6 +2,49 @@ import type Database from '@tauri-apps/plugin-sql';
 import { defaultPreventiveCatalogItems } from '$lib/domain/preventive/default-catalog.js';
 import { defaultPreventiveProtocols } from '$lib/domain/preventive/default-protocol.js';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
+import { incrementalSchemaMigrations } from './schema-migrations/registry.js';
+import type { SchemaMigration } from './schema-migrations/types.js';
+
+export const CURRENT_SCHEMA_VERSION = 1;
+export const BASELINE_APP_VERSION = '0.2.0';
+
+type BaselineDetection = 'empty' | 'current-unversioned' | 'unknown-unversioned' | 'versioned';
+
+interface TableColumnRow {
+	name: string;
+}
+
+interface TableNameRow {
+	name: string;
+}
+
+interface UserVersionRow {
+	user_version: number;
+}
+
+interface IntegrityCheckRow {
+	integrity_check: string;
+}
+
+interface ForeignKeyCheckRow {
+	table: string;
+	rowid: number;
+	parent: string;
+	fkid: number;
+}
+
+interface MigrationRecordRow {
+	version: number;
+}
+
+export interface SchemaStatus {
+	currentVersion: number;
+	targetVersion: number;
+	migrationRequired: boolean;
+	detection: BaselineDetection;
+	isSupported: boolean;
+	reason?: 'future-version' | 'unknown-schema';
+}
 
 function optionalTextCheck(column: string, maxLength: number): string {
 	return `${column} IS NULL OR length(${column}) <= ${maxLength}`;
@@ -22,6 +65,38 @@ function normalizePreventiveCatalogName(value: string): string {
 		.replace(/[\u0300-\u036f]/g, '')
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, '');
+}
+
+function quoteIdentifier(identifier: string): string {
+	return `"${identifier.replace(/"/g, '""')}"`;
+}
+
+async function tableHasColumns(database: Database, table: string, columns: string[]): Promise<boolean> {
+	const rows = await database.select<TableColumnRow[]>(`PRAGMA table_info(${quoteIdentifier(table)})`);
+	const names = new Set(rows.map((row) => row.name));
+	return columns.every((column) => names.has(column));
+}
+
+async function tableExists(database: Database, table: string): Promise<boolean> {
+	const rows = await database.select<TableNameRow[]>("SELECT name FROM sqlite_master WHERE type = 'table' AND name = $1 LIMIT 1", [table]);
+	return rows.length > 0;
+}
+
+async function getUserVersion(database: Database): Promise<number> {
+	const rows = await database.select<UserVersionRow[]>('PRAGMA user_version');
+	return Number(rows[0]?.user_version ?? 0);
+}
+
+async function setUserVersion(database: Database, version: number): Promise<void> {
+	if (!Number.isInteger(version) || version < 0) throw new Error(`database_schema_invalid_version:${version}`);
+	await database.execute(`PRAGMA user_version = ${version}`);
+}
+
+async function isEmptyDatabase(database: Database): Promise<boolean> {
+	const rows = await database.select<TableNameRow[]>(
+		"SELECT name FROM sqlite_master WHERE type IN ('table', 'view', 'trigger', 'index') AND name NOT LIKE 'sqlite_%' LIMIT 1"
+	);
+	return rows.length === 0;
 }
 
 async function seedDefaultPreventiveCatalog(database: Database): Promise<void> {
@@ -261,6 +336,15 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	`);
 
 	await database.execute(`
+		CREATE TABLE IF NOT EXISTS schema_migrations (
+			version INTEGER PRIMARY KEY,
+			name TEXT NOT NULL CHECK(length(trim(name)) > 0),
+			app_version TEXT NOT NULL CHECK(length(trim(app_version)) > 0),
+			applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+		)
+	`);
+
+	await database.execute(`
 		CREATE TABLE IF NOT EXISTS backup_history (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			path TEXT NOT NULL CHECK(${requiredTextCheck('path', FIELD_LIMITS.backupPath)}),
@@ -429,20 +513,229 @@ export async function createCurrentIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_deleted_at ON pet_antiparasitic_treatments(deleted_at)');
 }
 
+async function assertCurrentSchema(database: Database): Promise<void> {
+	const valid =
+		(await tableHasColumns(database, 'owners', ['id', 'name', 'additional_information', 'created_at', 'updated_at', 'deleted_at', 'purge_after'])) &&
+		(await tableHasColumns(database, 'addresses', ['id', 'owner_id', 'workplace_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code'])) &&
+		(await tableHasColumns(database, 'veterinarian_profiles', ['id', 'name', 'professional_registration', 'avatar_blob'])) &&
+		(await tableHasColumns(database, 'workplaces', ['id', 'name', 'services_description'])) &&
+		(await tableHasColumns(database, 'image_collections', ['id', 'entity_type', 'entity_id', 'primary_required', 'max_items'])) &&
+		(await tableHasColumns(database, 'image_collection_items', ['id', 'collection_id', 'image_blob', 'original_image_blob', 'description', 'is_primary', 'sort_order'])) &&
+		(await tableHasColumns(database, 'contacts', ['id', 'owner_id', 'responsible_id', 'veterinarian_profile_id', 'workplace_id', 'kind', 'label', 'value'])) &&
+		(await tableHasColumns(database, 'owner_additional_responsibles', ['id', 'owner_id', 'name', 'avatar_blob', 'sort_order'])) &&
+		(await tableHasColumns(database, 'pets', ['id', 'name', 'species', 'breed', 'updated_at', 'deleted_at', 'purge_after'])) &&
+		(await tableHasColumns(database, 'pet_owners', ['id', 'pet_id', 'owner_id', 'sort_order'])) &&
+		(await tableHasColumns(database, 'medical_records', ['id', 'pet_id', 'title', 'description', 'admitted_at', 'discharged_at', 'deleted_at', 'purge_after'])) &&
+		(await tableHasColumns(database, 'app_settings', ['key', 'value', 'updated_at'])) &&
+		(await tableHasColumns(database, 'schema_migrations', ['version', 'name', 'app_version', 'applied_at'])) &&
+		(await tableHasColumns(database, 'backup_history', ['id', 'path', 'kind', 'created_at'])) &&
+		(await tableHasColumns(database, 'preventive_catalog_items', ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'hidden_at'])) &&
+		(await tableHasColumns(database, 'preventive_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'deleted_at', 'purge_after'])) &&
+		(await tableHasColumns(database, 'preventive_protocol_items', ['id', 'protocol_id', 'catalog_item_id', 'sort_order'])) &&
+		(await tableHasColumns(database, 'preventive_protocol_doses', ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order'])) &&
+		(await tableHasColumns(database, 'pet_vaccinations', ['id', 'pet_id', 'applied_at', 'vaccine_name', 'vaccine_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'validity_ignored_at'])) &&
+		(await tableHasColumns(database, 'pet_antiparasitic_treatments', ['id', 'pet_id', 'applied_at', 'antiparasitic_name', 'antiparasitic_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'validity_ignored_at']));
+
+	if (!valid) throw new Error('database_schema_current_invalid');
+}
+
+async function hasCurrentUnversionedSchema(database: Database): Promise<boolean> {
+	const valid =
+		(await tableHasColumns(database, 'owners', ['id', 'name', 'additional_information'])) &&
+		(await tableHasColumns(database, 'addresses', ['id', 'owner_id', 'workplace_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code'])) &&
+		(await tableHasColumns(database, 'contacts', ['id', 'owner_id', 'responsible_id', 'veterinarian_profile_id', 'workplace_id', 'kind', 'label', 'value'])) &&
+		(await tableHasColumns(database, 'preventive_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name'])) &&
+		(await tableHasColumns(database, 'pet_vaccinations', ['id', 'pet_id', 'applied_at', 'vaccine_name', 'vaccine_normalized_name', 'dose', 'validity_value', 'validity_unit'])) &&
+		(await tableHasColumns(database, 'pet_antiparasitic_treatments', ['id', 'pet_id', 'applied_at', 'antiparasitic_name', 'antiparasitic_normalized_name', 'dose', 'validity_value', 'validity_unit']));
+
+	return valid;
+}
+
+async function hasSchemaMigrationRecord(database: Database, version: number): Promise<boolean> {
+	if (!(await tableExists(database, 'schema_migrations'))) return false;
+	const rows = await database.select<MigrationRecordRow[]>('SELECT version FROM schema_migrations WHERE version = $1 LIMIT 1', [version]);
+	return rows.length > 0;
+}
+
+export async function getSchemaStatus(database: Database): Promise<SchemaStatus> {
+	const currentVersion = await getUserVersion(database);
+
+	if (currentVersion > CURRENT_SCHEMA_VERSION) {
+		return {
+			currentVersion,
+			targetVersion: CURRENT_SCHEMA_VERSION,
+			migrationRequired: false,
+			detection: 'versioned',
+			isSupported: false,
+			reason: 'future-version'
+		};
+	}
+
+	if (currentVersion > 0) {
+		if (currentVersion === CURRENT_SCHEMA_VERSION && !(await hasCurrentUnversionedSchema(database))) {
+			return {
+				currentVersion,
+				targetVersion: CURRENT_SCHEMA_VERSION,
+				migrationRequired: false,
+				detection: 'versioned',
+				isSupported: false,
+				reason: 'unknown-schema'
+			};
+		}
+
+		const missingMetadata = !(await hasSchemaMigrationRecord(database, currentVersion));
+		return {
+			currentVersion,
+			targetVersion: CURRENT_SCHEMA_VERSION,
+			migrationRequired: currentVersion < CURRENT_SCHEMA_VERSION || missingMetadata,
+			detection: 'versioned',
+			isSupported: true
+		};
+	}
+
+	if (await isEmptyDatabase(database)) {
+		return {
+			currentVersion,
+			targetVersion: CURRENT_SCHEMA_VERSION,
+			migrationRequired: true,
+			detection: 'empty',
+			isSupported: true
+		};
+	}
+
+	if (await hasCurrentUnversionedSchema(database)) {
+		return {
+			currentVersion,
+			targetVersion: CURRENT_SCHEMA_VERSION,
+			migrationRequired: true,
+			detection: 'current-unversioned',
+			isSupported: true
+		};
+	}
+
+	return {
+		currentVersion,
+		targetVersion: CURRENT_SCHEMA_VERSION,
+		migrationRequired: false,
+		detection: 'unknown-unversioned',
+		isSupported: false,
+		reason: 'unknown-schema'
+	};
+}
+
+export async function assertDatabaseCanMigrate(database: Database): Promise<SchemaStatus> {
+	const status = await getSchemaStatus(database);
+	if (status.isSupported) return status;
+
+	if (status.reason === 'future-version') throw new Error(`database_schema_from_future:${status.currentVersion}`);
+	throw new Error('database_schema_unsupported');
+}
+
+async function ensureMigrationMetadataTable(database: Database): Promise<void> {
+	await database.execute(`
+		CREATE TABLE IF NOT EXISTS schema_migrations (
+			version INTEGER PRIMARY KEY,
+			name TEXT NOT NULL CHECK(length(trim(name)) > 0),
+			app_version TEXT NOT NULL CHECK(length(trim(app_version)) > 0),
+			applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+		)
+	`);
+}
+
+async function recordMigration(database: Database, migration: SchemaMigration): Promise<void> {
+	await database.execute(
+		`INSERT OR IGNORE INTO schema_migrations (version, name, app_version, applied_at)
+		 VALUES ($1, $2, $3, CURRENT_TIMESTAMP)`,
+		[migration.version, migration.name, migration.introducedInAppVersion]
+	);
+	await setUserVersion(database, migration.version);
+}
+
+async function backfillMigrationMetadata(database: Database, version: number): Promise<void> {
+	for (const migration of SCHEMA_MIGRATIONS.filter((item) => item.version <= version)) {
+		await recordMigration(database, migration);
+	}
+}
+
+async function validateDatabaseIntegrity(database: Database): Promise<void> {
+	const integrityRows = await database.select<IntegrityCheckRow[]>('PRAGMA integrity_check');
+	const integrityResult = integrityRows[0]?.integrity_check;
+	if (integrityResult !== 'ok') throw new Error(`database_integrity_check_failed:${integrityResult ?? 'unknown'}`);
+
+	const foreignKeyRows = await database.select<ForeignKeyCheckRow[]>('PRAGMA foreign_key_check');
+	if (foreignKeyRows.length > 0) {
+		const violation = foreignKeyRows[0];
+		throw new Error(`database_foreign_key_check_failed:${violation.table}.${violation.rowid}->${violation.parent}`);
+	}
+}
+
+const BASELINE_SCHEMA_MIGRATION = {
+	version: 1,
+	name: '0001_baseline_current_schema',
+	introducedInAppVersion: BASELINE_APP_VERSION,
+	up: createCurrentSchema,
+	verify: assertCurrentSchema
+} satisfies SchemaMigration;
+
+function buildSchemaMigrationRegistry(): SchemaMigration[] {
+	const migrations = [BASELINE_SCHEMA_MIGRATION, ...incrementalSchemaMigrations].sort((first, second) => first.version - second.version);
+	const seenVersions = new Set<number>();
+
+	for (const migration of migrations) {
+		if (seenVersions.has(migration.version)) throw new Error(`database_schema_migration_duplicate:${migration.version}`);
+		seenVersions.add(migration.version);
+		if (migration.version > CURRENT_SCHEMA_VERSION) throw new Error(`database_schema_migration_above_current:${migration.version}`);
+	}
+
+	for (let expectedVersion = 1; expectedVersion <= CURRENT_SCHEMA_VERSION; expectedVersion += 1) {
+		if (!seenVersions.has(expectedVersion)) throw new Error(`database_schema_migration_registry_gap:${expectedVersion}`);
+	}
+
+	return migrations;
+}
+
+const SCHEMA_MIGRATIONS = buildSchemaMigrationRegistry();
+
+async function applyMigration(database: Database, migration: SchemaMigration): Promise<void> {
+	await migration.up(database);
+	if (migration.verify) await migration.verify(database);
+	await recordMigration(database, migration);
+}
+
 export async function runMigrations(database: Database, options: RunMigrationsOptions = {}): Promise<void> {
 	const { createIndexes = true, seedDefaultData = false } = options;
+	const status = await assertDatabaseCanMigrate(database);
 
 	await database.execute('BEGIN IMMEDIATE');
 	try {
-		await createCurrentSchema(database);
+		await ensureMigrationMetadataTable(database);
+
+		if (status.detection === 'current-unversioned') {
+			await createCurrentSchema(database);
+			await assertCurrentSchema(database);
+			await backfillMigrationMetadata(database, CURRENT_SCHEMA_VERSION);
+		} else {
+			const unappliedMigrations = SCHEMA_MIGRATIONS.filter((migration) => migration.version > status.currentVersion && migration.version <= CURRENT_SCHEMA_VERSION);
+			for (const migration of unappliedMigrations) {
+				await applyMigration(database, migration);
+			}
+
+			if (status.detection === 'versioned' && status.migrationRequired && unappliedMigrations.length === 0) {
+				await backfillMigrationMetadata(database, status.currentVersion);
+			}
+		}
+
+		await assertCurrentSchema(database);
+
 		if (seedDefaultData) {
 			await seedDefaultPreventiveCatalog(database);
 			await seedDefaultPreventiveProtocols(database);
 		}
 		if (createIndexes) await createCurrentIndexes(database);
+		await validateDatabaseIntegrity(database);
 		await database.execute('COMMIT');
 	} catch (error) {
-		await database.execute('ROLLBACK');
+		await database.execute('ROLLBACK').catch(() => undefined);
 		throw error;
 	}
 }

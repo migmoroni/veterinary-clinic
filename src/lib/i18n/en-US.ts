@@ -700,6 +700,7 @@ export const enUs = {
 	'placeholder.settings.description': 'Export, import, automatic backups, and local preferences will live here.',
 	'settings.title': 'Settings',
 	'settings.description': 'Administrative screens for backups, import, export, trash, and preferences.',
+	'settings.about.version': 'App version',
 	'settings.profile.title': 'Personal information',
 	'settings.profile.description': 'Professional veterinarian details and workplace information.',
 	'settings.backups.title': 'Backups',

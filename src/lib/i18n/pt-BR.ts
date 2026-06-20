@@ -699,6 +699,7 @@ export const ptBr = {
 	'placeholder.settings.description': 'Aqui ficarão exportação, importação, backups automáticos e preferências locais.',
 	'settings.title': 'Ajustes',
 	'settings.description': 'Subtelas administrativas do app, incluindo backups, importação, exportação e lixeira.',
+	'settings.about.version': 'Versão do app',
 	'settings.profile.title': 'Informações pessoais',
 	'settings.profile.description': 'Dados profissionais do veterinário e informações do local de trabalho.',
 	'settings.backups.title': 'Backups',

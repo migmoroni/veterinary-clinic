@@ -699,6 +699,7 @@ export const gnPy = {
 	'placeholder.settings.description': 'Ko’ápe oĩta mondo, gueru, kopia ijeheguíva ha jerohoryvéva ko’ápegua.',
 	'settings.title': 'Ñemboheko',
 	'settings.description': 'App vore ñangarekorã: kopia ñangareko, gueru, mondo ha yty renda.',
+	'settings.about.version': 'App versión',
 	'settings.profile.title': 'Marandu tee',
 	'settings.profile.description': 'Mymba pohãnohára ha hembiapoha marandu.',
 	'settings.backups.title': 'Kopia ñangareko',

@@ -1,0 +1,121 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type Database from '@tauri-apps/plugin-sql';
+import { CURRENT_SCHEMA_VERSION, runMigrations } from '../migrations.js';
+
+interface UserVersionRow {
+	user_version: number;
+}
+
+interface CountRow {
+	total: number;
+}
+
+interface MigrationRow {
+	version: number;
+	name: string;
+}
+
+const sqlite3Available = spawnSync('sqlite3', ['--version'], { encoding: 'utf8' }).status === 0;
+const describeWithSqlite = sqlite3Available ? describe : describe.skip;
+
+function sqlLiteral(value: unknown): string {
+	if (value === null || typeof value === 'undefined') return 'NULL';
+	if (typeof value === 'number') return Number.isFinite(value) ? String(value) : 'NULL';
+	if (typeof value === 'boolean') return value ? '1' : '0';
+	return `'${String(value).replace(/'/g, "''")}'`;
+}
+
+function bindValues(query: string, values: unknown[]): string {
+	let sql = query;
+	for (const [index, value] of values.entries()) {
+		sql = sql.replaceAll(`$${index + 1}`, sqlLiteral(value));
+	}
+	return sql;
+}
+
+class CliSqliteDatabase {
+	constructor(private readonly filePath: string) {}
+
+	async execute(query: string, values: unknown[] = []): Promise<void> {
+		const sql = bindValues(query, values).trim();
+		if (/^(BEGIN|COMMIT|ROLLBACK)\b/i.test(sql)) return;
+
+		const result = spawnSync('sqlite3', [this.filePath, sql], { encoding: 'utf8' });
+		if (result.status !== 0) throw new Error(result.stderr.trim() || result.stdout.trim() || `sqlite_execute_failed:${result.status}`);
+	}
+
+	async select<T>(query: string, values: unknown[] = []): Promise<T> {
+		const result = spawnSync('sqlite3', ['-json', this.filePath, bindValues(query, values)], { encoding: 'utf8' });
+		if (result.status !== 0) throw new Error(result.stderr.trim() || result.stdout.trim() || `sqlite_select_failed:${result.status}`);
+		return JSON.parse(result.stdout.trim() || '[]') as T;
+	}
+}
+
+describeWithSqlite('SQLite schema migrations', () => {
+	let tempDir = '';
+	let database: CliSqliteDatabase;
+
+	beforeEach(() => {
+		tempDir = mkdtempSync(join(tmpdir(), 'veterinary-clinic-migrations-'));
+		database = new CliSqliteDatabase(join(tempDir, 'fixture.db'));
+	});
+
+	afterEach(() => {
+		if (tempDir) rmSync(tempDir, { recursive: true, force: true });
+	});
+
+	it('creates the current schema and stamps user_version on an empty database', async () => {
+		await runMigrations(database as unknown as Database);
+
+		const versions = await database.select<UserVersionRow[]>('PRAGMA user_version');
+		const migrations = await database.select<MigrationRow[]>('SELECT version, name FROM schema_migrations ORDER BY version');
+		const owners = await database.select<CountRow[]>('SELECT COUNT(*) AS total FROM owners');
+
+		expect(versions[0]?.user_version).toBe(CURRENT_SCHEMA_VERSION);
+		expect(migrations).toEqual([{ version: 1, name: '0001_baseline_current_schema' }]);
+		expect(owners[0]?.total).toBe(0);
+	});
+
+	it('adopts a current unversioned database without losing data', async () => {
+		await runMigrations(database as unknown as Database);
+		await database.execute("INSERT INTO owners (id, name, additional_information) VALUES (1, 'Ana', 'client data')");
+		await database.execute('DELETE FROM schema_migrations');
+		await database.execute('PRAGMA user_version = 0');
+
+		await runMigrations(database as unknown as Database);
+
+		const versions = await database.select<UserVersionRow[]>('PRAGMA user_version');
+		const owners = await database.select<CountRow[]>("SELECT COUNT(*) AS total FROM owners WHERE name = 'Ana' AND additional_information = 'client data'");
+
+		expect(versions[0]?.user_version).toBe(CURRENT_SCHEMA_VERSION);
+		expect(owners[0]?.total).toBe(1);
+	});
+
+	it('refuses to open a database from a future schema version', async () => {
+		await database.execute(`PRAGMA user_version = ${CURRENT_SCHEMA_VERSION + 1}`);
+
+		await expect(runMigrations(database as unknown as Database)).rejects.toThrow(`database_schema_from_future:${CURRENT_SCHEMA_VERSION + 1}`);
+	});
+
+	it('refuses a database that announces the current version but does not match the current schema', async () => {
+		await database.execute(`PRAGMA user_version = ${CURRENT_SCHEMA_VERSION}`);
+		await database.execute('CREATE TABLE unrelated_table (id INTEGER PRIMARY KEY AUTOINCREMENT, value TEXT NOT NULL)');
+
+		await expect(runMigrations(database as unknown as Database)).rejects.toThrow('database_schema_unsupported');
+	});
+
+	it('refuses an unversioned database that is not the current schema', async () => {
+		await database.execute(`
+			CREATE TABLE unrelated_table (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				value TEXT NOT NULL
+			)
+		`);
+
+		await expect(runMigrations(database as unknown as Database)).rejects.toThrow('database_schema_unsupported');
+	});
+});
