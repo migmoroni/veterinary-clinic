@@ -1,23 +1,19 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
-	import OwnerAdditionalResponsiblesField from '$lib/components/owner/OwnerAdditionalResponsiblesField.svelte';
-	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
-	import OwnerAvatarEditorDialog from '$lib/components/owner/OwnerAvatarEditorDialog.svelte';
-	import OwnerContactsField from '$lib/components/owner/OwnerContactsField.svelte';
-	import Select from '$lib/components/ui/Select.svelte';
-	import { brazilCityOptions, brazilStateOptions, countryHasStructuredLocations, countryOptions, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '$lib/domain/geo/location.js';
 	import { DEFAULT_OWNER_COUNTRY, type OwnerInput } from '$lib/domain/owner/owner.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
-	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
-	import { isCountrySupportedForCepLookup, lookupCep } from '$lib/services/cep.service.js';
+	import { t } from '$lib/i18n/index.js';
 	import { saveNewOwner } from '$lib/services/owner.service.js';
-	import Search from '@lucide/svelte/icons/search';
 	import Save from '@lucide/svelte/icons/save';
 
-	function emptyOwnerForm(): OwnerInput {
+	let name = $state('');
+	let saving = $state(false);
+	let error = $state<string | null>(null);
+
+	function ownerInputFromName(): OwnerInput {
 		return {
-			name: '',
+			name,
 			avatarBytes: null,
 			street: '',
 			streetNumber: '',
@@ -31,101 +27,6 @@
 			additionalResponsibles: [],
 			state: ''
 		};
-	}
-
-	let form = $state<OwnerInput>(emptyOwnerForm());
-	let saving = $state(false);
-	let cepLoading = $state(false);
-	let avatarDialogOpen = $state(false);
-	let statusKey = $state<TranslationKey | null>(null);
-	let error = $state<string | null>(null);
-	const hasStructuredLocations = $derived(countryHasStructuredLocations(form.country));
-	const countrySelectOptions = $derived(countryOptions(i18n.locale));
-	const stateSelectOptions = $derived(hasStructuredLocations ? [{ value: '', label: t('owner.statePlaceholder') }, ...brazilStateOptions()] : []);
-	const citySelectOptions = $derived(hasStructuredLocations ? [{ value: '', label: t('owner.cityPlaceholder') }, ...brazilCityOptions(form.state)] : []);
-
-	function updateCountry(value: string) {
-		form = {
-			...form,
-			country: normalizeOwnerCountry(value) ?? DEFAULT_OWNER_COUNTRY,
-			state: '',
-			city: ''
-		};
-	}
-
-	function updateState(value: string) {
-		if (!hasStructuredLocations) {
-			form = { ...form, state: value };
-			return;
-		}
-
-		const state = normalizeOwnerState(value, form.country) ?? '';
-		form = {
-			...form,
-			state,
-			city: normalizeOwnerCity(form.city, form.country, state) ?? ''
-		};
-	}
-
-	function updateCity(value: string) {
-		if (!hasStructuredLocations) {
-			form = { ...form, city: value };
-			return;
-		}
-
-		form = { ...form, city: normalizeOwnerCity(value, form.country, form.state) ?? '' };
-	}
-
-	function openAvatarDialog() {
-		if (saving) return;
-		avatarDialogOpen = true;
-	}
-
-	function closeAvatarDialog() {
-		avatarDialogOpen = false;
-	}
-
-	function applyAvatar(bytes: Uint8Array) {
-		form = { ...form, avatarBytes: bytes };
-		statusKey = null;
-		avatarDialogOpen = false;
-	}
-
-	function removeAvatar() {
-		form = { ...form, avatarBytes: null };
-		statusKey = null;
-		avatarDialogOpen = false;
-	}
-
-	async function fillAddressFromCep() {
-		cepLoading = true;
-		statusKey = 'status.cepSearching';
-		error = null;
-
-		try {
-			const cepAddress = await lookupCep(form.postalCode, form.country);
-			if (!cepAddress) {
-				statusKey = 'status.cepNotFound';
-				return;
-			}
-
-			form.postalCode = cepAddress.postalCode;
-			form.street = cepAddress.street;
-			form.neighborhood = cepAddress.neighborhood;
-			form.state = normalizeOwnerState(cepAddress.state, form.country, cepAddress.city) ?? '';
-			form.city = normalizeOwnerCity(cepAddress.city, form.country, form.state) ?? '';
-			statusKey = 'status.cepFound';
-		} catch (exception) {
-			if (exception instanceof Error && exception.message === 'cep_invalid') {
-				statusKey = 'status.cepInvalid';
-			} else if (exception instanceof Error && exception.message === 'cep_country_unsupported') {
-				statusKey = 'status.cepCountryUnsupported';
-			} else {
-				statusKey = 'status.cepUnavailable';
-			}
-		} finally {
-			cepLoading = false;
-		}
 	}
 
 	function ownerErrorMessage(exception: unknown): string {
@@ -142,8 +43,8 @@
 		error = null;
 
 		try {
-			const owner = await saveNewOwner(form);
-			await goto(`/owners/${owner.id}`);
+			const owner = await saveNewOwner(ownerInputFromName());
+			await goto(`/owners/${owner.id}?edit=1`);
 		} catch (exception) {
 			error = ownerErrorMessage(exception);
 		} finally {
@@ -163,122 +64,13 @@
 	</header>
 
 	<form class="w-full min-w-0 max-w-full rounded-md border border-border bg-card p-4 shadow-sm sm:p-5" onsubmit={submit}>
-		<div class="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center">
-			<OwnerAvatar avatarBytes={form.avatarBytes} ownerName={form.name} className="size-24 border border-border shadow-sm" iconClass="size-10 text-muted-foreground" />
-			<div class="flex flex-col gap-1.5 min-w-0">
-				<p class="text-sm font-semibold">{t('owner.avatarLabel')}</p>
-				<div class="flex flex-wrap gap-2">
-					<button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} onclick={openAvatarDialog}>
-						{t('owner.avatarEdit')}
-					</button>
-				</div>
-			</div>
-		</div>
-
-		<div class="grid w-full min-w-0 gap-4 sm:grid-cols-5">
-			<label class="flex min-w-0 flex-col gap-1 text-sm font-medium sm:col-span-5">
-				<span class="flex min-w-0 items-baseline justify-between gap-2">
-					<span>{t('owner.name')}</span>
-					<CharacterLimitHint value={form.name} max={FIELD_LIMITS.ownerName} />
-				</span>
-				<input class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.name} maxlength={FIELD_LIMITS.ownerName} required />
-			</label>
-
-			<label class="flex min-w-0 flex-col gap-1 text-sm font-medium sm:col-span-2">
-				<span>{t('owner.country')}</span>
-				<Select id="owner-country" value={form.country} options={countrySelectOptions} ariaLabel={t('owner.country')} onchange={updateCountry} />
-			</label>
-
-			<label class="flex min-w-0 flex-col gap-1 text-sm font-medium sm:col-span-3">
-				<span class="flex min-w-0 items-baseline justify-between gap-2">
-					<span>{t('owner.postalCode')}</span>
-					<CharacterLimitHint value={form.postalCode} max={FIELD_LIMITS.ownerPostalCode} />
-				</span>
-				<span class="flex min-w-0 gap-2">
-					<input class="h-10 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.postalCode} maxlength={FIELD_LIMITS.ownerPostalCode} />
-					<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={cepLoading || !isCountrySupportedForCepLookup(form.country)} onclick={() => void fillAddressFromCep()} aria-label={t('actions.searchCep')}>
-						<Search class="size-4" />
-						{t('actions.searchCep')}
-					</button>
-				</span>
-			</label>
-
-			{#if !isCountrySupportedForCepLookup(form.country)}
-				<p class="text-xs text-muted-foreground sm:col-span-2">{t('status.cepCountryUnsupported')}</p>
-			{/if}
-
-			<label class="flex min-w-0 flex-col gap-1 text-sm font-medium sm:col-span-3">
-				<span class="flex min-w-0 items-baseline justify-between gap-2">
-					<span>{t('owner.street')}</span>
-					<CharacterLimitHint value={form.street} max={FIELD_LIMITS.ownerStreet} />
-				</span>
-				<input class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.street} maxlength={FIELD_LIMITS.ownerStreet} />
-			</label>
-
-			<label class="flex min-w-0 flex-col gap-1 text-sm font-medium sm:col-span-1">
-				<span class="flex min-w-0 items-baseline justify-between gap-2">
-					<span>{t('owner.streetNumber')}</span>
-					<CharacterLimitHint value={form.streetNumber} max={FIELD_LIMITS.ownerStreetNumber} />
-				</span>
-				<input class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.streetNumber} maxlength={FIELD_LIMITS.ownerStreetNumber} />
-			</label>
-
-			<label class="flex min-w-0 flex-col gap-1 text-sm font-medium sm:col-span-1">
-				<span class="flex min-w-0 items-baseline justify-between gap-2">
-					<span>{t('owner.addressComplement')}</span>
-					<CharacterLimitHint value={form.addressComplement} max={FIELD_LIMITS.ownerAddressComplement} />
-				</span>
-				<input class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.addressComplement} maxlength={FIELD_LIMITS.ownerAddressComplement} />
-			</label>
-
-			<label class="flex min-w-0 flex-col gap-1 text-sm font-medium sm:col-span-2">
-				<span class="flex min-w-0 items-baseline justify-between gap-2">
-					<span>{t('owner.neighborhood')}</span>
-					<CharacterLimitHint value={form.neighborhood} max={FIELD_LIMITS.ownerNeighborhood} />
-				</span>
-				<input class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.neighborhood} maxlength={FIELD_LIMITS.ownerNeighborhood} />
-			</label>
-
-			<label class="flex min-w-0 flex-col gap-1 text-sm font-medium sm:col-span-1">
-				<span class="flex min-w-0 items-baseline justify-between gap-2">
-					<span>{t('owner.state')}</span>
-					{#if !hasStructuredLocations}<CharacterLimitHint value={form.state} max={FIELD_LIMITS.ownerState} />{/if}
-				</span>
-				{#if hasStructuredLocations}
-					<Select id="owner-state" value={form.state} options={stateSelectOptions} ariaLabel={t('owner.state')} onchange={updateState} />
-				{:else}
-					<input id="owner-state" class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.state} maxlength={FIELD_LIMITS.ownerState} autocomplete="address-level1" />
-				{/if}
-			</label>
-
-			<label class="flex min-w-0 flex-col gap-1 text-sm font-medium sm:col-span-2">
-				<span class="flex min-w-0 items-baseline justify-between gap-2">
-					<span>{t('owner.city')}</span>
-					{#if !hasStructuredLocations}<CharacterLimitHint value={form.city} max={FIELD_LIMITS.ownerCity} />{/if}
-				</span>
-				{#if hasStructuredLocations}
-					<Select id="owner-city" value={form.city} options={citySelectOptions} disabled={!form.state} ariaLabel={t('owner.city')} onchange={updateCity} />
-				{:else}
-					<input id="owner-city" class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.city} maxlength={FIELD_LIMITS.ownerCity} autocomplete="address-level2" />
-				{/if}
-			</label>
-
-
-			<OwnerContactsField bind:contacts={form.contacts} country={form.country} />
-			<OwnerAdditionalResponsiblesField bind:responsibles={form.additionalResponsibles} country={form.country} />
-
-			<label class="flex min-w-0 flex-col gap-1 text-sm font-medium sm:col-span-5">
-				<span class="flex min-w-0 items-baseline justify-between gap-2">
-					<span>{t('owner.additionalInformation')}</span>
-					<CharacterLimitHint value={form.additionalInformation} max={FIELD_LIMITS.ownerAdditionalInformation} />
-				</span>
-				<textarea class="min-h-28 w-full min-w-0 resize-y rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={form.additionalInformation} maxlength={FIELD_LIMITS.ownerAdditionalInformation} aria-label={t('owner.additionalInformation')}></textarea>
-			</label>
-		</div>
-
-		{#if statusKey}
-			<p class="mt-4 rounded-md bg-muted p-3 text-sm text-muted-foreground">{t(statusKey)}</p>
-		{/if}
+		<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
+			<span class="flex min-w-0 items-baseline justify-between gap-2">
+				<span>{t('owner.name')}</span>
+				<CharacterLimitHint value={name} max={FIELD_LIMITS.ownerName} />
+			</span>
+			<input class="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={name} maxlength={FIELD_LIMITS.ownerName} required />
+		</label>
 
 		{#if error}
 			<p class="mt-4 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm">{error}</p>
@@ -292,7 +84,3 @@
 		</div>
 	</form>
 </section>
-
-{#if avatarDialogOpen}
-	<OwnerAvatarEditorDialog initialAvatarBytes={form.avatarBytes} onApply={applyAvatar} onRemove={removeAvatar} onClose={closeAvatarDialog} />
-{/if}

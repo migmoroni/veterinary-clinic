@@ -104,6 +104,12 @@
 		return `${url.pathname}${url.search}${url.hash}`;
 	}
 
+	function clearEditQueryParameter() {
+		const url = new URL(window.location.href);
+		url.searchParams.delete('edit');
+		window.history.replaceState(window.history.state, '', hrefFromUrl(url));
+	}
+
 	function updateCountry(value: string) {
 		form = {
 			...form,
@@ -217,11 +223,13 @@
 		error = null;
 
 		try {
+			const shouldStartEditing = page.url.searchParams.get('edit') === '1';
 			profile = await loadOwnerProfile(ownerId);
 			const loadedForm = toForm(profile.owner);
 			form = loadedForm;
 			savedSnapshot = snapshotForm(loadedForm);
-			editing = false;
+			editing = shouldStartEditing;
+			if (shouldStartEditing) clearEditQueryParameter();
 		} catch (exception) {
 			error = exception instanceof Error ? exception.message : String(exception);
 		} finally {
