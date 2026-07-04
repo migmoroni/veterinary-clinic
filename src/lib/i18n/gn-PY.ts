@@ -631,7 +631,7 @@ export const gnPy = {
 	'search.title': 'Heka',
 	'search.description': 'Ejuhu mymba jára, mymba ha kuatia pohãno oikóva.',
 	'search.recentTitle': 'Mba’e ojepe’a ramovéva',
-	'search.recentDescription': '15 osẽva ipyahuvéva ojehechauka ko’ápe jeheka nandi aja.',
+	'search.recentDescription': '20 osẽva ipyahuvéva ojehechauka ko’ápe jeheka nandi aja.',
 	'search.kind.owner': 'Mymba jára',
 	'search.kind.pet': 'Mymba',
 	'search.kind.record': 'Kuatia pohãno',

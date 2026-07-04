@@ -631,7 +631,7 @@ export const ptPt = {
 	'search.title': 'Pesquisa',
 	'search.description': 'Encontre tutores, animais e fichas clínicas ativas.',
 	'search.recentTitle': 'Últimos elementos abertos',
-	'search.recentDescription': 'Os 15 resultados mais recentes aparecem aqui enquanto a pesquisa estiver vazia.',
+	'search.recentDescription': 'Os 20 resultados mais recentes aparecem aqui enquanto a pesquisa estiver vazia.',
 	'search.kind.owner': 'Tutor',
 	'search.kind.pet': 'Animal',
 	'search.kind.record': 'Ficha clínica',

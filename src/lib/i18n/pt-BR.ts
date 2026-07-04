@@ -631,7 +631,7 @@ export const ptBr = {
 	'search.title': 'Busca',
 	'search.description': 'Encontre proprietários, pets e prontuários ativos.',
 	'search.recentTitle': 'Últimos itens abertos',
-	'search.recentDescription': 'Os 15 resultados mais recentes aparecem aqui enquanto a busca está vazia.',
+	'search.recentDescription': 'Os 20 resultados mais recentes aparecem aqui enquanto a busca está vazia.',
 	'search.kind.owner': 'Proprietário',
 	'search.kind.pet': 'Pet',
 	'search.kind.record': 'Prontuário',

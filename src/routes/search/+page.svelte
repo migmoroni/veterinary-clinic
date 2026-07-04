@@ -8,12 +8,12 @@
 	import type { SearchResult, SearchResultKind } from '$lib/persistence/repositories/search.repository.js';
 	import { t } from '$lib/i18n/index.js';
 	import { RECENT_SEARCH_STORAGE_KEY } from '$lib/services/client-state.service.js';
-	import { loadOwnerAssociatedContactsByOwnerIds, loadOwnerAvatarsByOwnerIds, loadPetAvatarsByPetIds, searchEverywhere } from '$lib/services/clinic.service.js';
+	import { filterActiveSearchResults, loadOwnerAssociatedContactsByOwnerIds, loadOwnerAvatarsByOwnerIds, loadPetAvatarsByPetIds, searchEverywhere } from '$lib/services/clinic.service.js';
 	import ClipboardPenLine from '@lucide/svelte/icons/clipboard-pen-line';
 	import Phone from '@lucide/svelte/icons/phone';
 	import Search from '@lucide/svelte/icons/search';
 
-	const recentSearchLimit = 15;
+	const recentSearchLimit = 20;
 
 	let query = $state('');
 	let results = $state<SearchResult[]>([]);
@@ -97,7 +97,9 @@
 		try {
 			const parsed = JSON.parse(localStorage.getItem(RECENT_SEARCH_STORAGE_KEY) ?? '[]');
 			const baseResults: SearchResult[] = Array.isArray(parsed) ? parsed.slice(0, recentSearchLimit) : [];
-			recentResults = await hydrateRecentResults(baseResults);
+			const activeResults = await filterActiveSearchResults(baseResults);
+			recentResults = await hydrateRecentResults(activeResults);
+			if (activeResults.length !== baseResults.length) saveRecentResults(activeResults);
 		} catch {
 			recentResults = [];
 		}

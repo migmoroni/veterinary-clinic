@@ -34,6 +34,10 @@ interface SearchResultRow {
 
 type SearchTermPredicate = (placeholder: string) => string;
 
+interface ActiveSearchResultIdRow {
+	id: number;
+}
+
 const firstOwnerIdSql = `(SELECT owners.id
 	FROM pet_owners
 	JOIN owners ON owners.id = pet_owners.owner_id
@@ -67,6 +71,28 @@ function searchTerms(query: string): string[] {
 	const normalized = query.trim();
 	if (normalized.length < 2) return [];
 	return normalized.split(/\s+/).filter((term) => term.length > 0);
+}
+
+function searchResultId(result: SearchResult): number {
+	if (result.kind === 'record' && result.recordId !== null) return Number(result.recordId);
+	return Number(result.id);
+}
+
+function searchResultActiveKey(kind: SearchResultKind, id: number): string {
+	return `${kind}:${id}`;
+}
+
+function idsForKind(results: SearchResult[], kind: SearchResultKind): number[] {
+	const ids = results.map((result) => (result.kind === kind ? searchResultId(result) : 0)).filter((id) => Number.isInteger(id) && id > 0);
+	return [...new Set(ids)];
+}
+
+async function loadActiveIds(ids: number[], query: string): Promise<Set<number>> {
+	if (ids.length === 0) return new Set<number>();
+
+	const placeholders = ids.map((_, index) => `$${index + 1}`).join(', ');
+	const rows = await selectMany<ActiveSearchResultIdRow>(query.replace('__IDS__', placeholders), ids);
+	return new Set(rows.map((row) => row.id));
 }
 
 function buildSearchFilter(predicates: SearchTermPredicate[], termCount: number): string {
@@ -140,6 +166,32 @@ const recordSearchPredicates: SearchTermPredicate[] = [
 			AND (contacts.value LIKE ${placeholder} OR contacts.label LIKE ${placeholder})
 	)`
 ];
+
+export async function filterActiveSearchResults(results: SearchResult[]): Promise<SearchResult[]> {
+	if (results.length === 0) return [];
+
+	const [ownerIds, petIds, recordIds] = [idsForKind(results, 'owner'), idsForKind(results, 'pet'), idsForKind(results, 'record')];
+	const [activeOwnerIds, activePetIds, activeRecordIds] = await Promise.all([
+		loadActiveIds(ownerIds, 'SELECT id FROM owners WHERE id IN (__IDS__) AND deleted_at IS NULL'),
+		loadActiveIds(petIds, 'SELECT id FROM pets WHERE id IN (__IDS__) AND deleted_at IS NULL'),
+		loadActiveIds(
+			recordIds,
+			`SELECT medical_records.id
+			 FROM medical_records
+			 JOIN pets ON pets.id = medical_records.pet_id
+			 WHERE medical_records.id IN (__IDS__)
+				AND medical_records.deleted_at IS NULL
+				AND pets.deleted_at IS NULL`
+		)
+	]);
+	const activeKeys = new Set<string>();
+
+	for (const id of activeOwnerIds) activeKeys.add(searchResultActiveKey('owner', id));
+	for (const id of activePetIds) activeKeys.add(searchResultActiveKey('pet', id));
+	for (const id of activeRecordIds) activeKeys.add(searchResultActiveKey('record', id));
+
+	return results.filter((result) => activeKeys.has(searchResultActiveKey(result.kind, searchResultId(result))));
+}
 
 export async function searchClinic(query: string): Promise<SearchResult[]> {
 	const terms = searchTerms(query);

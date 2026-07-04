@@ -5,7 +5,7 @@ import { hasDatabaseFile } from '$lib/native/database-file.js';
 import { createEmptyDatabase, getDatabase } from '$lib/persistence/sqlite/client.js';
 import { getLastEditedRecord } from '$lib/persistence/repositories/medical-record.repository.js';
 import { listOwnerAssociatedContactsByOwnerIds } from '$lib/persistence/repositories/owner.repository.js';
-import { searchClinic, type SearchResult } from '$lib/persistence/repositories/search.repository.js';
+import { filterActiveSearchResults as filterActiveSearchResultsRepository, searchClinic, type SearchResult } from '$lib/persistence/repositories/search.repository.js';
 import { getClinicCounts } from '$lib/persistence/repositories/stats.repository.js';
 import type { VaccineAnalyticsOverview } from '$lib/persistence/repositories/vaccine-analytics.repository.js';
 import type { VaccineHistoryPoint } from '$lib/domain/vaccine/analytics.js';
@@ -71,6 +71,10 @@ export async function loadDashboard(): Promise<ClinicDashboard> {
 
 export async function searchEverywhere(query: string): Promise<SearchResult[]> {
 	return searchClinic(query);
+}
+
+export async function filterActiveSearchResults(results: SearchResult[]): Promise<SearchResult[]> {
+	return filterActiveSearchResultsRepository(results);
 }
 
 export async function loadOwnerAssociatedContactsByOwnerIds(ownerIds: number[]): Promise<Map<number, OwnerAssociatedContact[]>> {

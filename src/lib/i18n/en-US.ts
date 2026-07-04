@@ -632,7 +632,7 @@ export const enUs = {
 	'search.title': 'Search',
 	'search.description': 'Find active owners, pets, and records.',
 	'search.recentTitle': 'Recently opened items',
-	'search.recentDescription': 'The 15 most recent results appear here while search is empty.',
+	'search.recentDescription': 'The 20 most recent results appear here while search is empty.',
 	'search.kind.owner': 'Owner',
 	'search.kind.pet': 'Pet',
 	'search.kind.record': 'Record',

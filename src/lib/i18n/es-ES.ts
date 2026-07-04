@@ -632,7 +632,7 @@ export const esEs = {
 	'search.title': 'Búsqueda',
 	'search.description': 'Encuentra propietarios, mascotas e historias activas.',
 	'search.recentTitle': 'Últimos elementos abiertos',
-	'search.recentDescription': 'Los 15 resultados más recientes aparecen aquí mientras la búsqueda está vacía.',
+	'search.recentDescription': 'Los 20 resultados más recientes aparecen aquí mientras la búsqueda está vacía.',
 	'search.kind.owner': 'Propietario',
 	'search.kind.pet': 'Mascota',
 	'search.kind.record': 'Historia',
