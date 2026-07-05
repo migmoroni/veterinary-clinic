@@ -6,6 +6,7 @@
 	import type { DashboardAnalysisView } from '$lib/domain/dashboard/analytics.js';
 	import ChartColumn from '@lucide/svelte/icons/chart-column';
 	import PawPrint from '@lucide/svelte/icons/paw-print';
+	import Pill from '@lucide/svelte/icons/pill';
 	import RotateCw from '@lucide/svelte/icons/rotate-cw';
 	import Syringe from '@lucide/svelte/icons/syringe';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
@@ -16,6 +17,7 @@
 	const viewOptions: { view: DashboardAnalysisView; labelKey: Parameters<typeof t>[0]; icon: Component }[] = [
 		{ view: 'general', labelKey: 'analysis.view.general', icon: ChartColumn },
 		{ view: 'vaccines', labelKey: 'analysis.view.vaccines', icon: Syringe },
+		{ view: 'antiparasitics', labelKey: 'analysis.view.antiparasitics', icon: Pill },
 		{ view: 'pets', labelKey: 'analysis.view.pets', icon: PawPrint },
 		{ view: 'owners', labelKey: 'analysis.view.owners', icon: UserPlus }
 	];
@@ -24,7 +26,7 @@
 
 	function resolveActiveView(pathname: string): DashboardAnalysisView {
 		const segment = pathname.split('/').filter(Boolean)[1];
-		if (segment === 'vaccines' || segment === 'pets' || segment === 'owners') return segment;
+		if (segment === 'vaccines' || segment === 'antiparasitics' || segment === 'pets' || segment === 'owners') return segment;
 		return 'general';
 	}
 
@@ -54,7 +56,7 @@
 		</button>
 	</header>
 
-	<div class="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1 lg:grid-cols-4" role="tablist" aria-label={t('analysis.dashboard.title')}>
+	<div class="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1 lg:grid-cols-5" role="tablist" aria-label={t('analysis.dashboard.title')}>
 		{#each viewOptions as option}
 			<a
 				href={viewHref(option.view)}

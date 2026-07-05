@@ -13,12 +13,14 @@
 	import RotateCw from '@lucide/svelte/icons/rotate-cw';
 	import Upload from '@lucide/svelte/icons/upload';
 	import Syringe from '@lucide/svelte/icons/syringe';
+	import Pill from '@lucide/svelte/icons/pill';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import PawPrint from '@lucide/svelte/icons/paw-print';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 
 	const analysisCards: { view: Exclude<DashboardAnalysisView, 'general'>; titleKey: TranslationKey; descriptionKey: TranslationKey; metricKey: TranslationKey; icon: typeof Syringe }[] = [
 		{ view: 'vaccines', titleKey: 'analysis.card.vaccines.title', descriptionKey: 'analysis.card.vaccines.description', metricKey: 'analysis.trackedVaccineItems', icon: Syringe },
+		{ view: 'antiparasitics', titleKey: 'analysis.card.antiparasitics.title', descriptionKey: 'analysis.card.antiparasitics.description', metricKey: 'analysis.trackedAntiparasiticItems', icon: Pill },
 		{ view: 'pets', titleKey: 'analysis.card.pets.title', descriptionKey: 'analysis.card.pets.description', metricKey: 'stats.pets', icon: PawPrint },
 		{ view: 'owners', titleKey: 'analysis.card.owners.title', descriptionKey: 'analysis.card.owners.description', metricKey: 'stats.owners', icon: UserPlus }
 	];
@@ -51,6 +53,7 @@
 
 	function analysisCount(view: Exclude<DashboardAnalysisView, 'general'>): number {
 		if (view === 'vaccines') return clinic.dashboard?.vaccines.totalTracked ?? 0;
+		if (view === 'antiparasitics') return clinic.dashboard?.antiparasitics.totalTracked ?? 0;
 		if (view === 'pets') return clinic.dashboard?.counts.pets ?? 0;
 		return clinic.dashboard?.counts.owners ?? 0;
 	}
@@ -218,13 +221,13 @@
 		</div>
 
 		{#if clinic.loading}
-			<div class="mt-4 grid gap-3 lg:grid-cols-3">
+			<div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
 				{#each analysisCards as _card}
 					<div class="h-36 animate-pulse rounded-md bg-muted"></div>
 				{/each}
 			</div>
 		{:else}
-			<div class="mt-4 grid gap-3 lg:grid-cols-3">
+			<div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
 				{#each analysisCards as card}
 					<a href={`/dashboard/${card.view}`} class="flex min-h-40 flex-col rounded-md border border-border bg-background p-4 hover:bg-accent" aria-label={`${t(card.titleKey)}: ${metricFormatter(analysisCount(card.view))}`}>
 						<span class="flex items-start justify-between gap-3">

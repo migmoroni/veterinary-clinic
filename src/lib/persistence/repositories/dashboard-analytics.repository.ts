@@ -1,11 +1,13 @@
 import type {
 	DashboardAgeBandKey,
 	DashboardAnalytics,
+	DashboardAntiparasiticStatusKey,
 	DashboardBreedKey,
 	DashboardBucket,
 	DashboardNamedBucket,
 	DashboardOwnerStudyItem,
 	DashboardOwnerStudyPet,
+	DashboardPetStudyAntiparasitic,
 	DashboardPetStudyOwner,
 	DashboardPetStudyItem,
 	DashboardPetStudyVaccine,
@@ -17,6 +19,9 @@ import type {
 } from '$lib/domain/dashboard/analytics.js';
 import { dashboardAgeBand, dashboardAgeBandYear, dashboardAgeMonthBandKeys } from '$lib/domain/dashboard/age-bands.js';
 import type { PetBreed, PetSex, PetSpecies } from '$lib/domain/pet/pet.js';
+import type { AntiparasiticTreatmentStatusKey } from '$lib/domain/antiparasitic/analytics.js';
+import { buildAntiparasiticTreatmentStatus, isPlausibleAntiparasiticTreatmentAppliedAt } from '$lib/domain/antiparasitic/analytics.js';
+import type { AntiparasiticValidityUnit } from '$lib/domain/antiparasitic/antiparasitic.js';
 import type { VaccineStatusKey } from '$lib/domain/vaccine/analytics.js';
 import { buildVaccineStatus, isPlausibleVaccineAppliedAt } from '$lib/domain/vaccine/analytics.js';
 import type { VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
@@ -55,7 +60,26 @@ interface LatestVaccinationAnalyticsRow {
 	validity_unit: VaccineValidityUnit;
 }
 
+interface LatestAntiparasiticAnalyticsRow {
+	pet_id: number;
+	antiparasitic_name: string;
+	antiparasitic_normalized_name: string;
+	dose: string;
+	applied_at: string;
+	validity_value: number;
+	validity_unit: AntiparasiticValidityUnit;
+}
+
 const vaccineStatusWeight: Record<DashboardVaccineStatusKey, number> = {
+	untracked: 0,
+	current: 1,
+	dueSoon: 2,
+	dueVerySoon: 3,
+	expired: 4,
+	overdue: 5
+};
+
+const antiparasiticStatusWeight: Record<DashboardAntiparasiticStatusKey, number> = {
 	untracked: 0,
 	current: 1,
 	dueSoon: 2,
@@ -107,6 +131,10 @@ function completeAgeBuckets(buckets: Map<DashboardAgeBandKey, number>, maxYear: 
 
 function worstVaccineStatus(first: DashboardVaccineStatusKey, second: DashboardVaccineStatusKey): DashboardVaccineStatusKey {
 	return vaccineStatusWeight[second] > vaccineStatusWeight[first] ? second : first;
+}
+
+function worstAntiparasiticStatus(first: DashboardAntiparasiticStatusKey, second: DashboardAntiparasiticStatusKey): DashboardAntiparasiticStatusKey {
+	return antiparasiticStatusWeight[second] > antiparasiticStatusWeight[first] ? second : first;
 }
 
 function locationLabel(owner: OwnerAnalyticsRow): string | null {
@@ -188,6 +216,42 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationAnalyticsRo
 	return rows.filter((row) => isPlausibleVaccineAppliedAt(row.applied_at));
 }
 
+async function listLatestAntiparasiticRows(): Promise<LatestAntiparasiticAnalyticsRow[]> {
+	const rows = await selectMany<LatestAntiparasiticAnalyticsRow>(
+		`SELECT pet_id,
+			antiparasitic_name,
+			antiparasitic_normalized_name,
+			dose,
+			applied_at,
+			validity_value,
+			validity_unit
+		 FROM (
+			SELECT pet_antiparasitic_treatments.pet_id,
+				pet_antiparasitic_treatments.antiparasitic_name,
+				pet_antiparasitic_treatments.antiparasitic_normalized_name,
+				pet_antiparasitic_treatments.dose,
+				pet_antiparasitic_treatments.applied_at,
+				pet_antiparasitic_treatments.validity_value,
+				pet_antiparasitic_treatments.validity_unit,
+				ROW_NUMBER() OVER (
+					PARTITION BY pet_antiparasitic_treatments.pet_id, pet_antiparasitic_treatments.antiparasitic_normalized_name
+					ORDER BY pet_antiparasitic_treatments.applied_at DESC, pet_antiparasitic_treatments.id DESC
+				) AS latest_rank
+			 FROM pet_antiparasitic_treatments
+			 JOIN pets ON pets.id = pet_antiparasitic_treatments.pet_id
+			 WHERE pet_antiparasitic_treatments.deleted_at IS NULL
+				AND pet_antiparasitic_treatments.validity_ignored_at IS NULL
+				AND pets.deleted_at IS NULL
+				AND date(pet_antiparasitic_treatments.applied_at) IS NOT NULL
+				AND pet_antiparasitic_treatments.applied_at <= date('now', 'localtime')
+		 )
+		 WHERE latest_rank = 1
+		 ORDER BY pet_id, antiparasitic_normalized_name`
+	);
+
+	return rows.filter((row) => isPlausibleAntiparasiticTreatmentAppliedAt(row.applied_at));
+}
+
 function buildPetVaccineStatusMap(rows: LatestVaccinationAnalyticsRow[]): Map<number, DashboardVaccineStatusKey> {
 	const statusByPetId = new Map<number, DashboardVaccineStatusKey>();
 
@@ -197,6 +261,20 @@ function buildPetVaccineStatusMap(rows: LatestVaccinationAnalyticsRow[]): Map<nu
 
 		const current = statusByPetId.get(row.pet_id) ?? 'untracked';
 		statusByPetId.set(row.pet_id, worstVaccineStatus(current, status.status as VaccineStatusKey));
+	}
+
+	return statusByPetId;
+}
+
+function buildPetAntiparasiticStatusMap(rows: LatestAntiparasiticAnalyticsRow[]): Map<number, DashboardAntiparasiticStatusKey> {
+	const statusByPetId = new Map<number, DashboardAntiparasiticStatusKey>();
+
+	for (const row of rows) {
+		const status = buildAntiparasiticTreatmentStatus(row.applied_at, row.validity_value, row.validity_unit);
+		if (!status) continue;
+
+		const current = statusByPetId.get(row.pet_id) ?? 'untracked';
+		statusByPetId.set(row.pet_id, worstAntiparasiticStatus(current, status.status as AntiparasiticTreatmentStatusKey));
 	}
 
 	return statusByPetId;
@@ -225,12 +303,36 @@ function buildPetVaccinesMap(rows: LatestVaccinationAnalyticsRow[]): Map<number,
 	return vaccinesByPetId;
 }
 
-function buildPetAnalytics(pets: PetAnalyticsRow[], statusByPetId: Map<number, DashboardVaccineStatusKey>) {
+function buildPetAntiparasiticsMap(rows: LatestAntiparasiticAnalyticsRow[]): Map<number, DashboardPetStudyAntiparasitic[]> {
+	const antiparasiticsByPetId = new Map<number, DashboardPetStudyAntiparasitic[]>();
+
+	for (const row of rows) {
+		const status = buildAntiparasiticTreatmentStatus(row.applied_at, row.validity_value, row.validity_unit);
+		if (!status) continue;
+
+		const antiparasitics = antiparasiticsByPetId.get(row.pet_id) ?? [];
+		antiparasitics.push({
+			antiparasiticNormalizedName: row.antiparasitic_normalized_name,
+			antiparasiticName: row.antiparasitic_name,
+			dose: row.dose,
+			appliedAt: row.applied_at,
+			dueAt: status.dueAt,
+			daysUntilDue: status.daysUntilDue,
+			status: status.status
+		});
+		antiparasiticsByPetId.set(row.pet_id, antiparasitics);
+	}
+
+	return antiparasiticsByPetId;
+}
+
+function buildPetAnalytics(pets: PetAnalyticsRow[], statusByPetId: Map<number, DashboardVaccineStatusKey>, antiparasiticStatusByPetId: Map<number, DashboardAntiparasiticStatusKey>) {
 	const bySpecies = new Map<DashboardSpeciesKey, number>();
 	const byBreed = new Map<DashboardBreedKey, number>();
 	const bySex = new Map<DashboardSexKey, number>();
 	const byAge = new Map<DashboardAgeBandKey, number>();
 	const byVaccineStatus = new Map<DashboardVaccineStatusKey, number>();
+	const byAntiparasiticStatus = new Map<DashboardAntiparasiticStatusKey, number>();
 	let maxYear: number | null = null;
 
 	for (const pet of pets) {
@@ -243,6 +345,7 @@ function buildPetAnalytics(pets: PetAnalyticsRow[], statusByPetId: Map<number, D
 		incrementBucket(bySex, pet.sex ?? 'unknown');
 		incrementBucket(byAge, age);
 		incrementBucket(byVaccineStatus, statusByPetId.get(pet.id) ?? 'untracked');
+		incrementBucket(byAntiparasiticStatus, antiparasiticStatusByPetId.get(pet.id) ?? 'untracked');
 	}
 	completeAgeBuckets(byAge, maxYear);
 
@@ -252,7 +355,8 @@ function buildPetAnalytics(pets: PetAnalyticsRow[], statusByPetId: Map<number, D
 		byBreed: toBuckets(byBreed),
 		bySex: toBuckets(bySex),
 		byAge: toBuckets(byAge),
-		byVaccineStatus: toBuckets(byVaccineStatus)
+		byVaccineStatus: toBuckets(byVaccineStatus),
+		byAntiparasiticStatus: toBuckets(byAntiparasiticStatus)
 	};
 }
 
@@ -267,10 +371,16 @@ function buildOwnerPetMap(rows: PetOwnerAnalyticsRow[]): Map<number, number[]> {
 	return petIdsByOwnerId;
 }
 
-function buildOwnerAnalytics(owners: OwnerAnalyticsRow[], petOwnerRows: PetOwnerAnalyticsRow[], statusByPetId: Map<number, DashboardVaccineStatusKey>) {
+function buildOwnerAnalytics(
+	owners: OwnerAnalyticsRow[],
+	petOwnerRows: PetOwnerAnalyticsRow[],
+	statusByPetId: Map<number, DashboardVaccineStatusKey>,
+	antiparasiticStatusByPetId: Map<number, DashboardAntiparasiticStatusKey>
+) {
 	const byLocation = new Map<string, { label: string | null; count: number }>();
 	const byPetCount = new Map<DashboardPetCountBandKey, number>();
 	const byPetVaccineStatus = new Map<DashboardVaccineStatusKey, number>();
+	const byPetAntiparasiticStatus = new Map<DashboardAntiparasiticStatusKey, number>();
 	const petIdsByOwnerId = buildOwnerPetMap(petOwnerRows);
 	const totalPetsLinked = owners.reduce((total, owner) => total + owner.pet_count, 0);
 
@@ -280,11 +390,16 @@ function buildOwnerAnalytics(owners: OwnerAnalyticsRow[], petOwnerRows: PetOwner
 		incrementBucket(byPetCount, petCountBand(owner.pet_count));
 
 		let ownerStatus: DashboardVaccineStatusKey = 'untracked';
+		let ownerAntiparasiticStatus: DashboardAntiparasiticStatusKey = 'untracked';
 		for (const petId of petIdsByOwnerId.get(owner.id) ?? []) {
 			const petStatus = statusByPetId.get(petId) ?? 'untracked';
 			ownerStatus = worstVaccineStatus(ownerStatus, petStatus);
+
+			const petAntiparasiticStatus = antiparasiticStatusByPetId.get(petId) ?? 'untracked';
+			ownerAntiparasiticStatus = worstAntiparasiticStatus(ownerAntiparasiticStatus, petAntiparasiticStatus);
 		}
 		incrementBucket(byPetVaccineStatus, ownerStatus);
+		incrementBucket(byPetAntiparasiticStatus, ownerAntiparasiticStatus);
 	}
 
 	return {
@@ -292,7 +407,8 @@ function buildOwnerAnalytics(owners: OwnerAnalyticsRow[], petOwnerRows: PetOwner
 		averagePetsPerOwner: owners.length > 0 ? Math.round((totalPetsLinked / owners.length) * 10) / 10 : 0,
 		byLocation: toNamedBuckets(byLocation),
 		byPetCount: toBuckets(byPetCount),
-		byPetVaccineStatus: toBuckets(byPetVaccineStatus)
+		byPetVaccineStatus: toBuckets(byPetVaccineStatus),
+		byPetAntiparasiticStatus: toBuckets(byPetAntiparasiticStatus)
 	};
 }
 
@@ -317,9 +433,13 @@ function toOwnerStudyPet(pet: DashboardPetStudyItem): DashboardOwnerStudyPet {
 		sex: pet.sex,
 		age: pet.age,
 		vaccineStatus: pet.vaccineStatus,
+		antiparasiticStatus: pet.antiparasiticStatus,
 		vaccineNormalizedNames: pet.vaccineNormalizedNames,
 		vaccineNames: pet.vaccineNames,
-		vaccines: pet.vaccines
+		vaccines: pet.vaccines,
+		antiparasiticNormalizedNames: pet.antiparasiticNormalizedNames,
+		antiparasiticNames: pet.antiparasiticNames,
+		antiparasitics: pet.antiparasitics
 	};
 }
 
@@ -332,12 +452,15 @@ function buildStudyAnalytics(
 	owners: OwnerAnalyticsRow[],
 	petOwnerRows: PetOwnerAnalyticsRow[],
 	statusByPetId: Map<number, DashboardVaccineStatusKey>,
-	vaccinesByPetId: Map<number, DashboardPetStudyVaccine[]>
+	vaccinesByPetId: Map<number, DashboardPetStudyVaccine[]>,
+	antiparasiticStatusByPetId: Map<number, DashboardAntiparasiticStatusKey>,
+	antiparasiticsByPetId: Map<number, DashboardPetStudyAntiparasitic[]>
 ): DashboardStudyAnalytics {
 	const ownersById = new Map(owners.map((owner) => [owner.id, owner]));
 	const ownerIdsByPetId = buildPetOwnerMap(petOwnerRows);
 	const petIdsByOwnerId = buildOwnerPetMap(petOwnerRows);
 	const vaccinesBucket = new Map<string, { label: string | null; count: number }>();
+	const antiparasiticsBucket = new Map<string, { label: string | null; count: number }>();
 	const ownerCities = new Map<string, { label: string | null; count: number }>();
 	const ownerLocations = new Map<string, { label: string | null; count: number }>();
 	const studyPets: DashboardPetStudyItem[] = [];
@@ -357,13 +480,22 @@ function buildStudyAnalytics(
 		const ownerLocationKeys: string[] = [];
 		const ownerLocationLabels: string[] = [];
 		const vaccines = vaccinesByPetId.get(pet.id) ?? [];
+		const antiparasitics = antiparasiticsByPetId.get(pet.id) ?? [];
 		const vaccineNormalizedNames: string[] = [];
 		const vaccineNames: string[] = [];
+		const antiparasiticNormalizedNames: string[] = [];
+		const antiparasiticNames: string[] = [];
 
 		for (const vaccine of vaccines) {
 			if (!vaccineNormalizedNames.includes(vaccine.vaccineNormalizedName)) vaccineNormalizedNames.push(vaccine.vaccineNormalizedName);
 			addUnique(vaccineNames, vaccine.vaccineName);
 			incrementNamedBucket(vaccinesBucket, vaccine.vaccineNormalizedName, vaccine.vaccineName);
+		}
+
+		for (const antiparasitic of antiparasitics) {
+			if (!antiparasiticNormalizedNames.includes(antiparasitic.antiparasiticNormalizedName)) antiparasiticNormalizedNames.push(antiparasitic.antiparasiticNormalizedName);
+			addUnique(antiparasiticNames, antiparasitic.antiparasiticName);
+			incrementNamedBucket(antiparasiticsBucket, antiparasitic.antiparasiticNormalizedName, antiparasitic.antiparasiticName);
 		}
 
 		for (const ownerId of ownerIdsByPetId.get(pet.id) ?? []) {
@@ -402,9 +534,13 @@ function buildStudyAnalytics(
 			sex: pet.sex ?? 'unknown',
 			age: dashboardAgeBand(pet.birth_date),
 			vaccineStatus: statusByPetId.get(pet.id) ?? 'untracked',
+			antiparasiticStatus: antiparasiticStatusByPetId.get(pet.id) ?? 'untracked',
 			vaccineNormalizedNames,
 			vaccineNames,
 			vaccines,
+			antiparasiticNormalizedNames,
+			antiparasiticNames,
+			antiparasitics,
 			owners,
 			ownerCityKeys,
 			ownerCityLabels,
@@ -439,19 +575,22 @@ function buildStudyAnalytics(
 		pets: studyPets,
 		owners: studyOwners,
 		vaccines: toNamedBuckets(vaccinesBucket),
+		antiparasitics: toNamedBuckets(antiparasiticsBucket),
 		ownerCities: toNamedBuckets(ownerCities),
 		ownerLocations: toNamedBuckets(ownerLocations)
 	};
 }
 
 export async function getDashboardAnalytics(): Promise<DashboardAnalytics> {
-	const [pets, owners, petOwnerRows, latestVaccinationRows] = await Promise.all([listPetRows(), listOwnerRows(), listPetOwnerRows(), listLatestVaccinationRows()]);
+	const [pets, owners, petOwnerRows, latestVaccinationRows, latestAntiparasiticRows] = await Promise.all([listPetRows(), listOwnerRows(), listPetOwnerRows(), listLatestVaccinationRows(), listLatestAntiparasiticRows()]);
 	const statusByPetId = buildPetVaccineStatusMap(latestVaccinationRows);
 	const vaccinesByPetId = buildPetVaccinesMap(latestVaccinationRows);
+	const antiparasiticStatusByPetId = buildPetAntiparasiticStatusMap(latestAntiparasiticRows);
+	const antiparasiticsByPetId = buildPetAntiparasiticsMap(latestAntiparasiticRows);
 
 	return {
-		pets: buildPetAnalytics(pets, statusByPetId),
-		owners: buildOwnerAnalytics(owners, petOwnerRows, statusByPetId),
-		study: buildStudyAnalytics(pets, owners, petOwnerRows, statusByPetId, vaccinesByPetId)
+		pets: buildPetAnalytics(pets, statusByPetId, antiparasiticStatusByPetId),
+		owners: buildOwnerAnalytics(owners, petOwnerRows, statusByPetId, antiparasiticStatusByPetId),
+		study: buildStudyAnalytics(pets, owners, petOwnerRows, statusByPetId, vaccinesByPetId, antiparasiticStatusByPetId, antiparasiticsByPetId)
 	};
 }

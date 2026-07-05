@@ -1,10 +1,12 @@
 <script lang="ts">
 	import Select from '$lib/components/ui/Select.svelte';
 	import {
+		type DashboardAntiparasiticStatusKey,
 		type DashboardBucket,
 		type DashboardNamedBucket,
 		type DashboardOwnerStudyItem,
 		type DashboardOwnerStudyPet,
+		type DashboardPetStudyAntiparasitic,
 		type DashboardPetStudyItem,
 		type DashboardPetStudyVaccine,
 		type DashboardVaccineStatusKey
@@ -16,31 +18,58 @@
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
 	import ChartColumn from '@lucide/svelte/icons/chart-column';
 	import PawPrint from '@lucide/svelte/icons/paw-print';
+	import Pill from '@lucide/svelte/icons/pill';
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import Syringe from '@lucide/svelte/icons/syringe';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import List from '@lucide/svelte/icons/list';
 	import X from '@lucide/svelte/icons/x';
 
-	type StudyTarget = 'vaccines' | 'pets' | 'owners';
+	type StudyTarget = 'vaccines' | 'antiparasitics' | 'pets' | 'owners';
 	type StudyPetSnapshot = DashboardPetStudyItem | DashboardOwnerStudyPet;
 	type StudyVaccineSummary = DashboardPetStudyVaccine & { id: string; pet: DashboardPetStudyItem };
-	type StudyDimension = 'vaccine' | 'vaccineStatus' | 'petSpecies' | 'petBreed' | 'petSex' | 'petAge' | 'petVaccineStatus' | 'ownerCity' | 'ownerPetCount' | 'ownerPetVaccineStatus' | 'ownerPetSpecies';
+	type StudyAntiparasiticSummary = DashboardPetStudyAntiparasitic & { id: string; pet: DashboardPetStudyItem };
+	type StudyDimension =
+		| 'vaccine'
+		| 'vaccineStatus'
+		| 'antiparasitic'
+		| 'antiparasiticStatus'
+		| 'petSpecies'
+		| 'petBreed'
+		| 'petSex'
+		| 'petAge'
+		| 'petVaccineStatus'
+		| 'petAntiparasiticStatus'
+		| 'ownerCity'
+		| 'ownerPetCount'
+		| 'ownerPetVaccineStatus'
+		| 'ownerPetAntiparasiticStatus'
+		| 'ownerPetSpecies';
 	type StudyVisualizationMode = 'bars' | 'table';
 	type StudyPanel = 'chart' | 'list';
 	type StudyCrossBucket = { primaryLabel: string; secondaryLabel: string; count: number };
 	type StudyCrossSelection = StudyCrossBucket & { primaryDimension: StudyDimension; secondaryDimension: StudyDimension };
 	type StudyDimensionOption = { dimension: StudyDimension; labelKey: TranslationKey };
 	type StudyFactor = { label: string; value: string; count: number };
-	type StudyFactorKind = 'vaccine' | 'vaccineStatus' | 'species' | 'breed' | 'sex' | 'age' | 'city' | 'ownerPetCount';
+	type StudyFactorKind = 'vaccine' | 'vaccineStatus' | 'antiparasitic' | 'antiparasiticStatus' | 'species' | 'breed' | 'sex' | 'age' | 'city' | 'ownerPetCount';
 
 	const studyTargetOptions = [
 		{ target: 'vaccines', labelKey: 'analysis.study.axis.vaccines', descriptionKey: 'analysis.study.axis.vaccinesDescription', icon: Syringe },
+		{ target: 'antiparasitics', labelKey: 'analysis.view.antiparasitics', descriptionKey: 'analysis.study.axis.antiparasiticsDescription', icon: Pill },
 		{ target: 'pets', labelKey: 'analysis.study.axis.pets', descriptionKey: 'analysis.study.axis.petsDescription', icon: PawPrint },
 		{ target: 'owners', labelKey: 'analysis.study.axis.owners', descriptionKey: 'analysis.study.axis.ownersDescription', icon: UserPlus }
 	] as const;
 
 	const studyVaccineStatusWeight: Record<DashboardVaccineStatusKey, number> = {
+		untracked: 0,
+		current: 1,
+		dueSoon: 2,
+		dueVerySoon: 3,
+		expired: 4,
+		overdue: 5
+	};
+
+	const studyAntiparasiticStatusWeight: Record<DashboardAntiparasiticStatusKey, number> = {
 		untracked: 0,
 		current: 1,
 		dueSoon: 2,
@@ -60,6 +89,8 @@
 	let studyAge = $state('');
 	let studyVaccineStatus = $state('');
 	let studyVaccineNormalizedName = $state('');
+	let studyAntiparasiticStatus = $state('');
+	let studyAntiparasiticNormalizedName = $state('');
 	let studyCity = $state('');
 	let studyOwnerPetCount = $state('');
 	let selectedStudyBucket = $state<StudyCrossSelection | null>(null);
@@ -67,15 +98,19 @@
 	const allStudyPets = $derived(clinic.dashboard?.analytics.study.pets ?? []);
 	const allStudyOwners = $derived(clinic.dashboard?.analytics.study.owners ?? []);
 	const allStudyVaccines = $derived(studyVaccineItems(allStudyPets));
+	const allStudyAntiparasitics = $derived(studyAntiparasiticItems(allStudyPets));
 	const filteredStudyPets = $derived(filterStudyPets(allStudyPets));
 	const filteredStudyVaccineItems = $derived(filterStudyVaccineItems(allStudyVaccines));
+	const filteredStudyAntiparasiticItems = $derived(filterStudyAntiparasiticItems(allStudyAntiparasitics));
 	const filteredStudyOwners = $derived(filterStudyOwners(allStudyOwners));
 	const studyTargetPets = $derived(resolveStudyTargetPets());
 	const studyTargetOwners = $derived(resolveStudyTargetOwners());
 	const studyTargetVaccines = $derived(resolveStudyTargetVaccines());
+	const studyTargetAntiparasitics = $derived(resolveStudyTargetAntiparasitics());
 	const selectedStudyBuckets = $derived(buildStudyVisualizationBuckets());
 	const selectedStudyFactors = $derived(studyFactorSummaries());
 	const listedStudyVaccines = $derived(resolveListedStudyVaccines());
+	const listedStudyAntiparasitics = $derived(resolveListedStudyAntiparasitics());
 	const listedStudyOwners = $derived(resolveListedStudyOwners());
 	const listedStudyPets = $derived(resolveListedStudyPets());
 
@@ -95,6 +130,10 @@
 		return pets.flatMap((pet) => pet.vaccines.map((vaccine) => ({ ...vaccine, id: `${pet.id}:${vaccine.vaccineNormalizedName}`, pet })));
 	}
 
+	function studyAntiparasiticItems(pets: DashboardPetStudyItem[]): StudyAntiparasiticSummary[] {
+		return pets.flatMap((pet) => pet.antiparasitics.map((antiparasitic) => ({ ...antiparasitic, id: `${pet.id}:${antiparasitic.antiparasiticNormalizedName}`, pet })));
+	}
+
 	function selectStudyTarget(target: StudyTarget): void {
 		studyTarget = target;
 		studyPrimaryDimension = defaultStudyPrimaryDimension(target);
@@ -112,12 +151,14 @@
 
 	function defaultStudyPrimaryDimension(target: StudyTarget): StudyDimension {
 		if (target === 'vaccines') return 'vaccineStatus';
+		if (target === 'antiparasitics') return 'antiparasiticStatus';
 		if (target === 'owners') return 'ownerCity';
 		return 'petBreed';
 	}
 
 	function defaultStudySecondaryDimension(target: StudyTarget): StudyDimension {
 		if (target === 'vaccines') return 'petSpecies';
+		if (target === 'antiparasitics') return 'petSpecies';
 		if (target === 'owners') return 'ownerPetVaccineStatus';
 		return 'petVaccineStatus';
 	}
@@ -127,6 +168,20 @@
 			return [
 				{ dimension: 'vaccineStatus', labelKey: 'analysis.study.dimension.vaccineStatus' },
 				{ dimension: 'vaccine', labelKey: 'analysis.study.dimension.vaccine' },
+				{ dimension: 'antiparasitic', labelKey: 'antiparasiticTreatment.name' },
+				{ dimension: 'petAntiparasiticStatus', labelKey: 'analysis.study.dimension.petAntiparasiticStatus' },
+				{ dimension: 'petSpecies', labelKey: 'analysis.study.dimension.petSpecies' },
+				{ dimension: 'petBreed', labelKey: 'analysis.study.dimension.petBreed' },
+				{ dimension: 'petAge', labelKey: 'analysis.study.dimension.petAge' },
+				{ dimension: 'ownerCity', labelKey: 'analysis.study.dimension.ownerCity' },
+				{ dimension: 'ownerPetCount', labelKey: 'analysis.study.dimension.ownerPetCount' }
+			];
+		}
+
+		if (studyTarget === 'antiparasitics') {
+			return [
+				{ dimension: 'antiparasiticStatus', labelKey: 'antiparasiticTreatment.analytics.filterMode.status' },
+				{ dimension: 'antiparasitic', labelKey: 'antiparasiticTreatment.name' },
 				{ dimension: 'petSpecies', labelKey: 'analysis.study.dimension.petSpecies' },
 				{ dimension: 'petBreed', labelKey: 'analysis.study.dimension.petBreed' },
 				{ dimension: 'petAge', labelKey: 'analysis.study.dimension.petAge' },
@@ -140,8 +195,10 @@
 				{ dimension: 'ownerCity', labelKey: 'analysis.study.dimension.ownerCity' },
 				{ dimension: 'ownerPetCount', labelKey: 'analysis.study.dimension.ownerPetCount' },
 				{ dimension: 'ownerPetVaccineStatus', labelKey: 'analysis.study.dimension.ownerPetVaccineStatus' },
+				{ dimension: 'ownerPetAntiparasiticStatus', labelKey: 'analysis.study.dimension.ownerPetAntiparasiticStatus' },
 				{ dimension: 'ownerPetSpecies', labelKey: 'analysis.study.dimension.ownerPetSpecies' },
 				{ dimension: 'vaccine', labelKey: 'analysis.study.dimension.vaccine' },
+				{ dimension: 'antiparasitic', labelKey: 'antiparasiticTreatment.name' },
 				{ dimension: 'petBreed', labelKey: 'analysis.study.dimension.petBreed' },
 				{ dimension: 'petAge', labelKey: 'analysis.study.dimension.petAge' }
 			];
@@ -151,7 +208,9 @@
 			{ dimension: 'petBreed', labelKey: 'analysis.study.dimension.petBreed' },
 			{ dimension: 'petSpecies', labelKey: 'analysis.study.dimension.petSpecies' },
 			{ dimension: 'petVaccineStatus', labelKey: 'analysis.study.dimension.petVaccineStatus' },
+			{ dimension: 'petAntiparasiticStatus', labelKey: 'analysis.study.dimension.petAntiparasiticStatus' },
 			{ dimension: 'vaccine', labelKey: 'analysis.study.dimension.vaccine' },
+			{ dimension: 'antiparasitic', labelKey: 'antiparasiticTreatment.name' },
 			{ dimension: 'petSex', labelKey: 'analysis.study.dimension.petSex' },
 			{ dimension: 'petAge', labelKey: 'analysis.study.dimension.petAge' },
 			{ dimension: 'ownerCity', labelKey: 'analysis.study.dimension.ownerCity' },
@@ -191,6 +250,13 @@
 		];
 	}
 
+	function studyAntiparasiticOptions() {
+		return [
+			{ value: '', label: studyAllOptionLabel() },
+			...(clinic.dashboard?.analytics.study.antiparasitics ?? []).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(renderBucketLabel(bucket), bucket.count) }))
+		];
+	}
+
 	function studyVaccineStatusOptions() {
 		if (studyVaccineNormalizedName) {
 			const buckets = new Map<DashboardVaccineStatusKey, number>();
@@ -206,6 +272,23 @@
 		}
 
 		return [{ value: '', label: studyAllOptionLabel() }, ...studyBuckets(allStudyPets, (pet) => pet.vaccineStatus).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(vaccineStatusLabel(bucket.key), bucket.count) }))];
+	}
+
+	function studyAntiparasiticStatusOptions() {
+		if (studyAntiparasiticNormalizedName) {
+			const buckets = new Map<DashboardAntiparasiticStatusKey, number>();
+			for (const antiparasitic of allStudyAntiparasitics) {
+				if (antiparasitic.antiparasiticNormalizedName !== studyAntiparasiticNormalizedName) continue;
+				buckets.set(antiparasitic.status, (buckets.get(antiparasitic.status) ?? 0) + 1);
+			}
+			return [{ value: '', label: studyAllOptionLabel() }, ...toDashboardBuckets(buckets).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(antiparasiticStatusLabel(bucket.key), bucket.count) }))];
+		}
+
+		if (studyTarget === 'antiparasitics') {
+			return [{ value: '', label: studyAllOptionLabel() }, ...studyBuckets(allStudyAntiparasitics, (antiparasitic) => antiparasitic.status).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(antiparasiticStatusLabel(bucket.key), bucket.count) }))];
+		}
+
+		return [{ value: '', label: studyAllOptionLabel() }, ...studyBuckets(allStudyPets, (pet) => pet.antiparasiticStatus).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(antiparasiticStatusLabel(bucket.key), bucket.count) }))];
 	}
 
 	function studyCityOptions() {
@@ -237,6 +320,13 @@
 		if (studyVaccineNormalizedName && studyVaccineStatus) return pet.vaccines.some((vaccine) => vaccine.vaccineNormalizedName === studyVaccineNormalizedName && vaccine.status === studyVaccineStatus);
 		if (studyVaccineNormalizedName) return pet.vaccineNormalizedNames.includes(studyVaccineNormalizedName);
 		if (studyVaccineStatus) return pet.vaccineStatus === studyVaccineStatus;
+		return true;
+	}
+
+	function studyPetMatchesAntiparasitic(pet: StudyPetSnapshot): boolean {
+		if (studyAntiparasiticNormalizedName && studyAntiparasiticStatus) return pet.antiparasitics.some((antiparasitic) => antiparasitic.antiparasiticNormalizedName === studyAntiparasiticNormalizedName && antiparasitic.status === studyAntiparasiticStatus);
+		if (studyAntiparasiticNormalizedName) return pet.antiparasiticNormalizedNames.includes(studyAntiparasiticNormalizedName);
+		if (studyAntiparasiticStatus) return pet.antiparasiticStatus === studyAntiparasiticStatus;
 		return true;
 	}
 
@@ -276,20 +366,30 @@
 		return true;
 	}
 
+	function studyAntiparasiticMatchesFilters(antiparasitic: StudyAntiparasiticSummary): boolean {
+		if (studyAntiparasiticNormalizedName && antiparasitic.antiparasiticNormalizedName !== studyAntiparasiticNormalizedName) return false;
+		if (studyAntiparasiticStatus && antiparasitic.status !== studyAntiparasiticStatus) return false;
+		return true;
+	}
+
 	function filterStudyPets(items: DashboardPetStudyItem[]): DashboardPetStudyItem[] {
-		return items.filter((pet) => studyPetMatchesDimensions(pet) && studyPetMatchesVaccine(pet) && petMatchesOwnerFilters(pet));
+		return items.filter((pet) => studyPetMatchesDimensions(pet) && studyPetMatchesVaccine(pet) && studyPetMatchesAntiparasitic(pet) && petMatchesOwnerFilters(pet));
 	}
 
 	function filterStudyVaccineItems(items: StudyVaccineSummary[]): StudyVaccineSummary[] {
-		return items.filter((vaccine) => studyPetMatchesDimensions(vaccine.pet) && petMatchesOwnerFilters(vaccine.pet) && studyVaccineMatchesFilters(vaccine));
+		return items.filter((vaccine) => studyPetMatchesDimensions(vaccine.pet) && petMatchesOwnerFilters(vaccine.pet) && studyPetMatchesAntiparasitic(vaccine.pet) && studyVaccineMatchesFilters(vaccine));
+	}
+
+	function filterStudyAntiparasiticItems(items: StudyAntiparasiticSummary[]): StudyAntiparasiticSummary[] {
+		return items.filter((antiparasitic) => studyPetMatchesDimensions(antiparasitic.pet) && petMatchesOwnerFilters(antiparasitic.pet) && studyPetMatchesVaccine(antiparasitic.pet) && studyAntiparasiticMatchesFilters(antiparasitic));
 	}
 
 	function filterStudyOwners(items: DashboardOwnerStudyItem[]): DashboardOwnerStudyItem[] {
-		const hasPetOrVaccineFilters = !!(studySpecies || studyBreed || studySex || studyAge || studyVaccineNormalizedName || studyVaccineStatus);
+		const hasPetOrPreventiveFilters = !!(studySpecies || studyBreed || studySex || studyAge || studyVaccineNormalizedName || studyVaccineStatus || studyAntiparasiticNormalizedName || studyAntiparasiticStatus);
 		return items.filter((owner) => {
 			if (!ownerMatchesOwnerFilters(owner)) return false;
-			if (!hasPetOrVaccineFilters) return true;
-			return owner.pets.some((pet) => studyPetMatchesDimensions(pet) && studyPetMatchesVaccine(pet));
+			if (!hasPetOrPreventiveFilters) return true;
+			return owner.pets.some((pet) => studyPetMatchesDimensions(pet) && studyPetMatchesVaccine(pet) && studyPetMatchesAntiparasitic(pet));
 		});
 	}
 
@@ -311,6 +411,12 @@
 		return [...pets.values()].sort((first, second) => first.name.localeCompare(second.name));
 	}
 
+	function uniquePetsFromAntiparasitics(antiparasitics: StudyAntiparasiticSummary[]): DashboardPetStudyItem[] {
+		const pets = new Map<number, DashboardPetStudyItem>();
+		for (const antiparasitic of antiparasitics) pets.set(antiparasitic.pet.id, antiparasitic.pet);
+		return [...pets.values()].sort((first, second) => first.name.localeCompare(second.name));
+	}
+
 	function petsRelatedToOwners(owners: DashboardOwnerStudyItem[]): DashboardPetStudyItem[] {
 		const petIds = new Set<number>();
 		for (const owner of owners) for (const pet of owner.pets) petIds.add(pet.id);
@@ -325,6 +431,7 @@
 
 	function resolveStudyTargetPets(): DashboardPetStudyItem[] {
 		if (studyTarget === 'vaccines') return uniquePetsFromVaccines(filteredStudyVaccineItems);
+		if (studyTarget === 'antiparasitics') return uniquePetsFromAntiparasitics(filteredStudyAntiparasiticItems);
 		if (studyTarget === 'owners') return petsRelatedToOwners(filteredStudyOwners);
 		return filteredStudyPets;
 	}
@@ -340,8 +447,14 @@
 		return allStudyVaccines.filter((vaccine) => petIds.has(vaccine.pet.id) && studyVaccineMatchesFilters(vaccine));
 	}
 
+	function resolveStudyTargetAntiparasitics(): StudyAntiparasiticSummary[] {
+		if (studyTarget === 'antiparasitics') return filteredStudyAntiparasiticItems;
+		const petIds = new Set(studyTargetPets.map((pet) => pet.id));
+		return allStudyAntiparasitics.filter((antiparasitic) => petIds.has(antiparasitic.pet.id) && studyAntiparasiticMatchesFilters(antiparasitic));
+	}
+
 	function hasStudyFilters(): boolean {
-		return !!(studySpecies || studyBreed || studySex || studyAge || studyVaccineStatus || studyVaccineNormalizedName || studyCity || studyOwnerPetCount);
+		return !!(studySpecies || studyBreed || studySex || studyAge || studyVaccineStatus || studyVaccineNormalizedName || studyAntiparasiticStatus || studyAntiparasiticNormalizedName || studyCity || studyOwnerPetCount);
 	}
 
 	function clearStudyFilters(): void {
@@ -351,6 +464,8 @@
 		studyAge = '';
 		studyVaccineStatus = '';
 		studyVaccineNormalizedName = '';
+		studyAntiparasiticStatus = '';
+		studyAntiparasiticNormalizedName = '';
 		studyCity = '';
 		studyOwnerPetCount = '';
 	}
@@ -359,6 +474,8 @@
 		const factors: StudyFactor[] = [];
 		if (studyVaccineNormalizedName) factors.push({ label: t('analysis.study.vaccine'), value: selectedStudyVaccineLabel(), count: countStudyTargetForFactor('vaccine') });
 		if (studyVaccineStatus) factors.push({ label: t('analysis.study.vaccineStatus'), value: vaccineStatusLabel(studyVaccineStatus as DashboardVaccineStatusKey), count: countStudyTargetForFactor('vaccineStatus') });
+		if (studyAntiparasiticNormalizedName) factors.push({ label: t('antiparasiticTreatment.name'), value: selectedStudyAntiparasiticLabel(), count: countStudyTargetForFactor('antiparasitic') });
+		if (studyAntiparasiticStatus) factors.push({ label: t('antiparasiticTreatment.analytics.filterMode.status'), value: antiparasiticStatusLabel(studyAntiparasiticStatus as DashboardAntiparasiticStatusKey), count: countStudyTargetForFactor('antiparasiticStatus') });
 		if (studySpecies) factors.push({ label: t('analysis.study.species'), value: speciesLabel(studySpecies), count: countStudyTargetForFactor('species') });
 		if (studyBreed) factors.push({ label: t('analysis.study.breed'), value: breedLabel(studyBreed), count: countStudyTargetForFactor('breed') });
 		if (studySex) factors.push({ label: t('analysis.study.sex'), value: sexLabel(studySex), count: countStudyTargetForFactor('sex') });
@@ -373,6 +490,11 @@
 		return bucket ? renderBucketLabel(bucket) : t('common.notInformed');
 	}
 
+	function selectedStudyAntiparasiticLabel(): string {
+		const bucket = clinic.dashboard?.analytics.study.antiparasitics.find((item) => item.key === studyAntiparasiticNormalizedName);
+		return bucket ? renderBucketLabel(bucket) : t('common.notInformed');
+	}
+
 	function selectedCityLabel(): string {
 		return studyCityOptions().find((option) => option.value === studyCity)?.label.replace(/ \([0-9.,]+\)$/, '') ?? t('common.notInformed');
 	}
@@ -380,6 +502,8 @@
 	function petMatchesFactor(pet: DashboardPetStudyItem, factor: StudyFactorKind): boolean {
 		if (factor === 'vaccine') return pet.vaccineNormalizedNames.includes(studyVaccineNormalizedName);
 		if (factor === 'vaccineStatus') return studyVaccineStatus ? pet.vaccineStatus === studyVaccineStatus : true;
+		if (factor === 'antiparasitic') return pet.antiparasiticNormalizedNames.includes(studyAntiparasiticNormalizedName);
+		if (factor === 'antiparasiticStatus') return studyAntiparasiticStatus ? pet.antiparasiticStatus === studyAntiparasiticStatus : true;
 		if (factor === 'species') return pet.species === studySpecies;
 		if (factor === 'breed') return pet.breed === studyBreed;
 		if (factor === 'sex') return pet.sex === studySex;
@@ -397,12 +521,20 @@
 		return petMatchesFactor(vaccine.pet, factor);
 	}
 
+	function antiparasiticMatchesFactor(antiparasitic: StudyAntiparasiticSummary, factor: StudyFactorKind): boolean {
+		if (factor === 'antiparasitic') return antiparasitic.antiparasiticNormalizedName === studyAntiparasiticNormalizedName;
+		if (factor === 'antiparasiticStatus') return antiparasitic.status === studyAntiparasiticStatus;
+		return petMatchesFactor(antiparasitic.pet, factor);
+	}
+
 	function ownerMatchesFactor(owner: DashboardOwnerStudyItem, factor: StudyFactorKind): boolean {
 		if (factor === 'city') return owner.cityKey === studyCity;
 		if (factor === 'ownerPetCount') return ownerPetCountBand(owner.petCount) === studyOwnerPetCount;
 		return owner.pets.some((pet) => {
 			if (factor === 'vaccine') return pet.vaccineNormalizedNames.includes(studyVaccineNormalizedName);
 			if (factor === 'vaccineStatus') return studyVaccineStatus ? pet.vaccineStatus === studyVaccineStatus : true;
+			if (factor === 'antiparasitic') return pet.antiparasiticNormalizedNames.includes(studyAntiparasiticNormalizedName);
+			if (factor === 'antiparasiticStatus') return studyAntiparasiticStatus ? pet.antiparasiticStatus === studyAntiparasiticStatus : true;
 			if (factor === 'species') return pet.species === studySpecies;
 			if (factor === 'breed') return pet.breed === studyBreed;
 			if (factor === 'sex') return pet.sex === studySex;
@@ -412,6 +544,7 @@
 
 	function countStudyTargetForFactor(factor: StudyFactorKind): number {
 		if (studyTarget === 'vaccines') return allStudyVaccines.filter((vaccine) => vaccineMatchesFactor(vaccine, factor)).length;
+		if (studyTarget === 'antiparasitics') return allStudyAntiparasitics.filter((antiparasitic) => antiparasiticMatchesFactor(antiparasitic, factor)).length;
 		if (studyTarget === 'owners') return allStudyOwners.filter((owner) => ownerMatchesFactor(owner, factor)).length;
 		return allStudyPets.filter((pet) => petMatchesFactor(pet, factor)).length;
 	}
@@ -429,6 +562,12 @@
 		return statusValue;
 	}
 
+	function ownerAntiparasiticStatus(owner: DashboardOwnerStudyItem): DashboardAntiparasiticStatusKey {
+		let statusValue: DashboardAntiparasiticStatusKey = 'untracked';
+		for (const pet of owner.pets) if (studyAntiparasiticStatusWeight[pet.antiparasiticStatus] > studyAntiparasiticStatusWeight[statusValue]) statusValue = pet.antiparasiticStatus;
+		return statusValue;
+	}
+
 	function uniqueStudyLabels(values: string[]): string[] {
 		const labels = values.map((value) => value.trim()).filter((value) => value.length > 0);
 		return labels.length > 0 ? [...new Set(labels)] : [t('common.notInformed')];
@@ -437,11 +576,14 @@
 	function activePetDimensionLabels(pet: DashboardPetStudyItem, dimension: StudyDimension): string[] {
 		if (dimension === 'vaccine') return uniqueStudyLabels(pet.vaccineNames.length > 0 ? pet.vaccineNames : [t('analysis.vaccineStatus.untracked')]);
 		if (dimension === 'vaccineStatus') return uniqueStudyLabels(pet.vaccines.length > 0 ? pet.vaccines.map((vaccine) => vaccineStatusLabel(vaccine.status)) : [t('analysis.vaccineStatus.untracked')]);
+		if (dimension === 'antiparasitic') return uniqueStudyLabels(pet.antiparasiticNames.length > 0 ? pet.antiparasiticNames : [t('analysis.antiparasiticStatus.untracked')]);
+		if (dimension === 'antiparasiticStatus') return uniqueStudyLabels(pet.antiparasitics.length > 0 ? pet.antiparasitics.map((antiparasitic) => antiparasiticStatusLabel(antiparasitic.status)) : [t('analysis.antiparasiticStatus.untracked')]);
 		if (dimension === 'petSpecies') return [speciesLabel(pet.species)];
 		if (dimension === 'petBreed') return [breedLabel(pet.breed)];
 		if (dimension === 'petSex') return [sexLabel(pet.sex)];
 		if (dimension === 'petAge') return [ageBandLabel(pet.age)];
 		if (dimension === 'petVaccineStatus') return [vaccineStatusLabel(pet.vaccineStatus)];
+		if (dimension === 'petAntiparasiticStatus') return [antiparasiticStatusLabel(pet.antiparasiticStatus)];
 		if (dimension === 'ownerCity') return uniqueStudyLabels(pet.ownerCityLabels);
 		if (dimension === 'ownerPetCount') return uniqueStudyLabels(pet.owners.map((owner) => {
 			const ownerItem = findStudyOwner(owner.id);
@@ -456,8 +598,11 @@
 		if (dimension === 'petSex') return [sexLabel(pet.sex)];
 		if (dimension === 'petAge') return [ageBandLabel(pet.age)];
 		if (dimension === 'petVaccineStatus') return [vaccineStatusLabel(pet.vaccineStatus)];
+		if (dimension === 'petAntiparasiticStatus') return [antiparasiticStatusLabel(pet.antiparasiticStatus)];
 		if (dimension === 'vaccine') return uniqueStudyLabels(pet.vaccineNames.length > 0 ? pet.vaccineNames : [t('analysis.vaccineStatus.untracked')]);
 		if (dimension === 'vaccineStatus') return uniqueStudyLabels(pet.vaccines.length > 0 ? pet.vaccines.map((vaccine) => vaccineStatusLabel(vaccine.status)) : [t('analysis.vaccineStatus.untracked')]);
+		if (dimension === 'antiparasitic') return uniqueStudyLabels(pet.antiparasiticNames.length > 0 ? pet.antiparasiticNames : [t('analysis.antiparasiticStatus.untracked')]);
+		if (dimension === 'antiparasiticStatus') return uniqueStudyLabels(pet.antiparasitics.length > 0 ? pet.antiparasitics.map((antiparasitic) => antiparasiticStatusLabel(antiparasitic.status)) : [t('analysis.antiparasiticStatus.untracked')]);
 		return [t('common.notInformed')];
 	}
 
@@ -467,10 +612,17 @@
 		return activePetDimensionLabels(vaccine.pet, dimension);
 	}
 
+	function antiparasiticDimensionLabels(antiparasitic: StudyAntiparasiticSummary, dimension: StudyDimension): string[] {
+		if (dimension === 'antiparasitic') return [antiparasitic.antiparasiticName];
+		if (dimension === 'antiparasiticStatus') return [antiparasiticStatusLabel(antiparasitic.status)];
+		return activePetDimensionLabels(antiparasitic.pet, dimension);
+	}
+
 	function ownerDimensionLabels(owner: DashboardOwnerStudyItem, dimension: StudyDimension): string[] {
 		if (dimension === 'ownerCity') return [owner.cityLabel ?? t('common.notInformed')];
 		if (dimension === 'ownerPetCount') return [t(petCountLabelKey(ownerPetCountBand(owner.petCount)))];
 		if (dimension === 'ownerPetVaccineStatus') return [vaccineStatusLabel(ownerVaccineStatus(owner))];
+		if (dimension === 'ownerPetAntiparasiticStatus') return [antiparasiticStatusLabel(ownerAntiparasiticStatus(owner))];
 		if (dimension === 'ownerPetSpecies') return uniqueStudyLabels(owner.pets.map((pet) => speciesLabel(pet.species)));
 		return uniqueStudyLabels(owner.pets.flatMap((pet) => ownerPetDimensionLabels(pet, dimension)));
 	}
@@ -499,6 +651,7 @@
 	function buildStudyVisualizationBuckets(): StudyCrossBucket[] {
 		const buckets = new Map<string, StudyCrossBucket>();
 		if (studyTarget === 'vaccines') for (const vaccine of studyTargetVaccines) addStudyCrossBucket(buckets, vaccineDimensionLabels(vaccine, studyPrimaryDimension), vaccineDimensionLabels(vaccine, studySecondaryDimension));
+		else if (studyTarget === 'antiparasitics') for (const antiparasitic of studyTargetAntiparasitics) addStudyCrossBucket(buckets, antiparasiticDimensionLabels(antiparasitic, studyPrimaryDimension), antiparasiticDimensionLabels(antiparasitic, studySecondaryDimension));
 		else if (studyTarget === 'owners') for (const owner of studyTargetOwners) addStudyCrossBucket(buckets, ownerDimensionLabels(owner, studyPrimaryDimension), ownerDimensionLabels(owner, studySecondaryDimension));
 		else for (const pet of studyTargetPets) addStudyCrossBucket(buckets, activePetDimensionLabels(pet, studyPrimaryDimension), activePetDimensionLabels(pet, studySecondaryDimension));
 		return [...buckets.values()].sort((first, second) => second.count - first.count || first.primaryLabel.localeCompare(second.primaryLabel) || first.secondaryLabel.localeCompare(second.secondaryLabel));
@@ -526,6 +679,12 @@
 		const selection = selectedStudyBucket;
 		if (!selection) return studyTargetVaccines;
 		return studyTargetVaccines.filter((vaccine) => labelsMatchSelectedStudyBucket(vaccineDimensionLabels(vaccine, selection.primaryDimension), vaccineDimensionLabels(vaccine, selection.secondaryDimension)));
+	}
+
+	function resolveListedStudyAntiparasitics(): StudyAntiparasiticSummary[] {
+		const selection = selectedStudyBucket;
+		if (!selection) return studyTargetAntiparasitics;
+		return studyTargetAntiparasitics.filter((antiparasitic) => labelsMatchSelectedStudyBucket(antiparasiticDimensionLabels(antiparasitic, selection.primaryDimension), antiparasiticDimensionLabels(antiparasitic, selection.secondaryDimension)));
 	}
 
 	function resolveListedStudyOwners(): DashboardOwnerStudyItem[] {
@@ -606,8 +765,17 @@
 		return t(`vaccine.status.${key}` as TranslationKey);
 	}
 
+	function antiparasiticStatusLabel(key: DashboardAntiparasiticStatusKey): string {
+		if (key === 'untracked') return t('analysis.antiparasiticStatus.untracked');
+		return t(`antiparasiticTreatment.status.${key}` as TranslationKey);
+	}
+
 	function vaccineDoseLabel(vaccine: DashboardPetStudyVaccine): string {
 		return vaccine.dose;
+	}
+
+	function antiparasiticDoseLabel(antiparasitic: DashboardPetStudyAntiparasitic): string {
+		return antiparasitic.dose;
 	}
 
 	function renderBucketLabel(bucket: DashboardNamedBucket): string {
@@ -624,6 +792,10 @@
 
 	function studyPetVaccineText(pet: DashboardPetStudyItem): string {
 		return pet.vaccineNames.join(' - ') || t('analysis.vaccineStatus.untracked');
+	}
+
+	function studyPetAntiparasiticText(pet: DashboardPetStudyItem): string {
+		return pet.antiparasiticNames.join(' - ') || t('analysis.antiparasiticStatus.untracked');
 	}
 
 	function studyPetProfileHref(pet: DashboardPetStudyItem): string {
@@ -645,6 +817,7 @@
 		if (studyBreed && !studyBreedOptions().some((option) => option.value === studyBreed)) studyBreed = '';
 		if (studyOwnerPetCount && !studyOwnerPetCountOptions().some((option) => option.value === studyOwnerPetCount)) studyOwnerPetCount = '';
 		if (studyVaccineStatus && !studyVaccineStatusOptions().some((option) => option.value === studyVaccineStatus)) studyVaccineStatus = '';
+		if (studyAntiparasiticStatus && !studyAntiparasiticStatusOptions().some((option) => option.value === studyAntiparasiticStatus)) studyAntiparasiticStatus = '';
 	});
 
 	$effect(() => {
@@ -704,6 +877,18 @@
 							<div class="space-y-1">
 								<label class="text-sm font-medium" for="study-vaccine-status">{t('analysis.study.vaccineStatus')}</label>
 								<Select id="study-vaccine-status" bind:value={studyVaccineStatus} options={studyVaccineStatusOptions()} />
+							</div>
+						</div>
+
+						<div class="space-y-3 border-t border-border pt-5">
+							<p class="text-sm font-semibold">{t('analysis.view.antiparasitics')}</p>
+							<div class="space-y-1">
+								<label class="text-sm font-medium" for="study-antiparasitic">{t('antiparasiticTreatment.name')}</label>
+								<Select id="study-antiparasitic" bind:value={studyAntiparasiticNormalizedName} options={studyAntiparasiticOptions()} />
+							</div>
+							<div class="space-y-1">
+								<label class="text-sm font-medium" for="study-antiparasitic-status">{t('antiparasiticTreatment.analytics.filterMode.status')}</label>
+								<Select id="study-antiparasitic-status" bind:value={studyAntiparasiticStatus} options={studyAntiparasiticStatusOptions()} />
 							</div>
 						</div>
 
@@ -859,14 +1044,14 @@
 					<div class="flex items-start justify-between gap-3">
 						<div>
 							<div class="flex flex-wrap items-center gap-2">
-								<h3 class="text-sm font-semibold">{studyTarget === 'vaccines' ? t('analysis.study.relatedVaccines') : studyTarget === 'owners' ? t('analysis.study.relatedOwners') : t('analysis.study.relatedPets')}</h3>
+								<h3 class="text-sm font-semibold">{studyTarget === 'vaccines' ? t('analysis.study.relatedVaccines') : studyTarget === 'antiparasitics' ? t('analysis.study.relatedAntiparasitics') : studyTarget === 'owners' ? t('analysis.study.relatedOwners') : t('analysis.study.relatedPets')}</h3>
 								<span class="inline-flex max-w-full items-center rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
 									<span class="truncate">{t('analysis.study.currentFocus')}: {studyTargetLabel()}</span>
 								</span>
 							</div>
-							<p class="mt-1 text-sm text-muted-foreground">{studyTarget === 'vaccines' ? t('analysis.study.relatedVaccinesDescription') : studyTarget === 'owners' ? t('analysis.study.relatedOwnersListDescription') : t('analysis.study.relatedPetsDescription')}</p>
+							<p class="mt-1 text-sm text-muted-foreground">{studyTarget === 'vaccines' ? t('analysis.study.relatedVaccinesDescription') : studyTarget === 'antiparasitics' ? t('analysis.study.relatedAntiparasiticsDescription') : studyTarget === 'owners' ? t('analysis.study.relatedOwnersListDescription') : t('analysis.study.relatedPetsDescription')}</p>
 						</div>
-						<span class="rounded-md bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">{metricFormatter(studyTarget === 'vaccines' ? listedStudyVaccines.length : studyTarget === 'owners' ? listedStudyOwners.length : listedStudyPets.length)}</span>
+						<span class="rounded-md bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">{metricFormatter(studyTarget === 'vaccines' ? listedStudyVaccines.length : studyTarget === 'antiparasitics' ? listedStudyAntiparasitics.length : studyTarget === 'owners' ? listedStudyOwners.length : listedStudyPets.length)}</span>
 					</div>
 					{#if selectedStudyBucket}
 						<div class="mt-3 flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
@@ -889,6 +1074,20 @@
 							{:else}
 								<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyVaccines')}</p>
 							{/each}
+						{:else if studyTarget === 'antiparasitics'}
+							{#each listedStudyAntiparasitics.slice(0, 40) as antiparasitic}
+								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+									<div class="min-w-0">
+										<p class="wrap-break-word text-sm font-semibold">{antiparasitic.antiparasiticName} · {antiparasiticDoseLabel(antiparasitic)} - {antiparasiticStatusLabel(antiparasitic.status)}</p>
+										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{antiparasitic.pet.name} - {speciesLabel(antiparasitic.pet.species)} - {breedLabel(antiparasitic.pet.breed)}</p>
+										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(antiparasitic.pet)} - {studyPetCityText(antiparasitic.pet)}</p>
+										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{t('antiparasiticTreatment.appliedAt')}: {formatDateForDisplay(antiparasitic.appliedAt)} - {t('antiparasiticTreatment.analytics.dueAt')}: {formatDateForDisplay(antiparasitic.dueAt)}</p>
+									</div>
+									<a href={studyPetProfileHref(antiparasitic.pet)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openPet')}</a>
+								</article>
+							{:else}
+								<p class="p-4 text-center text-sm text-muted-foreground">{t('antiparasiticTreatment.analytics.emptyStatus')}</p>
+							{/each}
 						{:else if studyTarget === 'owners'}
 							{#each listedStudyOwners.slice(0, 40) as owner}
 								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
@@ -910,6 +1109,7 @@
 										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{speciesLabel(pet.species)} - {breedLabel(pet.breed)} - {sexLabel(pet.sex)}</p>
 										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(pet)} - {studyPetCityText(pet)}</p>
 										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{vaccineStatusLabel(pet.vaccineStatus)} - {studyPetVaccineText(pet)}</p>
+										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{antiparasiticStatusLabel(pet.antiparasiticStatus)} - {studyPetAntiparasiticText(pet)}</p>
 									</div>
 									<a href={studyPetProfileHref(pet)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openPet')}</a>
 								</article>
