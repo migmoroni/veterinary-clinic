@@ -149,7 +149,6 @@
 	<header class="hidden shrink-0 border-b border-border bg-background/95 md:block">
 		<div class="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-6 px-6 lg:px-8">
 			<div class="min-w-0">
-				<p class="text-xs font-semibold uppercase text-muted-foreground">{t('app.brandKicker')}</p>
 				<h1 class="truncate text-lg font-semibold">{brandName || t('app.name')}</h1>
 			</div>
 

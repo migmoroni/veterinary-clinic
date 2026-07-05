@@ -151,8 +151,7 @@
 
 <section class="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
 	<header class="border-b border-border pb-5">
-		<p class="text-sm font-medium text-muted-foreground">{t('app.brandKicker')}</p>
-		<h2 class="mt-1 text-2xl font-semibold sm:text-3xl">{t('search.title')}</h2>
+		<h2 class="text-2xl font-semibold sm:text-3xl">{t('search.title')}</h2>
 		<p class="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{t('search.description')}</p>
 	</header>
 

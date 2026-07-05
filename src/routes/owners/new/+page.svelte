@@ -59,8 +59,7 @@
 
 <section class="mx-auto flex w-full min-w-0 max-w-4xl flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
 	<header class="border-b border-border pb-5">
-		<p class="text-sm font-medium text-muted-foreground">{t('app.brandKicker')}</p>
-		<h2 class="mt-1 text-2xl font-semibold sm:text-3xl">{t('owner.titleNew')}</h2>
+		<h2 class="text-2xl font-semibold sm:text-3xl">{t('owner.titleNew')}</h2>
 	</header>
 
 	<form class="w-full min-w-0 max-w-full rounded-md border border-border bg-card p-4 shadow-sm sm:p-5" onsubmit={submit}>
