@@ -6,6 +6,7 @@ import Database from 'better-sqlite3';
 const CURRENT_SCHEMA_VERSION = 1;
 const BASELINE_APP_VERSION = '0.2.0';
 const BASELINE_MIGRATION_NAME = '0001_baseline_current_schema';
+const PREFERENCE_SETTING_KEYS_TO_CLEAR = ['app.locale', 'app.typography'];
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const defaultSourcePath = path.resolve(scriptDir, 'dist/veterinary_clinic-version-0.db');
@@ -168,6 +169,13 @@ function stampSchemaVersion(database) {
 	database.pragma(`user_version = ${CURRENT_SCHEMA_VERSION}`);
 }
 
+function clearSavedPreferences(database) {
+	const placeholders = PREFERENCE_SETTING_KEYS_TO_CLEAR.map(() => '?').join(', ');
+	return database
+		.prepare(`DELETE FROM app_settings WHERE key IN (${placeholders})`)
+		.run(...PREFERENCE_SETTING_KEYS_TO_CLEAR).changes;
+}
+
 function assertStamped(database) {
 	const version = userVersion(database);
 	if (version !== CURRENT_SCHEMA_VERSION) throw new Error(`user_version esperado ${CURRENT_SCHEMA_VERSION}, recebido ${version}`);
@@ -210,8 +218,10 @@ function adoptVersionZeroDatabase() {
 	const output = new Database(outputPath, { fileMustExist: true });
 	output.pragma('foreign_keys = ON');
 	try {
+		let clearedPreferenceSettings = 0;
 		output.transaction(() => {
 			stampSchemaVersion(output);
+			clearedPreferenceSettings = clearSavedPreferences(output);
 		})();
 		assertCurrentDataSchema(output, 'Banco versionado');
 		assertStamped(output);
@@ -227,6 +237,7 @@ function adoptVersionZeroDatabase() {
 		console.log(`- medical_records: ${countRows(output, 'medical_records')}`);
 		console.log(`- pet_vaccinations: ${countRows(output, 'pet_vaccinations')}`);
 		console.log(`- pet_antiparasitic_treatments: ${countRows(output, 'pet_antiparasitic_treatments')}`);
+		console.log(`- preferências removidas: ${clearedPreferenceSettings}`);
 	} finally {
 		output.close();
 	}
