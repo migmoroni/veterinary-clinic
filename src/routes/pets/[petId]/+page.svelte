@@ -29,18 +29,20 @@
 	import Info from '@lucide/svelte/icons/info';
 	import Pill from '@lucide/svelte/icons/pill';
 	import Save from '@lucide/svelte/icons/save';
+	import Settings from '@lucide/svelte/icons/settings';
 	import Syringe from '@lucide/svelte/icons/syringe';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
 	type PetForm = Omit<PetInput, 'sex' | 'avatarBytes'> & { sex: '' | Exclude<PetSex, null>; avatarBytes: Uint8Array | null };
-	type PetPanel = 'overview' | 'records' | 'vaccines' | 'antiparasiticTreatments';
+	type PetPanel = 'overview' | 'records' | 'vaccines' | 'antiparasiticTreatments' | 'administrative';
 
 	const petId = $derived(Number(page.params.petId));
 	const panelItems = [
 		{ id: 'overview', titleKey: 'pet.overviewSection', icon: Info },
 		{ id: 'records', titleKey: 'pet.recordsSection', icon: ClipboardPenLine },
 		{ id: 'vaccines', titleKey: 'pet.vaccinesSection', icon: Syringe },
-		{ id: 'antiparasiticTreatments', titleKey: 'pet.antiparasiticsSection', icon: Pill }
+		{ id: 'antiparasiticTreatments', titleKey: 'pet.antiparasiticsSection', icon: Pill },
+		{ id: 'administrative', titleKey: 'pet.administrativeSection', icon: Settings }
 	] satisfies { id: PetPanel; titleKey: TranslationKey; icon: typeof Info }[];
 
 	function avatarSnapshotValue(bytes: Uint8Array | null | undefined): string {
@@ -441,10 +443,6 @@
 				<p class="mt-1 text-sm text-muted-foreground">{sexLabel(profile.pet.sex)} · {taxonomyLabel(profile.pet)}</p>
 			{/if}
 		</div>
-		<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-card px-4 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={deleting} onclick={requestDeletePet}>
-			<Trash2 class="size-4" />
-			{t('actions.delete')}
-		</button>
 	</header>
 
 	{#if error}
@@ -647,10 +645,20 @@
 					<div role="tabpanel">
 						<VaccinationPanel petId={petId} petSpecies={profile.pet.species} vaccinations={profile.vaccinations} vaccines={profile.vaccines} onChange={updateVaccinations} />
 					</div>
-				{:else}
+				{:else if activePanel === 'antiparasiticTreatments'}
 					<div role="tabpanel">
 						<AntiparasiticPanel petId={petId} petSpecies={profile.pet.species} antiparasiticTreatments={profile.antiparasiticTreatments} antiparasitics={profile.antiparasitics} onChange={updateAntiparasiticTreatments} />
 					</div>
+				{:else}
+					<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5" role="tabpanel">
+						<h3 class="text-base font-semibold">{t('pet.administrativeSection')}</h3>
+						<div class="mt-4 flex flex-wrap gap-2">
+							<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-4 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={deleting} onclick={requestDeletePet}>
+								<Trash2 class="size-4" />
+								{t('actions.delete')}
+							</button>
+						</div>
+					</section>
 				{/if}
 			</div>
 		</div>

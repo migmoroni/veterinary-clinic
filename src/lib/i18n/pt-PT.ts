@@ -230,6 +230,7 @@ export const ptPt = {
 	'pet.recordsSection': 'Fichas clínicas',
 	'pet.vaccinesSection': 'Vacinas',
 	'pet.antiparasiticsSection': 'Antiparasitários',
+	'pet.administrativeSection': 'Administrativo',
 	'pet.lastRecord': 'Última ficha clínica',
 	'pet.latestVaccines': 'Últimas vacinas',
 	'pet.latestAntiparasitics': 'Últimos antiparasitários',

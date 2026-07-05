@@ -456,10 +456,6 @@
 				<UserPlus class="size-4" />
 				{t('actions.addPet')}
 			</a>
-			<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-card px-4 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={deleting} onclick={requestDeleteOwner}>
-				<Trash2 class="size-4" />
-				{t('actions.delete')}
-			</button>
 		</div>
 	</header>
 
@@ -474,15 +470,21 @@
 			<form class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5" onsubmit={submit}>
 				<div class="flex flex-wrap items-center justify-between gap-2">
 					<h3 class="text-base font-semibold">{t('owner.editSection')}</h3>
-					{#if editing}
-						<button type="button" class="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} onclick={requestCancelEditing}>
-							{t('actions.cancel')}
+					<div class="flex flex-wrap gap-2">
+						{#if editing}
+							<button type="button" class="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} onclick={requestCancelEditing}>
+								{t('actions.cancel')}
+							</button>
+						{:else}
+							<button type="button" class="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 text-sm font-medium hover:bg-accent" onclick={startEditing}>
+								{t('actions.edit')}
+							</button>
+						{/if}
+						<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-4 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={deleting} onclick={requestDeleteOwner}>
+							<Trash2 class="size-4" />
+							{t('actions.delete')}
 						</button>
-					{:else}
-						<button type="button" class="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 text-sm font-medium hover:bg-accent" onclick={startEditing}>
-							{t('actions.edit')}
-						</button>
-					{/if}
+					</div>
 				</div>
 
 				<div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">

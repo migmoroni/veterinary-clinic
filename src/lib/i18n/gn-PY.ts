@@ -230,6 +230,7 @@ export const gnPy = {
 	'pet.recordsSection': 'Kuatia pohãno',
 	'pet.vaccinesSection': 'Vakúnakuéra',
 	'pet.antiparasiticsSection': 'Antiparasitário',
+	'pet.administrativeSection': 'Administrativo',
 	'pet.lastRecord': 'Kuatia pohãno ipaháva',
 	'pet.latestVaccines': 'Vakúna oñemoĩ ramovéva',
 	'pet.latestAntiparasitics': 'Antiparasitário oñemoĩ ramovéva',

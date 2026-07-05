@@ -230,6 +230,7 @@ export const ptBr = {
 	'pet.recordsSection': 'Prontuários',
 	'pet.vaccinesSection': 'Vacinas',
 	'pet.antiparasiticsSection': 'Antiparasitários',
+	'pet.administrativeSection': 'Administrativo',
 	'pet.lastRecord': 'Último prontuário',
 	'pet.latestVaccines': 'Últimas vacinas',
 	'pet.latestAntiparasitics': 'Últimos antiparasitários',

@@ -231,6 +231,7 @@ export const enUs = {
 	'pet.recordsSection': 'Records',
 	'pet.vaccinesSection': 'Vaccines',
 	'pet.antiparasiticsSection': 'Antiparasitics',
+	'pet.administrativeSection': 'Administrative',
 	'pet.lastRecord': 'Latest record',
 	'pet.latestVaccines': 'Latest vaccines',
 	'pet.latestAntiparasitics': 'Latest antiparasitics',

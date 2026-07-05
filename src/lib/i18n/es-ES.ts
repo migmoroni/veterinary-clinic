@@ -231,6 +231,7 @@ export const esEs = {
 	'pet.recordsSection': 'Historias clínicas',
 	'pet.vaccinesSection': 'Vacunas',
 	'pet.antiparasiticsSection': 'Antiparasitarios',
+	'pet.administrativeSection': 'Administrativo',
 	'pet.lastRecord': 'Última historia clínica',
 	'pet.latestVaccines': 'Últimas vacunas',
 	'pet.latestAntiparasitics': 'Últimos antiparasitarios',
