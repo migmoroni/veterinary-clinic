@@ -302,7 +302,7 @@
 	<title>{t('breedReference.title')} | {t('app.name')}</title>
 </svelte:head>
 
-<section class="mx-auto flex w-full max-w-[90rem] flex-col gap-4 px-4 py-4 sm:px-5 lg:px-6">
+<section class="mx-auto flex w-full max-w-360 flex-col gap-4 px-4 py-4 sm:px-5 lg:px-6">
 	<header class="border-b border-border pb-4">
 		<p class="text-sm font-medium text-muted-foreground">{t('breedReference.kicker')}</p>
 		<h2 class="mt-1 text-2xl font-semibold tracking-normal text-foreground">{t('breedReference.title')}</h2>
