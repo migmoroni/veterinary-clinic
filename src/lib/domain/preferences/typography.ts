@@ -3,6 +3,14 @@ import type { TranslationKey } from '$lib/i18n/index.js';
 const SYSTEM_FALLBACK_STACK =
 	'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
+const BASE_ROOT_FONT_SIZE_PX = 16;
+
+export const UI_ZOOM_MIN = 0.8;
+export const UI_ZOOM_MAX = 1.4;
+export const UI_ZOOM_STEP = 0.05;
+export const UI_ZOOM_KEYBOARD_STEP = 0.1;
+export const DEFAULT_UI_ZOOM = 1;
+
 export const bundledFontOptions = [
 	{
 		id: 'atkinson',
@@ -35,35 +43,29 @@ export const bundledFontOptions = [
 	license: string;
 }>;
 
-export const fontSizeOptions = [
-	{ id: 'small', labelKey: 'preferences.fontSize.small', rootSize: '15px' },
-	{ id: 'default', labelKey: 'preferences.fontSize.default', rootSize: '16px' },
-	{ id: 'comfortable', labelKey: 'preferences.fontSize.comfortable', rootSize: '17px' },
-	{ id: 'large', labelKey: 'preferences.fontSize.large', rootSize: '18px' },
-	{ id: 'extraLarge', labelKey: 'preferences.fontSize.extraLarge', rootSize: '20px' }
+export const uiZoomOptions = [
+	{ id: 'compact', labelKey: 'preferences.uiZoom.compact', zoom: 0.9 },
+	{ id: 'standard', labelKey: 'preferences.uiZoom.standard', zoom: 1 },
+	{ id: 'comfortable', labelKey: 'preferences.uiZoom.comfortable', zoom: 1.1 },
+	{ id: 'large', labelKey: 'preferences.uiZoom.large', zoom: 1.2 }
 ] as const satisfies ReadonlyArray<{
 	id: string;
 	labelKey: TranslationKey;
-	rootSize: string;
+	zoom: number;
 }>;
-
-export const CUSTOM_FONT_SIZE_ID = 'custom' as const;
-
-export const CUSTOM_FONT_SIZE_MIN_PX = 12;
-export const CUSTOM_FONT_SIZE_MAX_PX = 24;
-export const CUSTOM_FONT_SIZE_STEP_PX = 1;
-export const DEFAULT_CUSTOM_ROOT_SIZE_PX = 16;
 
 export const fontSourceOptions = ['bundled', 'system'] as const;
 
 export type BundledFontId = (typeof bundledFontOptions)[number]['id'];
-export type PresetFontSizeId = (typeof fontSizeOptions)[number]['id'];
-export type FontSizeId = PresetFontSizeId | typeof CUSTOM_FONT_SIZE_ID;
+export type UiZoomPresetId = (typeof uiZoomOptions)[number]['id'];
 export type FontSource = (typeof fontSourceOptions)[number];
 
 export interface TypographyPreferences {
-	fontSize: FontSizeId;
-	customRootSizePx: number;
+	uiZoom: number;
+	uppercaseText: boolean;
+	highContrast: boolean;
+	enhancedFocus: boolean;
+	reduceMotion: boolean;
 	fontSource: FontSource;
 	bundledFont: BundledFontId;
 	systemFontFamily: string;
@@ -71,8 +73,11 @@ export interface TypographyPreferences {
 }
 
 export const DEFAULT_TYPOGRAPHY_PREFERENCES: TypographyPreferences = {
-	fontSize: 'default',
-	customRootSizePx: DEFAULT_CUSTOM_ROOT_SIZE_PX,
+	uiZoom: DEFAULT_UI_ZOOM,
+	uppercaseText: false,
+	highContrast: false,
+	enhancedFocus: false,
+	reduceMotion: false,
 	fontSource: 'bundled',
 	bundledFont: 'atkinson',
 	systemFontFamily: '',
@@ -81,12 +86,6 @@ export const DEFAULT_TYPOGRAPHY_PREFERENCES: TypographyPreferences = {
 
 export function isBundledFontId(value: unknown): value is BundledFontId {
 	return typeof value === 'string' && bundledFontOptions.some((option) => option.id === value);
-}
-
-export function isFontSizeId(value: unknown): value is FontSizeId {
-	if (value === CUSTOM_FONT_SIZE_ID) return true;
-
-	return typeof value === 'string' && fontSizeOptions.some((option) => option.id === value);
 }
 
 export function isFontSource(value: unknown): value is FontSource {
@@ -105,32 +104,34 @@ export function sanitizeSystemFontDirectory(value: unknown): string {
 	return value.replace(/[\0\n\r]/g, '').trim().slice(0, 500);
 }
 
-export function normalizeCustomRootSizePx(value: unknown): number {
+export function normalizeUiZoom(value: unknown): number {
 	const numericValue = typeof value === 'number' ? value : Number(value);
-	if (!Number.isFinite(numericValue)) return DEFAULT_CUSTOM_ROOT_SIZE_PX;
+	if (!Number.isFinite(numericValue)) return DEFAULT_UI_ZOOM;
 
-	const clamped = Math.min(CUSTOM_FONT_SIZE_MAX_PX, Math.max(CUSTOM_FONT_SIZE_MIN_PX, numericValue));
-	const stepped = Math.round(clamped / CUSTOM_FONT_SIZE_STEP_PX) * CUSTOM_FONT_SIZE_STEP_PX;
+	const clamped = Math.min(UI_ZOOM_MAX, Math.max(UI_ZOOM_MIN, numericValue));
+	const stepped = Math.round(clamped / UI_ZOOM_STEP) * UI_ZOOM_STEP;
 
 	return Number(stepped.toFixed(2));
 }
 
-export function stepCustomRootSizePx(value: number, step: number): number {
-	const source = normalizeCustomRootSizePx(value);
+export function stepUiZoom(value: unknown, step: number): number {
+	const source = normalizeUiZoom(value);
 	const normalizedStep = Number.isFinite(step) ? Math.trunc(step) : 0;
 	if (normalizedStep === 0) return source;
 
-	return normalizeCustomRootSizePx(source + normalizedStep);
+	return normalizeUiZoom(source + normalizedStep * UI_ZOOM_KEYBOARD_STEP);
 }
 
 export function normalizeTypographyPreferences(value: unknown): TypographyPreferences {
-	const candidate = value && typeof value === 'object' ? (value as Partial<TypographyPreferences>) : {};
+	const candidate =
+		value && typeof value === 'object' ? (value as Partial<TypographyPreferences>) : {};
 
 	return {
-		fontSize: isFontSizeId(candidate.fontSize)
-			? candidate.fontSize
-			: DEFAULT_TYPOGRAPHY_PREFERENCES.fontSize,
-		customRootSizePx: normalizeCustomRootSizePx(candidate.customRootSizePx),
+		uiZoom: normalizeUiZoom(candidate.uiZoom),
+		uppercaseText: candidate.uppercaseText === true,
+		highContrast: candidate.highContrast === true,
+		enhancedFocus: candidate.enhancedFocus === true,
+		reduceMotion: candidate.reduceMotion === true,
 		fontSource: isFontSource(candidate.fontSource)
 			? candidate.fontSource
 			: DEFAULT_TYPOGRAPHY_PREFERENCES.fontSource,
@@ -146,34 +147,22 @@ export function getBundledFontOption(value: BundledFontId) {
 	return bundledFontOptions.find((option) => option.id === value) ?? bundledFontOptions[0];
 }
 
-export function getFontSizeOption(value: FontSizeId) {
-	return fontSizeOptions.find((option) => option.id === value) ?? fontSizeOptions[1];
+export function getUiZoomOption(value: UiZoomPresetId) {
+	return uiZoomOptions.find((option) => option.id === value) ?? uiZoomOptions[1];
 }
 
-export function stepFontSize(value: FontSizeId, step: number): FontSizeId {
-	if (value === CUSTOM_FONT_SIZE_ID) return CUSTOM_FONT_SIZE_ID;
-
-	const fallbackIndex = Math.max(
-		fontSizeOptions.findIndex((option) => option.id === DEFAULT_TYPOGRAPHY_PREFERENCES.fontSize),
-		0
-	);
-	const currentIndex = fontSizeOptions.findIndex((option) => option.id === value);
-	const sourceIndex = currentIndex >= 0 ? currentIndex : fallbackIndex;
-	const normalizedStep = Number.isFinite(step) ? Math.trunc(step) : 0;
-	const targetIndex = Math.min(
-		fontSizeOptions.length - 1,
-		Math.max(0, sourceIndex + normalizedStep)
-	);
-
-	return fontSizeOptions[targetIndex].id;
+export function getTypographyRootSize(
+	preferences: Pick<TypographyPreferences, 'uiZoom'> = DEFAULT_TYPOGRAPHY_PREFERENCES
+): string {
+	return `${Number((BASE_ROOT_FONT_SIZE_PX * normalizeUiZoom(preferences.uiZoom)).toFixed(2))}px`;
 }
 
-export function getTypographyRootSize(preferences: TypographyPreferences): string {
-	if (preferences.fontSize === CUSTOM_FONT_SIZE_ID) {
-		return `${normalizeCustomRootSizePx(preferences.customRootSizePx)}px`;
-	}
+export function getTypographyUiZoom(preferences: TypographyPreferences): number {
+	return normalizeUiZoom(preferences.uiZoom);
+}
 
-	return getFontSizeOption(preferences.fontSize).rootSize;
+export function getTypographyTextTransform(preferences: TypographyPreferences): 'uppercase' | 'none' {
+	return preferences.uppercaseText ? 'uppercase' : 'none';
 }
 
 export function getTypographyFontFamily(preferences: TypographyPreferences): string {

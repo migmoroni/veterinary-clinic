@@ -7,9 +7,10 @@
 	import { hasDatabaseFile } from '$lib/native/database-file.js';
 	import { AUTOMATIC_BACKUP_CHECK_INTERVAL_MS, createAutomaticBackupIfDue } from '$lib/services/backup.service.js';
 	import {
-		adjustTypographyFontSize,
+		adjustTypographyZoom,
 		loadLocalePreference,
-		loadTypographyPreference
+		loadTypographyPreference,
+		resetTypographyZoom
 	} from '$lib/services/preferences.service.js';
 	import {
 		loadPracticeIdentity,
@@ -83,7 +84,7 @@
 		}
 	}
 
-	function getTypographyShortcutStep(event: KeyboardEvent): -1 | 1 | null {
+	function getTypographyShortcutStep(event: KeyboardEvent): -1 | 0 | 1 | null {
 		if (!event.ctrlKey || event.metaKey || event.altKey) return null;
 
 		if (event.key === '+' || event.key === '=' || event.code === 'NumpadAdd') {
@@ -94,16 +95,24 @@
 			return -1;
 		}
 
+		if (event.key === '0' || event.code === 'Numpad0') {
+			return 0;
+		}
+
 		return null;
 	}
 
-	async function applyTypographyShortcut(step: -1 | 1): Promise<void> {
+	async function applyTypographyShortcut(step: -1 | 0 | 1): Promise<void> {
 		if (adjustingTypographyShortcut) return;
 
 		adjustingTypographyShortcut = true;
 
 		try {
-			await adjustTypographyFontSize(step);
+			if (step === 0) {
+				await resetTypographyZoom();
+			} else {
+				await adjustTypographyZoom(step);
+			}
 		} catch {
 			// Shortcut can fire before the local database exists during initial setup.
 		} finally {
@@ -136,7 +145,7 @@
 	});
 </script>
 
-<div class="fixed inset-0 flex w-full flex-col overflow-hidden bg-background text-foreground">
+<div class="app-zoom-shell flex w-full flex-col overflow-hidden bg-background text-foreground">
 	<header class="hidden shrink-0 border-b border-border bg-background/95 md:block">
 		<div class="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-6 px-6 lg:px-8">
 			<div class="min-w-0">

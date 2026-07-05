@@ -1,12 +1,13 @@
 import { DEFAULT_LOCALE, getLocale, isLocale, setLocale, type Locale } from '$lib/i18n/index.js';
 import {
-	CUSTOM_FONT_SIZE_ID,
+	DEFAULT_UI_ZOOM,
 	DEFAULT_TYPOGRAPHY_PREFERENCES,
 	getTypographyFontFamily,
 	getTypographyRootSize,
+	getTypographyTextTransform,
+	getTypographyUiZoom,
 	normalizeTypographyPreferences,
-	stepCustomRootSizePx,
-	stepFontSize,
+	stepUiZoom,
 	type TypographyPreferences
 } from '$lib/domain/preferences/typography.js';
 import { getSetting, setSetting } from '$lib/persistence/repositories/settings.repository.js';
@@ -14,6 +15,8 @@ import { getSetting, setSetting } from '$lib/persistence/repositories/settings.r
 const LOCALE_SETTING_KEY = 'app.locale';
 const TYPOGRAPHY_SETTING_KEY = 'app.typography';
 const RECORD_AUTO_SAVE_SETTING_KEY = 'record.autoSave';
+
+export const TYPOGRAPHY_PREFERENCE_CHANGED_EVENT = 'typography-preference-changed';
 
 function parseBooleanSetting(value: string | null, fallback: boolean): boolean {
 	if (value === 'true') return true;
@@ -49,6 +52,21 @@ export function applyTypographyPreference(preferences: TypographyPreferences): v
 	const root = document.documentElement;
 	root.style.setProperty('--app-font-family', getTypographyFontFamily(normalized));
 	root.style.setProperty('--app-root-font-size', getTypographyRootSize(normalized));
+	root.style.setProperty('--app-ui-zoom', String(getTypographyUiZoom(normalized)));
+	root.style.setProperty('--app-text-transform', getTypographyTextTransform(normalized));
+	root.toggleAttribute('data-app-high-contrast', normalized.highContrast);
+	root.toggleAttribute('data-app-enhanced-focus', normalized.enhancedFocus);
+	root.toggleAttribute('data-app-reduce-motion', normalized.reduceMotion);
+}
+
+function notifyTypographyPreferenceChanged(preferences: TypographyPreferences): void {
+	if (typeof window === 'undefined') return;
+
+	window.dispatchEvent(
+		new CustomEvent<TypographyPreferences>(TYPOGRAPHY_PREFERENCE_CHANGED_EVENT, {
+			detail: preferences
+		})
+	);
 }
 
 export async function loadTypographyPreference(): Promise<TypographyPreferences> {
@@ -62,11 +80,12 @@ export async function saveTypographyPreference(
 ): Promise<TypographyPreferences> {
 	const normalized = normalizeTypographyPreferences(preferences);
 	applyTypographyPreference(normalized);
+	notifyTypographyPreferenceChanged(normalized);
 	await setSetting(TYPOGRAPHY_SETTING_KEY, JSON.stringify(normalized));
 	return normalized;
 }
 
-export async function adjustTypographyFontSize(step: number): Promise<TypographyPreferences> {
+export async function adjustTypographyZoom(step: number): Promise<TypographyPreferences> {
 	const current = parseTypographySetting(await getSetting(TYPOGRAPHY_SETTING_KEY));
 	const normalizedStep = Number.isFinite(step) ? Math.trunc(step) : 0;
 
@@ -75,31 +94,30 @@ export async function adjustTypographyFontSize(step: number): Promise<Typography
 		return current;
 	}
 
-	if (current.fontSize === CUSTOM_FONT_SIZE_ID) {
-		const nextCustomRootSizePx = stepCustomRootSizePx(current.customRootSizePx, normalizedStep);
+	const nextUiZoom = stepUiZoom(current.uiZoom, normalizedStep);
 
-		if (nextCustomRootSizePx === current.customRootSizePx) {
-			applyTypographyPreference(current);
-			return current;
-		}
-
-		return saveTypographyPreference({
-			...current,
-			fontSize: CUSTOM_FONT_SIZE_ID,
-			customRootSizePx: nextCustomRootSizePx
-		});
-	}
-
-	const nextFontSize = stepFontSize(current.fontSize, normalizedStep);
-
-	if (nextFontSize === current.fontSize) {
+	if (nextUiZoom === current.uiZoom) {
 		applyTypographyPreference(current);
 		return current;
 	}
 
 	return saveTypographyPreference({
 		...current,
-		fontSize: nextFontSize
+		uiZoom: nextUiZoom
+	});
+}
+
+export async function resetTypographyZoom(): Promise<TypographyPreferences> {
+	const current = parseTypographySetting(await getSetting(TYPOGRAPHY_SETTING_KEY));
+
+	if (current.uiZoom === DEFAULT_UI_ZOOM) {
+		applyTypographyPreference(current);
+		return current;
+	}
+
+	return saveTypographyPreference({
+		...current,
+		uiZoom: DEFAULT_UI_ZOOM
 	});
 }
 

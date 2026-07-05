@@ -1,58 +1,47 @@
 import { describe, expect, it } from 'vitest';
 import {
-	CUSTOM_FONT_SIZE_MAX_PX,
-	CUSTOM_FONT_SIZE_MIN_PX,
-	DEFAULT_CUSTOM_ROOT_SIZE_PX,
 	DEFAULT_TYPOGRAPHY_PREFERENCES,
+	DEFAULT_UI_ZOOM,
+	UI_ZOOM_MAX,
+	UI_ZOOM_MIN,
 	getTypographyFontFamily,
 	getTypographyRootSize,
-	normalizeCustomRootSizePx,
+	getTypographyUiZoom,
 	normalizeTypographyPreferences,
+	normalizeUiZoom,
 	sanitizeSystemFontDirectory,
 	sanitizeSystemFontFamily,
-	stepCustomRootSizePx,
-	stepFontSize
+	stepUiZoom
 } from '../typography.js';
 
-describe('typography font size step', () => {
-	it('moves font size up and down', () => {
-		expect(stepFontSize('default', 1)).toBe('comfortable');
-		expect(stepFontSize('default', -1)).toBe('small');
+describe('typography interface zoom', () => {
+	it('normalizes and clamps zoom values', () => {
+		expect(normalizeUiZoom('invalid')).toBe(DEFAULT_UI_ZOOM);
+		expect(normalizeUiZoom(UI_ZOOM_MIN - 1)).toBe(UI_ZOOM_MIN);
+		expect(normalizeUiZoom(UI_ZOOM_MAX + 1)).toBe(UI_ZOOM_MAX);
+		expect(normalizeUiZoom(1.13)).toBe(1.15);
 	});
 
-	it('clamps to configured boundaries', () => {
-		expect(stepFontSize('small', -1)).toBe('small');
-		expect(stepFontSize('extraLarge', 1)).toBe('extraLarge');
-		expect(stepFontSize('custom', 1)).toBe('custom');
+	it('steps zoom while respecting configured limits', () => {
+		expect(stepUiZoom(UI_ZOOM_MIN, -1)).toBe(UI_ZOOM_MIN);
+		expect(stepUiZoom(UI_ZOOM_MAX, 1)).toBe(UI_ZOOM_MAX);
+		expect(stepUiZoom(DEFAULT_UI_ZOOM, 1)).toBe(1.1);
+		expect(stepUiZoom(DEFAULT_UI_ZOOM, -1)).toBe(0.9);
 	});
 
-	it('normalizes step values before applying', () => {
-		expect(stepFontSize('default', 2.9)).toBe('large');
-		expect(stepFontSize('large', Number.POSITIVE_INFINITY)).toBe('large');
-	});
-});
-
-describe('custom typography root size', () => {
-	it('normalizes and clamps custom slider values', () => {
-		expect(normalizeCustomRootSizePx('invalid')).toBe(DEFAULT_CUSTOM_ROOT_SIZE_PX);
-		expect(normalizeCustomRootSizePx(CUSTOM_FONT_SIZE_MIN_PX - 10)).toBe(CUSTOM_FONT_SIZE_MIN_PX);
-		expect(normalizeCustomRootSizePx(CUSTOM_FONT_SIZE_MAX_PX + 10)).toBe(CUSTOM_FONT_SIZE_MAX_PX);
+	it('scales root font size so text is rendered sharply at the final size', () => {
+		expect(getTypographyRootSize()).toBe('16px');
+		expect(getTypographyRootSize({ uiZoom: 0.8 })).toBe('12.8px');
+		expect(getTypographyRootSize({ uiZoom: 1.2 })).toBe('19.2px');
 	});
 
-	it('steps custom size while respecting configured limits', () => {
-		expect(stepCustomRootSizePx(CUSTOM_FONT_SIZE_MIN_PX, -1)).toBe(CUSTOM_FONT_SIZE_MIN_PX);
-		expect(stepCustomRootSizePx(CUSTOM_FONT_SIZE_MAX_PX, 1)).toBe(CUSTOM_FONT_SIZE_MAX_PX);
-		expect(stepCustomRootSizePx(DEFAULT_CUSTOM_ROOT_SIZE_PX, 1)).toBe(DEFAULT_CUSTOM_ROOT_SIZE_PX + 1);
-	});
-
-	it('returns the custom root size when custom option is selected', () => {
+	it('returns normalized zoom from full typography preferences', () => {
 		expect(
-			getTypographyRootSize({
+			getTypographyUiZoom({
 				...DEFAULT_TYPOGRAPHY_PREFERENCES,
-				fontSize: 'custom',
-				customRootSizePx: CUSTOM_FONT_SIZE_MAX_PX + 6
+				uiZoom: UI_ZOOM_MAX + 1
 			})
-		).toBe(`${CUSTOM_FONT_SIZE_MAX_PX}px`);
+		).toBe(UI_ZOOM_MAX);
 	});
 });
 
@@ -74,8 +63,11 @@ describe('typography input sanitization', () => {
 	it('normalizes full typography preference objects from untrusted shapes', () => {
 		expect(
 			normalizeTypographyPreferences({
-				fontSize: 'giant',
-				customRootSizePx: 10_000,
+				uiZoom: 10_000,
+				uppercaseText: true,
+				highContrast: true,
+				enhancedFocus: true,
+				reduceMotion: true,
 				fontSource: 'system',
 				bundledFont: 'unknown',
 				systemFontFamily: 'Bad;\nFont{}',
@@ -83,11 +75,26 @@ describe('typography input sanitization', () => {
 			})
 		).toEqual({
 			...DEFAULT_TYPOGRAPHY_PREFERENCES,
-			customRootSizePx: CUSTOM_FONT_SIZE_MAX_PX,
+			uiZoom: UI_ZOOM_MAX,
+			uppercaseText: true,
+			highContrast: true,
+			enhancedFocus: true,
+			reduceMotion: true,
 			fontSource: 'system',
 			systemFontFamily: 'BadFont',
 			systemFontDirectory: '/fontsbad'
 		});
+	});
+
+	it('does not normalize removed legacy font-size fields', () => {
+		expect(
+			normalizeTypographyPreferences({
+				fontSize: 'extraLarge',
+				customRootSizePx: 20,
+				interfaceScale: 'large',
+				customInterfaceScale: 1.2
+			})
+		).toEqual(DEFAULT_TYPOGRAPHY_PREFERENCES);
 	});
 
 	it('quotes and escapes custom system font families for CSS use', () => {

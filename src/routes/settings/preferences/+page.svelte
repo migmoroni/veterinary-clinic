@@ -2,39 +2,45 @@
 	import { onMount } from 'svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import {
-		CUSTOM_FONT_SIZE_ID,
-		CUSTOM_FONT_SIZE_MAX_PX,
-		CUSTOM_FONT_SIZE_MIN_PX,
-		CUSTOM_FONT_SIZE_STEP_PX,
+		DEFAULT_UI_ZOOM,
 		DEFAULT_TYPOGRAPHY_PREFERENCES,
+		UI_ZOOM_MAX,
+		UI_ZOOM_MIN,
 		bundledFontOptions,
-		fontSizeOptions,
-		getFontSizeOption,
 		getBundledFontOption,
 		getTypographyFontFamily,
-		normalizeCustomRootSizePx,
+		getTypographyUiZoom,
+		normalizeTypographyPreferences,
+		normalizeUiZoom,
 		sanitizeSystemFontDirectory,
 		sanitizeSystemFontFamily,
+		stepUiZoom,
+		uiZoomOptions,
 		type BundledFontId,
-		type FontSizeId,
 		type FontSource,
 		type TypographyPreferences
 	} from '$lib/domain/preferences/typography.js';
 	import { getLocale, localeOptions, setLocale, t, type Locale, type TranslationKey } from '$lib/i18n/index.js';
 	import { listSystemFonts } from '$lib/native/system-fonts.js';
 	import {
-		applyTypographyPreference,
 		loadLocalePreference,
 		loadTypographyPreference,
 		saveLocalePreference,
-		saveTypographyPreference
+		saveTypographyPreference,
+		TYPOGRAPHY_PREFERENCE_CHANGED_EVENT
 	} from '$lib/services/preferences.service.js';
 	import { open } from '@tauri-apps/plugin-dialog';
-	import Languages from '@lucide/svelte/icons/languages';
+	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
 	import FolderPlus from '@lucide/svelte/icons/folder-plus';
+	import Languages from '@lucide/svelte/icons/languages';
+	import Minus from '@lucide/svelte/icons/minus';
+	import Plus from '@lucide/svelte/icons/plus';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-	import X from '@lucide/svelte/icons/x';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import TypeIcon from '@lucide/svelte/icons/type';
+	import X from '@lucide/svelte/icons/x';
+
+	type ReadingPreferenceKey = 'uppercaseText' | 'highContrast' | 'enhancedFocus' | 'reduceMotion';
 
 	let selectedLocale = $state<Locale>(getLocale());
 	let typography = $state<TypographyPreferences>({ ...DEFAULT_TYPOGRAPHY_PREFERENCES });
@@ -44,13 +50,9 @@
 	let statusKey = $state<TranslationKey | null>(null);
 	let error = $state<string | null>(null);
 	let previewStyle = $derived(`font-family: ${getTypographyFontFamily(typography)};`);
-	let currentRootSizePx = $derived.by(() => {
-		if (typography.fontSize === CUSTOM_FONT_SIZE_ID) {
-			return normalizeCustomRootSizePx(typography.customRootSizePx);
-		}
-
-		return normalizeCustomRootSizePx(Number.parseFloat(getFontSizeOption(typography.fontSize).rootSize));
-	});
+	let currentUiZoom = $derived(getTypographyUiZoom(typography));
+	let currentUiZoomPercent = $derived(Math.round(currentUiZoom * 100));
+	let activeUiZoomPresetId = $derived(uiZoomOptions.find((option) => option.zoom === currentUiZoom)?.id ?? null);
 	let systemFontChoices = $derived.by(() => {
 		const values = new Set(systemFontOptions);
 		if (typography.systemFontFamily) values.add(typography.systemFontFamily);
@@ -107,31 +109,21 @@
 		}
 	}
 
-	async function changeFontSize(fontSize: FontSizeId) {
-		const rootSizeBeforeChange = currentRootSizePx;
-		typography.fontSize = fontSize;
-		if (fontSize === CUSTOM_FONT_SIZE_ID) {
-			typography.customRootSizePx = rootSizeBeforeChange;
-		} else {
-			typography.customRootSizePx = normalizeCustomRootSizePx(
-				Number.parseFloat(getFontSizeOption(fontSize).rootSize)
-			);
-		}
+	async function changeUiZoom(value: number) {
+		typography.uiZoom = normalizeUiZoom(value);
 		await saveTypography();
 	}
 
-	function updateCustomFontSize(value: string): void {
-		typography.customRootSizePx = normalizeCustomRootSizePx(value);
-		typography.fontSize = CUSTOM_FONT_SIZE_ID;
+	async function nudgeUiZoom(step: -1 | 1) {
+		await changeUiZoom(stepUiZoom(typography.uiZoom, step));
 	}
 
-	function previewCustomFontSize(event: Event): void {
-		updateCustomFontSize((event.currentTarget as HTMLInputElement).value);
-		applyTypographyPreference(typography);
+	async function resetUiZoom() {
+		await changeUiZoom(DEFAULT_UI_ZOOM);
 	}
 
-	async function saveCustomFontSize(event: Event) {
-		updateCustomFontSize((event.currentTarget as HTMLInputElement).value);
+	async function changeReadingPreference(key: ReadingPreferenceKey, event: Event) {
+		typography[key] = (event.currentTarget as HTMLInputElement).checked;
 		await saveTypography();
 	}
 
@@ -197,8 +189,18 @@
 		await loadAvailableSystemFonts();
 	}
 
+	function syncExternalTypographyChange(event: Event) {
+		if (!(event instanceof CustomEvent)) return;
+		typography = normalizeTypographyPreferences(event.detail);
+	}
+
 	onMount(() => {
 		void load();
+		window.addEventListener(TYPOGRAPHY_PREFERENCE_CHANGED_EVENT, syncExternalTypographyChange);
+
+		return () => {
+			window.removeEventListener(TYPOGRAPHY_PREFERENCE_CHANGED_EVENT, syncExternalTypographyChange);
+		};
 	});
 </script>
 
@@ -220,11 +222,14 @@
 	{/if}
 
 	<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
-		<div class="flex items-center gap-3">
+		<div class="flex items-start gap-3">
 			<span class="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
 				<Languages class="size-5" />
 			</span>
-			<h3 class="text-base font-semibold">{t('preferences.languageTitle')}</h3>
+			<div class="min-w-0">
+				<h3 class="text-base font-semibold">{t('preferences.languageTitle')}</h3>
+				<p class="mt-1 text-sm leading-6 text-muted-foreground">{t('preferences.languageDescription')}</p>
+			</div>
 		</div>
 
 		<label class="mt-4 flex w-full flex-col gap-1 text-sm font-medium sm:max-w-sm">
@@ -234,70 +239,87 @@
 	</section>
 
 	<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
-		<div class="flex items-center gap-3">
+		<div class="flex items-start gap-3">
 			<span class="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
 				<TypeIcon class="size-5" />
 			</span>
-			<h3 class="text-base font-semibold">{t('preferences.typographyTitle')}</h3>
+			<div class="min-w-0">
+				<h3 class="text-base font-semibold">{t('preferences.typographyTitle')}</h3>
+				<p class="mt-1 text-sm leading-6 text-muted-foreground">{t('preferences.typographyDescription')}</p>
+			</div>
 		</div>
 
 		<div class="mt-5">
-			<p class="text-sm font-medium">{t('preferences.fontSizeLabel')}</p>
-			<div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
-				{#each fontSizeOptions as option}
+			<div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+				<div class="min-w-0">
+					<p class="text-sm font-medium">{t('preferences.uiZoomLabel')}</p>
+					<p class="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">{t('preferences.uiZoomDescription')}</p>
+				</div>
+
+				<div class="flex shrink-0 items-center gap-2">
+					<div class="inline-flex h-10 items-center rounded-md border border-border bg-background p-1 shadow-sm">
+						<button
+							type="button"
+							class="inline-flex size-8 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40"
+							aria-label={t('preferences.uiZoomDecrease')}
+							title={t('preferences.uiZoomDecrease')}
+							disabled={saving || currentUiZoom <= UI_ZOOM_MIN}
+							onclick={() => void nudgeUiZoom(-1)}
+						>
+							<Minus class="size-4" />
+						</button>
+						<output class="w-16 text-center text-sm font-semibold tabular-nums" aria-live="polite">
+							{currentUiZoomPercent}%
+						</output>
+						<button
+							type="button"
+							class="inline-flex size-8 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40"
+							aria-label={t('preferences.uiZoomIncrease')}
+							title={t('preferences.uiZoomIncrease')}
+							disabled={saving || currentUiZoom >= UI_ZOOM_MAX}
+							onclick={() => void nudgeUiZoom(1)}
+						>
+							<Plus class="size-4" />
+						</button>
+					</div>
+
 					<button
 						type="button"
-						class="min-h-10 rounded-md border px-2 py-2 text-sm font-medium transition-colors {typography.fontSize === option.id
+						class="inline-flex size-10 items-center justify-center rounded-md border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40"
+						aria-label={t('preferences.uiZoomReset')}
+						title={t('preferences.uiZoomReset')}
+						disabled={saving || currentUiZoom === DEFAULT_UI_ZOOM}
+						onclick={() => void resetUiZoom()}
+					>
+						<RotateCcw class="size-4" />
+					</button>
+				</div>
+			</div>
+
+			<div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+				{#each uiZoomOptions as option}
+					<button
+						type="button"
+						class="min-h-10 rounded-md border px-3 py-2 text-sm font-medium transition-colors {activeUiZoomPresetId === option.id
 							? 'border-primary bg-primary text-primary-foreground'
 							: 'border-border bg-background text-foreground hover:bg-accent'}"
-						aria-pressed={typography.fontSize === option.id}
+						aria-pressed={activeUiZoomPresetId === option.id}
 						disabled={saving}
-						onclick={() => void changeFontSize(option.id)}
+						onclick={() => void changeUiZoom(option.zoom)}
 					>
 						{t(option.labelKey)}
 					</button>
 				{/each}
-				<button
-					type="button"
-					class="min-h-10 rounded-md border px-2 py-2 text-sm font-medium transition-colors {typography.fontSize === CUSTOM_FONT_SIZE_ID
-						? 'border-primary bg-primary text-primary-foreground'
-						: 'border-border bg-background text-foreground hover:bg-accent'}"
-					aria-pressed={typography.fontSize === CUSTOM_FONT_SIZE_ID}
-					disabled={saving}
-					onclick={() => void changeFontSize(CUSTOM_FONT_SIZE_ID)}
-				>
-					{t('preferences.fontSize.custom')}
-				</button>
-			</div>
-
-			<div class="mt-3 rounded-md border border-border bg-background p-3">
-				<div class="flex flex-wrap items-center justify-between gap-2 text-sm">
-					<label for="custom-font-size" class="font-medium">{t('preferences.customFontSizeLabel')}</label>
-					<p class="font-semibold">{currentRootSizePx}px</p>
-				</div>
-				<input
-					id="custom-font-size"
-					type="range"
-					class="mt-3 h-2 w-full cursor-pointer appearance-none rounded-lg bg-muted accent-primary disabled:opacity-60"
-					min={String(CUSTOM_FONT_SIZE_MIN_PX)}
-					max={String(CUSTOM_FONT_SIZE_MAX_PX)}
-					step={String(CUSTOM_FONT_SIZE_STEP_PX)}
-					value={String(currentRootSizePx)}
-					disabled={saving}
-					oninput={previewCustomFontSize}
-					onchange={saveCustomFontSize}
-				/>
-				<div class="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-					<span>{CUSTOM_FONT_SIZE_MIN_PX}px</span>
-					<span>{CUSTOM_FONT_SIZE_MAX_PX}px</span>
-				</div>
 			</div>
 		</div>
 
-		<div class="mt-5">
-			<fieldset class="min-w-0">
+		<div class="mt-6 border-t border-border pt-5">
+			<p class="text-sm font-medium">{t('preferences.fontTitle')}</p>
+			<p class="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">{t('preferences.fontDescription')}</p>
+
+			<fieldset class="mt-4 min-w-0">
 				<legend class="text-sm font-medium">{t('preferences.fontSourceLabel')}</legend>
-				<div class="mt-2 grid grid-cols-2 gap-2">
+				<div class="mt-2 grid gap-2 sm:grid-cols-2">
 					<label class="flex min-h-11 items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm">
 						<input
 							type="radio"
@@ -320,96 +342,171 @@
 					</label>
 				</div>
 			</fieldset>
-		</div>
 
-		{#if typography.fontSource === 'bundled'}
-			<div class="mt-5 max-w-xl">
-				<label class="min-w-0 text-sm font-medium">
-					<span>{t('preferences.bundledFontLabel')}</span>
-					<Select
-						class="mt-1"
-						bind:value={typography.bundledFont}
-						disabled={saving}
-						options={bundledFontOptions.map((opt) => ({ value: opt.id, label: t(opt.labelKey) }))}
-						onchange={changeBundledFont}
-					/>
-					<p class="mt-2 text-xs leading-5 text-muted-foreground">
-						{t('preferences.fontLicenseLabel')}: {getBundledFontOption(typography.bundledFont).license}
-					</p>
-				</label>
-			</div>
-		{:else}
-			<div class="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
-				<label class="min-w-0 text-sm font-medium" for="system-font-family">
-					<span>{t('preferences.systemFontLabel')}</span>
-					<Select
-						id="system-font-family"
-						class="mt-1"
-						bind:value={typography.systemFontFamily}
-						disabled={saving || loadingSystemFonts}
-						options={[
-							{ value: '', label: t('preferences.systemFontDefault') },
-							...systemFontChoices.map((font) => ({ value: font, label: font }))
-						]}
-						onchange={changeSystemFont}
-					/>
-				</label>
-
-				<div class="flex items-end gap-2">
-					<button
-						type="button"
-						class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent disabled:opacity-60 lg:w-auto"
-						aria-label={t('preferences.loadSystemFonts')}
-						title={t('preferences.loadSystemFonts')}
-						disabled={saving || loadingSystemFonts}
-						onclick={() => void loadAvailableSystemFonts()}
-					>
-						<RefreshCw class="size-4 {loadingSystemFonts ? 'animate-spin' : ''}" />
-						<span>{t('preferences.loadSystemFonts')}</span>
-					</button>
-				</div>
-			</div>
-
-			<div class="mt-4 rounded-md border border-border bg-background p-3">
-				<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-					<div class="min-w-0">
-						<p class="text-sm font-medium">{t('preferences.systemFontDirectoryLabel')}</p>
-						<p class="mt-1 truncate text-xs leading-5 text-muted-foreground">
-							{typography.systemFontDirectory || t('preferences.systemFontDirectoryEmpty')}
+			{#if typography.fontSource === 'bundled'}
+				<div class="mt-4 max-w-xl">
+					<label class="min-w-0 text-sm font-medium">
+						<span>{t('preferences.bundledFontLabel')}</span>
+						<Select
+							class="mt-1"
+							bind:value={typography.bundledFont}
+							disabled={saving}
+							options={bundledFontOptions.map((opt) => ({ value: opt.id, label: t(opt.labelKey) }))}
+							onchange={changeBundledFont}
+						/>
+						<p class="mt-2 text-xs leading-5 text-muted-foreground">
+							{t('preferences.fontLicenseLabel')}: {getBundledFontOption(typography.bundledFont).license}
 						</p>
-					</div>
-					<div class="flex shrink-0 gap-2">
+					</label>
+				</div>
+			{:else}
+				<div class="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+					<label class="min-w-0 text-sm font-medium" for="system-font-family">
+						<span>{t('preferences.systemFontLabel')}</span>
+						<Select
+							id="system-font-family"
+							class="mt-1"
+							bind:value={typography.systemFontFamily}
+							disabled={saving || loadingSystemFonts}
+							options={[
+								{ value: '', label: t('preferences.systemFontDefault') },
+								...systemFontChoices.map((font) => ({ value: font, label: font }))
+							]}
+							onchange={changeSystemFont}
+						/>
+						<p class="mt-2 text-xs leading-5 text-muted-foreground">{t('preferences.systemFontHelp')}</p>
+					</label>
+
+					<div class="flex items-end gap-2">
 						<button
 							type="button"
-							class="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent disabled:opacity-60 sm:flex-none"
-							aria-label={t('preferences.addSystemFontDirectory')}
-							title={t('preferences.addSystemFontDirectory')}
+							class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent disabled:opacity-60 lg:w-auto"
+							aria-label={t('preferences.loadSystemFonts')}
+							title={t('preferences.loadSystemFonts')}
 							disabled={saving || loadingSystemFonts}
-							onclick={() => void addSystemFontDirectory()}
+							onclick={() => void loadAvailableSystemFonts()}
 						>
-							<FolderPlus class="size-4" />
-							<span>{t('preferences.addSystemFontDirectory')}</span>
+							<RefreshCw class="size-4 {loadingSystemFonts ? 'animate-spin' : ''}" />
+							<span>{t('preferences.loadSystemFonts')}</span>
 						</button>
-						{#if typography.systemFontDirectory}
-							<button
-								type="button"
-								class="inline-flex size-9 items-center justify-center rounded-md border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:bg-accent hover:text-foreground disabled:opacity-60"
-								aria-label={t('preferences.clearSystemFontDirectory')}
-								title={t('preferences.clearSystemFontDirectory')}
-								disabled={saving || loadingSystemFonts}
-								onclick={() => void clearSystemFontDirectory()}
-							>
-								<X class="size-4" />
-							</button>
-						{/if}
 					</div>
 				</div>
-			</div>
-		{/if}
 
-		<div class="mt-5 border-t border-border pt-4" style={previewStyle}>
+				<div class="mt-4 border-t border-border pt-4">
+					<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+						<div class="min-w-0">
+							<p class="text-sm font-medium">{t('preferences.systemFontDirectoryLabel')}</p>
+							<p class="mt-1 truncate text-xs leading-5 text-muted-foreground">
+								{typography.systemFontDirectory || t('preferences.systemFontDirectoryEmpty')}
+							</p>
+							<p class="mt-1 text-xs leading-5 text-muted-foreground">{t('preferences.systemFontDirectoryHelp')}</p>
+						</div>
+						<div class="flex shrink-0 gap-2">
+							<button
+								type="button"
+								class="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent disabled:opacity-60 sm:flex-none"
+								aria-label={t('preferences.addSystemFontDirectory')}
+								title={t('preferences.addSystemFontDirectory')}
+								disabled={saving || loadingSystemFonts}
+								onclick={() => void addSystemFontDirectory()}
+							>
+								<FolderPlus class="size-4" />
+								<span>{t('preferences.addSystemFontDirectory')}</span>
+							</button>
+							{#if typography.systemFontDirectory}
+								<button
+									type="button"
+									class="inline-flex size-9 items-center justify-center rounded-md border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:bg-accent hover:text-foreground disabled:opacity-60"
+									aria-label={t('preferences.clearSystemFontDirectory')}
+									title={t('preferences.clearSystemFontDirectory')}
+									disabled={saving || loadingSystemFonts}
+									onclick={() => void clearSystemFontDirectory()}
+								>
+									<X class="size-4" />
+								</button>
+							{/if}
+						</div>
+					</div>
+				</div>
+			{/if}
+		</div>
+
+		<div class="mt-6 border-t border-border pt-5">
+			<p class="text-sm font-medium">{t('preferences.accessibilityTitle')}</p>
+			<p class="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">{t('preferences.accessibilityDescription')}</p>
+
+			<div class="mt-4 grid gap-3 sm:grid-cols-2">
+				<label class="flex min-w-0 items-start gap-3 rounded-md border border-border bg-background p-3 text-sm">
+					<input
+						type="checkbox"
+						class="mt-1 size-4 rounded border-border text-primary"
+						checked={typography.highContrast}
+						disabled={saving}
+						onchange={(event) => void changeReadingPreference('highContrast', event)}
+					/>
+					<span class="min-w-0">
+						<span class="block font-medium">{t('preferences.highContrastLabel')}</span>
+						<span class="mt-1 block leading-6 text-muted-foreground">{t('preferences.highContrastHelp')}</span>
+					</span>
+				</label>
+
+				<label class="flex min-w-0 items-start gap-3 rounded-md border border-border bg-background p-3 text-sm">
+					<input
+						type="checkbox"
+						class="mt-1 size-4 rounded border-border text-primary"
+						checked={typography.enhancedFocus}
+						disabled={saving}
+						onchange={(event) => void changeReadingPreference('enhancedFocus', event)}
+					/>
+					<span class="min-w-0">
+						<span class="block font-medium">{t('preferences.enhancedFocusLabel')}</span>
+						<span class="mt-1 block leading-6 text-muted-foreground">{t('preferences.enhancedFocusHelp')}</span>
+					</span>
+				</label>
+
+				<label class="flex min-w-0 items-start gap-3 rounded-md border border-border bg-background p-3 text-sm">
+					<input
+						type="checkbox"
+						class="mt-1 size-4 rounded border-border text-primary"
+						checked={typography.reduceMotion}
+						disabled={saving}
+						onchange={(event) => void changeReadingPreference('reduceMotion', event)}
+					/>
+					<span class="min-w-0">
+						<span class="block font-medium">{t('preferences.reduceMotionLabel')}</span>
+						<span class="mt-1 block leading-6 text-muted-foreground">{t('preferences.reduceMotionHelp')}</span>
+					</span>
+				</label>
+
+				<label class="flex min-w-0 items-start gap-3 rounded-md border border-border bg-background p-3 text-sm">
+					<input
+						type="checkbox"
+						class="mt-1 size-4 rounded border-border text-primary"
+						checked={typography.uppercaseText}
+						disabled={saving}
+						onchange={(event) => void changeReadingPreference('uppercaseText', event)}
+					/>
+					<span class="min-w-0">
+						<span class="block font-medium">{t('preferences.uppercaseTextLabel')}</span>
+						<span class="mt-1 block leading-6 text-muted-foreground">{t('preferences.uppercaseTextHelp')}</span>
+					</span>
+				</label>
+			</div>
+		</div>
+
+		<div class="mt-6 border-t border-border pt-5" style={previewStyle}>
 			<p class="text-xs font-semibold uppercase text-muted-foreground">{t('preferences.fontPreviewTitle')}</p>
 			<p class="mt-2 text-lg font-semibold">{t('preferences.fontPreviewText')}</p>
+			<p class="mt-1 text-sm leading-6 text-muted-foreground">{t('preferences.fontPreviewDetail')}</p>
+			<div class="mt-3 flex flex-wrap gap-2">
+				<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">
+					<CheckCircle2 class="size-4" />
+					{t('actions.save')}
+				</button>
+				<button type="button" class="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 text-sm font-medium">
+					{t('actions.cancel')}
+				</button>
+			</div>
 		</div>
 	</section>
 </section>
