@@ -302,14 +302,14 @@
 	<title>{t('breedReference.title')} | {t('app.name')}</title>
 </svelte:head>
 
-<section class="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
-	<header class="border-b border-border pb-5">
+<section class="mx-auto flex w-full max-w-[90rem] flex-col gap-4 px-4 py-4 sm:px-5 lg:px-6">
+	<header class="border-b border-border pb-4">
 		<p class="text-sm font-medium text-muted-foreground">{t('breedReference.kicker')}</p>
-		<h2 class="mt-1 text-2xl font-semibold tracking-normal text-foreground sm:text-3xl">{t('breedReference.title')}</h2>
+		<h2 class="mt-1 text-2xl font-semibold tracking-normal text-foreground">{t('breedReference.title')}</h2>
 		<p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{t('breedReference.description')}</p>
 	</header>
 
-	<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
+	<section class="rounded-md border border-border bg-card p-3 shadow-sm sm:p-4">
 		<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 			<div class="min-w-0">
 				<div class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
@@ -328,7 +328,7 @@
 		</div>
 
 		<div
-			class="relative mt-4 aspect-2/1 min-h-72 touch-none overflow-hidden rounded-md border border-border bg-muted/60 sm:min-h-96 {mapZoom === 'detail' ? mapDragState ? 'cursor-grabbing' : 'cursor-grab' : ''}"
+			class="relative mt-4 aspect-2/1 min-h-56 touch-none overflow-hidden rounded-md border border-border bg-muted/60 sm:min-h-72 {mapZoom === 'detail' ? mapDragState ? 'cursor-grabbing' : 'cursor-grab' : ''}"
 			role="region"
 			aria-label={t('breedReference.mapPanArea')}
 			onpointerdown={startMapPan}
@@ -358,7 +358,7 @@
 		</div>
 	</section>
 
-    <section class="grid gap-3 rounded-md border border-border bg-card p-4 shadow-sm sm:p-5 lg:grid-cols-[minmax(14rem,1.2fr)_minmax(10rem,0.7fr)_minmax(10rem,0.7fr)_minmax(12rem,0.9fr)]">
+	<section class="grid gap-3 rounded-md border border-border bg-card p-3 shadow-sm sm:p-4 lg:grid-cols-[minmax(14rem,1.2fr)_minmax(10rem,0.7fr)_minmax(10rem,0.7fr)_minmax(12rem,0.9fr)]">
 		<label class="space-y-1">
 			<span class="text-sm font-medium">{t('breedReference.searchLabel')}</span>
 			<span class="relative block">
@@ -383,9 +383,9 @@
 		</div>
 	</section>
 
-	<div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
-		<div class="min-w-0 space-y-5">
-			<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
+	<div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+		<div class="min-w-0 space-y-4">
+			<section class="rounded-md border border-border bg-card p-3 shadow-sm sm:p-4">
 				<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 					<div class="min-w-0">
 						<div class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
@@ -396,66 +396,70 @@
 					<span class="inline-flex h-8 shrink-0 items-center rounded-md bg-muted px-3 text-sm font-medium tabular-nums text-muted-foreground">{filteredProfiles.length}</span>
 				</div>
 
-				<div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+				<div class="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
 					{#each filteredProfiles as profile}
-						<button type="button" class="flex min-h-64 flex-col overflow-hidden rounded-md border text-left transition-colors hover:bg-accent {selectedProfile?.option.id === profile.option.id ? 'border-primary bg-primary/10 ring-2 ring-ring/25' : 'border-border bg-background'}" aria-label={`${t('breedReference.openBreed')}: ${breedName(profile)}`} onclick={() => selectBreed(profile)}>
-							<img class="aspect-4/3 w-full bg-muted object-cover" src={profile.option.imagePath} alt="" aria-hidden="true" loading="lazy" onerror={(event) => useFallbackImage(event, profile.option.fallbackImagePath)} />
-							<span class="flex min-h-28 flex-1 flex-col p-3">
-								<span class="wrap-break-word text-base font-semibold leading-6">{breedName(profile)}</span>
-								<span class="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-									<MapPin class="size-4 shrink-0" />
+						<button type="button" class="flex min-h-48 flex-col overflow-hidden rounded-md border text-left transition-colors hover:bg-accent {selectedProfile?.option.id === profile.option.id ? 'border-primary bg-primary/10 ring-2 ring-ring/25' : 'border-border bg-background'}" aria-label={`${t('breedReference.openBreed')}: ${breedName(profile)}`} onclick={() => selectBreed(profile)}>
+							<img class="aspect-5/4 w-full bg-muted object-cover" src={profile.option.imagePath} alt="" aria-hidden="true" loading="lazy" onerror={(event) => useFallbackImage(event, profile.option.fallbackImagePath)} />
+							<span class="flex min-h-24 flex-1 flex-col p-2.5">
+								<span class="wrap-break-word text-sm font-semibold leading-5">{breedName(profile)}</span>
+								<span class="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+									<MapPin class="size-3.5 shrink-0" />
 									<span class="truncate">{originLabel(profile.origin)}</span>
 								</span>
 								<span class="mt-auto pt-3 text-xs font-medium uppercase text-muted-foreground">{sizeLabel(profile.sizeCategory)} · {speciesLabel(profile)}</span>
 							</span>
 						</button>
 					{:else}
-						<p class="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground sm:col-span-2 lg:col-span-3">{t('breedReference.noResults')}</p>
+						<p class="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground sm:col-span-2 lg:col-span-4">{t('breedReference.noResults')}</p>
 					{/each}
 				</div>
 			</section>
 		</div>
 
-		<aside class="space-y-5">
+		<aside>
 			{#if selectedProfile}
 				<section class="rounded-md border border-border bg-card shadow-sm xl:sticky xl:top-5 xl:self-start">
-					<img class="aspect-4/3 w-full rounded-t-md bg-muted object-cover" src={selectedProfile.option.imagePath} alt="" aria-hidden="true" loading="lazy" onerror={(event) => useFallbackImage(event, selectedProfile.option.fallbackImagePath)} />
-					<div class="p-4 sm:p-5">
-						<p class="text-sm font-medium text-muted-foreground">{t('breedReference.detailsTitle')}</p>
-						<h3 class="mt-1 wrap-break-word text-xl font-semibold">{breedName(selectedProfile)}</h3>
+					<img class="aspect-16/10 w-full rounded-t-md bg-muted object-cover" src={selectedProfile.option.imagePath} alt="" aria-hidden="true" loading="lazy" onerror={(event) => useFallbackImage(event, selectedProfile.option.fallbackImagePath)} />
+					<div class="p-3 sm:p-4">
+						<p class="text-xs font-medium uppercase text-muted-foreground">{t('breedReference.detailsTitle')}</p>
+						<h3 class="mt-1 wrap-break-word text-lg font-semibold">{breedName(selectedProfile)}</h3>
 
-						<div class="mt-4 space-y-3 text-sm">
-							<div class="rounded-md border border-border bg-background p-3">
-								<p class="text-xs font-medium uppercase text-muted-foreground">{t('breedReference.origin')}</p>
-								<p class="mt-1 font-medium">{originLabel(selectedProfile.origin)}</p>
-							</div>
-
-							<div class="rounded-md border border-border bg-background p-3">
-								<p class="text-xs font-medium uppercase text-muted-foreground">{t('breedReference.size')}</p>
-								<p class="mt-1 font-medium">{sizeLabel(selectedProfile.sizeCategory)}</p>
-							</div>
-
-							<div class="rounded-md border border-border bg-background p-3">
-								<div class="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
-									<Scale class="size-4" />
-									{t('breedReference.averageWeight')}
+						<div class="mt-3 grid gap-2 text-sm">
+							<div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+								<div class="rounded-md border border-border bg-background p-2.5">
+									<p class="text-xs font-medium uppercase text-muted-foreground">{t('breedReference.origin')}</p>
+									<p class="mt-1 font-medium">{originLabel(selectedProfile.origin)}</p>
 								</div>
-								<div class="mt-2 grid gap-2">
-									{#each sexRangeRows(selectedProfile.averageWeightKg, 'breedReference.unit.kg') as row}
-										<div class="flex items-center justify-between gap-3"><span class="text-muted-foreground">{row.label}</span><span class="font-medium tabular-nums">{row.value}</span></div>
-									{/each}
+
+								<div class="rounded-md border border-border bg-background p-2.5">
+									<p class="text-xs font-medium uppercase text-muted-foreground">{t('breedReference.size')}</p>
+									<p class="mt-1 font-medium">{sizeLabel(selectedProfile.sizeCategory)}</p>
 								</div>
 							</div>
 
-							<div class="rounded-md border border-border bg-background p-3">
-								<div class="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
-									<Ruler class="size-4" />
-									{t('breedReference.averageHeight')}
+							<div class="grid grid-cols-2 gap-2">
+								<div class="rounded-md border border-border bg-background p-2.5">
+									<div class="flex items-center gap-1.5 text-xs font-medium uppercase text-muted-foreground">
+										<Scale class="size-3.5" />
+										{t('breedReference.averageWeight')}
+									</div>
+									<div class="mt-2 grid gap-1.5 text-xs">
+										{#each sexRangeRows(selectedProfile.averageWeightKg, 'breedReference.unit.kg') as row}
+											<div class="grid gap-0.5"><span class="text-muted-foreground">{row.label}</span><span class="font-medium tabular-nums">{row.value}</span></div>
+										{/each}
+									</div>
 								</div>
-								<div class="mt-2 grid gap-2">
-									{#each sexRangeRows(selectedProfile.averageHeightCm, 'breedReference.unit.cm') as row}
-										<div class="flex items-center justify-between gap-3"><span class="text-muted-foreground">{row.label}</span><span class="font-medium tabular-nums">{row.value}</span></div>
-									{/each}
+
+								<div class="rounded-md border border-border bg-background p-2.5">
+									<div class="flex items-center gap-1.5 text-xs font-medium uppercase text-muted-foreground">
+										<Ruler class="size-3.5" />
+										{t('breedReference.averageHeight')}
+									</div>
+									<div class="mt-2 grid gap-1.5 text-xs">
+										{#each sexRangeRows(selectedProfile.averageHeightCm, 'breedReference.unit.cm') as row}
+											<div class="grid gap-0.5"><span class="text-muted-foreground">{row.label}</span><span class="font-medium tabular-nums">{row.value}</span></div>
+										{/each}
+									</div>
 								</div>
 							</div>
 						</div>
