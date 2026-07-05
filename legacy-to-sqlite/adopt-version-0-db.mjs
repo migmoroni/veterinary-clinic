@@ -9,7 +9,7 @@ const BASELINE_MIGRATION_NAME = '0001_baseline_current_schema';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const defaultSourcePath = path.resolve(scriptDir, 'dist/veterinary_clinic-version-0.db');
-const defaultOutputPath = path.resolve(scriptDir, 'build/veterinary_clinic-version-1.db');
+const defaultOutputPath = path.resolve(scriptDir, `build/veterinary_clinic-version-${CURRENT_SCHEMA_VERSION}.db`);
 
 const requiredSchema = {
 	owners: ['id', 'name', 'avatar_blob', 'additional_information', 'created_at', 'updated_at', 'deleted_at', 'purge_after'],
