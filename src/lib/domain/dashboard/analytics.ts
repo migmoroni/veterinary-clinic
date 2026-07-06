@@ -1,6 +1,5 @@
 import type { PetBreed, PetSex, PetSpecies } from '$lib/domain/pet/pet.js';
-import type { AntiparasiticTreatmentStatusKey } from '$lib/domain/antiparasitic/analytics.js';
-import type { VaccineStatusKey } from '$lib/domain/vaccine/analytics.js';
+import type { TreatmentStatusKey } from '$lib/domain/treatment/analytics.js';
 
 export type DashboardAnalysisView = 'general' | 'vaccines' | 'antiparasitics' | 'pets' | 'owners';
 export type DashboardSpeciesKey = PetSpecies | 'unknown';
@@ -8,8 +7,8 @@ export type DashboardBreedKey = PetBreed | 'unknown';
 export type DashboardSexKey = Exclude<PetSex, null> | 'unknown';
 export type DashboardAgeBandKey = 'months0To3' | 'months3To6' | 'months6To12' | `year:${number}` | 'unknown';
 export type DashboardPetCountBandKey = 'none' | 'one' | 'two' | 'threePlus';
-export type DashboardVaccineStatusKey = VaccineStatusKey | 'untracked';
-export type DashboardAntiparasiticStatusKey = AntiparasiticTreatmentStatusKey | 'untracked';
+export type DashboardVaccineStatusKey = TreatmentStatusKey | 'untracked';
+export type DashboardAntiparasiticStatusKey = TreatmentStatusKey | 'untracked';
 
 export const dashboardAnalysisViews: DashboardAnalysisView[] = ['general', 'vaccines', 'antiparasitics', 'pets', 'owners'];
 export const dashboardVaccineStatusKeys: DashboardVaccineStatusKey[] = ['current', 'dueSoon', 'dueVerySoon', 'expired', 'overdue', 'untracked'];
@@ -43,24 +42,14 @@ export interface DashboardPetStudyOwner {
 	locationLabel: string | null;
 }
 
-export interface DashboardPetStudyVaccine {
-	vaccineNormalizedName: string;
-	vaccineName: string;
+export interface DashboardPetStudyTreatment<StatusKey extends string> {
+	normalizedName: string;
+	name: string;
 	dose: string;
 	appliedAt: string;
 	dueAt: string;
 	daysUntilDue: number;
-	status: DashboardVaccineStatusKey;
-}
-
-export interface DashboardPetStudyAntiparasitic {
-	antiparasiticNormalizedName: string;
-	antiparasiticName: string;
-	dose: string;
-	appliedAt: string;
-	dueAt: string;
-	daysUntilDue: number;
-	status: DashboardAntiparasiticStatusKey;
+	status: StatusKey;
 }
 
 export interface DashboardOwnerStudyPet {
@@ -75,10 +64,10 @@ export interface DashboardOwnerStudyPet {
 	antiparasiticStatus: DashboardAntiparasiticStatusKey;
 	vaccineNormalizedNames: string[];
 	vaccineNames: string[];
-	vaccines: DashboardPetStudyVaccine[];
+	vaccines: DashboardPetStudyTreatment<DashboardVaccineStatusKey>[];
 	antiparasiticNormalizedNames: string[];
 	antiparasiticNames: string[];
-	antiparasitics: DashboardPetStudyAntiparasitic[];
+	antiparasitics: DashboardPetStudyTreatment<DashboardAntiparasiticStatusKey>[];
 }
 
 export interface DashboardOwnerStudyItem extends DashboardPetStudyOwner {
@@ -99,10 +88,10 @@ export interface DashboardPetStudyItem {
 	antiparasiticStatus: DashboardAntiparasiticStatusKey;
 	vaccineNormalizedNames: string[];
 	vaccineNames: string[];
-	vaccines: DashboardPetStudyVaccine[];
+	vaccines: DashboardPetStudyTreatment<DashboardVaccineStatusKey>[];
 	antiparasiticNormalizedNames: string[];
 	antiparasiticNames: string[];
-	antiparasitics: DashboardPetStudyAntiparasitic[];
+	antiparasitics: DashboardPetStudyTreatment<DashboardAntiparasiticStatusKey>[];
 	owners: DashboardPetStudyOwner[];
 	ownerCityKeys: string[];
 	ownerCityLabels: string[];

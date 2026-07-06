@@ -1,10 +1,12 @@
 import type { KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
 import type { PreventiveCatalogOrigin } from '$lib/domain/preventive/catalog.js';
 
-export type VaccineValidityUnit = 'days' | 'months' | 'years';
+export type TreatmentKind = 'vaccine' | 'antiparasitic';
+export type TreatmentValidityUnit = 'days' | 'months' | 'years';
 
-export interface Vaccine {
+export interface TreatmentCatalogItem {
 	id: number;
+	kind: TreatmentKind;
 	name: string;
 	normalizedName: string;
 	species: KnownPetSpecies[];
@@ -16,7 +18,7 @@ export interface Vaccine {
 	updatedAt: string | null;
 }
 
-export interface VaccineInput {
+export interface TreatmentCatalogItemInput {
 	name: string;
 	species?: KnownPetSpecies[];
 	aliases?: string[];
@@ -24,15 +26,16 @@ export interface VaccineInput {
 	regions?: string[];
 }
 
-export interface PetVaccination {
+export interface PetTreatment {
 	id: number;
 	petId: number;
+	kind: TreatmentKind;
 	appliedAt: string;
-	vaccineName: string;
-	vaccineNormalizedName: string;
+	name: string;
+	normalizedName: string;
 	dose: string;
 	validityValue: number;
-	validityUnit: VaccineValidityUnit;
+	validityUnit: TreatmentValidityUnit;
 	observation: string | null;
 	validityIgnoredAt: string | null;
 	updatedAt: string | null;
@@ -40,16 +43,16 @@ export interface PetVaccination {
 	purgeAfter: string | null;
 }
 
-export interface PetVaccinationInput {
+export interface PetTreatmentInput {
 	appliedAt: string;
-	vaccineName: string;
+	name: string;
 	dose: string;
 	validityValue: number;
-	validityUnit: VaccineValidityUnit;
+	validityUnit: TreatmentValidityUnit;
 	observation: string | null;
 }
 
-export interface VaccineDueStatus {
+export interface TreatmentDueStatus {
 	dueAt: string | null;
 	daysUntilDue: number | null;
 	expired: boolean;
@@ -59,7 +62,7 @@ export interface VaccineDueStatus {
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export function normalizeVaccineName(value: string): string {
+export function normalizeTreatmentName(value: string): string {
 	return value
 		.normalize('NFD')
 		.replace(/[\u0300-\u036f]/g, '')
@@ -89,7 +92,7 @@ function daysInMonth(year: number, month: number): number {
 	return new Date(year, month, 0).getDate();
 }
 
-export function computeVaccineDueAt(appliedAt: string, validity: Pick<PetVaccination, 'validityValue' | 'validityUnit'> | null): string | null {
+export function computeTreatmentDueAt(appliedAt: string, validity: Pick<PetTreatment, 'validityValue' | 'validityUnit'> | null): string | null {
 	if (!validity) return null;
 	if (validity.validityValue <= 0) return null;
 	const applied = parseIsoDate(appliedAt);
@@ -108,10 +111,10 @@ export function computeVaccineDueAt(appliedAt: string, validity: Pick<PetVaccina
 	return formatIsoDate(new Date(year, month - 1, day));
 }
 
-export function getVaccineDueStatus(vaccination: PetVaccination, now = new Date()): VaccineDueStatus {
-	if (vaccination.validityIgnoredAt) return { dueAt: null, daysUntilDue: null, expired: false, validityIgnored: true };
+export function getTreatmentDueStatus(treatment: PetTreatment, now = new Date()): TreatmentDueStatus {
+	if (treatment.validityIgnoredAt) return { dueAt: null, daysUntilDue: null, expired: false, validityIgnored: true };
 
-	const dueAt = computeVaccineDueAt(vaccination.appliedAt, vaccination);
+	const dueAt = computeTreatmentDueAt(treatment.appliedAt, treatment);
 	if (!dueAt) return { dueAt: null, daysUntilDue: null, expired: false, validityIgnored: false };
 
 	const due = parseIsoDate(dueAt);

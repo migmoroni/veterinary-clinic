@@ -6,9 +6,8 @@
 		type DashboardNamedBucket,
 		type DashboardOwnerStudyItem,
 		type DashboardOwnerStudyPet,
-		type DashboardPetStudyAntiparasitic,
 		type DashboardPetStudyItem,
-		type DashboardPetStudyVaccine,
+		type DashboardPetStudyTreatment,
 		type DashboardVaccineStatusKey
 	} from '$lib/domain/dashboard/analytics.js';
 	import { dashboardAgeBandYear } from '$lib/domain/dashboard/age-bands.js';
@@ -27,8 +26,8 @@
 
 	type StudyTarget = 'vaccines' | 'antiparasitics' | 'pets' | 'owners';
 	type StudyPetSnapshot = DashboardPetStudyItem | DashboardOwnerStudyPet;
-	type StudyVaccineSummary = DashboardPetStudyVaccine & { id: string; pet: DashboardPetStudyItem };
-	type StudyAntiparasiticSummary = DashboardPetStudyAntiparasitic & { id: string; pet: DashboardPetStudyItem };
+	type StudyVaccineSummary = DashboardPetStudyTreatment<DashboardVaccineStatusKey> & { id: string; pet: DashboardPetStudyItem };
+	type StudyAntiparasiticSummary = DashboardPetStudyTreatment<DashboardAntiparasiticStatusKey> & { id: string; pet: DashboardPetStudyItem };
 	type StudyDimension =
 		| 'vaccine'
 		| 'vaccineStatus'
@@ -127,11 +126,11 @@
 	}
 
 	function studyVaccineItems(pets: DashboardPetStudyItem[]): StudyVaccineSummary[] {
-		return pets.flatMap((pet) => pet.vaccines.map((vaccine) => ({ ...vaccine, id: `${pet.id}:${vaccine.vaccineNormalizedName}`, pet })));
+		return pets.flatMap((pet) => pet.vaccines.map((vaccine) => ({ ...vaccine, id: `${pet.id}:${vaccine.normalizedName}`, pet })));
 	}
 
 	function studyAntiparasiticItems(pets: DashboardPetStudyItem[]): StudyAntiparasiticSummary[] {
-		return pets.flatMap((pet) => pet.antiparasitics.map((antiparasitic) => ({ ...antiparasitic, id: `${pet.id}:${antiparasitic.antiparasiticNormalizedName}`, pet })));
+		return pets.flatMap((pet) => pet.antiparasitics.map((antiparasitic) => ({ ...antiparasitic, id: `${pet.id}:${antiparasitic.normalizedName}`, pet })));
 	}
 
 	function selectStudyTarget(target: StudyTarget): void {
@@ -261,7 +260,7 @@
 		if (studyVaccineNormalizedName) {
 			const buckets = new Map<DashboardVaccineStatusKey, number>();
 			for (const vaccine of allStudyVaccines) {
-				if (vaccine.vaccineNormalizedName !== studyVaccineNormalizedName) continue;
+				if (vaccine.normalizedName !== studyVaccineNormalizedName) continue;
 				buckets.set(vaccine.status, (buckets.get(vaccine.status) ?? 0) + 1);
 			}
 			return [{ value: '', label: studyAllOptionLabel() }, ...toDashboardBuckets(buckets).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(vaccineStatusLabel(bucket.key), bucket.count) }))];
@@ -278,7 +277,7 @@
 		if (studyAntiparasiticNormalizedName) {
 			const buckets = new Map<DashboardAntiparasiticStatusKey, number>();
 			for (const antiparasitic of allStudyAntiparasitics) {
-				if (antiparasitic.antiparasiticNormalizedName !== studyAntiparasiticNormalizedName) continue;
+				if (antiparasitic.normalizedName !== studyAntiparasiticNormalizedName) continue;
 				buckets.set(antiparasitic.status, (buckets.get(antiparasitic.status) ?? 0) + 1);
 			}
 			return [{ value: '', label: studyAllOptionLabel() }, ...toDashboardBuckets(buckets).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(antiparasiticStatusLabel(bucket.key), bucket.count) }))];
@@ -317,14 +316,14 @@
 	}
 
 	function studyPetMatchesVaccine(pet: StudyPetSnapshot): boolean {
-		if (studyVaccineNormalizedName && studyVaccineStatus) return pet.vaccines.some((vaccine) => vaccine.vaccineNormalizedName === studyVaccineNormalizedName && vaccine.status === studyVaccineStatus);
+		if (studyVaccineNormalizedName && studyVaccineStatus) return pet.vaccines.some((vaccine) => vaccine.normalizedName === studyVaccineNormalizedName && vaccine.status === studyVaccineStatus);
 		if (studyVaccineNormalizedName) return pet.vaccineNormalizedNames.includes(studyVaccineNormalizedName);
 		if (studyVaccineStatus) return pet.vaccineStatus === studyVaccineStatus;
 		return true;
 	}
 
 	function studyPetMatchesAntiparasitic(pet: StudyPetSnapshot): boolean {
-		if (studyAntiparasiticNormalizedName && studyAntiparasiticStatus) return pet.antiparasitics.some((antiparasitic) => antiparasitic.antiparasiticNormalizedName === studyAntiparasiticNormalizedName && antiparasitic.status === studyAntiparasiticStatus);
+		if (studyAntiparasiticNormalizedName && studyAntiparasiticStatus) return pet.antiparasitics.some((antiparasitic) => antiparasitic.normalizedName === studyAntiparasiticNormalizedName && antiparasitic.status === studyAntiparasiticStatus);
 		if (studyAntiparasiticNormalizedName) return pet.antiparasiticNormalizedNames.includes(studyAntiparasiticNormalizedName);
 		if (studyAntiparasiticStatus) return pet.antiparasiticStatus === studyAntiparasiticStatus;
 		return true;
@@ -361,13 +360,13 @@
 	}
 
 	function studyVaccineMatchesFilters(vaccine: StudyVaccineSummary): boolean {
-		if (studyVaccineNormalizedName && vaccine.vaccineNormalizedName !== studyVaccineNormalizedName) return false;
+		if (studyVaccineNormalizedName && vaccine.normalizedName !== studyVaccineNormalizedName) return false;
 		if (studyVaccineStatus && vaccine.status !== studyVaccineStatus) return false;
 		return true;
 	}
 
 	function studyAntiparasiticMatchesFilters(antiparasitic: StudyAntiparasiticSummary): boolean {
-		if (studyAntiparasiticNormalizedName && antiparasitic.antiparasiticNormalizedName !== studyAntiparasiticNormalizedName) return false;
+		if (studyAntiparasiticNormalizedName && antiparasitic.normalizedName !== studyAntiparasiticNormalizedName) return false;
 		if (studyAntiparasiticStatus && antiparasitic.status !== studyAntiparasiticStatus) return false;
 		return true;
 	}
@@ -516,13 +515,13 @@
 	}
 
 	function vaccineMatchesFactor(vaccine: StudyVaccineSummary, factor: StudyFactorKind): boolean {
-		if (factor === 'vaccine') return vaccine.vaccineNormalizedName === studyVaccineNormalizedName;
+		if (factor === 'vaccine') return vaccine.normalizedName === studyVaccineNormalizedName;
 		if (factor === 'vaccineStatus') return vaccine.status === studyVaccineStatus;
 		return petMatchesFactor(vaccine.pet, factor);
 	}
 
 	function antiparasiticMatchesFactor(antiparasitic: StudyAntiparasiticSummary, factor: StudyFactorKind): boolean {
-		if (factor === 'antiparasitic') return antiparasitic.antiparasiticNormalizedName === studyAntiparasiticNormalizedName;
+		if (factor === 'antiparasitic') return antiparasitic.normalizedName === studyAntiparasiticNormalizedName;
 		if (factor === 'antiparasiticStatus') return antiparasitic.status === studyAntiparasiticStatus;
 		return petMatchesFactor(antiparasitic.pet, factor);
 	}
@@ -607,13 +606,13 @@
 	}
 
 	function vaccineDimensionLabels(vaccine: StudyVaccineSummary, dimension: StudyDimension): string[] {
-		if (dimension === 'vaccine') return [vaccine.vaccineName];
+		if (dimension === 'vaccine') return [vaccine.name];
 		if (dimension === 'vaccineStatus') return [vaccineStatusLabel(vaccine.status)];
 		return activePetDimensionLabels(vaccine.pet, dimension);
 	}
 
 	function antiparasiticDimensionLabels(antiparasitic: StudyAntiparasiticSummary, dimension: StudyDimension): string[] {
-		if (dimension === 'antiparasitic') return [antiparasitic.antiparasiticName];
+		if (dimension === 'antiparasitic') return [antiparasitic.name];
 		if (dimension === 'antiparasiticStatus') return [antiparasiticStatusLabel(antiparasitic.status)];
 		return activePetDimensionLabels(antiparasitic.pet, dimension);
 	}
@@ -770,11 +769,11 @@
 		return t(`antiparasiticTreatment.status.${key}` as TranslationKey);
 	}
 
-	function vaccineDoseLabel(vaccine: DashboardPetStudyVaccine): string {
+	function vaccineDoseLabel(vaccine: DashboardPetStudyTreatment<DashboardVaccineStatusKey>): string {
 		return vaccine.dose;
 	}
 
-	function antiparasiticDoseLabel(antiparasitic: DashboardPetStudyAntiparasitic): string {
+	function antiparasiticDoseLabel(antiparasitic: DashboardPetStudyTreatment<DashboardAntiparasiticStatusKey>): string {
 		return antiparasitic.dose;
 	}
 
@@ -1064,7 +1063,7 @@
 							{#each listedStudyVaccines.slice(0, 40) as vaccine}
 								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 									<div class="min-w-0">
-										<p class="wrap-break-word text-sm font-semibold">{vaccine.vaccineName} · {vaccineDoseLabel(vaccine)} - {vaccineStatusLabel(vaccine.status)}</p>
+										<p class="wrap-break-word text-sm font-semibold">{vaccine.name} · {vaccineDoseLabel(vaccine)} - {vaccineStatusLabel(vaccine.status)}</p>
 										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{vaccine.pet.name} - {speciesLabel(vaccine.pet.species)} - {breedLabel(vaccine.pet.breed)}</p>
 										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(vaccine.pet)} - {studyPetCityText(vaccine.pet)}</p>
 										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{t('vaccine.appliedAt')}: {formatDateForDisplay(vaccine.appliedAt)} - {t('vaccine.analytics.dueAt')}: {formatDateForDisplay(vaccine.dueAt)}</p>
@@ -1078,7 +1077,7 @@
 							{#each listedStudyAntiparasitics.slice(0, 40) as antiparasitic}
 								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 									<div class="min-w-0">
-										<p class="wrap-break-word text-sm font-semibold">{antiparasitic.antiparasiticName} · {antiparasiticDoseLabel(antiparasitic)} - {antiparasiticStatusLabel(antiparasitic.status)}</p>
+										<p class="wrap-break-word text-sm font-semibold">{antiparasitic.name} · {antiparasiticDoseLabel(antiparasitic)} - {antiparasiticStatusLabel(antiparasitic.status)}</p>
 										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{antiparasitic.pet.name} - {speciesLabel(antiparasitic.pet.species)} - {breedLabel(antiparasitic.pet.breed)}</p>
 										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(antiparasitic.pet)} - {studyPetCityText(antiparasitic.pet)}</p>
 										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{t('antiparasiticTreatment.appliedAt')}: {formatDateForDisplay(antiparasitic.appliedAt)} - {t('antiparasiticTreatment.analytics.dueAt')}: {formatDateForDisplay(antiparasitic.dueAt)}</p>

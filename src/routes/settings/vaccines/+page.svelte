@@ -6,16 +6,14 @@
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
-	import type { Antiparasitic } from '$lib/domain/antiparasitic/antiparasitic.js';
 	import { petSpeciesOptions, type KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
 	import { canDeletePreventiveCatalogItem, canEditPreventiveCatalogItem } from '$lib/domain/preventive/catalog.js';
 	import { canDeletePreventiveProtocol, canEditPreventiveProtocol, type PreventiveProtocol, type PreventiveProtocolDose, type PreventiveProtocolKind, type PreventiveValidityUnit } from '$lib/domain/preventive/protocol.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
-	import type { Vaccine } from '$lib/domain/vaccine/vaccine.js';
+	import type { TreatmentCatalogItem } from '$lib/domain/treatment/treatment.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
-	import { loadAntiparasitics, removeAntiparasiticName, saveAntiparasiticName, setAntiparasiticNameHidden } from '$lib/services/antiparasitic.service.js';
 	import { loadPreventiveProtocols, removeProtocol, removeProtocolDose, saveProtocol, saveProtocolDose, setProtocolHidden } from '$lib/services/preventive-protocol.service.js';
-	import { loadVaccines, removeVaccineName, saveVaccineName, setVaccineNameHidden } from '$lib/services/vaccine.service.js';
+	import { loadTreatmentCatalogItems, removeTreatmentCatalogName, saveTreatmentCatalogName, setTreatmentCatalogNameHidden } from '$lib/services/treatment.service.js';
 	import Eye from '@lucide/svelte/icons/eye';
 	import EyeOff from '@lucide/svelte/icons/eye-off';
 	import Pill from '@lucide/svelte/icons/pill';
@@ -26,7 +24,7 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
 	type VaccineSettingsTab = 'vaccines' | 'antiparasitics' | 'protocols';
-	type CatalogItem = Vaccine | Antiparasitic;
+	type CatalogItem = TreatmentCatalogItem;
 
 	const tabs: { id: VaccineSettingsTab; labelKey: TranslationKey }[] = [
 		{ id: 'vaccines', labelKey: 'vaccine.catalog.tab.vaccines' },
@@ -34,8 +32,8 @@
 		{ id: 'protocols', labelKey: 'protocol.tab' }
 	];
 
-	let vaccines = $state<Vaccine[]>([]);
-	let antiparasitics = $state<Antiparasitic[]>([]);
+	let vaccines = $state<TreatmentCatalogItem[]>([]);
+	let antiparasitics = $state<TreatmentCatalogItem[]>([]);
 	let protocols = $state<PreventiveProtocol[]>([]);
 	let activeTab = $state<VaccineSettingsTab>('vaccines');
 	let vaccineDraftNames = $state<Record<number, string>>({});
@@ -80,11 +78,11 @@
 	let errorKey = $state<TranslationKey | null>(null);
 	let newProtocolSelectableItems = $derived(visibleCatalogItemsForSpecies(newProtocolKind, newProtocolSpecies));
 
-	function sortedVaccines(source: Vaccine[]): Vaccine[] {
+	function sortedVaccines(source: TreatmentCatalogItem[]): TreatmentCatalogItem[] {
 		return [...source].sort((first, second) => first.name.localeCompare(second.name));
 	}
 
-	function sortedAntiparasitics(source: Antiparasitic[]): Antiparasitic[] {
+	function sortedAntiparasitics(source: TreatmentCatalogItem[]): TreatmentCatalogItem[] {
 		return [...source].sort((first, second) => first.name.localeCompare(second.name));
 	}
 
@@ -129,19 +127,19 @@
 		return species.map(speciesLabel).join(', ');
 	}
 
-	function vaccineDraftSpeciesValue(vaccine: Vaccine): KnownPetSpecies[] {
+	function vaccineDraftSpeciesValue(vaccine: TreatmentCatalogItem): KnownPetSpecies[] {
 		return vaccineDraftSpecies[vaccine.id] ?? vaccine.species;
 	}
 
-	function vaccineDraftRegionsValue(vaccine: Vaccine): string[] {
+	function vaccineDraftRegionsValue(vaccine: TreatmentCatalogItem): string[] {
 		return vaccineDraftRegions[vaccine.id] ?? vaccine.regions;
 	}
 
-	function antiparasiticDraftSpeciesValue(antiparasitic: Antiparasitic): KnownPetSpecies[] {
+	function antiparasiticDraftSpeciesValue(antiparasitic: TreatmentCatalogItem): KnownPetSpecies[] {
 		return antiparasiticDraftSpecies[antiparasitic.id] ?? antiparasitic.species;
 	}
 
-	function antiparasiticDraftRegionsValue(antiparasitic: Antiparasitic): string[] {
+	function antiparasiticDraftRegionsValue(antiparasitic: TreatmentCatalogItem): string[] {
 		return antiparasiticDraftRegions[antiparasitic.id] ?? antiparasitic.regions;
 	}
 
@@ -149,11 +147,11 @@
 		return protocolDraftSpecies[protocol.id] ?? protocol.species;
 	}
 
-	function setVaccineSpecies(vaccine: Vaccine, species: KnownPetSpecies) {
+	function setVaccineSpecies(vaccine: TreatmentCatalogItem, species: KnownPetSpecies) {
 		vaccineDraftSpecies = { ...vaccineDraftSpecies, [vaccine.id]: toggleSpeciesDraft(vaccineDraftSpeciesValue(vaccine), species) };
 	}
 
-	function setAntiparasiticSpecies(antiparasitic: Antiparasitic, species: KnownPetSpecies) {
+	function setAntiparasiticSpecies(antiparasitic: TreatmentCatalogItem, species: KnownPetSpecies) {
 		antiparasiticDraftSpecies = { ...antiparasiticDraftSpecies, [antiparasitic.id]: toggleSpeciesDraft(antiparasiticDraftSpeciesValue(antiparasitic), species) };
 	}
 
@@ -270,7 +268,7 @@
 		doseDraftValidityUnits = { ...doseDraftValidityUnits, [dose.id]: dose.validityUnit };
 	}
 
-	function upsertVaccine(vaccine: Vaccine) {
+	function upsertVaccine(vaccine: TreatmentCatalogItem) {
 		vaccines = sortedVaccines([...vaccines.filter((item) => item.id !== vaccine.id && item.normalizedName !== vaccine.normalizedName), vaccine]);
 		vaccineDraftNames = { ...vaccineDraftNames, [vaccine.id]: vaccine.name };
 		vaccineDraftAliases = { ...vaccineDraftAliases, [vaccine.id]: aliasDraft(vaccine.aliases) };
@@ -279,7 +277,7 @@
 		vaccineDraftSpecies = { ...vaccineDraftSpecies, [vaccine.id]: vaccine.species };
 	}
 
-	function upsertAntiparasitic(antiparasitic: Antiparasitic) {
+	function upsertAntiparasitic(antiparasitic: TreatmentCatalogItem) {
 		antiparasitics = sortedAntiparasitics([...antiparasitics.filter((item) => item.id !== antiparasitic.id && item.normalizedName !== antiparasitic.normalizedName), antiparasitic]);
 		antiparasiticDraftNames = { ...antiparasiticDraftNames, [antiparasitic.id]: antiparasitic.name };
 		antiparasiticDraftAliases = { ...antiparasiticDraftAliases, [antiparasitic.id]: aliasDraft(antiparasitic.aliases) };
@@ -297,8 +295,7 @@
 		if (exception instanceof Error && exception.message === 'field_limit_exceeded') errorKey = 'form.limitExceeded';
 		else if (exception instanceof Error && exception.message === 'field_required') errorKey = 'form.fieldRequired';
 		else if (exception instanceof Error && (exception.message === 'preventive_catalog_system_item' || exception.message === 'preventive_protocol_system_item')) errorKey = 'preventive.systemItemReadOnly';
-		else if (exception instanceof Error && exception.message === 'vaccine_name_required') errorKey = 'vaccine.nameRequired';
-		else if (exception instanceof Error && exception.message === 'antiparasitic_name_required') errorKey = 'antiparasiticTreatment.nameRequired';
+		else if (exception instanceof Error && exception.message === 'treatment_name_required') errorKey = activeTab === 'antiparasitics' ? 'antiparasiticTreatment.nameRequired' : 'vaccine.nameRequired';
 		else if (exception instanceof Error && exception.message === 'protocol_name_required') errorKey = 'protocol.nameRequired';
 		else if (exception instanceof Error && exception.message === 'protocol_item_required') errorKey = 'protocol.itemRequired';
 		else if (exception instanceof Error && exception.message === 'protocol_dose_required') errorKey = 'protocol.doseRequired';
@@ -311,7 +308,7 @@
 		errorKey = null;
 
 		try {
-			const [loadedVaccines, loadedAntiparasitics, loadedProtocols] = await Promise.all([loadVaccines(true), loadAntiparasitics(true), loadPreventiveProtocols(undefined, true)]);
+			const [loadedVaccines, loadedAntiparasitics, loadedProtocols] = await Promise.all([loadTreatmentCatalogItems('vaccine', true), loadTreatmentCatalogItems('antiparasitic', true), loadPreventiveProtocols(undefined, true)]);
 			vaccines = sortedVaccines(loadedVaccines);
 			antiparasitics = sortedAntiparasitics(loadedAntiparasitics);
 			protocols = sortedProtocols(loadedProtocols);
@@ -340,7 +337,7 @@
 		errorKey = null;
 
 		try {
-			const saved = await saveVaccineName({
+			const saved = await saveTreatmentCatalogName('vaccine', {
 				name: newVaccineName,
 				species: newVaccineSpecies,
 				aliases: parseAliases(newVaccineAliases),
@@ -368,7 +365,7 @@
 		errorKey = null;
 
 		try {
-			const saved = await saveAntiparasiticName({
+			const saved = await saveTreatmentCatalogName('antiparasitic', {
 				name: newAntiparasiticName,
 				species: newAntiparasiticSpecies,
 				aliases: parseAliases(newAntiparasiticAliases),
@@ -410,14 +407,15 @@
 		}
 	}
 
-	async function saveExistingVaccine(vaccine: Vaccine) {
+	async function saveExistingVaccine(vaccine: TreatmentCatalogItem) {
 		if (!canEditPreventiveCatalogItem(vaccine)) return;
 		saving = true;
 		statusKey = null;
 		errorKey = null;
 
 		try {
-			const saved = await saveVaccineName(
+			const saved = await saveTreatmentCatalogName(
+				'vaccine',
 				{
 					name: vaccineDraftNames[vaccine.id] ?? vaccine.name,
 					species: vaccineDraftSpeciesValue(vaccine),
@@ -436,14 +434,15 @@
 		}
 	}
 
-	async function saveExistingAntiparasitic(antiparasitic: Antiparasitic) {
+	async function saveExistingAntiparasitic(antiparasitic: TreatmentCatalogItem) {
 		if (!canEditPreventiveCatalogItem(antiparasitic)) return;
 		saving = true;
 		statusKey = null;
 		errorKey = null;
 
 		try {
-			const saved = await saveAntiparasiticName(
+			const saved = await saveTreatmentCatalogName(
+				'antiparasitic',
 				{
 					name: antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name,
 					species: antiparasiticDraftSpeciesValue(antiparasitic),
@@ -488,13 +487,13 @@
 		}
 	}
 
-	async function toggleVaccineHidden(vaccine: Vaccine) {
+	async function toggleVaccineHidden(vaccine: TreatmentCatalogItem) {
 		saving = true;
 		statusKey = null;
 		errorKey = null;
 
 		try {
-			const saved = await setVaccineNameHidden(vaccine.id, !vaccine.hiddenAt);
+			const saved = await setTreatmentCatalogNameHidden('vaccine', vaccine.id, !vaccine.hiddenAt);
 			upsertVaccine(saved);
 			statusKey = saved.hiddenAt ? 'vaccine.hiddenSaved' : 'vaccine.shownSaved';
 		} catch {
@@ -504,13 +503,13 @@
 		}
 	}
 
-	async function toggleAntiparasiticHidden(antiparasitic: Antiparasitic) {
+	async function toggleAntiparasiticHidden(antiparasitic: TreatmentCatalogItem) {
 		saving = true;
 		statusKey = null;
 		errorKey = null;
 
 		try {
-			const saved = await setAntiparasiticNameHidden(antiparasitic.id, !antiparasitic.hiddenAt);
+			const saved = await setTreatmentCatalogNameHidden('antiparasitic', antiparasitic.id, !antiparasitic.hiddenAt);
 			upsertAntiparasitic(saved);
 			statusKey = saved.hiddenAt ? 'antiparasiticTreatment.hiddenSaved' : 'antiparasiticTreatment.shownSaved';
 		} catch {
@@ -536,7 +535,7 @@
 		}
 	}
 
-	async function deleteVaccine(vaccine: Vaccine) {
+	async function deleteVaccine(vaccine: TreatmentCatalogItem) {
 		if (!canDeletePreventiveCatalogItem(vaccine)) return;
 		if (!window.confirm(t('vaccine.list.deleteConfirm'))) return;
 		saving = true;
@@ -544,7 +543,7 @@
 		errorKey = null;
 
 		try {
-			await removeVaccineName(vaccine.id);
+			await removeTreatmentCatalogName('vaccine', vaccine.id);
 			vaccines = vaccines.filter((item) => item.id !== vaccine.id);
 			const { [vaccine.id]: _removed, ...remainingDrafts } = vaccineDraftNames;
 			vaccineDraftNames = remainingDrafts;
@@ -564,7 +563,7 @@
 		}
 	}
 
-	async function deleteAntiparasitic(antiparasitic: Antiparasitic) {
+	async function deleteAntiparasitic(antiparasitic: TreatmentCatalogItem) {
 		if (!canDeletePreventiveCatalogItem(antiparasitic)) return;
 		if (!window.confirm(t('antiparasiticTreatment.list.deleteConfirm'))) return;
 		saving = true;
@@ -572,7 +571,7 @@
 		errorKey = null;
 
 		try {
-			await removeAntiparasiticName(antiparasitic.id);
+			await removeTreatmentCatalogName('antiparasitic', antiparasitic.id);
 			antiparasitics = antiparasitics.filter((item) => item.id !== antiparasitic.id);
 			const { [antiparasitic.id]: _removed, ...remainingDrafts } = antiparasiticDraftNames;
 			antiparasiticDraftNames = remainingDrafts;

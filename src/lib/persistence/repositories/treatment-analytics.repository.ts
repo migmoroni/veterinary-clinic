@@ -1,32 +1,32 @@
 import type {
-	VaccineAnalyticsVaccine,
-	VaccineHistoryFilter,
-	VaccineHistoryPoint,
-	VaccineHistoryPeriod,
-	VaccineDueFilter,
-	VaccineDueFilterMode,
-	VaccineStatusItem,
-	VaccineStatusKey,
-	VaccineStatusSummary
-} from '$lib/domain/vaccine/analytics.js';
-import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
+	TreatmentAnalyticsCatalogItem,
+	TreatmentDueFilter,
+	TreatmentDueFilterMode,
+	TreatmentHistoryFilter,
+	TreatmentHistoryPeriod,
+	TreatmentHistoryPoint,
+	TreatmentStatusItem,
+	TreatmentStatusKey,
+	TreatmentStatusSummary
+} from '$lib/domain/treatment/analytics.js';
 import {
-	buildVaccineStatus,
-	emptyVaccineStatusSummary,
+	buildTreatmentStatus,
+	emptyTreatmentStatusSummary,
 	historyBucket,
-	isPlausibleVaccineAppliedAt,
-	matchesVaccineDueFilter,
-	vaccineDueFilterModes,
-	vaccineHistoryPeriods,
-	vaccineStatusKeys,
+	isPlausibleTreatmentAppliedAt,
+	matchesTreatmentDueFilter,
 	shiftIsoDate,
-	todayIsoDate
-} from '$lib/domain/vaccine/analytics.js';
-import type { VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
+	todayIsoDate,
+	treatmentDueFilterModes,
+	treatmentHistoryPeriods,
+	treatmentStatusKeys
+} from '$lib/domain/treatment/analytics.js';
+import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
+import type { TreatmentKind, TreatmentValidityUnit } from '$lib/domain/treatment/treatment.js';
 import { selectMany } from '$lib/persistence/sqlite/client.js';
 import { listOwnerAssociatedContactsByOwnerIds } from './owner.repository.js';
 
-interface LatestVaccinationRow {
+interface LatestTreatmentRow {
 	id: number;
 	pet_id: number;
 	pet_name: string;
@@ -35,29 +35,29 @@ interface LatestVaccinationRow {
 	owner_name: string | null;
 	owner_contacts: OwnerAssociatedContact[];
 	applied_at: string;
-	vaccine_name: string;
-	vaccine_normalized_name: string;
+	name: string;
+	normalized_name: string;
 	validity_value: number;
-	validity_unit: VaccineValidityUnit;
+	validity_unit: TreatmentValidityUnit;
 }
 
-interface VaccinationHistoryRow {
+interface TreatmentHistoryRow {
 	applied_at: string;
-	vaccine_normalized_name: string;
+	normalized_name: string;
 }
 
-interface AnalyticsVaccineRow {
-	vaccine_name: string;
-	vaccine_normalized_name: string;
+interface AnalyticsTreatmentRow {
+	name: string;
+	normalized_name: string;
 	count: number;
 }
 
-export interface VaccineAnalyticsOverview {
+export interface TreatmentAnalyticsOverview {
 	totalTracked: number;
-	summary: VaccineStatusSummary;
+	summary: TreatmentStatusSummary;
 }
 
-const statusOrder: Record<VaccineStatusKey, number> = {
+const statusOrder: Record<TreatmentStatusKey, number> = {
 	current: 0,
 	dueSoon: 1,
 	dueVerySoon: 2,
@@ -97,19 +97,19 @@ function parseOwnerIds(value: string | null | undefined): number[] {
 		.filter((id) => Number.isInteger(id) && id > 0);
 }
 
-function normalizeStatus(value: string | null | undefined): VaccineStatusKey {
-	return vaccineStatusKeys.includes(value as VaccineStatusKey) ? (value as VaccineStatusKey) : 'expired';
+function normalizeStatus(value: string | null | undefined): TreatmentStatusKey {
+	return treatmentStatusKeys.includes(value as TreatmentStatusKey) ? (value as TreatmentStatusKey) : 'expired';
 }
 
-function normalizeDueFilterMode(value: string | null | undefined): VaccineDueFilterMode {
-	return vaccineDueFilterModes.includes(value as VaccineDueFilterMode) ? (value as VaccineDueFilterMode) : 'status';
+function normalizeDueFilterMode(value: string | null | undefined): TreatmentDueFilterMode {
+	return treatmentDueFilterModes.includes(value as TreatmentDueFilterMode) ? (value as TreatmentDueFilterMode) : 'status';
 }
 
 function normalizeDueDate(value: string | null | undefined, fallback: string): string {
 	return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : fallback;
 }
 
-function normalizeDueFilter(filter: Partial<VaccineDueFilter> | string | null | undefined): VaccineDueFilter {
+function normalizeDueFilter(filter: Partial<TreatmentDueFilter> | string | null | undefined): TreatmentDueFilter {
 	const today = todayIsoDate();
 	const defaultStartDate = shiftIsoDate(today, -30);
 	const defaultEndDate = shiftIsoDate(today, 30);
@@ -129,17 +129,17 @@ function normalizeDueFilter(filter: Partial<VaccineDueFilter> | string | null | 
 	};
 }
 
-function normalizePeriod(value: string | null | undefined): VaccineHistoryPeriod {
-	return vaccineHistoryPeriods.includes(value as VaccineHistoryPeriod) ? (value as VaccineHistoryPeriod) : 'month';
+function normalizePeriod(value: string | null | undefined): TreatmentHistoryPeriod {
+	return treatmentHistoryPeriods.includes(value as TreatmentHistoryPeriod) ? (value as TreatmentHistoryPeriod) : 'month';
 }
 
-function normalizeVaccineFilter(value: string | null | undefined): string | null {
+function normalizeTreatmentFilter(value: string | null | undefined): string | null {
 	const normalized = value?.trim() ?? '';
 	return normalized ? normalized : null;
 }
 
-async function listLatestVaccinationRows(): Promise<LatestVaccinationRow[]> {
-	const rows = await selectMany<LatestVaccinationRow>(
+async function listLatestTreatmentRows(kind: TreatmentKind): Promise<LatestTreatmentRow[]> {
+	const rows = await selectMany<LatestTreatmentRow>(
 		`SELECT id,
 			pet_id,
 			pet_name,
@@ -147,8 +147,8 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationRow[]> {
 			owner_ids,
 			owner_name,
 			applied_at,
-			vaccine_name,
-			vaccine_normalized_name,
+			name,
+			normalized_name,
 			validity_value,
 			validity_unit
 		 FROM (
@@ -160,8 +160,8 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationRow[]> {
 				${ownerIdsSql} AS owner_ids,
 				${ownerNamesSql} AS owner_name,
 				pet_treatments.applied_at,
-				pet_treatments.name AS vaccine_name,
-				pet_treatments.normalized_name AS vaccine_normalized_name,
+				pet_treatments.name,
+				pet_treatments.normalized_name,
 				pet_treatments.validity_value,
 				pet_treatments.validity_unit,
 				ROW_NUMBER() OVER (
@@ -170,7 +170,7 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationRow[]> {
 				) AS latest_rank
 			 FROM pet_treatments
 			 JOIN pets ON pets.id = pet_treatments.pet_id
-			 WHERE pet_treatments.kind = 'vaccine'
+			 WHERE pet_treatments.kind = $1
 				AND pet_treatments.deleted_at IS NULL
 				AND pet_treatments.validity_ignored_at IS NULL
 				AND pets.deleted_at IS NULL
@@ -178,11 +178,12 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationRow[]> {
 				AND pet_treatments.applied_at <= date('now', 'localtime')
 		 )
 		 WHERE latest_rank = 1
-		 ORDER BY pet_id, vaccine_normalized_name`
+		 ORDER BY pet_id, normalized_name`,
+		[kind]
 	);
 
-	const latestRows = rows.filter((row) => isPlausibleVaccineAppliedAt(row.applied_at));
-	const ownerIdsByRow = new Map<LatestVaccinationRow, number[]>();
+	const latestRows = rows.filter((row) => isPlausibleTreatmentAppliedAt(row.applied_at));
+	const ownerIdsByRow = new Map<LatestTreatmentRow, number[]>();
 	const allOwnerIds: number[] = [];
 	for (const row of latestRows) {
 		const ownerIds = parseOwnerIds(row.owner_ids);
@@ -197,8 +198,8 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationRow[]> {
 	}));
 }
 
-function mapStatusItem(row: LatestVaccinationRow, now = new Date()): VaccineStatusItem | null {
-	const status = buildVaccineStatus(row.applied_at, row.validity_value, row.validity_unit, now);
+function mapStatusItem(row: LatestTreatmentRow, now = new Date()): TreatmentStatusItem | null {
+	const status = buildTreatmentStatus(row.applied_at, row.validity_value, row.validity_unit, now);
 	if (!status) return null;
 
 	return {
@@ -208,8 +209,8 @@ function mapStatusItem(row: LatestVaccinationRow, now = new Date()): VaccineStat
 		petId: row.pet_id,
 		petName: row.pet_name,
 		petAvatarBytes: null,
-		vaccineName: row.vaccine_name,
-		vaccineNormalizedName: row.vaccine_normalized_name,
+		name: row.name,
+		normalizedName: row.normalized_name,
 		appliedAt: row.applied_at,
 		dueAt: status.dueAt,
 		daysUntilDue: status.daysUntilDue,
@@ -217,17 +218,17 @@ function mapStatusItem(row: LatestVaccinationRow, now = new Date()): VaccineStat
 	};
 }
 
-function sortStatusItems(items: VaccineStatusItem[]): VaccineStatusItem[] {
+function sortStatusItems(items: TreatmentStatusItem[]): TreatmentStatusItem[] {
 	return [...items].sort((first, second) => {
 		if (first.status !== second.status) return statusOrder[first.status] - statusOrder[second.status];
 		if (first.dueAt !== second.dueAt) return first.dueAt.localeCompare(second.dueAt);
-		return first.ownerName.localeCompare(second.ownerName) || first.petName.localeCompare(second.petName) || first.vaccineName.localeCompare(second.vaccineName);
+		return first.ownerName.localeCompare(second.ownerName) || first.petName.localeCompare(second.petName) || first.name.localeCompare(second.name);
 	});
 }
 
-export async function getVaccineAnalyticsOverview(): Promise<VaccineAnalyticsOverview> {
-	const rows = await listLatestVaccinationRows();
-	const summary = emptyVaccineStatusSummary();
+export async function getTreatmentAnalyticsOverview(kind: TreatmentKind): Promise<TreatmentAnalyticsOverview> {
+	const rows = await listLatestTreatmentRows(kind);
+	const summary = emptyTreatmentStatusSummary();
 	let totalTracked = 0;
 
 	for (const row of rows) {
@@ -240,29 +241,29 @@ export async function getVaccineAnalyticsOverview(): Promise<VaccineAnalyticsOve
 	return { totalTracked, summary };
 }
 
-export async function listVaccineStatusItems(filter: Partial<VaccineDueFilter> | string | null | undefined): Promise<VaccineStatusItem[]> {
+export async function listTreatmentStatusItems(kind: TreatmentKind, filter: Partial<TreatmentDueFilter> | string | null | undefined): Promise<TreatmentStatusItem[]> {
 	const normalizedFilter = normalizeDueFilter(filter);
-	const rows = await listLatestVaccinationRows();
-	return sortStatusItems(rows.map((row) => mapStatusItem(row)).filter((item): item is VaccineStatusItem => !!item && matchesVaccineDueFilter(item, normalizedFilter)));
+	const rows = await listLatestTreatmentRows(kind);
+	return sortStatusItems(rows.map((row) => mapStatusItem(row)).filter((item): item is TreatmentStatusItem => !!item && matchesTreatmentDueFilter(item, normalizedFilter)));
 }
 
-export async function listVaccineHistory(filter: Partial<VaccineHistoryFilter>): Promise<VaccineHistoryPoint[]> {
+export async function listTreatmentHistory(kind: TreatmentKind, filter: Partial<TreatmentHistoryFilter>): Promise<TreatmentHistoryPoint[]> {
 	const period = normalizePeriod(filter.period);
-	const vaccineNormalizedName = normalizeVaccineFilter(filter.vaccineNormalizedName);
-	const values = vaccineNormalizedName ? [vaccineNormalizedName] : [];
-	const rows = await selectMany<VaccinationHistoryRow>(
-		`SELECT pet_treatments.applied_at, pet_treatments.normalized_name AS vaccine_normalized_name
+	const normalizedName = normalizeTreatmentFilter(filter.normalizedName);
+	const values = normalizedName ? [kind, normalizedName] : [kind];
+	const rows = await selectMany<TreatmentHistoryRow>(
+		`SELECT pet_treatments.applied_at, pet_treatments.normalized_name
 		 FROM pet_treatments
 		 JOIN pets ON pets.id = pet_treatments.pet_id
-		 WHERE pet_treatments.kind = 'vaccine'
+		 WHERE pet_treatments.kind = $1
 			AND pet_treatments.deleted_at IS NULL
 			AND pets.deleted_at IS NULL
-			${vaccineNormalizedName ? 'AND pet_treatments.normalized_name = $1' : ''}
+			${normalizedName ? 'AND pet_treatments.normalized_name = $2' : ''}
 		 ORDER BY pet_treatments.applied_at ASC`,
 		values
 	);
 
-	const buckets = new Map<string, VaccineHistoryPoint>();
+	const buckets = new Map<string, TreatmentHistoryPoint>();
 	for (const row of rows) {
 		const bucket = historyBucket(row.applied_at, period);
 		if (!bucket) continue;
@@ -274,18 +275,19 @@ export async function listVaccineHistory(filter: Partial<VaccineHistoryFilter>):
 	return [...buckets.values()].sort((first, second) => first.key.localeCompare(second.key));
 }
 
-export async function listAnalyticsVaccines(): Promise<VaccineAnalyticsVaccine[]> {
-	const rows = await selectMany<AnalyticsVaccineRow>(
-		`SELECT vaccine_name, vaccine_normalized_name, COUNT(*) AS count
+export async function listAnalyticsTreatments(kind: TreatmentKind): Promise<TreatmentAnalyticsCatalogItem[]> {
+	const rows = await selectMany<AnalyticsTreatmentRow>(
+		`SELECT name, normalized_name, COUNT(*) AS count
 		 FROM (
-			SELECT name AS vaccine_name, normalized_name AS vaccine_normalized_name, applied_at, id
+			SELECT name, normalized_name, applied_at, id
 			FROM pet_treatments
-			WHERE kind = 'vaccine' AND deleted_at IS NULL
+			WHERE kind = $1 AND deleted_at IS NULL
 			ORDER BY normalized_name, applied_at DESC, id DESC
 		 )
-		 GROUP BY vaccine_normalized_name
-		 ORDER BY vaccine_name COLLATE NOCASE`
+		 GROUP BY normalized_name
+		 ORDER BY name COLLATE NOCASE`,
+		[kind]
 	);
 
-	return rows.map((row) => ({ vaccineName: row.vaccine_name, vaccineNormalizedName: row.vaccine_normalized_name, count: row.count }));
+	return rows.map((row) => ({ name: row.name, normalizedName: row.normalized_name, count: row.count }));
 }

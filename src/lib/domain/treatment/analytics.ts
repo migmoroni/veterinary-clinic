@@ -1,15 +1,15 @@
 import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
-import { computeAntiparasiticTreatmentDueAt, type AntiparasiticValidityUnit } from './antiparasitic.js';
+import { computeTreatmentDueAt, type TreatmentValidityUnit } from './treatment.js';
 
-export type AntiparasiticTreatmentStatusKey = 'current' | 'dueSoon' | 'dueVerySoon' | 'expired' | 'overdue';
-export type AntiparasiticTreatmentHistoryPeriod = 'week' | 'month' | 'quarter' | 'semester' | 'year';
-export type AntiparasiticTreatmentDueFilterMode = 'status' | 'period';
+export type TreatmentStatusKey = 'current' | 'dueSoon' | 'dueVerySoon' | 'expired' | 'overdue';
+export type TreatmentHistoryPeriod = 'week' | 'month' | 'quarter' | 'semester' | 'year';
+export type TreatmentDueFilterMode = 'status' | 'period';
 
-export const antiparasiticTreatmentStatusKeys: AntiparasiticTreatmentStatusKey[] = ['current', 'dueSoon', 'dueVerySoon', 'expired', 'overdue'];
-export const antiparasiticTreatmentHistoryPeriods: AntiparasiticTreatmentHistoryPeriod[] = ['week', 'month', 'quarter', 'semester', 'year'];
-export const antiparasiticTreatmentDueFilterModes: AntiparasiticTreatmentDueFilterMode[] = ['status', 'period'];
+export const treatmentStatusKeys: TreatmentStatusKey[] = ['current', 'dueSoon', 'dueVerySoon', 'expired', 'overdue'];
+export const treatmentHistoryPeriods: TreatmentHistoryPeriod[] = ['week', 'month', 'quarter', 'semester', 'year'];
+export const treatmentDueFilterModes: TreatmentDueFilterMode[] = ['status', 'period'];
 
-export interface AntiparasiticTreatmentStatusSummary {
+export interface TreatmentStatusSummary {
 	current: number;
 	dueSoon: number;
 	dueVerySoon: number;
@@ -17,42 +17,42 @@ export interface AntiparasiticTreatmentStatusSummary {
 	overdue: number;
 }
 
-export interface AntiparasiticTreatmentStatusItem {
+export interface TreatmentStatusItem {
 	ownerId: number;
 	ownerName: string;
 	ownerContacts: OwnerAssociatedContact[];
 	petId: number;
 	petName: string;
 	petAvatarBytes: Uint8Array | null;
-	antiparasiticName: string;
-	antiparasiticNormalizedName: string;
+	name: string;
+	normalizedName: string;
 	appliedAt: string;
 	dueAt: string;
 	daysUntilDue: number;
-	status: AntiparasiticTreatmentStatusKey;
+	status: TreatmentStatusKey;
 }
 
-export interface AntiparasiticTreatmentHistoryPoint {
+export interface TreatmentHistoryPoint {
 	key: string;
 	label: string;
 	count: number;
 }
 
-export interface AntiparasiticTreatmentHistoryFilter {
-	period: AntiparasiticTreatmentHistoryPeriod;
-	antiparasiticNormalizedName: string | null;
+export interface TreatmentHistoryFilter {
+	period: TreatmentHistoryPeriod;
+	normalizedName: string | null;
 }
 
-export interface AntiparasiticTreatmentDueFilter {
-	mode: AntiparasiticTreatmentDueFilterMode;
-	status: AntiparasiticTreatmentStatusKey;
+export interface TreatmentDueFilter {
+	mode: TreatmentDueFilterMode;
+	status: TreatmentStatusKey;
 	startDate: string;
 	endDate: string;
 }
 
-export interface AntiparasiticAnalyticsAntiparasitic {
-	antiparasiticName: string;
-	antiparasiticNormalizedName: string;
+export interface TreatmentAnalyticsCatalogItem {
+	name: string;
+	normalizedName: string;
 	count: number;
 }
 
@@ -92,11 +92,11 @@ function startOfIsoWeek(date: Date): Date {
 	return copy;
 }
 
-export function emptyAntiparasiticTreatmentStatusSummary(): AntiparasiticTreatmentStatusSummary {
+export function emptyTreatmentStatusSummary(): TreatmentStatusSummary {
 	return { current: 0, dueSoon: 0, dueVerySoon: 0, expired: 0, overdue: 0 };
 }
 
-export function getAntiparasiticTreatmentStatus(daysUntilDue: number): AntiparasiticTreatmentStatusKey {
+export function getTreatmentStatus(daysUntilDue: number): TreatmentStatusKey {
 	if (daysUntilDue <= -15) return 'overdue';
 	if (daysUntilDue < 0) return 'expired';
 	if (daysUntilDue <= 15) return 'dueVerySoon';
@@ -104,12 +104,12 @@ export function getAntiparasiticTreatmentStatus(daysUntilDue: number): Antiparas
 	return 'current';
 }
 
-export function matchesAntiparasiticTreatmentDueFilter(item: AntiparasiticTreatmentStatusItem, filter: AntiparasiticTreatmentDueFilter): boolean {
+export function matchesTreatmentDueFilter(item: TreatmentStatusItem, filter: TreatmentDueFilter): boolean {
 	if (filter.mode === 'status') return item.status === filter.status;
 	return item.dueAt >= filter.startDate && item.dueAt <= filter.endDate;
 }
 
-export function isPlausibleAntiparasiticTreatmentAppliedAt(value: string, now = new Date()): boolean {
+export function isPlausibleTreatmentAppliedAt(value: string, now = new Date()): boolean {
 	const date = parseIsoDate(value);
 	if (!date) return false;
 
@@ -117,10 +117,10 @@ export function isPlausibleAntiparasiticTreatmentAppliedAt(value: string, now = 
 	return date.getTime() <= today.getTime();
 }
 
-export function buildAntiparasiticTreatmentStatus(appliedAt: string, validityValue: number, validityUnit: AntiparasiticValidityUnit, now = new Date()): { dueAt: string; daysUntilDue: number; status: AntiparasiticTreatmentStatusKey } | null {
-	if (!isPlausibleAntiparasiticTreatmentAppliedAt(appliedAt, now)) return null;
+export function buildTreatmentStatus(appliedAt: string, validityValue: number, validityUnit: TreatmentValidityUnit, now = new Date()): { dueAt: string; daysUntilDue: number; status: TreatmentStatusKey } | null {
+	if (!isPlausibleTreatmentAppliedAt(appliedAt, now)) return null;
 
-	const dueAt = computeAntiparasiticTreatmentDueAt(appliedAt, { validityValue, validityUnit });
+	const dueAt = computeTreatmentDueAt(appliedAt, { validityValue, validityUnit });
 	if (!dueAt) return null;
 
 	const dueDate = parseIsoDate(dueAt);
@@ -128,11 +128,11 @@ export function buildAntiparasiticTreatmentStatus(appliedAt: string, validityVal
 
 	const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 	const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / DAY_MS);
-	return { dueAt, daysUntilDue, status: getAntiparasiticTreatmentStatus(daysUntilDue) };
+	return { dueAt, daysUntilDue, status: getTreatmentStatus(daysUntilDue) };
 }
 
-export function historyBucket(value: string, period: AntiparasiticTreatmentHistoryPeriod): AntiparasiticTreatmentHistoryPoint | null {
-	if (!isPlausibleAntiparasiticTreatmentAppliedAt(value)) return null;
+export function historyBucket(value: string, period: TreatmentHistoryPeriod): TreatmentHistoryPoint | null {
+	if (!isPlausibleTreatmentAppliedAt(value)) return null;
 
 	const date = parseIsoDate(value);
 	if (!date) return null;

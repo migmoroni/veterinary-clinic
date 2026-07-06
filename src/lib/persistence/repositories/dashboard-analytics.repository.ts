@@ -7,10 +7,9 @@ import type {
 	DashboardNamedBucket,
 	DashboardOwnerStudyItem,
 	DashboardOwnerStudyPet,
-	DashboardPetStudyAntiparasitic,
 	DashboardPetStudyOwner,
 	DashboardPetStudyItem,
-	DashboardPetStudyVaccine,
+	DashboardPetStudyTreatment,
 	DashboardPetCountBandKey,
 	DashboardSexKey,
 	DashboardSpeciesKey,
@@ -19,12 +18,9 @@ import type {
 } from '$lib/domain/dashboard/analytics.js';
 import { dashboardAgeBand, dashboardAgeBandYear, dashboardAgeMonthBandKeys } from '$lib/domain/dashboard/age-bands.js';
 import type { PetBreed, PetSex, PetSpecies } from '$lib/domain/pet/pet.js';
-import type { AntiparasiticTreatmentStatusKey } from '$lib/domain/antiparasitic/analytics.js';
-import { buildAntiparasiticTreatmentStatus, isPlausibleAntiparasiticTreatmentAppliedAt } from '$lib/domain/antiparasitic/analytics.js';
-import type { AntiparasiticValidityUnit } from '$lib/domain/antiparasitic/antiparasitic.js';
-import type { VaccineStatusKey } from '$lib/domain/vaccine/analytics.js';
-import { buildVaccineStatus, isPlausibleVaccineAppliedAt } from '$lib/domain/vaccine/analytics.js';
-import type { VaccineValidityUnit } from '$lib/domain/vaccine/vaccine.js';
+import type { TreatmentStatusKey } from '$lib/domain/treatment/analytics.js';
+import { buildTreatmentStatus, isPlausibleTreatmentAppliedAt } from '$lib/domain/treatment/analytics.js';
+import type { TreatmentKind, TreatmentValidityUnit } from '$lib/domain/treatment/treatment.js';
 import { selectMany } from '$lib/persistence/sqlite/client.js';
 
 interface PetAnalyticsRow {
@@ -50,24 +46,14 @@ interface PetOwnerAnalyticsRow {
 	owner_id: number;
 }
 
-interface LatestVaccinationAnalyticsRow {
+interface LatestTreatmentAnalyticsRow {
 	pet_id: number;
-	vaccine_name: string;
-	vaccine_normalized_name: string;
+	name: string;
+	normalized_name: string;
 	dose: string;
 	applied_at: string;
 	validity_value: number;
-	validity_unit: VaccineValidityUnit;
-}
-
-interface LatestAntiparasiticAnalyticsRow {
-	pet_id: number;
-	antiparasitic_name: string;
-	antiparasitic_normalized_name: string;
-	dose: string;
-	applied_at: string;
-	validity_value: number;
-	validity_unit: AntiparasiticValidityUnit;
+	validity_unit: TreatmentValidityUnit;
 }
 
 const vaccineStatusWeight: Record<DashboardVaccineStatusKey, number> = {
@@ -180,19 +166,19 @@ async function listPetOwnerRows(): Promise<PetOwnerAnalyticsRow[]> {
 	);
 }
 
-async function listLatestVaccinationRows(): Promise<LatestVaccinationAnalyticsRow[]> {
-	const rows = await selectMany<LatestVaccinationAnalyticsRow>(
+async function listLatestTreatmentRows(kind: TreatmentKind): Promise<LatestTreatmentAnalyticsRow[]> {
+	const rows = await selectMany<LatestTreatmentAnalyticsRow>(
 		`SELECT pet_id,
-			vaccine_name,
-			vaccine_normalized_name,
+			name,
+			normalized_name,
 			dose,
 			applied_at,
 			validity_value,
 			validity_unit
 		 FROM (
 			SELECT pet_treatments.pet_id,
-				pet_treatments.name AS vaccine_name,
-				pet_treatments.normalized_name AS vaccine_normalized_name,
+				pet_treatments.name,
+				pet_treatments.normalized_name,
 				pet_treatments.dose,
 				pet_treatments.applied_at,
 				pet_treatments.validity_value,
@@ -203,7 +189,7 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationAnalyticsRo
 				) AS latest_rank
 			 FROM pet_treatments
 			 JOIN pets ON pets.id = pet_treatments.pet_id
-			 WHERE pet_treatments.kind = 'vaccine'
+			 WHERE pet_treatments.kind = $1
 				AND pet_treatments.deleted_at IS NULL
 				AND pet_treatments.validity_ignored_at IS NULL
 				AND pets.deleted_at IS NULL
@@ -211,88 +197,52 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationAnalyticsRo
 				AND pet_treatments.applied_at <= date('now', 'localtime')
 		 )
 		 WHERE latest_rank = 1
-		 ORDER BY pet_id, vaccine_normalized_name`
+		 ORDER BY pet_id, normalized_name`,
+		[kind]
 	);
 
-	return rows.filter((row) => isPlausibleVaccineAppliedAt(row.applied_at));
+	return rows.filter((row) => isPlausibleTreatmentAppliedAt(row.applied_at));
 }
 
-async function listLatestAntiparasiticRows(): Promise<LatestAntiparasiticAnalyticsRow[]> {
-	const rows = await selectMany<LatestAntiparasiticAnalyticsRow>(
-		`SELECT pet_id,
-			antiparasitic_name,
-			antiparasitic_normalized_name,
-			dose,
-			applied_at,
-			validity_value,
-			validity_unit
-		 FROM (
-			SELECT pet_treatments.pet_id,
-				pet_treatments.name AS antiparasitic_name,
-				pet_treatments.normalized_name AS antiparasitic_normalized_name,
-				pet_treatments.dose,
-				pet_treatments.applied_at,
-				pet_treatments.validity_value,
-				pet_treatments.validity_unit,
-				ROW_NUMBER() OVER (
-					PARTITION BY pet_treatments.pet_id, pet_treatments.normalized_name
-					ORDER BY pet_treatments.applied_at DESC, pet_treatments.id DESC
-				) AS latest_rank
-			 FROM pet_treatments
-			 JOIN pets ON pets.id = pet_treatments.pet_id
-			 WHERE pet_treatments.kind = 'antiparasitic'
-				AND pet_treatments.deleted_at IS NULL
-				AND pet_treatments.validity_ignored_at IS NULL
-				AND pets.deleted_at IS NULL
-				AND date(pet_treatments.applied_at) IS NOT NULL
-				AND pet_treatments.applied_at <= date('now', 'localtime')
-		 )
-		 WHERE latest_rank = 1
-		 ORDER BY pet_id, antiparasitic_normalized_name`
-	);
-
-	return rows.filter((row) => isPlausibleAntiparasiticTreatmentAppliedAt(row.applied_at));
-}
-
-function buildPetVaccineStatusMap(rows: LatestVaccinationAnalyticsRow[]): Map<number, DashboardVaccineStatusKey> {
+function buildPetVaccineStatusMap(rows: LatestTreatmentAnalyticsRow[]): Map<number, DashboardVaccineStatusKey> {
 	const statusByPetId = new Map<number, DashboardVaccineStatusKey>();
 
 	for (const row of rows) {
-		const status = buildVaccineStatus(row.applied_at, row.validity_value, row.validity_unit);
+		const status = buildTreatmentStatus(row.applied_at, row.validity_value, row.validity_unit);
 		if (!status) continue;
 
 		const current = statusByPetId.get(row.pet_id) ?? 'untracked';
-		statusByPetId.set(row.pet_id, worstVaccineStatus(current, status.status as VaccineStatusKey));
+		statusByPetId.set(row.pet_id, worstVaccineStatus(current, status.status as TreatmentStatusKey));
 	}
 
 	return statusByPetId;
 }
 
-function buildPetAntiparasiticStatusMap(rows: LatestAntiparasiticAnalyticsRow[]): Map<number, DashboardAntiparasiticStatusKey> {
+function buildPetAntiparasiticStatusMap(rows: LatestTreatmentAnalyticsRow[]): Map<number, DashboardAntiparasiticStatusKey> {
 	const statusByPetId = new Map<number, DashboardAntiparasiticStatusKey>();
 
 	for (const row of rows) {
-		const status = buildAntiparasiticTreatmentStatus(row.applied_at, row.validity_value, row.validity_unit);
+		const status = buildTreatmentStatus(row.applied_at, row.validity_value, row.validity_unit);
 		if (!status) continue;
 
 		const current = statusByPetId.get(row.pet_id) ?? 'untracked';
-		statusByPetId.set(row.pet_id, worstAntiparasiticStatus(current, status.status as AntiparasiticTreatmentStatusKey));
+		statusByPetId.set(row.pet_id, worstAntiparasiticStatus(current, status.status as TreatmentStatusKey));
 	}
 
 	return statusByPetId;
 }
 
-function buildPetVaccinesMap(rows: LatestVaccinationAnalyticsRow[]): Map<number, DashboardPetStudyVaccine[]> {
-	const vaccinesByPetId = new Map<number, DashboardPetStudyVaccine[]>();
+function buildPetVaccinesMap(rows: LatestTreatmentAnalyticsRow[]): Map<number, DashboardPetStudyTreatment<DashboardVaccineStatusKey>[]> {
+	const vaccinesByPetId = new Map<number, DashboardPetStudyTreatment<DashboardVaccineStatusKey>[]>();
 
 	for (const row of rows) {
-		const status = buildVaccineStatus(row.applied_at, row.validity_value, row.validity_unit);
+		const status = buildTreatmentStatus(row.applied_at, row.validity_value, row.validity_unit);
 		if (!status) continue;
 
 		const vaccines = vaccinesByPetId.get(row.pet_id) ?? [];
 		vaccines.push({
-			vaccineNormalizedName: row.vaccine_normalized_name,
-			vaccineName: row.vaccine_name,
+			normalizedName: row.normalized_name,
+			name: row.name,
 			dose: row.dose,
 			appliedAt: row.applied_at,
 			dueAt: status.dueAt,
@@ -305,17 +255,17 @@ function buildPetVaccinesMap(rows: LatestVaccinationAnalyticsRow[]): Map<number,
 	return vaccinesByPetId;
 }
 
-function buildPetAntiparasiticsMap(rows: LatestAntiparasiticAnalyticsRow[]): Map<number, DashboardPetStudyAntiparasitic[]> {
-	const antiparasiticsByPetId = new Map<number, DashboardPetStudyAntiparasitic[]>();
+function buildPetAntiparasiticsMap(rows: LatestTreatmentAnalyticsRow[]): Map<number, DashboardPetStudyTreatment<DashboardAntiparasiticStatusKey>[]> {
+	const antiparasiticsByPetId = new Map<number, DashboardPetStudyTreatment<DashboardAntiparasiticStatusKey>[]>();
 
 	for (const row of rows) {
-		const status = buildAntiparasiticTreatmentStatus(row.applied_at, row.validity_value, row.validity_unit);
+		const status = buildTreatmentStatus(row.applied_at, row.validity_value, row.validity_unit);
 		if (!status) continue;
 
 		const antiparasitics = antiparasiticsByPetId.get(row.pet_id) ?? [];
 		antiparasitics.push({
-			antiparasiticNormalizedName: row.antiparasitic_normalized_name,
-			antiparasiticName: row.antiparasitic_name,
+			normalizedName: row.normalized_name,
+			name: row.name,
 			dose: row.dose,
 			appliedAt: row.applied_at,
 			dueAt: status.dueAt,
@@ -454,9 +404,9 @@ function buildStudyAnalytics(
 	owners: OwnerAnalyticsRow[],
 	petOwnerRows: PetOwnerAnalyticsRow[],
 	statusByPetId: Map<number, DashboardVaccineStatusKey>,
-	vaccinesByPetId: Map<number, DashboardPetStudyVaccine[]>,
+	vaccinesByPetId: Map<number, DashboardPetStudyTreatment<DashboardVaccineStatusKey>[]>,
 	antiparasiticStatusByPetId: Map<number, DashboardAntiparasiticStatusKey>,
-	antiparasiticsByPetId: Map<number, DashboardPetStudyAntiparasitic[]>
+	antiparasiticsByPetId: Map<number, DashboardPetStudyTreatment<DashboardAntiparasiticStatusKey>[]>
 ): DashboardStudyAnalytics {
 	const ownersById = new Map(owners.map((owner) => [owner.id, owner]));
 	const ownerIdsByPetId = buildPetOwnerMap(petOwnerRows);
@@ -489,15 +439,15 @@ function buildStudyAnalytics(
 		const antiparasiticNames: string[] = [];
 
 		for (const vaccine of vaccines) {
-			if (!vaccineNormalizedNames.includes(vaccine.vaccineNormalizedName)) vaccineNormalizedNames.push(vaccine.vaccineNormalizedName);
-			addUnique(vaccineNames, vaccine.vaccineName);
-			incrementNamedBucket(vaccinesBucket, vaccine.vaccineNormalizedName, vaccine.vaccineName);
+			if (!vaccineNormalizedNames.includes(vaccine.normalizedName)) vaccineNormalizedNames.push(vaccine.normalizedName);
+			addUnique(vaccineNames, vaccine.name);
+			incrementNamedBucket(vaccinesBucket, vaccine.normalizedName, vaccine.name);
 		}
 
 		for (const antiparasitic of antiparasitics) {
-			if (!antiparasiticNormalizedNames.includes(antiparasitic.antiparasiticNormalizedName)) antiparasiticNormalizedNames.push(antiparasitic.antiparasiticNormalizedName);
-			addUnique(antiparasiticNames, antiparasitic.antiparasiticName);
-			incrementNamedBucket(antiparasiticsBucket, antiparasitic.antiparasiticNormalizedName, antiparasitic.antiparasiticName);
+			if (!antiparasiticNormalizedNames.includes(antiparasitic.normalizedName)) antiparasiticNormalizedNames.push(antiparasitic.normalizedName);
+			addUnique(antiparasiticNames, antiparasitic.name);
+			incrementNamedBucket(antiparasiticsBucket, antiparasitic.normalizedName, antiparasitic.name);
 		}
 
 		for (const ownerId of ownerIdsByPetId.get(pet.id) ?? []) {
@@ -584,7 +534,7 @@ function buildStudyAnalytics(
 }
 
 export async function getDashboardAnalytics(): Promise<DashboardAnalytics> {
-	const [pets, owners, petOwnerRows, latestVaccinationRows, latestAntiparasiticRows] = await Promise.all([listPetRows(), listOwnerRows(), listPetOwnerRows(), listLatestVaccinationRows(), listLatestAntiparasiticRows()]);
+	const [pets, owners, petOwnerRows, latestVaccinationRows, latestAntiparasiticRows] = await Promise.all([listPetRows(), listOwnerRows(), listPetOwnerRows(), listLatestTreatmentRows('vaccine'), listLatestTreatmentRows('antiparasitic')]);
 	const statusByPetId = buildPetVaccineStatusMap(latestVaccinationRows);
 	const vaccinesByPetId = buildPetVaccinesMap(latestVaccinationRows);
 	const antiparasiticStatusByPetId = buildPetAntiparasiticStatusMap(latestAntiparasiticRows);

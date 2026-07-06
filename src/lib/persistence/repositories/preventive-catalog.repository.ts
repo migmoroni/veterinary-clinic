@@ -1,13 +1,11 @@
-import type { Antiparasitic } from '$lib/domain/antiparasitic/antiparasitic.js';
-import { normalizeAntiparasiticName } from '$lib/domain/antiparasitic/antiparasitic.js';
 import { canEditPreventiveCatalogItem, parsePreventiveAliases, parsePreventiveRegions, parsePreventiveSpecies, stringifyPreventiveAliases, stringifyPreventiveRegions, stringifyPreventiveSpecies, type PreventiveCatalogOrigin } from '$lib/domain/preventive/catalog.js';
 import { FIELD_LIMITS, assertTextLimit, nullableLimitedText } from '$lib/domain/shared/field-limits.js';
-import type { Vaccine } from '$lib/domain/vaccine/vaccine.js';
-import { normalizeVaccineName } from '$lib/domain/vaccine/vaccine.js';
+import type { TreatmentCatalogItem, TreatmentCatalogItemInput, TreatmentKind } from '$lib/domain/treatment/treatment.js';
+import { normalizeTreatmentName } from '$lib/domain/treatment/treatment.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
-export type PreventiveCatalogKind = 'vaccine' | 'antiparasitic';
-export type PreventiveCatalogItem = Vaccine | Antiparasitic;
+export type PreventiveCatalogKind = TreatmentKind;
+export type PreventiveCatalogItem = TreatmentCatalogItem;
 
 interface PreventiveCatalogItemRow {
 	id: number;
@@ -23,14 +21,6 @@ interface PreventiveCatalogItemRow {
 	updated_at: string | null;
 }
 
-interface PreventiveCatalogItemInput {
-	name: string;
-	species?: string[];
-	aliases?: string[];
-	manufacturer?: string | null;
-	regions?: string[];
-}
-
 interface PreventiveCatalogConfig {
 	nameLimit: number;
 	normalizedNameLimit: number;
@@ -43,16 +33,16 @@ const catalogConfigs: Record<PreventiveCatalogKind, PreventiveCatalogConfig> = {
 	vaccine: {
 		nameLimit: FIELD_LIMITS.vaccineName,
 		normalizedNameLimit: FIELD_LIMITS.vaccineNormalizedName,
-		requiredError: 'vaccine_name_required',
-		saveFailedError: 'vaccine_save_failed',
-		normalize: normalizeVaccineName
+		requiredError: 'treatment_name_required',
+		saveFailedError: 'treatment_save_failed',
+		normalize: normalizeTreatmentName
 	},
 	antiparasitic: {
 		nameLimit: FIELD_LIMITS.antiparasiticName,
 		normalizedNameLimit: FIELD_LIMITS.antiparasiticNormalizedName,
-		requiredError: 'antiparasitic_name_required',
-		saveFailedError: 'antiparasitic_save_failed',
-		normalize: normalizeAntiparasiticName
+		requiredError: 'treatment_name_required',
+		saveFailedError: 'treatment_save_failed',
+		normalize: normalizeTreatmentName
 	}
 };
 
@@ -64,6 +54,7 @@ function mapCatalogItem(row: PreventiveCatalogItemRow): PreventiveCatalogItem {
 	const config = configFor(row.kind);
 	return {
 		id: row.id,
+		kind: row.kind,
 		name: row.name,
 		normalizedName: row.normalized_name,
 		species: parsePreventiveSpecies(row.species),
@@ -78,7 +69,7 @@ function mapCatalogItem(row: PreventiveCatalogItemRow): PreventiveCatalogItem {
 
 function normalizePreventiveCatalogMetadata(
 	kind: PreventiveCatalogKind,
-	input: Pick<PreventiveCatalogItemInput, 'species' | 'aliases' | 'manufacturer' | 'regions'>,
+	input: Pick<TreatmentCatalogItemInput, 'species' | 'aliases' | 'manufacturer' | 'regions'>,
 	normalizedName: string
 ): { species: string; aliases: string; manufacturer: string | null; regions: string } {
 	const config = configFor(kind);
@@ -159,7 +150,7 @@ export async function listPreventiveCatalogItems(kind: PreventiveCatalogKind, in
 	return rows.map(mapCatalogItem);
 }
 
-export async function savePreventiveCatalogItem(kind: PreventiveCatalogKind, input: PreventiveCatalogItemInput, id?: number): Promise<PreventiveCatalogItem> {
+export async function savePreventiveCatalogItem(kind: PreventiveCatalogKind, input: TreatmentCatalogItemInput, id?: number): Promise<PreventiveCatalogItem> {
 	const { name, normalizedName } = normalizePreventiveCatalogInput(kind, input.name);
 	const metadata = normalizePreventiveCatalogMetadata(kind, input, normalizedName);
 

@@ -5,22 +5,20 @@
 	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
 	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
-	import AntiparasiticPanel from '$lib/components/pet/AntiparasiticPanel.svelte';
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import PetAvatarEditorDialog from '$lib/components/pet/PetAvatarEditorDialog.svelte';
 	import PetTaxonomyPicker from '$lib/components/pet/PetTaxonomyPicker.svelte';
 	import PreventiveDueBadge from '$lib/components/pet/PreventiveDueBadge.svelte';
-	import VaccinationPanel from '$lib/components/pet/VaccinationPanel.svelte';
+	import TreatmentPanel from '$lib/components/pet/TreatmentPanel.svelte';
 	import UnsavedChangesDialog from '$lib/components/records/UnsavedChangesDialog.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
-	import { getAntiparasiticTreatmentDueStatus, type PetAntiparasiticTreatment } from '$lib/domain/antiparasitic/antiparasitic.js';
 	import type { MedicalRecord } from '$lib/domain/medical-record/medical-record.js';
 	import type { Pet, PetInput, PetSex } from '$lib/domain/pet/pet.js';
 	import { getPetBreedOption, getPetSpeciesOption } from '$lib/domain/pet/taxonomy.js';
 	import { formatDateForDisplay, formatDateForInput, normalizeDateInput } from '$lib/domain/shared/date-input.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import { computeAgeFromBirthDate } from '$lib/domain/shared/time.js';
-	import { getVaccineDueStatus, type PetVaccination } from '$lib/domain/vaccine/vaccine.js';
+	import { getTreatmentDueStatus, type PetTreatment } from '$lib/domain/treatment/treatment.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
 	import type { PetProfile } from '$lib/services/pet.service.js';
 	import { loadPetProfile, removePet, savePet } from '$lib/services/pet.service.js';
@@ -140,10 +138,6 @@
 		return items.reduce<string | null>((latest, item) => (!latest || item.appliedAt > latest ? item.appliedAt : latest), null);
 	}
 
-	function vaccinationOverviewLabel(vaccination: PetVaccination): string {
-		return vaccination.dose;
-	}
-
 	let profile = $state<PetProfile | null>(null);
 	let form = $state<PetForm>({ name: '', birthDate: '', species: null, breed: null, sex: '', avatarBytes: null });
 	let activePanel = $state<PetPanel>('overview');
@@ -170,13 +164,13 @@
 	const latestVaccinationDate = $derived(profile ? latestAppliedDate(profile.vaccinations) : null);
 	const latestVaccinations = $derived(
 		profile && latestVaccinationDate
-			? profile.vaccinations.filter((vaccination) => vaccination.appliedAt === latestVaccinationDate).sort((first, second) => first.vaccineName.localeCompare(second.vaccineName) || first.id - second.id)
+			? profile.vaccinations.filter((vaccination) => vaccination.appliedAt === latestVaccinationDate).sort((first, second) => first.name.localeCompare(second.name) || first.id - second.id)
 			: []
 	);
 	const latestAntiparasiticTreatmentDate = $derived(profile ? latestAppliedDate(profile.antiparasiticTreatments) : null);
 	const latestAntiparasiticTreatments = $derived(
 		profile && latestAntiparasiticTreatmentDate
-			? profile.antiparasiticTreatments.filter((antiparasiticTreatment) => antiparasiticTreatment.appliedAt === latestAntiparasiticTreatmentDate).sort((first, second) => first.antiparasiticName.localeCompare(second.antiparasiticName) || first.id - second.id)
+			? profile.antiparasiticTreatments.filter((antiparasiticTreatment) => antiparasiticTreatment.appliedAt === latestAntiparasiticTreatmentDate).sort((first, second) => first.name.localeCompare(second.name) || first.id - second.id)
 			: []
 	);
 
@@ -356,12 +350,12 @@
 		}
 	}
 
-	function updateVaccinations(vaccinations: PetVaccination[]) {
+	function updateVaccinations(vaccinations: PetTreatment[]) {
 		if (!profile) return;
 		profile = { ...profile, vaccinations };
 	}
 
-	function updateAntiparasiticTreatments(antiparasiticTreatments: PetAntiparasiticTreatment[]) {
+	function updateAntiparasiticTreatments(antiparasiticTreatments: PetTreatment[]) {
 		if (!profile) return;
 		profile = { ...profile, antiparasiticTreatments };
 	}
@@ -583,9 +577,9 @@
 											<div class="flex items-start gap-3 rounded-md border border-border bg-background p-3">
 												<Syringe class="mt-0.5 size-4 shrink-0 text-primary" />
 												<span class="min-w-0">
-													<span class="block truncate text-sm font-medium">{vaccination.vaccineName}</span>
-													<span class="block truncate text-xs text-muted-foreground">{vaccinationOverviewLabel(vaccination)}</span>
-													<PreventiveDueBadge kind="vaccine" status={getVaccineDueStatus(vaccination)} className="mt-2" />
+													<span class="block truncate text-sm font-medium">{vaccination.name}</span>
+													<span class="block truncate text-xs text-muted-foreground">{vaccination.dose}</span>
+													<PreventiveDueBadge kind="vaccine" status={getTreatmentDueStatus(vaccination)} className="mt-2" />
 												</span>
 											</div>
 										{/each}
@@ -604,9 +598,9 @@
 											<div class="flex items-start gap-3 rounded-md border border-border bg-background p-3">
 												<Pill class="mt-0.5 size-4 shrink-0 text-primary" />
 												<span class="min-w-0">
-													<span class="block truncate text-sm font-medium">{antiparasiticTreatment.antiparasiticName}</span>
+													<span class="block truncate text-sm font-medium">{antiparasiticTreatment.name}</span>
 													<span class="block truncate text-xs text-muted-foreground">{antiparasiticTreatment.dose}</span>
-													<PreventiveDueBadge kind="antiparasitic" status={getAntiparasiticTreatmentDueStatus(antiparasiticTreatment)} className="mt-2" />
+													<PreventiveDueBadge kind="antiparasitic" status={getTreatmentDueStatus(antiparasiticTreatment)} className="mt-2" />
 												</span>
 											</div>
 										{/each}
@@ -643,11 +637,11 @@
 					</section>
 				{:else if activePanel === 'vaccines'}
 					<div role="tabpanel">
-						<VaccinationPanel petId={petId} petSpecies={profile.pet.species} vaccinations={profile.vaccinations} vaccines={profile.vaccines} onChange={updateVaccinations} />
+						<TreatmentPanel kind="vaccine" petId={petId} petSpecies={profile.pet.species} treatments={profile.vaccinations} catalogItems={profile.vaccines} onChange={updateVaccinations} />
 					</div>
 				{:else if activePanel === 'antiparasiticTreatments'}
 					<div role="tabpanel">
-						<AntiparasiticPanel petId={petId} petSpecies={profile.pet.species} antiparasiticTreatments={profile.antiparasiticTreatments} antiparasitics={profile.antiparasitics} onChange={updateAntiparasiticTreatments} />
+						<TreatmentPanel kind="antiparasitic" petId={petId} petSpecies={profile.pet.species} treatments={profile.antiparasiticTreatments} catalogItems={profile.antiparasitics} onChange={updateAntiparasiticTreatments} />
 					</div>
 				{:else}
 					<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5" role="tabpanel">

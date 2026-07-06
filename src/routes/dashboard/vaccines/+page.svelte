@@ -1,5 +1,5 @@
 <script lang="ts">
-	import VaccineAnalyticsPage from '../../vaccines/+page.svelte';
+	import TreatmentAnalyticsPage from '$lib/components/treatment/TreatmentAnalyticsPage.svelte';
 </script>
 
-<VaccineAnalyticsPage basePath="/dashboard/vaccines" />
+<TreatmentAnalyticsPage kind="vaccine" basePath="/dashboard/vaccines" />

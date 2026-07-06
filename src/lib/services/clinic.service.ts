@@ -7,26 +7,19 @@ import { getLastEditedRecord } from '$lib/persistence/repositories/medical-recor
 import { listOwnerAssociatedContactsByOwnerIds } from '$lib/persistence/repositories/owner.repository.js';
 import { filterActiveSearchResults as filterActiveSearchResultsRepository, searchClinic, type SearchResult } from '$lib/persistence/repositories/search.repository.js';
 import { getClinicCounts } from '$lib/persistence/repositories/stats.repository.js';
-import type { AntiparasiticTreatmentAnalyticsOverview } from '$lib/persistence/repositories/antiparasitic-analytics.repository.js';
-import type { AntiparasiticTreatmentHistoryPoint } from '$lib/domain/antiparasitic/analytics.js';
-import type { VaccineAnalyticsOverview } from '$lib/persistence/repositories/vaccine-analytics.repository.js';
-import type { VaccineHistoryPoint } from '$lib/domain/vaccine/analytics.js';
+import type { TreatmentHistoryPoint } from '$lib/domain/treatment/analytics.js';
+import type { TreatmentAnalyticsOverview } from '$lib/persistence/repositories/treatment-analytics.repository.js';
 import { loadLocalePreference } from './preferences.service.js';
 import { importDatabase } from './database-import.service.js';
 import { shouldResetOverviewLastRecordOnce } from './client-state.service.js';
-import { loadAntiparasiticTreatmentAnalyticsOverview, loadAntiparasiticTreatmentHistory } from './antiparasitic-analytics.service.js';
-import { loadVaccineAnalyticsOverview, loadVaccineHistory } from './vaccine-analytics.service.js';
+import { loadTreatmentAnalyticsOverview, loadTreatmentHistory } from './treatment-analytics.service.js';
 import { loadDashboardAnalytics } from './dashboard-analytics.service.js';
 import { requestPracticeIdentityRefresh } from './practice-profile.service.js';
 
 export { loadOwnerAvatarsByOwnerIds, loadPetAvatarsByPetIds } from './avatar.service.js';
 
-export interface ClinicVaccineDashboard extends VaccineAnalyticsOverview {
-	history: VaccineHistoryPoint[];
-}
-
-export interface ClinicAntiparasiticDashboard extends AntiparasiticTreatmentAnalyticsOverview {
-	history: AntiparasiticTreatmentHistoryPoint[];
+export interface ClinicTreatmentDashboard extends TreatmentAnalyticsOverview {
+	history: TreatmentHistoryPoint[];
 }
 
 export interface ClinicDashboard {
@@ -36,8 +29,8 @@ export interface ClinicDashboard {
 		pets: number;
 		records: number;
 	};
-	vaccines: ClinicVaccineDashboard;
-	antiparasitics: ClinicAntiparasiticDashboard;
+	vaccines: ClinicTreatmentDashboard;
+	antiparasitics: ClinicTreatmentDashboard;
 	analytics: DashboardAnalytics;
 }
 
@@ -65,10 +58,10 @@ export async function loadDashboard(): Promise<ClinicDashboard> {
 	const [record, counts, vaccineOverview, vaccineHistory, antiparasiticOverview, antiparasiticHistory, analytics] = await Promise.all([
 		getLastEditedRecord(),
 		getClinicCounts(),
-		loadVaccineAnalyticsOverview(),
-		loadVaccineHistory({ period: 'month', vaccineNormalizedName: null }),
-		loadAntiparasiticTreatmentAnalyticsOverview(),
-		loadAntiparasiticTreatmentHistory({ period: 'month', antiparasiticNormalizedName: null }),
+		loadTreatmentAnalyticsOverview('vaccine'),
+		loadTreatmentHistory('vaccine', { period: 'month', normalizedName: null }),
+		loadTreatmentAnalyticsOverview('antiparasitic'),
+		loadTreatmentHistory('antiparasitic', { period: 'month', normalizedName: null }),
 		loadDashboardAnalytics()
 	]);
 	return {
