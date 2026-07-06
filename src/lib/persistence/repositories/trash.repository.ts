@@ -109,13 +109,13 @@ export async function listTrashItems(): Promise<TrashItem[]> {
 		 UNION ALL
 
 		 SELECT 'protocol' AS kind,
-			preventive_protocols.id,
-			preventive_protocols.name AS title,
-			COALESCE(preventive_protocols.observation, '') AS subtitle,
-			preventive_protocols.deleted_at,
-			preventive_protocols.purge_after
-		 FROM preventive_protocols
-		 WHERE preventive_protocols.deleted_at IS NOT NULL
+			medication_protocols.id,
+			medication_protocols.name AS title,
+			COALESCE(medication_protocols.observation, '') AS subtitle,
+			medication_protocols.deleted_at,
+			medication_protocols.purge_after
+		 FROM medication_protocols
+		 WHERE medication_protocols.deleted_at IS NOT NULL
 
 		 UNION ALL
 
@@ -171,7 +171,7 @@ export async function restoreTrashItem(kind: TrashKind, id: number): Promise<voi
 	}
 
 	if (kind === 'protocol') {
-		await execute('UPDATE preventive_protocols SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
+		await execute('UPDATE medication_protocols SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
 		return;
 	}
 
@@ -213,7 +213,7 @@ export async function hardDeleteTrashItem(kind: TrashKind, id: number): Promise<
 	}
 
 	if (kind === 'protocol') {
-		await execute('DELETE FROM preventive_protocols WHERE id = $1', [id]);
+		await execute('DELETE FROM medication_protocols WHERE id = $1', [id]);
 		return;
 	}
 
@@ -222,7 +222,7 @@ export async function hardDeleteTrashItem(kind: TrashKind, id: number): Promise<
 
 export async function purgeExpiredTrash(now = new Date().toISOString()): Promise<void> {
 	await execute(
-		`DELETE FROM preventive_protocols
+		`DELETE FROM medication_protocols
 		 WHERE deleted_at IS NOT NULL
 			AND purge_after <= $1`,
 		[now]

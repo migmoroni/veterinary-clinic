@@ -1,0 +1,580 @@
+[
+	{
+		"origin": "system",
+		"name": "Drontal Plus",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Elanco",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"praziquantel pamoato de pirantel febantel",
+			"praziquantel pyrantel pamoate febantel",
+			"antiparasitário de amplo espectro",
+			"antiparasitário de largo espetro",
+			"antiparasitario de amplio espectro",
+			"broad-spectrum antiparasitic",
+			"tenicida",
+			"tapeworm treatment"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Drontal Puppy",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Elanco",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"pamoato de pirantel febantel",
+			"pyrantel pamoate febantel",
+			"antiparasitário de amplo espectro",
+			"antiparasitário de largo espetro",
+			"antiparasitario de amplio espectro",
+			"broad-spectrum antiparasitic"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Endogard",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Virbac",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"praziquantel pamoato de pirantel febantel",
+			"praziquantel pyrantel pamoate febantel",
+			"antiparasitário de amplo espectro",
+			"antiparasitário de largo espetro",
+			"antiparasitario de amplio espectro",
+			"broad-spectrum antiparasitic"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Canex Premium",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Ceva Saúde Animal",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"praziquantel pamoato de pirantel febantel",
+			"praziquantel pyrantel pamoate febantel",
+			"antiparasitário de amplo espectro",
+			"antiparasitário de largo espetro",
+			"antiparasitario de amplio espectro",
+			"broad-spectrum antiparasitic"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Endal Plus",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Ourofino Saúde Animal",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"praziquantel pamoato de pirantel febantel",
+			"praziquantel pyrantel pamoate febantel",
+			"antiparasitário de amplo espectro",
+			"antiparasitário de largo espetro",
+			"antiparasitario de amplio espectro",
+			"broad-spectrum antiparasitic"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Chemital",
+		"species": [
+			"canine",
+			"feline"
+		],
+		"manufacturer": "Chemitec",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"antiparasitário de amplo espectro",
+			"antiparasitário de largo espetro",
+			"antiparasitario de amplio espectro",
+			"broad-spectrum antiparasitic",
+			"endoparasitas",
+			"endoparásitos",
+			"endoparasites"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Top Dog",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Ourofino Saúde Animal",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"antiparasitário de amplo espectro",
+			"antiparasitário de largo espetro",
+			"antiparasitario de amplio espectro",
+			"broad-spectrum antiparasitic",
+			"endoparasitas",
+			"endoparásitos",
+			"endoparasites"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Drontal Gatos",
+		"species": [
+			"feline"
+		],
+		"manufacturer": "Elanco",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"praziquantel pamoato de pirantel",
+			"praziquantel pyrantel pamoate",
+			"tenicida",
+			"tapeworm treatment"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Milbemax",
+		"species": [
+			"canine",
+			"feline"
+		],
+		"manufacturer": "Elanco",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"milbemicina oxima praziquantel",
+			"milbemycin oxime praziquantel",
+			"antiparasitário de amplo espectro",
+			"antiparasitário de largo espetro",
+			"antiparasitario de amplio espectro",
+			"broad-spectrum antiparasitic"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Milpro",
+		"species": [
+			"canine",
+			"feline"
+		],
+		"manufacturer": "Virbac",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"milbemicina oxima praziquantel",
+			"milbemycin oxime praziquantel",
+			"antiparasitário de amplo espectro",
+			"antiparasitário de largo espetro",
+			"antiparasitario de amplio espectro",
+			"broad-spectrum antiparasitic"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Panacur 10%",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "MSD Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"fenbendazol",
+			"fenbendazole",
+			"endoparasitas",
+			"endoparásitos",
+			"endoparasites",
+			"giárdia",
+			"giardia",
+			"nematódeos",
+			"nemátodes",
+			"nematodos",
+			"nematodes"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Giardicid",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Agener União Saúde Animal",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"febantel",
+			"giárdia",
+			"giardia",
+			"verme redondo",
+			"gusano redondo",
+			"roundworm"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Bravecto",
+		"species": [
+			"canine",
+			"feline"
+		],
+		"manufacturer": "MSD Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"fluralaner",
+			"ectoparasiticida",
+			"ectoparasiticide",
+			"antipulgas",
+			"flea treatment",
+			"carrapaticida",
+			"tratamento contra carraças",
+			"tratamiento contra garrapatas",
+			"tick treatment"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "NexGard",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Boehringer Ingelheim Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"afoxolaner",
+			"ectoparasiticida",
+			"ectoparasiticide",
+			"antipulgas",
+			"flea treatment",
+			"carrapaticida",
+			"tratamento contra carraças",
+			"tratamiento contra garrapatas",
+			"tick treatment"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Simparic",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Zoetis",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"sarolaner",
+			"ectoparasiticida",
+			"ectoparasiticide",
+			"antipulgas",
+			"flea treatment",
+			"carrapaticida",
+			"tratamento contra carraças",
+			"tratamiento contra garrapatas",
+			"tick treatment"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Capstar",
+		"species": [
+			"canine",
+			"feline"
+		],
+		"manufacturer": "Elanco",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"nitenpiram",
+			"nitenpyram",
+			"ectoparasiticida",
+			"ectoparasiticide",
+			"antipulgas",
+			"flea treatment"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Effipro",
+		"species": [
+			"canine",
+			"feline"
+		],
+		"manufacturer": "Virbac",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"fipronil",
+			"ectoparasiticida",
+			"ectoparasiticide",
+			"antipulgas",
+			"flea treatment",
+			"carrapaticida",
+			"tratamento contra carraças",
+			"tratamiento contra garrapatas",
+			"tick treatment"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Fiprolex",
+		"species": [
+			"canine",
+			"feline"
+		],
+		"manufacturer": "Ceva Saúde Animal",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"fipronil",
+			"ectoparasiticida",
+			"ectoparasiticide",
+			"antipulgas",
+			"flea treatment",
+			"carrapaticida",
+			"tratamento contra carraças",
+			"tratamiento contra garrapatas",
+			"tick treatment"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Frontline",
+		"species": [
+			"canine",
+			"feline"
+		],
+		"manufacturer": "Boehringer Ingelheim Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"fipronil",
+			"ectoparasiticida",
+			"ectoparasiticide",
+			"antipulgas",
+			"flea treatment",
+			"carrapaticida",
+			"tratamento contra carraças",
+			"tratamiento contra garrapatas",
+			"tick treatment"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Defenza",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Ourofino Saúde Animal",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"ectoparasiticida",
+			"ectoparasiticide",
+			"antipulgas",
+			"flea treatment",
+			"carrapaticida",
+			"tratamento contra carraças",
+			"tratamiento contra garrapatas",
+			"tick treatment"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Mectimax",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Agener União Saúde Animal",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"ivermectina",
+			"ivermectin",
+			"endectocida",
+			"endectocide"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Ivercanis",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "World Veterinária",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"ivermectina",
+			"ivermectin",
+			"endectocida",
+			"endectocide"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Revolution",
+		"species": [
+			"canine",
+			"feline"
+		],
+		"manufacturer": "Zoetis",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"selamectina",
+			"selamectin",
+			"endectocida",
+			"endectocide"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Stronghold",
+		"species": [
+			"canine",
+			"feline"
+		],
+		"manufacturer": "Zoetis",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"selamectina",
+			"selamectin",
+			"endectocida",
+			"endectocide"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Advocate",
+		"species": [
+			"canine",
+			"feline"
+		],
+		"manufacturer": "Elanco",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"moxidectina imidacloprida",
+			"moxidectina imidaclopride",
+			"moxidectin imidacloprid",
+			"endectocida",
+			"endectocide"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Advantage Multi",
+		"species": [
+			"canine",
+			"feline"
+		],
+		"manufacturer": "Elanco",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"moxidectina imidacloprida",
+			"moxidectina imidaclopride",
+			"moxidectin imidacloprid",
+			"endectocida",
+			"endectocide"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Profender",
+		"species": [
+			"feline"
+		],
+		"manufacturer": "Elanco",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"emodepsida praziquantel",
+			"emodepside praziquantel",
+			"endoparasitas",
+			"endoparásitos",
+			"endoparasites",
+			"antiparasitário tópico felino",
+			"antiparasitario tópico felino",
+			"topical feline antiparasitic"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "NexGard Spectra",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Boehringer Ingelheim Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"afoxolaner milbemicina oxima",
+			"afoxolaner milbemycin oxime",
+			"endectocida",
+			"endectocide"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Simparic Trio",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Zoetis",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"sarolaner moxidectina pirantel",
+			"sarolaner moxidectin pyrantel",
+			"endectocida",
+			"endectocide"
+		]
+	}
+]

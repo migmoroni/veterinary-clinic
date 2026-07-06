@@ -5,6 +5,12 @@
     "moduleResolution": "NodeNext",
     "strict": true,
     "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "baseUrl": "..",
+    "paths": {
+      "$lib/*": ["src/lib/*"]
+    },
+    "ignoreDeprecations": "6.0",
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "rootDir": "..",
@@ -12,12 +18,12 @@
   },
   "include": [
     "to-sqlite.ts",
-    "../src/lib/domain/preventive/default-catalog.ts",
-    "../src/lib/domain/preventive/default-protocol.ts",
+    "../src/lib/domain/medication/default-catalog.ts",
+    "../src/lib/domain/medication/default-protocol.ts",
     "../src/lib/i18n/locales.ts",
-    "../src/lib/i18n/preventive-aliases/**/*.ts"
+    "../src/lib/i18n/medication-aliases/**/*.ts"
   ],
   "exclude": [
-    "../src/lib/i18n/preventive-aliases/**/__tests__/**"
+    "../src/lib/i18n/medication-aliases/**/__tests__/**"
   ]
 }

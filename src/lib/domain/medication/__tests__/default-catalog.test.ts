@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
-import { localizedPreventiveAliases } from '$lib/i18n/preventive-aliases/index.js';
-import { defaultPreventiveCatalogItems } from '../default-catalog.js';
+import { localizedMedicationAliases } from '$lib/i18n/medication-aliases/index.js';
+import { defaultMedicationCatalogItems } from '../default-catalog.js';
 
 function vaccine(name: string) {
-	const item = defaultPreventiveCatalogItems.find((candidate) => candidate.kind === 'vaccine' && candidate.name === name);
+	const item = defaultMedicationCatalogItems.find((candidate) => candidate.kind === 'vaccine' && candidate.name === name);
 	if (!item) throw new Error(`Default vaccine not found: ${name}`);
 	return item;
 }
 
 function antiparasitic(name: string) {
-	const item = defaultPreventiveCatalogItems.find((candidate) => candidate.kind === 'antiparasitic' && candidate.name === name);
+	const item = defaultMedicationCatalogItems.find((candidate) => candidate.kind === 'antiparasitic' && candidate.name === name);
 	if (!item) throw new Error(`Default antiparasitic not found: ${name}`);
 	return item;
 }
@@ -23,7 +23,7 @@ function normalize(value: string): string {
 		.replace(/[^a-z0-9]+/g, '');
 }
 
-describe('default preventive catalog', () => {
+describe('default medication catalog', () => {
 	it('allows general search aliases to be shared by multiple products', () => {
 		const recombitek = vaccine('Recombitek C6');
 		const vanguard = vaccine('Vanguard Plus');
@@ -36,7 +36,7 @@ describe('default preventive catalog', () => {
 
 	it('expands localized aliases while preserving language-independent aliases', () => {
 		const vanguard = vaccine('Vanguard Plus');
-		const localizedPolyvalentAliases = localizedPreventiveAliases('preventiveAlias.polyvalent');
+		const localizedPolyvalentAliases = localizedMedicationAliases('medicationAlias.polyvalent');
 
 		expect(vanguard.aliases).toEqual(expect.arrayContaining(localizedPolyvalentAliases));
 		expect(vanguard.aliases).toContain('V10');
@@ -44,20 +44,20 @@ describe('default preventive catalog', () => {
 	});
 
 	it('uses one canonical catalog entry per kind and normalized name', () => {
-		const keys = defaultPreventiveCatalogItems.map((item) => `${item.kind}:${item.name.toLocaleLowerCase()}`);
+		const keys = defaultMedicationCatalogItems.map((item) => `${item.kind}:${item.name.toLocaleLowerCase()}`);
 		expect(new Set(keys).size).toBe(keys.length);
 	});
 
 	it('identifies every bundled product as system-owned', () => {
-		for (const item of defaultPreventiveCatalogItems) expect(item.origin).toBe('system');
+		for (const item of defaultMedicationCatalogItems) expect(item.origin).toBe('system');
 	});
 
 	it('provides manufacturer and market metadata for every bundled product', () => {
-		for (const item of defaultPreventiveCatalogItems) {
+		for (const item of defaultMedicationCatalogItems) {
 			expect(item.manufacturer.trim().length).toBeGreaterThan(0);
-			expect(item.manufacturer.length).toBeLessThanOrEqual(FIELD_LIMITS.preventiveManufacturer);
+			expect(item.manufacturer.length).toBeLessThanOrEqual(FIELD_LIMITS.medicationManufacturer);
 			expect(item.regions.length).toBeGreaterThan(0);
-			expect(JSON.stringify(item.regions).length).toBeLessThanOrEqual(FIELD_LIMITS.preventiveRegionsJson);
+			expect(JSON.stringify(item.regions).length).toBeLessThanOrEqual(FIELD_LIMITS.medicationRegionsJson);
 		}
 
 		expect(vaccine('Nobivac Raiva').manufacturer).toBe('MSD Animal Health');
@@ -68,7 +68,7 @@ describe('default preventive catalog', () => {
 	});
 
 	it('uses commercial products instead of generic legacy descriptions', () => {
-		const names = new Set(defaultPreventiveCatalogItems.map((item) => item.name));
+		const names = new Set(defaultMedicationCatalogItems.map((item) => item.name));
 		const legacyDescriptions = [
 			'DHPPI',
 			'Giardia inativada',
@@ -127,9 +127,9 @@ describe('default preventive catalog', () => {
 	});
 
 	it('keeps product names out of aliases', () => {
-		const normalizedProductNames = new Set(defaultPreventiveCatalogItems.map((item) => normalize(item.name)));
+		const normalizedProductNames = new Set(defaultMedicationCatalogItems.map((item) => normalize(item.name)));
 
-		for (const item of defaultPreventiveCatalogItems) {
+		for (const item of defaultMedicationCatalogItems) {
 			for (const alias of item.aliases) expect(normalizedProductNames).not.toContain(normalize(alias));
 		}
 	});
@@ -153,10 +153,10 @@ describe('default preventive catalog', () => {
 	});
 
 	it('keeps every persisted alias payload within the database limits', () => {
-		for (const item of defaultPreventiveCatalogItems) {
-			expect(item.aliases.every((alias) => alias.length <= FIELD_LIMITS.preventiveAlias)).toBe(true);
+		for (const item of defaultMedicationCatalogItems) {
+			expect(item.aliases.every((alias) => alias.length <= FIELD_LIMITS.medicationAlias)).toBe(true);
 			expect(item.aliases.every((alias) => !alias.includes(','))).toBe(true);
-			expect(JSON.stringify(item.aliases).length).toBeLessThanOrEqual(FIELD_LIMITS.preventiveAliasesJson);
+			expect(JSON.stringify(item.aliases).length).toBeLessThanOrEqual(FIELD_LIMITS.medicationAliasesJson);
 		}
 	});
 });

@@ -1,0 +1,826 @@
+[
+	{
+		"origin": "system",
+		"name": "Nobivac Canine 1-DAPPVL2+CV",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "MSD Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"DAPPVL2+CV",
+			"polivalente",
+			"polyvalent",
+			"múltipla canina",
+			"vacuna múltiple canina",
+			"canine combination vaccine",
+			"cinomose canina",
+			"esgana canina",
+			"moquillo canino",
+			"canine distemper",
+			"adenovírus canino tipo 2",
+			"adenovirus canino tipo 2",
+			"canine adenovirus type 2",
+			"coronavirose canina",
+			"coronavirus canino",
+			"canine coronavirus",
+			"parainfluenza canina",
+			"canine parainfluenza",
+			"parvovirose canina",
+			"parvovirosis canina",
+			"canine parvovirus",
+			"leptospirose canina",
+			"leptospirosis canina",
+			"canine leptospirosis"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Nobivac DHPPI+L",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "MSD Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"DHPPI+L",
+			"V 8",
+			"V8",
+			"polivalente",
+			"polyvalent",
+			"múltipla canina",
+			"vacuna múltiple canina",
+			"canine combination vaccine",
+			"cinomose canina",
+			"esgana canina",
+			"moquillo canino",
+			"canine distemper",
+			"hepatite infecciosa canina",
+			"hepatitis infecciosa canina",
+			"infectious canine hepatitis",
+			"parainfluenza canina",
+			"canine parainfluenza",
+			"parvovirose canina",
+			"parvovirosis canina",
+			"canine parvovirus",
+			"leptospirose canina",
+			"leptospirosis canina",
+			"canine leptospirosis"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Nobivac DHPPi",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "MSD Animal Health",
+		"regions": [
+			"ZAF"
+		],
+		"aliases": [
+			"DHPPi",
+			"polivalente",
+			"polyvalent",
+			"múltipla canina",
+			"vacuna múltiple canina",
+			"canine combination vaccine",
+			"cinomose canina",
+			"esgana canina",
+			"moquillo canino",
+			"canine distemper",
+			"hepatite infecciosa canina",
+			"hepatitis infecciosa canina",
+			"infectious canine hepatitis",
+			"parainfluenza canina",
+			"canine parainfluenza",
+			"parvovirose canina",
+			"parvovirosis canina",
+			"canine parvovirus"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Duramune Max 5-CvK/4L",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Elanco",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"DAPPi+CV+L4",
+			"V 10",
+			"V10",
+			"polivalente",
+			"polyvalent",
+			"múltipla canina",
+			"vacuna múltiple canina",
+			"canine combination vaccine",
+			"cinomose canina",
+			"esgana canina",
+			"moquillo canino",
+			"canine distemper",
+			"adenovírus canino tipo 2",
+			"adenovirus canino tipo 2",
+			"canine adenovirus type 2",
+			"coronavirose canina",
+			"coronavirus canino",
+			"canine coronavirus",
+			"parainfluenza canina",
+			"canine parainfluenza",
+			"parvovirose canina",
+			"parvovirosis canina",
+			"canine parvovirus",
+			"leptospirose canina",
+			"leptospirosis canina",
+			"canine leptospirosis"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Canigen MHA2PPi/L",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Virbac",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"MHA2PPi/L",
+			"V 8",
+			"V8",
+			"polivalente",
+			"polyvalent",
+			"múltipla canina",
+			"vacuna múltiple canina",
+			"canine combination vaccine",
+			"cinomose canina",
+			"esgana canina",
+			"moquillo canino",
+			"canine distemper",
+			"hepatite infecciosa canina",
+			"hepatitis infecciosa canina",
+			"infectious canine hepatitis",
+			"parainfluenza canina",
+			"canine parainfluenza",
+			"parvovirose canina",
+			"parvovirosis canina",
+			"canine parvovirus",
+			"adenovírus canino tipo 2",
+			"adenovirus canino tipo 2",
+			"canine adenovirus type 2",
+			"leptospirose canina",
+			"leptospirosis canina",
+			"canine leptospirosis"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Imunocan V8",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Vaxxinova",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"V 8",
+			"V8",
+			"polivalente",
+			"polyvalent",
+			"múltipla canina",
+			"vacuna múltiple canina",
+			"canine combination vaccine",
+			"cinomose canina",
+			"esgana canina",
+			"moquillo canino",
+			"canine distemper",
+			"hepatite infecciosa canina",
+			"hepatitis infecciosa canina",
+			"infectious canine hepatitis",
+			"parainfluenza canina",
+			"canine parainfluenza",
+			"parvovirose canina",
+			"parvovirosis canina",
+			"canine parvovirus",
+			"adenovírus canino tipo 2",
+			"adenovirus canino tipo 2",
+			"canine adenovirus type 2",
+			"coronavirose canina",
+			"coronavirus canino",
+			"canine coronavirus",
+			"leptospirose canina",
+			"leptospirosis canina",
+			"canine leptospirosis"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Versican Plus DHPPi/L4R",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Zoetis",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"DHPPi/L4R",
+			"polivalente",
+			"polyvalent",
+			"múltipla canina",
+			"vacuna múltiple canina",
+			"canine combination vaccine",
+			"cinomose canina",
+			"esgana canina",
+			"moquillo canino",
+			"canine distemper",
+			"adenovírus canino tipo 2",
+			"adenovirus canino tipo 2",
+			"canine adenovirus type 2",
+			"parainfluenza canina",
+			"canine parainfluenza",
+			"parvovirose canina",
+			"parvovirosis canina",
+			"canine parvovirus",
+			"leptospirose canina",
+			"leptospirosis canina",
+			"canine leptospirosis",
+			"raiva",
+			"antirrábica",
+			"rabia",
+			"rabies"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Nobivac Puppy DP",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "MSD Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"DP",
+			"filhote",
+			"cachorro",
+			"jagua ra’y",
+			"puppy",
+			"cinomose canina",
+			"esgana canina",
+			"moquillo canino",
+			"canine distemper",
+			"parvovirose canina",
+			"parvovirosis canina",
+			"canine parvovirus"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "GiardiaVax",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Zoetis",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"giárdia",
+			"giardia",
+			"giardíase",
+			"giardiasis"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "BronchiGuard",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Zoetis",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"Bordetella bronchiseptica",
+			"traqueobronquite infecciosa canina",
+			"traqueobronquite infeciosa canina",
+			"traqueobronquitis infecciosa canina",
+			"canine infectious tracheobronchitis",
+			"tosse dos canis",
+			"tosse do canil",
+			"tos de las perreras",
+			"kennel cough"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Nobivac Intra-Trac Oral Bb",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "MSD Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"Bb",
+			"Bordetella bronchiseptica",
+			"traqueobronquite infecciosa canina",
+			"traqueobronquite infeciosa canina",
+			"traqueobronquitis infecciosa canina",
+			"canine infectious tracheobronchitis",
+			"tosse dos canis",
+			"tosse do canil",
+			"tos de las perreras",
+			"kennel cough"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Nobivac KC",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "MSD Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"KC",
+			"Bordetella bronchiseptica",
+			"traqueobronquite infecciosa canina",
+			"traqueobronquite infeciosa canina",
+			"traqueobronquitis infecciosa canina",
+			"canine infectious tracheobronchitis",
+			"tosse dos canis",
+			"tosse do canil",
+			"tos de las perreras",
+			"kennel cough",
+			"parainfluenza canina",
+			"canine parainfluenza"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Leish-Tec",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Ceva Saúde Animal",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"leishmaniose",
+			"leishmaniosis",
+			"leishmaniasis",
+			"calazar",
+			"kala-azar"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Eurican Herpes 205",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Boehringer Ingelheim Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"herpesvírus canino",
+			"herpesvirus canino",
+			"canine herpesvirus"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Nobivac Raiva",
+		"species": [
+			"canine",
+			"feline"
+		],
+		"manufacturer": "MSD Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"raiva",
+			"antirrábica",
+			"rabia",
+			"rabies"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Rabisin",
+		"species": [
+			"canine",
+			"feline"
+		],
+		"manufacturer": "Boehringer Ingelheim Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"raiva",
+			"antirrábica",
+			"rabia",
+			"rabies"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Defensor",
+		"species": [
+			"canine",
+			"feline"
+		],
+		"manufacturer": "Zoetis",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"raiva",
+			"antirrábica",
+			"rabia",
+			"rabies"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Nobivac Feline 1-HCP",
+		"species": [
+			"feline"
+		],
+		"manufacturer": "MSD Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"V 3",
+			"V3",
+			"HCP",
+			"FVRCP",
+			"tríplice felina",
+			"triple felina",
+			"feline three-way vaccine",
+			"rinotraqueíte felina",
+			"rinotraqueítis felina",
+			"feline rhinotracheitis",
+			"calicivirose felina",
+			"calicivirosis felina",
+			"feline calicivirosis",
+			"panleucopenia felina",
+			"feline panleukopenia"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Nobivac Feline 1-HCPCh",
+		"species": [
+			"feline"
+		],
+		"manufacturer": "MSD Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"V 4",
+			"V4",
+			"HCPCh",
+			"FVRCP+Ch",
+			"quádrupla felina",
+			"cuádruple felina",
+			"feline four-way vaccine",
+			"rinotraqueíte felina",
+			"rinotraqueítis felina",
+			"feline rhinotracheitis",
+			"calicivirose felina",
+			"calicivirosis felina",
+			"feline calicivirosis",
+			"panleucopenia felina",
+			"feline panleukopenia",
+			"clamidiose felina",
+			"clamidiosis felina",
+			"feline chlamydiosis"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Nobivac Feline 1-HCPCh + FeLV",
+		"species": [
+			"feline"
+		],
+		"manufacturer": "MSD Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"V 5",
+			"V5",
+			"HCPCh+FeLV",
+			"FVRCP+Ch+FeLV",
+			"FeLV",
+			"quíntupla felina",
+			"quíntuple felina",
+			"feline five-way vaccine",
+			"rinotraqueíte felina",
+			"rinotraqueítis felina",
+			"feline rhinotracheitis",
+			"calicivirose felina",
+			"calicivirosis felina",
+			"feline calicivirosis",
+			"panleucopenia felina",
+			"feline panleukopenia",
+			"clamidiose felina",
+			"clamidiosis felina",
+			"feline chlamydiosis",
+			"leucemia felina",
+			"feline leukemia"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Nobivac L4",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "MSD Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"L4",
+			"leptospirose canina",
+			"leptospirosis canina",
+			"canine leptospirosis"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Recombitek C6",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Boehringer Ingelheim Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"C6",
+			"V 10",
+			"V10",
+			"polivalente",
+			"polyvalent",
+			"múltipla canina",
+			"vacuna múltiple canina",
+			"canine combination vaccine"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Vanguard Plus",
+		"species": [
+			"canine"
+		],
+		"manufacturer": "Zoetis",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"V 10",
+			"V10",
+			"polivalente",
+			"polyvalent",
+			"múltipla canina",
+			"vacuna múltiple canina",
+			"canine combination vaccine"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Nobivac Tricat Trio",
+		"species": [
+			"feline"
+		],
+		"manufacturer": "MSD Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"V 3",
+			"V3",
+			"FVRCP",
+			"tríplice felina",
+			"triple felina",
+			"feline three-way vaccine",
+			"rinotraqueíte felina",
+			"rinotraqueítis felina",
+			"feline rhinotracheitis",
+			"calicivirose felina",
+			"calicivirosis felina",
+			"feline calicivirosis",
+			"panleucopenia felina",
+			"feline panleukopenia"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Felocell CVR",
+		"species": [
+			"feline"
+		],
+		"manufacturer": "Zoetis",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"V 3",
+			"V3",
+			"FVRCP",
+			"tríplice felina",
+			"triple felina",
+			"feline three-way vaccine",
+			"rinotraqueíte felina",
+			"rinotraqueítis felina",
+			"feline rhinotracheitis",
+			"calicivirose felina",
+			"calicivirosis felina",
+			"feline calicivirosis",
+			"panleucopenia felina",
+			"feline panleukopenia"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Purevax RCP",
+		"species": [
+			"feline"
+		],
+		"manufacturer": "Boehringer Ingelheim Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"V 3",
+			"V3",
+			"RCP",
+			"FVRCP",
+			"tríplice felina",
+			"triple felina",
+			"feline three-way vaccine",
+			"rinotraqueíte felina",
+			"rinotraqueítis felina",
+			"feline rhinotracheitis",
+			"calicivirose felina",
+			"calicivirosis felina",
+			"feline calicivirosis",
+			"panleucopenia felina",
+			"feline panleukopenia"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Purevax RCPCh",
+		"species": [
+			"feline"
+		],
+		"manufacturer": "Boehringer Ingelheim Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"V 4",
+			"V4",
+			"RCPCh",
+			"FVRCP+Ch",
+			"quádrupla felina",
+			"cuádruple felina",
+			"feline four-way vaccine",
+			"rinotraqueíte felina",
+			"rinotraqueítis felina",
+			"feline rhinotracheitis",
+			"calicivirose felina",
+			"calicivirosis felina",
+			"feline calicivirosis",
+			"panleucopenia felina",
+			"feline panleukopenia",
+			"clamidiose felina",
+			"clamidiosis felina",
+			"feline chlamydiosis"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Purevax RCPCh FeLV",
+		"species": [
+			"feline"
+		],
+		"manufacturer": "Boehringer Ingelheim Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"V 5",
+			"V5",
+			"RCPCh FeLV",
+			"FVRCP+Ch+FeLV",
+			"FeLV",
+			"quíntupla felina",
+			"quíntuple felina",
+			"feline five-way vaccine",
+			"rinotraqueíte felina",
+			"rinotraqueítis felina",
+			"feline rhinotracheitis",
+			"calicivirose felina",
+			"calicivirosis felina",
+			"feline calicivirosis",
+			"panleucopenia felina",
+			"feline panleukopenia",
+			"clamidiose felina",
+			"clamidiosis felina",
+			"feline chlamydiosis",
+			"leucemia felina",
+			"feline leukemia"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Purevax FeLV",
+		"species": [
+			"feline"
+		],
+		"manufacturer": "Boehringer Ingelheim Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"FeLV",
+			"leucemia felina",
+			"feline leukemia"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Purevax Rabies",
+		"species": [
+			"feline"
+		],
+		"manufacturer": "Boehringer Ingelheim Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"raiva",
+			"antirrábica",
+			"rabia",
+			"rabies"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Leucogen",
+		"species": [
+			"feline"
+		],
+		"manufacturer": "Boehringer Ingelheim Animal Health",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"FeLV",
+			"leucemia felina",
+			"feline leukemia"
+		]
+	},
+	{
+		"origin": "system",
+		"name": "Versifel FeLV",
+		"species": [
+			"feline"
+		],
+		"manufacturer": "Zoetis",
+		"regions": [
+			"BRA"
+		],
+		"aliases": [
+			"FeLV",
+			"leucemia felina",
+			"feline leukemia"
+		]
+	}
+]

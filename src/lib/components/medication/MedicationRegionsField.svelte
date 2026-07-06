@@ -44,7 +44,7 @@
 					<button
 						type="button"
 						class="inline-flex size-7 shrink-0 items-center justify-center rounded-sm hover:bg-background disabled:opacity-50"
-						aria-label={`${t('preventive.removeRegion')}: ${regionLabel(region)}`}
+						aria-label={`${t('medication.removeRegion')}: ${regionLabel(region)}`}
 						{disabled}
 						onclick={() => removeRegion(region)}
 					>
@@ -60,7 +60,7 @@
 		bind:value={selectedRegion}
 		emptyValue=""
 		options={availableCountries}
-		placeholder={t('preventive.regionPlaceholder')}
+		placeholder={t('medication.regionPlaceholder')}
 		emptyLabel={t('form.noOptions')}
 		{disabled}
 		onchange={addRegion}

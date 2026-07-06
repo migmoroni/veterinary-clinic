@@ -1,27 +1,27 @@
-import { canEditPreventiveCatalogItem, parsePreventiveAliases, parsePreventiveRegions, parsePreventiveSpecies, stringifyPreventiveAliases, stringifyPreventiveRegions, stringifyPreventiveSpecies, type PreventiveCatalogOrigin } from '$lib/domain/preventive/catalog.js';
+import { canEditMedicationCatalogItem, parseMedicationAliases, parseMedicationRegions, parseMedicationSpecies, stringifyMedicationAliases, stringifyMedicationRegions, stringifyMedicationSpecies, type MedicationCatalogOrigin } from '$lib/domain/medication/catalog.js';
 import { FIELD_LIMITS, assertTextLimit, nullableLimitedText } from '$lib/domain/shared/field-limits.js';
 import type { TreatmentCatalogItem, TreatmentCatalogItemInput, TreatmentKind } from '$lib/domain/treatment/treatment.js';
 import { normalizeTreatmentName } from '$lib/domain/treatment/treatment.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
-export type PreventiveCatalogKind = TreatmentKind;
-export type PreventiveCatalogItem = TreatmentCatalogItem;
+export type MedicationCatalogKind = TreatmentKind;
+export type MedicationCatalogItem = TreatmentCatalogItem;
 
-interface PreventiveCatalogItemRow {
+interface MedicationCatalogItemRow {
 	id: number;
-	kind: PreventiveCatalogKind;
+	kind: MedicationCatalogKind;
 	name: string;
 	normalized_name: string;
 	species: string;
 	aliases: string;
 	manufacturer: string | null;
-	origin: PreventiveCatalogOrigin;
+	origin: MedicationCatalogOrigin;
 	regions: string;
 	hidden_at: string | null;
 	updated_at: string | null;
 }
 
-interface PreventiveCatalogConfig {
+interface MedicationCatalogConfig {
 	nameLimit: number;
 	normalizedNameLimit: number;
 	requiredError: string;
@@ -29,7 +29,7 @@ interface PreventiveCatalogConfig {
 	normalize: (value: string) => string;
 }
 
-const catalogConfigs: Record<PreventiveCatalogKind, PreventiveCatalogConfig> = {
+const catalogConfigs: Record<MedicationCatalogKind, MedicationCatalogConfig> = {
 	vaccine: {
 		nameLimit: FIELD_LIMITS.vaccineName,
 		normalizedNameLimit: FIELD_LIMITS.vaccineNormalizedName,
@@ -46,44 +46,44 @@ const catalogConfigs: Record<PreventiveCatalogKind, PreventiveCatalogConfig> = {
 	}
 };
 
-function configFor(kind: PreventiveCatalogKind): PreventiveCatalogConfig {
+function configFor(kind: MedicationCatalogKind): MedicationCatalogConfig {
 	return catalogConfigs[kind];
 }
 
-function mapCatalogItem(row: PreventiveCatalogItemRow): PreventiveCatalogItem {
+function mapCatalogItem(row: MedicationCatalogItemRow): MedicationCatalogItem {
 	const config = configFor(row.kind);
 	return {
 		id: row.id,
 		kind: row.kind,
 		name: row.name,
 		normalizedName: row.normalized_name,
-		species: parsePreventiveSpecies(row.species),
-		aliases: parsePreventiveAliases(row.aliases, FIELD_LIMITS.preventiveAlias, config.normalize, row.normalized_name),
+		species: parseMedicationSpecies(row.species),
+		aliases: parseMedicationAliases(row.aliases, FIELD_LIMITS.medicationAlias, config.normalize, row.normalized_name),
 		manufacturer: row.manufacturer,
 		origin: row.origin,
-		regions: parsePreventiveRegions(row.regions),
+		regions: parseMedicationRegions(row.regions),
 		hiddenAt: row.hidden_at,
 		updatedAt: row.updated_at
 	};
 }
 
-function normalizePreventiveCatalogMetadata(
-	kind: PreventiveCatalogKind,
+function normalizeMedicationCatalogMetadata(
+	kind: MedicationCatalogKind,
 	input: Pick<TreatmentCatalogItemInput, 'species' | 'aliases' | 'manufacturer' | 'regions'>,
 	normalizedName: string
 ): { species: string; aliases: string; manufacturer: string | null; regions: string } {
 	const config = configFor(kind);
-	const species = stringifyPreventiveSpecies(input.species);
-	const aliases = stringifyPreventiveAliases(input.aliases, FIELD_LIMITS.preventiveAlias, config.normalize, normalizedName);
-	const manufacturer = nullableLimitedText(input.manufacturer, FIELD_LIMITS.preventiveManufacturer);
-	const regions = stringifyPreventiveRegions(input.regions);
-	assertTextLimit(species, FIELD_LIMITS.preventiveSpeciesJson);
-	assertTextLimit(aliases, FIELD_LIMITS.preventiveAliasesJson);
-	assertTextLimit(regions, FIELD_LIMITS.preventiveRegionsJson);
+	const species = stringifyMedicationSpecies(input.species);
+	const aliases = stringifyMedicationAliases(input.aliases, FIELD_LIMITS.medicationAlias, config.normalize, normalizedName);
+	const manufacturer = nullableLimitedText(input.manufacturer, FIELD_LIMITS.medicationManufacturer);
+	const regions = stringifyMedicationRegions(input.regions);
+	assertTextLimit(species, FIELD_LIMITS.medicationSpeciesJson);
+	assertTextLimit(aliases, FIELD_LIMITS.medicationAliasesJson);
+	assertTextLimit(regions, FIELD_LIMITS.medicationRegionsJson);
 	return { species, aliases, manufacturer, regions };
 }
 
-export function normalizePreventiveCatalogInput(kind: PreventiveCatalogKind, value: string): { name: string; normalizedName: string } {
+export function normalizeMedicationCatalogInput(kind: MedicationCatalogKind, value: string): { name: string; normalizedName: string } {
 	const config = configFor(kind);
 	const name = value.trim();
 	if (!name) throw new Error(config.requiredError);
@@ -96,10 +96,10 @@ export function normalizePreventiveCatalogInput(kind: PreventiveCatalogKind, val
 	return { name, normalizedName };
 }
 
-async function getPreventiveCatalogItemByNormalizedName(kind: PreventiveCatalogKind, normalizedName: string): Promise<PreventiveCatalogItem | null> {
-	const rows = await selectMany<PreventiveCatalogItemRow>(
+async function getMedicationCatalogItemByNormalizedName(kind: MedicationCatalogKind, normalizedName: string): Promise<MedicationCatalogItem | null> {
+	const rows = await selectMany<MedicationCatalogItemRow>(
 		`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, hidden_at, updated_at
-		 FROM preventive_catalog_items
+		 FROM medication_catalog_items
 		 WHERE kind = $1 AND normalized_name = $2
 		 LIMIT 1`,
 		[kind, normalizedName]
@@ -108,24 +108,24 @@ async function getPreventiveCatalogItemByNormalizedName(kind: PreventiveCatalogK
 	return rows[0] ? mapCatalogItem(rows[0]) : null;
 }
 
-async function assertPreventiveCatalogItemEditable(kind: PreventiveCatalogKind, id: number): Promise<void> {
-	const rows = await selectMany<Pick<PreventiveCatalogItemRow, 'origin'>>(
+async function assertMedicationCatalogItemEditable(kind: MedicationCatalogKind, id: number): Promise<void> {
+	const rows = await selectMany<Pick<MedicationCatalogItemRow, 'origin'>>(
 		`SELECT origin
-		 FROM preventive_catalog_items
+		 FROM medication_catalog_items
 		 WHERE id = $1 AND kind = $2
 		 LIMIT 1`,
 		[id, kind]
 	);
-	if (rows[0] && !canEditPreventiveCatalogItem(rows[0])) throw new Error('preventive_catalog_system_item');
+	if (rows[0] && !canEditMedicationCatalogItem(rows[0])) throw new Error('medication_catalog_system_item');
 }
 
-export async function ensurePreventiveCatalogItem(kind: PreventiveCatalogKind, name: string, normalizedName: string): Promise<PreventiveCatalogItem> {
-	const existingItem = await getPreventiveCatalogItemByNormalizedName(kind, normalizedName);
+export async function ensureMedicationCatalogItem(kind: MedicationCatalogKind, name: string, normalizedName: string): Promise<MedicationCatalogItem> {
+	const existingItem = await getMedicationCatalogItemByNormalizedName(kind, normalizedName);
 	if (existingItem?.origin === 'system') return existingItem;
 
-	const metadata = normalizePreventiveCatalogMetadata(kind, {}, normalizedName);
+	const metadata = normalizeMedicationCatalogMetadata(kind, {}, normalizedName);
 	await execute(
-		`INSERT INTO preventive_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at)
+		`INSERT INTO medication_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at)
 		 VALUES ($1, $2, $3, $4, $5, $6, 'user', $7, CURRENT_TIMESTAMP)
 		 ON CONFLICT(kind, normalized_name) DO UPDATE SET
 			name = excluded.name,
@@ -133,15 +133,15 @@ export async function ensurePreventiveCatalogItem(kind: PreventiveCatalogKind, n
 		[kind, name, normalizedName, metadata.species, metadata.aliases, metadata.manufacturer, metadata.regions]
 	);
 
-	const item = await getPreventiveCatalogItemByNormalizedName(kind, normalizedName);
+	const item = await getMedicationCatalogItemByNormalizedName(kind, normalizedName);
 	if (!item) throw new Error(configFor(kind).saveFailedError);
 	return item;
 }
 
-export async function listPreventiveCatalogItems(kind: PreventiveCatalogKind, includeHidden = false): Promise<PreventiveCatalogItem[]> {
-	const rows = await selectMany<PreventiveCatalogItemRow>(
+export async function listMedicationCatalogItems(kind: MedicationCatalogKind, includeHidden = false): Promise<MedicationCatalogItem[]> {
+	const rows = await selectMany<MedicationCatalogItemRow>(
 		`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, hidden_at, updated_at
-		 FROM preventive_catalog_items
+		 FROM medication_catalog_items
 		 WHERE kind = $1 AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}
 		 ORDER BY name COLLATE NOCASE`,
 		[kind]
@@ -150,14 +150,14 @@ export async function listPreventiveCatalogItems(kind: PreventiveCatalogKind, in
 	return rows.map(mapCatalogItem);
 }
 
-export async function savePreventiveCatalogItem(kind: PreventiveCatalogKind, input: TreatmentCatalogItemInput, id?: number): Promise<PreventiveCatalogItem> {
-	const { name, normalizedName } = normalizePreventiveCatalogInput(kind, input.name);
-	const metadata = normalizePreventiveCatalogMetadata(kind, input, normalizedName);
+export async function saveMedicationCatalogItem(kind: MedicationCatalogKind, input: TreatmentCatalogItemInput, id?: number): Promise<MedicationCatalogItem> {
+	const { name, normalizedName } = normalizeMedicationCatalogInput(kind, input.name);
+	const metadata = normalizeMedicationCatalogMetadata(kind, input, normalizedName);
 
 	if (id) {
-		await assertPreventiveCatalogItemEditable(kind, id);
+		await assertMedicationCatalogItemEditable(kind, id);
 		await execute(
-			`UPDATE preventive_catalog_items
+			`UPDATE medication_catalog_items
 			 SET name = $3,
 				normalized_name = $4,
 				species = $5,
@@ -169,9 +169,9 @@ export async function savePreventiveCatalogItem(kind: PreventiveCatalogKind, inp
 			[id, kind, name, normalizedName, metadata.species, metadata.aliases, metadata.manufacturer, metadata.regions]
 		);
 
-		const rows = await selectMany<PreventiveCatalogItemRow>(
+		const rows = await selectMany<MedicationCatalogItemRow>(
 			`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, hidden_at, updated_at
-			 FROM preventive_catalog_items
+			 FROM medication_catalog_items
 			 WHERE id = $1 AND kind = $2
 			 LIMIT 1`,
 			[id, kind]
@@ -180,11 +180,11 @@ export async function savePreventiveCatalogItem(kind: PreventiveCatalogKind, inp
 		throw new Error(configFor(kind).saveFailedError);
 	}
 
-	const existingItem = await getPreventiveCatalogItemByNormalizedName(kind, normalizedName);
-	if (existingItem && !canEditPreventiveCatalogItem(existingItem)) throw new Error('preventive_catalog_system_item');
+	const existingItem = await getMedicationCatalogItemByNormalizedName(kind, normalizedName);
+	if (existingItem && !canEditMedicationCatalogItem(existingItem)) throw new Error('medication_catalog_system_item');
 
 	await execute(
-		`INSERT INTO preventive_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at)
+		`INSERT INTO medication_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at)
 		 VALUES ($1, $2, $3, $4, $5, $6, 'user', $7, CURRENT_TIMESTAMP)
 		 ON CONFLICT(kind, normalized_name) DO UPDATE SET
 			name = excluded.name,
@@ -197,23 +197,23 @@ export async function savePreventiveCatalogItem(kind: PreventiveCatalogKind, inp
 		[kind, name, normalizedName, metadata.species, metadata.aliases, metadata.manufacturer, metadata.regions]
 	);
 
-	const item = await getPreventiveCatalogItemByNormalizedName(kind, normalizedName);
+	const item = await getMedicationCatalogItemByNormalizedName(kind, normalizedName);
 	if (!item) throw new Error(configFor(kind).saveFailedError);
 	return item;
 }
 
-export async function setPreventiveCatalogItemHidden(kind: PreventiveCatalogKind, id: number, hidden: boolean): Promise<PreventiveCatalogItem> {
+export async function setMedicationCatalogItemHidden(kind: MedicationCatalogKind, id: number, hidden: boolean): Promise<MedicationCatalogItem> {
 	await execute(
-		`UPDATE preventive_catalog_items
+		`UPDATE medication_catalog_items
 		 SET hidden_at = ${hidden ? 'COALESCE(hidden_at, CURRENT_TIMESTAMP)' : 'NULL'},
 			updated_at = CURRENT_TIMESTAMP
 		 WHERE id = $1 AND kind = $2`,
 		[id, kind]
 	);
 
-	const rows = await selectMany<PreventiveCatalogItemRow>(
+	const rows = await selectMany<MedicationCatalogItemRow>(
 		`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, hidden_at, updated_at
-		 FROM preventive_catalog_items
+		 FROM medication_catalog_items
 		 WHERE id = $1 AND kind = $2
 		 LIMIT 1`,
 		[id, kind]
@@ -222,7 +222,7 @@ export async function setPreventiveCatalogItemHidden(kind: PreventiveCatalogKind
 	return mapCatalogItem(rows[0]);
 }
 
-export async function deletePreventiveCatalogItem(kind: PreventiveCatalogKind, id: number): Promise<void> {
-	await assertPreventiveCatalogItemEditable(kind, id);
-	await execute('DELETE FROM preventive_catalog_items WHERE id = $1 AND kind = $2', [id, kind]);
+export async function deleteMedicationCatalogItem(kind: MedicationCatalogKind, id: number): Promise<void> {
+	await assertMedicationCatalogItemEditable(kind, id);
+	await execute('DELETE FROM medication_catalog_items WHERE id = $1 AND kind = $2', [id, kind]);
 }

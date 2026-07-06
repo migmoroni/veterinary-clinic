@@ -1,7 +1,7 @@
 import { FIELD_LIMITS, assertTextLimit, nullableMultilineText } from '$lib/domain/shared/field-limits.js';
 import type { PetTreatment, PetTreatmentInput, TreatmentCatalogItem, TreatmentCatalogItemInput, TreatmentKind, TreatmentValidityUnit } from '$lib/domain/treatment/treatment.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
-import { deletePreventiveCatalogItem, ensurePreventiveCatalogItem, listPreventiveCatalogItems, normalizePreventiveCatalogInput, savePreventiveCatalogItem, setPreventiveCatalogItemHidden } from '$lib/persistence/repositories/preventive-catalog.repository.js';
+import { deleteMedicationCatalogItem, ensureMedicationCatalogItem, listMedicationCatalogItems, normalizeMedicationCatalogInput, saveMedicationCatalogItem, setMedicationCatalogItemHidden } from '$lib/persistence/repositories/medication-catalog.repository.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
 interface PetTreatmentRow {
@@ -146,19 +146,19 @@ async function markPreviousEquivalentTreatmentsIgnored(kind: TreatmentKind, petI
 }
 
 export async function listTreatmentCatalogItems(kind: TreatmentKind, includeHidden = false): Promise<TreatmentCatalogItem[]> {
-	return listPreventiveCatalogItems(kind, includeHidden);
+	return listMedicationCatalogItems(kind, includeHidden);
 }
 
 export async function saveTreatmentCatalogItem(kind: TreatmentKind, input: TreatmentCatalogItemInput, id?: number): Promise<TreatmentCatalogItem> {
-	return savePreventiveCatalogItem(kind, input, id);
+	return saveMedicationCatalogItem(kind, input, id);
 }
 
 export async function setTreatmentCatalogItemHidden(kind: TreatmentKind, id: number, hidden: boolean): Promise<TreatmentCatalogItem> {
-	return setPreventiveCatalogItemHidden(kind, id, hidden);
+	return setMedicationCatalogItemHidden(kind, id, hidden);
 }
 
 export async function deleteTreatmentCatalogItem(kind: TreatmentKind, id: number): Promise<void> {
-	await deletePreventiveCatalogItem(kind, id);
+	await deleteMedicationCatalogItem(kind, id);
 }
 
 export async function listTreatmentsByPet(kind: TreatmentKind, petId: number, includeDeleted = false): Promise<PetTreatment[]> {
@@ -178,13 +178,13 @@ export async function createTreatments(kind: TreatmentKind, petId: number, input
 
 	for (const input of inputs) {
 		const appliedAt = requiredIsoDate(input.appliedAt);
-		const { name, normalizedName } = normalizePreventiveCatalogInput(kind, input.name);
+		const { name, normalizedName } = normalizeMedicationCatalogInput(kind, input.name);
 		const dose = normalizeDose(kind, input.dose);
 		const validityUnit = normalizeValidityUnit(input.validityUnit);
 		const validityValue = normalizeValidityValue(kind, Number(input.validityValue), validityUnit);
 		const observation = nullableMultilineText(input.observation, configFor(kind).observationLimit);
 
-		await ensurePreventiveCatalogItem(kind, name, normalizedName);
+		await ensureMedicationCatalogItem(kind, name, normalizedName);
 		await execute(
 			`INSERT INTO pet_treatments (pet_id, kind, applied_at, name, normalized_name, dose, validity_value, validity_unit, observation, updated_at)
 			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)`,

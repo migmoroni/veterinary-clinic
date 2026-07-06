@@ -2,17 +2,17 @@
 	import { onMount } from 'svelte';
 	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
 	import PeriodField from '$lib/components/forms/PeriodField.svelte';
-	import PreventiveRegionsField from '$lib/components/preventive/PreventiveRegionsField.svelte';
+	import MedicationRegionsField from '$lib/components/medication/MedicationRegionsField.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import { petSpeciesOptions, type KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
-	import { canDeletePreventiveCatalogItem, canEditPreventiveCatalogItem } from '$lib/domain/preventive/catalog.js';
-	import { canDeletePreventiveProtocol, canEditPreventiveProtocol, type PreventiveProtocol, type PreventiveProtocolDose, type PreventiveProtocolKind, type PreventiveValidityUnit } from '$lib/domain/preventive/protocol.js';
+	import { canDeleteMedicationCatalogItem, canEditMedicationCatalogItem } from '$lib/domain/medication/catalog.js';
+	import { canDeleteMedicationProtocol, canEditMedicationProtocol, type MedicationProtocol, type MedicationProtocolDose, type MedicationProtocolKind, type MedicationValidityUnit } from '$lib/domain/medication/protocol.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import type { TreatmentCatalogItem } from '$lib/domain/treatment/treatment.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
-	import { loadPreventiveProtocols, removeProtocol, removeProtocolDose, saveProtocol, saveProtocolDose, setProtocolHidden } from '$lib/services/preventive-protocol.service.js';
+	import { loadMedicationProtocols, removeProtocol, removeProtocolDose, saveProtocol, saveProtocolDose, setProtocolHidden } from '$lib/services/medication-protocol.service.js';
 	import { loadTreatmentCatalogItems, removeTreatmentCatalogName, saveTreatmentCatalogName, setTreatmentCatalogNameHidden } from '$lib/services/treatment.service.js';
 	import Eye from '@lucide/svelte/icons/eye';
 	import EyeOff from '@lucide/svelte/icons/eye-off';
@@ -34,7 +34,7 @@
 
 	let vaccines = $state<TreatmentCatalogItem[]>([]);
 	let antiparasitics = $state<TreatmentCatalogItem[]>([]);
-	let protocols = $state<PreventiveProtocol[]>([]);
+	let protocols = $state<MedicationProtocol[]>([]);
 	let activeTab = $state<VaccineSettingsTab>('vaccines');
 	let vaccineDraftNames = $state<Record<number, string>>({});
 	let vaccineDraftAliases = $state<Record<number, string>>({});
@@ -52,10 +52,10 @@
 	let protocolDraftItemIds = $state<Record<number, number[]>>({});
 	let doseDraftDoses = $state<Record<number, string>>({});
 	let doseDraftValidityValues = $state<Record<number, number>>({});
-	let doseDraftValidityUnits = $state<Record<number, PreventiveValidityUnit>>({});
+	let doseDraftValidityUnits = $state<Record<number, MedicationValidityUnit>>({});
 	let newDoseDoses = $state<Record<number, string>>({});
 	let newDoseValidityValues = $state<Record<number, number>>({});
-	let newDoseValidityUnits = $state<Record<number, PreventiveValidityUnit>>({});
+	let newDoseValidityUnits = $state<Record<number, MedicationValidityUnit>>({});
 	let newVaccineName = $state('');
 	let newVaccineAliases = $state('');
 	let newVaccineManufacturer = $state('');
@@ -66,14 +66,14 @@
 	let newAntiparasiticManufacturer = $state('');
 	let newAntiparasiticRegions = $state<string[]>(['BRA']);
 	let newAntiparasiticSpecies = $state<KnownPetSpecies[]>(defaultSpeciesDraft());
-	let newProtocolKind = $state<PreventiveProtocolKind>('vaccine');
+	let newProtocolKind = $state<MedicationProtocolKind>('vaccine');
 	let newProtocolName = $state('');
 	let newProtocolSpecies = $state<KnownPetSpecies[]>(defaultSpeciesDraft());
 	let newProtocolObservation = $state('');
 	let newProtocolItemIds = $state<number[]>([]);
 	let loading = $state(true);
 	let saving = $state(false);
-	let protocolPendingRemoval = $state<PreventiveProtocol | null>(null);
+	let protocolPendingRemoval = $state<MedicationProtocol | null>(null);
 	let statusKey = $state<TranslationKey | null>(null);
 	let errorKey = $state<TranslationKey | null>(null);
 	let newProtocolSelectableItems = $derived(visibleCatalogItemsForSpecies(newProtocolKind, newProtocolSpecies));
@@ -86,7 +86,7 @@
 		return [...source].sort((first, second) => first.name.localeCompare(second.name));
 	}
 
-	function sortedProtocols(source: PreventiveProtocol[]): PreventiveProtocol[] {
+	function sortedProtocols(source: MedicationProtocol[]): MedicationProtocol[] {
 		return [...source].sort((first, second) => first.kind.localeCompare(second.kind) || first.sortOrder - second.sortOrder || first.name.localeCompare(second.name));
 	}
 
@@ -143,7 +143,7 @@
 		return antiparasiticDraftRegions[antiparasitic.id] ?? antiparasitic.regions;
 	}
 
-	function protocolDraftSpeciesValue(protocol: PreventiveProtocol): KnownPetSpecies[] {
+	function protocolDraftSpeciesValue(protocol: MedicationProtocol): KnownPetSpecies[] {
 		return protocolDraftSpecies[protocol.id] ?? protocol.species;
 	}
 
@@ -163,7 +163,7 @@
 		antiparasiticDraftRegions = { ...antiparasiticDraftRegions, [antiparasiticId]: regions };
 	}
 
-	function itemMatchesSpecies(kind: PreventiveProtocolKind, itemId: number, species: KnownPetSpecies[]): boolean {
+	function itemMatchesSpecies(kind: MedicationProtocolKind, itemId: number, species: KnownPetSpecies[]): boolean {
 		return catalogItems(kind).some((item) => item.id === itemId && speciesOverlap(item.species, species));
 	}
 
@@ -173,7 +173,7 @@
 		newProtocolItemIds = newProtocolItemIds.filter((itemId) => itemMatchesSpecies(newProtocolKind, itemId, nextSpecies));
 	}
 
-	function setProtocolSpecies(protocol: PreventiveProtocol, species: KnownPetSpecies) {
+	function setProtocolSpecies(protocol: MedicationProtocol, species: KnownPetSpecies) {
 		const nextSpecies = toggleSpeciesDraft(protocolDraftSpeciesValue(protocol), species, true);
 		protocolDraftSpecies = { ...protocolDraftSpecies, [protocol.id]: nextSpecies };
 		protocolDraftItemIds = { ...protocolDraftItemIds, [protocol.id]: selectedItemIds(protocol).filter((itemId) => itemMatchesSpecies(protocol.kind, itemId, nextSpecies)) };
@@ -192,11 +192,11 @@
 		];
 	}
 
-	function catalogItems(kind: PreventiveProtocolKind): CatalogItem[] {
+	function catalogItems(kind: MedicationProtocolKind): CatalogItem[] {
 		return kind === 'vaccine' ? vaccines : antiparasitics;
 	}
 
-	function visibleCatalogItems(kind: PreventiveProtocolKind): CatalogItem[] {
+	function visibleCatalogItems(kind: MedicationProtocolKind): CatalogItem[] {
 		return catalogItems(kind).filter((item) => !item.hiddenAt);
 	}
 
@@ -204,13 +204,13 @@
 		return left.some((species) => right.includes(species));
 	}
 
-	function visibleCatalogItemsForSpecies(kind: PreventiveProtocolKind, species: KnownPetSpecies[]): CatalogItem[] {
+	function visibleCatalogItemsForSpecies(kind: MedicationProtocolKind, species: KnownPetSpecies[]): CatalogItem[] {
 		if (species.length === 0) return [];
 		return sortedCatalogItems(visibleCatalogItems(kind).filter((item) => speciesOverlap(item.species, species)));
 	}
 
-	function protocolCatalogItems(protocol: PreventiveProtocol): CatalogItem[] {
-		if (!canEditPreventiveProtocol(protocol)) {
+	function protocolCatalogItems(protocol: MedicationProtocol): CatalogItem[] {
+		if (!canEditMedicationProtocol(protocol)) {
 			const linkedItemIds = new Set(protocol.items.map((item) => item.id));
 			return sortedCatalogItems(catalogItems(protocol.kind).filter((item) => linkedItemIds.has(item.id)));
 		}
@@ -230,28 +230,28 @@
 		if (nextItemIds.length !== newProtocolItemIds.length) newProtocolItemIds = nextItemIds;
 	});
 
-	function kindLabel(kind: PreventiveProtocolKind): string {
+	function kindLabel(kind: MedicationProtocolKind): string {
 		return kind === 'vaccine' ? t('protocol.kind.vaccine') : t('protocol.kind.antiparasitic');
 	}
 
-	function validityLabel(value: number, unit: PreventiveValidityUnit): string {
+	function validityLabel(value: number, unit: MedicationValidityUnit): string {
 		const unitKey = unit === 'days' ? (value === 1 ? 'pet.ageDaySingular' : 'pet.ageDayPlural') : unit === 'months' ? (value === 1 ? 'pet.ageMonthSingular' : 'pet.ageMonthPlural') : value === 1 ? 'pet.ageYearSingular' : 'pet.ageYearPlural';
 		return `${value} ${t(unitKey)}`;
 	}
 
-	function protocolDraftName(protocol: PreventiveProtocol): string {
+	function protocolDraftName(protocol: MedicationProtocol): string {
 		return protocolDraftNames[protocol.id] ?? protocol.name;
 	}
 
-	function protocolDraftObservation(protocol: PreventiveProtocol): string {
+	function protocolDraftObservation(protocol: MedicationProtocol): string {
 		return protocolDraftObservations[protocol.id] ?? protocol.observation ?? '';
 	}
 
-	function selectedItemIds(protocol: PreventiveProtocol): number[] {
+	function selectedItemIds(protocol: MedicationProtocol): number[] {
 		return protocolDraftItemIds[protocol.id] ?? protocol.items.map((item) => item.id);
 	}
 
-	function syncProtocolDraft(protocol: PreventiveProtocol) {
+	function syncProtocolDraft(protocol: MedicationProtocol) {
 		protocolDraftNames = { ...protocolDraftNames, [protocol.id]: protocol.name };
 		protocolDraftSpecies = { ...protocolDraftSpecies, [protocol.id]: protocol.species };
 		protocolDraftObservations = { ...protocolDraftObservations, [protocol.id]: protocol.observation ?? '' };
@@ -262,7 +262,7 @@
 		newDoseValidityUnits = { ...newDoseValidityUnits, [protocol.id]: newDoseValidityUnits[protocol.id] ?? 'months' };
 	}
 
-	function syncDoseDraft(dose: PreventiveProtocolDose) {
+	function syncDoseDraft(dose: MedicationProtocolDose) {
 		doseDraftDoses = { ...doseDraftDoses, [dose.id]: dose.dose };
 		doseDraftValidityValues = { ...doseDraftValidityValues, [dose.id]: dose.validityValue };
 		doseDraftValidityUnits = { ...doseDraftValidityUnits, [dose.id]: dose.validityUnit };
@@ -286,7 +286,7 @@
 		antiparasiticDraftSpecies = { ...antiparasiticDraftSpecies, [antiparasitic.id]: antiparasitic.species };
 	}
 
-	function upsertProtocol(protocol: PreventiveProtocol) {
+	function upsertProtocol(protocol: MedicationProtocol) {
 		protocols = sortedProtocols([...protocols.filter((item) => item.id !== protocol.id && !(item.kind === protocol.kind && item.normalizedName === protocol.normalizedName)), protocol]);
 		syncProtocolDraft(protocol);
 	}
@@ -294,7 +294,7 @@
 	function setFailure(exception: unknown) {
 		if (exception instanceof Error && exception.message === 'field_limit_exceeded') errorKey = 'form.limitExceeded';
 		else if (exception instanceof Error && exception.message === 'field_required') errorKey = 'form.fieldRequired';
-		else if (exception instanceof Error && (exception.message === 'preventive_catalog_system_item' || exception.message === 'preventive_protocol_system_item')) errorKey = 'preventive.systemItemReadOnly';
+		else if (exception instanceof Error && (exception.message === 'medication_catalog_system_item' || exception.message === 'medication_protocol_system_item')) errorKey = 'medication.systemItemReadOnly';
 		else if (exception instanceof Error && exception.message === 'treatment_name_required') errorKey = activeTab === 'antiparasitics' ? 'antiparasiticTreatment.nameRequired' : 'vaccine.nameRequired';
 		else if (exception instanceof Error && exception.message === 'protocol_name_required') errorKey = 'protocol.nameRequired';
 		else if (exception instanceof Error && exception.message === 'protocol_item_required') errorKey = 'protocol.itemRequired';
@@ -308,7 +308,7 @@
 		errorKey = null;
 
 		try {
-			const [loadedVaccines, loadedAntiparasitics, loadedProtocols] = await Promise.all([loadTreatmentCatalogItems('vaccine', true), loadTreatmentCatalogItems('antiparasitic', true), loadPreventiveProtocols(undefined, true)]);
+			const [loadedVaccines, loadedAntiparasitics, loadedProtocols] = await Promise.all([loadTreatmentCatalogItems('vaccine', true), loadTreatmentCatalogItems('antiparasitic', true), loadMedicationProtocols(undefined, true)]);
 			vaccines = sortedVaccines(loadedVaccines);
 			antiparasitics = sortedAntiparasitics(loadedAntiparasitics);
 			protocols = sortedProtocols(loadedProtocols);
@@ -408,7 +408,7 @@
 	}
 
 	async function saveExistingVaccine(vaccine: TreatmentCatalogItem) {
-		if (!canEditPreventiveCatalogItem(vaccine)) return;
+		if (!canEditMedicationCatalogItem(vaccine)) return;
 		saving = true;
 		statusKey = null;
 		errorKey = null;
@@ -435,7 +435,7 @@
 	}
 
 	async function saveExistingAntiparasitic(antiparasitic: TreatmentCatalogItem) {
-		if (!canEditPreventiveCatalogItem(antiparasitic)) return;
+		if (!canEditMedicationCatalogItem(antiparasitic)) return;
 		saving = true;
 		statusKey = null;
 		errorKey = null;
@@ -461,8 +461,8 @@
 		}
 	}
 
-	async function saveExistingProtocol(protocol: PreventiveProtocol) {
-		if (!canEditPreventiveProtocol(protocol)) return;
+	async function saveExistingProtocol(protocol: MedicationProtocol) {
+		if (!canEditMedicationProtocol(protocol)) return;
 		saving = true;
 		statusKey = null;
 		errorKey = null;
@@ -519,7 +519,7 @@
 		}
 	}
 
-	async function toggleProtocolHidden(protocol: PreventiveProtocol) {
+	async function toggleProtocolHidden(protocol: MedicationProtocol) {
 		saving = true;
 		statusKey = null;
 		errorKey = null;
@@ -536,7 +536,7 @@
 	}
 
 	async function deleteVaccine(vaccine: TreatmentCatalogItem) {
-		if (!canDeletePreventiveCatalogItem(vaccine)) return;
+		if (!canDeleteMedicationCatalogItem(vaccine)) return;
 		if (!window.confirm(t('vaccine.list.deleteConfirm'))) return;
 		saving = true;
 		statusKey = null;
@@ -564,7 +564,7 @@
 	}
 
 	async function deleteAntiparasitic(antiparasitic: TreatmentCatalogItem) {
-		if (!canDeletePreventiveCatalogItem(antiparasitic)) return;
+		if (!canDeleteMedicationCatalogItem(antiparasitic)) return;
 		if (!window.confirm(t('antiparasiticTreatment.list.deleteConfirm'))) return;
 		saving = true;
 		statusKey = null;
@@ -591,14 +591,14 @@
 		}
 	}
 
-	function deleteProtocol(protocol: PreventiveProtocol) {
-		if (saving || !canDeletePreventiveProtocol(protocol)) return;
+	function deleteProtocol(protocol: MedicationProtocol) {
+		if (saving || !canDeleteMedicationProtocol(protocol)) return;
 		protocolPendingRemoval = protocol;
 	}
 
 	async function confirmProtocolRemoval() {
 		const protocol = protocolPendingRemoval;
-		if (!protocol || saving || !canDeletePreventiveProtocol(protocol)) return;
+		if (!protocol || saving || !canDeleteMedicationProtocol(protocol)) return;
 
 		saving = true;
 		statusKey = null;
@@ -625,13 +625,13 @@
 		newProtocolItemIds = newProtocolItemIds.includes(itemId) ? newProtocolItemIds.filter((id) => id !== itemId) : [...newProtocolItemIds, itemId];
 	}
 
-	function handleNewProtocolKindChange(kind: PreventiveProtocolKind) {
+	function handleNewProtocolKindChange(kind: MedicationProtocolKind) {
 		newProtocolKind = kind;
 		newProtocolItemIds = [];
 	}
 
-	function toggleProtocolItem(protocol: PreventiveProtocol, itemId: number) {
-		if (!canEditPreventiveProtocol(protocol)) return;
+	function toggleProtocolItem(protocol: MedicationProtocol, itemId: number) {
+		if (!canEditMedicationProtocol(protocol)) return;
 		const selected = selectedItemIds(protocol);
 		if (!selected.includes(itemId) && !itemMatchesSpecies(protocol.kind, itemId, protocolDraftSpeciesValue(protocol))) return;
 		protocolDraftItemIds = {
@@ -640,8 +640,8 @@
 		};
 	}
 
-	function setProtocolObservation(protocol: PreventiveProtocol, value: string) {
-		if (!canEditPreventiveProtocol(protocol)) return;
+	function setProtocolObservation(protocol: MedicationProtocol, value: string) {
+		if (!canEditMedicationProtocol(protocol)) return;
 		protocolDraftObservations = { ...protocolDraftObservations, [protocol.id]: value };
 	}
 
@@ -649,19 +649,19 @@
 		newDoseDoses = { ...newDoseDoses, [protocolId]: value };
 	}
 
-	function setNewDoseValidity(protocolId: number, value: number, unit: PreventiveValidityUnit) {
+	function setNewDoseValidity(protocolId: number, value: number, unit: MedicationValidityUnit) {
 		newDoseValidityValues = { ...newDoseValidityValues, [protocolId]: value };
 		newDoseValidityUnits = { ...newDoseValidityUnits, [protocolId]: unit };
 	}
 
-	function setDoseValidity(doseId: number, value: number, unit: PreventiveValidityUnit) {
+	function setDoseValidity(doseId: number, value: number, unit: MedicationValidityUnit) {
 		doseDraftValidityValues = { ...doseDraftValidityValues, [doseId]: value };
 		doseDraftValidityUnits = { ...doseDraftValidityUnits, [doseId]: unit };
 	}
 
-	async function addProtocolDose(event: SubmitEvent, protocol: PreventiveProtocol) {
+	async function addProtocolDose(event: SubmitEvent, protocol: MedicationProtocol) {
 		event.preventDefault();
-		if (!canEditPreventiveProtocol(protocol)) return;
+		if (!canEditMedicationProtocol(protocol)) return;
 		saving = true;
 		statusKey = null;
 		errorKey = null;
@@ -684,9 +684,9 @@
 		}
 	}
 
-	async function saveExistingProtocolDose(event: SubmitEvent, protocol: PreventiveProtocol, dose: PreventiveProtocolDose) {
+	async function saveExistingProtocolDose(event: SubmitEvent, protocol: MedicationProtocol, dose: MedicationProtocolDose) {
 		event.preventDefault();
-		if (!canEditPreventiveProtocol(protocol)) return;
+		if (!canEditMedicationProtocol(protocol)) return;
 		saving = true;
 		statusKey = null;
 		errorKey = null;
@@ -710,8 +710,8 @@
 		}
 	}
 
-	async function deleteProtocolDose(protocol: PreventiveProtocol, dose: PreventiveProtocolDose) {
-		if (!canEditPreventiveProtocol(protocol)) return;
+	async function deleteProtocolDose(protocol: MedicationProtocol, dose: MedicationProtocolDose) {
+		if (!canEditMedicationProtocol(protocol)) return;
 		if (!window.confirm(t('protocol.doseDeleteConfirm'))) return;
 		saving = true;
 		statusKey = null;
@@ -778,20 +778,20 @@
 						</label>
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
-								<span>{t('preventive.manufacturer')}</span>
-								<CharacterLimitHint value={newVaccineManufacturer} max={FIELD_LIMITS.preventiveManufacturer} />
+								<span>{t('medication.manufacturer')}</span>
+								<CharacterLimitHint value={newVaccineManufacturer} max={FIELD_LIMITS.medicationManufacturer} />
 							</span>
-							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newVaccineManufacturer} maxlength={FIELD_LIMITS.preventiveManufacturer} />
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newVaccineManufacturer} maxlength={FIELD_LIMITS.medicationManufacturer} />
 						</label>
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
-								<span>{t('preventive.aliases')}</span>
-								<CharacterLimitHint value={newVaccineAliases} max={FIELD_LIMITS.preventiveAliasesJson} />
+								<span>{t('medication.aliases')}</span>
+								<CharacterLimitHint value={newVaccineAliases} max={FIELD_LIMITS.medicationAliasesJson} />
 							</span>
-							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newVaccineAliases} maxlength={FIELD_LIMITS.preventiveAliasesJson} placeholder={t('preventive.aliasesPlaceholder')} />
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newVaccineAliases} maxlength={FIELD_LIMITS.medicationAliasesJson} placeholder={t('medication.aliasesPlaceholder')} />
 						</label>
 						<div class="flex min-w-0 flex-col gap-2 text-sm font-medium">
-							<span>{t('preventive.species')}</span>
+							<span>{t('medication.species')}</span>
 							<div class="flex flex-wrap gap-2">
 								{#each petSpeciesOptions as option}
 									<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
@@ -802,8 +802,8 @@
 							</div>
 						</div>
 						<div class="flex min-w-0 flex-col gap-2 text-sm font-medium">
-							<span>{t('preventive.regions')}</span>
-							<PreventiveRegionsField id="new-vaccine-regions" value={newVaccineRegions} disabled={saving} onchange={(regions) => (newVaccineRegions = regions)} />
+							<span>{t('medication.regions')}</span>
+							<MedicationRegionsField id="new-vaccine-regions" value={newVaccineRegions} disabled={saving} onchange={(regions) => (newVaccineRegions = regions)} />
 						</div>
 						<button type="submit" class="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50 lg:col-span-2" disabled={saving}>
 							<Plus class="size-4" />
@@ -824,23 +824,23 @@
 									<span>{t('vaccine.name')}</span>
 									<CharacterLimitHint value={vaccineDraftNames[vaccine.id] ?? vaccine.name} max={FIELD_LIMITS.vaccineName} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={vaccineDraftNames[vaccine.id] ?? vaccine.name} maxlength={FIELD_LIMITS.vaccineName} disabled={!canEditPreventiveCatalogItem(vaccine)} required oninput={(event) => (vaccineDraftNames = { ...vaccineDraftNames, [vaccine.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={vaccineDraftNames[vaccine.id] ?? vaccine.name} maxlength={FIELD_LIMITS.vaccineName} disabled={!canEditMedicationCatalogItem(vaccine)} required oninput={(event) => (vaccineDraftNames = { ...vaccineDraftNames, [vaccine.id]: inputValue(event) })} />
 							</label>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
-									<span>{t('preventive.manufacturer')}</span>
-									<CharacterLimitHint value={vaccineDraftManufacturers[vaccine.id] ?? vaccine.manufacturer ?? ''} max={FIELD_LIMITS.preventiveManufacturer} />
+									<span>{t('medication.manufacturer')}</span>
+									<CharacterLimitHint value={vaccineDraftManufacturers[vaccine.id] ?? vaccine.manufacturer ?? ''} max={FIELD_LIMITS.medicationManufacturer} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={vaccineDraftManufacturers[vaccine.id] ?? vaccine.manufacturer ?? ''} maxlength={FIELD_LIMITS.preventiveManufacturer} disabled={!canEditPreventiveCatalogItem(vaccine)} oninput={(event) => (vaccineDraftManufacturers = { ...vaccineDraftManufacturers, [vaccine.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={vaccineDraftManufacturers[vaccine.id] ?? vaccine.manufacturer ?? ''} maxlength={FIELD_LIMITS.medicationManufacturer} disabled={!canEditMedicationCatalogItem(vaccine)} oninput={(event) => (vaccineDraftManufacturers = { ...vaccineDraftManufacturers, [vaccine.id]: inputValue(event) })} />
 							</label>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
-									<span>{t('preventive.aliases')}</span>
-									<CharacterLimitHint value={vaccineDraftAliases[vaccine.id] ?? aliasDraft(vaccine.aliases)} max={FIELD_LIMITS.preventiveAliasesJson} />
+									<span>{t('medication.aliases')}</span>
+									<CharacterLimitHint value={vaccineDraftAliases[vaccine.id] ?? aliasDraft(vaccine.aliases)} max={FIELD_LIMITS.medicationAliasesJson} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={vaccineDraftAliases[vaccine.id] ?? aliasDraft(vaccine.aliases)} maxlength={FIELD_LIMITS.preventiveAliasesJson} placeholder={t('preventive.aliasesPlaceholder')} disabled={!canEditPreventiveCatalogItem(vaccine)} oninput={(event) => (vaccineDraftAliases = { ...vaccineDraftAliases, [vaccine.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={vaccineDraftAliases[vaccine.id] ?? aliasDraft(vaccine.aliases)} maxlength={FIELD_LIMITS.medicationAliasesJson} placeholder={t('medication.aliasesPlaceholder')} disabled={!canEditMedicationCatalogItem(vaccine)} oninput={(event) => (vaccineDraftAliases = { ...vaccineDraftAliases, [vaccine.id]: inputValue(event) })} />
 							</label>
-							{#if canEditPreventiveCatalogItem(vaccine)}
+							{#if canEditMedicationCatalogItem(vaccine)}
 								<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
 									<Save class="size-4" />
 									{t('actions.save')}
@@ -855,26 +855,26 @@
 									{t('vaccine.list.hide')}
 								{/if}
 							</button>
-							{#if canDeletePreventiveCatalogItem(vaccine)}
+							{#if canDeleteMedicationCatalogItem(vaccine)}
 								<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={() => void deleteVaccine(vaccine)}>
 									<Trash2 class="size-4" />
 									{t('actions.delete')}
 								</button>
 							{/if}
 							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-3">
-								<span>{t('preventive.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(vaccineDraftSpeciesValue(vaccine))}</span></span>
+								<span>{t('medication.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(vaccineDraftSpeciesValue(vaccine))}</span></span>
 								<div class="flex flex-wrap gap-2">
 									{#each petSpeciesOptions as option}
 										<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
-											<input type="checkbox" class="size-4 accent-primary" checked={vaccineDraftSpeciesValue(vaccine).includes(option.id)} disabled={!canEditPreventiveCatalogItem(vaccine)} onchange={() => setVaccineSpecies(vaccine, option.id)} />
+											<input type="checkbox" class="size-4 accent-primary" checked={vaccineDraftSpeciesValue(vaccine).includes(option.id)} disabled={!canEditMedicationCatalogItem(vaccine)} onchange={() => setVaccineSpecies(vaccine, option.id)} />
 											<span>{t(option.labelKey)}</span>
 										</label>
 									{/each}
 								</div>
 							</div>
 							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-3">
-								<span>{t('preventive.regions')}</span>
-								<PreventiveRegionsField id={`vaccine-regions-${vaccine.id}`} value={vaccineDraftRegionsValue(vaccine)} disabled={saving || !canEditPreventiveCatalogItem(vaccine)} onchange={(regions) => setVaccineRegions(vaccine.id, regions)} />
+								<span>{t('medication.regions')}</span>
+								<MedicationRegionsField id={`vaccine-regions-${vaccine.id}`} value={vaccineDraftRegionsValue(vaccine)} disabled={saving || !canEditMedicationCatalogItem(vaccine)} onchange={(regions) => setVaccineRegions(vaccine.id, regions)} />
 							</div>
 						</form>
 					{:else}
@@ -901,20 +901,20 @@
 						</label>
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
-								<span>{t('preventive.manufacturer')}</span>
-								<CharacterLimitHint value={newAntiparasiticManufacturer} max={FIELD_LIMITS.preventiveManufacturer} />
+								<span>{t('medication.manufacturer')}</span>
+								<CharacterLimitHint value={newAntiparasiticManufacturer} max={FIELD_LIMITS.medicationManufacturer} />
 							</span>
-							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newAntiparasiticManufacturer} maxlength={FIELD_LIMITS.preventiveManufacturer} />
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newAntiparasiticManufacturer} maxlength={FIELD_LIMITS.medicationManufacturer} />
 						</label>
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
-								<span>{t('preventive.aliases')}</span>
-								<CharacterLimitHint value={newAntiparasiticAliases} max={FIELD_LIMITS.preventiveAliasesJson} />
+								<span>{t('medication.aliases')}</span>
+								<CharacterLimitHint value={newAntiparasiticAliases} max={FIELD_LIMITS.medicationAliasesJson} />
 							</span>
-							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newAntiparasiticAliases} maxlength={FIELD_LIMITS.preventiveAliasesJson} placeholder={t('preventive.aliasesPlaceholder')} />
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newAntiparasiticAliases} maxlength={FIELD_LIMITS.medicationAliasesJson} placeholder={t('medication.aliasesPlaceholder')} />
 						</label>
 						<div class="flex min-w-0 flex-col gap-2 text-sm font-medium">
-							<span>{t('preventive.species')}</span>
+							<span>{t('medication.species')}</span>
 							<div class="flex flex-wrap gap-2">
 								{#each petSpeciesOptions as option}
 									<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
@@ -925,8 +925,8 @@
 							</div>
 						</div>
 						<div class="flex min-w-0 flex-col gap-2 text-sm font-medium">
-							<span>{t('preventive.regions')}</span>
-							<PreventiveRegionsField id="new-antiparasitic-regions" value={newAntiparasiticRegions} disabled={saving} onchange={(regions) => (newAntiparasiticRegions = regions)} />
+							<span>{t('medication.regions')}</span>
+							<MedicationRegionsField id="new-antiparasitic-regions" value={newAntiparasiticRegions} disabled={saving} onchange={(regions) => (newAntiparasiticRegions = regions)} />
 						</div>
 						<button type="submit" class="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50 lg:col-span-2" disabled={saving}>
 							<Plus class="size-4" />
@@ -947,23 +947,23 @@
 									<span>{t('antiparasiticTreatment.name')}</span>
 									<CharacterLimitHint value={antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name} max={FIELD_LIMITS.antiparasiticName} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name} maxlength={FIELD_LIMITS.antiparasiticName} disabled={!canEditPreventiveCatalogItem(antiparasitic)} required oninput={(event) => (antiparasiticDraftNames = { ...antiparasiticDraftNames, [antiparasitic.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name} maxlength={FIELD_LIMITS.antiparasiticName} disabled={!canEditMedicationCatalogItem(antiparasitic)} required oninput={(event) => (antiparasiticDraftNames = { ...antiparasiticDraftNames, [antiparasitic.id]: inputValue(event) })} />
 							</label>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
-									<span>{t('preventive.manufacturer')}</span>
-									<CharacterLimitHint value={antiparasiticDraftManufacturers[antiparasitic.id] ?? antiparasitic.manufacturer ?? ''} max={FIELD_LIMITS.preventiveManufacturer} />
+									<span>{t('medication.manufacturer')}</span>
+									<CharacterLimitHint value={antiparasiticDraftManufacturers[antiparasitic.id] ?? antiparasitic.manufacturer ?? ''} max={FIELD_LIMITS.medicationManufacturer} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={antiparasiticDraftManufacturers[antiparasitic.id] ?? antiparasitic.manufacturer ?? ''} maxlength={FIELD_LIMITS.preventiveManufacturer} disabled={!canEditPreventiveCatalogItem(antiparasitic)} oninput={(event) => (antiparasiticDraftManufacturers = { ...antiparasiticDraftManufacturers, [antiparasitic.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={antiparasiticDraftManufacturers[antiparasitic.id] ?? antiparasitic.manufacturer ?? ''} maxlength={FIELD_LIMITS.medicationManufacturer} disabled={!canEditMedicationCatalogItem(antiparasitic)} oninput={(event) => (antiparasiticDraftManufacturers = { ...antiparasiticDraftManufacturers, [antiparasitic.id]: inputValue(event) })} />
 							</label>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
-									<span>{t('preventive.aliases')}</span>
-									<CharacterLimitHint value={antiparasiticDraftAliases[antiparasitic.id] ?? aliasDraft(antiparasitic.aliases)} max={FIELD_LIMITS.preventiveAliasesJson} />
+									<span>{t('medication.aliases')}</span>
+									<CharacterLimitHint value={antiparasiticDraftAliases[antiparasitic.id] ?? aliasDraft(antiparasitic.aliases)} max={FIELD_LIMITS.medicationAliasesJson} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={antiparasiticDraftAliases[antiparasitic.id] ?? aliasDraft(antiparasitic.aliases)} maxlength={FIELD_LIMITS.preventiveAliasesJson} placeholder={t('preventive.aliasesPlaceholder')} disabled={!canEditPreventiveCatalogItem(antiparasitic)} oninput={(event) => (antiparasiticDraftAliases = { ...antiparasiticDraftAliases, [antiparasitic.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={antiparasiticDraftAliases[antiparasitic.id] ?? aliasDraft(antiparasitic.aliases)} maxlength={FIELD_LIMITS.medicationAliasesJson} placeholder={t('medication.aliasesPlaceholder')} disabled={!canEditMedicationCatalogItem(antiparasitic)} oninput={(event) => (antiparasiticDraftAliases = { ...antiparasiticDraftAliases, [antiparasitic.id]: inputValue(event) })} />
 							</label>
-							{#if canEditPreventiveCatalogItem(antiparasitic)}
+							{#if canEditMedicationCatalogItem(antiparasitic)}
 								<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
 									<Save class="size-4" />
 									{t('actions.save')}
@@ -978,26 +978,26 @@
 									{t('antiparasiticTreatment.list.hide')}
 								{/if}
 							</button>
-							{#if canDeletePreventiveCatalogItem(antiparasitic)}
+							{#if canDeleteMedicationCatalogItem(antiparasitic)}
 								<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={() => void deleteAntiparasitic(antiparasitic)}>
 									<Trash2 class="size-4" />
 									{t('actions.delete')}
 								</button>
 							{/if}
 							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-3">
-								<span>{t('preventive.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(antiparasiticDraftSpeciesValue(antiparasitic))}</span></span>
+								<span>{t('medication.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(antiparasiticDraftSpeciesValue(antiparasitic))}</span></span>
 								<div class="flex flex-wrap gap-2">
 									{#each petSpeciesOptions as option}
 										<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
-											<input type="checkbox" class="size-4 accent-primary" checked={antiparasiticDraftSpeciesValue(antiparasitic).includes(option.id)} disabled={!canEditPreventiveCatalogItem(antiparasitic)} onchange={() => setAntiparasiticSpecies(antiparasitic, option.id)} />
+											<input type="checkbox" class="size-4 accent-primary" checked={antiparasiticDraftSpeciesValue(antiparasitic).includes(option.id)} disabled={!canEditMedicationCatalogItem(antiparasitic)} onchange={() => setAntiparasiticSpecies(antiparasitic, option.id)} />
 											<span>{t(option.labelKey)}</span>
 										</label>
 									{/each}
 								</div>
 							</div>
 							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-3">
-								<span>{t('preventive.regions')}</span>
-								<PreventiveRegionsField id={`antiparasitic-regions-${antiparasitic.id}`} value={antiparasiticDraftRegionsValue(antiparasitic)} disabled={saving || !canEditPreventiveCatalogItem(antiparasitic)} onchange={(regions) => setAntiparasiticRegions(antiparasitic.id, regions)} />
+								<span>{t('medication.regions')}</span>
+								<MedicationRegionsField id={`antiparasitic-regions-${antiparasitic.id}`} value={antiparasiticDraftRegionsValue(antiparasitic)} disabled={saving || !canEditMedicationCatalogItem(antiparasitic)} onchange={(regions) => setAntiparasiticRegions(antiparasitic.id, regions)} />
 							</div>
 						</form>
 					{:else}
@@ -1022,13 +1022,13 @@
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
 								<span>{t('protocol.name')}</span>
-								<CharacterLimitHint value={newProtocolName} max={FIELD_LIMITS.preventiveProtocolName} />
+								<CharacterLimitHint value={newProtocolName} max={FIELD_LIMITS.medicationProtocolName} />
 							</span>
-							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newProtocolName} maxlength={FIELD_LIMITS.preventiveProtocolName} required />
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newProtocolName} maxlength={FIELD_LIMITS.medicationProtocolName} required />
 						</label>
 
 						<div class="lg:col-span-2 flex min-w-0 flex-col gap-2 text-sm font-medium">
-							<span>{t('preventive.species')}</span>
+							<span>{t('medication.species')}</span>
 							<div class="flex flex-wrap gap-2">
 								{#each petSpeciesOptions as option}
 									<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
@@ -1054,7 +1054,7 @@
 
 						<div class="lg:col-span-2 flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<label for="new-protocol-observation">{t('protocol.observation')}</label>
-							<Textarea id="new-protocol-observation" bind:value={newProtocolObservation} ariaLabel={t('protocol.observation')} maxLength={FIELD_LIMITS.preventiveProtocolObservation} class="min-h-24" />
+							<Textarea id="new-protocol-observation" bind:value={newProtocolObservation} ariaLabel={t('protocol.observation')} maxLength={FIELD_LIMITS.medicationProtocolObservation} class="min-h-24" />
 						</div>
 
 						<button type="submit" class="lg:col-span-2 inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={saving}>
@@ -1076,11 +1076,11 @@
 								<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 									<span class="flex min-w-0 items-baseline justify-between gap-2">
 										<span>{t('protocol.name')}</span>
-										<CharacterLimitHint value={protocolDraftName(protocol)} max={FIELD_LIMITS.preventiveProtocolName} />
+										<CharacterLimitHint value={protocolDraftName(protocol)} max={FIELD_LIMITS.medicationProtocolName} />
 									</span>
-									<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-70" value={protocolDraftName(protocol)} maxlength={FIELD_LIMITS.preventiveProtocolName} required disabled={!canEditPreventiveProtocol(protocol)} oninput={(event) => (protocolDraftNames = { ...protocolDraftNames, [protocol.id]: inputValue(event) })} />
+									<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-70" value={protocolDraftName(protocol)} maxlength={FIELD_LIMITS.medicationProtocolName} required disabled={!canEditMedicationProtocol(protocol)} oninput={(event) => (protocolDraftNames = { ...protocolDraftNames, [protocol.id]: inputValue(event) })} />
 								</label>
-								{#if canEditPreventiveProtocol(protocol)}
+								{#if canEditMedicationProtocol(protocol)}
 									<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
 										<Save class="size-4" />
 										{t('actions.save')}
@@ -1095,7 +1095,7 @@
 										{t('protocol.hide')}
 									{/if}
 								</button>
-								{#if canDeletePreventiveProtocol(protocol)}
+								{#if canDeleteMedicationProtocol(protocol)}
 									<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={() => void deleteProtocol(protocol)}>
 										<Trash2 class="size-4" />
 										{t('actions.delete')}
@@ -1103,11 +1103,11 @@
 								{/if}
 
 								<div class="lg:col-span-full flex min-w-0 flex-col gap-2 text-sm font-medium">
-									<span>{t('preventive.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(protocolDraftSpeciesValue(protocol))}</span></span>
+									<span>{t('medication.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(protocolDraftSpeciesValue(protocol))}</span></span>
 									<div class="flex flex-wrap gap-2">
 										{#each petSpeciesOptions as option}
 											<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
-												<input type="checkbox" class="size-4 accent-primary" checked={protocolDraftSpeciesValue(protocol).includes(option.id)} disabled={!canEditPreventiveProtocol(protocol)} onchange={() => setProtocolSpecies(protocol, option.id)} />
+												<input type="checkbox" class="size-4 accent-primary" checked={protocolDraftSpeciesValue(protocol).includes(option.id)} disabled={!canEditMedicationProtocol(protocol)} onchange={() => setProtocolSpecies(protocol, option.id)} />
 												<span>{t(option.labelKey)}</span>
 											</label>
 										{/each}
@@ -1119,7 +1119,7 @@
 									<div class="flex flex-wrap gap-2">
 										{#each protocolCatalogItems(protocol) as item (item.id)}
 											{@const selected = selectedItemIds(protocol).includes(item.id)}
-											<button type="button" class="inline-flex h-8 max-w-full items-center rounded-md border px-3 text-sm transition-colors disabled:cursor-default {selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background hover:bg-accent'} {item.hiddenAt ? 'opacity-60' : ''}" aria-pressed={selected} disabled={!canEditPreventiveProtocol(protocol)} onclick={() => toggleProtocolItem(protocol, item.id)}>
+											<button type="button" class="inline-flex h-8 max-w-full items-center rounded-md border px-3 text-sm transition-colors disabled:cursor-default {selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background hover:bg-accent'} {item.hiddenAt ? 'opacity-60' : ''}" aria-pressed={selected} disabled={!canEditMedicationProtocol(protocol)} onclick={() => toggleProtocolItem(protocol, item.id)}>
 												<span class="truncate">{item.name}</span>
 											</button>
 										{:else}
@@ -1130,17 +1130,17 @@
 
 								<div class="lg:col-span-full flex min-w-0 flex-col gap-1 text-sm font-medium">
 									<label for={`protocol-observation-${protocol.id}`}>{t('protocol.observation')}</label>
-									<Textarea id={`protocol-observation-${protocol.id}`} value={protocolDraftObservation(protocol)} oninput={(value) => setProtocolObservation(protocol, value)} readonly={!canEditPreventiveProtocol(protocol)} ariaLabel={t('protocol.observation')} maxLength={FIELD_LIMITS.preventiveProtocolObservation} class="min-h-20" />
+									<Textarea id={`protocol-observation-${protocol.id}`} value={protocolDraftObservation(protocol)} oninput={(value) => setProtocolObservation(protocol, value)} readonly={!canEditMedicationProtocol(protocol)} ariaLabel={t('protocol.observation')} maxLength={FIELD_LIMITS.medicationProtocolObservation} class="min-h-20" />
 								</div>
 							</form>
 
 							<div class="mt-4 border-t border-border pt-4">
 								<h4 class="text-sm font-semibold">{t('protocol.doseTitle')}</h4>
-								{#if canEditPreventiveProtocol(protocol)}
+								{#if canEditMedicationProtocol(protocol)}
 									<form class="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_12rem_auto] lg:items-end" onsubmit={(event) => void addProtocolDose(event, protocol)}>
 										<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 											<span>{t('protocol.doseText')}</span>
-											<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={newDoseDoses[protocol.id] ?? ''} maxlength={FIELD_LIMITS.preventiveProtocolDose} required oninput={(event) => setNewDose(protocol.id, inputValue(event))} />
+											<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={newDoseDoses[protocol.id] ?? ''} maxlength={FIELD_LIMITS.medicationProtocolDose} required oninput={(event) => setNewDose(protocol.id, inputValue(event))} />
 										</label>
 										<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 											<span>{t('protocol.doseValidity')}</span>
@@ -1158,13 +1158,13 @@
 										<form class="grid gap-3 rounded-md border border-border p-3 lg:grid-cols-[minmax(0,1fr)_12rem_auto_auto] lg:items-end" onsubmit={(event) => void saveExistingProtocolDose(event, protocol, protocolDose)}>
 											<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 												<span>{t('protocol.doseText')}</span>
-												<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-70" value={doseDraftDoses[protocolDose.id] ?? protocolDose.dose} maxlength={FIELD_LIMITS.preventiveProtocolDose} required disabled={!canEditPreventiveProtocol(protocol)} oninput={(event) => (doseDraftDoses = { ...doseDraftDoses, [protocolDose.id]: inputValue(event) })} />
+												<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-70" value={doseDraftDoses[protocolDose.id] ?? protocolDose.dose} maxlength={FIELD_LIMITS.medicationProtocolDose} required disabled={!canEditMedicationProtocol(protocol)} oninput={(event) => (doseDraftDoses = { ...doseDraftDoses, [protocolDose.id]: inputValue(event) })} />
 											</label>
 											<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 												<span>{t('protocol.doseValidity')}</span>
-												<PeriodField value={doseDraftValidityValues[protocolDose.id] ?? protocolDose.validityValue} unit={doseDraftValidityUnits[protocolDose.id] ?? protocolDose.validityUnit} disabled={!canEditPreventiveProtocol(protocol)} ariaLabel={t('protocol.doseValidity')} onChange={(value, unit) => setDoseValidity(protocolDose.id, value, unit)} />
+												<PeriodField value={doseDraftValidityValues[protocolDose.id] ?? protocolDose.validityValue} unit={doseDraftValidityUnits[protocolDose.id] ?? protocolDose.validityUnit} disabled={!canEditMedicationProtocol(protocol)} ariaLabel={t('protocol.doseValidity')} onChange={(value, unit) => setDoseValidity(protocolDose.id, value, unit)} />
 											</label>
-											{#if canEditPreventiveProtocol(protocol)}
+											{#if canEditMedicationProtocol(protocol)}
 												<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
 													<Save class="size-4" />
 													{t('actions.save')}

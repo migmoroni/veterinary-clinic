@@ -3,20 +3,20 @@
 	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
 	import DateField from '$lib/components/forms/DateField.svelte';
 	import PeriodField from '$lib/components/forms/PeriodField.svelte';
-	import PreventiveDueBadge from '$lib/components/pet/PreventiveDueBadge.svelte';
+	import TreatmentDueBadge from '$lib/components/pet/TreatmentDueBadge.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
 	import SearchableSelect from '$lib/components/ui/SearchableSelect.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import type { PetSpecies } from '$lib/domain/pet/taxonomy.js';
-	import { preventiveItemMatchesSpecies } from '$lib/domain/preventive/catalog.js';
-	import type { PreventiveProtocol } from '$lib/domain/preventive/protocol.js';
+	import { medicationItemMatchesSpecies } from '$lib/domain/medication/catalog.js';
+	import type { MedicationProtocol } from '$lib/domain/medication/protocol.js';
 	import { formatDateForDisplay, normalizeDateInput } from '$lib/domain/shared/date-input.js';
 	import { FIELD_LIMITS, textLength } from '$lib/domain/shared/field-limits.js';
 	import type { PetTreatment, PetTreatmentInput, TreatmentCatalogItem, TreatmentKind, TreatmentValidityUnit } from '$lib/domain/treatment/treatment.js';
 	import { getTreatmentDueStatus } from '$lib/domain/treatment/treatment.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
-	import { loadPreventiveProtocols } from '$lib/services/preventive-protocol.service.js';
+	import { loadMedicationProtocols } from '$lib/services/medication-protocol.service.js';
 	import { loadTreatmentCatalogItems, removeTreatment, saveNewTreatments, setTreatmentValidity } from '$lib/services/treatment.service.js';
 	import Bell from '@lucide/svelte/icons/bell';
 	import BellOff from '@lucide/svelte/icons/bell-off';
@@ -143,7 +143,7 @@
 
 	let currentTreatments = $state<PetTreatment[]>([]);
 	let currentCatalogItems = $state<TreatmentCatalogItem[]>([]);
-	let currentProtocols = $state<PreventiveProtocol[]>([]);
+	let currentProtocols = $state<MedicationProtocol[]>([]);
 	let loadedPetId = $state<number | null>(null);
 	let loadedKind = $state<TreatmentKind | null>(null);
 	let appliedAt = $state(todayInput);
@@ -161,10 +161,10 @@
 	let errorKey = $state<TranslationKey | null>(null);
 
 	const sortedTreatments = $derived([...currentTreatments].sort((first, second) => second.appliedAt.localeCompare(first.appliedAt) || second.id - first.id));
-	const visibleCatalogItems = $derived(currentCatalogItems.filter((item) => !item.hiddenAt && preventiveItemMatchesSpecies(item.species, petSpecies)));
+	const visibleCatalogItems = $derived(currentCatalogItems.filter((item) => !item.hiddenAt && medicationItemMatchesSpecies(item.species, petSpecies)));
 	const knownNames = $derived([...new Set(visibleCatalogItems.map((item) => item.name))].sort((first, second) => first.localeCompare(second)));
 	const selectedCatalogItem = $derived(visibleCatalogItems.find((item) => item.name === treatmentName) ?? null);
-	const visibleProtocols = $derived(selectedCatalogItem ? currentProtocols.filter((protocol) => !protocol.hiddenAt && preventiveItemMatchesSpecies(protocol.species, petSpecies) && protocol.items.some((item) => item.id === selectedCatalogItem.id)) : []);
+	const visibleProtocols = $derived(selectedCatalogItem ? currentProtocols.filter((protocol) => !protocol.hiddenAt && medicationItemMatchesSpecies(protocol.species, petSpecies) && protocol.items.some((item) => item.id === selectedCatalogItem.id)) : []);
 	const selectedProtocol = $derived(visibleProtocols.find((protocol) => protocol.id === protocolId) ?? null);
 	const visibleProtocolDoses = $derived(selectedProtocol ? selectedProtocol.doses : []);
 	const selectedProtocolDose = $derived(visibleProtocolDoses.find((protocolDose) => protocolDose.id === protocolDoseId) ?? null);
@@ -319,7 +319,7 @@
 	}
 
 	async function reloadCatalogs() {
-		const [loadedCatalogItems, loadedProtocols] = await Promise.all([loadTreatmentCatalogItems(kind), loadPreventiveProtocols(kind)]);
+		const [loadedCatalogItems, loadedProtocols] = await Promise.all([loadTreatmentCatalogItems(kind), loadMedicationProtocols(kind)]);
 		currentCatalogItems = loadedCatalogItems;
 		currentProtocols = loadedProtocols;
 		if (protocolId && !visibleProtocols.some((protocol) => protocol.id === protocolId)) clearProtocolSelection();
@@ -514,7 +514,7 @@
 					{#if treatment.observation}
 						<span class="mt-1 block whitespace-pre-wrap wrap-break-word text-xs text-muted-foreground"><span class="font-medium text-foreground">{t(config.observation)}:</span> {treatment.observation}</span>
 					{/if}
-					<PreventiveDueBadge {kind} status={getTreatmentDueStatus(treatment)} className="mt-2" />
+					<TreatmentDueBadge {kind} status={getTreatmentDueStatus(treatment)} className="mt-2" />
 				</span>
 				<span class="flex shrink-0 gap-1">
 					{#if treatment.validityIgnoredAt}

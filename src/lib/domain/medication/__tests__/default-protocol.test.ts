@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { defaultPreventiveCatalogItems } from '../default-catalog.js';
-import { defaultPreventiveProtocols } from '../default-protocol.js';
-import { canDeletePreventiveProtocol, canEditPreventiveProtocol } from '../protocol.js';
+import { defaultMedicationCatalogItems } from '../default-catalog.js';
+import { defaultMedicationProtocols } from '../default-protocol.js';
+import { canDeleteMedicationProtocol, canEditMedicationProtocol } from '../protocol.js';
 
-describe('default preventive protocols', () => {
+describe('default medication protocols', () => {
 	it('provides the shared canine primary series for Vanguard Plus and Recombitek C6', () => {
-		expect(defaultPreventiveProtocols).toEqual([
+		expect(defaultMedicationProtocols).toEqual([
 			{
 				kind: 'vaccine',
 				origin: 'system',
@@ -25,17 +25,17 @@ describe('default preventive protocols', () => {
 	});
 
 	it('only references bundled catalog products of the same kind', () => {
-		for (const protocol of defaultPreventiveProtocols) {
+		for (const protocol of defaultMedicationProtocols) {
 			for (const catalogItemName of protocol.catalogItemNames) {
-				expect(defaultPreventiveCatalogItems.some((item) => item.kind === protocol.kind && item.name === catalogItemName)).toBe(true);
+				expect(defaultMedicationCatalogItems.some((item) => item.kind === protocol.kind && item.name === catalogItemName)).toBe(true);
 			}
 		}
 	});
 
 	it('only allows user-created protocols to be edited or deleted', () => {
-		expect(canEditPreventiveProtocol({ origin: 'user' })).toBe(true);
-		expect(canEditPreventiveProtocol({ origin: 'system' })).toBe(false);
-		expect(canDeletePreventiveProtocol({ origin: 'user' })).toBe(true);
-		expect(canDeletePreventiveProtocol({ origin: 'system' })).toBe(false);
+		expect(canEditMedicationProtocol({ origin: 'user' })).toBe(true);
+		expect(canEditMedicationProtocol({ origin: 'system' })).toBe(false);
+		expect(canDeleteMedicationProtocol({ origin: 'user' })).toBe(true);
+		expect(canDeleteMedicationProtocol({ origin: 'system' })).toBe(false);
 	});
 });

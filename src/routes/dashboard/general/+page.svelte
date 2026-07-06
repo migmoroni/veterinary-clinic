@@ -384,10 +384,10 @@
 	}
 
 	function filterStudyOwners(items: DashboardOwnerStudyItem[]): DashboardOwnerStudyItem[] {
-		const hasPetOrPreventiveFilters = !!(studySpecies || studyBreed || studySex || studyAge || studyVaccineNormalizedName || studyVaccineStatus || studyAntiparasiticNormalizedName || studyAntiparasiticStatus);
+		const hasPetOrMedicationFilters = !!(studySpecies || studyBreed || studySex || studyAge || studyVaccineNormalizedName || studyVaccineStatus || studyAntiparasiticNormalizedName || studyAntiparasiticStatus);
 		return items.filter((owner) => {
 			if (!ownerMatchesOwnerFilters(owner)) return false;
-			if (!hasPetOrPreventiveFilters) return true;
+			if (!hasPetOrMedicationFilters) return true;
 			return owner.pets.some((pet) => studyPetMatchesDimensions(pet) && studyPetMatchesVaccine(pet) && studyPetMatchesAntiparasitic(pet));
 		});
 	}

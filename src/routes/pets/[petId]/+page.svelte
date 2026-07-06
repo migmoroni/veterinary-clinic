@@ -8,7 +8,7 @@
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import PetAvatarEditorDialog from '$lib/components/pet/PetAvatarEditorDialog.svelte';
 	import PetTaxonomyPicker from '$lib/components/pet/PetTaxonomyPicker.svelte';
-	import PreventiveDueBadge from '$lib/components/pet/PreventiveDueBadge.svelte';
+	import TreatmentDueBadge from '$lib/components/pet/TreatmentDueBadge.svelte';
 	import TreatmentPanel from '$lib/components/pet/TreatmentPanel.svelte';
 	import UnsavedChangesDialog from '$lib/components/records/UnsavedChangesDialog.svelte';
 	import TrashRemovalDialog from '$lib/components/shared/TrashRemovalDialog.svelte';
@@ -579,7 +579,7 @@
 												<span class="min-w-0">
 													<span class="block truncate text-sm font-medium">{vaccination.name}</span>
 													<span class="block truncate text-xs text-muted-foreground">{vaccination.dose}</span>
-													<PreventiveDueBadge kind="vaccine" status={getTreatmentDueStatus(vaccination)} className="mt-2" />
+													<TreatmentDueBadge kind="vaccine" status={getTreatmentDueStatus(vaccination)} className="mt-2" />
 												</span>
 											</div>
 										{/each}
@@ -600,7 +600,7 @@
 												<span class="min-w-0">
 													<span class="block truncate text-sm font-medium">{antiparasiticTreatment.name}</span>
 													<span class="block truncate text-xs text-muted-foreground">{antiparasiticTreatment.dose}</span>
-													<PreventiveDueBadge kind="antiparasitic" status={getTreatmentDueStatus(antiparasiticTreatment)} className="mt-2" />
+													<TreatmentDueBadge kind="antiparasitic" status={getTreatmentDueStatus(antiparasiticTreatment)} className="mt-2" />
 												</span>
 											</div>
 										{/each}

@@ -193,7 +193,7 @@ const currentSchema = {
   pets: ['id', 'name', 'birth_date', 'species', 'breed', 'sex', 'avatar_blob', 'updated_at', 'deleted_at', 'purge_after'],
   pet_owners: ['id', 'pet_id', 'owner_id', 'sort_order', 'created_at', 'updated_at'],
   medical_records: ['id', 'pet_id', 'title', 'description', 'admitted_at', 'discharged_at', 'updated_at', 'deleted_at', 'purge_after'],
-  preventive_catalog_items: ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'origin', 'regions', 'created_at', 'updated_at'],
+  medication_catalog_items: ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'origin', 'regions', 'created_at', 'updated_at'],
   pet_vaccinations: ['id', 'pet_id', 'applied_at', 'vaccine_name', 'vaccine_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after']
 } as const;
 
@@ -338,7 +338,7 @@ function maxId(database: Database.Database, table: string): number {
   return (database.prepare(`SELECT MAX(id) AS max_id FROM ${quoteIdentifier(table)}`).get() as MaxIdRow).max_id ?? 0;
 }
 
-function normalizePreventiveName(value: string): string {
+function normalizeMedicationName(value: string): string {
   return value
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -618,15 +618,15 @@ function synchronizeMedicalRecords(
 }
 
 function ensureVaccineCatalogItem(output: Database.Database, vaccineName: string, species: string | null): string {
-  const normalizedName = normalizePreventiveName(vaccineName);
+  const normalizedName = normalizeMedicationName(vaccineName);
   const existing = output.prepare(
-    `SELECT id FROM preventive_catalog_items WHERE kind = 'vaccine' AND normalized_name = ? LIMIT 1`
+    `SELECT id FROM medication_catalog_items WHERE kind = 'vaccine' AND normalized_name = ? LIMIT 1`
   ).get(normalizedName) as IdRow | undefined;
   if (existing) return normalizedName;
 
   const supportedSpecies = species === 'feline' ? ['feline'] : species === 'canine' ? ['canine'] : ['canine', 'feline'];
   output.prepare(`
-    INSERT INTO preventive_catalog_items (
+    INSERT INTO medication_catalog_items (
       kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at
     ) VALUES ('vaccine', ?, ?, ?, '[]', NULL, 'user', '[]', CURRENT_TIMESTAMP)
   `).run(vaccineName, normalizedName, JSON.stringify(supportedSpecies));

@@ -1,0 +1,41 @@
+[
+	{
+		"origin": "system",
+		"name": "4 doses",
+		"species": [
+			"canine"
+		],
+		"catalogItemNames": [
+			"Vanguard Plus",
+			"Recombitek C6"
+		],
+		"observation": null,
+		"doses": [
+			{
+				"dose": "1ª dose",
+				"validityValue": 21,
+				"validityUnit": "days"
+			},
+			{
+				"dose": "2ª dose",
+				"validityValue": 21,
+				"validityUnit": "days"
+			},
+			{
+				"dose": "3ª dose",
+				"validityValue": 21,
+				"validityUnit": "days"
+			},
+			{
+				"dose": "4ª dose",
+				"validityValue": 1,
+				"validityUnit": "years"
+			},
+			{
+				"dose": "anual",
+				"validityValue": 1,
+				"validityUnit": "years"
+			}
+		]
+	}
+]

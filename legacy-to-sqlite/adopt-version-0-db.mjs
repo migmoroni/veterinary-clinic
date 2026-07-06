@@ -26,22 +26,45 @@ const sourceSchema = {
 	medical_records: ['id', 'pet_id', 'title', 'description', 'admitted_at', 'discharged_at', 'updated_at', 'deleted_at', 'purge_after'],
 	app_settings: ['key', 'value', 'updated_at'],
 	backup_history: ['id', 'path', 'kind', 'created_at'],
-	preventive_catalog_items: ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'hidden_at', 'created_at', 'updated_at'],
-	preventive_protocols: ['id', 'kind', 'origin', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'created_at', 'updated_at', 'deleted_at', 'purge_after'],
-	preventive_protocol_items: ['id', 'protocol_id', 'catalog_item_id', 'sort_order', 'created_at', 'updated_at'],
-	preventive_protocol_doses: ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order', 'created_at', 'updated_at'],
 	pet_vaccinations: ['id', 'pet_id', 'applied_at', 'vaccine_name', 'vaccine_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after'],
 	pet_antiparasitic_treatments: ['id', 'pet_id', 'applied_at', 'antiparasitic_name', 'antiparasitic_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after']
 };
 
+const medicationSchema = {
+	catalog: ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'hidden_at', 'created_at', 'updated_at'],
+	protocols: ['id', 'kind', 'origin', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'created_at', 'updated_at', 'deleted_at', 'purge_after'],
+	protocolItems: ['id', 'protocol_id', 'catalog_item_id', 'sort_order', 'created_at', 'updated_at'],
+	protocolDoses: ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order', 'created_at', 'updated_at']
+};
+
+const medicationTableSets = {
+	deprecated: {
+		catalog: 'preventive_catalog_items',
+		protocols: 'preventive_protocols',
+		protocolItems: 'preventive_protocol_items',
+		protocolDoses: 'preventive_protocol_doses'
+	},
+	current: {
+		catalog: 'medication_catalog_items',
+		protocols: 'medication_protocols',
+		protocolItems: 'medication_protocol_items',
+		protocolDoses: 'medication_protocol_doses'
+	}
+};
+
 const versionedSchema = {
 	...sourceSchema,
+	medication_catalog_items: medicationSchema.catalog,
+	medication_protocols: medicationSchema.protocols,
+	medication_protocol_items: medicationSchema.protocolItems,
+	medication_protocol_doses: medicationSchema.protocolDoses,
 	pet_treatments: ['id', 'pet_id', 'kind', 'applied_at', 'name', 'normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after']
 };
 delete versionedSchema.pet_vaccinations;
 delete versionedSchema.pet_antiparasitic_treatments;
 
 const deprecatedTreatmentTables = ['pet_vaccinations', 'pet_antiparasitic_treatments'];
+const deprecatedMedicationTables = ['preventive_catalog_items', 'preventive_protocols', 'preventive_protocol_items', 'preventive_protocol_doses'];
 
 function printUsage() {
 	console.log(`Uso:
@@ -129,10 +152,45 @@ function assertDataSchema(database, label, schema) {
 	if (missingColumns.length > 0) throw new Error(`${label} não tem as colunas atuais esperadas: ${missingColumns.join(', ')}`);
 }
 
+function detectMedicationSourceSchema(database, label) {
+	const tables = new Set(database.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((row) => row.name));
+	const hasDeprecatedTables = Object.values(medicationTableSets.deprecated).every((table) => tables.has(table));
+	const hasCurrentTables = Object.values(medicationTableSets.current).every((table) => tables.has(table));
+
+	if (hasDeprecatedTables && hasCurrentTables) throw new Error(`${label} mistura tabelas preventive_* e medication_* para medicamentos.`);
+	if (!hasDeprecatedTables && !hasCurrentTables) throw new Error(`${label} não tem as tabelas de medicamentos esperadas.`);
+
+	const tableSetKey = hasDeprecatedTables ? 'deprecated' : 'current';
+	const tableSet = medicationTableSets[tableSetKey];
+	const expectedColumnsByKey = {
+		catalog: medicationSchema.catalog,
+		protocols: medicationSchema.protocols,
+		protocolItems: medicationSchema.protocolItems,
+		protocolDoses: medicationSchema.protocolDoses
+	};
+	const missingColumns = [];
+
+	for (const [key, table] of Object.entries(tableSet)) {
+		const existingColumns = tableColumns(database, table);
+		for (const column of expectedColumnsByKey[key]) {
+			if (!existingColumns.has(column)) missingColumns.push(`${table}.${column}`);
+		}
+	}
+	if (missingColumns.length > 0) throw new Error(`${label} não tem as colunas de medicamentos esperadas: ${missingColumns.join(', ')}`);
+
+	return tableSetKey;
+}
+
 function assertNoDeprecatedTreatmentTables(database, label) {
 	const tables = new Set(database.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((row) => row.name));
 	const deprecatedTables = deprecatedTreatmentTables.filter((table) => tables.has(table));
 	if (deprecatedTables.length > 0) throw new Error(`${label} ainda contém tabelas substituídas: ${deprecatedTables.join(', ')}`);
+}
+
+function assertNoDeprecatedMedicationTables(database, label) {
+	const tables = new Set(database.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((row) => row.name));
+	const deprecatedTables = deprecatedMedicationTables.filter((table) => tables.has(table));
+	if (deprecatedTables.length > 0) throw new Error(`${label} ainda contém tabelas preventivas substituídas: ${deprecatedTables.join(', ')}`);
 }
 
 function assertIntegrity(database, label) {
@@ -225,6 +283,48 @@ function migrateTreatmentTables(database) {
 	return { originalVaccinationRows, originalAntiparasiticRows };
 }
 
+function migrateMedicationTables(database) {
+	const tableSetKey = detectMedicationSourceSchema(database, 'Banco intermediário');
+	const sourceTables = medicationTableSets[tableSetKey];
+	const originalCatalogRows = countRows(database, sourceTables.catalog);
+	const originalProtocolRows = countRows(database, sourceTables.protocols);
+
+	if (tableSetKey === 'deprecated') {
+		database.exec(`
+			ALTER TABLE preventive_catalog_items RENAME TO medication_catalog_items;
+			ALTER TABLE preventive_protocols RENAME TO medication_protocols;
+			ALTER TABLE preventive_protocol_items RENAME TO medication_protocol_items;
+			ALTER TABLE preventive_protocol_doses RENAME TO medication_protocol_doses;
+		`);
+	}
+
+	database.exec(`
+		DROP INDEX IF EXISTS idx_preventive_catalog_items_kind_name;
+		DROP INDEX IF EXISTS idx_preventive_catalog_items_kind_normalized_name;
+		DROP INDEX IF EXISTS idx_preventive_catalog_items_hidden_at;
+		DROP INDEX IF EXISTS idx_preventive_protocols_kind_name;
+		DROP INDEX IF EXISTS idx_preventive_protocols_kind_normalized_name;
+		DROP INDEX IF EXISTS idx_preventive_protocols_hidden_at;
+		DROP INDEX IF EXISTS idx_preventive_protocols_deleted_at;
+		DROP INDEX IF EXISTS idx_preventive_protocol_items_protocol_id;
+		DROP INDEX IF EXISTS idx_preventive_protocol_items_catalog_item_id;
+		DROP INDEX IF EXISTS idx_preventive_protocol_doses_protocol_id;
+
+		CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_kind_name ON medication_catalog_items(kind, name COLLATE NOCASE);
+		CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_kind_normalized_name ON medication_catalog_items(kind, normalized_name);
+		CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_hidden_at ON medication_catalog_items(hidden_at);
+		CREATE INDEX IF NOT EXISTS idx_medication_protocols_kind_name ON medication_protocols(kind, name COLLATE NOCASE);
+		CREATE INDEX IF NOT EXISTS idx_medication_protocols_kind_normalized_name ON medication_protocols(kind, normalized_name);
+		CREATE INDEX IF NOT EXISTS idx_medication_protocols_hidden_at ON medication_protocols(hidden_at);
+		CREATE INDEX IF NOT EXISTS idx_medication_protocols_deleted_at ON medication_protocols(deleted_at);
+		CREATE INDEX IF NOT EXISTS idx_medication_protocol_items_protocol_id ON medication_protocol_items(protocol_id);
+		CREATE INDEX IF NOT EXISTS idx_medication_protocol_items_catalog_item_id ON medication_protocol_items(catalog_item_id);
+		CREATE INDEX IF NOT EXISTS idx_medication_protocol_doses_protocol_id ON medication_protocol_doses(protocol_id);
+	`);
+
+	return { originalCatalogRows, originalProtocolRows };
+}
+
 function stampSchemaVersion(database) {
 	database.exec(`
 		CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -288,6 +388,7 @@ function adoptVersionZeroDatabase() {
 		const sourceVersion = userVersion(source);
 		if (sourceVersion > CURRENT_SCHEMA_VERSION) throw new Error(`Banco de origem tem schema futuro: user_version=${sourceVersion}`);
 		assertDataSchema(source, 'Banco de origem', sourceSchema);
+		detectMedicationSourceSchema(source, 'Banco de origem');
 		assertIntegrity(source, 'Banco de origem');
 		source.exec(`VACUUM INTO ${quoteSqlString(outputPath)}`);
 	} finally {
@@ -299,12 +400,15 @@ function adoptVersionZeroDatabase() {
 	try {
 		let clearedPreferenceSettings = 0;
 		let treatmentMigration = { originalVaccinationRows: 0, originalAntiparasiticRows: 0 };
+		let medicationMigration = { originalCatalogRows: 0, originalProtocolRows: 0 };
 		output.transaction(() => {
+			medicationMigration = migrateMedicationTables(output);
 			treatmentMigration = migrateTreatmentTables(output);
 			stampSchemaVersion(output);
 			clearedPreferenceSettings = clearSavedPreferences(output);
 		})();
 		assertDataSchema(output, 'Banco versionado', versionedSchema);
+		assertNoDeprecatedMedicationTables(output, 'Banco versionado');
 		assertNoDeprecatedTreatmentTables(output, 'Banco versionado');
 		assertStamped(output);
 		assertIntegrity(output, 'Banco versionado');
@@ -317,6 +421,8 @@ function adoptVersionZeroDatabase() {
 		console.log(`- owners: ${countRows(output, 'owners')}`);
 		console.log(`- pets: ${countRows(output, 'pets')}`);
 		console.log(`- medical_records: ${countRows(output, 'medical_records')}`);
+		console.log(`- medication_catalog_items: ${countRows(output, 'medication_catalog_items')} de ${medicationMigration.originalCatalogRows}`);
+		console.log(`- medication_protocols: ${countRows(output, 'medication_protocols')} de ${medicationMigration.originalProtocolRows}`);
 		console.log(`- pet_treatments: ${countRows(output, 'pet_treatments')}`);
 		console.log(`  - vaccine: ${countTreatments(output, 'vaccine')} de ${treatmentMigration.originalVaccinationRows}`);
 		console.log(`  - antiparasitic: ${countTreatments(output, 'antiparasitic')} de ${treatmentMigration.originalAntiparasiticRows}`);

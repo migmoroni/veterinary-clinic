@@ -1,5 +1,4 @@
-import type { KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
-import type { PreventiveCatalogOrigin } from '$lib/domain/preventive/catalog.js';
+import type { MedicationCatalogOrigin, MedicationSpecies } from '$lib/domain/medication/catalog.js';
 
 export type TreatmentKind = 'vaccine' | 'antiparasitic';
 export type TreatmentValidityUnit = 'days' | 'months' | 'years';
@@ -9,10 +8,10 @@ export interface TreatmentCatalogItem {
 	kind: TreatmentKind;
 	name: string;
 	normalizedName: string;
-	species: KnownPetSpecies[];
+	species: MedicationSpecies[];
 	aliases: string[];
 	manufacturer: string | null;
-	origin: PreventiveCatalogOrigin;
+	origin: MedicationCatalogOrigin;
 	regions: string[];
 	hiddenAt: string | null;
 	updatedAt: string | null;
@@ -20,7 +19,7 @@ export interface TreatmentCatalogItem {
 
 export interface TreatmentCatalogItemInput {
 	name: string;
-	species?: KnownPetSpecies[];
+	species?: MedicationSpecies[];
 	aliases?: string[];
 	manufacturer?: string | null;
 	regions?: string[];

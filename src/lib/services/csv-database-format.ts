@@ -85,22 +85,22 @@ export const CSV_TABLES: CsvTableDefinition[] = [
 		orderBy: 'id'
 	},
 	{
-		name: 'preventive_catalog_items',
+		name: 'medication_catalog_items',
 		columns: ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'hidden_at', 'created_at', 'updated_at'],
 		orderBy: 'kind, name, id'
 	},
 	{
-		name: 'preventive_protocols',
+		name: 'medication_protocols',
 		columns: ['id', 'kind', 'origin', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'created_at', 'updated_at', 'deleted_at', 'purge_after'],
 		orderBy: 'kind, sort_order, name, id'
 	},
 	{
-		name: 'preventive_protocol_items',
+		name: 'medication_protocol_items',
 		columns: ['id', 'protocol_id', 'catalog_item_id', 'sort_order', 'created_at', 'updated_at'],
 		orderBy: 'protocol_id, sort_order, id'
 	},
 	{
-		name: 'preventive_protocol_doses',
+		name: 'medication_protocol_doses',
 		columns: ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order', 'created_at', 'updated_at'],
 		orderBy: 'protocol_id, sort_order, id'
 	},

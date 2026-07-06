@@ -1,6 +1,6 @@
 import type Database from '@tauri-apps/plugin-sql';
-import { defaultPreventiveCatalogItems } from '$lib/domain/preventive/default-catalog.js';
-import { defaultPreventiveProtocols } from '$lib/domain/preventive/default-protocol.js';
+import { defaultMedicationCatalogItems } from '$lib/domain/medication/default-catalog.js';
+import { defaultMedicationProtocols } from '$lib/domain/medication/default-protocol.js';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 import { incrementalSchemaMigrations } from './schema-migrations/registry.js';
 import type { SchemaMigration } from './schema-migrations/types.js';
@@ -59,7 +59,7 @@ interface RunMigrationsOptions {
 	createIndexes?: boolean;
 }
 
-function normalizePreventiveCatalogName(value: string): string {
+function normalizeMedicationCatalogName(value: string): string {
 	return value
 		.normalize('NFD')
 		.replace(/[\u0300-\u036f]/g, '')
@@ -99,27 +99,27 @@ async function isEmptyDatabase(database: Database): Promise<boolean> {
 	return rows.length === 0;
 }
 
-async function seedDefaultPreventiveCatalog(database: Database): Promise<void> {
-	for (const item of defaultPreventiveCatalogItems) {
+async function seedDefaultMedicationCatalog(database: Database): Promise<void> {
+	for (const item of defaultMedicationCatalogItems) {
 		await database.execute(
-			`INSERT OR IGNORE INTO preventive_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at)
+			`INSERT OR IGNORE INTO medication_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at)
 			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
-			[item.kind, item.name, normalizePreventiveCatalogName(item.name), JSON.stringify(item.species), JSON.stringify(item.aliases), item.manufacturer, item.origin, JSON.stringify(item.regions)]
+			[item.kind, item.name, normalizeMedicationCatalogName(item.name), JSON.stringify(item.species), JSON.stringify(item.aliases), item.manufacturer, item.origin, JSON.stringify(item.regions)]
 		);
 	}
 }
 
-async function seedDefaultPreventiveProtocols(database: Database): Promise<void> {
-	for (const protocol of defaultPreventiveProtocols) {
-		const normalizedName = normalizePreventiveCatalogName(protocol.name);
+async function seedDefaultMedicationProtocols(database: Database): Promise<void> {
+	for (const protocol of defaultMedicationProtocols) {
+		const normalizedName = normalizeMedicationCatalogName(protocol.name);
 		await database.execute(
-			`INSERT OR IGNORE INTO preventive_protocols (kind, origin, name, normalized_name, species, observation, sort_order, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, $6, COALESCE((SELECT MAX(sort_order) + 1 FROM preventive_protocols WHERE kind = $1), 0), CURRENT_TIMESTAMP)`,
+			`INSERT OR IGNORE INTO medication_protocols (kind, origin, name, normalized_name, species, observation, sort_order, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, COALESCE((SELECT MAX(sort_order) + 1 FROM medication_protocols WHERE kind = $1), 0), CURRENT_TIMESTAMP)`,
 			[protocol.kind, protocol.origin, protocol.name, normalizedName, JSON.stringify(protocol.species), protocol.observation]
 		);
 
 		const protocolRows = await database.select<{ id: number }[]>(
-			'SELECT id FROM preventive_protocols WHERE kind = $1 AND normalized_name = $2 LIMIT 1',
+			'SELECT id FROM medication_protocols WHERE kind = $1 AND normalized_name = $2 LIMIT 1',
 			[protocol.kind, normalizedName]
 		);
 		const protocolId = protocolRows[0]?.id;
@@ -127,14 +127,14 @@ async function seedDefaultPreventiveProtocols(database: Database): Promise<void>
 
 		for (const [sortOrder, catalogItemName] of protocol.catalogItemNames.entries()) {
 			const catalogRows = await database.select<{ id: number }[]>(
-				'SELECT id FROM preventive_catalog_items WHERE kind = $1 AND normalized_name = $2 LIMIT 1',
-				[protocol.kind, normalizePreventiveCatalogName(catalogItemName)]
+				'SELECT id FROM medication_catalog_items WHERE kind = $1 AND normalized_name = $2 LIMIT 1',
+				[protocol.kind, normalizeMedicationCatalogName(catalogItemName)]
 			);
 			const catalogItemId = catalogRows[0]?.id;
 			if (!catalogItemId) throw new Error(`default_protocol_catalog_item_not_found:${catalogItemName}`);
 
 			await database.execute(
-				`INSERT OR IGNORE INTO preventive_protocol_items (protocol_id, catalog_item_id, sort_order, updated_at)
+				`INSERT OR IGNORE INTO medication_protocol_items (protocol_id, catalog_item_id, sort_order, updated_at)
 				 VALUES ($1, $2, $3, CURRENT_TIMESTAMP)`,
 				[protocolId, catalogItemId, sortOrder]
 			);
@@ -142,10 +142,10 @@ async function seedDefaultPreventiveProtocols(database: Database): Promise<void>
 
 		for (const [sortOrder, dose] of protocol.doses.entries()) {
 			await database.execute(
-				`INSERT INTO preventive_protocol_doses (protocol_id, dose, validity_value, validity_unit, sort_order, updated_at)
+				`INSERT INTO medication_protocol_doses (protocol_id, dose, validity_value, validity_unit, sort_order, updated_at)
 				 SELECT $1, $2, $3, $4, $5, CURRENT_TIMESTAMP
 				 WHERE NOT EXISTS (
-					SELECT 1 FROM preventive_protocol_doses WHERE protocol_id = $1 AND sort_order = $5
+					SELECT 1 FROM medication_protocol_doses WHERE protocol_id = $1 AND sort_order = $5
 				 )`,
 				[protocolId, dose.dose, dose.validityValue, dose.validityUnit, sortOrder]
 			);
@@ -354,16 +354,16 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	`);
 
 	await database.execute(`
-		CREATE TABLE IF NOT EXISTS preventive_catalog_items (
+		CREATE TABLE IF NOT EXISTS medication_catalog_items (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
 			name TEXT NOT NULL,
 			normalized_name TEXT NOT NULL,
-			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.preventiveSpeciesJson)}),
-			aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.preventiveAliasesJson)}),
-			manufacturer TEXT CHECK(${optionalTextCheck('manufacturer', FIELD_LIMITS.preventiveManufacturer)}),
+			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.medicationSpeciesJson)}),
+			aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.medicationAliasesJson)}),
+			manufacturer TEXT CHECK(${optionalTextCheck('manufacturer', FIELD_LIMITS.medicationManufacturer)}),
 			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
-			regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.preventiveRegionsJson)}),
+			regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.medicationRegionsJson)}),
 			hidden_at TEXT,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
@@ -374,14 +374,14 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	`);
 
 	await database.execute(`
-		CREATE TABLE IF NOT EXISTS preventive_protocols (
+		CREATE TABLE IF NOT EXISTS medication_protocols (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
 			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
-			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.preventiveProtocolName)}),
-			normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.preventiveProtocolNormalizedName)}),
-			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.preventiveSpeciesJson)}),
-			observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.preventiveProtocolObservation)}),
+			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.medicationProtocolName)}),
+			normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.medicationProtocolNormalizedName)}),
+			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.medicationSpeciesJson)}),
+			observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.medicationProtocolObservation)}),
 			sort_order INTEGER NOT NULL DEFAULT 0,
 			hidden_at TEXT,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -393,30 +393,30 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	`);
 
 	await database.execute(`
-		CREATE TABLE IF NOT EXISTS preventive_protocol_items (
+		CREATE TABLE IF NOT EXISTS medication_protocol_items (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			protocol_id INTEGER NOT NULL,
 			catalog_item_id INTEGER NOT NULL,
 			sort_order INTEGER NOT NULL DEFAULT 0,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
-			FOREIGN KEY (protocol_id) REFERENCES preventive_protocols(id) ON DELETE CASCADE,
-			FOREIGN KEY (catalog_item_id) REFERENCES preventive_catalog_items(id) ON DELETE CASCADE,
+			FOREIGN KEY (protocol_id) REFERENCES medication_protocols(id) ON DELETE CASCADE,
+			FOREIGN KEY (catalog_item_id) REFERENCES medication_catalog_items(id) ON DELETE CASCADE,
 			UNIQUE(protocol_id, catalog_item_id)
 		)
 	`);
 
 	await database.execute(`
-		CREATE TABLE IF NOT EXISTS preventive_protocol_doses (
+		CREATE TABLE IF NOT EXISTS medication_protocol_doses (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			protocol_id INTEGER NOT NULL,
-			dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', FIELD_LIMITS.preventiveProtocolDose)}),
+			dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', FIELD_LIMITS.medicationProtocolDose)}),
 			validity_value INTEGER NOT NULL CHECK(validity_value > 0),
 			validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months', 'years')),
 			sort_order INTEGER NOT NULL DEFAULT 0,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
-			FOREIGN KEY (protocol_id) REFERENCES preventive_protocols(id) ON DELETE CASCADE,
+			FOREIGN KEY (protocol_id) REFERENCES medication_protocols(id) ON DELETE CASCADE,
 			CHECK((validity_unit = 'days' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityDays, FIELD_LIMITS.antiparasiticTreatmentValidityDays)}) OR (validity_unit = 'months' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityMonths, FIELD_LIMITS.antiparasiticTreatmentValidityMonths)}) OR (validity_unit = 'years' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityYears, FIELD_LIMITS.antiparasiticTreatmentValidityYears)}))
 		)
 	`);
@@ -472,16 +472,16 @@ export async function createCurrentIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pets_breed ON pets(breed)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_pet_id ON medical_records(pet_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_deleted_at ON medical_records(deleted_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_preventive_catalog_items_kind_name ON preventive_catalog_items(kind, name COLLATE NOCASE)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_preventive_catalog_items_kind_normalized_name ON preventive_catalog_items(kind, normalized_name)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_preventive_catalog_items_hidden_at ON preventive_catalog_items(hidden_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_preventive_protocols_kind_name ON preventive_protocols(kind, name COLLATE NOCASE)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_preventive_protocols_kind_normalized_name ON preventive_protocols(kind, normalized_name)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_preventive_protocols_hidden_at ON preventive_protocols(hidden_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_preventive_protocols_deleted_at ON preventive_protocols(deleted_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_preventive_protocol_items_protocol_id ON preventive_protocol_items(protocol_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_preventive_protocol_items_catalog_item_id ON preventive_protocol_items(catalog_item_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_preventive_protocol_doses_protocol_id ON preventive_protocol_doses(protocol_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_kind_name ON medication_catalog_items(kind, name COLLATE NOCASE)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_kind_normalized_name ON medication_catalog_items(kind, normalized_name)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_hidden_at ON medication_catalog_items(hidden_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_protocols_kind_name ON medication_protocols(kind, name COLLATE NOCASE)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_protocols_kind_normalized_name ON medication_protocols(kind, normalized_name)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_protocols_hidden_at ON medication_protocols(hidden_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_protocols_deleted_at ON medication_protocols(deleted_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_protocol_items_protocol_id ON medication_protocol_items(protocol_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_protocol_items_catalog_item_id ON medication_protocol_items(catalog_item_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_protocol_doses_protocol_id ON medication_protocol_doses(protocol_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_pet_id ON pet_treatments(pet_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_kind_applied_at ON pet_treatments(kind, applied_at)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_kind_normalized_name ON pet_treatments(kind, normalized_name)');
@@ -506,10 +506,10 @@ async function assertCurrentSchema(database: Database): Promise<void> {
 		(await tableHasColumns(database, 'app_settings', ['key', 'value', 'updated_at'])) &&
 		(await tableHasColumns(database, 'schema_migrations', ['version', 'name', 'app_version', 'applied_at'])) &&
 		(await tableHasColumns(database, 'backup_history', ['id', 'path', 'kind', 'created_at'])) &&
-		(await tableHasColumns(database, 'preventive_catalog_items', ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'hidden_at'])) &&
-		(await tableHasColumns(database, 'preventive_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'deleted_at', 'purge_after'])) &&
-		(await tableHasColumns(database, 'preventive_protocol_items', ['id', 'protocol_id', 'catalog_item_id', 'sort_order'])) &&
-		(await tableHasColumns(database, 'preventive_protocol_doses', ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order'])) &&
+		(await tableHasColumns(database, 'medication_catalog_items', ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'hidden_at'])) &&
+		(await tableHasColumns(database, 'medication_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'deleted_at', 'purge_after'])) &&
+		(await tableHasColumns(database, 'medication_protocol_items', ['id', 'protocol_id', 'catalog_item_id', 'sort_order'])) &&
+		(await tableHasColumns(database, 'medication_protocol_doses', ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order'])) &&
 		(await tableHasColumns(database, 'pet_treatments', ['id', 'pet_id', 'kind', 'applied_at', 'name', 'normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'validity_ignored_at']));
 
 	if (!valid) throw new Error('database_schema_current_invalid');
@@ -520,7 +520,7 @@ async function hasCurrentUnversionedSchema(database: Database): Promise<boolean>
 		(await tableHasColumns(database, 'owners', ['id', 'name', 'additional_information'])) &&
 		(await tableHasColumns(database, 'addresses', ['id', 'owner_id', 'workplace_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code'])) &&
 		(await tableHasColumns(database, 'contacts', ['id', 'owner_id', 'responsible_id', 'veterinarian_profile_id', 'workplace_id', 'kind', 'label', 'value'])) &&
-		(await tableHasColumns(database, 'preventive_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name'])) &&
+		(await tableHasColumns(database, 'medication_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name'])) &&
 		(await tableHasColumns(database, 'pet_treatments', ['id', 'pet_id', 'kind', 'applied_at', 'name', 'normalized_name', 'dose', 'validity_value', 'validity_unit']));
 
 	return valid;
@@ -703,8 +703,8 @@ export async function runMigrations(database: Database, options: RunMigrationsOp
 		await assertCurrentSchema(database);
 
 		if (seedDefaultData) {
-			await seedDefaultPreventiveCatalog(database);
-			await seedDefaultPreventiveProtocols(database);
+			await seedDefaultMedicationCatalog(database);
+			await seedDefaultMedicationProtocols(database);
 		}
 		if (createIndexes) await createCurrentIndexes(database);
 		await validateDatabaseIntegrity(database);

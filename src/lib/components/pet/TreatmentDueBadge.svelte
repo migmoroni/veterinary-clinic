@@ -1,15 +1,7 @@
 <script lang="ts">
 	import { formatDateForDisplay } from '$lib/domain/shared/date-input.js';
+	import type { TreatmentDueStatus, TreatmentKind } from '$lib/domain/treatment/treatment.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
-
-	type PreventiveKind = 'vaccine' | 'antiparasitic';
-
-	interface PreventiveDueStatus {
-		dueAt: string | null;
-		daysUntilDue: number | null;
-		expired: boolean;
-		validityIgnored: boolean;
-	}
 
 	const labelKeys = {
 		vaccine: {
@@ -28,9 +20,9 @@
 			validUntil: 'antiparasiticTreatment.validUntil',
 			expiresIn: 'antiparasiticTreatment.expiresIn'
 		}
-	} satisfies Record<PreventiveKind, Record<string, TranslationKey>>;
+	} satisfies Record<TreatmentKind, Record<string, TranslationKey>>;
 
-	let { kind, status, className = '' }: { kind: PreventiveKind; status: PreventiveDueStatus; className?: string } = $props();
+	let { kind, status, className = '' }: { kind: TreatmentKind; status: TreatmentDueStatus; className?: string } = $props();
 
 	const label = $derived.by(() => {
 		const keys = labelKeys[kind];

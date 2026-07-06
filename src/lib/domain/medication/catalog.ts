@@ -1,0 +1,127 @@
+import { assertTextLimit } from '$lib/domain/shared/field-limits.js';
+
+const medicationSpeciesIds = ['canine', 'feline'] as const;
+
+export type MedicationSpecies = (typeof medicationSpeciesIds)[number];
+export type MedicationCatalogOrigin = 'system' | 'user';
+
+export const defaultMedicationSpecies = [...medicationSpeciesIds];
+
+export interface MedicationCatalogMetadata {
+	aliases: string[];
+	manufacturer: string | null;
+	origin: MedicationCatalogOrigin;
+	regions: string[];
+	species: MedicationSpecies[];
+}
+
+export function canEditMedicationCatalogItem(item: Pick<MedicationCatalogMetadata, 'origin'>): boolean {
+	return item.origin === 'user';
+}
+
+export function canDeleteMedicationCatalogItem(item: Pick<MedicationCatalogMetadata, 'origin'>): boolean {
+	return canEditMedicationCatalogItem(item);
+}
+
+export function normalizeMedicationSpecies(values: readonly string[] | null | undefined): MedicationSpecies[] {
+	const normalized: MedicationSpecies[] = [];
+	for (const value of values ?? []) {
+		if (isMedicationSpecies(value) && !normalized.includes(value)) normalized.push(value);
+	}
+
+	return normalized.length > 0 ? normalized : [...defaultMedicationSpecies];
+}
+
+export function parseMedicationSpecies(value: string | null | undefined): MedicationSpecies[] {
+	if (!value) return [...defaultMedicationSpecies];
+
+	try {
+		const parsed = JSON.parse(value);
+		return Array.isArray(parsed) ? normalizeMedicationSpecies(parsed.filter((item): item is string => typeof item === 'string')) : [...defaultMedicationSpecies];
+	} catch {
+		return [...defaultMedicationSpecies];
+	}
+}
+
+export function stringifyMedicationSpecies(values: readonly string[] | null | undefined): string {
+	return JSON.stringify(normalizeMedicationSpecies(values));
+}
+
+/**
+ * Normalizes product markets as unique ISO 3166-1 alpha-3 country codes.
+ */
+export function normalizeMedicationRegions(values: readonly string[] | null | undefined): string[] {
+	const regions: string[] = [];
+
+	for (const value of values ?? []) {
+		const candidate = value.trim().toUpperCase();
+		if (!/^[A-Z]{3}$/.test(candidate) || regions.includes(candidate)) continue;
+		regions.push(candidate);
+	}
+
+	return regions;
+}
+
+export function parseMedicationRegions(value: string | null | undefined): string[] {
+	if (!value) return [];
+
+	try {
+		const parsed = JSON.parse(value);
+		return Array.isArray(parsed) ? normalizeMedicationRegions(parsed.filter((item): item is string => typeof item === 'string')) : [];
+	} catch {
+		return [];
+	}
+}
+
+export function stringifyMedicationRegions(values: readonly string[] | null | undefined): string {
+	return JSON.stringify(normalizeMedicationRegions(values));
+}
+
+export function normalizeMedicationAliases(values: readonly string[] | null | undefined, maxLength: number, normalize: (value: string) => string, canonicalNormalizedName = ''): string[] {
+	const aliases: string[] = [];
+	const seen = new Set<string>();
+
+	for (const value of values ?? []) {
+		const alias = value.trim();
+		if (!alias) continue;
+		assertTextLimit(alias, maxLength);
+
+		const normalized = normalize(alias);
+		if (!normalized || normalized === canonicalNormalizedName || seen.has(normalized)) continue;
+		seen.add(normalized);
+		aliases.push(alias);
+	}
+
+	return aliases;
+}
+
+export function parseMedicationAliases(value: string | null | undefined, maxLength: number, normalize: (value: string) => string, canonicalNormalizedName = ''): string[] {
+	if (!value) return [];
+
+	try {
+		const parsed = JSON.parse(value);
+		return Array.isArray(parsed) ? normalizeMedicationAliases(parsed.filter((item): item is string => typeof item === 'string'), maxLength, normalize, canonicalNormalizedName) : [];
+	} catch {
+		return [];
+	}
+}
+
+export function stringifyMedicationAliases(values: readonly string[] | null | undefined, maxLength: number, normalize: (value: string) => string, canonicalNormalizedName = ''): string {
+	return JSON.stringify(normalizeMedicationAliases(values, maxLength, normalize, canonicalNormalizedName));
+}
+
+export function medicationItemMatchesSpecies(species: readonly MedicationSpecies[], petSpecies: string | null | undefined): boolean {
+	if (!isMedicationSpecies(petSpecies)) return true;
+	return species.includes(petSpecies);
+}
+
+function isMedicationSpecies(value: string | null | undefined): value is MedicationSpecies {
+	return value === 'canine' || value === 'feline';
+}
+
+export function medicationItemMatchesSearch(name: string, aliases: readonly string[], query: string, normalize: (value: string) => string): boolean {
+	const normalizedQuery = normalize(query);
+	if (!normalizedQuery) return true;
+	if (normalize(name).includes(normalizedQuery)) return true;
+	return aliases.some((alias) => normalize(alias).includes(normalizedQuery));
+}
