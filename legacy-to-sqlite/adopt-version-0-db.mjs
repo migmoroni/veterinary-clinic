@@ -12,7 +12,7 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const defaultSourcePath = path.resolve(scriptDir, 'dist/veterinary_clinic-version-0.db');
 const defaultOutputPath = path.resolve(scriptDir, `build/veterinary_clinic-version-${CURRENT_SCHEMA_VERSION}.db`);
 
-const requiredSchema = {
+const sourceSchema = {
 	owners: ['id', 'name', 'avatar_blob', 'additional_information', 'created_at', 'updated_at', 'deleted_at', 'purge_after'],
 	veterinarian_profiles: ['id', 'name', 'professional_registration', 'avatar_blob', 'created_at', 'updated_at'],
 	workplaces: ['id', 'name', 'services_description', 'created_at', 'updated_at'],
@@ -33,6 +33,15 @@ const requiredSchema = {
 	pet_vaccinations: ['id', 'pet_id', 'applied_at', 'vaccine_name', 'vaccine_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after'],
 	pet_antiparasitic_treatments: ['id', 'pet_id', 'applied_at', 'antiparasitic_name', 'antiparasitic_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after']
 };
+
+const versionedSchema = {
+	...sourceSchema,
+	pet_treatments: ['id', 'pet_id', 'kind', 'applied_at', 'name', 'normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after']
+};
+delete versionedSchema.pet_vaccinations;
+delete versionedSchema.pet_antiparasitic_treatments;
+
+const deprecatedTreatmentTables = ['pet_vaccinations', 'pet_antiparasitic_treatments'];
 
 function printUsage() {
 	console.log(`Uso:
@@ -105,19 +114,25 @@ function tableColumns(database, table) {
 	return new Set(database.prepare(`PRAGMA table_info(${quoteIdentifier(table)})`).all().map((row) => row.name));
 }
 
-function assertCurrentDataSchema(database, label) {
+function assertDataSchema(database, label, schema) {
 	const tables = new Set(database.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((row) => row.name));
-	const missingTables = Object.keys(requiredSchema).filter((table) => !tables.has(table));
+	const missingTables = Object.keys(schema).filter((table) => !tables.has(table));
 	if (missingTables.length > 0) throw new Error(`${label} não tem as tabelas atuais esperadas: ${missingTables.join(', ')}`);
 
 	const missingColumns = [];
-	for (const [table, columns] of Object.entries(requiredSchema)) {
+	for (const [table, columns] of Object.entries(schema)) {
 		const existingColumns = tableColumns(database, table);
 		for (const column of columns) {
 			if (!existingColumns.has(column)) missingColumns.push(`${table}.${column}`);
 		}
 	}
 	if (missingColumns.length > 0) throw new Error(`${label} não tem as colunas atuais esperadas: ${missingColumns.join(', ')}`);
+}
+
+function assertNoDeprecatedTreatmentTables(database, label) {
+	const tables = new Set(database.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((row) => row.name));
+	const deprecatedTables = deprecatedTreatmentTables.filter((table) => tables.has(table));
+	if (deprecatedTables.length > 0) throw new Error(`${label} ainda contém tabelas substituídas: ${deprecatedTables.join(', ')}`);
 }
 
 function assertIntegrity(database, label) {
@@ -144,6 +159,70 @@ function userVersion(database) {
 
 function countRows(database, table) {
 	return database.prepare(`SELECT COUNT(*) AS total FROM ${quoteIdentifier(table)}`).get().total;
+}
+
+function countTreatments(database, kind) {
+	return database.prepare('SELECT COUNT(*) AS total FROM pet_treatments WHERE kind = ?').get(kind).total;
+}
+
+function migrateTreatmentTables(database) {
+	const originalVaccinationRows = countRows(database, 'pet_vaccinations');
+	const originalAntiparasiticRows = countRows(database, 'pet_antiparasitic_treatments');
+
+	database.exec(`
+		DROP TABLE IF EXISTS pet_treatments;
+
+		CREATE TABLE pet_treatments (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			pet_id INTEGER NOT NULL,
+			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
+			applied_at TEXT NOT NULL DEFAULT CURRENT_DATE,
+			name TEXT NOT NULL CHECK(length(trim(name)) > 0),
+			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) > 0),
+			dose TEXT NOT NULL CHECK(length(trim(dose)) > 0),
+			validity_value INTEGER NOT NULL CHECK(validity_value > 0),
+			validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months', 'years')),
+			observation TEXT,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			validity_ignored_at TEXT,
+			updated_at TEXT,
+			deleted_at TEXT,
+			purge_after TEXT,
+			FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE RESTRICT
+		);
+
+		INSERT INTO pet_treatments (
+			pet_id, kind, applied_at, name, normalized_name, dose, validity_value, validity_unit, observation,
+			created_at, validity_ignored_at, updated_at, deleted_at, purge_after
+		)
+		SELECT
+			pet_id, 'vaccine', applied_at, vaccine_name, vaccine_normalized_name, dose, validity_value, validity_unit, observation,
+			COALESCE(created_at, CURRENT_TIMESTAMP), validity_ignored_at, updated_at, deleted_at, purge_after
+		FROM pet_vaccinations
+		ORDER BY id;
+
+		INSERT INTO pet_treatments (
+			pet_id, kind, applied_at, name, normalized_name, dose, validity_value, validity_unit, observation,
+			created_at, validity_ignored_at, updated_at, deleted_at, purge_after
+		)
+		SELECT
+			pet_id, 'antiparasitic', applied_at, antiparasitic_name, antiparasitic_normalized_name, dose, validity_value, validity_unit, observation,
+			COALESCE(created_at, CURRENT_TIMESTAMP), validity_ignored_at, updated_at, deleted_at, purge_after
+		FROM pet_antiparasitic_treatments
+		ORDER BY id;
+
+		DROP TABLE pet_vaccinations;
+		DROP TABLE pet_antiparasitic_treatments;
+
+		CREATE INDEX IF NOT EXISTS idx_pet_treatments_pet_id ON pet_treatments(pet_id);
+		CREATE INDEX IF NOT EXISTS idx_pet_treatments_kind_applied_at ON pet_treatments(kind, applied_at);
+		CREATE INDEX IF NOT EXISTS idx_pet_treatments_kind_normalized_name ON pet_treatments(kind, normalized_name);
+		CREATE INDEX IF NOT EXISTS idx_pet_treatments_latest_active ON pet_treatments(kind, pet_id, normalized_name, applied_at DESC, id DESC) WHERE deleted_at IS NULL AND validity_ignored_at IS NULL;
+		CREATE INDEX IF NOT EXISTS idx_pet_treatments_validity_ignored_at ON pet_treatments(validity_ignored_at);
+		CREATE INDEX IF NOT EXISTS idx_pet_treatments_deleted_at ON pet_treatments(deleted_at);
+	`);
+
+	return { originalVaccinationRows, originalAntiparasiticRows };
 }
 
 function stampSchemaVersion(database) {
@@ -208,7 +287,7 @@ function adoptVersionZeroDatabase() {
 	try {
 		const sourceVersion = userVersion(source);
 		if (sourceVersion > CURRENT_SCHEMA_VERSION) throw new Error(`Banco de origem tem schema futuro: user_version=${sourceVersion}`);
-		assertCurrentDataSchema(source, 'Banco de origem');
+		assertDataSchema(source, 'Banco de origem', sourceSchema);
 		assertIntegrity(source, 'Banco de origem');
 		source.exec(`VACUUM INTO ${quoteSqlString(outputPath)}`);
 	} finally {
@@ -219,11 +298,14 @@ function adoptVersionZeroDatabase() {
 	output.pragma('foreign_keys = ON');
 	try {
 		let clearedPreferenceSettings = 0;
+		let treatmentMigration = { originalVaccinationRows: 0, originalAntiparasiticRows: 0 };
 		output.transaction(() => {
+			treatmentMigration = migrateTreatmentTables(output);
 			stampSchemaVersion(output);
 			clearedPreferenceSettings = clearSavedPreferences(output);
 		})();
-		assertCurrentDataSchema(output, 'Banco versionado');
+		assertDataSchema(output, 'Banco versionado', versionedSchema);
+		assertNoDeprecatedTreatmentTables(output, 'Banco versionado');
 		assertStamped(output);
 		assertIntegrity(output, 'Banco versionado');
 		output.pragma('optimize');
@@ -235,8 +317,9 @@ function adoptVersionZeroDatabase() {
 		console.log(`- owners: ${countRows(output, 'owners')}`);
 		console.log(`- pets: ${countRows(output, 'pets')}`);
 		console.log(`- medical_records: ${countRows(output, 'medical_records')}`);
-		console.log(`- pet_vaccinations: ${countRows(output, 'pet_vaccinations')}`);
-		console.log(`- pet_antiparasitic_treatments: ${countRows(output, 'pet_antiparasitic_treatments')}`);
+		console.log(`- pet_treatments: ${countRows(output, 'pet_treatments')}`);
+		console.log(`  - vaccine: ${countTreatments(output, 'vaccine')} de ${treatmentMigration.originalVaccinationRows}`);
+		console.log(`  - antiparasitic: ${countTreatments(output, 'antiparasitic')} de ${treatmentMigration.originalAntiparasiticRows}`);
 		console.log(`- preferências removidas: ${clearedPreferenceSettings}`);
 	} finally {
 		output.close();

@@ -153,28 +153,29 @@ async function listLatestAntiparasiticTreatmentRows(): Promise<LatestAntiparasit
 			validity_unit
 		 FROM (
 			SELECT
-				pet_antiparasitic_treatments.id,
-				pet_antiparasitic_treatments.pet_id,
+				pet_treatments.id,
+				pet_treatments.pet_id,
 				pets.name AS pet_name,
 				${firstOwnerIdSql} AS owner_id,
 				${ownerIdsSql} AS owner_ids,
 				${ownerNamesSql} AS owner_name,
-				pet_antiparasitic_treatments.applied_at,
-				pet_antiparasitic_treatments.antiparasitic_name,
-				pet_antiparasitic_treatments.antiparasitic_normalized_name,
-				pet_antiparasitic_treatments.validity_value,
-				pet_antiparasitic_treatments.validity_unit,
+				pet_treatments.applied_at,
+				pet_treatments.name AS antiparasitic_name,
+				pet_treatments.normalized_name AS antiparasitic_normalized_name,
+				pet_treatments.validity_value,
+				pet_treatments.validity_unit,
 				ROW_NUMBER() OVER (
-					PARTITION BY pet_antiparasitic_treatments.pet_id, pet_antiparasitic_treatments.antiparasitic_normalized_name
-					ORDER BY pet_antiparasitic_treatments.applied_at DESC, pet_antiparasitic_treatments.id DESC
+					PARTITION BY pet_treatments.pet_id, pet_treatments.normalized_name
+					ORDER BY pet_treatments.applied_at DESC, pet_treatments.id DESC
 				) AS latest_rank
-			 FROM pet_antiparasitic_treatments
-			 JOIN pets ON pets.id = pet_antiparasitic_treatments.pet_id
-			 WHERE pet_antiparasitic_treatments.deleted_at IS NULL
-				AND pet_antiparasitic_treatments.validity_ignored_at IS NULL
+			 FROM pet_treatments
+			 JOIN pets ON pets.id = pet_treatments.pet_id
+			 WHERE pet_treatments.kind = 'antiparasitic'
+				AND pet_treatments.deleted_at IS NULL
+				AND pet_treatments.validity_ignored_at IS NULL
 				AND pets.deleted_at IS NULL
-				AND date(pet_antiparasitic_treatments.applied_at) IS NOT NULL
-				AND pet_antiparasitic_treatments.applied_at <= date('now', 'localtime')
+				AND date(pet_treatments.applied_at) IS NOT NULL
+				AND pet_treatments.applied_at <= date('now', 'localtime')
 		 )
 		 WHERE latest_rank = 1
 		 ORDER BY pet_id, antiparasitic_normalized_name`
@@ -250,13 +251,14 @@ export async function listAntiparasiticTreatmentHistory(filter: Partial<Antipara
 	const antiparasiticNormalizedName = normalizeAntiparasiticFilter(filter.antiparasiticNormalizedName);
 	const values = antiparasiticNormalizedName ? [antiparasiticNormalizedName] : [];
 	const rows = await selectMany<AntiparasiticTreatmentHistoryRow>(
-		`SELECT pet_antiparasitic_treatments.applied_at, pet_antiparasitic_treatments.antiparasitic_normalized_name
-		 FROM pet_antiparasitic_treatments
-		 JOIN pets ON pets.id = pet_antiparasitic_treatments.pet_id
-		 WHERE pet_antiparasitic_treatments.deleted_at IS NULL
+		`SELECT pet_treatments.applied_at, pet_treatments.normalized_name AS antiparasitic_normalized_name
+		 FROM pet_treatments
+		 JOIN pets ON pets.id = pet_treatments.pet_id
+		 WHERE pet_treatments.kind = 'antiparasitic'
+			AND pet_treatments.deleted_at IS NULL
 			AND pets.deleted_at IS NULL
-			${antiparasiticNormalizedName ? 'AND pet_antiparasitic_treatments.antiparasitic_normalized_name = $1' : ''}
-		 ORDER BY pet_antiparasitic_treatments.applied_at ASC`,
+			${antiparasiticNormalizedName ? 'AND pet_treatments.normalized_name = $1' : ''}
+		 ORDER BY pet_treatments.applied_at ASC`,
 		values
 	);
 
@@ -276,10 +278,10 @@ export async function listAnalyticsAntiparasitics(): Promise<AntiparasiticAnalyt
 	const rows = await selectMany<AnalyticsAntiparasiticRow>(
 		`SELECT antiparasitic_name, antiparasitic_normalized_name, COUNT(*) AS count
 		 FROM (
-			SELECT antiparasitic_name, antiparasitic_normalized_name, applied_at, id
-			FROM pet_antiparasitic_treatments
-			WHERE deleted_at IS NULL
-			ORDER BY antiparasitic_normalized_name, applied_at DESC, id DESC
+			SELECT name AS antiparasitic_name, normalized_name AS antiparasitic_normalized_name, applied_at, id
+			FROM pet_treatments
+			WHERE kind = 'antiparasitic' AND deleted_at IS NULL
+			ORDER BY normalized_name, applied_at DESC, id DESC
 		 )
 		 GROUP BY antiparasitic_normalized_name
 		 ORDER BY antiparasitic_name COLLATE NOCASE`

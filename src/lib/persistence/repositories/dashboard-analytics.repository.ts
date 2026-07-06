@@ -190,24 +190,25 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationAnalyticsRo
 			validity_value,
 			validity_unit
 		 FROM (
-			SELECT pet_vaccinations.pet_id,
-				pet_vaccinations.vaccine_name,
-				pet_vaccinations.vaccine_normalized_name,
-				pet_vaccinations.dose,
-				pet_vaccinations.applied_at,
-				pet_vaccinations.validity_value,
-				pet_vaccinations.validity_unit,
+			SELECT pet_treatments.pet_id,
+				pet_treatments.name AS vaccine_name,
+				pet_treatments.normalized_name AS vaccine_normalized_name,
+				pet_treatments.dose,
+				pet_treatments.applied_at,
+				pet_treatments.validity_value,
+				pet_treatments.validity_unit,
 				ROW_NUMBER() OVER (
-					PARTITION BY pet_vaccinations.pet_id, pet_vaccinations.vaccine_normalized_name
-					ORDER BY pet_vaccinations.applied_at DESC, pet_vaccinations.id DESC
+					PARTITION BY pet_treatments.pet_id, pet_treatments.normalized_name
+					ORDER BY pet_treatments.applied_at DESC, pet_treatments.id DESC
 				) AS latest_rank
-			 FROM pet_vaccinations
-			 JOIN pets ON pets.id = pet_vaccinations.pet_id
-			 WHERE pet_vaccinations.deleted_at IS NULL
-				AND pet_vaccinations.validity_ignored_at IS NULL
+			 FROM pet_treatments
+			 JOIN pets ON pets.id = pet_treatments.pet_id
+			 WHERE pet_treatments.kind = 'vaccine'
+				AND pet_treatments.deleted_at IS NULL
+				AND pet_treatments.validity_ignored_at IS NULL
 				AND pets.deleted_at IS NULL
-				AND date(pet_vaccinations.applied_at) IS NOT NULL
-				AND pet_vaccinations.applied_at <= date('now', 'localtime')
+				AND date(pet_treatments.applied_at) IS NOT NULL
+				AND pet_treatments.applied_at <= date('now', 'localtime')
 		 )
 		 WHERE latest_rank = 1
 		 ORDER BY pet_id, vaccine_normalized_name`
@@ -226,24 +227,25 @@ async function listLatestAntiparasiticRows(): Promise<LatestAntiparasiticAnalyti
 			validity_value,
 			validity_unit
 		 FROM (
-			SELECT pet_antiparasitic_treatments.pet_id,
-				pet_antiparasitic_treatments.antiparasitic_name,
-				pet_antiparasitic_treatments.antiparasitic_normalized_name,
-				pet_antiparasitic_treatments.dose,
-				pet_antiparasitic_treatments.applied_at,
-				pet_antiparasitic_treatments.validity_value,
-				pet_antiparasitic_treatments.validity_unit,
+			SELECT pet_treatments.pet_id,
+				pet_treatments.name AS antiparasitic_name,
+				pet_treatments.normalized_name AS antiparasitic_normalized_name,
+				pet_treatments.dose,
+				pet_treatments.applied_at,
+				pet_treatments.validity_value,
+				pet_treatments.validity_unit,
 				ROW_NUMBER() OVER (
-					PARTITION BY pet_antiparasitic_treatments.pet_id, pet_antiparasitic_treatments.antiparasitic_normalized_name
-					ORDER BY pet_antiparasitic_treatments.applied_at DESC, pet_antiparasitic_treatments.id DESC
+					PARTITION BY pet_treatments.pet_id, pet_treatments.normalized_name
+					ORDER BY pet_treatments.applied_at DESC, pet_treatments.id DESC
 				) AS latest_rank
-			 FROM pet_antiparasitic_treatments
-			 JOIN pets ON pets.id = pet_antiparasitic_treatments.pet_id
-			 WHERE pet_antiparasitic_treatments.deleted_at IS NULL
-				AND pet_antiparasitic_treatments.validity_ignored_at IS NULL
+			 FROM pet_treatments
+			 JOIN pets ON pets.id = pet_treatments.pet_id
+			 WHERE pet_treatments.kind = 'antiparasitic'
+				AND pet_treatments.deleted_at IS NULL
+				AND pet_treatments.validity_ignored_at IS NULL
 				AND pets.deleted_at IS NULL
-				AND date(pet_antiparasitic_treatments.applied_at) IS NOT NULL
-				AND pet_antiparasitic_treatments.applied_at <= date('now', 'localtime')
+				AND date(pet_treatments.applied_at) IS NOT NULL
+				AND pet_treatments.applied_at <= date('now', 'localtime')
 		 )
 		 WHERE latest_rank = 1
 		 ORDER BY pet_id, antiparasitic_normalized_name`

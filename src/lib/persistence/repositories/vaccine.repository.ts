@@ -73,9 +73,9 @@ function mapVaccination(row: PetVaccinationRow): PetVaccination {
 
 async function getVaccinationRow(id: number): Promise<PetVaccinationRow | null> {
 	const rows = await selectMany<PetVaccinationRow>(
-		`SELECT id, pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose, validity_value, validity_unit, observation, validity_ignored_at, updated_at, deleted_at, purge_after
-		 FROM pet_vaccinations
-		 WHERE id = $1
+		`SELECT id, pet_id, applied_at, name AS vaccine_name, normalized_name AS vaccine_normalized_name, dose, validity_value, validity_unit, observation, validity_ignored_at, updated_at, deleted_at, purge_after
+		 FROM pet_treatments
+		 WHERE id = $1 AND kind = 'vaccine'
 		 LIMIT 1`,
 		[id]
 	);
@@ -90,9 +90,10 @@ async function ensureVaccine(name: string, normalizedName: string): Promise<Vacc
 async function markPreviousEquivalentVaccinationsIgnored(petId: number, vaccineNormalizedName: string): Promise<void> {
 	const rows = await selectMany<{ id: number; validity_ignored_at: string | null }>(
 		`SELECT id, validity_ignored_at
-		 FROM pet_vaccinations
-		 WHERE pet_id = $1
-			AND vaccine_normalized_name = $2
+		 FROM pet_treatments
+		 WHERE kind = 'vaccine'
+			AND pet_id = $1
+			AND normalized_name = $2
 			AND deleted_at IS NULL
 		 ORDER BY applied_at DESC, id DESC`,
 		[petId, vaccineNormalizedName]
@@ -102,10 +103,10 @@ async function markPreviousEquivalentVaccinationsIgnored(petId: number, vaccineN
 
 	for (const row of previousRows) {
 		await execute(
-			`UPDATE pet_vaccinations
+			`UPDATE pet_treatments
 			 SET validity_ignored_at = CURRENT_TIMESTAMP,
 				updated_at = CURRENT_TIMESTAMP
-			 WHERE id = $1 AND validity_ignored_at IS NULL`,
+			 WHERE id = $1 AND kind = 'vaccine' AND validity_ignored_at IS NULL`,
 			[row.id]
 		);
 	}
@@ -129,9 +130,9 @@ export async function deleteVaccine(id: number): Promise<void> {
 
 export async function listVaccinationsByPet(petId: number, includeDeleted = false): Promise<PetVaccination[]> {
 	const rows = await selectMany<PetVaccinationRow>(
-		`SELECT id, pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose, validity_value, validity_unit, observation, validity_ignored_at, updated_at, deleted_at, purge_after
-		 FROM pet_vaccinations
-		 WHERE pet_id = $1 ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
+		`SELECT id, pet_id, applied_at, name AS vaccine_name, normalized_name AS vaccine_normalized_name, dose, validity_value, validity_unit, observation, validity_ignored_at, updated_at, deleted_at, purge_after
+		 FROM pet_treatments
+		 WHERE kind = 'vaccine' AND pet_id = $1 ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
 		 ORDER BY applied_at DESC, id DESC`,
 		[petId]
 	);
@@ -152,8 +153,8 @@ export async function createVaccinations(petId: number, inputs: PetVaccinationIn
 
 		await ensureVaccine(name, normalizedName);
 		await execute(
-			`INSERT INTO pet_vaccinations (pet_id, applied_at, vaccine_name, vaccine_normalized_name, dose, validity_value, validity_unit, observation, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
+			`INSERT INTO pet_treatments (pet_id, kind, applied_at, name, normalized_name, dose, validity_value, validity_unit, observation, updated_at)
+			 VALUES ($1, 'vaccine', $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
 			[petId, appliedAt, name, normalizedName, dose, validityValue, validityUnit, observation]
 		);
 		affectedVaccines.add(normalizedName);
@@ -170,19 +171,19 @@ export async function createVaccinations(petId: number, inputs: PetVaccinationIn
 export async function softDeleteVaccination(id: number): Promise<void> {
 	const deletedAt = nowIso();
 	await execute(
-		`UPDATE pet_vaccinations
+		`UPDATE pet_treatments
 		 SET deleted_at = $2, purge_after = $3, updated_at = CURRENT_TIMESTAMP
-		 WHERE id = $1 AND deleted_at IS NULL`,
+		 WHERE id = $1 AND kind = 'vaccine' AND deleted_at IS NULL`,
 		[id, deletedAt, computePurgeAfter(deletedAt)]
 	);
 }
 
 export async function setVaccinationValidityIgnored(id: number, ignored: boolean): Promise<PetVaccination> {
 	await execute(
-		`UPDATE pet_vaccinations
+		`UPDATE pet_treatments
 		 SET validity_ignored_at = ${ignored ? 'COALESCE(validity_ignored_at, CURRENT_TIMESTAMP)' : 'NULL'},
 			updated_at = CURRENT_TIMESTAMP
-		 WHERE id = $1 AND deleted_at IS NULL`,
+		 WHERE id = $1 AND kind = 'vaccine' AND deleted_at IS NULL`,
 		[id]
 	);
 

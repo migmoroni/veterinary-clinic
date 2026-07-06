@@ -153,28 +153,29 @@ async function listLatestVaccinationRows(): Promise<LatestVaccinationRow[]> {
 			validity_unit
 		 FROM (
 			SELECT
-				pet_vaccinations.id,
-				pet_vaccinations.pet_id,
+				pet_treatments.id,
+				pet_treatments.pet_id,
 				pets.name AS pet_name,
 				${firstOwnerIdSql} AS owner_id,
 				${ownerIdsSql} AS owner_ids,
 				${ownerNamesSql} AS owner_name,
-				pet_vaccinations.applied_at,
-				pet_vaccinations.vaccine_name,
-				pet_vaccinations.vaccine_normalized_name,
-				pet_vaccinations.validity_value,
-				pet_vaccinations.validity_unit,
+				pet_treatments.applied_at,
+				pet_treatments.name AS vaccine_name,
+				pet_treatments.normalized_name AS vaccine_normalized_name,
+				pet_treatments.validity_value,
+				pet_treatments.validity_unit,
 				ROW_NUMBER() OVER (
-					PARTITION BY pet_vaccinations.pet_id, pet_vaccinations.vaccine_normalized_name
-					ORDER BY pet_vaccinations.applied_at DESC, pet_vaccinations.id DESC
+					PARTITION BY pet_treatments.pet_id, pet_treatments.normalized_name
+					ORDER BY pet_treatments.applied_at DESC, pet_treatments.id DESC
 				) AS latest_rank
-			 FROM pet_vaccinations
-			 JOIN pets ON pets.id = pet_vaccinations.pet_id
-			 WHERE pet_vaccinations.deleted_at IS NULL
-				AND pet_vaccinations.validity_ignored_at IS NULL
+			 FROM pet_treatments
+			 JOIN pets ON pets.id = pet_treatments.pet_id
+			 WHERE pet_treatments.kind = 'vaccine'
+				AND pet_treatments.deleted_at IS NULL
+				AND pet_treatments.validity_ignored_at IS NULL
 				AND pets.deleted_at IS NULL
-				AND date(pet_vaccinations.applied_at) IS NOT NULL
-				AND pet_vaccinations.applied_at <= date('now', 'localtime')
+				AND date(pet_treatments.applied_at) IS NOT NULL
+				AND pet_treatments.applied_at <= date('now', 'localtime')
 		 )
 		 WHERE latest_rank = 1
 		 ORDER BY pet_id, vaccine_normalized_name`
@@ -250,13 +251,14 @@ export async function listVaccineHistory(filter: Partial<VaccineHistoryFilter>):
 	const vaccineNormalizedName = normalizeVaccineFilter(filter.vaccineNormalizedName);
 	const values = vaccineNormalizedName ? [vaccineNormalizedName] : [];
 	const rows = await selectMany<VaccinationHistoryRow>(
-		`SELECT pet_vaccinations.applied_at, pet_vaccinations.vaccine_normalized_name
-		 FROM pet_vaccinations
-		 JOIN pets ON pets.id = pet_vaccinations.pet_id
-		 WHERE pet_vaccinations.deleted_at IS NULL
+		`SELECT pet_treatments.applied_at, pet_treatments.normalized_name AS vaccine_normalized_name
+		 FROM pet_treatments
+		 JOIN pets ON pets.id = pet_treatments.pet_id
+		 WHERE pet_treatments.kind = 'vaccine'
+			AND pet_treatments.deleted_at IS NULL
 			AND pets.deleted_at IS NULL
-			${vaccineNormalizedName ? 'AND pet_vaccinations.vaccine_normalized_name = $1' : ''}
-		 ORDER BY pet_vaccinations.applied_at ASC`,
+			${vaccineNormalizedName ? 'AND pet_treatments.normalized_name = $1' : ''}
+		 ORDER BY pet_treatments.applied_at ASC`,
 		values
 	);
 
@@ -276,10 +278,10 @@ export async function listAnalyticsVaccines(): Promise<VaccineAnalyticsVaccine[]
 	const rows = await selectMany<AnalyticsVaccineRow>(
 		`SELECT vaccine_name, vaccine_normalized_name, COUNT(*) AS count
 		 FROM (
-			SELECT vaccine_name, vaccine_normalized_name, applied_at, id
-			FROM pet_vaccinations
-			WHERE deleted_at IS NULL
-			ORDER BY vaccine_normalized_name, applied_at DESC, id DESC
+			SELECT name AS vaccine_name, normalized_name AS vaccine_normalized_name, applied_at, id
+			FROM pet_treatments
+			WHERE kind = 'vaccine' AND deleted_at IS NULL
+			ORDER BY normalized_name, applied_at DESC, id DESC
 		 )
 		 GROUP BY vaccine_normalized_name
 		 ORDER BY vaccine_name COLLATE NOCASE`

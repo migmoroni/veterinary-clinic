@@ -422,44 +422,27 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	`);
 
 	await database.execute(`
-		CREATE TABLE IF NOT EXISTS pet_vaccinations (
+		CREATE TABLE IF NOT EXISTS pet_treatments (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			pet_id INTEGER NOT NULL,
+			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
 			applied_at TEXT NOT NULL DEFAULT CURRENT_DATE CHECK(length(applied_at) <= ${FIELD_LIMITS.isoDate}),
-			vaccine_name TEXT NOT NULL CHECK(${requiredTextCheck('vaccine_name', FIELD_LIMITS.vaccineName)}),
-			vaccine_normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('vaccine_normalized_name', FIELD_LIMITS.vaccineNormalizedName)}),
-			dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', FIELD_LIMITS.vaccineDose)}),
+			name TEXT NOT NULL CHECK(${requiredTextCheck('name', Math.max(FIELD_LIMITS.vaccineName, FIELD_LIMITS.antiparasiticName))}),
+			normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', Math.max(FIELD_LIMITS.vaccineNormalizedName, FIELD_LIMITS.antiparasiticNormalizedName))}),
+			dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', Math.max(FIELD_LIMITS.vaccineDose, FIELD_LIMITS.antiparasiticTreatmentDose))}),
 			validity_value INTEGER NOT NULL CHECK(validity_value > 0),
 			validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months', 'years')),
-			observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.vaccinationObservation)}),
+			observation TEXT CHECK(${optionalTextCheck('observation', Math.max(FIELD_LIMITS.vaccinationObservation, FIELD_LIMITS.antiparasiticTreatmentObservation))}),
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			validity_ignored_at TEXT,
 			updated_at TEXT,
 			deleted_at TEXT,
 			purge_after TEXT,
 			FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE RESTRICT,
-			CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.vaccineValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.vaccineValidityMonths}) OR (validity_unit = 'years' AND validity_value <= ${FIELD_LIMITS.vaccineValidityYears}))
-		)
-	`);
-
-	await database.execute(`
-		CREATE TABLE IF NOT EXISTS pet_antiparasitic_treatments (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			pet_id INTEGER NOT NULL,
-			applied_at TEXT NOT NULL DEFAULT CURRENT_DATE CHECK(length(applied_at) <= ${FIELD_LIMITS.isoDate}),
-			antiparasitic_name TEXT NOT NULL CHECK(${requiredTextCheck('antiparasitic_name', FIELD_LIMITS.antiparasiticName)}),
-			antiparasitic_normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('antiparasitic_normalized_name', FIELD_LIMITS.antiparasiticNormalizedName)}),
-			dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', FIELD_LIMITS.antiparasiticTreatmentDose)}),
-			validity_value INTEGER NOT NULL CHECK(validity_value > 0),
-			validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months', 'years')),
-			observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.antiparasiticTreatmentObservation)}),
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			validity_ignored_at TEXT,
-			updated_at TEXT,
-			deleted_at TEXT,
-			purge_after TEXT,
-			FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE RESTRICT,
-			CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.antiparasiticTreatmentValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.antiparasiticTreatmentValidityMonths}) OR (validity_unit = 'years' AND validity_value <= ${FIELD_LIMITS.antiparasiticTreatmentValidityYears}))
+			CHECK(
+				(kind = 'vaccine' AND ((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.vaccineValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.vaccineValidityMonths}) OR (validity_unit = 'years' AND validity_value <= ${FIELD_LIMITS.vaccineValidityYears})))
+				OR (kind = 'antiparasitic' AND ((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.antiparasiticTreatmentValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.antiparasiticTreatmentValidityMonths}) OR (validity_unit = 'years' AND validity_value <= ${FIELD_LIMITS.antiparasiticTreatmentValidityYears})))
+			)
 		)
 	`);
 
@@ -499,18 +482,12 @@ export async function createCurrentIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_preventive_protocol_items_protocol_id ON preventive_protocol_items(protocol_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_preventive_protocol_items_catalog_item_id ON preventive_protocol_items(catalog_item_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_preventive_protocol_doses_protocol_id ON preventive_protocol_doses(protocol_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_pet_id ON pet_vaccinations(pet_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_applied_at ON pet_vaccinations(applied_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_vaccine_normalized_name ON pet_vaccinations(vaccine_normalized_name)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_latest_active ON pet_vaccinations(pet_id, vaccine_normalized_name, applied_at DESC, id DESC) WHERE deleted_at IS NULL AND validity_ignored_at IS NULL');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_validity_ignored_at ON pet_vaccinations(validity_ignored_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_deleted_at ON pet_vaccinations(deleted_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_pet_id ON pet_antiparasitic_treatments(pet_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_applied_at ON pet_antiparasitic_treatments(applied_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_antiparasitic_normalized_name ON pet_antiparasitic_treatments(antiparasitic_normalized_name)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_latest_active ON pet_antiparasitic_treatments(pet_id, antiparasitic_normalized_name, applied_at DESC, id DESC) WHERE deleted_at IS NULL AND validity_ignored_at IS NULL');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_validity_ignored_at ON pet_antiparasitic_treatments(validity_ignored_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_antiparasitic_treatments_deleted_at ON pet_antiparasitic_treatments(deleted_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_pet_id ON pet_treatments(pet_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_kind_applied_at ON pet_treatments(kind, applied_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_kind_normalized_name ON pet_treatments(kind, normalized_name)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_latest_active ON pet_treatments(kind, pet_id, normalized_name, applied_at DESC, id DESC) WHERE deleted_at IS NULL AND validity_ignored_at IS NULL');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_validity_ignored_at ON pet_treatments(validity_ignored_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_deleted_at ON pet_treatments(deleted_at)');
 }
 
 async function assertCurrentSchema(database: Database): Promise<void> {
@@ -533,8 +510,7 @@ async function assertCurrentSchema(database: Database): Promise<void> {
 		(await tableHasColumns(database, 'preventive_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'deleted_at', 'purge_after'])) &&
 		(await tableHasColumns(database, 'preventive_protocol_items', ['id', 'protocol_id', 'catalog_item_id', 'sort_order'])) &&
 		(await tableHasColumns(database, 'preventive_protocol_doses', ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order'])) &&
-		(await tableHasColumns(database, 'pet_vaccinations', ['id', 'pet_id', 'applied_at', 'vaccine_name', 'vaccine_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'validity_ignored_at'])) &&
-		(await tableHasColumns(database, 'pet_antiparasitic_treatments', ['id', 'pet_id', 'applied_at', 'antiparasitic_name', 'antiparasitic_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'validity_ignored_at']));
+		(await tableHasColumns(database, 'pet_treatments', ['id', 'pet_id', 'kind', 'applied_at', 'name', 'normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'validity_ignored_at']));
 
 	if (!valid) throw new Error('database_schema_current_invalid');
 }
@@ -545,8 +521,7 @@ async function hasCurrentUnversionedSchema(database: Database): Promise<boolean>
 		(await tableHasColumns(database, 'addresses', ['id', 'owner_id', 'workplace_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code'])) &&
 		(await tableHasColumns(database, 'contacts', ['id', 'owner_id', 'responsible_id', 'veterinarian_profile_id', 'workplace_id', 'kind', 'label', 'value'])) &&
 		(await tableHasColumns(database, 'preventive_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name'])) &&
-		(await tableHasColumns(database, 'pet_vaccinations', ['id', 'pet_id', 'applied_at', 'vaccine_name', 'vaccine_normalized_name', 'dose', 'validity_value', 'validity_unit'])) &&
-		(await tableHasColumns(database, 'pet_antiparasitic_treatments', ['id', 'pet_id', 'applied_at', 'antiparasitic_name', 'antiparasitic_normalized_name', 'dose', 'validity_value', 'validity_unit']));
+		(await tableHasColumns(database, 'pet_treatments', ['id', 'pet_id', 'kind', 'applied_at', 'name', 'normalized_name', 'dose', 'validity_value', 'validity_unit']));
 
 	return valid;
 }

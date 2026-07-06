@@ -73,9 +73,9 @@ function mapAntiparasiticTreatment(row: PetAntiparasiticTreatmentRow): PetAntipa
 
 async function getAntiparasiticTreatmentRow(id: number): Promise<PetAntiparasiticTreatmentRow | null> {
 	const rows = await selectMany<PetAntiparasiticTreatmentRow>(
-		`SELECT id, pet_id, applied_at, antiparasitic_name, antiparasitic_normalized_name, dose, validity_value, validity_unit, observation, validity_ignored_at, updated_at, deleted_at, purge_after
-		 FROM pet_antiparasitic_treatments
-		 WHERE id = $1
+		`SELECT id, pet_id, applied_at, name AS antiparasitic_name, normalized_name AS antiparasitic_normalized_name, dose, validity_value, validity_unit, observation, validity_ignored_at, updated_at, deleted_at, purge_after
+		 FROM pet_treatments
+		 WHERE id = $1 AND kind = 'antiparasitic'
 		 LIMIT 1`,
 		[id]
 	);
@@ -90,9 +90,10 @@ async function ensureAntiparasitic(name: string, normalizedName: string): Promis
 async function markPreviousEquivalentAntiparasiticTreatmentsIgnored(petId: number, antiparasiticNormalizedName: string): Promise<void> {
 	const rows = await selectMany<{ id: number; validity_ignored_at: string | null }>(
 		`SELECT id, validity_ignored_at
-		 FROM pet_antiparasitic_treatments
-		 WHERE pet_id = $1
-			AND antiparasitic_normalized_name = $2
+		 FROM pet_treatments
+		 WHERE kind = 'antiparasitic'
+			AND pet_id = $1
+			AND normalized_name = $2
 			AND deleted_at IS NULL
 		 ORDER BY applied_at DESC, id DESC`,
 		[petId, antiparasiticNormalizedName]
@@ -102,10 +103,10 @@ async function markPreviousEquivalentAntiparasiticTreatmentsIgnored(petId: numbe
 
 	for (const row of previousRows) {
 		await execute(
-			`UPDATE pet_antiparasitic_treatments
+			`UPDATE pet_treatments
 			 SET validity_ignored_at = CURRENT_TIMESTAMP,
 				updated_at = CURRENT_TIMESTAMP
-			 WHERE id = $1 AND validity_ignored_at IS NULL`,
+			 WHERE id = $1 AND kind = 'antiparasitic' AND validity_ignored_at IS NULL`,
 			[row.id]
 		);
 	}
@@ -129,9 +130,9 @@ export async function deleteAntiparasitic(id: number): Promise<void> {
 
 export async function listAntiparasiticTreatmentsByPet(petId: number, includeDeleted = false): Promise<PetAntiparasiticTreatment[]> {
 	const rows = await selectMany<PetAntiparasiticTreatmentRow>(
-		`SELECT id, pet_id, applied_at, antiparasitic_name, antiparasitic_normalized_name, dose, validity_value, validity_unit, observation, validity_ignored_at, updated_at, deleted_at, purge_after
-		 FROM pet_antiparasitic_treatments
-		 WHERE pet_id = $1 ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
+		`SELECT id, pet_id, applied_at, name AS antiparasitic_name, normalized_name AS antiparasitic_normalized_name, dose, validity_value, validity_unit, observation, validity_ignored_at, updated_at, deleted_at, purge_after
+		 FROM pet_treatments
+		 WHERE kind = 'antiparasitic' AND pet_id = $1 ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
 		 ORDER BY applied_at DESC, id DESC`,
 		[petId]
 	);
@@ -152,8 +153,8 @@ export async function createAntiparasiticTreatments(petId: number, inputs: PetAn
 
 		await ensureAntiparasitic(name, normalizedName);
 		await execute(
-			`INSERT INTO pet_antiparasitic_treatments (pet_id, applied_at, antiparasitic_name, antiparasitic_normalized_name, dose, validity_value, validity_unit, observation, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
+			`INSERT INTO pet_treatments (pet_id, kind, applied_at, name, normalized_name, dose, validity_value, validity_unit, observation, updated_at)
+			 VALUES ($1, 'antiparasitic', $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
 			[petId, appliedAt, name, normalizedName, dose, validityValue, validityUnit, observation]
 		);
 		affectedAntiparasitics.add(normalizedName);
@@ -170,19 +171,19 @@ export async function createAntiparasiticTreatments(petId: number, inputs: PetAn
 export async function softDeleteAntiparasiticTreatment(id: number): Promise<void> {
 	const deletedAt = nowIso();
 	await execute(
-		`UPDATE pet_antiparasitic_treatments
+		`UPDATE pet_treatments
 		 SET deleted_at = $2, purge_after = $3, updated_at = CURRENT_TIMESTAMP
-		 WHERE id = $1 AND deleted_at IS NULL`,
+		 WHERE id = $1 AND kind = 'antiparasitic' AND deleted_at IS NULL`,
 		[id, deletedAt, computePurgeAfter(deletedAt)]
 	);
 }
 
 export async function setAntiparasiticTreatmentValidityIgnored(id: number, ignored: boolean): Promise<PetAntiparasiticTreatment> {
 	await execute(
-		`UPDATE pet_antiparasitic_treatments
+		`UPDATE pet_treatments
 		 SET validity_ignored_at = ${ignored ? 'COALESCE(validity_ignored_at, CURRENT_TIMESTAMP)' : 'NULL'},
 			updated_at = CURRENT_TIMESTAMP
-		 WHERE id = $1 AND deleted_at IS NULL`,
+		 WHERE id = $1 AND kind = 'antiparasitic' AND deleted_at IS NULL`,
 		[id]
 	);
 
