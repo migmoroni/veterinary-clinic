@@ -368,8 +368,8 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
 			UNIQUE(kind, normalized_name),
-			CHECK((kind = 'vaccine' AND ${requiredTextCheck('name', FIELD_LIMITS.vaccineName)}) OR (kind = 'antiparasitic' AND ${requiredTextCheck('name', FIELD_LIMITS.antiparasiticName)})),
-			CHECK((kind = 'vaccine' AND ${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedName)}) OR (kind = 'antiparasitic' AND ${requiredTextCheck('normalized_name', FIELD_LIMITS.antiparasiticNormalizedName)}))
+			CHECK(${requiredTextCheck('name', FIELD_LIMITS.treatmentName)}),
+			CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.treatmentNormalizedName)})
 		)
 	`);
 
@@ -381,7 +381,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.medicationProtocolName)}),
 			normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.medicationProtocolNormalizedName)}),
 			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.medicationSpeciesJson)}),
-			observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.medicationProtocolObservation)}),
+			observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.treatmentObservation)}),
 			sort_order INTEGER NOT NULL DEFAULT 0,
 			hidden_at TEXT,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -410,14 +410,14 @@ async function createCurrentSchema(database: Database): Promise<void> {
 		CREATE TABLE IF NOT EXISTS medication_protocol_doses (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			protocol_id INTEGER NOT NULL,
-			dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', FIELD_LIMITS.medicationProtocolDose)}),
+			dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', FIELD_LIMITS.treatmentDose)}),
 			validity_value INTEGER NOT NULL CHECK(validity_value > 0),
 			validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months', 'years')),
 			sort_order INTEGER NOT NULL DEFAULT 0,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
 			FOREIGN KEY (protocol_id) REFERENCES medication_protocols(id) ON DELETE CASCADE,
-			CHECK((validity_unit = 'days' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityDays, FIELD_LIMITS.antiparasiticTreatmentValidityDays)}) OR (validity_unit = 'months' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityMonths, FIELD_LIMITS.antiparasiticTreatmentValidityMonths)}) OR (validity_unit = 'years' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityYears, FIELD_LIMITS.antiparasiticTreatmentValidityYears)}))
+			CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.treatmentValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.treatmentValidityMonths}) OR (validity_unit = 'years' AND validity_value <= ${FIELD_LIMITS.treatmentValidityYears}))
 		)
 	`);
 
@@ -427,12 +427,12 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			pet_id INTEGER NOT NULL,
 			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
 			applied_at TEXT NOT NULL DEFAULT CURRENT_DATE CHECK(length(applied_at) <= ${FIELD_LIMITS.isoDate}),
-			name TEXT NOT NULL CHECK(${requiredTextCheck('name', Math.max(FIELD_LIMITS.vaccineName, FIELD_LIMITS.antiparasiticName))}),
-			normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', Math.max(FIELD_LIMITS.vaccineNormalizedName, FIELD_LIMITS.antiparasiticNormalizedName))}),
-			dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', Math.max(FIELD_LIMITS.vaccineDose, FIELD_LIMITS.antiparasiticTreatmentDose))}),
+			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.treatmentName)}),
+			normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.treatmentNormalizedName)}),
+			dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', FIELD_LIMITS.treatmentDose)}),
 			validity_value INTEGER NOT NULL CHECK(validity_value > 0),
 			validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months', 'years')),
-			observation TEXT CHECK(${optionalTextCheck('observation', Math.max(FIELD_LIMITS.vaccinationObservation, FIELD_LIMITS.antiparasiticTreatmentObservation))}),
+			observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.treatmentObservation)}),
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			validity_ignored_at TEXT,
 			updated_at TEXT,
@@ -440,8 +440,9 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			purge_after TEXT,
 			FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE RESTRICT,
 			CHECK(
-				(kind = 'vaccine' AND ((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.vaccineValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.vaccineValidityMonths}) OR (validity_unit = 'years' AND validity_value <= ${FIELD_LIMITS.vaccineValidityYears})))
-				OR (kind = 'antiparasitic' AND ((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.antiparasiticTreatmentValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.antiparasiticTreatmentValidityMonths}) OR (validity_unit = 'years' AND validity_value <= ${FIELD_LIMITS.antiparasiticTreatmentValidityYears})))
+				(validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.treatmentValidityDays})
+				OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.treatmentValidityMonths})
+				OR (validity_unit = 'years' AND validity_value <= ${FIELD_LIMITS.treatmentValidityYears})
 			)
 		)
 	`);

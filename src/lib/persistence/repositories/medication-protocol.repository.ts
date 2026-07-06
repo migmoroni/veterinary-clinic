@@ -67,10 +67,10 @@ function normalizeValidityValue(value: number, unit: MedicationValidityUnit): nu
 	const normalized = Number.isFinite(value) ? Math.trunc(value) : 0;
 	const max =
 		unit === 'days'
-			? Math.max(FIELD_LIMITS.vaccineValidityDays, FIELD_LIMITS.antiparasiticTreatmentValidityDays)
+			? FIELD_LIMITS.treatmentValidityDays
 			: unit === 'months'
-				? Math.max(FIELD_LIMITS.vaccineValidityMonths, FIELD_LIMITS.antiparasiticTreatmentValidityMonths)
-				: Math.max(FIELD_LIMITS.vaccineValidityYears, FIELD_LIMITS.antiparasiticTreatmentValidityYears);
+				? FIELD_LIMITS.treatmentValidityMonths
+				: FIELD_LIMITS.treatmentValidityYears;
 	if (normalized <= 0 || normalized > max) throw new Error('protocol_validity_required');
 	return normalized;
 }
@@ -243,7 +243,7 @@ export async function saveMedicationProtocol(input: MedicationProtocolInput, id?
 	const { name, normalizedName } = normalizeName(input.name);
 	const species = stringifyMedicationSpecies(input.species);
 	assertTextLimit(species, FIELD_LIMITS.medicationSpeciesJson);
-	const observation = nullableMultilineText(input.observation, FIELD_LIMITS.medicationProtocolObservation);
+	const observation = nullableMultilineText(input.observation, FIELD_LIMITS.treatmentObservation);
 	const catalogItemIds = await resolveProtocolItemIds(kind, input.catalogItemIds);
 
 	let protocolId = id ?? 0;
@@ -316,7 +316,7 @@ export async function deleteMedicationProtocol(id: number): Promise<void> {
 export async function saveMedicationProtocolDose(protocolId: number, input: MedicationProtocolDoseInput, id?: number): Promise<MedicationProtocol> {
 	await protocolKind(protocolId);
 	await assertMedicationProtocolEditable(protocolId);
-	const dose = requiredText(input.dose, 'protocol_dose_required', FIELD_LIMITS.medicationProtocolDose);
+	const dose = requiredText(input.dose, 'protocol_dose_required', FIELD_LIMITS.treatmentDose);
 	const validityUnit = normalizeValidityUnit(input.validityUnit);
 	const validityValue = normalizeValidityValue(Number(input.validityValue), validityUnit);
 

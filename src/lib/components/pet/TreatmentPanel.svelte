@@ -61,8 +61,15 @@
 		defaultValidityUnit: TreatmentValidityUnit;
 	}
 
+	const treatmentPanelLimits = {
+		nameLimit: FIELD_LIMITS.treatmentName,
+		doseLimit: FIELD_LIMITS.treatmentDose,
+		observationLimit: FIELD_LIMITS.treatmentObservation
+	};
+
 	const panelConfigs = {
 		vaccine: {
+			...treatmentPanelLimits,
 			prefix: 'vaccine',
 			sectionTitle: 'vaccine.sectionTitle',
 			manageLabel: 'vaccine.manageVaccines',
@@ -88,13 +95,11 @@
 			validityIgnoredSaved: 'vaccine.validityIgnoredSaved',
 			validityRestoredSaved: 'vaccine.validityRestoredSaved',
 			deleteConfirm: 'vaccine.deleteConfirm',
-			nameLimit: FIELD_LIMITS.vaccineName,
-			doseLimit: FIELD_LIMITS.vaccineDose,
-			observationLimit: FIELD_LIMITS.vaccinationObservation,
 			defaultValidityValue: 12,
 			defaultValidityUnit: 'months'
 		},
 		antiparasitic: {
+			...treatmentPanelLimits,
 			prefix: 'antiparasiticTreatment',
 			sectionTitle: 'antiparasiticTreatment.sectionTitle',
 			manageLabel: 'antiparasiticTreatment.manageAntiparasitics',
@@ -120,9 +125,6 @@
 			validityIgnoredSaved: 'antiparasiticTreatment.validityIgnoredSaved',
 			validityRestoredSaved: 'antiparasiticTreatment.validityRestoredSaved',
 			deleteConfirm: 'antiparasiticTreatment.deleteConfirm',
-			nameLimit: FIELD_LIMITS.antiparasiticName,
-			doseLimit: FIELD_LIMITS.antiparasiticTreatmentDose,
-			observationLimit: FIELD_LIMITS.antiparasiticTreatmentObservation,
 			defaultValidityValue: 6,
 			defaultValidityUnit: 'months'
 		}

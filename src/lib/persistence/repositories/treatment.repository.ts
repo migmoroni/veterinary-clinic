@@ -22,42 +22,20 @@ interface PetTreatmentRow {
 }
 
 interface TreatmentConfig {
-	nameLimit: number;
-	doseLimit: number;
-	observationLimit: number;
-	validityDaysLimit: number;
-	validityMonthsLimit: number;
-	validityYearsLimit: number;
 	defaultValidityValue: number;
 	defaultValidityUnit: TreatmentValidityUnit;
 }
 
 export const treatmentConfigs: Record<TreatmentKind, TreatmentConfig> = {
 	vaccine: {
-		nameLimit: FIELD_LIMITS.vaccineName,
-		doseLimit: FIELD_LIMITS.vaccineDose,
-		observationLimit: FIELD_LIMITS.vaccinationObservation,
-		validityDaysLimit: FIELD_LIMITS.vaccineValidityDays,
-		validityMonthsLimit: FIELD_LIMITS.vaccineValidityMonths,
-		validityYearsLimit: FIELD_LIMITS.vaccineValidityYears,
 		defaultValidityValue: 12,
 		defaultValidityUnit: 'months'
 	},
 	antiparasitic: {
-		nameLimit: FIELD_LIMITS.antiparasiticName,
-		doseLimit: FIELD_LIMITS.antiparasiticTreatmentDose,
-		observationLimit: FIELD_LIMITS.antiparasiticTreatmentObservation,
-		validityDaysLimit: FIELD_LIMITS.antiparasiticTreatmentValidityDays,
-		validityMonthsLimit: FIELD_LIMITS.antiparasiticTreatmentValidityMonths,
-		validityYearsLimit: FIELD_LIMITS.antiparasiticTreatmentValidityYears,
 		defaultValidityValue: 6,
 		defaultValidityUnit: 'months'
 	}
 };
-
-function configFor(kind: TreatmentKind): TreatmentConfig {
-	return treatmentConfigs[kind];
-}
 
 function requiredText(value: string, error: string, maxLength?: number): string {
 	const trimmed = value.trim();
@@ -77,16 +55,15 @@ function normalizeValidityUnit(value: string): TreatmentValidityUnit {
 	throw new Error('treatment_validity_required');
 }
 
-function normalizeValidityValue(kind: TreatmentKind, value: number, unit: TreatmentValidityUnit): number {
+function normalizeValidityValue(value: number, unit: TreatmentValidityUnit): number {
 	const normalized = Number.isFinite(value) ? Math.trunc(value) : 0;
-	const config = configFor(kind);
-	const max = unit === 'days' ? config.validityDaysLimit : unit === 'months' ? config.validityMonthsLimit : config.validityYearsLimit;
+	const max = unit === 'days' ? FIELD_LIMITS.treatmentValidityDays : unit === 'months' ? FIELD_LIMITS.treatmentValidityMonths : FIELD_LIMITS.treatmentValidityYears;
 	if (normalized <= 0 || normalized > max) throw new Error('treatment_validity_required');
 	return normalized;
 }
 
-function normalizeDose(kind: TreatmentKind, value: string): string {
-	return requiredText(value, 'treatment_dose_required', configFor(kind).doseLimit);
+function normalizeDose(value: string): string {
+	return requiredText(value, 'treatment_dose_required', FIELD_LIMITS.treatmentDose);
 }
 
 function mapTreatment(row: PetTreatmentRow): PetTreatment {
@@ -179,10 +156,10 @@ export async function createTreatments(kind: TreatmentKind, petId: number, input
 	for (const input of inputs) {
 		const appliedAt = requiredIsoDate(input.appliedAt);
 		const { name, normalizedName } = normalizeMedicationCatalogInput(kind, input.name);
-		const dose = normalizeDose(kind, input.dose);
+		const dose = normalizeDose(input.dose);
 		const validityUnit = normalizeValidityUnit(input.validityUnit);
-		const validityValue = normalizeValidityValue(kind, Number(input.validityValue), validityUnit);
-		const observation = nullableMultilineText(input.observation, configFor(kind).observationLimit);
+		const validityValue = normalizeValidityValue(Number(input.validityValue), validityUnit);
+		const observation = nullableMultilineText(input.observation, FIELD_LIMITS.treatmentObservation);
 
 		await ensureMedicationCatalogItem(kind, name, normalizedName);
 		await execute(

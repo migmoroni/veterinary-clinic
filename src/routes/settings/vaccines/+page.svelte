@@ -772,9 +772,9 @@
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
 								<span>{t('vaccine.name')}</span>
-								<CharacterLimitHint value={newVaccineName} max={FIELD_LIMITS.vaccineName} />
+								<CharacterLimitHint value={newVaccineName} max={FIELD_LIMITS.treatmentName} />
 							</span>
-							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newVaccineName} maxlength={FIELD_LIMITS.vaccineName} required />
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newVaccineName} maxlength={FIELD_LIMITS.treatmentName} required />
 						</label>
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
@@ -822,9 +822,9 @@
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
 									<span>{t('vaccine.name')}</span>
-									<CharacterLimitHint value={vaccineDraftNames[vaccine.id] ?? vaccine.name} max={FIELD_LIMITS.vaccineName} />
+									<CharacterLimitHint value={vaccineDraftNames[vaccine.id] ?? vaccine.name} max={FIELD_LIMITS.treatmentName} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={vaccineDraftNames[vaccine.id] ?? vaccine.name} maxlength={FIELD_LIMITS.vaccineName} disabled={!canEditMedicationCatalogItem(vaccine)} required oninput={(event) => (vaccineDraftNames = { ...vaccineDraftNames, [vaccine.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={vaccineDraftNames[vaccine.id] ?? vaccine.name} maxlength={FIELD_LIMITS.treatmentName} disabled={!canEditMedicationCatalogItem(vaccine)} required oninput={(event) => (vaccineDraftNames = { ...vaccineDraftNames, [vaccine.id]: inputValue(event) })} />
 							</label>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
@@ -895,9 +895,9 @@
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
 								<span>{t('antiparasiticTreatment.name')}</span>
-								<CharacterLimitHint value={newAntiparasiticName} max={FIELD_LIMITS.antiparasiticName} />
+								<CharacterLimitHint value={newAntiparasiticName} max={FIELD_LIMITS.treatmentName} />
 							</span>
-							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newAntiparasiticName} maxlength={FIELD_LIMITS.antiparasiticName} required />
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newAntiparasiticName} maxlength={FIELD_LIMITS.treatmentName} required />
 						</label>
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
@@ -945,9 +945,9 @@
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
 									<span>{t('antiparasiticTreatment.name')}</span>
-									<CharacterLimitHint value={antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name} max={FIELD_LIMITS.antiparasiticName} />
+									<CharacterLimitHint value={antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name} max={FIELD_LIMITS.treatmentName} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name} maxlength={FIELD_LIMITS.antiparasiticName} disabled={!canEditMedicationCatalogItem(antiparasitic)} required oninput={(event) => (antiparasiticDraftNames = { ...antiparasiticDraftNames, [antiparasitic.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name} maxlength={FIELD_LIMITS.treatmentName} disabled={!canEditMedicationCatalogItem(antiparasitic)} required oninput={(event) => (antiparasiticDraftNames = { ...antiparasiticDraftNames, [antiparasitic.id]: inputValue(event) })} />
 							</label>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
@@ -1054,7 +1054,7 @@
 
 						<div class="lg:col-span-2 flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<label for="new-protocol-observation">{t('protocol.observation')}</label>
-							<Textarea id="new-protocol-observation" bind:value={newProtocolObservation} ariaLabel={t('protocol.observation')} maxLength={FIELD_LIMITS.medicationProtocolObservation} class="min-h-24" />
+							<Textarea id="new-protocol-observation" bind:value={newProtocolObservation} ariaLabel={t('protocol.observation')} maxLength={FIELD_LIMITS.treatmentObservation} class="min-h-24" />
 						</div>
 
 						<button type="submit" class="lg:col-span-2 inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={saving}>
@@ -1130,7 +1130,7 @@
 
 								<div class="lg:col-span-full flex min-w-0 flex-col gap-1 text-sm font-medium">
 									<label for={`protocol-observation-${protocol.id}`}>{t('protocol.observation')}</label>
-									<Textarea id={`protocol-observation-${protocol.id}`} value={protocolDraftObservation(protocol)} oninput={(value) => setProtocolObservation(protocol, value)} readonly={!canEditMedicationProtocol(protocol)} ariaLabel={t('protocol.observation')} maxLength={FIELD_LIMITS.medicationProtocolObservation} class="min-h-20" />
+									<Textarea id={`protocol-observation-${protocol.id}`} value={protocolDraftObservation(protocol)} oninput={(value) => setProtocolObservation(protocol, value)} readonly={!canEditMedicationProtocol(protocol)} ariaLabel={t('protocol.observation')} maxLength={FIELD_LIMITS.treatmentObservation} class="min-h-20" />
 								</div>
 							</form>
 
@@ -1140,7 +1140,7 @@
 									<form class="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_12rem_auto] lg:items-end" onsubmit={(event) => void addProtocolDose(event, protocol)}>
 										<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 											<span>{t('protocol.doseText')}</span>
-											<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={newDoseDoses[protocol.id] ?? ''} maxlength={FIELD_LIMITS.medicationProtocolDose} required oninput={(event) => setNewDose(protocol.id, inputValue(event))} />
+											<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={newDoseDoses[protocol.id] ?? ''} maxlength={FIELD_LIMITS.treatmentDose} required oninput={(event) => setNewDose(protocol.id, inputValue(event))} />
 										</label>
 										<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 											<span>{t('protocol.doseValidity')}</span>
@@ -1158,7 +1158,7 @@
 										<form class="grid gap-3 rounded-md border border-border p-3 lg:grid-cols-[minmax(0,1fr)_12rem_auto_auto] lg:items-end" onsubmit={(event) => void saveExistingProtocolDose(event, protocol, protocolDose)}>
 											<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 												<span>{t('protocol.doseText')}</span>
-												<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-70" value={doseDraftDoses[protocolDose.id] ?? protocolDose.dose} maxlength={FIELD_LIMITS.medicationProtocolDose} required disabled={!canEditMedicationProtocol(protocol)} oninput={(event) => (doseDraftDoses = { ...doseDraftDoses, [protocolDose.id]: inputValue(event) })} />
+												<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-70" value={doseDraftDoses[protocolDose.id] ?? protocolDose.dose} maxlength={FIELD_LIMITS.treatmentDose} required disabled={!canEditMedicationProtocol(protocol)} oninput={(event) => (doseDraftDoses = { ...doseDraftDoses, [protocolDose.id]: inputValue(event) })} />
 											</label>
 											<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 												<span>{t('protocol.doseValidity')}</span>

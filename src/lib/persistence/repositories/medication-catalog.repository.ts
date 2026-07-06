@@ -29,21 +29,17 @@ interface MedicationCatalogConfig {
 	normalize: (value: string) => string;
 }
 
+const treatmentCatalogConfig: MedicationCatalogConfig = {
+	nameLimit: FIELD_LIMITS.treatmentName,
+	normalizedNameLimit: FIELD_LIMITS.treatmentNormalizedName,
+	requiredError: 'treatment_name_required',
+	saveFailedError: 'treatment_save_failed',
+	normalize: normalizeTreatmentName
+};
+
 const catalogConfigs: Record<MedicationCatalogKind, MedicationCatalogConfig> = {
-	vaccine: {
-		nameLimit: FIELD_LIMITS.vaccineName,
-		normalizedNameLimit: FIELD_LIMITS.vaccineNormalizedName,
-		requiredError: 'treatment_name_required',
-		saveFailedError: 'treatment_save_failed',
-		normalize: normalizeTreatmentName
-	},
-	antiparasitic: {
-		nameLimit: FIELD_LIMITS.antiparasiticName,
-		normalizedNameLimit: FIELD_LIMITS.antiparasiticNormalizedName,
-		requiredError: 'treatment_name_required',
-		saveFailedError: 'treatment_save_failed',
-		normalize: normalizeTreatmentName
-	}
+	vaccine: treatmentCatalogConfig,
+	antiparasitic: treatmentCatalogConfig
 };
 
 function configFor(kind: MedicationCatalogKind): MedicationCatalogConfig {
