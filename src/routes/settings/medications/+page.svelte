@@ -352,6 +352,8 @@
 	}
 
 	function openCatalogImageManager(kind: TreatmentKind, item: TreatmentCatalogItem) {
+		if (!canEditMedicationCatalogItem(item)) return;
+
 		imageManagerTarget = { kind, itemId: item.id };
 		managedImages = [...catalogDraftImages(kind, item)];
 		imageEditIndex = null;
@@ -624,10 +626,12 @@
 						<form class="grid gap-4 rounded-md border border-border bg-background p-3 lg:grid-cols-[9rem_minmax(0,1fr)]" onsubmit={(event) => { event.preventDefault(); void saveExistingCatalogItem(activeKind, item); }}>
 							<div class="flex min-w-0 flex-col gap-2">
 								<MedicationImage kind={activeKind} imageBytes={itemPrimaryImage?.imageBytes ?? null} alt={item.name} className="h-32 w-full bg-muted/60" imageClass="h-full w-full object-contain" iconClass="size-9 text-primary" />
-								<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} onclick={() => openCatalogImageManager(activeKind, item)}>
-									<Images class="size-4" />
-									{t('practiceProfile.manageImages')}
-								</button>
+								{#if canEditMedicationCatalogItem(item)}
+									<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} onclick={() => openCatalogImageManager(activeKind, item)}>
+										<Images class="size-4" />
+										{t('practiceProfile.manageImages')}
+									</button>
+								{/if}
 							</div>
 							<div class="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto] xl:items-start">
 								<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">

@@ -258,6 +258,7 @@ export async function saveMedicationCatalogItemImages(kind: MedicationCatalogKin
 	);
 	const row = rows[0];
 	if (!row) throw new Error(configFor(kind).saveFailedError);
+	if (!canEditMedicationCatalogItem(row)) throw new Error('medication_catalog_system_item');
 
 	const collection = await replaceImageCollection(MEDICATION_CATALOG_IMAGE_COLLECTION_TYPE, id, images, MEDICATION_CATALOG_IMAGE_POLICY);
 	return mapCatalogItem(row, collection.items);
