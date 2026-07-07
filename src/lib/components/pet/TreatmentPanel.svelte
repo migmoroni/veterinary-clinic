@@ -187,7 +187,10 @@
 			value: item.name,
 			label: item.name,
 			description: [item.manufacturer, ...item.aliases].filter(Boolean).join(' · '),
-			searchText: [item.manufacturer, ...item.aliases, ...item.regions].filter(Boolean).join(' ')
+			searchText: [item.manufacturer, ...item.aliases, ...item.regions].filter(Boolean).join(' '),
+			imageBytes: item.primaryImage?.imageBytes ?? null,
+			imageAlt: item.name,
+			fallbackIcon: kind === 'vaccine' ? Syringe : Pill
 		}));
 	}
 
@@ -430,7 +433,7 @@
 
 			<div class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 				<label for={`${config.prefix}-name-${petId}`}>{t(config.stepItem)}</label>
-				<SearchableSelect id={`${config.prefix}-name-${petId}`} bind:value={treatmentName} emptyValue="" options={catalogOptions()} placeholder={t(config.namePlaceholder)} emptyLabel={t('form.noOptions')} disabled={knownNames.length === 0} onchange={handleTreatmentChange} />
+				<SearchableSelect id={`${config.prefix}-name-${petId}`} bind:value={treatmentName} emptyValue="" options={catalogOptions()} placeholder={t(config.namePlaceholder)} emptyLabel={t('form.noOptions')} disabled={knownNames.length === 0} showOptionMedia onchange={handleTreatmentChange} />
 			</div>
 
 			<div class="grid gap-3 md:col-span-2 sm:grid-cols-2">

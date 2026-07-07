@@ -144,3 +144,8 @@ export async function replaceImageCollection(
 	if (!saved) throw new Error('image_collection_save_failed');
 	return saved;
 }
+
+export async function deleteImageCollection(entityType: string, entityId: number): Promise<void> {
+	const normalizedEntityType = requireLimitedText(entityType, FIELD_LIMITS.imageCollectionEntityType);
+	await execute('DELETE FROM image_collections WHERE entity_type = $1 AND entity_id = $2', [normalizedEntityType, entityId]);
+}

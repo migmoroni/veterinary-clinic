@@ -1,5 +1,5 @@
 import type Database from '@tauri-apps/plugin-sql';
-import { defaultMedicationCatalogItems } from '$lib/domain/medication/default-catalog.js';
+import { defaultMedicationCatalogItems, type DefaultMedicationCatalogImage } from '$lib/domain/medication/default-catalog.js';
 import { defaultMedicationProtocols } from '$lib/domain/medication/default-protocol.js';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 import { incrementalSchemaMigrations } from './schema-migrations/registry.js';
@@ -37,6 +37,19 @@ interface MigrationRecordRow {
 	version: number;
 }
 
+interface MedicationCatalogRow {
+	id: number;
+	origin: string;
+}
+
+interface ImageCollectionRow {
+	id: number;
+}
+
+interface CountRow {
+	total: number;
+}
+
 export interface SchemaStatus {
 	currentVersion: number;
 	targetVersion: number;
@@ -57,7 +70,11 @@ function requiredTextCheck(column: string, maxLength: number): string {
 interface RunMigrationsOptions {
 	seedDefaultData?: boolean;
 	createIndexes?: boolean;
+	syncDefaultMedicationData?: boolean;
 }
+
+const MEDICATION_CATALOG_IMAGE_COLLECTION_TYPE = 'medication_catalog_item';
+const MEDICATION_CATALOG_IMAGE_MAX_ITEMS = 9;
 
 function normalizeMedicationCatalogName(value: string): string {
 	return value
@@ -69,6 +86,12 @@ function normalizeMedicationCatalogName(value: string): string {
 
 function quoteIdentifier(identifier: string): string {
 	return `"${identifier.replace(/"/g, '""')}"`;
+}
+
+function bytesToSqlLiteral(value: Uint8Array): string {
+	if (value.length === 0) throw new Error('image_required');
+	const hex = Array.from(value, (byte) => byte.toString(16).padStart(2, '0')).join('');
+	return `X'${hex}'`;
 }
 
 async function tableHasColumns(database: Database, table: string, columns: string[]): Promise<boolean> {
@@ -99,13 +122,98 @@ async function isEmptyDatabase(database: Database): Promise<boolean> {
 	return rows.length === 0;
 }
 
-async function seedDefaultMedicationCatalog(database: Database): Promise<void> {
-	for (const item of defaultMedicationCatalogItems) {
+async function loadDefaultMedicationImageBytes(source: string): Promise<Uint8Array> {
+	if (typeof fetch !== 'function') throw new Error('default_medication_image_loader_unavailable');
+	const response = await fetch(source);
+	if (!response.ok) throw new Error(`default_medication_image_not_found:${source}`);
+	const buffer = await response.arrayBuffer();
+	const bytes = new Uint8Array(buffer);
+	if (bytes.length === 0) throw new Error(`default_medication_image_empty:${source}`);
+	return bytes;
+}
+
+function normalizedDefaultMedicationImages(images: readonly DefaultMedicationCatalogImage[] | null | undefined): DefaultMedicationCatalogImage[] {
+	const normalized = (images ?? []).filter((image) => image.source.trim());
+	if (normalized.length === 0) return [];
+	if (normalized.length > MEDICATION_CATALOG_IMAGE_MAX_ITEMS) throw new Error('default_medication_image_limit_exceeded');
+	if (normalized.filter((image) => image.primary).length > 1) throw new Error('default_medication_image_multiple_primary');
+	return normalized;
+}
+
+async function medicationImageCollectionItemCount(database: Database, catalogItemId: number): Promise<number> {
+	const rows = await database.select<CountRow[]>(
+		`SELECT COUNT(*) AS total
+		 FROM image_collection_items item
+		 INNER JOIN image_collections collection ON collection.id = item.collection_id
+		 WHERE collection.entity_type = $1 AND collection.entity_id = $2`,
+		[MEDICATION_CATALOG_IMAGE_COLLECTION_TYPE, catalogItemId]
+	);
+	return Number(rows[0]?.total ?? 0);
+}
+
+async function ensureDefaultMedicationImages(database: Database, catalogItemId: number, images: readonly DefaultMedicationCatalogImage[] | null | undefined): Promise<void> {
+	const normalizedImages = normalizedDefaultMedicationImages(images);
+	if (normalizedImages.length === 0) return;
+	if ((await medicationImageCollectionItemCount(database, catalogItemId)) > 0) return;
+
+	await database.execute(
+		`INSERT INTO image_collections (entity_type, entity_id, primary_required, max_items, updated_at)
+		 VALUES ($1, $2, 1, $3, CURRENT_TIMESTAMP)
+		 ON CONFLICT(entity_type, entity_id) DO UPDATE SET
+			primary_required = excluded.primary_required,
+			max_items = excluded.max_items,
+			updated_at = CURRENT_TIMESTAMP`,
+		[MEDICATION_CATALOG_IMAGE_COLLECTION_TYPE, catalogItemId, MEDICATION_CATALOG_IMAGE_MAX_ITEMS]
+	);
+
+	const collectionRows = await database.select<ImageCollectionRow[]>(
+		'SELECT id FROM image_collections WHERE entity_type = $1 AND entity_id = $2 LIMIT 1',
+		[MEDICATION_CATALOG_IMAGE_COLLECTION_TYPE, catalogItemId]
+	);
+	const collectionId = collectionRows[0]?.id;
+	if (!collectionId) throw new Error('default_medication_image_collection_not_found');
+
+	await database.execute('DELETE FROM image_collection_items WHERE collection_id = $1', [collectionId]);
+	const explicitPrimaryIndex = normalizedImages.findIndex((image) => image.primary);
+	const primaryIndex = explicitPrimaryIndex >= 0 ? explicitPrimaryIndex : 0;
+
+	for (const [index, image] of normalizedImages.entries()) {
+		const description = image.description?.trim() ?? '';
+		if (description.length > FIELD_LIMITS.imageDescription) throw new Error('field_limit_exceeded');
+		const imageBytes = await loadDefaultMedicationImageBytes(image.source);
 		await database.execute(
-			`INSERT OR IGNORE INTO medication_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
-			[item.kind, item.name, normalizeMedicationCatalogName(item.name), JSON.stringify(item.species), JSON.stringify(item.aliases), item.manufacturer, item.origin, JSON.stringify(item.regions)]
+			`INSERT INTO image_collection_items (
+				collection_id, image_blob, original_image_blob, description, is_primary, sort_order, updated_at
+			)
+			 VALUES ($1, ${bytesToSqlLiteral(imageBytes)}, ${bytesToSqlLiteral(imageBytes)}, $2, $3, $4, CURRENT_TIMESTAMP)`,
+			[collectionId, description || null, index === primaryIndex ? 1 : 0, index]
 		);
+	}
+}
+
+async function syncDefaultMedicationCatalog(database: Database): Promise<void> {
+	for (const item of defaultMedicationCatalogItems) {
+		const normalizedName = normalizeMedicationCatalogName(item.name);
+		await database.execute(
+			`INSERT INTO medication_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
+			 ON CONFLICT(kind, normalized_name) DO UPDATE SET
+				name = excluded.name,
+				species = excluded.species,
+				aliases = excluded.aliases,
+				manufacturer = excluded.manufacturer,
+				regions = excluded.regions,
+				updated_at = CURRENT_TIMESTAMP
+			 WHERE medication_catalog_items.origin = 'system'`,
+			[item.kind, item.name, normalizedName, JSON.stringify(item.species), JSON.stringify(item.aliases), item.manufacturer, item.origin, JSON.stringify(item.regions)]
+		);
+
+		const rows = await database.select<MedicationCatalogRow[]>(
+			'SELECT id, origin FROM medication_catalog_items WHERE kind = $1 AND normalized_name = $2 LIMIT 1',
+			[item.kind, normalizedName]
+		);
+		const catalogItem = rows[0];
+		if (catalogItem?.origin === 'system') await ensureDefaultMedicationImages(database, catalogItem.id, item.images);
 	}
 }
 
@@ -679,8 +787,9 @@ async function applyMigration(database: Database, migration: SchemaMigration): P
 }
 
 export async function runMigrations(database: Database, options: RunMigrationsOptions = {}): Promise<void> {
-	const { createIndexes = true, seedDefaultData = false } = options;
+	const { createIndexes = true, seedDefaultData = false, syncDefaultMedicationData = true } = options;
 	const status = await assertDatabaseCanMigrate(database);
+	let appliedSchemaChange = false;
 
 	await database.execute('BEGIN IMMEDIATE');
 	try {
@@ -690,11 +799,13 @@ export async function runMigrations(database: Database, options: RunMigrationsOp
 			await createCurrentSchema(database);
 			await assertCurrentSchema(database);
 			await backfillMigrationMetadata(database, CURRENT_SCHEMA_VERSION);
+			appliedSchemaChange = true;
 		} else {
 			const unappliedMigrations = SCHEMA_MIGRATIONS.filter((migration) => migration.version > status.currentVersion && migration.version <= CURRENT_SCHEMA_VERSION);
 			for (const migration of unappliedMigrations) {
 				await applyMigration(database, migration);
 			}
+			appliedSchemaChange = unappliedMigrations.length > 0;
 
 			if (status.detection === 'versioned' && status.migrationRequired && unappliedMigrations.length === 0) {
 				await backfillMigrationMetadata(database, status.currentVersion);
@@ -703,10 +814,8 @@ export async function runMigrations(database: Database, options: RunMigrationsOp
 
 		await assertCurrentSchema(database);
 
-		if (seedDefaultData) {
-			await seedDefaultMedicationCatalog(database);
-			await seedDefaultMedicationProtocols(database);
-		}
+		if (seedDefaultData || (syncDefaultMedicationData && appliedSchemaChange)) await syncDefaultMedicationCatalog(database);
+		if (seedDefaultData) await seedDefaultMedicationProtocols(database);
 		if (createIndexes) await createCurrentIndexes(database);
 		await validateDatabaseIntegrity(database);
 		await database.execute('COMMIT');

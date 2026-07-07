@@ -1,7 +1,9 @@
 import { canEditMedicationCatalogItem, parseMedicationAliases, parseMedicationRegions, parseMedicationSpecies, stringifyMedicationAliases, stringifyMedicationRegions, stringifyMedicationSpecies, type MedicationCatalogOrigin } from '$lib/domain/medication/catalog.js';
+import type { ImageCollectionItem, ImageCollectionItemInput, ImageCollectionPolicy } from '$lib/domain/image-collection/image-collection.js';
 import { FIELD_LIMITS, assertTextLimit, nullableLimitedText } from '$lib/domain/shared/field-limits.js';
 import type { TreatmentCatalogItem, TreatmentCatalogItemInput, TreatmentKind } from '$lib/domain/treatment/treatment.js';
 import { normalizeTreatmentName } from '$lib/domain/treatment/treatment.js';
+import { deleteImageCollection, getImageCollection, replaceImageCollection } from '$lib/persistence/repositories/image-collection.repository.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
 export type MedicationCatalogKind = TreatmentKind;
@@ -37,6 +39,12 @@ const treatmentCatalogConfig: MedicationCatalogConfig = {
 	normalize: normalizeTreatmentName
 };
 
+export const MEDICATION_CATALOG_IMAGE_COLLECTION_TYPE = 'medication_catalog_item';
+export const MEDICATION_CATALOG_IMAGE_POLICY: ImageCollectionPolicy = {
+	primaryRequired: true,
+	maxItems: 9
+};
+
 const catalogConfigs: Record<MedicationCatalogKind, MedicationCatalogConfig> = {
 	vaccine: treatmentCatalogConfig,
 	antiparasitic: treatmentCatalogConfig
@@ -46,7 +54,11 @@ function configFor(kind: MedicationCatalogKind): MedicationCatalogConfig {
 	return catalogConfigs[kind];
 }
 
-function mapCatalogItem(row: MedicationCatalogItemRow): MedicationCatalogItem {
+function primaryImage(images: ImageCollectionItem[]): ImageCollectionItem | null {
+	return images.find((image) => image.isPrimary) ?? images[0] ?? null;
+}
+
+function mapCatalogItem(row: MedicationCatalogItemRow, images: ImageCollectionItem[] = []): MedicationCatalogItem {
 	const config = configFor(row.kind);
 	return {
 		id: row.id,
@@ -56,11 +68,22 @@ function mapCatalogItem(row: MedicationCatalogItemRow): MedicationCatalogItem {
 		species: parseMedicationSpecies(row.species),
 		aliases: parseMedicationAliases(row.aliases, FIELD_LIMITS.medicationAlias, config.normalize, row.normalized_name),
 		manufacturer: row.manufacturer,
+		images,
+		primaryImage: primaryImage(images),
 		origin: row.origin,
 		regions: parseMedicationRegions(row.regions),
 		hiddenAt: row.hidden_at,
 		updatedAt: row.updated_at
 	};
+}
+
+async function loadCatalogItemImages(id: number): Promise<ImageCollectionItem[]> {
+	const collection = await getImageCollection(MEDICATION_CATALOG_IMAGE_COLLECTION_TYPE, id);
+	return collection?.items ?? [];
+}
+
+async function mapCatalogItemWithImages(row: MedicationCatalogItemRow): Promise<MedicationCatalogItem> {
+	return mapCatalogItem(row, await loadCatalogItemImages(row.id));
 }
 
 function normalizeMedicationCatalogMetadata(
@@ -101,7 +124,7 @@ async function getMedicationCatalogItemByNormalizedName(kind: MedicationCatalogK
 		[kind, normalizedName]
 	);
 
-	return rows[0] ? mapCatalogItem(rows[0]) : null;
+	return rows[0] ? mapCatalogItemWithImages(rows[0]) : null;
 }
 
 async function assertMedicationCatalogItemEditable(kind: MedicationCatalogKind, id: number): Promise<void> {
@@ -143,7 +166,8 @@ export async function listMedicationCatalogItems(kind: MedicationCatalogKind, in
 		[kind]
 	);
 
-	return rows.map(mapCatalogItem);
+	const imagesByIndex = await Promise.all(rows.map((row) => loadCatalogItemImages(row.id)));
+	return rows.map((row, index) => mapCatalogItem(row, imagesByIndex[index] ?? []));
 }
 
 export async function saveMedicationCatalogItem(kind: MedicationCatalogKind, input: TreatmentCatalogItemInput, id?: number): Promise<MedicationCatalogItem> {
@@ -172,7 +196,7 @@ export async function saveMedicationCatalogItem(kind: MedicationCatalogKind, inp
 			 LIMIT 1`,
 			[id, kind]
 		);
-		if (rows[0]) return mapCatalogItem(rows[0]);
+		if (rows[0]) return mapCatalogItemWithImages(rows[0]);
 		throw new Error(configFor(kind).saveFailedError);
 	}
 
@@ -215,10 +239,26 @@ export async function setMedicationCatalogItemHidden(kind: MedicationCatalogKind
 		[id, kind]
 	);
 	if (!rows[0]) throw new Error(configFor(kind).saveFailedError);
-	return mapCatalogItem(rows[0]);
+	return mapCatalogItemWithImages(rows[0]);
 }
 
 export async function deleteMedicationCatalogItem(kind: MedicationCatalogKind, id: number): Promise<void> {
 	await assertMedicationCatalogItemEditable(kind, id);
+	await deleteImageCollection(MEDICATION_CATALOG_IMAGE_COLLECTION_TYPE, id);
 	await execute('DELETE FROM medication_catalog_items WHERE id = $1 AND kind = $2', [id, kind]);
+}
+
+export async function saveMedicationCatalogItemImages(kind: MedicationCatalogKind, id: number, images: ImageCollectionItemInput[]): Promise<MedicationCatalogItem> {
+	const rows = await selectMany<MedicationCatalogItemRow>(
+		`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, hidden_at, updated_at
+		 FROM medication_catalog_items
+		 WHERE id = $1 AND kind = $2
+		 LIMIT 1`,
+		[id, kind]
+	);
+	const row = rows[0];
+	if (!row) throw new Error(configFor(kind).saveFailedError);
+
+	const collection = await replaceImageCollection(MEDICATION_CATALOG_IMAGE_COLLECTION_TYPE, id, images, MEDICATION_CATALOG_IMAGE_POLICY);
+	return mapCatalogItem(row, collection.items);
 }

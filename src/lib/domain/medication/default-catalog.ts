@@ -5,6 +5,12 @@ import antiparasiticCatalog from './defaults/antiparasitic-catalog.json' with { 
 export type DefaultMedicationKind = TreatmentKind;
 export type DefaultMedicationSpecies = 'canine' | 'feline';
 
+export interface DefaultMedicationCatalogImage {
+	source: string;
+	description?: string;
+	primary?: boolean;
+}
+
 export interface DefaultMedicationCatalogItem {
 	kind: DefaultMedicationKind;
 	origin: 'system';
@@ -12,6 +18,7 @@ export interface DefaultMedicationCatalogItem {
 	species: DefaultMedicationSpecies[];
 	aliases: string[];
 	manufacturer: string;
+	images?: DefaultMedicationCatalogImage[];
 	regions: string[];
 }
 

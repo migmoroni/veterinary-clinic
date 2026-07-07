@@ -1,13 +1,19 @@
 <script lang="ts" module>
+	import type { Component } from 'svelte';
+
 	export type SearchableSelectOption<T extends string | number> = {
 		value: T;
 		label: string;
 		description?: string;
 		searchText?: string;
+		imageBytes?: Uint8Array | null;
+		imageAlt?: string;
+		fallbackIcon?: Component;
 	};
 </script>
 
 <script lang="ts" generics="T extends string | number">
+	import BinaryImage from '$lib/components/shared/BinaryImage.svelte';
 	import Check from '@lucide/svelte/icons/check';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import { cn } from '$lib/utils.js';
@@ -22,6 +28,7 @@
 		id = undefined,
 		ariaLabel = undefined,
 		class: className = '',
+		showOptionMedia = false,
 		onchange = undefined
 	}: {
 		value: T;
@@ -33,6 +40,7 @@
 		id?: string;
 		ariaLabel?: string;
 		class?: string;
+		showOptionMedia?: boolean;
 		onchange?: (value: T) => void;
 	} = $props();
 
@@ -145,13 +153,22 @@
 		<div id="listbox-{id || 'searchable-select'}" role="listbox" class="absolute z-50 mt-1 max-h-64 w-full min-w-48 overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md outline-none scrollbar-gutter-stable">
 			{#each filteredOptions as option (option.value)}
 				<button type="button" role="option" aria-selected={value === option.value} class={cn('relative flex w-full min-w-0 cursor-default items-start gap-2 rounded-sm px-2 py-2 text-left text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground', value === option.value && 'bg-accent/50')} onclick={(event) => selectOption(event, option)}>
-					<span class="mt-0.5 flex size-4 shrink-0 items-center justify-center">
-						{#if value === option.value}<Check class="size-4" />{/if}
-					</span>
+					{#if showOptionMedia}
+						<BinaryImage imageBytes={option.imageBytes} alt={option.imageAlt ?? option.label} className="size-10 bg-background" imageClass="h-full w-full object-contain" iconClass="size-5 text-primary" fallbackIcon={option.fallbackIcon} />
+					{:else}
+						<span class="mt-0.5 flex size-4 shrink-0 items-center justify-center">
+							{#if value === option.value}<Check class="size-4" />{/if}
+						</span>
+					{/if}
 					<span class="min-w-0 flex-1">
 						<span class="block truncate font-medium">{option.label}</span>
 						{#if option.description}<span class="mt-0.5 block truncate text-xs text-muted-foreground">{option.description}</span>{/if}
 					</span>
+					{#if showOptionMedia}
+						<span class="mt-2 flex size-4 shrink-0 items-center justify-center">
+							{#if value === option.value}<Check class="size-4" />{/if}
+						</span>
+					{/if}
 				</button>
 			{:else}
 				<p class="px-2 py-2 text-sm text-muted-foreground">{emptyLabel}</p>

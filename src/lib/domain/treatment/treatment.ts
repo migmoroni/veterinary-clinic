@@ -1,4 +1,5 @@
 import type { MedicationCatalogOrigin, MedicationSpecies } from '$lib/domain/medication/catalog.js';
+import type { ImageCollectionItem } from '$lib/domain/image-collection/image-collection.js';
 
 export type TreatmentKind = 'vaccine' | 'antiparasitic';
 export type TreatmentValidityUnit = 'days' | 'months' | 'years';
@@ -13,6 +14,8 @@ export interface TreatmentCatalogItem {
 	species: MedicationSpecies[];
 	aliases: string[];
 	manufacturer: string | null;
+	images: ImageCollectionItem[];
+	primaryImage: ImageCollectionItem | null;
 	origin: MedicationCatalogOrigin;
 	regions: string[];
 	hiddenAt: string | null;

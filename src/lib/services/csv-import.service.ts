@@ -361,7 +361,7 @@ async function buildDatabaseFromCsvZip(tempName: string, archive: Uint8Array): P
 	const database = await Database.load(databaseUrl);
 	try {
 		await database.execute('PRAGMA foreign_keys = ON');
-		await runMigrations(database, { seedDefaultData: false, createIndexes: false });
+		await runMigrations(database, { seedDefaultData: false, createIndexes: false, syncDefaultMedicationData: false });
 
 		const entries = readZipEntries(archive);
 		const schemaMetadata = readSchemaMetadata(entries);

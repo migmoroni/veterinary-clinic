@@ -1,5 +1,6 @@
+import type { ImageCollectionItemInput } from '$lib/domain/image-collection/image-collection.js';
 import type { PetTreatment, PetTreatmentInput, TreatmentCatalogItem, TreatmentCatalogItemInput, TreatmentKind } from '$lib/domain/treatment/treatment.js';
-import { createTreatments, deleteTreatmentCatalogItem, listTreatmentCatalogItems, saveTreatmentCatalogItem, setTreatmentCatalogItemHidden, setTreatmentValidityIgnored, softDeleteTreatment } from '$lib/persistence/repositories/treatment.repository.js';
+import { createTreatments, deleteTreatmentCatalogItem, listTreatmentCatalogItems, saveTreatmentCatalogItem, saveTreatmentCatalogItemImages, setTreatmentCatalogItemHidden, setTreatmentValidityIgnored, softDeleteTreatment } from '$lib/persistence/repositories/treatment.repository.js';
 
 export async function saveNewTreatments(kind: TreatmentKind, petId: number, inputs: PetTreatmentInput[]): Promise<PetTreatment[]> {
 	return createTreatments(kind, petId, inputs);
@@ -23,6 +24,10 @@ export async function saveTreatmentCatalogName(kind: TreatmentKind, input: Treat
 
 export async function setTreatmentCatalogNameHidden(kind: TreatmentKind, id: number, hidden: boolean): Promise<TreatmentCatalogItem> {
 	return setTreatmentCatalogItemHidden(kind, id, hidden);
+}
+
+export async function saveTreatmentCatalogImages(kind: TreatmentKind, id: number, images: ImageCollectionItemInput[]): Promise<TreatmentCatalogItem> {
+	return saveTreatmentCatalogItemImages(kind, id, images);
 }
 
 export async function removeTreatmentCatalogName(kind: TreatmentKind, id: number): Promise<void> {
