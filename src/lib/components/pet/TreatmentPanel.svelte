@@ -407,7 +407,7 @@
 <section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
 	<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 		<h3 class="min-w-0 text-base font-semibold">{t(config.sectionTitle)}</h3>
-		<a href="/settings/vaccines" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={t(config.manageLabel)}>
+		<a href="/settings/medications" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={t(config.manageLabel)}>
 			<Settings2 class="size-4" />
 			{t(config.manageLabel)}
 		</a>

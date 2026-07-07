@@ -3,8 +3,9 @@
 	import { t } from '$lib/i18n/index.js';
 	import Archive from '@lucide/svelte/icons/archive';
 	import DatabaseBackup from '@lucide/svelte/icons/database-backup';
+	import Pill from '@lucide/svelte/icons/pill';
+	import ScrollText from '@lucide/svelte/icons/scroll-text';
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
-	import Syringe from '@lucide/svelte/icons/syringe';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import UserCog from '@lucide/svelte/icons/user-cog';
 	import type { Component, Snippet } from 'svelte';
@@ -33,9 +34,14 @@
 			icon: Trash2
 		},
 		{
-			href: '/settings/vaccines',
-			titleKey: 'settings.vaccines.title',
-			icon: Syringe
+			href: '/settings/medications',
+			titleKey: 'settings.medications.title',
+			icon: Pill
+		},
+		{
+			href: '/settings/protocols',
+			titleKey: 'settings.protocols.title',
+			icon: ScrollText
 		},
 		{
 			href: '/settings/preferences',
