@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import type { TreatmentKind } from '$lib/domain/treatment/treatment.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import type { TrashItem, TrashKind } from '$lib/persistence/repositories/trash.repository.js';
 	import { deleteFromTrash, loadTrash, purgeTrash, restoreFromTrash } from '$lib/services/trash.service.js';
@@ -17,8 +18,7 @@
 	const groups: { kind: TrashKind; titleKey: TranslationKey }[] = [
 		{ kind: 'owner', titleKey: 'trash.owners' },
 		{ kind: 'pet', titleKey: 'trash.pets' },
-		{ kind: 'vaccination', titleKey: 'trash.vaccinations' },
-		{ kind: 'antiparasiticTreatment', titleKey: 'trash.antiparasiticTreatments' },
+		{ kind: 'treatment', titleKey: 'trash.treatments' },
 		{ kind: 'protocol', titleKey: 'trash.protocols' },
 		{ kind: 'record', titleKey: 'trash.records' }
 	];
@@ -34,6 +34,10 @@
 		return groupItems(kind).length;
 	}
 
+	function treatmentKindLabel(kind: TreatmentKind): TranslationKey {
+		return kind === 'vaccine' ? 'vaccine.sectionTitle' : 'antiparasiticTreatment.sectionTitle';
+	}
+
 	function selectTab(kind: TrashKind) {
 		activeKind = kind;
 	}
@@ -44,10 +48,10 @@
 
 		try {
 			items = await loadTrash();
-				if (selectInitialTab) {
-					activeKind = groups.find((group) => groupItems(group.kind).length > 0)?.kind ?? activeKind;
-					selectInitialTab = false;
-				}
+			if (selectInitialTab) {
+				activeKind = groups.find((group) => groupItems(group.kind).length > 0)?.kind ?? activeKind;
+				selectInitialTab = false;
+			}
 		} catch (exception) {
 			error = exception instanceof Error ? exception.message : String(exception);
 		} finally {
@@ -144,7 +148,7 @@
 	{#if loading}
 		<div class="h-64 animate-pulse rounded-md bg-muted"></div>
 	{:else}
-		<div class="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1 sm:grid-cols-3 xl:grid-cols-6" role="tablist" aria-label={t('trash.title')}>
+		<div class="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1 sm:grid-cols-3 xl:grid-cols-5" role="tablist" aria-label={t('trash.title')}>
 			{#each groups as group}
 				{@const count = itemCount(group.kind)}
 				<button class="inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-sm px-3 text-sm font-medium transition-colors {activeKind === group.kind ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}" type="button" role="tab" aria-selected={activeKind === group.kind} onclick={() => selectTab(group.kind)}>
@@ -162,7 +166,12 @@
 					{#each activeItems as item (item.kind + '-' + item.id)}
 						<div class="flex flex-col gap-3 rounded-md border border-border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
 							<div class="min-w-0">
-								<p class="truncate text-sm font-medium">{item.title}</p>
+								<div class="flex min-w-0 flex-wrap items-center gap-2">
+									<p class="min-w-0 truncate text-sm font-medium">{item.title}</p>
+									{#if item.treatmentKind}
+										<span class="inline-flex shrink-0 items-center rounded-sm border border-border bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{t(treatmentKindLabel(item.treatmentKind))}</span>
+									{/if}
+								</div>
 								<p class="truncate text-xs text-muted-foreground">{item.subtitle || t('common.notInformed')}</p>
 								<p class="mt-1 text-xs text-muted-foreground">{t('trash.deletedAt')}: {item.deletedAt ?? t('common.notInformed')} · {t('trash.purgeAfter')}: {item.purgeAfter ?? t('common.notInformed')}</p>
 							</div>

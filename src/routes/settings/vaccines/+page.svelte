@@ -10,7 +10,7 @@
 	import { canDeleteMedicationCatalogItem, canEditMedicationCatalogItem } from '$lib/domain/medication/catalog.js';
 	import { canDeleteMedicationProtocol, canEditMedicationProtocol, type MedicationProtocol, type MedicationProtocolDose, type MedicationProtocolKind, type MedicationValidityUnit } from '$lib/domain/medication/protocol.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
-	import type { TreatmentCatalogItem } from '$lib/domain/treatment/treatment.js';
+	import { TREATMENT_KINDS, type TreatmentCatalogItem, type TreatmentKind } from '$lib/domain/treatment/treatment.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import { loadMedicationProtocols, removeProtocol, removeProtocolDose, saveProtocol, saveProtocolDose, setProtocolHidden } from '$lib/services/medication-protocol.service.js';
 	import { loadTreatmentCatalogItems, removeTreatmentCatalogName, saveTreatmentCatalogName, setTreatmentCatalogNameHidden } from '$lib/services/treatment.service.js';
@@ -23,29 +23,96 @@
 	import Syringe from '@lucide/svelte/icons/syringe';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
-	type VaccineSettingsTab = 'vaccines' | 'antiparasitics' | 'protocols';
+	type TreatmentSettingsTab = 'vaccines' | 'antiparasitics' | 'protocols';
+	type CatalogSettingsTab = Exclude<TreatmentSettingsTab, 'protocols'>;
 	type CatalogItem = TreatmentCatalogItem;
 
-	const tabs: { id: VaccineSettingsTab; labelKey: TranslationKey }[] = [
-		{ id: 'vaccines', labelKey: 'vaccine.catalog.tab.vaccines' },
-		{ id: 'antiparasitics', labelKey: 'antiparasiticTreatment.catalog.tab.antiparasitics' },
+	interface CatalogSectionConfig {
+		tab: CatalogSettingsTab;
+		tabLabel: TranslationKey;
+		title: TranslationKey;
+		nameLabel: TranslationKey;
+		addLabel: TranslationKey;
+		showLabel: TranslationKey;
+		hideLabel: TranslationKey;
+		emptyLabel: TranslationKey;
+		deleteConfirm: TranslationKey;
+		savedStatus: TranslationKey;
+		hiddenStatus: TranslationKey;
+		shownStatus: TranslationKey;
+		saveFailed: TranslationKey;
+	}
+
+	interface CatalogDrafts {
+		names: Record<number, string>;
+		aliases: Record<number, string>;
+		manufacturers: Record<number, string>;
+		regions: Record<number, string[]>;
+		species: Record<number, KnownPetSpecies[]>;
+	}
+
+	interface NewCatalogDraft {
+		name: string;
+		aliases: string;
+		manufacturer: string;
+		regions: string[];
+		species: KnownPetSpecies[];
+	}
+
+	const treatmentKinds = TREATMENT_KINDS;
+
+	const catalogSectionConfigs: Record<TreatmentKind, CatalogSectionConfig> = {
+		vaccine: {
+			tab: 'vaccines',
+			tabLabel: 'vaccine.catalog.tab.vaccines',
+			title: 'vaccine.list.title',
+			nameLabel: 'vaccine.name',
+			addLabel: 'vaccine.list.add',
+			showLabel: 'vaccine.list.show',
+			hideLabel: 'vaccine.list.hide',
+			emptyLabel: 'vaccine.emptyVaccines',
+			deleteConfirm: 'vaccine.list.deleteConfirm',
+			savedStatus: 'vaccine.saved',
+			hiddenStatus: 'vaccine.hiddenSaved',
+			shownStatus: 'vaccine.shownSaved',
+			saveFailed: 'vaccine.saveFailed'
+		},
+		antiparasitic: {
+			tab: 'antiparasitics',
+			tabLabel: 'antiparasiticTreatment.catalog.tab.antiparasitics',
+			title: 'antiparasiticTreatment.list.title',
+			nameLabel: 'antiparasiticTreatment.name',
+			addLabel: 'antiparasiticTreatment.list.add',
+			showLabel: 'antiparasiticTreatment.list.show',
+			hideLabel: 'antiparasiticTreatment.list.hide',
+			emptyLabel: 'antiparasiticTreatment.emptyAntiparasitics',
+			deleteConfirm: 'antiparasiticTreatment.list.deleteConfirm',
+			savedStatus: 'antiparasiticTreatment.saved',
+			hiddenStatus: 'antiparasiticTreatment.hiddenSaved',
+			shownStatus: 'antiparasiticTreatment.shownSaved',
+			saveFailed: 'antiparasiticTreatment.saveFailed'
+		}
+	};
+
+	const tabs: { id: TreatmentSettingsTab; labelKey: TranslationKey }[] = [
+		...treatmentKinds.map((kind) => ({ id: catalogSectionConfigs[kind].tab, labelKey: catalogSectionConfigs[kind].tabLabel })),
 		{ id: 'protocols', labelKey: 'protocol.tab' }
 	];
 
-	let vaccines = $state<TreatmentCatalogItem[]>([]);
-	let antiparasitics = $state<TreatmentCatalogItem[]>([]);
+	let catalogItemsByKind = $state<Record<TreatmentKind, TreatmentCatalogItem[]>>({
+		vaccine: [],
+		antiparasitic: []
+	});
+	let catalogDrafts = $state<Record<TreatmentKind, CatalogDrafts>>({
+		vaccine: emptyCatalogDrafts(),
+		antiparasitic: emptyCatalogDrafts()
+	});
+	let newCatalogDrafts = $state<Record<TreatmentKind, NewCatalogDraft>>({
+		vaccine: createNewCatalogDraft(),
+		antiparasitic: createNewCatalogDraft()
+	});
 	let protocols = $state<MedicationProtocol[]>([]);
-	let activeTab = $state<VaccineSettingsTab>('vaccines');
-	let vaccineDraftNames = $state<Record<number, string>>({});
-	let vaccineDraftAliases = $state<Record<number, string>>({});
-	let vaccineDraftManufacturers = $state<Record<number, string>>({});
-	let vaccineDraftRegions = $state<Record<number, string[]>>({});
-	let vaccineDraftSpecies = $state<Record<number, KnownPetSpecies[]>>({});
-	let antiparasiticDraftNames = $state<Record<number, string>>({});
-	let antiparasiticDraftAliases = $state<Record<number, string>>({});
-	let antiparasiticDraftManufacturers = $state<Record<number, string>>({});
-	let antiparasiticDraftRegions = $state<Record<number, string[]>>({});
-	let antiparasiticDraftSpecies = $state<Record<number, KnownPetSpecies[]>>({});
+	let activeTab = $state<TreatmentSettingsTab>('vaccines');
 	let protocolDraftNames = $state<Record<number, string>>({});
 	let protocolDraftSpecies = $state<Record<number, KnownPetSpecies[]>>({});
 	let protocolDraftObservations = $state<Record<number, string>>({});
@@ -56,16 +123,6 @@
 	let newDoseDoses = $state<Record<number, string>>({});
 	let newDoseValidityValues = $state<Record<number, number>>({});
 	let newDoseValidityUnits = $state<Record<number, MedicationValidityUnit>>({});
-	let newVaccineName = $state('');
-	let newVaccineAliases = $state('');
-	let newVaccineManufacturer = $state('');
-	let newVaccineRegions = $state<string[]>(['BRA']);
-	let newVaccineSpecies = $state<KnownPetSpecies[]>(defaultSpeciesDraft());
-	let newAntiparasiticName = $state('');
-	let newAntiparasiticAliases = $state('');
-	let newAntiparasiticManufacturer = $state('');
-	let newAntiparasiticRegions = $state<string[]>(['BRA']);
-	let newAntiparasiticSpecies = $state<KnownPetSpecies[]>(defaultSpeciesDraft());
 	let newProtocolKind = $state<MedicationProtocolKind>('vaccine');
 	let newProtocolName = $state('');
 	let newProtocolSpecies = $state<KnownPetSpecies[]>(defaultSpeciesDraft());
@@ -76,13 +133,10 @@
 	let protocolPendingRemoval = $state<MedicationProtocol | null>(null);
 	let statusKey = $state<TranslationKey | null>(null);
 	let errorKey = $state<TranslationKey | null>(null);
+	let selectedCatalogKind = $derived(catalogKindForTab(activeTab));
 	let newProtocolSelectableItems = $derived(visibleCatalogItemsForSpecies(newProtocolKind, newProtocolSpecies));
 
-	function sortedVaccines(source: TreatmentCatalogItem[]): TreatmentCatalogItem[] {
-		return [...source].sort((first, second) => first.name.localeCompare(second.name));
-	}
-
-	function sortedAntiparasitics(source: TreatmentCatalogItem[]): TreatmentCatalogItem[] {
+	function sortedTreatmentCatalogItems(source: TreatmentCatalogItem[]): TreatmentCatalogItem[] {
 		return [...source].sort((first, second) => first.name.localeCompare(second.name));
 	}
 
@@ -100,6 +154,26 @@
 
 	function defaultSpeciesDraft(): KnownPetSpecies[] {
 		return petSpeciesOptions.map((option) => option.id);
+	}
+
+	function emptyCatalogDrafts(): CatalogDrafts {
+		return {
+			names: {},
+			aliases: {},
+			manufacturers: {},
+			regions: {},
+			species: {}
+		};
+	}
+
+	function createNewCatalogDraft(): NewCatalogDraft {
+		return {
+			name: '',
+			aliases: '',
+			manufacturer: '',
+			regions: ['BRA'],
+			species: defaultSpeciesDraft()
+		};
 	}
 
 	function parseAliases(value: string): string[] {
@@ -127,40 +201,126 @@
 		return species.map(speciesLabel).join(', ');
 	}
 
-	function vaccineDraftSpeciesValue(vaccine: TreatmentCatalogItem): KnownPetSpecies[] {
-		return vaccineDraftSpecies[vaccine.id] ?? vaccine.species;
-	}
-
-	function vaccineDraftRegionsValue(vaccine: TreatmentCatalogItem): string[] {
-		return vaccineDraftRegions[vaccine.id] ?? vaccine.regions;
-	}
-
-	function antiparasiticDraftSpeciesValue(antiparasitic: TreatmentCatalogItem): KnownPetSpecies[] {
-		return antiparasiticDraftSpecies[antiparasitic.id] ?? antiparasitic.species;
-	}
-
-	function antiparasiticDraftRegionsValue(antiparasitic: TreatmentCatalogItem): string[] {
-		return antiparasiticDraftRegions[antiparasitic.id] ?? antiparasitic.regions;
-	}
-
 	function protocolDraftSpeciesValue(protocol: MedicationProtocol): KnownPetSpecies[] {
 		return protocolDraftSpecies[protocol.id] ?? protocol.species;
 	}
 
-	function setVaccineSpecies(vaccine: TreatmentCatalogItem, species: KnownPetSpecies) {
-		vaccineDraftSpecies = { ...vaccineDraftSpecies, [vaccine.id]: toggleSpeciesDraft(vaccineDraftSpeciesValue(vaccine), species) };
+	function catalogSectionConfig(kind: TreatmentKind): CatalogSectionConfig {
+		return catalogSectionConfigs[kind];
 	}
 
-	function setAntiparasiticSpecies(antiparasitic: TreatmentCatalogItem, species: KnownPetSpecies) {
-		antiparasiticDraftSpecies = { ...antiparasiticDraftSpecies, [antiparasitic.id]: toggleSpeciesDraft(antiparasiticDraftSpeciesValue(antiparasitic), species) };
+	function catalogKindForTab(tab: TreatmentSettingsTab): TreatmentKind | null {
+		if (tab === 'vaccines') return 'vaccine';
+		if (tab === 'antiparasitics') return 'antiparasitic';
+		return null;
 	}
 
-	function setVaccineRegions(vaccineId: number, regions: string[]) {
-		vaccineDraftRegions = { ...vaccineDraftRegions, [vaccineId]: regions };
+	function activeCatalogKind(): TreatmentKind | null {
+		return catalogKindForTab(activeTab);
 	}
 
-	function setAntiparasiticRegions(antiparasiticId: number, regions: string[]) {
-		antiparasiticDraftRegions = { ...antiparasiticDraftRegions, [antiparasiticId]: regions };
+	function treatmentCatalogItems(kind: TreatmentKind): CatalogItem[] {
+		return catalogItemsByKind[kind];
+	}
+
+	function setTreatmentCatalogItems(kind: TreatmentKind, items: TreatmentCatalogItem[]) {
+		catalogItemsByKind = { ...catalogItemsByKind, [kind]: sortedTreatmentCatalogItems(items) };
+	}
+
+	function buildCatalogDrafts(items: TreatmentCatalogItem[]): CatalogDrafts {
+		return {
+			names: Object.fromEntries(items.map((item) => [item.id, item.name])),
+			aliases: Object.fromEntries(items.map((item) => [item.id, aliasDraft(item.aliases)])),
+			manufacturers: Object.fromEntries(items.map((item) => [item.id, item.manufacturer ?? ''])),
+			regions: Object.fromEntries(items.map((item) => [item.id, item.regions])),
+			species: Object.fromEntries(items.map((item) => [item.id, item.species]))
+		};
+	}
+
+	function setCatalogDrafts(kind: TreatmentKind, drafts: CatalogDrafts) {
+		catalogDrafts = { ...catalogDrafts, [kind]: drafts };
+	}
+
+	function syncCatalogDraft(kind: TreatmentKind, item: TreatmentCatalogItem) {
+		const drafts = catalogDrafts[kind];
+		setCatalogDrafts(kind, {
+			names: { ...drafts.names, [item.id]: item.name },
+			aliases: { ...drafts.aliases, [item.id]: aliasDraft(item.aliases) },
+			manufacturers: { ...drafts.manufacturers, [item.id]: item.manufacturer ?? '' },
+			regions: { ...drafts.regions, [item.id]: item.regions },
+			species: { ...drafts.species, [item.id]: item.species }
+		});
+	}
+
+	function removeCatalogDraft(kind: TreatmentKind, itemId: number) {
+		const drafts = catalogDrafts[kind];
+		const { [itemId]: _removedName, ...names } = drafts.names;
+		const { [itemId]: _removedAliases, ...aliases } = drafts.aliases;
+		const { [itemId]: _removedManufacturer, ...manufacturers } = drafts.manufacturers;
+		const { [itemId]: _removedRegions, ...regions } = drafts.regions;
+		const { [itemId]: _removedSpecies, ...species } = drafts.species;
+		setCatalogDrafts(kind, { names, aliases, manufacturers, regions, species });
+	}
+
+	function catalogDraftName(kind: TreatmentKind, item: TreatmentCatalogItem): string {
+		return catalogDrafts[kind].names[item.id] ?? item.name;
+	}
+
+	function catalogDraftAliases(kind: TreatmentKind, item: TreatmentCatalogItem): string {
+		return catalogDrafts[kind].aliases[item.id] ?? aliasDraft(item.aliases);
+	}
+
+	function catalogDraftManufacturer(kind: TreatmentKind, item: TreatmentCatalogItem): string {
+		return catalogDrafts[kind].manufacturers[item.id] ?? item.manufacturer ?? '';
+	}
+
+	function catalogDraftRegions(kind: TreatmentKind, item: TreatmentCatalogItem): string[] {
+		return catalogDrafts[kind].regions[item.id] ?? item.regions;
+	}
+
+	function catalogDraftSpecies(kind: TreatmentKind, item: TreatmentCatalogItem): KnownPetSpecies[] {
+		return catalogDrafts[kind].species[item.id] ?? item.species;
+	}
+
+	function setCatalogDraftText(kind: TreatmentKind, itemId: number, field: 'names' | 'aliases' | 'manufacturers', value: string) {
+		const drafts = catalogDrafts[kind];
+		setCatalogDrafts(kind, {
+			...drafts,
+			[field]: { ...drafts[field], [itemId]: value }
+		});
+	}
+
+	function setCatalogDraftRegions(kind: TreatmentKind, itemId: number, regions: string[]) {
+		const drafts = catalogDrafts[kind];
+		setCatalogDrafts(kind, {
+			...drafts,
+			regions: { ...drafts.regions, [itemId]: regions }
+		});
+	}
+
+	function setCatalogDraftSpecies(kind: TreatmentKind, item: TreatmentCatalogItem, species: KnownPetSpecies) {
+		const drafts = catalogDrafts[kind];
+		setCatalogDrafts(kind, {
+			...drafts,
+			species: { ...drafts.species, [item.id]: toggleSpeciesDraft(catalogDraftSpecies(kind, item), species) }
+		});
+	}
+
+	function setNewCatalogDraft(kind: TreatmentKind, draft: NewCatalogDraft) {
+		newCatalogDrafts = { ...newCatalogDrafts, [kind]: draft };
+	}
+
+	function setNewCatalogDraftText(kind: TreatmentKind, field: 'name' | 'aliases' | 'manufacturer', value: string) {
+		setNewCatalogDraft(kind, { ...newCatalogDrafts[kind], [field]: value });
+	}
+
+	function setNewCatalogDraftRegions(kind: TreatmentKind, regions: string[]) {
+		setNewCatalogDraft(kind, { ...newCatalogDrafts[kind], regions });
+	}
+
+	function toggleNewCatalogDraftSpecies(kind: TreatmentKind, species: KnownPetSpecies) {
+		const draft = newCatalogDrafts[kind];
+		setNewCatalogDraft(kind, { ...draft, species: toggleSpeciesDraft(draft.species, species) });
 	}
 
 	function itemMatchesSpecies(kind: MedicationProtocolKind, itemId: number, species: KnownPetSpecies[]): boolean {
@@ -179,9 +339,9 @@
 		protocolDraftItemIds = { ...protocolDraftItemIds, [protocol.id]: selectedItemIds(protocol).filter((itemId) => itemMatchesSpecies(protocol.kind, itemId, nextSpecies)) };
 	}
 
-	function itemCount(tab: VaccineSettingsTab): number {
-		if (tab === 'vaccines') return vaccines.length;
-		if (tab === 'antiparasitics') return antiparasitics.length;
+	function itemCount(tab: TreatmentSettingsTab): number {
+		const kind = catalogKindForTab(tab);
+		if (kind) return treatmentCatalogItems(kind).length;
 		return protocols.length;
 	}
 
@@ -193,7 +353,7 @@
 	}
 
 	function catalogItems(kind: MedicationProtocolKind): CatalogItem[] {
-		return kind === 'vaccine' ? vaccines : antiparasitics;
+		return treatmentCatalogItems(kind);
 	}
 
 	function visibleCatalogItems(kind: MedicationProtocolKind): CatalogItem[] {
@@ -268,22 +428,9 @@
 		doseDraftValidityUnits = { ...doseDraftValidityUnits, [dose.id]: dose.validityUnit };
 	}
 
-	function upsertVaccine(vaccine: TreatmentCatalogItem) {
-		vaccines = sortedVaccines([...vaccines.filter((item) => item.id !== vaccine.id && item.normalizedName !== vaccine.normalizedName), vaccine]);
-		vaccineDraftNames = { ...vaccineDraftNames, [vaccine.id]: vaccine.name };
-		vaccineDraftAliases = { ...vaccineDraftAliases, [vaccine.id]: aliasDraft(vaccine.aliases) };
-		vaccineDraftManufacturers = { ...vaccineDraftManufacturers, [vaccine.id]: vaccine.manufacturer ?? '' };
-		vaccineDraftRegions = { ...vaccineDraftRegions, [vaccine.id]: vaccine.regions };
-		vaccineDraftSpecies = { ...vaccineDraftSpecies, [vaccine.id]: vaccine.species };
-	}
-
-	function upsertAntiparasitic(antiparasitic: TreatmentCatalogItem) {
-		antiparasitics = sortedAntiparasitics([...antiparasitics.filter((item) => item.id !== antiparasitic.id && item.normalizedName !== antiparasitic.normalizedName), antiparasitic]);
-		antiparasiticDraftNames = { ...antiparasiticDraftNames, [antiparasitic.id]: antiparasitic.name };
-		antiparasiticDraftAliases = { ...antiparasiticDraftAliases, [antiparasitic.id]: aliasDraft(antiparasitic.aliases) };
-		antiparasiticDraftManufacturers = { ...antiparasiticDraftManufacturers, [antiparasitic.id]: antiparasitic.manufacturer ?? '' };
-		antiparasiticDraftRegions = { ...antiparasiticDraftRegions, [antiparasitic.id]: antiparasitic.regions };
-		antiparasiticDraftSpecies = { ...antiparasiticDraftSpecies, [antiparasitic.id]: antiparasitic.species };
+	function upsertCatalogItem(kind: TreatmentKind, item: TreatmentCatalogItem) {
+		setTreatmentCatalogItems(kind, [...treatmentCatalogItems(kind).filter((current) => current.id !== item.id && current.normalizedName !== item.normalizedName), item]);
+		syncCatalogDraft(kind, item);
 	}
 
 	function upsertProtocol(protocol: MedicationProtocol) {
@@ -295,7 +442,7 @@
 		if (exception instanceof Error && exception.message === 'field_limit_exceeded') errorKey = 'form.limitExceeded';
 		else if (exception instanceof Error && exception.message === 'field_required') errorKey = 'form.fieldRequired';
 		else if (exception instanceof Error && (exception.message === 'medication_catalog_system_item' || exception.message === 'medication_protocol_system_item')) errorKey = 'medication.systemItemReadOnly';
-		else if (exception instanceof Error && exception.message === 'treatment_name_required') errorKey = activeTab === 'antiparasitics' ? 'antiparasiticTreatment.nameRequired' : 'vaccine.nameRequired';
+		else if (exception instanceof Error && exception.message === 'treatment_name_required') errorKey = activeCatalogKind() === 'antiparasitic' ? 'antiparasiticTreatment.nameRequired' : 'vaccine.nameRequired';
 		else if (exception instanceof Error && exception.message === 'protocol_name_required') errorKey = 'protocol.nameRequired';
 		else if (exception instanceof Error && exception.message === 'protocol_item_required') errorKey = 'protocol.itemRequired';
 		else if (exception instanceof Error && exception.message === 'protocol_dose_required') errorKey = 'protocol.doseRequired';
@@ -308,20 +455,13 @@
 		errorKey = null;
 
 		try {
-			const [loadedVaccines, loadedAntiparasitics, loadedProtocols] = await Promise.all([loadTreatmentCatalogItems('vaccine', true), loadTreatmentCatalogItems('antiparasitic', true), loadMedicationProtocols(undefined, true)]);
-			vaccines = sortedVaccines(loadedVaccines);
-			antiparasitics = sortedAntiparasitics(loadedAntiparasitics);
+			const [loadedCatalogItems, loadedProtocols] = await Promise.all([Promise.all(treatmentKinds.map((kind) => loadTreatmentCatalogItems(kind, true))), loadMedicationProtocols(undefined, true)]);
+			for (const [index, kind] of treatmentKinds.entries()) {
+				const items = loadedCatalogItems[index] ?? [];
+				setTreatmentCatalogItems(kind, items);
+				setCatalogDrafts(kind, buildCatalogDrafts(items));
+			}
 			protocols = sortedProtocols(loadedProtocols);
-			vaccineDraftNames = Object.fromEntries(vaccines.map((vaccine) => [vaccine.id, vaccine.name]));
-			vaccineDraftAliases = Object.fromEntries(vaccines.map((vaccine) => [vaccine.id, aliasDraft(vaccine.aliases)]));
-			vaccineDraftManufacturers = Object.fromEntries(vaccines.map((vaccine) => [vaccine.id, vaccine.manufacturer ?? '']));
-			vaccineDraftRegions = Object.fromEntries(vaccines.map((vaccine) => [vaccine.id, vaccine.regions]));
-			vaccineDraftSpecies = Object.fromEntries(vaccines.map((vaccine) => [vaccine.id, vaccine.species]));
-			antiparasiticDraftNames = Object.fromEntries(antiparasitics.map((antiparasitic) => [antiparasitic.id, antiparasitic.name]));
-			antiparasiticDraftAliases = Object.fromEntries(antiparasitics.map((antiparasitic) => [antiparasitic.id, aliasDraft(antiparasitic.aliases)]));
-			antiparasiticDraftManufacturers = Object.fromEntries(antiparasitics.map((antiparasitic) => [antiparasitic.id, antiparasitic.manufacturer ?? '']));
-			antiparasiticDraftRegions = Object.fromEntries(antiparasitics.map((antiparasitic) => [antiparasitic.id, antiparasitic.regions]));
-			antiparasiticDraftSpecies = Object.fromEntries(antiparasitics.map((antiparasitic) => [antiparasitic.id, antiparasitic.species]));
 			for (const protocol of protocols) syncProtocolDraft(protocol);
 		} catch {
 			errorKey = 'protocol.saveFailed';
@@ -330,55 +470,24 @@
 		}
 	}
 
-	async function submitNewVaccine(event: SubmitEvent) {
+	async function submitNewCatalogItem(event: SubmitEvent, kind: TreatmentKind) {
 		event.preventDefault();
 		saving = true;
 		statusKey = null;
 		errorKey = null;
 
 		try {
-			const saved = await saveTreatmentCatalogName('vaccine', {
-				name: newVaccineName,
-				species: newVaccineSpecies,
-				aliases: parseAliases(newVaccineAliases),
-				manufacturer: newVaccineManufacturer,
-				regions: newVaccineRegions
+			const draft = newCatalogDrafts[kind];
+			const saved = await saveTreatmentCatalogName(kind, {
+				name: draft.name,
+				species: draft.species,
+				aliases: parseAliases(draft.aliases),
+				manufacturer: draft.manufacturer,
+				regions: draft.regions
 			});
-			upsertVaccine(saved);
-			newVaccineName = '';
-			newVaccineAliases = '';
-			newVaccineManufacturer = '';
-			newVaccineRegions = ['BRA'];
-			newVaccineSpecies = defaultSpeciesDraft();
-			statusKey = 'vaccine.saved';
-		} catch (exception) {
-			setFailure(exception);
-		} finally {
-			saving = false;
-		}
-	}
-
-	async function submitNewAntiparasitic(event: SubmitEvent) {
-		event.preventDefault();
-		saving = true;
-		statusKey = null;
-		errorKey = null;
-
-		try {
-			const saved = await saveTreatmentCatalogName('antiparasitic', {
-				name: newAntiparasiticName,
-				species: newAntiparasiticSpecies,
-				aliases: parseAliases(newAntiparasiticAliases),
-				manufacturer: newAntiparasiticManufacturer,
-				regions: newAntiparasiticRegions
-			});
-			upsertAntiparasitic(saved);
-			newAntiparasiticName = '';
-			newAntiparasiticAliases = '';
-			newAntiparasiticManufacturer = '';
-			newAntiparasiticRegions = ['BRA'];
-			newAntiparasiticSpecies = defaultSpeciesDraft();
-			statusKey = 'antiparasiticTreatment.saved';
+			upsertCatalogItem(kind, saved);
+			setNewCatalogDraft(kind, createNewCatalogDraft());
+			statusKey = catalogSectionConfig(kind).savedStatus;
 		} catch (exception) {
 			setFailure(exception);
 		} finally {
@@ -407,53 +516,26 @@
 		}
 	}
 
-	async function saveExistingVaccine(vaccine: TreatmentCatalogItem) {
-		if (!canEditMedicationCatalogItem(vaccine)) return;
+	async function saveExistingCatalogItem(kind: TreatmentKind, item: TreatmentCatalogItem) {
+		if (!canEditMedicationCatalogItem(item)) return;
 		saving = true;
 		statusKey = null;
 		errorKey = null;
 
 		try {
 			const saved = await saveTreatmentCatalogName(
-				'vaccine',
+				kind,
 				{
-					name: vaccineDraftNames[vaccine.id] ?? vaccine.name,
-					species: vaccineDraftSpeciesValue(vaccine),
-					aliases: parseAliases(vaccineDraftAliases[vaccine.id] ?? aliasDraft(vaccine.aliases)),
-					manufacturer: vaccineDraftManufacturers[vaccine.id] ?? vaccine.manufacturer,
-					regions: vaccineDraftRegionsValue(vaccine)
+					name: catalogDraftName(kind, item),
+					species: catalogDraftSpecies(kind, item),
+					aliases: parseAliases(catalogDraftAliases(kind, item)),
+					manufacturer: catalogDraftManufacturer(kind, item),
+					regions: catalogDraftRegions(kind, item)
 				},
-				vaccine.id
+				item.id
 			);
-			upsertVaccine(saved);
-			statusKey = 'vaccine.saved';
-		} catch (exception) {
-			setFailure(exception);
-		} finally {
-			saving = false;
-		}
-	}
-
-	async function saveExistingAntiparasitic(antiparasitic: TreatmentCatalogItem) {
-		if (!canEditMedicationCatalogItem(antiparasitic)) return;
-		saving = true;
-		statusKey = null;
-		errorKey = null;
-
-		try {
-			const saved = await saveTreatmentCatalogName(
-				'antiparasitic',
-				{
-					name: antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name,
-					species: antiparasiticDraftSpeciesValue(antiparasitic),
-					aliases: parseAliases(antiparasiticDraftAliases[antiparasitic.id] ?? aliasDraft(antiparasitic.aliases)),
-					manufacturer: antiparasiticDraftManufacturers[antiparasitic.id] ?? antiparasitic.manufacturer,
-					regions: antiparasiticDraftRegionsValue(antiparasitic)
-				},
-				antiparasitic.id
-			);
-			upsertAntiparasitic(saved);
-			statusKey = 'antiparasiticTreatment.saved';
+			upsertCatalogItem(kind, saved);
+			statusKey = catalogSectionConfig(kind).savedStatus;
 		} catch (exception) {
 			setFailure(exception);
 		} finally {
@@ -487,33 +569,18 @@
 		}
 	}
 
-	async function toggleVaccineHidden(vaccine: TreatmentCatalogItem) {
+	async function toggleCatalogItemHidden(kind: TreatmentKind, item: TreatmentCatalogItem) {
 		saving = true;
 		statusKey = null;
 		errorKey = null;
 
 		try {
-			const saved = await setTreatmentCatalogNameHidden('vaccine', vaccine.id, !vaccine.hiddenAt);
-			upsertVaccine(saved);
-			statusKey = saved.hiddenAt ? 'vaccine.hiddenSaved' : 'vaccine.shownSaved';
+			const saved = await setTreatmentCatalogNameHidden(kind, item.id, !item.hiddenAt);
+			upsertCatalogItem(kind, saved);
+			const config = catalogSectionConfig(kind);
+			statusKey = saved.hiddenAt ? config.hiddenStatus : config.shownStatus;
 		} catch {
-			errorKey = 'vaccine.saveFailed';
-		} finally {
-			saving = false;
-		}
-	}
-
-	async function toggleAntiparasiticHidden(antiparasitic: TreatmentCatalogItem) {
-		saving = true;
-		statusKey = null;
-		errorKey = null;
-
-		try {
-			const saved = await setTreatmentCatalogNameHidden('antiparasitic', antiparasitic.id, !antiparasitic.hiddenAt);
-			upsertAntiparasitic(saved);
-			statusKey = saved.hiddenAt ? 'antiparasiticTreatment.hiddenSaved' : 'antiparasiticTreatment.shownSaved';
-		} catch {
-			errorKey = 'antiparasiticTreatment.saveFailed';
+			errorKey = catalogSectionConfig(kind).saveFailed;
 		} finally {
 			saving = false;
 		}
@@ -535,57 +602,21 @@
 		}
 	}
 
-	async function deleteVaccine(vaccine: TreatmentCatalogItem) {
-		if (!canDeleteMedicationCatalogItem(vaccine)) return;
-		if (!window.confirm(t('vaccine.list.deleteConfirm'))) return;
+	async function deleteCatalogItem(kind: TreatmentKind, item: TreatmentCatalogItem) {
+		if (!canDeleteMedicationCatalogItem(item)) return;
+		const config = catalogSectionConfig(kind);
+		if (!window.confirm(t(config.deleteConfirm))) return;
 		saving = true;
 		statusKey = null;
 		errorKey = null;
 
 		try {
-			await removeTreatmentCatalogName('vaccine', vaccine.id);
-			vaccines = vaccines.filter((item) => item.id !== vaccine.id);
-			const { [vaccine.id]: _removed, ...remainingDrafts } = vaccineDraftNames;
-			vaccineDraftNames = remainingDrafts;
-			const { [vaccine.id]: _removedAliases, ...remainingAliases } = vaccineDraftAliases;
-			const { [vaccine.id]: _removedManufacturer, ...remainingManufacturers } = vaccineDraftManufacturers;
-			const { [vaccine.id]: _removedRegions, ...remainingRegions } = vaccineDraftRegions;
-			const { [vaccine.id]: _removedSpecies, ...remainingSpecies } = vaccineDraftSpecies;
-			vaccineDraftAliases = remainingAliases;
-			vaccineDraftManufacturers = remainingManufacturers;
-			vaccineDraftRegions = remainingRegions;
-			vaccineDraftSpecies = remainingSpecies;
+			await removeTreatmentCatalogName(kind, item.id);
+			setTreatmentCatalogItems(kind, treatmentCatalogItems(kind).filter((current) => current.id !== item.id));
+			removeCatalogDraft(kind, item.id);
 			statusKey = 'status.deleted';
 		} catch {
-			errorKey = 'vaccine.saveFailed';
-		} finally {
-			saving = false;
-		}
-	}
-
-	async function deleteAntiparasitic(antiparasitic: TreatmentCatalogItem) {
-		if (!canDeleteMedicationCatalogItem(antiparasitic)) return;
-		if (!window.confirm(t('antiparasiticTreatment.list.deleteConfirm'))) return;
-		saving = true;
-		statusKey = null;
-		errorKey = null;
-
-		try {
-			await removeTreatmentCatalogName('antiparasitic', antiparasitic.id);
-			antiparasitics = antiparasitics.filter((item) => item.id !== antiparasitic.id);
-			const { [antiparasitic.id]: _removed, ...remainingDrafts } = antiparasiticDraftNames;
-			antiparasiticDraftNames = remainingDrafts;
-			const { [antiparasitic.id]: _removedAliases, ...remainingAliases } = antiparasiticDraftAliases;
-			const { [antiparasitic.id]: _removedManufacturer, ...remainingManufacturers } = antiparasiticDraftManufacturers;
-			const { [antiparasitic.id]: _removedRegions, ...remainingRegions } = antiparasiticDraftRegions;
-			const { [antiparasitic.id]: _removedSpecies, ...remainingSpecies } = antiparasiticDraftSpecies;
-			antiparasiticDraftAliases = remainingAliases;
-			antiparasiticDraftManufacturers = remainingManufacturers;
-			antiparasiticDraftRegions = remainingRegions;
-			antiparasiticDraftSpecies = remainingSpecies;
-			statusKey = 'status.deleted';
-		} catch {
-			errorKey = 'antiparasiticTreatment.saveFailed';
+			errorKey = config.saveFailed;
 		} finally {
 			saving = false;
 		}
@@ -760,42 +791,49 @@
 		{/each}
 	</div>
 
-	{#if activeTab === 'vaccines'}
+	{#if selectedCatalogKind}
+		{@const activeKind = selectedCatalogKind}
+		{@const config = catalogSectionConfig(activeKind)}
+		{@const newDraft = newCatalogDrafts[activeKind]}
 		<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
 			<div class="flex items-start gap-3">
 				<span class="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-					<Syringe class="size-5" />
+					{#if activeKind === 'vaccine'}
+						<Syringe class="size-5" />
+					{:else}
+						<Pill class="size-5" />
+					{/if}
 				</span>
 				<div class="min-w-0 flex-1">
-					<h3 class="text-base font-semibold">{t('vaccine.list.title')}</h3>
-					<form class="mt-4 grid gap-3 lg:grid-cols-2 lg:items-start" onsubmit={submitNewVaccine}>
+					<h3 class="text-base font-semibold">{t(config.title)}</h3>
+					<form class="mt-4 grid gap-3 lg:grid-cols-2 lg:items-start" onsubmit={(event) => void submitNewCatalogItem(event, activeKind)}>
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
-								<span>{t('vaccine.name')}</span>
-								<CharacterLimitHint value={newVaccineName} max={FIELD_LIMITS.treatmentName} />
+								<span>{t(config.nameLabel)}</span>
+								<CharacterLimitHint value={newDraft.name} max={FIELD_LIMITS.treatmentName} />
 							</span>
-							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newVaccineName} maxlength={FIELD_LIMITS.treatmentName} required />
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={newDraft.name} maxlength={FIELD_LIMITS.treatmentName} required oninput={(event) => setNewCatalogDraftText(activeKind, 'name', inputValue(event))} />
 						</label>
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
 								<span>{t('medication.manufacturer')}</span>
-								<CharacterLimitHint value={newVaccineManufacturer} max={FIELD_LIMITS.medicationManufacturer} />
+								<CharacterLimitHint value={newDraft.manufacturer} max={FIELD_LIMITS.medicationManufacturer} />
 							</span>
-							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newVaccineManufacturer} maxlength={FIELD_LIMITS.medicationManufacturer} />
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={newDraft.manufacturer} maxlength={FIELD_LIMITS.medicationManufacturer} oninput={(event) => setNewCatalogDraftText(activeKind, 'manufacturer', inputValue(event))} />
 						</label>
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
 								<span>{t('medication.aliases')}</span>
-								<CharacterLimitHint value={newVaccineAliases} max={FIELD_LIMITS.medicationAliasesJson} />
+								<CharacterLimitHint value={newDraft.aliases} max={FIELD_LIMITS.medicationAliasesJson} />
 							</span>
-							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newVaccineAliases} maxlength={FIELD_LIMITS.medicationAliasesJson} placeholder={t('medication.aliasesPlaceholder')} />
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={newDraft.aliases} maxlength={FIELD_LIMITS.medicationAliasesJson} placeholder={t('medication.aliasesPlaceholder')} oninput={(event) => setNewCatalogDraftText(activeKind, 'aliases', inputValue(event))} />
 						</label>
 						<div class="flex min-w-0 flex-col gap-2 text-sm font-medium">
 							<span>{t('medication.species')}</span>
 							<div class="flex flex-wrap gap-2">
 								{#each petSpeciesOptions as option}
 									<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
-										<input type="checkbox" class="size-4 accent-primary" checked={newVaccineSpecies.includes(option.id)} onchange={() => (newVaccineSpecies = toggleSpeciesDraft(newVaccineSpecies, option.id))} />
+										<input type="checkbox" class="size-4 accent-primary" checked={newDraft.species.includes(option.id)} onchange={() => toggleNewCatalogDraftSpecies(activeKind, option.id)} />
 										<span>{t(option.labelKey)}</span>
 									</label>
 								{/each}
@@ -803,11 +841,11 @@
 						</div>
 						<div class="flex min-w-0 flex-col gap-2 text-sm font-medium">
 							<span>{t('medication.regions')}</span>
-							<MedicationRegionsField id="new-vaccine-regions" value={newVaccineRegions} disabled={saving} onchange={(regions) => (newVaccineRegions = regions)} />
+							<MedicationRegionsField id={`new-${activeKind}-regions`} value={newDraft.regions} disabled={saving} onchange={(regions) => setNewCatalogDraftRegions(activeKind, regions)} />
 						</div>
 						<button type="submit" class="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50 lg:col-span-2" disabled={saving}>
 							<Plus class="size-4" />
-							{t('vaccine.list.add')}
+							{t(config.addLabel)}
 						</button>
 					</form>
 				</div>
@@ -817,56 +855,56 @@
 				{#if loading}
 					<div class="h-28 animate-pulse rounded-md bg-muted"></div>
 				{:else}
-					{#each vaccines as vaccine (vaccine.id)}
-						<form class="grid gap-3 rounded-md border border-border bg-background p-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto] xl:items-start" onsubmit={(event) => { event.preventDefault(); void saveExistingVaccine(vaccine); }}>
+					{#each treatmentCatalogItems(activeKind) as item (item.id)}
+						<form class="grid gap-3 rounded-md border border-border bg-background p-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto] xl:items-start" onsubmit={(event) => { event.preventDefault(); void saveExistingCatalogItem(activeKind, item); }}>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
-									<span>{t('vaccine.name')}</span>
-									<CharacterLimitHint value={vaccineDraftNames[vaccine.id] ?? vaccine.name} max={FIELD_LIMITS.treatmentName} />
+									<span>{t(config.nameLabel)}</span>
+									<CharacterLimitHint value={catalogDraftName(activeKind, item)} max={FIELD_LIMITS.treatmentName} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={vaccineDraftNames[vaccine.id] ?? vaccine.name} maxlength={FIELD_LIMITS.treatmentName} disabled={!canEditMedicationCatalogItem(vaccine)} required oninput={(event) => (vaccineDraftNames = { ...vaccineDraftNames, [vaccine.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={catalogDraftName(activeKind, item)} maxlength={FIELD_LIMITS.treatmentName} disabled={!canEditMedicationCatalogItem(item)} required oninput={(event) => setCatalogDraftText(activeKind, item.id, 'names', inputValue(event))} />
 							</label>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
 									<span>{t('medication.manufacturer')}</span>
-									<CharacterLimitHint value={vaccineDraftManufacturers[vaccine.id] ?? vaccine.manufacturer ?? ''} max={FIELD_LIMITS.medicationManufacturer} />
+									<CharacterLimitHint value={catalogDraftManufacturer(activeKind, item)} max={FIELD_LIMITS.medicationManufacturer} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={vaccineDraftManufacturers[vaccine.id] ?? vaccine.manufacturer ?? ''} maxlength={FIELD_LIMITS.medicationManufacturer} disabled={!canEditMedicationCatalogItem(vaccine)} oninput={(event) => (vaccineDraftManufacturers = { ...vaccineDraftManufacturers, [vaccine.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={catalogDraftManufacturer(activeKind, item)} maxlength={FIELD_LIMITS.medicationManufacturer} disabled={!canEditMedicationCatalogItem(item)} oninput={(event) => setCatalogDraftText(activeKind, item.id, 'manufacturers', inputValue(event))} />
 							</label>
 							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 								<span class="flex min-w-0 items-baseline justify-between gap-2">
 									<span>{t('medication.aliases')}</span>
-									<CharacterLimitHint value={vaccineDraftAliases[vaccine.id] ?? aliasDraft(vaccine.aliases)} max={FIELD_LIMITS.medicationAliasesJson} />
+									<CharacterLimitHint value={catalogDraftAliases(activeKind, item)} max={FIELD_LIMITS.medicationAliasesJson} />
 								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={vaccineDraftAliases[vaccine.id] ?? aliasDraft(vaccine.aliases)} maxlength={FIELD_LIMITS.medicationAliasesJson} placeholder={t('medication.aliasesPlaceholder')} disabled={!canEditMedicationCatalogItem(vaccine)} oninput={(event) => (vaccineDraftAliases = { ...vaccineDraftAliases, [vaccine.id]: inputValue(event) })} />
+								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={catalogDraftAliases(activeKind, item)} maxlength={FIELD_LIMITS.medicationAliasesJson} placeholder={t('medication.aliasesPlaceholder')} disabled={!canEditMedicationCatalogItem(item)} oninput={(event) => setCatalogDraftText(activeKind, item.id, 'aliases', inputValue(event))} />
 							</label>
-							{#if canEditMedicationCatalogItem(vaccine)}
+							{#if canEditMedicationCatalogItem(item)}
 								<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
 									<Save class="size-4" />
 									{t('actions.save')}
 								</button>
 							{/if}
-							<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} title={vaccine.hiddenAt ? t('vaccine.list.show') : t('vaccine.list.hide')} onclick={() => void toggleVaccineHidden(vaccine)}>
-								{#if vaccine.hiddenAt}
+							<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} title={item.hiddenAt ? t(config.showLabel) : t(config.hideLabel)} onclick={() => void toggleCatalogItemHidden(activeKind, item)}>
+								{#if item.hiddenAt}
 									<Eye class="size-4" />
-									{t('vaccine.list.show')}
+									{t(config.showLabel)}
 								{:else}
 									<EyeOff class="size-4" />
-									{t('vaccine.list.hide')}
+									{t(config.hideLabel)}
 								{/if}
 							</button>
-							{#if canDeleteMedicationCatalogItem(vaccine)}
-								<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={() => void deleteVaccine(vaccine)}>
+							{#if canDeleteMedicationCatalogItem(item)}
+								<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={() => void deleteCatalogItem(activeKind, item)}>
 									<Trash2 class="size-4" />
 									{t('actions.delete')}
 								</button>
 							{/if}
 							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-3">
-								<span>{t('medication.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(vaccineDraftSpeciesValue(vaccine))}</span></span>
+								<span>{t('medication.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(catalogDraftSpecies(activeKind, item))}</span></span>
 								<div class="flex flex-wrap gap-2">
 									{#each petSpeciesOptions as option}
 										<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
-											<input type="checkbox" class="size-4 accent-primary" checked={vaccineDraftSpeciesValue(vaccine).includes(option.id)} disabled={!canEditMedicationCatalogItem(vaccine)} onchange={() => setVaccineSpecies(vaccine, option.id)} />
+											<input type="checkbox" class="size-4 accent-primary" checked={catalogDraftSpecies(activeKind, item).includes(option.id)} disabled={!canEditMedicationCatalogItem(item)} onchange={() => setCatalogDraftSpecies(activeKind, item, option.id)} />
 											<span>{t(option.labelKey)}</span>
 										</label>
 									{/each}
@@ -874,134 +912,11 @@
 							</div>
 							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-3">
 								<span>{t('medication.regions')}</span>
-								<MedicationRegionsField id={`vaccine-regions-${vaccine.id}`} value={vaccineDraftRegionsValue(vaccine)} disabled={saving || !canEditMedicationCatalogItem(vaccine)} onchange={(regions) => setVaccineRegions(vaccine.id, regions)} />
+								<MedicationRegionsField id={`${activeKind}-regions-${item.id}`} value={catalogDraftRegions(activeKind, item)} disabled={saving || !canEditMedicationCatalogItem(item)} onchange={(regions) => setCatalogDraftRegions(activeKind, item.id, regions)} />
 							</div>
 						</form>
 					{:else}
-						<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('vaccine.emptyVaccines')}</p>
-					{/each}
-				{/if}
-			</div>
-		</section>
-	{:else if activeTab === 'antiparasitics'}
-		<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
-			<div class="flex items-start gap-3">
-				<span class="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-					<Pill class="size-5" />
-				</span>
-				<div class="min-w-0 flex-1">
-					<h3 class="text-base font-semibold">{t('antiparasiticTreatment.list.title')}</h3>
-					<form class="mt-4 grid gap-3 lg:grid-cols-2 lg:items-start" onsubmit={submitNewAntiparasitic}>
-						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-							<span class="flex min-w-0 items-baseline justify-between gap-2">
-								<span>{t('antiparasiticTreatment.name')}</span>
-								<CharacterLimitHint value={newAntiparasiticName} max={FIELD_LIMITS.treatmentName} />
-							</span>
-							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newAntiparasiticName} maxlength={FIELD_LIMITS.treatmentName} required />
-						</label>
-						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-							<span class="flex min-w-0 items-baseline justify-between gap-2">
-								<span>{t('medication.manufacturer')}</span>
-								<CharacterLimitHint value={newAntiparasiticManufacturer} max={FIELD_LIMITS.medicationManufacturer} />
-							</span>
-							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newAntiparasiticManufacturer} maxlength={FIELD_LIMITS.medicationManufacturer} />
-						</label>
-						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-							<span class="flex min-w-0 items-baseline justify-between gap-2">
-								<span>{t('medication.aliases')}</span>
-								<CharacterLimitHint value={newAntiparasiticAliases} max={FIELD_LIMITS.medicationAliasesJson} />
-							</span>
-							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newAntiparasiticAliases} maxlength={FIELD_LIMITS.medicationAliasesJson} placeholder={t('medication.aliasesPlaceholder')} />
-						</label>
-						<div class="flex min-w-0 flex-col gap-2 text-sm font-medium">
-							<span>{t('medication.species')}</span>
-							<div class="flex flex-wrap gap-2">
-								{#each petSpeciesOptions as option}
-									<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
-										<input type="checkbox" class="size-4 accent-primary" checked={newAntiparasiticSpecies.includes(option.id)} onchange={() => (newAntiparasiticSpecies = toggleSpeciesDraft(newAntiparasiticSpecies, option.id))} />
-										<span>{t(option.labelKey)}</span>
-									</label>
-								{/each}
-							</div>
-						</div>
-						<div class="flex min-w-0 flex-col gap-2 text-sm font-medium">
-							<span>{t('medication.regions')}</span>
-							<MedicationRegionsField id="new-antiparasitic-regions" value={newAntiparasiticRegions} disabled={saving} onchange={(regions) => (newAntiparasiticRegions = regions)} />
-						</div>
-						<button type="submit" class="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50 lg:col-span-2" disabled={saving}>
-							<Plus class="size-4" />
-							{t('antiparasiticTreatment.list.add')}
-						</button>
-					</form>
-				</div>
-			</div>
-
-			<div class="mt-4 flex flex-col gap-3">
-				{#if loading}
-					<div class="h-28 animate-pulse rounded-md bg-muted"></div>
-				{:else}
-					{#each antiparasitics as antiparasitic (antiparasitic.id)}
-						<form class="grid gap-3 rounded-md border border-border bg-background p-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto] xl:items-start" onsubmit={(event) => { event.preventDefault(); void saveExistingAntiparasitic(antiparasitic); }}>
-							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-								<span class="flex min-w-0 items-baseline justify-between gap-2">
-									<span>{t('antiparasiticTreatment.name')}</span>
-									<CharacterLimitHint value={antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name} max={FIELD_LIMITS.treatmentName} />
-								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={antiparasiticDraftNames[antiparasitic.id] ?? antiparasitic.name} maxlength={FIELD_LIMITS.treatmentName} disabled={!canEditMedicationCatalogItem(antiparasitic)} required oninput={(event) => (antiparasiticDraftNames = { ...antiparasiticDraftNames, [antiparasitic.id]: inputValue(event) })} />
-							</label>
-							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-								<span class="flex min-w-0 items-baseline justify-between gap-2">
-									<span>{t('medication.manufacturer')}</span>
-									<CharacterLimitHint value={antiparasiticDraftManufacturers[antiparasitic.id] ?? antiparasitic.manufacturer ?? ''} max={FIELD_LIMITS.medicationManufacturer} />
-								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={antiparasiticDraftManufacturers[antiparasitic.id] ?? antiparasitic.manufacturer ?? ''} maxlength={FIELD_LIMITS.medicationManufacturer} disabled={!canEditMedicationCatalogItem(antiparasitic)} oninput={(event) => (antiparasiticDraftManufacturers = { ...antiparasiticDraftManufacturers, [antiparasitic.id]: inputValue(event) })} />
-							</label>
-							<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-								<span class="flex min-w-0 items-baseline justify-between gap-2">
-									<span>{t('medication.aliases')}</span>
-									<CharacterLimitHint value={antiparasiticDraftAliases[antiparasitic.id] ?? aliasDraft(antiparasitic.aliases)} max={FIELD_LIMITS.medicationAliasesJson} />
-								</span>
-								<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={antiparasiticDraftAliases[antiparasitic.id] ?? aliasDraft(antiparasitic.aliases)} maxlength={FIELD_LIMITS.medicationAliasesJson} placeholder={t('medication.aliasesPlaceholder')} disabled={!canEditMedicationCatalogItem(antiparasitic)} oninput={(event) => (antiparasiticDraftAliases = { ...antiparasiticDraftAliases, [antiparasitic.id]: inputValue(event) })} />
-							</label>
-							{#if canEditMedicationCatalogItem(antiparasitic)}
-								<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
-									<Save class="size-4" />
-									{t('actions.save')}
-								</button>
-							{/if}
-							<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} title={antiparasitic.hiddenAt ? t('antiparasiticTreatment.list.show') : t('antiparasiticTreatment.list.hide')} onclick={() => void toggleAntiparasiticHidden(antiparasitic)}>
-								{#if antiparasitic.hiddenAt}
-									<Eye class="size-4" />
-									{t('antiparasiticTreatment.list.show')}
-								{:else}
-									<EyeOff class="size-4" />
-									{t('antiparasiticTreatment.list.hide')}
-								{/if}
-							</button>
-							{#if canDeleteMedicationCatalogItem(antiparasitic)}
-								<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={() => void deleteAntiparasitic(antiparasitic)}>
-									<Trash2 class="size-4" />
-									{t('actions.delete')}
-								</button>
-							{/if}
-							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-3">
-								<span>{t('medication.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(antiparasiticDraftSpeciesValue(antiparasitic))}</span></span>
-								<div class="flex flex-wrap gap-2">
-									{#each petSpeciesOptions as option}
-										<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
-											<input type="checkbox" class="size-4 accent-primary" checked={antiparasiticDraftSpeciesValue(antiparasitic).includes(option.id)} disabled={!canEditMedicationCatalogItem(antiparasitic)} onchange={() => setAntiparasiticSpecies(antiparasitic, option.id)} />
-											<span>{t(option.labelKey)}</span>
-										</label>
-									{/each}
-								</div>
-							</div>
-							<div class="flex min-w-0 flex-col gap-2 text-sm font-medium xl:col-span-3">
-								<span>{t('medication.regions')}</span>
-								<MedicationRegionsField id={`antiparasitic-regions-${antiparasitic.id}`} value={antiparasiticDraftRegionsValue(antiparasitic)} disabled={saving || !canEditMedicationCatalogItem(antiparasitic)} onchange={(regions) => setAntiparasiticRegions(antiparasitic.id, regions)} />
-							</div>
-						</form>
-					{:else}
-						<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('antiparasiticTreatment.emptyAntiparasitics')}</p>
+						<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t(config.emptyLabel)}</p>
 					{/each}
 				{/if}
 			</div>

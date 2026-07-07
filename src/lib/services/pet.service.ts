@@ -1,7 +1,7 @@
 import type { MedicalRecord } from '$lib/domain/medical-record/medical-record.js';
 import type { Owner } from '$lib/domain/owner/owner.js';
 import type { Pet, PetInput } from '$lib/domain/pet/pet.js';
-import type { PetTreatment, TreatmentCatalogItem } from '$lib/domain/treatment/treatment.js';
+import { TREATMENT_KINDS, type PetTreatment, type TreatmentCatalogItem, type TreatmentKind } from '$lib/domain/treatment/treatment.js';
 import { listRecordsByPet } from '$lib/persistence/repositories/medical-record.repository.js';
 import { listOwnersByPet } from '$lib/persistence/repositories/owner.repository.js';
 import { createPet, getPet, linkPetToOwner, searchPetsForOwnerLink, softDeletePet, updatePet } from '$lib/persistence/repositories/pet.repository.js';
@@ -11,26 +11,30 @@ export interface PetProfile {
 	pet: Pet;
 	owners: Owner[];
 	records: MedicalRecord[];
-	vaccinations: PetTreatment[];
-	vaccines: TreatmentCatalogItem[];
-	antiparasiticTreatments: PetTreatment[];
-	antiparasitics: TreatmentCatalogItem[];
+	treatments: Record<TreatmentKind, PetProfileTreatmentBundle>;
+}
+
+export interface PetProfileTreatmentBundle {
+	treatments: PetTreatment[];
+	catalogItems: TreatmentCatalogItem[];
 }
 
 export async function loadPetProfile(petId: number): Promise<PetProfile> {
 	const pet = await getPet(petId);
 	if (!pet) throw new Error('pet_not_found');
 
-	const [owners, records, vaccinations, vaccines, antiparasiticTreatments, antiparasitics] = await Promise.all([
+	const [owners, records, treatmentEntries] = await Promise.all([
 		listOwnersByPet(pet.id),
 		listRecordsByPet(pet.id),
-		listTreatmentsByPet('vaccine', pet.id),
-		listTreatmentCatalogItems('vaccine'),
-		listTreatmentsByPet('antiparasitic', pet.id),
-		listTreatmentCatalogItems('antiparasitic')
+		Promise.all(
+			TREATMENT_KINDS.map(async (kind) => {
+				const [treatments, catalogItems] = await Promise.all([listTreatmentsByPet(kind, pet.id), listTreatmentCatalogItems(kind)]);
+				return [kind, { treatments, catalogItems }] as const;
+			})
+		)
 	]);
 
-	return { pet, owners, records, vaccinations, vaccines, antiparasiticTreatments, antiparasitics };
+	return { pet, owners, records, treatments: Object.fromEntries(treatmentEntries) as Record<TreatmentKind, PetProfileTreatmentBundle> };
 }
 
 export async function saveNewPet(ownerId: number, input: PetInput): Promise<Pet> {

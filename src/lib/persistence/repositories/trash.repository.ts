@@ -1,9 +1,11 @@
+import type { TreatmentKind } from '$lib/domain/treatment/treatment.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
-export type TrashKind = 'owner' | 'pet' | 'record' | 'vaccination' | 'antiparasiticTreatment' | 'protocol';
+export type TrashKind = 'owner' | 'pet' | 'record' | 'treatment' | 'protocol';
 
 export interface TrashItem {
 	kind: TrashKind;
+	treatmentKind: TreatmentKind | null;
 	id: number;
 	title: string;
 	subtitle: string;
@@ -13,6 +15,7 @@ export interface TrashItem {
 
 interface TrashRow {
 	kind: TrashKind;
+	treatment_kind: TreatmentKind | null;
 	id: number;
 	title: string;
 	subtitle: string | null;
@@ -32,6 +35,7 @@ const ownerNamesForPetSql = `(SELECT group_concat(name, ' · ')
 function mapTrashItem(row: TrashRow): TrashItem {
 	return {
 		kind: row.kind,
+		treatmentKind: row.treatment_kind,
 		id: row.id,
 		title: row.title,
 		subtitle: row.subtitle ?? '',
@@ -43,6 +47,7 @@ function mapTrashItem(row: TrashRow): TrashItem {
 export async function listTrashItems(): Promise<TrashItem[]> {
 	const rows = await selectMany<TrashRow>(
 		`SELECT 'owner' AS kind,
+			NULL AS treatment_kind,
 			owners.id,
 			owners.name AS title,
 			COALESCE((
@@ -64,6 +69,7 @@ export async function listTrashItems(): Promise<TrashItem[]> {
 		 UNION ALL
 
 		 SELECT 'pet' AS kind,
+			NULL AS treatment_kind,
 			pets.id,
 			pets.name AS title,
 			COALESCE(${ownerNamesForPetSql}, '') AS subtitle,
@@ -74,7 +80,8 @@ export async function listTrashItems(): Promise<TrashItem[]> {
 
 		 UNION ALL
 
-		 SELECT 'vaccination' AS kind,
+		 SELECT 'treatment' AS kind,
+			pet_treatments.kind AS treatment_kind,
 			pet_treatments.id,
 			pet_treatments.name AS title,
 			COALESCE(
@@ -87,28 +94,12 @@ export async function listTrashItems(): Promise<TrashItem[]> {
 			pet_treatments.purge_after
 		 FROM pet_treatments
 		 LEFT JOIN pets ON pets.id = pet_treatments.pet_id
-		 WHERE pet_treatments.kind = 'vaccine' AND pet_treatments.deleted_at IS NOT NULL
-
-		 UNION ALL
-
-		 SELECT 'antiparasiticTreatment' AS kind,
-			pet_treatments.id,
-			pet_treatments.name AS title,
-			COALESCE(
-				pets.name || ' · ' || ${ownerNamesForPetSql} || ' · ' || pet_treatments.applied_at,
-				pets.name || ' · ' || pet_treatments.applied_at,
-				pet_treatments.applied_at,
-				''
-			) AS subtitle,
-			pet_treatments.deleted_at,
-			pet_treatments.purge_after
-		 FROM pet_treatments
-		 LEFT JOIN pets ON pets.id = pet_treatments.pet_id
-		 WHERE pet_treatments.kind = 'antiparasitic' AND pet_treatments.deleted_at IS NOT NULL
+		 WHERE pet_treatments.deleted_at IS NOT NULL
 
 		 UNION ALL
 
 		 SELECT 'protocol' AS kind,
+			NULL AS treatment_kind,
 			medication_protocols.id,
 			medication_protocols.name AS title,
 			COALESCE(medication_protocols.observation, '') AS subtitle,
@@ -120,6 +111,7 @@ export async function listTrashItems(): Promise<TrashItem[]> {
 		 UNION ALL
 
 		 SELECT 'record' AS kind,
+			NULL AS treatment_kind,
 			medical_records.id,
 			COALESCE(medical_records.title, 'Prontuario ' || medical_records.id) AS title,
 			COALESCE(pets.name || ' · ' || ${ownerNamesForPetSql}, pets.name, '') AS subtitle,
@@ -159,14 +151,14 @@ export async function restoreTrashItem(kind: TrashKind, id: number): Promise<voi
 		return;
 	}
 
-	if (kind === 'vaccination') {
+	if (kind === 'treatment') {
 		await execute(
 			`UPDATE pets
 			 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
-			 WHERE id = (SELECT pet_id FROM pet_treatments WHERE id = $1 AND kind = 'vaccine')`,
+			 WHERE id = (SELECT pet_id FROM pet_treatments WHERE id = $1)`,
 			[id]
 		);
-		await execute("UPDATE pet_treatments SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND kind = 'vaccine'", [id]);
+		await execute('UPDATE pet_treatments SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
 		return;
 	}
 
@@ -174,14 +166,6 @@ export async function restoreTrashItem(kind: TrashKind, id: number): Promise<voi
 		await execute('UPDATE medication_protocols SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
 		return;
 	}
-
-	await execute(
-		`UPDATE pets
-		 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
-		 WHERE id = (SELECT pet_id FROM pet_treatments WHERE id = $1 AND kind = 'antiparasitic')`,
-		[id]
-	);
-	await execute("UPDATE pet_treatments SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND kind = 'antiparasitic'", [id]);
 }
 
 export async function hardDeleteTrashItem(kind: TrashKind, id: number): Promise<void> {
@@ -207,8 +191,8 @@ export async function hardDeleteTrashItem(kind: TrashKind, id: number): Promise<
 		return;
 	}
 
-	if (kind === 'vaccination') {
-		await execute("DELETE FROM pet_treatments WHERE id = $1 AND kind = 'vaccine'", [id]);
+	if (kind === 'treatment') {
+		await execute('DELETE FROM pet_treatments WHERE id = $1', [id]);
 		return;
 	}
 
@@ -216,8 +200,6 @@ export async function hardDeleteTrashItem(kind: TrashKind, id: number): Promise<
 		await execute('DELETE FROM medication_protocols WHERE id = $1', [id]);
 		return;
 	}
-
-	await execute("DELETE FROM pet_treatments WHERE id = $1 AND kind = 'antiparasitic'", [id]);
 }
 
 export async function purgeExpiredTrash(now = new Date().toISOString()): Promise<void> {

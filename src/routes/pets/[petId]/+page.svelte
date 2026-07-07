@@ -18,7 +18,7 @@
 	import { formatDateForDisplay, formatDateForInput, normalizeDateInput } from '$lib/domain/shared/date-input.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import { computeAgeFromBirthDate } from '$lib/domain/shared/time.js';
-	import { getTreatmentDueStatus, type PetTreatment } from '$lib/domain/treatment/treatment.js';
+	import { getTreatmentDueStatus, TREATMENT_KINDS, type PetTreatment, type TreatmentKind } from '$lib/domain/treatment/treatment.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
 	import type { PetProfile } from '$lib/services/pet.service.js';
 	import { loadPetProfile, removePet, savePet } from '$lib/services/pet.service.js';
@@ -32,16 +32,50 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
 	type PetForm = Omit<PetInput, 'sex' | 'avatarBytes'> & { sex: '' | Exclude<PetSex, null>; avatarBytes: Uint8Array | null };
-	type PetPanel = 'overview' | 'records' | 'vaccines' | 'antiparasiticTreatments' | 'administrative';
+	type TreatmentPanelId = 'vaccines' | 'antiparasiticTreatments';
+	type PetPanel = 'overview' | 'records' | TreatmentPanelId | 'administrative';
+	type PanelIcon = typeof Info;
+
+	interface TreatmentPanelConfig {
+		kind: TreatmentKind;
+		panelId: TreatmentPanelId;
+		titleKey: TranslationKey;
+		latestTitleKey: TranslationKey;
+		emptyKey: TranslationKey;
+		icon: PanelIcon;
+	}
 
 	const petId = $derived(Number(page.params.petId));
+
+	function treatmentPanelConfig(kind: TreatmentKind): TreatmentPanelConfig {
+		if (kind === 'vaccine') {
+			return {
+				kind,
+				panelId: 'vaccines',
+				titleKey: 'pet.vaccinesSection',
+				latestTitleKey: 'pet.latestVaccines',
+				emptyKey: 'pet.noRecentVaccines',
+				icon: Syringe
+			};
+		}
+
+		return {
+			kind,
+			panelId: 'antiparasiticTreatments',
+			titleKey: 'pet.antiparasiticsSection',
+			latestTitleKey: 'pet.latestAntiparasitics',
+			emptyKey: 'pet.noRecentAntiparasitics',
+			icon: Pill
+		};
+	}
+
+	const treatmentPanelConfigs = TREATMENT_KINDS.map(treatmentPanelConfig);
 	const panelItems = [
 		{ id: 'overview', titleKey: 'pet.overviewSection', icon: Info },
 		{ id: 'records', titleKey: 'pet.recordsSection', icon: ClipboardPenLine },
-		{ id: 'vaccines', titleKey: 'pet.vaccinesSection', icon: Syringe },
-		{ id: 'antiparasiticTreatments', titleKey: 'pet.antiparasiticsSection', icon: Pill },
+		...treatmentPanelConfigs.map(({ panelId, titleKey, icon }) => ({ id: panelId, titleKey, icon })),
 		{ id: 'administrative', titleKey: 'pet.administrativeSection', icon: Settings }
-	] satisfies { id: PetPanel; titleKey: TranslationKey; icon: typeof Info }[];
+	] satisfies { id: PetPanel; titleKey: TranslationKey; icon: PanelIcon }[];
 
 	function avatarSnapshotValue(bytes: Uint8Array | null | undefined): string {
 		if (!bytes || bytes.length === 0) return 'none';
@@ -138,6 +172,20 @@
 		return items.reduce<string | null>((latest, item) => (!latest || item.appliedAt > latest ? item.appliedAt : latest), null);
 	}
 
+	function latestTreatments(kind: TreatmentKind): PetTreatment[] {
+		if (!profile) return [];
+
+		const treatments = profile.treatments[kind].treatments;
+		const latestDate = latestAppliedDate(treatments);
+		if (!latestDate) return [];
+
+		return treatments.filter((treatment) => treatment.appliedAt === latestDate).sort((first, second) => first.name.localeCompare(second.name) || first.id - second.id);
+	}
+
+	function treatmentConfigForPanel(panel: PetPanel): TreatmentPanelConfig | null {
+		return treatmentPanelConfigs.find((config) => config.panelId === panel) ?? null;
+	}
+
 	let profile = $state<PetProfile | null>(null);
 	let form = $state<PetForm>({ name: '', birthDate: '', species: null, breed: null, sex: '', avatarBytes: null });
 	let activePanel = $state<PetPanel>('overview');
@@ -157,22 +205,11 @@
 
 	const currentSnapshot = $derived(snapshotForm(form));
 	const hasUnsavedChanges = $derived(editing && Boolean(profile) && !loading && currentSnapshot !== savedSnapshot);
+	const activeTreatmentPanelConfig = $derived(treatmentConfigForPanel(activePanel));
 	const lastEditedRecord = $derived.by(() => {
 		if (!profile) return null;
 		return [...profile.records].sort((first, second) => recordEditedSortValue(second).localeCompare(recordEditedSortValue(first)) || second.id - first.id)[0] ?? null;
 	});
-	const latestVaccinationDate = $derived(profile ? latestAppliedDate(profile.vaccinations) : null);
-	const latestVaccinations = $derived(
-		profile && latestVaccinationDate
-			? profile.vaccinations.filter((vaccination) => vaccination.appliedAt === latestVaccinationDate).sort((first, second) => first.name.localeCompare(second.name) || first.id - second.id)
-			: []
-	);
-	const latestAntiparasiticTreatmentDate = $derived(profile ? latestAppliedDate(profile.antiparasiticTreatments) : null);
-	const latestAntiparasiticTreatments = $derived(
-		profile && latestAntiparasiticTreatmentDate
-			? profile.antiparasiticTreatments.filter((antiparasiticTreatment) => antiparasiticTreatment.appliedAt === latestAntiparasiticTreatmentDate).sort((first, second) => first.name.localeCompare(second.name) || first.id - second.id)
-			: []
-	);
 
 	const petAgeText = $derived.by(() => {
 		const age = computeAgeFromBirthDate(form.birthDate);
@@ -350,14 +387,15 @@
 		}
 	}
 
-	function updateVaccinations(vaccinations: PetTreatment[]) {
+	function updateTreatments(kind: TreatmentKind, treatments: PetTreatment[]) {
 		if (!profile) return;
-		profile = { ...profile, vaccinations };
-	}
-
-	function updateAntiparasiticTreatments(antiparasiticTreatments: PetTreatment[]) {
-		if (!profile) return;
-		profile = { ...profile, antiparasiticTreatments };
+		profile = {
+			...profile,
+			treatments: {
+				...profile.treatments,
+				[kind]: { ...profile.treatments[kind], treatments }
+			}
+		};
 	}
 
 	function selectPanel(panel: PetPanel) {
@@ -568,47 +606,31 @@
 								{/if}
 							</section>
 
-							<section class="rounded-md border border-border bg-card p-4 shadow-sm">
-								<h3 class="text-sm font-semibold">{t('pet.latestVaccines')}</h3>
-								{#if latestVaccinationDate && latestVaccinations.length > 0}
-									<p class="mt-2 text-xs font-medium text-muted-foreground">{formatDateForDisplay(latestVaccinationDate, i18n.locale)}</p>
-									<div class="mt-3 flex flex-col gap-2">
-										{#each latestVaccinations as vaccination}
-											<div class="flex items-start gap-3 rounded-md border border-border bg-background p-3">
-												<Syringe class="mt-0.5 size-4 shrink-0 text-primary" />
-												<span class="min-w-0">
-													<span class="block truncate text-sm font-medium">{vaccination.name}</span>
-													<span class="block truncate text-xs text-muted-foreground">{vaccination.dose}</span>
-													<TreatmentDueBadge kind="vaccine" status={getTreatmentDueStatus(vaccination)} className="mt-2" />
-												</span>
-											</div>
-										{/each}
-									</div>
-								{:else}
-									<p class="mt-3 rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('pet.noRecentVaccines')}</p>
-								{/if}
-							</section>
-
-							<section class="rounded-md border border-border bg-card p-4 shadow-sm">
-								<h3 class="text-sm font-semibold">{t('pet.latestAntiparasitics')}</h3>
-								{#if latestAntiparasiticTreatmentDate && latestAntiparasiticTreatments.length > 0}
-									<p class="mt-2 text-xs font-medium text-muted-foreground">{formatDateForDisplay(latestAntiparasiticTreatmentDate, i18n.locale)}</p>
-									<div class="mt-3 flex flex-col gap-2">
-										{#each latestAntiparasiticTreatments as antiparasiticTreatment}
-											<div class="flex items-start gap-3 rounded-md border border-border bg-background p-3">
-												<Pill class="mt-0.5 size-4 shrink-0 text-primary" />
-												<span class="min-w-0">
-													<span class="block truncate text-sm font-medium">{antiparasiticTreatment.name}</span>
-													<span class="block truncate text-xs text-muted-foreground">{antiparasiticTreatment.dose}</span>
-													<TreatmentDueBadge kind="antiparasitic" status={getTreatmentDueStatus(antiparasiticTreatment)} className="mt-2" />
-												</span>
-											</div>
-										{/each}
-									</div>
-								{:else}
-									<p class="mt-3 rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('pet.noRecentAntiparasitics')}</p>
-								{/if}
-							</section>
+							{#each treatmentPanelConfigs as treatmentConfig}
+								{@const Icon = treatmentConfig.icon}
+								{@const latestTreatmentDate = latestAppliedDate(profile.treatments[treatmentConfig.kind].treatments)}
+								{@const latestTreatmentItems = latestTreatments(treatmentConfig.kind)}
+								<section class="rounded-md border border-border bg-card p-4 shadow-sm">
+									<h3 class="text-sm font-semibold">{t(treatmentConfig.latestTitleKey)}</h3>
+									{#if latestTreatmentDate && latestTreatmentItems.length > 0}
+										<p class="mt-2 text-xs font-medium text-muted-foreground">{formatDateForDisplay(latestTreatmentDate, i18n.locale)}</p>
+										<div class="mt-3 flex flex-col gap-2">
+											{#each latestTreatmentItems as treatment}
+												<div class="flex items-start gap-3 rounded-md border border-border bg-background p-3">
+													<Icon class="mt-0.5 size-4 shrink-0 text-primary" />
+													<span class="min-w-0">
+														<span class="block truncate text-sm font-medium">{treatment.name}</span>
+														<span class="block truncate text-xs text-muted-foreground">{treatment.dose}</span>
+														<TreatmentDueBadge kind={treatmentConfig.kind} status={getTreatmentDueStatus(treatment)} className="mt-2" />
+													</span>
+												</div>
+											{/each}
+										</div>
+									{:else}
+										<p class="mt-3 rounded-md bg-muted p-3 text-sm text-muted-foreground">{t(treatmentConfig.emptyKey)}</p>
+									{/if}
+								</section>
+							{/each}
 						</div>
 					</div>
 				{:else if activePanel === 'records'}
@@ -635,13 +657,17 @@
 							{/each}
 						</div>
 					</section>
-				{:else if activePanel === 'vaccines'}
+				{:else if activeTreatmentPanelConfig}
+					{@const treatmentBundle = profile.treatments[activeTreatmentPanelConfig.kind]}
 					<div role="tabpanel">
-						<TreatmentPanel kind="vaccine" petId={petId} petSpecies={profile.pet.species} treatments={profile.vaccinations} catalogItems={profile.vaccines} onChange={updateVaccinations} />
-					</div>
-				{:else if activePanel === 'antiparasiticTreatments'}
-					<div role="tabpanel">
-						<TreatmentPanel kind="antiparasitic" petId={petId} petSpecies={profile.pet.species} treatments={profile.antiparasiticTreatments} catalogItems={profile.antiparasitics} onChange={updateAntiparasiticTreatments} />
+						<TreatmentPanel
+							kind={activeTreatmentPanelConfig.kind}
+							petId={petId}
+							petSpecies={profile.pet.species}
+							treatments={treatmentBundle.treatments}
+							catalogItems={treatmentBundle.catalogItems}
+							onChange={(treatments) => updateTreatments(activeTreatmentPanelConfig.kind, treatments)}
+						/>
 					</div>
 				{:else}
 					<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5" role="tabpanel">

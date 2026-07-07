@@ -3,6 +3,8 @@ import type { MedicationCatalogOrigin, MedicationSpecies } from '$lib/domain/med
 export type TreatmentKind = 'vaccine' | 'antiparasitic';
 export type TreatmentValidityUnit = 'days' | 'months' | 'years';
 
+export const TREATMENT_KINDS = ['vaccine', 'antiparasitic'] as const satisfies readonly TreatmentKind[];
+
 export interface TreatmentCatalogItem {
 	id: number;
 	kind: TreatmentKind;
