@@ -172,8 +172,6 @@ describe('default medication catalog', () => {
 
 		expect(sample.extension?.classification).toBeTruthy();
 		expect(sample.extension?.commercialLine).toBeTruthy();
-		expect(sample.extension?.rating).toBeTypeOf('number');
-		expect(sample.extension?.reviewCount).toBeTypeOf('number');
 
 		for (const sectionId of medicationLeafletSectionIds) {
 			expect(sample.extension?.sections?.[sectionId]?.trim().length).toBeGreaterThan(0);

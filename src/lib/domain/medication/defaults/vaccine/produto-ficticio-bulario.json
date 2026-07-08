@@ -19,8 +19,6 @@
 	"extension": {
 		"classification": "Medicamento ficticio de referência",
 		"commercialLine": "Linha demonstrativa",
-		"rating": 8.7,
-		"reviewCount": 152,
 		"sections": {
 			"about": "Receita simples. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae justo sed arcu facilisis luctus. Composição demonstrativa com ativos fictícios para visualização do bulário.",
 			"presentations": "Apresentação demonstrativa em frasco, blister ou embalagem clínica. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec non mi ac augue facilisis volutpat.",
@@ -30,7 +28,6 @@
 			"pharmacology": "Farmacologia demonstrativa. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Propriedades farmacodinâmicas e farmacocinéticas simuladas para composição visual.",
 			"studies": "Estudos demonstrativos. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Evidências e observações clínicas fictícias para teste de conteúdo longo.",
 			"videos": "Vídeos demonstrativos. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Links ou descrições poderão ser organizados em outra etapa.",
-			"reviews": "Avaliações fictícias. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Comentários gerais e percepção de uso podem ser apresentados aqui.",
 			"distributors": "Distribuidores fictícios. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Contatos, regiões atendidas e observações comerciais ficam em texto corrido por enquanto.",
 			"references": "Referências bibliográficas fictícias. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fontes e documentos poderão receber estrutura própria depois."
 		}

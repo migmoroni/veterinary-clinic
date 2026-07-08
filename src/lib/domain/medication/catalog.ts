@@ -13,7 +13,6 @@ export const medicationLeafletSectionIds = [
 	'pharmacology',
 	'studies',
 	'videos',
-	'reviews',
 	'distributors',
 	'references'
 ] as const;
@@ -25,8 +24,6 @@ export type MedicationLeafletSections = Partial<Record<MedicationLeafletSectionI
 export interface MedicationCatalogExtension {
 	classification: string | null;
 	commercialLine: string | null;
-	rating: number | null;
-	reviewCount: number | null;
 	sections: MedicationLeafletSections;
 }
 
@@ -34,8 +31,6 @@ export const defaultMedicationSpecies = [...medicationSpeciesIds];
 export const emptyMedicationCatalogExtension: MedicationCatalogExtension = {
 	classification: null,
 	commercialLine: null,
-	rating: null,
-	reviewCount: null,
 	sections: {}
 };
 
@@ -165,11 +160,6 @@ function normalizedNullableText(value: unknown): string | null {
 	return trimmed ? trimmed : null;
 }
 
-function normalizedNullableNumber(value: unknown): number | null {
-	if (typeof value !== 'number' || !Number.isFinite(value)) return null;
-	return value;
-}
-
 function normalizedLeafletSections(value: unknown): MedicationLeafletSections {
 	if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
 
@@ -191,8 +181,6 @@ export function normalizeMedicationCatalogExtension(value: unknown): MedicationC
 	return {
 		classification: normalizedNullableText(source.classification),
 		commercialLine: normalizedNullableText(source.commercialLine),
-		rating: normalizedNullableNumber(source.rating),
-		reviewCount: normalizedNullableNumber(source.reviewCount),
 		sections: normalizedLeafletSections(source.sections)
 	};
 }

@@ -5,7 +5,7 @@
 	import { type ReferenceFilterBarSelect } from '$lib/components/reference/ReferenceFilterBar.svelte';
 	import { type ReferenceGridCard } from '$lib/components/reference/ReferenceCardGrid.svelte';
 	import ReferenceSummarySidebar, { type ReferenceSummaryField } from '$lib/components/reference/ReferenceSummarySidebar.svelte';
-	import { normalizeReferenceSearch, referenceSpeciesLabel, referenceSpeciesOptions, referenceStarCount, resolveReferenceSelection } from '$lib/components/reference/reference-utils.js';
+	import { normalizeReferenceSearch, referenceSpeciesLabel, referenceSpeciesOptions, resolveReferenceSelection } from '$lib/components/reference/reference-utils.js';
 	import { countryOptions } from '$lib/domain/geo/location.js';
 	import { medicationLeafletSectionIds, type MedicationCatalogOrigin, type MedicationLeafletSectionId, type MedicationSpecies } from '$lib/domain/medication/catalog.js';
 	import type { TreatmentCatalogItem, TreatmentKind } from '$lib/domain/treatment/treatment.js';
@@ -13,7 +13,6 @@
 	import { loadAllTreatmentCatalogItems } from '$lib/services/treatment.service.js';
 	import Info from '@lucide/svelte/icons/info';
 	import Pill from '@lucide/svelte/icons/pill';
-	import Star from '@lucide/svelte/icons/star';
 	import Syringe from '@lucide/svelte/icons/syringe';
 
 	type KindFilter = 'all' | TreatmentKind;
@@ -181,12 +180,6 @@
 		return item.extension.sections[sectionId]?.trim() ?? '';
 	}
 
-	function ratingLabel(item: TreatmentCatalogItem): string {
-		const rating = item.extension.rating;
-		if (rating === null) return t('formulary.ratingUnavailable');
-		return new Intl.NumberFormat(i18n.locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(rating);
-	}
-
 	async function loadItems() {
 		loading = true;
 		errorKey = null;
@@ -250,17 +243,6 @@
 				>
 					{#snippet image()}
 						<MedicationImage kind={selectedItem.kind} imageBytes={selectedItem.primaryImage?.imageBytes ?? null} alt={selectedItem.name} className="aspect-16/10 w-full rounded-b-none border-0 bg-muted/60" imageClass="h-full w-full object-contain p-4" iconClass="size-12 text-primary" />
-					{/snippet}
-
-					{#snippet meta()}
-						<div class="mt-3 flex items-center gap-2 text-sm text-amber-600">
-							<span class="font-medium tabular-nums">{ratingLabel(selectedItem)}</span>
-							<span class="inline-flex items-center gap-0.5" aria-hidden="true">
-								{#each Array.from({ length: 5 }) as _, index}
-									<Star class="size-3.5 {index < referenceStarCount(selectedItem.extension.rating) ? 'fill-amber-500 text-amber-500' : 'text-muted-foreground/35'}" />
-								{/each}
-							</span>
-						</div>
 					{/snippet}
 				</ReferenceSummarySidebar>
 			{/if}

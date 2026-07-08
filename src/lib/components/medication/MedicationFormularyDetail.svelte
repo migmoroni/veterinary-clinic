@@ -12,7 +12,6 @@
 	import Package from '@lucide/svelte/icons/package';
 	import Quote from '@lucide/svelte/icons/quote';
 	import Share2 from '@lucide/svelte/icons/share-2';
-	import Star from '@lucide/svelte/icons/star';
 	import Syringe from '@lucide/svelte/icons/syringe';
 	import Video from '@lucide/svelte/icons/video';
 	import type { Component } from 'svelte';
@@ -32,7 +31,6 @@
 		{ id: 'pharmacology', labelKey: 'formulary.section.pharmacology', icon: FlaskConical },
 		{ id: 'studies', labelKey: 'formulary.section.studies', icon: GraduationCap },
 		{ id: 'videos', labelKey: 'formulary.section.videos', icon: Video },
-		{ id: 'reviews', labelKey: 'formulary.section.reviews', icon: Star },
 		{ id: 'distributors', labelKey: 'formulary.section.distributors', icon: Building2 },
 		{ id: 'references', labelKey: 'formulary.section.references', icon: Quote }
 	];
@@ -85,16 +83,6 @@
 			.filter(Boolean);
 	}
 
-	function ratingLabel(source: TreatmentCatalogItem): string {
-		const rating = source.extension.rating;
-		if (rating === null) return t('formulary.ratingUnavailable');
-		return new Intl.NumberFormat(i18n.locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(rating);
-	}
-
-	function activeStars(source: TreatmentCatalogItem): number {
-		return Math.max(0, Math.min(5, Math.round((source.extension.rating ?? 0) / 2)));
-	}
-
 	function originLabel(origin: MedicationCatalogOrigin): string {
 		return origin === 'system' ? t('formulary.origin.system') : t('formulary.origin.user');
 	}
@@ -136,24 +124,6 @@
 					<span class="mx-2 text-border">|</span>{item.extension.commercialLine}
 				{/if}
 			</p>
-
-			<div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-y border-border py-3">
-				<div class="flex items-center gap-2 text-sm text-amber-600">
-					<span class="font-medium tabular-nums">{ratingLabel(item)}</span>
-					<span class="inline-flex items-center gap-0.5" aria-hidden="true">
-						{#each Array.from({ length: 5 }) as _, index}
-							<Star class="size-4 {index < activeStars(item) ? 'fill-amber-500 text-amber-500' : 'text-muted-foreground/35'}" />
-						{/each}
-					</span>
-				</div>
-				<span class="text-sm text-muted-foreground">
-					{#if item.extension.reviewCount !== null}
-						{item.extension.reviewCount} {t('formulary.reviewCount')}
-					{:else}
-						{t('formulary.noReviews')}
-					{/if}
-				</span>
-			</div>
 
 			<div class="mt-4 grid gap-1 text-sm text-muted-foreground sm:grid-cols-2">
 				<p>{t('formulary.kind')}: <span class="text-foreground">{kindLabel(item.kind)}</span></p>
