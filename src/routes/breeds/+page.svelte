@@ -4,12 +4,13 @@
 	import { type ReferenceGridCard } from '$lib/components/reference/ReferenceCardGrid.svelte';
 	import ReferenceExplorer from '$lib/components/reference/ReferenceExplorer.svelte';
 	import { type ReferenceFilterBarSelect } from '$lib/components/reference/ReferenceFilterBar.svelte';
+	import ReferenceSummarySidebar, { type ReferenceSummaryField } from '$lib/components/reference/ReferenceSummarySidebar.svelte';
+	import { normalizeReferenceSearch, referenceRangeRows, referenceSpeciesLabel, referenceSpeciesOptions, resolveReferenceSelection } from '$lib/components/reference/reference-utils.js';
 	import {
 		getBreedOriginMapPosition,
 		type BreedReferenceOrigin,
 		type BreedReferenceProfile,
-		type BreedSizeCategory,
-		type BreedSexRange
+		type BreedSizeCategory
 	} from '$lib/domain/pet/breed-reference.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
 	import { loadBreedReferenceProfiles } from '$lib/services/breed-reference.service.js';
@@ -40,7 +41,7 @@
 	let mapDragState = $state<MapDragState | null>(null);
 
 	const filteredProfiles = $derived.by(() => {
-		const search = normalizeSearchText(searchTerm);
+		const search = normalizeReferenceSearch(searchTerm);
 
 		return profiles.filter((profile) => {
 			if (speciesFilter !== 'all' && profile.species !== speciesFilter) return false;
@@ -48,7 +49,7 @@
 			if (originFilter && profile.origin.id !== originFilter) return false;
 			if (!search) return true;
 
-			return normalizeSearchText([breedName(profile), speciesLabel(profile), originLabel(profile.origin), sizeLabel(profile.sizeCategory)].join(' ')).includes(search);
+			return normalizeReferenceSearch([breedName(profile), speciesLabel(profile), originLabel(profile.origin), sizeLabel(profile.sizeCategory)].join(' ')).includes(search);
 		});
 	});
 	const selectedProfile = $derived(filteredProfiles.find((profile) => profile.breedId === selectedBreedId) ?? filteredProfiles[0] ?? null);
@@ -62,6 +63,16 @@
 			fallbackIcon: PawPrint,
 			imageAlt: ''
 		}))
+	);
+	const selectedSummaryFields = $derived<ReferenceSummaryField[]>(
+		selectedProfile
+			? [
+					{ label: t('breedReference.origin'), value: originLabel(selectedProfile.origin) },
+					{ label: t('breedReference.size'), value: sizeLabel(selectedProfile.sizeCategory) },
+					{ label: t('breedReference.averageWeight'), icon: Scale, rows: sexRangeRows(selectedProfile.averageWeightKg, 'breedReference.unit.kg') },
+					{ label: t('breedReference.averageHeight'), icon: Ruler, rows: sexRangeRows(selectedProfile.averageHeightCm, 'breedReference.unit.cm') }
+				]
+			: []
 	);
 	const filterControls = $derived.by<ReferenceFilterBarSelect[]>(() => [
 		{
@@ -91,21 +102,12 @@
 	const mapLayerTransform = $derived(mapZoom === 'detail' ? `translate(${mapZoomTranslate(mapFocus.left)}%, ${mapZoomTranslate(mapFocus.top)}%) scale(4)` : 'translate(0%, 0%) scale(1)');
 	const mapPointScale = $derived(mapZoom === 'detail' ? 0.25 : 1);
 
-	function normalizeSearchText(value: string): string {
-		return value
-			.normalize('NFD')
-			.replace(/[\u0300-\u036f]/g, '')
-			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, ' ')
-			.trim();
-	}
-
 	function breedName(profile: BreedReferenceProfile): string {
 		return t(profile.labelKey);
 	}
 
 	function speciesLabel(profile: BreedReferenceProfile): string {
-		return profile.species === 'canine' ? t('pet.speciesCanine') : t('pet.speciesFeline');
+		return referenceSpeciesLabel(profile.species, t('pet.speciesCanine'), t('pet.speciesFeline'));
 	}
 
 	function sizeLabel(size: BreedSizeCategory): string {
@@ -119,27 +121,16 @@
 		return new Intl.DisplayNames([i18n.locale], { type: 'region' }).of(origin.countryCode) ?? origin.countryCode;
 	}
 
-	function rangeLabel(range: readonly [number, number], unitKey: TranslationKey): string {
-		return `${numberLabel(range[0])}-${numberLabel(range[1])} ${t(unitKey)}`;
-	}
-
 	function numberLabel(value: number): string {
 		return new Intl.NumberFormat(i18n.locale, { maximumFractionDigits: 1 }).format(value);
 	}
 
-	function sexRangeRows(range: BreedSexRange, unitKey: TranslationKey) {
-		return [
-			{ label: t('breedReference.male'), value: rangeLabel(range.male, unitKey) },
-			{ label: t('breedReference.female'), value: rangeLabel(range.female, unitKey) }
-		];
+	function sexRangeRows(range: { male: readonly [number, number]; female: readonly [number, number] }, unitKey: TranslationKey) {
+		return referenceRangeRows(range, { male: t('breedReference.male'), female: t('breedReference.female'), unit: t(unitKey) }, numberLabel);
 	}
 
 	function speciesOptions() {
-		return [
-			{ value: 'all', label: t('breedReference.allSpecies') },
-			{ value: 'canine', label: t('pet.speciesCanine') },
-			{ value: 'feline', label: t('pet.speciesFeline') }
-		];
+		return referenceSpeciesOptions(t('breedReference.allSpecies'), t('pet.speciesCanine'), t('pet.speciesFeline'));
 	}
 
 	function sizeOptions() {
@@ -329,14 +320,7 @@
 	});
 
 	$effect(() => {
-		if (filteredProfiles.length === 0) {
-			selectedBreedId = null;
-			return;
-		}
-
-		if (!selectedBreedId || !filteredProfiles.some((profile) => profile.breedId === selectedBreedId)) {
-			selectedBreedId = filteredProfiles[0].breedId;
-		}
+		selectedBreedId = resolveReferenceSelection(filteredProfiles, selectedBreedId, (profile) => profile.breedId);
 	});
 
 	$effect(() => {
@@ -431,57 +415,17 @@
 	>
 		{#snippet sidebar()}
 			{#if selectedProfile}
-				<section class="rounded-md border border-border bg-card shadow-sm">
-					<BinaryImage imageBytes={selectedProfile.primaryImage?.imageBytes ?? null} alt={breedName(selectedProfile)} className="aspect-16/10 w-full rounded-b-none border-0 bg-muted/60" imageClass="h-full w-full object-contain p-4" iconClass="size-16 text-muted-foreground" fallbackIcon={PawPrint} />
-					<div class="p-3 sm:p-4">
-						<p class="text-xs font-medium uppercase text-muted-foreground">{t('breedReference.detailsTitle')}</p>
-						<h3 class="mt-1 wrap-break-word text-lg font-semibold">{breedName(selectedProfile)}</h3>
-
-						<div class="mt-3 grid gap-2 text-sm">
-							<div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-								<div class="rounded-md border border-border bg-background p-2.5">
-									<p class="text-xs font-medium uppercase text-muted-foreground">{t('breedReference.origin')}</p>
-									<p class="mt-1 font-medium">{originLabel(selectedProfile.origin)}</p>
-								</div>
-
-								<div class="rounded-md border border-border bg-background p-2.5">
-									<p class="text-xs font-medium uppercase text-muted-foreground">{t('breedReference.size')}</p>
-									<p class="mt-1 font-medium">{sizeLabel(selectedProfile.sizeCategory)}</p>
-								</div>
-							</div>
-
-							<div class="grid grid-cols-2 gap-2">
-								<div class="rounded-md border border-border bg-background p-2.5">
-									<div class="flex items-center gap-1.5 text-xs font-medium uppercase text-muted-foreground">
-										<Scale class="size-3.5" />
-										{t('breedReference.averageWeight')}
-									</div>
-									<div class="mt-2 grid gap-1.5 text-xs">
-										{#each sexRangeRows(selectedProfile.averageWeightKg, 'breedReference.unit.kg') as row}
-											<div class="grid gap-0.5"><span class="text-muted-foreground">{row.label}</span><span class="font-medium tabular-nums">{row.value}</span></div>
-										{/each}
-									</div>
-								</div>
-
-								<div class="rounded-md border border-border bg-background p-2.5">
-									<div class="flex items-center gap-1.5 text-xs font-medium uppercase text-muted-foreground">
-										<Ruler class="size-3.5" />
-										{t('breedReference.averageHeight')}
-									</div>
-									<div class="mt-2 grid gap-1.5 text-xs">
-										{#each sexRangeRows(selectedProfile.averageHeightCm, 'breedReference.unit.cm') as row}
-											<div class="grid gap-0.5"><span class="text-muted-foreground">{row.label}</span><span class="font-medium tabular-nums">{row.value}</span></div>
-										{/each}
-									</div>
-								</div>
-							</div>
-						</div>
-
-						<a href={breedDetailHref(selectedProfile)} class="mt-4 inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95">
-							{t('breedReference.viewMore')}
-						</a>
-					</div>
-				</section>
+				<ReferenceSummarySidebar
+					eyebrow={t('breedReference.detailsTitle')}
+					title={breedName(selectedProfile)}
+					fields={selectedSummaryFields}
+					actionHref={breedDetailHref(selectedProfile)}
+					actionLabel={t('breedReference.viewMore')}
+				>
+					{#snippet image()}
+						<BinaryImage imageBytes={selectedProfile.primaryImage?.imageBytes ?? null} alt={breedName(selectedProfile)} className="aspect-16/10 w-full rounded-b-none border-0 bg-muted/60" imageClass="h-full w-full object-contain p-4" iconClass="size-16 text-muted-foreground" fallbackIcon={PawPrint} />
+					{/snippet}
+				</ReferenceSummarySidebar>
 			{/if}
 		{/snippet}
 	</ReferenceExplorer>
