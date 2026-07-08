@@ -80,12 +80,14 @@ function mapBreedReference(row: BreedReferenceRow, images: ImageCollectionItem[]
 	});
 }
 
-export async function listBreedReferences(): Promise<BreedReferenceProfile[]> {
+export async function listBreedReferences(includeImages = true): Promise<BreedReferenceProfile[]> {
 	const rows = await selectMany<BreedReferenceRow>(
 		`SELECT ${BREED_REFERENCE_COLUMNS}
 		 FROM breed_reference_items
 		 ORDER BY species, label_key COLLATE NOCASE, breed_id`
 	);
+
+	if (!includeImages) return rows.map((row) => mapBreedReference(row));
 
 	const imagesByIndex = await Promise.all(rows.map((row) => loadBreedReferenceImages(row.id)));
 	return rows.map((row, index) => mapBreedReference(row, imagesByIndex[index] ?? []));

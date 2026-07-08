@@ -3,6 +3,7 @@
 	import OwnerContactDialog from '$lib/components/owner/OwnerContactDialog.svelte';
 	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
+	import BinaryImage from '$lib/components/shared/BinaryImage.svelte';
 	import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import type { SearchResult, SearchResultKind } from '$lib/persistence/repositories/search.repository.js';
@@ -10,6 +11,8 @@
 	import { RECENT_SEARCH_STORAGE_KEY } from '$lib/services/client-state.service.js';
 	import { filterActiveSearchResults, loadOwnerAssociatedContactsByOwnerIds, loadOwnerAvatarsByOwnerIds, loadPetAvatarsByPetIds, searchEverywhere } from '$lib/services/clinic.service.js';
 	import ClipboardPenLine from '@lucide/svelte/icons/clipboard-pen-line';
+	import PawPrint from '@lucide/svelte/icons/paw-print';
+	import Pill from '@lucide/svelte/icons/pill';
 	import Phone from '@lucide/svelte/icons/phone';
 	import Search from '@lucide/svelte/icons/search';
 
@@ -31,7 +34,9 @@
 	function kindLabel(kind: SearchResultKind): string {
 		if (kind === 'owner') return t('search.kind.owner');
 		if (kind === 'pet') return t('search.kind.pet');
-		return t('search.kind.record');
+		if (kind === 'record') return t('search.kind.record');
+		if (kind === 'breed') return t('search.kind.breed');
+		return t('search.kind.medication');
 	}
 
 	function resultKey(result: SearchResult): string {
@@ -41,6 +46,30 @@
 	function resultSubtitle(result: SearchResult): string {
 		if (result.kind === 'pet' && result.subtitle.trim().length === 0) return t('owner.unassigned');
 		return result.subtitle;
+	}
+
+	function normalizeReferenceResult(result: SearchResult): SearchResult {
+		const normalizedResult: SearchResult = {
+			kind: result.kind,
+			id: result.id,
+			recordId: result.recordId,
+			ownerId: result.ownerId,
+			petId: result.petId,
+			href: result.href,
+			title: result.title,
+			subtitle: result.subtitle,
+			referenceImageBytes: result.referenceImageBytes,
+			ownerAvatarBytes: result.ownerAvatarBytes,
+			petAvatarBytes: result.petAvatarBytes,
+			ownerContacts: result.ownerContacts
+		};
+		if (normalizedResult.kind === 'breed') return { ...normalizedResult, href: `/breeds/${normalizedResult.id}` };
+		if (normalizedResult.kind === 'medication') return { ...normalizedResult, href: `/formulary/${normalizedResult.id}` };
+		return normalizedResult;
+	}
+
+	function numericResultId(result: SearchResult): number | null {
+		return typeof result.id === 'number' ? result.id : null;
 	}
 
 	function resultCountLabel(count: number): string {
@@ -70,23 +99,34 @@
 	}
 
 	function persistableSearchResult(result: SearchResult): SearchResult {
-		const { ownerAvatarBytes: _ownerAvatarBytes, petAvatarBytes: _petAvatarBytes, ...persistableResult } = result;
-		return persistableResult;
+		return {
+			kind: result.kind,
+			id: result.id,
+			recordId: result.recordId,
+			ownerId: result.ownerId,
+			petId: result.petId,
+			href: result.href,
+			title: result.title,
+			subtitle: result.subtitle,
+			ownerContacts: result.ownerContacts
+		};
 	}
 
 	async function hydrateRecentResults(baseResults: SearchResult[]): Promise<SearchResult[]> {
-		const ownerIds = baseResults.filter((result) => result.kind === 'owner').map((result) => result.id);
-		const petIds = baseResults.filter((result) => result.kind === 'pet').map((result) => result.id);
-		if (ownerIds.length === 0 && petIds.length === 0) return baseResults;
+		const normalizedBaseResults = baseResults.map(normalizeReferenceResult);
+		const ownerIds = normalizedBaseResults.filter((result) => result.kind === 'owner').map(numericResultId).filter((id): id is number => id !== null);
+		const petIds = normalizedBaseResults.filter((result) => result.kind === 'pet').map(numericResultId).filter((id): id is number => id !== null);
+		if (ownerIds.length === 0 && petIds.length === 0) return normalizedBaseResults;
 
 		const [contactsResult, ownerAvatarsResult, petAvatarsResult] = await Promise.allSettled([loadOwnerAssociatedContactsByOwnerIds(ownerIds), loadOwnerAvatarsByOwnerIds(ownerIds), loadPetAvatarsByPetIds(petIds)]);
 		const contactsByOwnerId = contactsResult.status === 'fulfilled' ? contactsResult.value : new Map<number, OwnerAssociatedContact[]>();
 		const avatarBytesByOwnerId = ownerAvatarsResult.status === 'fulfilled' ? ownerAvatarsResult.value : new Map<number, Uint8Array | null>();
 		const avatarBytesByPetId = petAvatarsResult.status === 'fulfilled' ? petAvatarsResult.value : new Map<number, Uint8Array | null>();
 
-		return baseResults.map((result) => {
-			if (result.kind === 'owner') return { ...result, ownerAvatarBytes: avatarBytesByOwnerId.get(result.id) ?? null, ownerContacts: contactsByOwnerId.get(result.id) ?? result.ownerContacts ?? [] };
-			if (result.kind === 'pet') return { ...result, petAvatarBytes: avatarBytesByPetId.get(result.id) ?? null };
+		return normalizedBaseResults.map((result) => {
+			const id = numericResultId(result);
+			if (result.kind === 'owner' && id !== null) return { ...result, ownerAvatarBytes: avatarBytesByOwnerId.get(id) ?? null, ownerContacts: contactsByOwnerId.get(id) ?? result.ownerContacts ?? [] };
+			if (result.kind === 'pet' && id !== null) return { ...result, petAvatarBytes: avatarBytesByPetId.get(id) ?? null };
 			return result;
 		});
 	}
@@ -209,6 +249,10 @@
 					<a href={result.href} class="flex items-start gap-3 rounded-md border border-border bg-card p-3 shadow-sm hover:bg-accent" onclick={() => rememberResult(result)}>
 						{#if result.kind === 'pet'}
 							<PetAvatar avatarBytes={result.petAvatarBytes} petName={result.title} className="mt-0.5 size-10" iconClass="size-5 text-primary" />
+						{:else if result.kind === 'breed'}
+							<BinaryImage imageBytes={result.referenceImageBytes} alt={result.title} className="mt-0.5 size-10" imageClass="h-full w-full object-cover" iconClass="size-5 text-primary" fallbackIcon={PawPrint} />
+						{:else if result.kind === 'medication'}
+							<BinaryImage imageBytes={result.referenceImageBytes} alt={result.title} className="mt-0.5 size-10" imageClass="h-full w-full object-contain p-1.5" iconClass="size-5 text-primary" fallbackIcon={Pill} />
 						{:else}
 							<ClipboardPenLine class="mt-0.5 size-4 shrink-0 text-primary" />
 						{/if}

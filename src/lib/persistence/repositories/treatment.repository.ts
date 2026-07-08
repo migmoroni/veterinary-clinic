@@ -2,7 +2,7 @@ import { FIELD_LIMITS, assertTextLimit, nullableMultilineText } from '$lib/domai
 import type { ImageCollectionItemInput } from '$lib/domain/image-collection/image-collection.js';
 import type { PetTreatment, PetTreatmentInput, TreatmentCatalogItem, TreatmentCatalogItemInput, TreatmentKind, TreatmentValidityUnit } from '$lib/domain/treatment/treatment.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
-import { deleteMedicationCatalogItem, ensureMedicationCatalogItem, listMedicationCatalogItems, normalizeMedicationCatalogInput, saveMedicationCatalogItem, saveMedicationCatalogItemImages, setMedicationCatalogItemHidden } from '$lib/persistence/repositories/medication-catalog.repository.js';
+import { deleteMedicationCatalogItem, ensureMedicationCatalogItem, getMedicationCatalogItemById, listMedicationCatalogItems, normalizeMedicationCatalogInput, saveMedicationCatalogItem, saveMedicationCatalogItemImages, setMedicationCatalogItemHidden } from '$lib/persistence/repositories/medication-catalog.repository.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
 interface PetTreatmentRow {
@@ -123,8 +123,12 @@ async function markPreviousEquivalentTreatmentsIgnored(kind: TreatmentKind, petI
 	}
 }
 
-export async function listTreatmentCatalogItems(kind: TreatmentKind, includeHidden = false): Promise<TreatmentCatalogItem[]> {
-	return listMedicationCatalogItems(kind, includeHidden);
+export async function listTreatmentCatalogItems(kind: TreatmentKind, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem[]> {
+	return listMedicationCatalogItems(kind, includeHidden, includeImages);
+}
+
+export async function getTreatmentCatalogItem(id: number, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem | null> {
+	return getMedicationCatalogItemById(id, includeHidden, includeImages);
 }
 
 export async function saveTreatmentCatalogItem(kind: TreatmentKind, input: TreatmentCatalogItemInput, id?: number): Promise<TreatmentCatalogItem> {

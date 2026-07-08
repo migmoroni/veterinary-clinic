@@ -161,7 +161,7 @@ export async function ensureMedicationCatalogItem(kind: MedicationCatalogKind, n
 	return item;
 }
 
-export async function listMedicationCatalogItems(kind: MedicationCatalogKind, includeHidden = false): Promise<MedicationCatalogItem[]> {
+export async function listMedicationCatalogItems(kind: MedicationCatalogKind, includeHidden = false, includeImages = true): Promise<MedicationCatalogItem[]> {
 	const rows = await selectMany<MedicationCatalogItemRow>(
 		`SELECT ${MEDICATION_CATALOG_COLUMNS}
 		 FROM medication_catalog_items
@@ -170,8 +170,24 @@ export async function listMedicationCatalogItems(kind: MedicationCatalogKind, in
 		[kind]
 	);
 
+	if (!includeImages) return rows.map((row) => mapCatalogItem(row));
+
 	const imagesByIndex = await Promise.all(rows.map((row) => loadCatalogItemImages(row.id)));
 	return rows.map((row, index) => mapCatalogItem(row, imagesByIndex[index] ?? []));
+}
+
+export async function getMedicationCatalogItemById(id: number, includeHidden = false, includeImages = true): Promise<MedicationCatalogItem | null> {
+	const rows = await selectMany<MedicationCatalogItemRow>(
+		`SELECT ${MEDICATION_CATALOG_COLUMNS}
+		 FROM medication_catalog_items
+		 WHERE id = $1 AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}
+		 LIMIT 1`,
+		[id]
+	);
+
+	const row = rows[0];
+	if (!row) return null;
+	return includeImages ? mapCatalogItemWithImages(row) : mapCatalogItem(row);
 }
 
 export async function saveMedicationCatalogItem(kind: MedicationCatalogKind, input: TreatmentCatalogItemInput, id?: number): Promise<MedicationCatalogItem> {

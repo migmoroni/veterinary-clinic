@@ -3,17 +3,19 @@ import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { listOwnerAssociatedContactsByOwnerIds } from './owner.repository.js';
 
-export type SearchResultKind = 'owner' | 'pet' | 'record';
+export type SearchResultKind = 'owner' | 'pet' | 'record' | 'breed' | 'medication';
+export type ClinicSearchResultKind = Extract<SearchResultKind, 'owner' | 'pet' | 'record'>;
 
 export interface SearchResult {
 	kind: SearchResultKind;
-	id: number;
+	id: number | string;
 	recordId: number | null;
 	ownerId: number | null;
 	petId: number | null;
 	href: string;
 	title: string;
 	subtitle: string;
+	referenceImageBytes?: Uint8Array | null;
 	ownerAvatarBytes?: Uint8Array | null;
 	petAvatarBytes?: Uint8Array | null;
 	ownerContacts?: OwnerAssociatedContact[];
@@ -21,7 +23,7 @@ export interface SearchResult {
 
 
 interface SearchResultRow {
-	kind: SearchResultKind;
+	kind: ClinicSearchResultKind;
 	id: number;
 	record_id: number | null;
 	owner_id: number | null;
@@ -78,13 +80,17 @@ function searchResultId(result: SearchResult): number {
 	return Number(result.id);
 }
 
-function searchResultActiveKey(kind: SearchResultKind, id: number): string {
+function searchResultActiveKey(kind: ClinicSearchResultKind, id: number): string {
 	return `${kind}:${id}`;
 }
 
-function idsForKind(results: SearchResult[], kind: SearchResultKind): number[] {
+function idsForKind(results: SearchResult[], kind: ClinicSearchResultKind): number[] {
 	const ids = results.map((result) => (result.kind === kind ? searchResultId(result) : 0)).filter((id) => Number.isInteger(id) && id > 0);
 	return [...new Set(ids)];
+}
+
+function isClinicSearchResult(result: SearchResult): result is SearchResult & { kind: ClinicSearchResultKind } {
+	return result.kind === 'owner' || result.kind === 'pet' || result.kind === 'record';
 }
 
 async function loadActiveIds(ids: number[], query: string): Promise<Set<number>> {
@@ -190,7 +196,7 @@ export async function filterActiveSearchResults(results: SearchResult[]): Promis
 	for (const id of activePetIds) activeKeys.add(searchResultActiveKey('pet', id));
 	for (const id of activeRecordIds) activeKeys.add(searchResultActiveKey('record', id));
 
-	return results.filter((result) => activeKeys.has(searchResultActiveKey(result.kind, searchResultId(result))));
+	return results.filter((result) => !isClinicSearchResult(result) || activeKeys.has(searchResultActiveKey(result.kind, searchResultId(result))));
 }
 
 export async function searchClinic(query: string): Promise<SearchResult[]> {
