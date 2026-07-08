@@ -131,7 +131,7 @@
 	}
 
 	function itemDetailHref(item: TreatmentCatalogItem): string {
-		return `/formulary/${item.kind}/${item.id}`;
+		return `/formulary/${item.id}`;
 	}
 
 	function searchableText(item: TreatmentCatalogItem): string {
