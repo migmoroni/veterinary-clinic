@@ -221,7 +221,7 @@
 	{/if}
 
 	<div class="relative">
-		<div bind:this={resultsListElement} class="grid max-h-[min(34rem,calc(100vh-18rem))] gap-2 overflow-y-scroll pr-3 [scrollbar-gutter:stable]" onscroll={updateResultsListScrollHint}>
+		<div bind:this={resultsListElement} class="grid max-h-[min(34rem,calc(100vh-18rem))] gap-2 overflow-y-scroll pr-3 scrollbar-gutter-stable" onscroll={updateResultsListScrollHint}>
 			{#each visibleResults as result (resultKey(result))}
 				{#if result.kind === 'owner'}
 					<article class="flex items-start gap-2 rounded-md border border-border bg-card p-3 shadow-sm hover:bg-accent">

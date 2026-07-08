@@ -208,7 +208,7 @@
 					</div>
 
 					<div class="relative mt-4">
-						<div bind:this={ownerListElement} class="grid max-h-[min(18rem,calc(100vh-20rem))] gap-2 overflow-y-scroll pr-3 [scrollbar-gutter:stable]" onscroll={updateOwnerListScrollHint}>
+						<div bind:this={ownerListElement} class="grid max-h-[min(18rem,calc(100vh-20rem))] gap-2 overflow-y-scroll pr-3 scrollbar-gutter-stable" onscroll={updateOwnerListScrollHint}>
 							{#each owners as owner (owner.id)}
 								<button type="button" class="flex min-w-0 cursor-pointer items-start gap-3 rounded-md border p-3 text-left shadow-sm transition-colors hover:bg-accent disabled:cursor-default disabled:opacity-50 {selectedOwnerId === owner.id ? 'border-primary bg-accent' : 'border-border bg-background'}" disabled={busy} aria-pressed={selectedOwnerId === owner.id} onclick={() => void selectOwner(owner)}>
 									<OwnerAvatar avatarBytes={owner.avatarBytes} ownerName={owner.name} className="mt-0.5 size-10" iconClass="size-5 text-primary" />
@@ -242,7 +242,7 @@
 			<h3 class="text-base font-semibold">{t('owner.petsSection')}</h3>
 
 			<div class="relative mt-4">
-				<div bind:this={ownerPetListElement} class="flex max-h-[min(18rem,calc(100vh-20rem))] flex-col gap-2 overflow-y-scroll pr-3 [scrollbar-gutter:stable]" onscroll={updateOwnerPetListScrollHint}>
+				<div bind:this={ownerPetListElement} class="flex max-h-[min(18rem,calc(100vh-20rem))] flex-col gap-2 overflow-y-scroll pr-3 scrollbar-gutter-stable" onscroll={updateOwnerPetListScrollHint}>
 					{#if ownerPetsLoading}
 						<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('common.loading')}</p>
 					{:else}
