@@ -1,0 +1,34 @@
+{
+	"id": "olde-english-bulldogge",
+	"species": "canine",
+	"labelKey": "pet.breed.oldeEnglishBulldogge",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			27,
+			36
+		],
+		"female": [
+			23,
+			32
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			51
+		],
+		"female": [
+			43,
+			48
+		]
+	},
+	"images": []
+}

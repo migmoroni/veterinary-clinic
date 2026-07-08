@@ -1,0 +1,34 @@
+{
+	"id": "clumber-spaniel",
+	"species": "canine",
+	"labelKey": "pet.breed.clumberSpaniel",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			32,
+			39
+		],
+		"female": [
+			25,
+			32
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			51
+		],
+		"female": [
+			43,
+			48
+		]
+	},
+	"images": []
+}

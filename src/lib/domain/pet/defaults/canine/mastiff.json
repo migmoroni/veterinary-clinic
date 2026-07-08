@@ -1,0 +1,34 @@
+{
+	"id": "mastiff",
+	"species": "canine",
+	"labelKey": "pet.breed.mastiff",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			70,
+			100
+		],
+		"female": [
+			54,
+			82
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			76,
+			91
+		],
+		"female": [
+			70,
+			86
+		]
+	},
+	"images": []
+}

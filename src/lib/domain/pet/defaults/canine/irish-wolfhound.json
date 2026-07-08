@@ -1,0 +1,34 @@
+{
+	"id": "irish-wolfhound",
+	"species": "canine",
+	"labelKey": "pet.breed.irishWolfhound",
+	"origin": {
+		"id": "ie",
+		"labelKey": null,
+		"countryCode": "IE",
+		"latitude": 53.4,
+		"longitude": -8.2
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			54,
+			82
+		],
+		"female": [
+			48,
+			68
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			81,
+			90
+		],
+		"female": [
+			76,
+			86
+		]
+	},
+	"images": []
+}

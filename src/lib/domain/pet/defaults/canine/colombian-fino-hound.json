@@ -1,0 +1,34 @@
+{
+	"id": "colombian-fino-hound",
+	"species": "canine",
+	"labelKey": "pet.breed.colombianFinoHound",
+	"origin": {
+		"id": "co",
+		"labelKey": null,
+		"countryCode": "CO",
+		"latitude": 4.6,
+		"longitude": -74.1
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			15,
+			25
+		],
+		"female": [
+			13,
+			22
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			43,
+			55
+		],
+		"female": [
+			40,
+			52
+		]
+	},
+	"images": []
+}

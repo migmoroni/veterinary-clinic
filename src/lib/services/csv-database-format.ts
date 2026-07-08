@@ -65,6 +65,11 @@ export const CSV_TABLES: CsvTableDefinition[] = [
 		orderBy: 'id'
 	},
 	{
+		name: 'breed_reference_items',
+		columns: ['id', 'breed_id', 'species', 'label_key', 'origin_id', 'origin_label_key', 'origin_country_code', 'origin_latitude', 'origin_longitude', 'size_category', 'average_weight_kg', 'average_height_cm', 'extension', 'created_at', 'updated_at'],
+		orderBy: 'species, label_key, id'
+	},
+	{
 		name: 'pet_owners',
 		columns: ['id', 'pet_id', 'owner_id', 'sort_order', 'created_at', 'updated_at'],
 		orderBy: 'pet_id, sort_order, id'
@@ -86,7 +91,7 @@ export const CSV_TABLES: CsvTableDefinition[] = [
 	},
 	{
 		name: 'medication_catalog_items',
-		columns: ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'hidden_at', 'created_at', 'updated_at'],
+		columns: ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'],
 		orderBy: 'kind, name, id'
 	},
 	{

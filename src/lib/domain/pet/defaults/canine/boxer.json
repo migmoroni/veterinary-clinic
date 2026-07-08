@@ -1,0 +1,34 @@
+{
+	"id": "boxer",
+	"species": "canine",
+	"labelKey": "pet.breed.boxer",
+	"origin": {
+		"id": "de",
+		"labelKey": null,
+		"countryCode": "DE",
+		"latitude": 51.2,
+		"longitude": 10.5
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			27,
+			32
+		],
+		"female": [
+			25,
+			29
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			57,
+			63
+		],
+		"female": [
+			53,
+			59
+		]
+	},
+	"images": []
+}

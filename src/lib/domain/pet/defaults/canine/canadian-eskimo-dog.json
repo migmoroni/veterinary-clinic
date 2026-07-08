@@ -1,0 +1,34 @@
+{
+	"id": "canadian-eskimo-dog",
+	"species": "canine",
+	"labelKey": "pet.breed.canadianEskimoDog",
+	"origin": {
+		"id": "ca",
+		"labelKey": null,
+		"countryCode": "CA",
+		"latitude": 56.1,
+		"longitude": -106.3
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			30,
+			40
+		],
+		"female": [
+			18,
+			30
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			58,
+			70
+		],
+		"female": [
+			50,
+			60
+		]
+	},
+	"images": []
+}

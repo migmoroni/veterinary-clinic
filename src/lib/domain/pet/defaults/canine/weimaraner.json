@@ -1,0 +1,34 @@
+{
+	"id": "weimaraner",
+	"species": "canine",
+	"labelKey": "pet.breed.weimaraner",
+	"origin": {
+		"id": "de",
+		"labelKey": null,
+		"countryCode": "DE",
+		"latitude": 51.2,
+		"longitude": 10.5
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			30,
+			40
+		],
+		"female": [
+			25,
+			35
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			62,
+			70
+		],
+		"female": [
+			57,
+			65
+		]
+	},
+	"images": []
+}

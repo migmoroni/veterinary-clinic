@@ -1,0 +1,34 @@
+{
+	"id": "norwegian-buhund",
+	"species": "canine",
+	"labelKey": "pet.breed.norwegianBuhund",
+	"origin": {
+		"id": "no",
+		"labelKey": null,
+		"countryCode": "NO",
+		"latitude": 60.5,
+		"longitude": 8.5
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			14,
+			18
+		],
+		"female": [
+			12,
+			16
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			43,
+			47
+		],
+		"female": [
+			41,
+			45
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,34 @@
+{
+	"id": "caucasian-shepherd-dog",
+	"species": "canine",
+	"labelKey": "pet.breed.caucasianShepherdDog",
+	"origin": {
+		"id": "caucasus",
+		"labelKey": "breedReference.origin.caucasus",
+		"countryCode": null,
+		"latitude": 42,
+		"longitude": 45
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			50,
+			100
+		],
+		"female": [
+			45,
+			80
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			68,
+			75
+		],
+		"female": [
+			64,
+			70
+		]
+	},
+	"images": []
+}

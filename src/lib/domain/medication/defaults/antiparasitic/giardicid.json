@@ -1,0 +1,19 @@
+{
+	"origin": "system",
+	"name": "Giardicid",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "Agener União Saúde Animal",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"febantel",
+		"giárdia",
+		"giardia",
+		"verme redondo",
+		"gusano redondo",
+		"roundworm"
+	]
+}

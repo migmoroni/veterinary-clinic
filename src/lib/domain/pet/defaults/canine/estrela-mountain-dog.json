@@ -1,0 +1,34 @@
+{
+	"id": "estrela-mountain-dog",
+	"species": "canine",
+	"labelKey": "pet.breed.estrelaMountainDog",
+	"origin": {
+		"id": "pt",
+		"labelKey": null,
+		"countryCode": "PT",
+		"latitude": 39.4,
+		"longitude": -8.2
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			45,
+			60
+		],
+		"female": [
+			35,
+			45
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			65,
+			72
+		],
+		"female": [
+			62,
+			68
+		]
+	},
+	"images": []
+}

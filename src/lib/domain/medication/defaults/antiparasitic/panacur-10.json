@@ -1,0 +1,24 @@
+{
+	"origin": "system",
+	"name": "Panacur 10%",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "MSD Animal Health",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"fenbendazol",
+		"fenbendazole",
+		"endoparasitas",
+		"endoparásitos",
+		"endoparasites",
+		"giárdia",
+		"giardia",
+		"nematódeos",
+		"nemátodes",
+		"nematodos",
+		"nematodes"
+	]
+}

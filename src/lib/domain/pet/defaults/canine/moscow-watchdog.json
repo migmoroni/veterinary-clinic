@@ -1,0 +1,34 @@
+{
+	"id": "moscow-watchdog",
+	"species": "canine",
+	"labelKey": "pet.breed.moscowWatchdog",
+	"origin": {
+		"id": "ru",
+		"labelKey": null,
+		"countryCode": "RU",
+		"latitude": 61.5,
+		"longitude": 105.3
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			55,
+			68
+		],
+		"female": [
+			45,
+			60
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			68,
+			78
+		],
+		"female": [
+			66,
+			73
+		]
+	},
+	"images": []
+}

@@ -30,7 +30,7 @@ const sourceSchema = {
 	pet_antiparasitic_treatments: ['id', 'pet_id', 'applied_at', 'antiparasitic_name', 'antiparasitic_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after']
 };
 
-const medicationCatalogColumns = ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'hidden_at', 'created_at', 'updated_at'];
+const medicationCatalogColumns = ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'];
 
 const medicationSchema = {
 	catalog: medicationCatalogColumns,
@@ -60,6 +60,7 @@ const versionedSchema = {
 	medication_protocols: medicationSchema.protocols,
 	medication_protocol_items: medicationSchema.protocolItems,
 	medication_protocol_doses: medicationSchema.protocolDoses,
+	breed_reference_items: ['id', 'breed_id', 'species', 'label_key', 'origin_id', 'origin_label_key', 'origin_country_code', 'origin_latitude', 'origin_longitude', 'size_category', 'average_weight_kg', 'average_height_cm', 'extension', 'created_at', 'updated_at'],
 	pet_treatments: ['id', 'pet_id', 'kind', 'applied_at', 'name', 'normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after']
 };
 delete versionedSchema.pet_vaccinations;
@@ -175,12 +176,20 @@ function detectMedicationSourceSchema(database, label) {
 	for (const [key, table] of Object.entries(tableSet)) {
 		const existingColumns = tableColumns(database, table);
 		for (const column of expectedColumnsByKey[key]) {
+			if (key === 'catalog' && column === 'extension') continue;
 			if (!existingColumns.has(column)) missingColumns.push(`${table}.${column}`);
 		}
 	}
 	if (missingColumns.length > 0) throw new Error(`${label} não tem as colunas de medicamentos esperadas: ${missingColumns.join(', ')}`);
 
 	return tableSetKey;
+}
+
+function ensureMedicationCatalogExtensionColumn(database) {
+	const columns = tableColumns(database, 'medication_catalog_items');
+	if (columns.has('extension')) return;
+
+	database.exec("ALTER TABLE medication_catalog_items ADD COLUMN extension TEXT NOT NULL DEFAULT '{}'");
 }
 
 function assertNoDeprecatedTreatmentTables(database, label) {
@@ -299,6 +308,7 @@ function migrateMedicationTables(database) {
 			ALTER TABLE preventive_protocol_doses RENAME TO medication_protocol_doses;
 		`);
 	}
+	ensureMedicationCatalogExtensionColumn(database);
 
 	database.exec(`
 		DROP INDEX IF EXISTS idx_preventive_catalog_items_kind_name;
@@ -325,6 +335,33 @@ function migrateMedicationTables(database) {
 	`);
 
 	return { originalCatalogRows, originalProtocolRows };
+}
+
+function ensureBreedReferenceTable(database) {
+	database.exec(`
+		CREATE TABLE IF NOT EXISTS breed_reference_items (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			breed_id TEXT NOT NULL CHECK(length(trim(breed_id)) > 0),
+			species TEXT NOT NULL CHECK(species IN ('canine', 'feline')),
+			label_key TEXT NOT NULL CHECK(length(trim(label_key)) > 0),
+			origin_id TEXT NOT NULL CHECK(length(trim(origin_id)) > 0),
+			origin_label_key TEXT,
+			origin_country_code TEXT,
+			origin_latitude REAL,
+			origin_longitude REAL,
+			size_category TEXT NOT NULL CHECK(size_category IN ('small', 'medium', 'large', 'giant')),
+			average_weight_kg TEXT NOT NULL CHECK(length(trim(average_weight_kg)) > 0),
+			average_height_cm TEXT NOT NULL CHECK(length(trim(average_height_cm)) > 0),
+			extension TEXT NOT NULL DEFAULT '{}',
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			UNIQUE(breed_id),
+			CHECK((origin_latitude IS NULL AND origin_longitude IS NULL) OR (origin_latitude BETWEEN -90 AND 90 AND origin_longitude BETWEEN -180 AND 180))
+		);
+
+		CREATE INDEX IF NOT EXISTS idx_breed_reference_items_species_label ON breed_reference_items(species, label_key COLLATE NOCASE);
+		CREATE INDEX IF NOT EXISTS idx_breed_reference_items_origin_id ON breed_reference_items(origin_id);
+	`);
 }
 
 function stampSchemaVersion(database) {
@@ -406,6 +443,7 @@ function adoptVersionZeroDatabase() {
 		output.transaction(() => {
 			medicationMigration = migrateMedicationTables(output);
 			treatmentMigration = migrateTreatmentTables(output);
+			ensureBreedReferenceTable(output);
 			stampSchemaVersion(output);
 			clearedPreferenceSettings = clearSavedPreferences(output);
 		})();
@@ -425,6 +463,7 @@ function adoptVersionZeroDatabase() {
 		console.log(`- medical_records: ${countRows(output, 'medical_records')}`);
 		console.log(`- medication_catalog_items: ${countRows(output, 'medication_catalog_items')} de ${medicationMigration.originalCatalogRows}`);
 		console.log(`- medication_protocols: ${countRows(output, 'medication_protocols')} de ${medicationMigration.originalProtocolRows}`);
+		console.log(`- breed_reference_items: ${countRows(output, 'breed_reference_items')}`);
 		console.log(`- pet_treatments: ${countRows(output, 'pet_treatments')}`);
 		console.log(`  - vaccine: ${countTreatments(output, 'vaccine')} de ${treatmentMigration.originalVaccinationRows}`);
 		console.log(`  - antiparasitic: ${countTreatments(output, 'antiparasitic')} de ${treatmentMigration.originalAntiparasiticRows}`);

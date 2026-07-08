@@ -1,0 +1,23 @@
+{
+	"origin": "system",
+	"name": "Frontline",
+	"species": [
+		"canine",
+		"feline"
+	],
+	"manufacturer": "Boehringer Ingelheim Animal Health",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"fipronil",
+		"ectoparasiticida",
+		"ectoparasiticide",
+		"antipulgas",
+		"flea treatment",
+		"carrapaticida",
+		"tratamento contra carraças",
+		"tratamiento contra garrapatas",
+		"tick treatment"
+	]
+}

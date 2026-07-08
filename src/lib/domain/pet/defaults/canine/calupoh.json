@@ -1,0 +1,34 @@
+{
+	"id": "calupoh",
+	"species": "canine",
+	"labelKey": "pet.breed.calupoh",
+	"origin": {
+		"id": "mx",
+		"labelKey": null,
+		"countryCode": "MX",
+		"latitude": 23.6,
+		"longitude": -102.6
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			30,
+			45
+		],
+		"female": [
+			25,
+			40
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			62,
+			75
+		],
+		"female": [
+			58,
+			70
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,23 @@
+{
+	"origin": "system",
+	"name": "Bravecto",
+	"species": [
+		"canine",
+		"feline"
+	],
+	"manufacturer": "MSD Animal Health",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"fluralaner",
+		"ectoparasiticida",
+		"ectoparasiticide",
+		"antipulgas",
+		"flea treatment",
+		"carrapaticida",
+		"tratamento contra carraças",
+		"tratamiento contra garrapatas",
+		"tick treatment"
+	]
+}

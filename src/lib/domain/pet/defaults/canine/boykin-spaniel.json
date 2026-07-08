@@ -1,0 +1,34 @@
+{
+	"id": "boykin-spaniel",
+	"species": "canine",
+	"labelKey": "pet.breed.boykinSpaniel",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			14,
+			18
+		],
+		"female": [
+			11,
+			16
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			39,
+			46
+		],
+		"female": [
+			36,
+			42
+		]
+	},
+	"images": []
+}

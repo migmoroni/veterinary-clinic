@@ -1,0 +1,34 @@
+{
+	"id": "aegean",
+	"species": "feline",
+	"labelKey": "pet.breed.aegean",
+	"origin": {
+		"id": "gr",
+		"labelKey": null,
+		"countryCode": "GR",
+		"latitude": 39.1,
+		"longitude": 21.8
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			5.5
+		],
+		"female": [
+			3,
+			4.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			22,
+			27
+		],
+		"female": [
+			20,
+			25
+		]
+	},
+	"images": []
+}

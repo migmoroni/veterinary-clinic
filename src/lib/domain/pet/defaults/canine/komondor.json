@@ -1,0 +1,34 @@
+{
+	"id": "komondor",
+	"species": "canine",
+	"labelKey": "pet.breed.komondor",
+	"origin": {
+		"id": "hu",
+		"labelKey": null,
+		"countryCode": "HU",
+		"latitude": 47.2,
+		"longitude": 19.5
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			45,
+			61
+		],
+		"female": [
+			36,
+			50
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			71,
+			76
+		],
+		"female": [
+			64,
+			69
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,34 @@
+{
+	"id": "chippiparai",
+	"species": "canine",
+	"labelKey": "pet.breed.chippiparai",
+	"origin": {
+		"id": "in",
+		"labelKey": null,
+		"countryCode": "IN",
+		"latitude": 20.6,
+		"longitude": 78.9
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			20,
+			28
+		],
+		"female": [
+			16,
+			24
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			60,
+			66
+		],
+		"female": [
+			55,
+			62
+		]
+	},
+	"images": []
+}

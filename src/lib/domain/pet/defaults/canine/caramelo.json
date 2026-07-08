@@ -1,0 +1,34 @@
+{
+	"id": "caramelo",
+	"species": "canine",
+	"labelKey": "pet.breed.caramelo",
+	"origin": {
+		"id": "br",
+		"labelKey": null,
+		"countryCode": "BR",
+		"latitude": -14.2,
+		"longitude": -51.9
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			10,
+			25
+		],
+		"female": [
+			8,
+			22
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			35,
+			55
+		],
+		"female": [
+			33,
+			52
+		]
+	},
+	"images": []
+}

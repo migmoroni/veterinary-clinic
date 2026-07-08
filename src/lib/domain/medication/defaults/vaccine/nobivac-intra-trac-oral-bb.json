@@ -1,0 +1,23 @@
+{
+	"origin": "system",
+	"name": "Nobivac Intra-Trac Oral Bb",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "MSD Animal Health",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"Bb",
+		"Bordetella bronchiseptica",
+		"traqueobronquite infecciosa canina",
+		"traqueobronquite infeciosa canina",
+		"traqueobronquitis infecciosa canina",
+		"canine infectious tracheobronchitis",
+		"tosse dos canis",
+		"tosse do canil",
+		"tos de las perreras",
+		"kennel cough"
+	]
+}

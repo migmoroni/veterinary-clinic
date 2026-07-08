@@ -1,0 +1,34 @@
+{
+	"id": "curly-coated-retriever",
+	"species": "canine",
+	"labelKey": "pet.breed.curlyCoatedRetriever",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			32,
+			43
+		],
+		"female": [
+			27,
+			36
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			64,
+			69
+		],
+		"female": [
+			58,
+			64
+		]
+	},
+	"images": []
+}

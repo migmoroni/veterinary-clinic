@@ -1,0 +1,34 @@
+{
+	"id": "aidi",
+	"species": "canine",
+	"labelKey": "pet.breed.aidi",
+	"origin": {
+		"id": "ma",
+		"labelKey": null,
+		"countryCode": "MA",
+		"latitude": 31.8,
+		"longitude": -7.1
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			23,
+			28
+		],
+		"female": [
+			20,
+			26
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			55,
+			62
+		],
+		"female": [
+			52,
+			58
+		]
+	},
+	"images": []
+}

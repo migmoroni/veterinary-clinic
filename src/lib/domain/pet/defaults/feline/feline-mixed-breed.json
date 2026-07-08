@@ -1,0 +1,34 @@
+{
+	"id": "feline-mixed-breed",
+	"species": "feline",
+	"labelKey": "pet.breed.felineMixedBreed",
+	"origin": {
+		"id": "varied",
+		"labelKey": "breedReference.origin.varied",
+		"countryCode": null,
+		"latitude": null,
+		"longitude": null
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			6.5
+		],
+		"female": [
+			3,
+			5.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			23,
+			28
+		],
+		"female": [
+			21,
+			27
+		]
+	},
+	"images": []
+}

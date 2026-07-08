@@ -1,0 +1,34 @@
+{
+	"id": "redbone-coonhound",
+	"species": "canine",
+	"labelKey": "pet.breed.redboneCoonhound",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			23,
+			32
+		],
+		"female": [
+			20,
+			29
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			56,
+			69
+		],
+		"female": [
+			53,
+			64
+		]
+	},
+	"images": []
+}

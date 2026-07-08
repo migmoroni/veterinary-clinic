@@ -1,0 +1,34 @@
+{
+	"id": "thai-ridgeback",
+	"species": "canine",
+	"labelKey": "pet.breed.thaiRidgeback",
+	"origin": {
+		"id": "th",
+		"labelKey": null,
+		"countryCode": "TH",
+		"latitude": 15.9,
+		"longitude": 100.9
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			23,
+			34
+		],
+		"female": [
+			20,
+			30
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			56,
+			61
+		],
+		"female": [
+			51,
+			56
+		]
+	},
+	"images": []
+}

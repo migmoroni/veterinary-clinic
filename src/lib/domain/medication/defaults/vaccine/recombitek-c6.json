@@ -1,0 +1,21 @@
+{
+	"origin": "system",
+	"name": "Recombitek C6",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "Boehringer Ingelheim Animal Health",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"C6",
+		"V 10",
+		"V10",
+		"polivalente",
+		"polyvalent",
+		"múltipla canina",
+		"vacuna múltiple canina",
+		"canine combination vaccine"
+	]
+}

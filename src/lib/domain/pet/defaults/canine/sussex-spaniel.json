@@ -1,0 +1,34 @@
+{
+	"id": "sussex-spaniel",
+	"species": "canine",
+	"labelKey": "pet.breed.sussexSpaniel",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			16,
+			23
+		],
+		"female": [
+			15,
+			22
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			33,
+			38
+		],
+		"female": [
+			33,
+			37
+		]
+	},
+	"images": []
+}

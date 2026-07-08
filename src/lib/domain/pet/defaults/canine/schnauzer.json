@@ -1,0 +1,34 @@
+{
+	"id": "schnauzer",
+	"species": "canine",
+	"labelKey": "pet.breed.schnauzer",
+	"origin": {
+		"id": "de",
+		"labelKey": null,
+		"countryCode": "DE",
+		"latitude": 51.2,
+		"longitude": 10.5
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			15,
+			20
+		],
+		"female": [
+			14,
+			18
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			47,
+			50
+		],
+		"female": [
+			45,
+			48
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,34 @@
+{
+	"id": "hokkaido",
+	"species": "canine",
+	"labelKey": "pet.breed.hokkaido",
+	"origin": {
+		"id": "jp",
+		"labelKey": null,
+		"countryCode": "JP",
+		"latitude": 36.2,
+		"longitude": 138.3
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			20,
+			25
+		],
+		"female": [
+			17,
+			22
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			48,
+			52
+		],
+		"female": [
+			45,
+			49
+		]
+	},
+	"images": []
+}

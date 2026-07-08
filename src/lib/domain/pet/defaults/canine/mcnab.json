@@ -1,0 +1,34 @@
+{
+	"id": "mcnab",
+	"species": "canine",
+	"labelKey": "pet.breed.mcnab",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			16,
+			29
+		],
+		"female": [
+			14,
+			23
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			64
+		],
+		"female": [
+			41,
+			53
+		]
+	},
+	"images": []
+}

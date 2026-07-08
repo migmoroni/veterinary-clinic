@@ -1,0 +1,23 @@
+{
+	"origin": "system",
+	"name": "Fiprolex",
+	"species": [
+		"canine",
+		"feline"
+	],
+	"manufacturer": "Ceva Saúde Animal",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"fipronil",
+		"ectoparasiticida",
+		"ectoparasiticide",
+		"antipulgas",
+		"flea treatment",
+		"carrapaticida",
+		"tratamento contra carraças",
+		"tratamiento contra garrapatas",
+		"tick treatment"
+	]
+}

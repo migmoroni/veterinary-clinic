@@ -1,0 +1,34 @@
+{
+	"id": "akbash",
+	"species": "canine",
+	"labelKey": "pet.breed.akbash",
+	"origin": {
+		"id": "tr",
+		"labelKey": null,
+		"countryCode": "TR",
+		"latitude": 38.9,
+		"longitude": 35.2
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			41,
+			64
+		],
+		"female": [
+			34,
+			50
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			71,
+			86
+		],
+		"female": [
+			69,
+			81
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,34 @@
+{
+	"id": "maltese",
+	"species": "canine",
+	"labelKey": "pet.breed.maltese",
+	"origin": {
+		"id": "mt",
+		"labelKey": null,
+		"countryCode": "MT",
+		"latitude": 35.9,
+		"longitude": 14.4
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			3,
+			4
+		],
+		"female": [
+			3,
+			4
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			21,
+			25
+		],
+		"female": [
+			20,
+			23
+		]
+	},
+	"images": []
+}

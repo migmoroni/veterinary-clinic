@@ -1,0 +1,34 @@
+{
+	"id": "double-nosed-andean-tiger-hound",
+	"species": "canine",
+	"labelKey": "pet.breed.doubleNosedAndeanTigerHound",
+	"origin": {
+		"id": "bo",
+		"labelKey": null,
+		"countryCode": "BO",
+		"latitude": -16.3,
+		"longitude": -63.6
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			18,
+			30
+		],
+		"female": [
+			16,
+			26
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			45,
+			55
+		],
+		"female": [
+			42,
+			52
+		]
+	},
+	"images": []
+}

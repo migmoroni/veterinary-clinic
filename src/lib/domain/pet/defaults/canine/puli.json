@@ -1,0 +1,34 @@
+{
+	"id": "puli",
+	"species": "canine",
+	"labelKey": "pet.breed.puli",
+	"origin": {
+		"id": "hu",
+		"labelKey": null,
+		"countryCode": "HU",
+		"latitude": 47.2,
+		"longitude": 19.5
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			13,
+			15
+		],
+		"female": [
+			10,
+			13
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			41,
+			43
+		],
+		"female": [
+			38,
+			41
+		]
+	},
+	"images": []
+}

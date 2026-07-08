@@ -1,0 +1,34 @@
+{
+	"id": "eurasier",
+	"species": "canine",
+	"labelKey": "pet.breed.eurasier",
+	"origin": {
+		"id": "de",
+		"labelKey": null,
+		"countryCode": "DE",
+		"latitude": 51.2,
+		"longitude": 10.5
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			23,
+			32
+		],
+		"female": [
+			18,
+			26
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			52,
+			60
+		],
+		"female": [
+			48,
+			56
+		]
+	},
+	"images": []
+}

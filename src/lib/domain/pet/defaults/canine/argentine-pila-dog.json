@@ -1,0 +1,34 @@
+{
+	"id": "argentine-pila-dog",
+	"species": "canine",
+	"labelKey": "pet.breed.argentinePilaDog",
+	"origin": {
+		"id": "ar",
+		"labelKey": null,
+		"countryCode": "AR",
+		"latitude": -38.4,
+		"longitude": -63.6
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			8,
+			25
+		],
+		"female": [
+			7,
+			22
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			35,
+			55
+		],
+		"female": [
+			33,
+			52
+		]
+	},
+	"images": []
+}

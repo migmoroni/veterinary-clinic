@@ -1,0 +1,34 @@
+{
+	"id": "teddy-roosevelt-terrier",
+	"species": "canine",
+	"labelKey": "pet.breed.teddyRooseveltTerrier",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			4,
+			11
+		],
+		"female": [
+			3.5,
+			10
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			20,
+			36
+		],
+		"female": [
+			20,
+			36
+		]
+	},
+	"images": []
+}

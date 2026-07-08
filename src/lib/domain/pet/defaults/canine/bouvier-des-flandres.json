@@ -1,0 +1,34 @@
+{
+	"id": "bouvier-des-flandres",
+	"species": "canine",
+	"labelKey": "pet.breed.bouvierDesFlandres",
+	"origin": {
+		"id": "be",
+		"labelKey": null,
+		"countryCode": "BE",
+		"latitude": 50.5,
+		"longitude": 4.5
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			35,
+			54
+		],
+		"female": [
+			27,
+			45
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			62,
+			68
+		],
+		"female": [
+			59,
+			65
+		]
+	},
+	"images": []
+}

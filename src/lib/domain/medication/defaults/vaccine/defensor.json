@@ -1,0 +1,18 @@
+{
+	"origin": "system",
+	"name": "Defensor",
+	"species": [
+		"canine",
+		"feline"
+	],
+	"manufacturer": "Zoetis",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"raiva",
+		"antirrábica",
+		"rabia",
+		"rabies"
+	]
+}

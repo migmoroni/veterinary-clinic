@@ -1,0 +1,34 @@
+{
+	"id": "european-shorthair",
+	"species": "feline",
+	"labelKey": "pet.breed.europeanShorthair",
+	"origin": {
+		"id": "europe",
+		"labelKey": "breedReference.origin.europe",
+		"countryCode": null,
+		"latitude": 50,
+		"longitude": 10
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			7
+		],
+		"female": [
+			3,
+			5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			23,
+			30
+		],
+		"female": [
+			21,
+			28
+		]
+	},
+	"images": []
+}

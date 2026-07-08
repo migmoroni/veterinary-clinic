@@ -1,0 +1,34 @@
+{
+	"id": "russian-spaniel",
+	"species": "canine",
+	"labelKey": "pet.breed.russianSpaniel",
+	"origin": {
+		"id": "ru",
+		"labelKey": null,
+		"countryCode": "RU",
+		"latitude": 61.5,
+		"longitude": 105.3
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			13,
+			18
+		],
+		"female": [
+			12,
+			16
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			38,
+			44
+		],
+		"female": [
+			36,
+			42
+		]
+	},
+	"images": []
+}

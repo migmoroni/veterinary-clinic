@@ -1,0 +1,17 @@
+{
+	"origin": "system",
+	"name": "GiardiaVax",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "Zoetis",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"giárdia",
+		"giardia",
+		"giardíase",
+		"giardiasis"
+	]
+}

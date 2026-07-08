@@ -1,0 +1,34 @@
+{
+	"id": "pumi",
+	"species": "canine",
+	"labelKey": "pet.breed.pumi",
+	"origin": {
+		"id": "hu",
+		"labelKey": null,
+		"countryCode": "HU",
+		"latitude": 47.2,
+		"longitude": 19.5
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			10,
+			13
+		],
+		"female": [
+			8,
+			11
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			41,
+			47
+		],
+		"female": [
+			38,
+			44
+		]
+	},
+	"images": []
+}

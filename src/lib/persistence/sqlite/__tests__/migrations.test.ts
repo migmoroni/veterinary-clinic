@@ -31,7 +31,8 @@ function sqlLiteral(value: unknown): string {
 
 function bindValues(query: string, values: unknown[]): string {
 	let sql = query;
-	for (const [index, value] of values.entries()) {
+	for (let index = values.length - 1; index >= 0; index -= 1) {
+		const value = values[index];
 		sql = sql.replaceAll(`$${index + 1}`, sqlLiteral(value));
 	}
 	return sql;
@@ -69,7 +70,7 @@ describeWithSqlite('SQLite schema migrations', () => {
 	});
 
 	it('creates the current schema and stamps user_version on an empty database', async () => {
-		await runMigrations(database as unknown as Database);
+		await runMigrations(database as unknown as Database, { syncDefaultBreedReferenceData: false });
 
 		const versions = await database.select<UserVersionRow[]>('PRAGMA user_version');
 		const migrations = await database.select<MigrationRow[]>('SELECT version, name FROM schema_migrations ORDER BY version');
@@ -81,12 +82,12 @@ describeWithSqlite('SQLite schema migrations', () => {
 	});
 
 	it('adopts a current unversioned database without losing data', async () => {
-		await runMigrations(database as unknown as Database);
+		await runMigrations(database as unknown as Database, { syncDefaultBreedReferenceData: false });
 		await database.execute("INSERT INTO owners (id, name, additional_information) VALUES (1, 'Ana', 'client data')");
 		await database.execute('DELETE FROM schema_migrations');
 		await database.execute('PRAGMA user_version = 0');
 
-		await runMigrations(database as unknown as Database);
+		await runMigrations(database as unknown as Database, { syncDefaultBreedReferenceData: false });
 
 		const versions = await database.select<UserVersionRow[]>('PRAGMA user_version');
 		const owners = await database.select<CountRow[]>("SELECT COUNT(*) AS total FROM owners WHERE name = 'Ana' AND additional_information = 'client data'");

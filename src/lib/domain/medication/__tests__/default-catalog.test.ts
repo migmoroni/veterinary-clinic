@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
+import { medicationLeafletSectionIds, stringifyMedicationCatalogExtension } from '../catalog.js';
 import { localizedMedicationAliases } from '$lib/i18n/medication-aliases/index.js';
 import { defaultMedicationCatalogItems } from '../default-catalog.js';
 
@@ -157,6 +158,25 @@ describe('default medication catalog', () => {
 			expect(item.aliases.every((alias) => alias.length <= FIELD_LIMITS.medicationAlias)).toBe(true);
 			expect(item.aliases.every((alias) => !alias.includes(','))).toBe(true);
 			expect(JSON.stringify(item.aliases).length).toBeLessThanOrEqual(FIELD_LIMITS.medicationAliasesJson);
+		}
+	});
+
+	it('keeps bundled formulary extensions within database limits', () => {
+		for (const item of defaultMedicationCatalogItems) {
+			expect(stringifyMedicationCatalogExtension(item.extension).length).toBeLessThanOrEqual(FIELD_LIMITS.medicationExtensionJson);
+		}
+	});
+
+	it('includes a complete fictitious formulary sample', () => {
+		const sample = vaccine('Produto Ficticio Bulário');
+
+		expect(sample.extension?.classification).toBeTruthy();
+		expect(sample.extension?.commercialLine).toBeTruthy();
+		expect(sample.extension?.rating).toBeTypeOf('number');
+		expect(sample.extension?.reviewCount).toBeTypeOf('number');
+
+		for (const sectionId of medicationLeafletSectionIds) {
+			expect(sample.extension?.sections?.[sectionId]?.trim().length).toBeGreaterThan(0);
 		}
 	});
 });

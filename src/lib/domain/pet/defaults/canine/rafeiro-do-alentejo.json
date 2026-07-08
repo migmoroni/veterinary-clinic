@@ -1,0 +1,34 @@
+{
+	"id": "rafeiro-do-alentejo",
+	"species": "canine",
+	"labelKey": "pet.breed.rafeiroDoAlentejo",
+	"origin": {
+		"id": "pt",
+		"labelKey": null,
+		"countryCode": "PT",
+		"latitude": 39.4,
+		"longitude": -8.2
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			50,
+			60
+		],
+		"female": [
+			45,
+			55
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			66,
+			74
+		],
+		"female": [
+			64,
+			70
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,34 @@
+{
+	"id": "shar-pei",
+	"species": "canine",
+	"labelKey": "pet.breed.sharPei",
+	"origin": {
+		"id": "cn",
+		"labelKey": null,
+		"countryCode": "CN",
+		"latitude": 35.9,
+		"longitude": 104.2
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			20,
+			29
+		],
+		"female": [
+			18,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			51
+		],
+		"female": [
+			44,
+			49
+		]
+	},
+	"images": []
+}

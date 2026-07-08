@@ -1,0 +1,34 @@
+{
+	"id": "old-english-sheepdog",
+	"species": "canine",
+	"labelKey": "pet.breed.oldEnglishSheepdog",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			32,
+			45
+		],
+		"female": [
+			27,
+			36
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			56,
+			61
+		],
+		"female": [
+			51,
+			56
+		]
+	},
+	"images": []
+}

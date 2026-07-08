@@ -1,0 +1,34 @@
+{
+	"id": "miniature-pinscher",
+	"species": "canine",
+	"labelKey": "pet.breed.miniaturePinscher",
+	"origin": {
+		"id": "de",
+		"labelKey": null,
+		"countryCode": "DE",
+		"latitude": 51.2,
+		"longitude": 10.5
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			4,
+			5
+		],
+		"female": [
+			3.5,
+			4.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			32
+		],
+		"female": [
+			25,
+			30
+		]
+	},
+	"images": []
+}

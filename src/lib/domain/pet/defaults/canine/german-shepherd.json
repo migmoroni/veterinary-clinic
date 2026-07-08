@@ -1,0 +1,34 @@
+{
+	"id": "german-shepherd",
+	"species": "canine",
+	"labelKey": "pet.breed.germanShepherd",
+	"origin": {
+		"id": "de",
+		"labelKey": null,
+		"countryCode": "DE",
+		"latitude": 51.2,
+		"longitude": 10.5
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			30,
+			40
+		],
+		"female": [
+			22,
+			32
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			60,
+			65
+		],
+		"female": [
+			55,
+			60
+		]
+	},
+	"images": []
+}

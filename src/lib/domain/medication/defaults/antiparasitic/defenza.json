@@ -1,0 +1,21 @@
+{
+	"origin": "system",
+	"name": "Defenza",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "Ourofino Saúde Animal",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"ectoparasiticida",
+		"ectoparasiticide",
+		"antipulgas",
+		"flea treatment",
+		"carrapaticida",
+		"tratamento contra carraças",
+		"tratamiento contra garrapatas",
+		"tick treatment"
+	]
+}

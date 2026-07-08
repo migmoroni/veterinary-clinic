@@ -1,0 +1,34 @@
+{
+	"origin": "system",
+	"name": "Purevax RCPCh FeLV",
+	"species": [
+		"feline"
+	],
+	"manufacturer": "Boehringer Ingelheim Animal Health",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"V 5",
+		"V5",
+		"RCPCh FeLV",
+		"FVRCP+Ch+FeLV",
+		"FeLV",
+		"quíntupla felina",
+		"quíntuple felina",
+		"feline five-way vaccine",
+		"rinotraqueíte felina",
+		"rinotraqueítis felina",
+		"feline rhinotracheitis",
+		"calicivirose felina",
+		"calicivirosis felina",
+		"feline calicivirosis",
+		"panleucopenia felina",
+		"feline panleukopenia",
+		"clamidiose felina",
+		"clamidiosis felina",
+		"feline chlamydiosis",
+		"leucemia felina",
+		"feline leukemia"
+	]
+}

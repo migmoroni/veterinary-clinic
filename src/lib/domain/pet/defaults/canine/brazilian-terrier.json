@@ -1,0 +1,34 @@
+{
+	"id": "brazilian-terrier",
+	"species": "canine",
+	"labelKey": "pet.breed.brazilianTerrier",
+	"origin": {
+		"id": "br",
+		"labelKey": null,
+		"countryCode": "BR",
+		"latitude": -14.2,
+		"longitude": -51.9
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			8,
+			10
+		],
+		"female": [
+			7,
+			9
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			35,
+			40
+		],
+		"female": [
+			33,
+			38
+		]
+	},
+	"images": []
+}

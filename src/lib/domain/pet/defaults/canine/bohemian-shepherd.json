@@ -1,0 +1,34 @@
+{
+	"id": "bohemian-shepherd",
+	"species": "canine",
+	"labelKey": "pet.breed.bohemianShepherd",
+	"origin": {
+		"id": "cz",
+		"labelKey": null,
+		"countryCode": "CZ",
+		"latitude": 49.8,
+		"longitude": 15.5
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			19,
+			27
+		],
+		"female": [
+			17,
+			24
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			52,
+			55
+		],
+		"female": [
+			49,
+			52
+		]
+	},
+	"images": []
+}

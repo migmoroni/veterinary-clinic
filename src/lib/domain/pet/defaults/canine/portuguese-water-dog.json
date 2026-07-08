@@ -1,0 +1,34 @@
+{
+	"id": "portuguese-water-dog",
+	"species": "canine",
+	"labelKey": "pet.breed.portugueseWaterDog",
+	"origin": {
+		"id": "pt",
+		"labelKey": null,
+		"countryCode": "PT",
+		"latitude": 39.4,
+		"longitude": -8.2
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			19,
+			27
+		],
+		"female": [
+			16,
+			23
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			50,
+			57
+		],
+		"female": [
+			43,
+			52
+		]
+	},
+	"images": []
+}

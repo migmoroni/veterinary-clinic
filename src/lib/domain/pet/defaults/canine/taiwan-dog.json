@@ -1,0 +1,34 @@
+{
+	"id": "taiwan-dog",
+	"species": "canine",
+	"labelKey": "pet.breed.taiwanDog",
+	"origin": {
+		"id": "tw",
+		"labelKey": null,
+		"countryCode": "TW",
+		"latitude": 23.7,
+		"longitude": 121
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			14,
+			18
+		],
+		"female": [
+			12,
+			16
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			48,
+			52
+		],
+		"female": [
+			43,
+			47
+		]
+	},
+	"images": []
+}

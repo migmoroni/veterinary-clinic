@@ -1,0 +1,34 @@
+{
+	"id": "brussels-griffon",
+	"species": "canine",
+	"labelKey": "pet.breed.brusselsGriffon",
+	"origin": {
+		"id": "be",
+		"labelKey": null,
+		"countryCode": "BE",
+		"latitude": 50.5,
+		"longitude": 4.5
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			3,
+			5.5
+		],
+		"female": [
+			3,
+			5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			18,
+			28
+		],
+		"female": [
+			18,
+			26
+		]
+	},
+	"images": []
+}

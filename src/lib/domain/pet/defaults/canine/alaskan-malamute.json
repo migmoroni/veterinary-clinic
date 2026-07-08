@@ -1,0 +1,34 @@
+{
+	"id": "alaskan-malamute",
+	"species": "canine",
+	"labelKey": "pet.breed.alaskanMalamute",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			34,
+			45
+		],
+		"female": [
+			30,
+			38
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			61,
+			64
+		],
+		"female": [
+			56,
+			59
+		]
+	},
+	"images": []
+}

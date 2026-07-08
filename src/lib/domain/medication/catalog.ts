@@ -4,8 +4,40 @@ const medicationSpeciesIds = ['canine', 'feline'] as const;
 
 export type MedicationSpecies = (typeof medicationSpeciesIds)[number];
 export type MedicationCatalogOrigin = 'system' | 'user';
+export const medicationLeafletSectionIds = [
+	'about',
+	'presentations',
+	'indications',
+	'administration',
+	'interactions',
+	'pharmacology',
+	'studies',
+	'videos',
+	'reviews',
+	'distributors',
+	'references'
+] as const;
+
+export type MedicationLeafletSectionId = (typeof medicationLeafletSectionIds)[number];
+
+export type MedicationLeafletSections = Partial<Record<MedicationLeafletSectionId, string>>;
+
+export interface MedicationCatalogExtension {
+	classification: string | null;
+	commercialLine: string | null;
+	rating: number | null;
+	reviewCount: number | null;
+	sections: MedicationLeafletSections;
+}
 
 export const defaultMedicationSpecies = [...medicationSpeciesIds];
+export const emptyMedicationCatalogExtension: MedicationCatalogExtension = {
+	classification: null,
+	commercialLine: null,
+	rating: null,
+	reviewCount: null,
+	sections: {}
+};
 
 export interface MedicationCatalogMetadata {
 	aliases: string[];
@@ -13,6 +45,7 @@ export interface MedicationCatalogMetadata {
 	origin: MedicationCatalogOrigin;
 	regions: string[];
 	species: MedicationSpecies[];
+	extension: MedicationCatalogExtension;
 }
 
 export function canEditMedicationCatalogItem(item: Pick<MedicationCatalogMetadata, 'origin'>): boolean {
@@ -124,4 +157,56 @@ export function medicationItemMatchesSearch(name: string, aliases: readonly stri
 	if (!normalizedQuery) return true;
 	if (normalize(name).includes(normalizedQuery)) return true;
 	return aliases.some((alias) => normalize(alias).includes(normalizedQuery));
+}
+
+function normalizedNullableText(value: unknown): string | null {
+	if (typeof value !== 'string') return null;
+	const trimmed = value.trim();
+	return trimmed ? trimmed : null;
+}
+
+function normalizedNullableNumber(value: unknown): number | null {
+	if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+	return value;
+}
+
+function normalizedLeafletSections(value: unknown): MedicationLeafletSections {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+
+	const source = value as Record<string, unknown>;
+	const sections: MedicationLeafletSections = {};
+
+	for (const sectionId of medicationLeafletSectionIds) {
+		const text = normalizedNullableText(source[sectionId]);
+		if (text) sections[sectionId] = text;
+	}
+
+	return sections;
+}
+
+export function normalizeMedicationCatalogExtension(value: unknown): MedicationCatalogExtension {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...emptyMedicationCatalogExtension, sections: {} };
+
+	const source = value as Record<string, unknown>;
+	return {
+		classification: normalizedNullableText(source.classification),
+		commercialLine: normalizedNullableText(source.commercialLine),
+		rating: normalizedNullableNumber(source.rating),
+		reviewCount: normalizedNullableNumber(source.reviewCount),
+		sections: normalizedLeafletSections(source.sections)
+	};
+}
+
+export function parseMedicationCatalogExtension(value: string | null | undefined): MedicationCatalogExtension {
+	if (!value) return { ...emptyMedicationCatalogExtension, sections: {} };
+
+	try {
+		return normalizeMedicationCatalogExtension(JSON.parse(value));
+	} catch {
+		return { ...emptyMedicationCatalogExtension, sections: {} };
+	}
+}
+
+export function stringifyMedicationCatalogExtension(value: unknown): string {
+	return JSON.stringify(normalizeMedicationCatalogExtension(value));
 }

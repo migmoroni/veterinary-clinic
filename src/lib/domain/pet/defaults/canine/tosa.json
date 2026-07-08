@@ -1,0 +1,34 @@
+{
+	"id": "tosa",
+	"species": "canine",
+	"labelKey": "pet.breed.tosa",
+	"origin": {
+		"id": "jp",
+		"labelKey": null,
+		"countryCode": "JP",
+		"latitude": 36.2,
+		"longitude": 138.3
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			45,
+			90
+		],
+		"female": [
+			36,
+			61
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			62,
+			82
+		],
+		"female": [
+			55,
+			72
+		]
+	},
+	"images": []
+}

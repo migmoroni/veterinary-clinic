@@ -1,0 +1,18 @@
+{
+	"origin": "system",
+	"name": "Rabisin",
+	"species": [
+		"canine",
+		"feline"
+	],
+	"manufacturer": "Boehringer Ingelheim Animal Health",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"raiva",
+		"antirrábica",
+		"rabia",
+		"rabies"
+	]
+}

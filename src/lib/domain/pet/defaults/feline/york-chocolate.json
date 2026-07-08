@@ -1,0 +1,34 @@
+{
+	"id": "york-chocolate",
+	"species": "feline",
+	"labelKey": "pet.breed.yorkChocolate",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			5,
+			8
+		],
+		"female": [
+			4,
+			6
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			32
+		],
+		"female": [
+			23,
+			30
+		]
+	},
+	"images": []
+}

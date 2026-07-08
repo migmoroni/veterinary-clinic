@@ -1,0 +1,25 @@
+{
+	"origin": "system",
+	"name": "Nobivac Puppy DP",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "MSD Animal Health",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"DP",
+		"filhote",
+		"cachorro",
+		"jagua ra’y",
+		"puppy",
+		"cinomose canina",
+		"esgana canina",
+		"moquillo canino",
+		"canine distemper",
+		"parvovirose canina",
+		"parvovirosis canina",
+		"canine parvovirus"
+	]
+}

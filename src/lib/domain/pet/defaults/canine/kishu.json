@@ -1,0 +1,34 @@
+{
+	"id": "kishu",
+	"species": "canine",
+	"labelKey": "pet.breed.kishu",
+	"origin": {
+		"id": "jp",
+		"labelKey": null,
+		"countryCode": "JP",
+		"latitude": 36.2,
+		"longitude": 138.3
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			18,
+			27
+		],
+		"female": [
+			14,
+			23
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			49,
+			55
+		],
+		"female": [
+			43,
+			49
+		]
+	},
+	"images": []
+}

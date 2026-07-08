@@ -1,0 +1,34 @@
+{
+	"id": "cesky-terrier",
+	"species": "canine",
+	"labelKey": "pet.breed.ceskyTerrier",
+	"origin": {
+		"id": "cz",
+		"labelKey": null,
+		"countryCode": "CZ",
+		"latitude": 49.8,
+		"longitude": 15.5
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			6,
+			10
+		],
+		"female": [
+			5.5,
+			9
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			32
+		],
+		"female": [
+			25,
+			30
+		]
+	},
+	"images": []
+}

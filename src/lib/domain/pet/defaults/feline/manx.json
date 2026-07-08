@@ -1,0 +1,34 @@
+{
+	"id": "manx",
+	"species": "feline",
+	"labelKey": "pet.breed.manx",
+	"origin": {
+		"id": "isle-of-man",
+		"labelKey": "breedReference.origin.isleOfMan",
+		"countryCode": null,
+		"latitude": 54.2,
+		"longitude": -4.5
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			6.5
+		],
+		"female": [
+			3.5,
+			5.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			23,
+			28
+		],
+		"female": [
+			21,
+			27
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,34 @@
+{
+	"id": "silken-windhound",
+	"species": "canine",
+	"labelKey": "pet.breed.silkenWindhound",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			12,
+			25
+		],
+		"female": [
+			10,
+			22
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			47,
+			60
+		],
+		"female": [
+			47,
+			60
+		]
+	},
+	"images": []
+}

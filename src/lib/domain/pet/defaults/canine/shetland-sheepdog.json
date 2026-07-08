@@ -1,0 +1,34 @@
+{
+	"id": "shetland-sheepdog",
+	"species": "canine",
+	"labelKey": "pet.breed.shetlandSheepdog",
+	"origin": {
+		"id": "scotland",
+		"labelKey": "breedReference.origin.scotland",
+		"countryCode": null,
+		"latitude": 56.5,
+		"longitude": -4.2
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			7,
+			12
+		],
+		"female": [
+			6,
+			10
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			35,
+			41
+		],
+		"female": [
+			33,
+			39
+		]
+	},
+	"images": []
+}

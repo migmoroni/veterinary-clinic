@@ -1,0 +1,34 @@
+{
+	"id": "ukrainian-levkoy",
+	"species": "feline",
+	"labelKey": "pet.breed.ukrainianLevkoy",
+	"origin": {
+		"id": "ua",
+		"labelKey": null,
+		"countryCode": "UA",
+		"latitude": 48.4,
+		"longitude": 31.2
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			6
+		],
+		"female": [
+			3,
+			5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			22,
+			28
+		],
+		"female": [
+			20,
+			26
+		]
+	},
+	"images": []
+}

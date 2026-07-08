@@ -1,0 +1,34 @@
+{
+	"id": "bengal",
+	"species": "feline",
+	"labelKey": "pet.breed.bengal",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			5,
+			7.5
+		],
+		"female": [
+			4,
+			6
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			26,
+			32
+		],
+		"female": [
+			24,
+			30
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,21 @@
+{
+	"origin": "system",
+	"name": "Chemital",
+	"species": [
+		"canine",
+		"feline"
+	],
+	"manufacturer": "Chemitec",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"antiparasitário de amplo espectro",
+		"antiparasitário de largo espetro",
+		"antiparasitario de amplio espectro",
+		"broad-spectrum antiparasitic",
+		"endoparasitas",
+		"endoparásitos",
+		"endoparasites"
+	]
+}

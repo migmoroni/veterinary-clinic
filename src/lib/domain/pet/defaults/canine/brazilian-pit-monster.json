@@ -1,0 +1,34 @@
+{
+	"id": "brazilian-pit-monster",
+	"species": "canine",
+	"labelKey": "pet.breed.brazilianPitMonster",
+	"origin": {
+		"id": "br",
+		"labelKey": null,
+		"countryCode": "BR",
+		"latitude": -14.2,
+		"longitude": -51.9
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			45,
+			60
+		],
+		"female": [
+			40,
+			55
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			55,
+			65
+		],
+		"female": [
+			50,
+			60
+		]
+	},
+	"images": []
+}

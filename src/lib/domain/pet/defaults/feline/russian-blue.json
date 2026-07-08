@@ -1,0 +1,34 @@
+{
+	"id": "russian-blue",
+	"species": "feline",
+	"labelKey": "pet.breed.russianBlue",
+	"origin": {
+		"id": "ru",
+		"labelKey": null,
+		"countryCode": "RU",
+		"latitude": 61.5,
+		"longitude": 105.3
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			6
+		],
+		"female": [
+			3,
+			5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			23,
+			28
+		],
+		"female": [
+			21,
+			27
+		]
+	},
+	"images": []
+}

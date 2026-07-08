@@ -1,0 +1,34 @@
+{
+	"id": "saint-bernard",
+	"species": "canine",
+	"labelKey": "pet.breed.saintBernard",
+	"origin": {
+		"id": "ch",
+		"labelKey": null,
+		"countryCode": "CH",
+		"latitude": 46.8,
+		"longitude": 8.2
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			64,
+			82
+		],
+		"female": [
+			54,
+			64
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			70,
+			90
+		],
+		"female": [
+			65,
+			80
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,34 @@
+{
+	"id": "polish-lowland-sheepdog",
+	"species": "canine",
+	"labelKey": "pet.breed.polishLowlandSheepdog",
+	"origin": {
+		"id": "pl",
+		"labelKey": null,
+		"countryCode": "PL",
+		"latitude": 52.1,
+		"longitude": 19.4
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			18,
+			23
+		],
+		"female": [
+			14,
+			20
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			45,
+			50
+		],
+		"female": [
+			42,
+			47
+		]
+	},
+	"images": []
+}

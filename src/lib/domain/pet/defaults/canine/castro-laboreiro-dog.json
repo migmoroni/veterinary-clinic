@@ -1,0 +1,34 @@
+{
+	"id": "castro-laboreiro-dog",
+	"species": "canine",
+	"labelKey": "pet.breed.castroLaboreiroDog",
+	"origin": {
+		"id": "pt",
+		"labelKey": null,
+		"countryCode": "PT",
+		"latitude": 39.4,
+		"longitude": -8.2
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			30,
+			40
+		],
+		"female": [
+			25,
+			35
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			58,
+			64
+		],
+		"female": [
+			55,
+			61
+		]
+	},
+	"images": []
+}

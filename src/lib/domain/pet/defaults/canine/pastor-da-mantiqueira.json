@@ -1,0 +1,34 @@
+{
+	"id": "pastor-da-mantiqueira",
+	"species": "canine",
+	"labelKey": "pet.breed.pastorDaMantiqueira",
+	"origin": {
+		"id": "br",
+		"labelKey": null,
+		"countryCode": "BR",
+		"latitude": -14.2,
+		"longitude": -51.9
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			25,
+			35
+		],
+		"female": [
+			20,
+			30
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			55,
+			65
+		],
+		"female": [
+			50,
+			60
+		]
+	},
+	"images": []
+}

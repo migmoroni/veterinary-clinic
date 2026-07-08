@@ -1,7 +1,10 @@
 <script lang="ts">
-	import Select from '$lib/components/ui/Select.svelte';
+	import { onMount } from 'svelte';
+	import BinaryImage from '$lib/components/shared/BinaryImage.svelte';
+	import { type ReferenceGridCard } from '$lib/components/reference/ReferenceCardGrid.svelte';
+	import ReferenceExplorer from '$lib/components/reference/ReferenceExplorer.svelte';
+	import { type ReferenceFilterBarSelect } from '$lib/components/reference/ReferenceFilterBar.svelte';
 	import {
-		breedReferenceProfiles,
 		getBreedOriginMapPosition,
 		type BreedReferenceOrigin,
 		type BreedReferenceProfile,
@@ -9,11 +12,11 @@
 		type BreedSexRange
 	} from '$lib/domain/pet/breed-reference.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
+	import { loadBreedReferenceProfiles } from '$lib/services/breed-reference.service.js';
 	import MapPin from '@lucide/svelte/icons/map-pin';
 	import PawPrint from '@lucide/svelte/icons/paw-print';
 	import Ruler from '@lucide/svelte/icons/ruler';
 	import Scale from '@lucide/svelte/icons/scale';
-	import Search from '@lucide/svelte/icons/search';
 
 	type SpeciesFilter = 'all' | 'canine' | 'feline';
 	type MapZoomLevel = 'world' | 'detail';
@@ -24,6 +27,9 @@
 	type MapPoint = OriginMapPoint | ClusterMapPoint;
 	type MapDragState = { pointerId: number; startX: number; startY: number; startFocus: MapFocus; moved: boolean };
 
+	let profiles = $state<BreedReferenceProfile[]>([]);
+	let loading = $state(true);
+	let loadFailed = $state(false);
 	let searchTerm = $state('');
 	let speciesFilter = $state<SpeciesFilter>('all');
 	let sizeFilter = $state('');
@@ -36,8 +42,8 @@
 	const filteredProfiles = $derived.by(() => {
 		const search = normalizeSearchText(searchTerm);
 
-		return breedReferenceProfiles.filter((profile) => {
-			if (speciesFilter !== 'all' && profile.option.species !== speciesFilter) return false;
+		return profiles.filter((profile) => {
+			if (speciesFilter !== 'all' && profile.species !== speciesFilter) return false;
 			if (sizeFilter && profile.sizeCategory !== sizeFilter) return false;
 			if (originFilter && profile.origin.id !== originFilter) return false;
 			if (!search) return true;
@@ -45,7 +51,41 @@
 			return normalizeSearchText([breedName(profile), speciesLabel(profile), originLabel(profile.origin), sizeLabel(profile.sizeCategory)].join(' ')).includes(search);
 		});
 	});
-	const selectedProfile = $derived(filteredProfiles.find((profile) => profile.option.id === selectedBreedId) ?? filteredProfiles[0] ?? null);
+	const selectedProfile = $derived(filteredProfiles.find((profile) => profile.breedId === selectedBreedId) ?? filteredProfiles[0] ?? null);
+	const breedCards = $derived<ReferenceGridCard[]>(
+		filteredProfiles.map((profile) => ({
+			id: profile.breedId,
+			title: breedName(profile),
+			subtitle: originLabel(profile.origin),
+			meta: `${sizeLabel(profile.sizeCategory)} · ${speciesLabel(profile)}`,
+			imageBytes: profile.primaryImage?.imageBytes ?? null,
+			fallbackIcon: PawPrint,
+			imageAlt: ''
+		}))
+	);
+	const filterControls = $derived.by<ReferenceFilterBarSelect[]>(() => [
+		{
+			id: 'breed-reference-species',
+			label: t('breedReference.speciesFilter'),
+			value: speciesFilter,
+			options: speciesOptions(),
+			onchange: (value) => (speciesFilter = value as SpeciesFilter)
+		},
+		{
+			id: 'breed-reference-size',
+			label: t('breedReference.sizeFilter'),
+			value: sizeFilter,
+			options: sizeOptions(),
+			onchange: (value) => (sizeFilter = value)
+		},
+		{
+			id: 'breed-reference-origin',
+			label: t('breedReference.originFilter'),
+			value: originFilter,
+			options: originOptions(),
+			onchange: (value) => (originFilter = value)
+		}
+	]);
 	const originPoints = $derived(buildOriginPoints(filteredProfiles));
 	const mapPoints = $derived(mapZoom === 'detail' ? originPoints.map((point) => ({ ...point, kind: 'origin' as const })) : buildWorldMapPoints(originPoints));
 	const mapLayerTransform = $derived(mapZoom === 'detail' ? `translate(${mapZoomTranslate(mapFocus.left)}%, ${mapZoomTranslate(mapFocus.top)}%) scale(4)` : 'translate(0%, 0%) scale(1)');
@@ -61,11 +101,11 @@
 	}
 
 	function breedName(profile: BreedReferenceProfile): string {
-		return t(profile.option.labelKey);
+		return t(profile.labelKey);
 	}
 
 	function speciesLabel(profile: BreedReferenceProfile): string {
-		return profile.option.species === 'canine' ? t('pet.speciesCanine') : t('pet.speciesFeline');
+		return profile.species === 'canine' ? t('pet.speciesCanine') : t('pet.speciesFeline');
 	}
 
 	function sizeLabel(size: BreedSizeCategory): string {
@@ -114,7 +154,7 @@
 
 	function originOptions() {
 		const options = new Map<string, string>();
-		for (const profile of breedReferenceProfiles) {
+		for (const profile of profiles) {
 			options.set(profile.origin.id, originLabel(profile.origin));
 		}
 
@@ -193,20 +233,28 @@
 		return Math.min(87.5, Math.max(12.5, value));
 	}
 
-	function useFallbackImage(event: Event, fallbackImagePath: string) {
-		const image = event.currentTarget as HTMLImageElement | null;
-		if (!image || image.dataset.fallbackApplied === 'true') return;
-
-		image.dataset.fallbackApplied = 'true';
-		image.src = fallbackImagePath;
-	}
-
-	function selectBreed(profile: BreedReferenceProfile): void {
-		selectedBreedId = profile.option.id;
+	function selectBreedId(id: string): void {
+		selectedBreedId = id;
 	}
 
 	function selectOrigin(origin: BreedReferenceOrigin): void {
 		originFilter = originFilter === origin.id ? '' : origin.id;
+	}
+
+	function breedDetailHref(profile: BreedReferenceProfile): string {
+		return `/breeds/${profile.breedId}`;
+	}
+
+	async function loadProfiles() {
+		loading = true;
+		loadFailed = false;
+		try {
+			profiles = await loadBreedReferenceProfiles();
+		} catch {
+			loadFailed = true;
+		} finally {
+			loading = false;
+		}
 	}
 
 	function selectMapPoint(point: MapPoint): void {
@@ -276,14 +324,18 @@
 		return `${t('breedReference.mapPoint')}: ${point.label}`;
 	}
 
+	onMount(() => {
+		void loadProfiles();
+	});
+
 	$effect(() => {
 		if (filteredProfiles.length === 0) {
 			selectedBreedId = null;
 			return;
 		}
 
-		if (!selectedBreedId || !filteredProfiles.some((profile) => profile.option.id === selectedBreedId)) {
-			selectedBreedId = filteredProfiles[0].option.id;
+		if (!selectedBreedId || !filteredProfiles.some((profile) => profile.breedId === selectedBreedId)) {
+			selectedBreedId = filteredProfiles[0].breedId;
 		}
 	});
 
@@ -308,6 +360,10 @@
 		<h2 class="mt-1 text-2xl font-semibold tracking-normal text-foreground">{t('breedReference.title')}</h2>
 		<p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{t('breedReference.description')}</p>
 	</header>
+
+	{#if loadFailed}
+		<p class="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm">{t('breedReference.loadFailed')}</p>
+	{/if}
 
 	<section class="rounded-md border border-border bg-card p-3 shadow-sm sm:p-4">
 		<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -358,68 +414,25 @@
 		</div>
 	</section>
 
-	<section class="grid gap-3 rounded-md border border-border bg-card p-3 shadow-sm sm:p-4 lg:grid-cols-[minmax(14rem,1.2fr)_minmax(10rem,0.7fr)_minmax(10rem,0.7fr)_minmax(12rem,0.9fr)]">
-		<label class="space-y-1">
-			<span class="text-sm font-medium">{t('breedReference.searchLabel')}</span>
-			<span class="relative block">
-				<Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-				<input class="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30" bind:value={searchTerm} placeholder={t('breedReference.searchPlaceholder')} />
-			</span>
-		</label>
-
-		<div class="space-y-1">
-			<label class="text-sm font-medium" for="breed-reference-species">{t('breedReference.speciesFilter')}</label>
-			<Select id="breed-reference-species" bind:value={speciesFilter} options={speciesOptions()} />
-		</div>
-
-		<div class="space-y-1">
-			<label class="text-sm font-medium" for="breed-reference-size">{t('breedReference.sizeFilter')}</label>
-			<Select id="breed-reference-size" bind:value={sizeFilter} options={sizeOptions()} />
-		</div>
-
-		<div class="space-y-1">
-			<label class="text-sm font-medium" for="breed-reference-origin">{t('breedReference.originFilter')}</label>
-			<Select id="breed-reference-origin" bind:value={originFilter} options={originOptions()} />
-		</div>
-	</section>
-
-	<div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
-		<div class="min-w-0 space-y-4">
-			<section class="rounded-md border border-border bg-card p-3 shadow-sm sm:p-4">
-				<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-					<div class="min-w-0">
-						<div class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-							<PawPrint class="size-4" />
-							{t('breedReference.listTitle')}
-						</div>
-					</div>
-					<span class="inline-flex h-8 shrink-0 items-center rounded-md bg-muted px-3 text-sm font-medium tabular-nums text-muted-foreground">{filteredProfiles.length}</span>
-				</div>
-
-				<div class="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-					{#each filteredProfiles as profile}
-						<button type="button" class="flex min-h-48 flex-col overflow-hidden rounded-md border text-left transition-colors hover:bg-accent {selectedProfile?.option.id === profile.option.id ? 'border-primary bg-primary/10 ring-2 ring-ring/25' : 'border-border bg-background'}" aria-label={`${t('breedReference.openBreed')}: ${breedName(profile)}`} onclick={() => selectBreed(profile)}>
-							<img class="aspect-5/4 w-full bg-muted object-cover" src={profile.option.imagePath} alt="" aria-hidden="true" loading="lazy" onerror={(event) => useFallbackImage(event, profile.option.fallbackImagePath)} />
-							<span class="flex min-h-24 flex-1 flex-col p-2.5">
-								<span class="wrap-break-word text-sm font-semibold leading-5">{breedName(profile)}</span>
-								<span class="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-									<MapPin class="size-3.5 shrink-0" />
-									<span class="truncate">{originLabel(profile.origin)}</span>
-								</span>
-								<span class="mt-auto pt-3 text-xs font-medium uppercase text-muted-foreground">{sizeLabel(profile.sizeCategory)} · {speciesLabel(profile)}</span>
-							</span>
-						</button>
-					{:else}
-						<p class="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground sm:col-span-2 lg:col-span-4">{t('breedReference.noResults')}</p>
-					{/each}
-				</div>
-			</section>
-		</div>
-
-		<aside>
+	<ReferenceExplorer
+		bind:searchTerm
+		searchLabel={t('breedReference.searchLabel')}
+		searchPlaceholder={t('breedReference.searchPlaceholder')}
+		filters={filterControls}
+		cards={breedCards}
+		selectedId={selectedProfile?.breedId ?? null}
+		emptyLabel={t('breedReference.noResults')}
+		openLabel={t('breedReference.openBreed')}
+		listTitle={t('breedReference.listTitle')}
+		listIcon={PawPrint}
+		count={filteredProfiles.length}
+		{loading}
+		onselect={selectBreedId}
+	>
+		{#snippet sidebar()}
 			{#if selectedProfile}
-				<section class="rounded-md border border-border bg-card shadow-sm xl:sticky xl:top-5 xl:self-start">
-					<img class="aspect-16/10 w-full rounded-t-md bg-muted object-cover" src={selectedProfile.option.imagePath} alt="" aria-hidden="true" loading="lazy" onerror={(event) => useFallbackImage(event, selectedProfile.option.fallbackImagePath)} />
+				<section class="rounded-md border border-border bg-card shadow-sm">
+					<BinaryImage imageBytes={selectedProfile.primaryImage?.imageBytes ?? null} alt={breedName(selectedProfile)} className="aspect-16/10 w-full rounded-b-none border-0 bg-muted/60" imageClass="h-full w-full object-contain p-4" iconClass="size-16 text-muted-foreground" fallbackIcon={PawPrint} />
 					<div class="p-3 sm:p-4">
 						<p class="text-xs font-medium uppercase text-muted-foreground">{t('breedReference.detailsTitle')}</p>
 						<h3 class="mt-1 wrap-break-word text-lg font-semibold">{breedName(selectedProfile)}</h3>
@@ -463,9 +476,13 @@
 								</div>
 							</div>
 						</div>
+
+						<a href={breedDetailHref(selectedProfile)} class="mt-4 inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95">
+							{t('breedReference.viewMore')}
+						</a>
 					</div>
 				</section>
 			{/if}
-		</aside>
-	</div>
+		{/snippet}
+	</ReferenceExplorer>
 </section>

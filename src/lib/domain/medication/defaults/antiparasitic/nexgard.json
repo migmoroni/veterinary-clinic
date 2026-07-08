@@ -1,0 +1,22 @@
+{
+	"origin": "system",
+	"name": "NexGard",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "Boehringer Ingelheim Animal Health",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"afoxolaner",
+		"ectoparasiticida",
+		"ectoparasiticide",
+		"antipulgas",
+		"flea treatment",
+		"carrapaticida",
+		"tratamento contra carraças",
+		"tratamiento contra garrapatas",
+		"tick treatment"
+	]
+}

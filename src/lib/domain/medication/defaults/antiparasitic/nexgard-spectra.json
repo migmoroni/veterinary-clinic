@@ -1,0 +1,17 @@
+{
+	"origin": "system",
+	"name": "NexGard Spectra",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "Boehringer Ingelheim Animal Health",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"afoxolaner milbemicina oxima",
+		"afoxolaner milbemycin oxime",
+		"endectocida",
+		"endectocide"
+	]
+}

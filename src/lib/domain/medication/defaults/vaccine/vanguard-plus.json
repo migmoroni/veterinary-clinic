@@ -1,0 +1,20 @@
+{
+	"origin": "system",
+	"name": "Vanguard Plus",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "Zoetis",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"V 10",
+		"V10",
+		"polivalente",
+		"polyvalent",
+		"múltipla canina",
+		"vacuna múltiple canina",
+		"canine combination vaccine"
+	]
+}

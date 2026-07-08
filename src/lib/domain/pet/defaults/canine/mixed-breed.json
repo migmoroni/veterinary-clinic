@@ -1,0 +1,43 @@
+{
+	"id": "mixed-breed",
+	"species": "canine",
+	"labelKey": "pet.breed.mixedBreed",
+	"origin": {
+		"id": "varied",
+		"labelKey": "breedReference.origin.varied",
+		"countryCode": null,
+		"latitude": null,
+		"longitude": null
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			8,
+			25
+		],
+		"female": [
+			6,
+			22
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			35,
+			55
+		],
+		"female": [
+			33,
+			52
+		]
+	},
+	"images": [],
+	"extension": {
+		"sections": {
+			"characteristics": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae justo sed arcu facilisis luctus. Perfil demonstrativo para validar a leitura da ficha da raça.",
+			"morphology": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morfologia fictícia com descrição de porte, pelagem, proporções corporais e variações observadas.",
+			"behavior": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Comportamento demonstrativo com observações sobre sociabilidade, energia, rotina e manejo.",
+			"diseases": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lista fictícia de predisposições e cuidados preventivos para teste visual da seção.",
+			"references": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Referências bibliográficas fictícias para validar a apresentação de fontes e notas técnicas."
+		}
+	}
+}

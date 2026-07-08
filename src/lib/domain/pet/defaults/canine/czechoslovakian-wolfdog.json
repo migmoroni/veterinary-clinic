@@ -1,0 +1,34 @@
+{
+	"id": "czechoslovakian-wolfdog",
+	"species": "canine",
+	"labelKey": "pet.breed.czechoslovakianWolfdog",
+	"origin": {
+		"id": "cz",
+		"labelKey": null,
+		"countryCode": "CZ",
+		"latitude": 49.8,
+		"longitude": 15.5
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			26,
+			32
+		],
+		"female": [
+			20,
+			26
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			65,
+			70
+		],
+		"female": [
+			60,
+			65
+		]
+	},
+	"images": []
+}

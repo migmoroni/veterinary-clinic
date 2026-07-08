@@ -1,0 +1,34 @@
+{
+	"id": "bullmastiff",
+	"species": "canine",
+	"labelKey": "pet.breed.bullmastiff",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			50,
+			59
+		],
+		"female": [
+			41,
+			50
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			64,
+			69
+		],
+		"female": [
+			61,
+			66
+		]
+	},
+	"images": []
+}

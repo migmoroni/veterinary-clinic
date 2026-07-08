@@ -1,0 +1,34 @@
+{
+	"id": "american-water-spaniel",
+	"species": "canine",
+	"labelKey": "pet.breed.americanWaterSpaniel",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			14,
+			20
+		],
+		"female": [
+			11,
+			18
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			38,
+			46
+		],
+		"female": [
+			36,
+			43
+		]
+	},
+	"images": []
+}

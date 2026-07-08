@@ -1,0 +1,34 @@
+{
+	"id": "anatolian-shepherd-dog",
+	"species": "canine",
+	"labelKey": "pet.breed.anatolianShepherdDog",
+	"origin": {
+		"id": "tr",
+		"labelKey": null,
+		"countryCode": "TR",
+		"latitude": 38.9,
+		"longitude": 35.2
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			50,
+			68
+		],
+		"female": [
+			40,
+			55
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			74,
+			81
+		],
+		"female": [
+			71,
+			79
+		]
+	},
+	"images": []
+}

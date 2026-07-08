@@ -1,0 +1,34 @@
+{
+	"id": "phu-quoc-ridgeback",
+	"species": "canine",
+	"labelKey": "pet.breed.phuQuocRidgeback",
+	"origin": {
+		"id": "vn",
+		"labelKey": null,
+		"countryCode": "VN",
+		"latitude": 14.1,
+		"longitude": 108.3
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			18,
+			25
+		],
+		"female": [
+			15,
+			22
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			50,
+			55
+		],
+		"female": [
+			48,
+			52
+		]
+	},
+	"images": []
+}

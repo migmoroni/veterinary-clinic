@@ -1,0 +1,34 @@
+{
+	"id": "treeing-tennessee-brindle",
+	"species": "canine",
+	"labelKey": "pet.breed.treeingTennesseeBrindle",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			16,
+			23
+		],
+		"female": [
+			14,
+			18
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			61
+		],
+		"female": [
+			41,
+			56
+		]
+	},
+	"images": []
+}

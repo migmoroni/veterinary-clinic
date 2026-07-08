@@ -1,0 +1,34 @@
+{
+	"id": "giant-schnauzer",
+	"species": "canine",
+	"labelKey": "pet.breed.giantSchnauzer",
+	"origin": {
+		"id": "de",
+		"labelKey": null,
+		"countryCode": "DE",
+		"latitude": 51.2,
+		"longitude": 10.5
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			34,
+			48
+		],
+		"female": [
+			27,
+			38
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			65,
+			70
+		],
+		"female": [
+			60,
+			65
+		]
+	},
+	"images": []
+}

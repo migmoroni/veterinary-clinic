@@ -1,0 +1,34 @@
+{
+	"id": "patagonian-sheepdog",
+	"species": "canine",
+	"labelKey": "pet.breed.patagonianSheepdog",
+	"origin": {
+		"id": "cl",
+		"labelKey": null,
+		"countryCode": "CL",
+		"latitude": -35.7,
+		"longitude": -71.5
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			18,
+			30
+		],
+		"female": [
+			16,
+			26
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			45,
+			60
+		],
+		"female": [
+			42,
+			56
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,34 @@
+{
+	"id": "original-fila-brasileiro",
+	"species": "canine",
+	"labelKey": "pet.breed.originalFilaBrasileiro",
+	"origin": {
+		"id": "br",
+		"labelKey": null,
+		"countryCode": "BR",
+		"latitude": -14.2,
+		"longitude": -51.9
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			45,
+			70
+		],
+		"female": [
+			38,
+			60
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			60,
+			75
+		],
+		"female": [
+			58,
+			70
+		]
+	},
+	"images": []
+}

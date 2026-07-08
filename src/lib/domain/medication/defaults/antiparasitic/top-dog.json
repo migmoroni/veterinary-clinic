@@ -1,0 +1,20 @@
+{
+	"origin": "system",
+	"name": "Top Dog",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "Ourofino Saúde Animal",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"antiparasitário de amplo espectro",
+		"antiparasitário de largo espetro",
+		"antiparasitario de amplio espectro",
+		"broad-spectrum antiparasitic",
+		"endoparasitas",
+		"endoparásitos",
+		"endoparasites"
+	]
+}

@@ -1,0 +1,27 @@
+{
+	"origin": "system",
+	"name": "Felocell CVR",
+	"species": [
+		"feline"
+	],
+	"manufacturer": "Zoetis",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"V 3",
+		"V3",
+		"FVRCP",
+		"tríplice felina",
+		"triple felina",
+		"feline three-way vaccine",
+		"rinotraqueíte felina",
+		"rinotraqueítis felina",
+		"feline rhinotracheitis",
+		"calicivirose felina",
+		"calicivirosis felina",
+		"feline calicivirosis",
+		"panleucopenia felina",
+		"feline panleukopenia"
+	]
+}

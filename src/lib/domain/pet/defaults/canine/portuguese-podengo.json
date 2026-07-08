@@ -1,0 +1,34 @@
+{
+	"id": "portuguese-podengo",
+	"species": "canine",
+	"labelKey": "pet.breed.portuguesePodengo",
+	"origin": {
+		"id": "pt",
+		"labelKey": null,
+		"countryCode": "PT",
+		"latitude": 39.4,
+		"longitude": -8.2
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			30
+		],
+		"female": [
+			4,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			20,
+			70
+		],
+		"female": [
+			20,
+			65
+		]
+	},
+	"images": []
+}

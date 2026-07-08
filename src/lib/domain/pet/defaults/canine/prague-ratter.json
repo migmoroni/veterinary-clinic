@@ -1,0 +1,34 @@
+{
+	"id": "prague-ratter",
+	"species": "canine",
+	"labelKey": "pet.breed.pragueRatter",
+	"origin": {
+		"id": "cz",
+		"labelKey": null,
+		"countryCode": "CZ",
+		"latitude": 49.8,
+		"longitude": 15.5
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			2,
+			3.5
+		],
+		"female": [
+			1.8,
+			3
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			20,
+			23
+		],
+		"female": [
+			19,
+			22
+		]
+	},
+	"images": []
+}

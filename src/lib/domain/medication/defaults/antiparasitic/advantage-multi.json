@@ -1,0 +1,19 @@
+{
+	"origin": "system",
+	"name": "Advantage Multi",
+	"species": [
+		"canine",
+		"feline"
+	],
+	"manufacturer": "Elanco",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"moxidectina imidacloprida",
+		"moxidectina imidaclopride",
+		"moxidectin imidacloprid",
+		"endectocida",
+		"endectocide"
+	]
+}

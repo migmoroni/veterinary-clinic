@@ -1,0 +1,34 @@
+{
+	"id": "stabyhoun",
+	"species": "canine",
+	"labelKey": "pet.breed.stabyhoun",
+	"origin": {
+		"id": "nl",
+		"labelKey": null,
+		"countryCode": "NL",
+		"latitude": 52.1,
+		"longitude": 5.3
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			20,
+			27
+		],
+		"female": [
+			18,
+			24
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			50,
+			53
+		],
+		"female": [
+			48,
+			50
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,34 @@
+{
+	"id": "boca-preta-sertanejo",
+	"species": "canine",
+	"labelKey": "pet.breed.bocaPretaSertanejo",
+	"origin": {
+		"id": "br",
+		"labelKey": null,
+		"countryCode": "BR",
+		"latitude": -14.2,
+		"longitude": -51.9
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			18,
+			28
+		],
+		"female": [
+			16,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			45,
+			58
+		],
+		"female": [
+			42,
+			55
+		]
+	},
+	"images": []
+}

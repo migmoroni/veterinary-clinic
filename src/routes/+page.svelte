@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import OwnerContactDialog from '$lib/components/owner/OwnerContactDialog.svelte';
 	import type { DashboardAnalysisView } from '$lib/domain/dashboard/analytics.js';
+	import { defaultMedicationCatalogItems } from '$lib/domain/medication/default-catalog.js';
 	import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 	import { breedReferenceProfiles } from '$lib/domain/pet/breed-reference.js';
 	import { clinic } from '$lib/stores/clinic.svelte.js';
@@ -60,6 +61,10 @@
 
 	function breedReferenceCount(): number {
 		return breedReferenceProfiles.length;
+	}
+
+	function medicationReferenceCount(): number {
+		return defaultMedicationCatalogItems.length;
 	}
 
 	function openCurrentRecordContact() {
@@ -251,26 +256,49 @@
 		{/if}
 	</section>
 
-	<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
-		<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-			<div class="flex min-w-0 gap-3">
-				<span class="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-					<BookOpen class="size-5" />
-				</span>
-				<div class="min-w-0">
-					<p class="text-sm font-medium text-muted-foreground">{t('home.breedReferenceKicker')}</p>
-					<h3 class="mt-1 text-base font-semibold">{t('home.breedReferenceTitle')}</h3>
-					<p class="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">{t('home.breedReferenceDescription')}</p>
+	<div class="grid gap-4 lg:grid-cols-2">
+		<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
+			<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+				<div class="flex min-w-0 gap-3">
+					<span class="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+						<BookOpen class="size-5" />
+					</span>
+					<div class="min-w-0">
+						<p class="text-sm font-medium text-muted-foreground">{t('home.breedReferenceKicker')}</p>
+						<h3 class="mt-1 text-base font-semibold">{t('home.breedReferenceTitle')}</h3>
+						<p class="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">{t('home.breedReferenceDescription')}</p>
+					</div>
 				</div>
-			</div>
 
-			<a href="/breeds" class="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium hover:bg-accent" aria-label={t('actions.openBreedReference')}>
-				<span class="tabular-nums">{metricFormatter(breedReferenceCount())}</span>
-				<span>{t('stats.breeds')}</span>
-				<ArrowRight class="size-4" />
-			</a>
-		</div>
-	</section>
+				<a href="/breeds" class="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium hover:bg-accent" aria-label={t('actions.openBreedReference')}>
+					<span class="tabular-nums">{metricFormatter(breedReferenceCount())}</span>
+					<span>{t('stats.breeds')}</span>
+					<ArrowRight class="size-4" />
+				</a>
+			</div>
+		</section>
+
+		<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
+			<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+				<div class="flex min-w-0 gap-3">
+					<span class="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+						<Pill class="size-5" />
+					</span>
+					<div class="min-w-0">
+						<p class="text-sm font-medium text-muted-foreground">{t('home.formularyKicker')}</p>
+						<h3 class="mt-1 text-base font-semibold">{t('home.formularyTitle')}</h3>
+						<p class="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">{t('home.formularyDescription')}</p>
+					</div>
+				</div>
+
+				<a href="/formulary" class="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium hover:bg-accent" aria-label={t('actions.openFormulary')}>
+					<span class="tabular-nums">{metricFormatter(medicationReferenceCount())}</span>
+					<span>{t('stats.medications')}</span>
+					<ArrowRight class="size-4" />
+				</a>
+			</div>
+		</section>
+	</div>
 </section>
 {/if}
 

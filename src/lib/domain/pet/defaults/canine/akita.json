@@ -1,0 +1,34 @@
+{
+	"id": "akita",
+	"species": "canine",
+	"labelKey": "pet.breed.akita",
+	"origin": {
+		"id": "jp",
+		"labelKey": null,
+		"countryCode": "JP",
+		"latitude": 36.2,
+		"longitude": 138.3
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			38,
+			59
+		],
+		"female": [
+			32,
+			45
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			64,
+			71
+		],
+		"female": [
+			58,
+			66
+		]
+	},
+	"images": []
+}

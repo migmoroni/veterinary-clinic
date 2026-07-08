@@ -1,0 +1,34 @@
+{
+	"id": "havana-brown",
+	"species": "feline",
+	"labelKey": "pet.breed.havanaBrown",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			3.5,
+			5.5
+		],
+		"female": [
+			2.5,
+			4.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			22,
+			27
+		],
+		"female": [
+			20,
+			25
+		]
+	},
+	"images": []
+}

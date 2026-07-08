@@ -1,0 +1,34 @@
+{
+	"id": "english-setter",
+	"species": "canine",
+	"labelKey": "pet.breed.englishSetter",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			25,
+			36
+		],
+		"female": [
+			20,
+			30
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			63,
+			69
+		],
+		"female": [
+			58,
+			64
+		]
+	},
+	"images": []
+}

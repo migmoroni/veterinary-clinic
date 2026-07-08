@@ -1,0 +1,34 @@
+{
+	"id": "boston-terrier",
+	"species": "canine",
+	"labelKey": "pet.breed.bostonTerrier",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			6,
+			11
+		],
+		"female": [
+			5,
+			10
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			38,
+			43
+		],
+		"female": [
+			36,
+			41
+		]
+	},
+	"images": []
+}

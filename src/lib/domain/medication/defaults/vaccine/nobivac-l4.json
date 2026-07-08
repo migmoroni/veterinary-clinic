@@ -1,0 +1,17 @@
+{
+	"origin": "system",
+	"name": "Nobivac L4",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "MSD Animal Health",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"L4",
+		"leptospirose canina",
+		"leptospirosis canina",
+		"canine leptospirosis"
+	]
+}

@@ -1,0 +1,34 @@
+{
+	"id": "sapsali",
+	"species": "canine",
+	"labelKey": "pet.breed.sapsali",
+	"origin": {
+		"id": "kr",
+		"labelKey": null,
+		"countryCode": "KR",
+		"latitude": 36.5,
+		"longitude": 127.9
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			20,
+			29
+		],
+		"female": [
+			18,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			49,
+			53
+		],
+		"female": [
+			47,
+			51
+		]
+	},
+	"images": []
+}

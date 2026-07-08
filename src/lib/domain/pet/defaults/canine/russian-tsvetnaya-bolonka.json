@@ -1,0 +1,34 @@
+{
+	"id": "russian-tsvetnaya-bolonka",
+	"species": "canine",
+	"labelKey": "pet.breed.russianTsvetnayaBolonka",
+	"origin": {
+		"id": "ru",
+		"labelKey": null,
+		"countryCode": "RU",
+		"latitude": 61.5,
+		"longitude": 105.3
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			2,
+			5
+		],
+		"female": [
+			2,
+			4.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			20,
+			26
+		],
+		"female": [
+			18,
+			25
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,25 @@
+{
+	"origin": "system",
+	"name": "Nobivac KC",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "MSD Animal Health",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"KC",
+		"Bordetella bronchiseptica",
+		"traqueobronquite infecciosa canina",
+		"traqueobronquite infeciosa canina",
+		"traqueobronquitis infecciosa canina",
+		"canine infectious tracheobronchitis",
+		"tosse dos canis",
+		"tosse do canil",
+		"tos de las perreras",
+		"kennel cough",
+		"parainfluenza canina",
+		"canine parainfluenza"
+	]
+}

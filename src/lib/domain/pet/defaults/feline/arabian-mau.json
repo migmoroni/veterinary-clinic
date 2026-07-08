@@ -1,0 +1,34 @@
+{
+	"id": "arabian-mau",
+	"species": "feline",
+	"labelKey": "pet.breed.arabianMau",
+	"origin": {
+		"id": "middle-east",
+		"labelKey": "breedReference.origin.middleEast",
+		"countryCode": null,
+		"latitude": 30,
+		"longitude": 40
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			7
+		],
+		"female": [
+			3,
+			5.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			24,
+			30
+		],
+		"female": [
+			22,
+			28
+		]
+	},
+	"images": []
+}

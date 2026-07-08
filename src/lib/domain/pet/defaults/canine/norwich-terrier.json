@@ -1,0 +1,34 @@
+{
+	"id": "norwich-terrier",
+	"species": "canine",
+	"labelKey": "pet.breed.norwichTerrier",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			5,
+			6
+		],
+		"female": [
+			5,
+			5.8
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			24,
+			26
+		],
+		"female": [
+			23,
+			25
+		]
+	},
+	"images": []
+}

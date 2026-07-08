@@ -1,0 +1,34 @@
+{
+	"id": "kuvasz",
+	"species": "canine",
+	"labelKey": "pet.breed.kuvasz",
+	"origin": {
+		"id": "hu",
+		"labelKey": null,
+		"countryCode": "HU",
+		"latitude": 47.2,
+		"longitude": 19.5
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			45,
+			52
+		],
+		"female": [
+			32,
+			41
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			71,
+			76
+		],
+		"female": [
+			66,
+			70
+		]
+	},
+	"images": []
+}

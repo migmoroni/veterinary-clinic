@@ -1,0 +1,34 @@
+{
+	"id": "abyssinian",
+	"species": "feline",
+	"labelKey": "pet.breed.abyssinian",
+	"origin": {
+		"id": "et",
+		"labelKey": null,
+		"countryCode": "ET",
+		"latitude": 9.1,
+		"longitude": 40.5
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			5.5
+		],
+		"female": [
+			3,
+			4.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			22,
+			26
+		],
+		"female": [
+			20,
+			24
+		]
+	},
+	"images": []
+}

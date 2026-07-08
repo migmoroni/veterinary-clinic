@@ -1,0 +1,20 @@
+{
+	"origin": "system",
+	"name": "Capstar",
+	"species": [
+		"canine",
+		"feline"
+	],
+	"manufacturer": "Elanco",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"nitenpiram",
+		"nitenpyram",
+		"ectoparasiticida",
+		"ectoparasiticide",
+		"antipulgas",
+		"flea treatment"
+	]
+}

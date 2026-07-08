@@ -1,0 +1,36 @@
+{
+	"origin": "system",
+	"name": "Nobivac DHPPI+L",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "MSD Animal Health",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"DHPPI+L",
+		"V 8",
+		"V8",
+		"polivalente",
+		"polyvalent",
+		"múltipla canina",
+		"vacuna múltiple canina",
+		"canine combination vaccine",
+		"cinomose canina",
+		"esgana canina",
+		"moquillo canino",
+		"canine distemper",
+		"hepatite infecciosa canina",
+		"hepatitis infecciosa canina",
+		"infectious canine hepatitis",
+		"parainfluenza canina",
+		"canine parainfluenza",
+		"parvovirose canina",
+		"parvovirosis canina",
+		"canine parvovirus",
+		"leptospirose canina",
+		"leptospirosis canina",
+		"canine leptospirosis"
+	]
+}

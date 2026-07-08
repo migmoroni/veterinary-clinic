@@ -1,0 +1,34 @@
+{
+	"id": "east-siberian-laika",
+	"species": "canine",
+	"labelKey": "pet.breed.eastSiberianLaika",
+	"origin": {
+		"id": "ru",
+		"labelKey": null,
+		"countryCode": "RU",
+		"latitude": 61.5,
+		"longitude": 105.3
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			21,
+			30
+		],
+		"female": [
+			18,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			57,
+			64
+		],
+		"female": [
+			53,
+			60
+		]
+	},
+	"images": []
+}

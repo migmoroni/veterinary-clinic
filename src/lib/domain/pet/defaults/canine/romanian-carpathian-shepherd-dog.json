@@ -1,0 +1,34 @@
+{
+	"id": "romanian-carpathian-shepherd-dog",
+	"species": "canine",
+	"labelKey": "pet.breed.romanianCarpathianShepherdDog",
+	"origin": {
+		"id": "ro",
+		"labelKey": null,
+		"countryCode": "RO",
+		"latitude": 45.9,
+		"longitude": 24.9
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			35,
+			50
+		],
+		"female": [
+			32,
+			45
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			65,
+			73
+		],
+		"female": [
+			59,
+			67
+		]
+	},
+	"images": []
+}

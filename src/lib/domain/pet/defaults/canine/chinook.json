@@ -1,0 +1,34 @@
+{
+	"id": "chinook",
+	"species": "canine",
+	"labelKey": "pet.breed.chinook",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			27,
+			41
+		],
+		"female": [
+			23,
+			32
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			61,
+			69
+		],
+		"female": [
+			53,
+			61
+		]
+	},
+	"images": []
+}

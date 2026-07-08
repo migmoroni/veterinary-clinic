@@ -1,0 +1,34 @@
+{
+	"id": "minskin",
+	"species": "feline",
+	"labelKey": "pet.breed.minskin",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			2,
+			4
+		],
+		"female": [
+			1.8,
+			3.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			18,
+			23
+		],
+		"female": [
+			17,
+			22
+		]
+	},
+	"images": []
+}

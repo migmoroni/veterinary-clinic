@@ -1,0 +1,34 @@
+{
+	"id": "norwegian-forest-cat",
+	"species": "feline",
+	"labelKey": "pet.breed.norwegianForestCat",
+	"origin": {
+		"id": "no",
+		"labelKey": null,
+		"countryCode": "NO",
+		"latitude": 60.5,
+		"longitude": 8.5
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			5.5,
+			9
+		],
+		"female": [
+			4,
+			6
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			30,
+			40
+		],
+		"female": [
+			28,
+			36
+		]
+	},
+	"images": []
+}

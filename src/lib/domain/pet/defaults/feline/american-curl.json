@@ -1,0 +1,34 @@
+{
+	"id": "american-curl",
+	"species": "feline",
+	"labelKey": "pet.breed.americanCurl",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			3.2,
+			4.5
+		],
+		"female": [
+			2.3,
+			3.6
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			22,
+			26
+		],
+		"female": [
+			20,
+			24
+		]
+	},
+	"images": []
+}

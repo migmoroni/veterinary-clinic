@@ -1,0 +1,34 @@
+{
+	"id": "asian-cat",
+	"species": "feline",
+	"labelKey": "pet.breed.asianCat",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			6
+		],
+		"female": [
+			3,
+			5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			23,
+			28
+		],
+		"female": [
+			21,
+			26
+		]
+	},
+	"images": []
+}

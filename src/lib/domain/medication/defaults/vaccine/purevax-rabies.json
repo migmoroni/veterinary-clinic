@@ -1,0 +1,17 @@
+{
+	"origin": "system",
+	"name": "Purevax Rabies",
+	"species": [
+		"feline"
+	],
+	"manufacturer": "Boehringer Ingelheim Animal Health",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"raiva",
+		"antirrábica",
+		"rabia",
+		"rabies"
+	]
+}

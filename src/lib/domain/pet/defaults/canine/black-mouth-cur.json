@@ -1,0 +1,34 @@
+{
+	"id": "black-mouth-cur",
+	"species": "canine",
+	"labelKey": "pet.breed.blackMouthCur",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			18,
+			45
+		],
+		"female": [
+			16,
+			40
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			64
+		],
+		"female": [
+			41,
+			60
+		]
+	},
+	"images": []
+}

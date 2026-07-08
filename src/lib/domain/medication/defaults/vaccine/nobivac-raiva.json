@@ -1,0 +1,18 @@
+{
+	"origin": "system",
+	"name": "Nobivac Raiva",
+	"species": [
+		"canine",
+		"feline"
+	],
+	"manufacturer": "MSD Animal Health",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"raiva",
+		"antirrábica",
+		"rabia",
+		"rabies"
+	]
+}

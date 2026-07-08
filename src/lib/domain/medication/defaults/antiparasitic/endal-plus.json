@@ -1,0 +1,19 @@
+{
+	"origin": "system",
+	"name": "Endal Plus",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "Ourofino Saúde Animal",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"praziquantel pamoato de pirantel febantel",
+		"praziquantel pyrantel pamoate febantel",
+		"antiparasitário de amplo espectro",
+		"antiparasitário de largo espetro",
+		"antiparasitario de amplio espectro",
+		"broad-spectrum antiparasitic"
+	]
+}

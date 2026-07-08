@@ -1,0 +1,34 @@
+{
+	"id": "rhodesian-ridgeback",
+	"species": "canine",
+	"labelKey": "pet.breed.rhodesianRidgeback",
+	"origin": {
+		"id": "zw",
+		"labelKey": null,
+		"countryCode": "ZW",
+		"latitude": -19,
+		"longitude": 29.2
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			36,
+			41
+		],
+		"female": [
+			29,
+			34
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			63,
+			69
+		],
+		"female": [
+			61,
+			66
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,34 @@
+{
+	"id": "american-bobtail",
+	"species": "feline",
+	"labelKey": "pet.breed.americanBobtail",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			5,
+			7.5
+		],
+		"female": [
+			3.5,
+			5.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			24,
+			32
+		],
+		"female": [
+			22,
+			29
+		]
+	},
+	"images": []
+}

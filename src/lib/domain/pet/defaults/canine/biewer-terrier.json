@@ -1,0 +1,34 @@
+{
+	"id": "biewer-terrier",
+	"species": "canine",
+	"labelKey": "pet.breed.biewerTerrier",
+	"origin": {
+		"id": "de",
+		"labelKey": null,
+		"countryCode": "DE",
+		"latitude": 51.2,
+		"longitude": 10.5
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			2,
+			4
+		],
+		"female": [
+			2,
+			3.8
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			18,
+			28
+		],
+		"female": [
+			18,
+			26
+		]
+	},
+	"images": []
+}

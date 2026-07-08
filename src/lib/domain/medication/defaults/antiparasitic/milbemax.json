@@ -1,0 +1,20 @@
+{
+	"origin": "system",
+	"name": "Milbemax",
+	"species": [
+		"canine",
+		"feline"
+	],
+	"manufacturer": "Elanco",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"milbemicina oxima praziquantel",
+		"milbemycin oxime praziquantel",
+		"antiparasitário de amplo espectro",
+		"antiparasitário de largo espetro",
+		"antiparasitario de amplio espectro",
+		"broad-spectrum antiparasitic"
+	]
+}

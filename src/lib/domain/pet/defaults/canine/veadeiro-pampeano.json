@@ -1,0 +1,34 @@
+{
+	"id": "veadeiro-pampeano",
+	"species": "canine",
+	"labelKey": "pet.breed.veadeiroPampeano",
+	"origin": {
+		"id": "br",
+		"labelKey": null,
+		"countryCode": "BR",
+		"latitude": -14.2,
+		"longitude": -51.9
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			23,
+			30
+		],
+		"female": [
+			20,
+			27
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			52,
+			59
+		],
+		"female": [
+			47,
+			55
+		]
+	},
+	"images": []
+}

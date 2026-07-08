@@ -1,0 +1,34 @@
+{
+	"id": "pomeranian",
+	"species": "canine",
+	"labelKey": "pet.breed.pomeranian",
+	"origin": {
+		"id": "de",
+		"labelKey": null,
+		"countryCode": "DE",
+		"latitude": 51.2,
+		"longitude": 10.5
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			1.8,
+			3.5
+		],
+		"female": [
+			1.8,
+			3.2
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			18,
+			24
+		],
+		"female": [
+			18,
+			23
+		]
+	},
+	"images": []
+}

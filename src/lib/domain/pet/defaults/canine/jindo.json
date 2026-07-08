@@ -1,0 +1,34 @@
+{
+	"id": "jindo",
+	"species": "canine",
+	"labelKey": "pet.breed.jindo",
+	"origin": {
+		"id": "kr",
+		"labelKey": null,
+		"countryCode": "KR",
+		"latitude": 36.5,
+		"longitude": 127.9
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			18,
+			23
+		],
+		"female": [
+			15,
+			19
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			50,
+			55
+		],
+		"female": [
+			45,
+			50
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,34 @@
+{
+	"id": "bull-terrier",
+	"species": "canine",
+	"labelKey": "pet.breed.bullTerrier",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			22,
+			35
+		],
+		"female": [
+			20,
+			30
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			48,
+			56
+		],
+		"female": [
+			45,
+			53
+		]
+	},
+	"images": []
+}

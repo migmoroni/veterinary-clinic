@@ -1,0 +1,34 @@
+{
+	"id": "georgian-shepherd",
+	"species": "canine",
+	"labelKey": "pet.breed.georgianShepherd",
+	"origin": {
+		"id": "ge",
+		"labelKey": null,
+		"countryCode": "GE",
+		"latitude": 42.3,
+		"longitude": 43.4
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			55,
+			70
+		],
+		"female": [
+			45,
+			60
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			65,
+			72
+		],
+		"female": [
+			60,
+			67
+		]
+	},
+	"images": []
+}

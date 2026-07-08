@@ -1,6 +1,5 @@
+import type { MedicationCatalogExtension } from '$lib/domain/medication/catalog.js';
 import type { TreatmentKind } from '$lib/domain/treatment/treatment.js';
-import vaccineCatalog from './defaults/vaccine-catalog.json' with { type: 'json' };
-import antiparasiticCatalog from './defaults/antiparasitic-catalog.json' with { type: 'json' };
 
 export type DefaultMedicationKind = TreatmentKind;
 export type DefaultMedicationSpecies = 'canine' | 'feline';
@@ -20,15 +19,21 @@ export interface DefaultMedicationCatalogItem {
 	manufacturer: string;
 	images?: DefaultMedicationCatalogImage[];
 	regions: string[];
+	extension?: Partial<MedicationCatalogExtension>;
 }
 
 type DefaultMedicationCatalogJsonItem = Omit<DefaultMedicationCatalogItem, 'kind'>;
 
-function withKind(kind: DefaultMedicationKind, items: DefaultMedicationCatalogJsonItem[]): DefaultMedicationCatalogItem[] {
-	return items.map((item) => ({ kind, ...item }));
+const vaccineCatalogModules = import.meta.glob('./defaults/vaccine/*.json', { eager: true, import: 'default' }) as Record<string, DefaultMedicationCatalogJsonItem>;
+const antiparasiticCatalogModules = import.meta.glob('./defaults/antiparasitic/*.json', { eager: true, import: 'default' }) as Record<string, DefaultMedicationCatalogJsonItem>;
+
+function withKind(kind: DefaultMedicationKind, modules: Record<string, DefaultMedicationCatalogJsonItem>): DefaultMedicationCatalogItem[] {
+	return Object.entries(modules)
+		.sort(([leftPath], [rightPath]) => leftPath.localeCompare(rightPath))
+		.map(([, item]) => ({ kind, ...item }));
 }
 
 export const defaultMedicationCatalogItems: DefaultMedicationCatalogItem[] = [
-	...withKind('vaccine', vaccineCatalog as DefaultMedicationCatalogJsonItem[]),
-	...withKind('antiparasitic', antiparasiticCatalog as DefaultMedicationCatalogJsonItem[])
+	...withKind('vaccine', vaccineCatalogModules),
+	...withKind('antiparasitic', antiparasiticCatalogModules)
 ];

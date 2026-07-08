@@ -1,0 +1,34 @@
+{
+	"id": "havanese",
+	"species": "canine",
+	"labelKey": "pet.breed.havanese",
+	"origin": {
+		"id": "cu",
+		"labelKey": null,
+		"countryCode": "CU",
+		"latitude": 21.5,
+		"longitude": -78.9
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			4.5,
+			7.5
+		],
+		"female": [
+			4,
+			7
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			23,
+			29
+		],
+		"female": [
+			23,
+			28
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,17 @@
+{
+	"origin": "system",
+	"name": "Drontal Gatos",
+	"species": [
+		"feline"
+	],
+	"manufacturer": "Elanco",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"praziquantel pamoato de pirantel",
+		"praziquantel pyrantel pamoate",
+		"tenicida",
+		"tapeworm treatment"
+	]
+}

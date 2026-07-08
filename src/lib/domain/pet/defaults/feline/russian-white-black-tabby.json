@@ -1,0 +1,34 @@
+{
+	"id": "russian-white-black-tabby",
+	"species": "feline",
+	"labelKey": "pet.breed.russianWhiteBlackTabby",
+	"origin": {
+		"id": "au",
+		"labelKey": null,
+		"countryCode": "AU",
+		"latitude": -25.3,
+		"longitude": 133.8
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			6
+		],
+		"female": [
+			3,
+			5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			23,
+			28
+		],
+		"female": [
+			21,
+			27
+		]
+	},
+	"images": []
+}

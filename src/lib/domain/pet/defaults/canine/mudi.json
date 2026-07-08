@@ -1,0 +1,34 @@
+{
+	"id": "mudi",
+	"species": "canine",
+	"labelKey": "pet.breed.mudi",
+	"origin": {
+		"id": "hu",
+		"labelKey": null,
+		"countryCode": "HU",
+		"latitude": 47.2,
+		"longitude": 19.5
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			8,
+			13
+		],
+		"female": [
+			7,
+			11
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			41,
+			47
+		],
+		"female": [
+			38,
+			44
+		]
+	},
+	"images": []
+}

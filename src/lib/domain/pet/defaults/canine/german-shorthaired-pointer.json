@@ -1,0 +1,34 @@
+{
+	"id": "german-shorthaired-pointer",
+	"species": "canine",
+	"labelKey": "pet.breed.germanShorthairedPointer",
+	"origin": {
+		"id": "de",
+		"labelKey": null,
+		"countryCode": "DE",
+		"latitude": 51.2,
+		"longitude": 10.5
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			25,
+			32
+		],
+		"female": [
+			20,
+			27
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			58,
+			64
+		],
+		"female": [
+			53,
+			59
+		]
+	},
+	"images": []
+}

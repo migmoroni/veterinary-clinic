@@ -1,0 +1,34 @@
+{
+	"id": "yorkshire-terrier",
+	"species": "canine",
+	"labelKey": "pet.breed.yorkshireTerrier",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			2,
+			3.5
+		],
+		"female": [
+			2,
+			3.2
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			18,
+			23
+		],
+		"female": [
+			18,
+			22
+		]
+	},
+	"images": []
+}

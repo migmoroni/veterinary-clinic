@@ -1,0 +1,34 @@
+{
+	"id": "american-hairless-terrier",
+	"species": "canine",
+	"labelKey": "pet.breed.americanHairlessTerrier",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			5.5,
+			13
+		],
+		"female": [
+			5.5,
+			12.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			30,
+			41
+		],
+		"female": [
+			30,
+			41
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,34 @@
+{
+	"id": "cornish-rex",
+	"species": "feline",
+	"labelKey": "pet.breed.cornishRex",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			3,
+			4.5
+		],
+		"female": [
+			2.5,
+			4
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			20,
+			25
+		],
+		"female": [
+			18,
+			23
+		]
+	},
+	"images": []
+}

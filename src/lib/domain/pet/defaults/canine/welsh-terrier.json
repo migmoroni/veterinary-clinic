@@ -1,0 +1,34 @@
+{
+	"id": "welsh-terrier",
+	"species": "canine",
+	"labelKey": "pet.breed.welshTerrier",
+	"origin": {
+		"id": "wales",
+		"labelKey": "breedReference.origin.wales",
+		"countryCode": null,
+		"latitude": 52.2,
+		"longitude": -3.8
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			9,
+			10
+		],
+		"female": [
+			8,
+			9
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			38,
+			39
+		],
+		"female": [
+			36,
+			38
+		]
+	},
+	"images": []
+}

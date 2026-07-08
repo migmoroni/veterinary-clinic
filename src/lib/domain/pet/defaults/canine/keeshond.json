@@ -1,0 +1,34 @@
+{
+	"id": "keeshond",
+	"species": "canine",
+	"labelKey": "pet.breed.keeshond",
+	"origin": {
+		"id": "nl",
+		"labelKey": null,
+		"countryCode": "NL",
+		"latitude": 52.1,
+		"longitude": 5.3
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			16,
+			18
+		],
+		"female": [
+			14,
+			16
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			44,
+			46
+		],
+		"female": [
+			43,
+			45
+		]
+	},
+	"images": []
+}

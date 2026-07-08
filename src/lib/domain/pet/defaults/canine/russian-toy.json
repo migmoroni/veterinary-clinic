@@ -1,0 +1,34 @@
+{
+	"id": "russian-toy",
+	"species": "canine",
+	"labelKey": "pet.breed.russianToy",
+	"origin": {
+		"id": "ru",
+		"labelKey": null,
+		"countryCode": "RU",
+		"latitude": 61.5,
+		"longitude": 105.3
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			1.5,
+			3
+		],
+		"female": [
+			1.3,
+			2.8
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			22,
+			27
+		],
+		"female": [
+			20,
+			26
+		]
+	},
+	"images": []
+}

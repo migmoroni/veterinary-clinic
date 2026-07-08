@@ -1,0 +1,17 @@
+{
+	"origin": "system",
+	"name": "Mectimax",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "Agener União Saúde Animal",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"ivermectina",
+		"ivermectin",
+		"endectocida",
+		"endectocide"
+	]
+}

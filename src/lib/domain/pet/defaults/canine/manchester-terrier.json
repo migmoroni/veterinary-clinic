@@ -1,0 +1,34 @@
+{
+	"id": "manchester-terrier",
+	"species": "canine",
+	"labelKey": "pet.breed.manchesterTerrier",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			5.5,
+			10
+		],
+		"female": [
+			5,
+			8
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			38,
+			41
+		],
+		"female": [
+			35,
+			39
+		]
+	},
+	"images": []
+}

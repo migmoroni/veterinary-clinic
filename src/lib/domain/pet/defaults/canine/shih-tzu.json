@@ -1,0 +1,34 @@
+{
+	"id": "shih-tzu",
+	"species": "canine",
+	"labelKey": "pet.breed.shihTzu",
+	"origin": {
+		"id": "cn",
+		"labelKey": null,
+		"countryCode": "CN",
+		"latitude": 35.9,
+		"longitude": 104.2
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			4,
+			8
+		],
+		"female": [
+			4,
+			7.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			22,
+			28
+		],
+		"female": [
+			20,
+			27
+		]
+	},
+	"images": []
+}

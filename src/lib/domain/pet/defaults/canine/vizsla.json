@@ -1,0 +1,34 @@
+{
+	"id": "vizsla",
+	"species": "canine",
+	"labelKey": "pet.breed.vizsla",
+	"origin": {
+		"id": "hu",
+		"labelKey": null,
+		"countryCode": "HU",
+		"latitude": 47.2,
+		"longitude": 19.5
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			23,
+			30
+		],
+		"female": [
+			20,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			58,
+			64
+		],
+		"female": [
+			53,
+			60
+		]
+	},
+	"images": []
+}

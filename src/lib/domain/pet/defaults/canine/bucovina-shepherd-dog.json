@@ -1,0 +1,34 @@
+{
+	"id": "bucovina-shepherd-dog",
+	"species": "canine",
+	"labelKey": "pet.breed.bucovinaShepherdDog",
+	"origin": {
+		"id": "ro",
+		"labelKey": null,
+		"countryCode": "RO",
+		"latitude": 45.9,
+		"longitude": 24.9
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			50,
+			80
+		],
+		"female": [
+			45,
+			65
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			68,
+			78
+		],
+		"female": [
+			64,
+			72
+		]
+	},
+	"images": []
+}

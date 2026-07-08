@@ -1,0 +1,34 @@
+{
+	"id": "airedale-terrier",
+	"species": "canine",
+	"labelKey": "pet.breed.airedaleTerrier",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			23,
+			29
+		],
+		"female": [
+			18,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			58,
+			61
+		],
+		"female": [
+			56,
+			59
+		]
+	},
+	"images": []
+}

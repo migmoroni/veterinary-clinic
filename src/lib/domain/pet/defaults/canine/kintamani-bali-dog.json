@@ -1,0 +1,34 @@
+{
+	"id": "kintamani-bali-dog",
+	"species": "canine",
+	"labelKey": "pet.breed.kintamaniBaliDog",
+	"origin": {
+		"id": "id",
+		"labelKey": null,
+		"countryCode": "ID",
+		"latitude": -2.5,
+		"longitude": 118
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			15,
+			18
+		],
+		"female": [
+			13,
+			16
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			49,
+			57
+		],
+		"female": [
+			44,
+			52
+		]
+	},
+	"images": []
+}

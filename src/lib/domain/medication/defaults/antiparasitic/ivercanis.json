@@ -1,0 +1,17 @@
+{
+	"origin": "system",
+	"name": "Ivercanis",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "World Veterinária",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"ivermectina",
+		"ivermectin",
+		"endectocida",
+		"endectocide"
+	]
+}

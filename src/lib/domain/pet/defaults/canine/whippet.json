@@ -1,0 +1,34 @@
+{
+	"id": "whippet",
+	"species": "canine",
+	"labelKey": "pet.breed.whippet",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			12,
+			19
+		],
+		"female": [
+			9,
+			16
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			47,
+			56
+		],
+		"female": [
+			44,
+			53
+		]
+	},
+	"images": []
+}

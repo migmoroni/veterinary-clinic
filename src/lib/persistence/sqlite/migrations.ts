@@ -1,6 +1,9 @@
 import type Database from '@tauri-apps/plugin-sql';
 import { defaultMedicationCatalogItems, type DefaultMedicationCatalogImage } from '$lib/domain/medication/default-catalog.js';
+import { stringifyMedicationCatalogExtension } from '$lib/domain/medication/catalog.js';
 import { defaultMedicationProtocols } from '$lib/domain/medication/default-protocol.js';
+import { defaultBreedReferenceItems, type DefaultBreedReferenceImage } from '$lib/domain/pet/default-breed-reference.js';
+import { stringifyBreedReferenceExtension, stringifyBreedSexRange } from '$lib/domain/pet/breed-reference.js';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 import { incrementalSchemaMigrations } from './schema-migrations/registry.js';
 import type { SchemaMigration } from './schema-migrations/types.js';
@@ -42,6 +45,10 @@ interface MedicationCatalogRow {
 	origin: string;
 }
 
+interface BreedReferenceRow {
+	id: number;
+}
+
 interface ImageCollectionRow {
 	id: number;
 }
@@ -71,10 +78,13 @@ interface RunMigrationsOptions {
 	seedDefaultData?: boolean;
 	createIndexes?: boolean;
 	syncDefaultMedicationData?: boolean;
+	syncDefaultBreedReferenceData?: boolean;
 }
 
 const MEDICATION_CATALOG_IMAGE_COLLECTION_TYPE = 'medication_catalog_item';
 const MEDICATION_CATALOG_IMAGE_MAX_ITEMS = 9;
+const BREED_REFERENCE_IMAGE_COLLECTION_TYPE = 'breed_reference_item';
+const BREED_REFERENCE_IMAGE_MAX_ITEMS = 9;
 
 function normalizeMedicationCatalogName(value: string): string {
 	return value
@@ -191,21 +201,84 @@ async function ensureDefaultMedicationImages(database: Database, catalogItemId: 
 	}
 }
 
+function normalizedDefaultBreedReferenceImages(images: readonly DefaultBreedReferenceImage[] | null | undefined): DefaultBreedReferenceImage[] {
+	const normalized = (images ?? []).filter((image) => image.source.trim());
+	if (normalized.length === 0) return [];
+	if (normalized.length > BREED_REFERENCE_IMAGE_MAX_ITEMS) throw new Error('default_breed_reference_image_limit_exceeded');
+	if (normalized.filter((image) => image.primary).length > 1) throw new Error('default_breed_reference_image_multiple_primary');
+	return normalized;
+}
+
+async function breedReferenceImageCollectionItemCount(database: Database, referenceItemId: number): Promise<number> {
+	const rows = await database.select<CountRow[]>(
+		`SELECT COUNT(*) AS total
+		 FROM image_collection_items item
+		 INNER JOIN image_collections collection ON collection.id = item.collection_id
+		 WHERE collection.entity_type = $1 AND collection.entity_id = $2`,
+		[BREED_REFERENCE_IMAGE_COLLECTION_TYPE, referenceItemId]
+	);
+	return Number(rows[0]?.total ?? 0);
+}
+
+async function ensureDefaultBreedReferenceImages(database: Database, referenceItemId: number, images: readonly DefaultBreedReferenceImage[] | null | undefined): Promise<void> {
+	const normalizedImages = normalizedDefaultBreedReferenceImages(images);
+	if (normalizedImages.length === 0) return;
+	if ((await breedReferenceImageCollectionItemCount(database, referenceItemId)) > 0) return;
+
+	await database.execute(
+		`INSERT INTO image_collections (entity_type, entity_id, primary_required, max_items, updated_at)
+		 VALUES ($1, $2, 1, $3, CURRENT_TIMESTAMP)
+		 ON CONFLICT(entity_type, entity_id) DO UPDATE SET
+			primary_required = excluded.primary_required,
+			max_items = excluded.max_items,
+			updated_at = CURRENT_TIMESTAMP`,
+		[BREED_REFERENCE_IMAGE_COLLECTION_TYPE, referenceItemId, BREED_REFERENCE_IMAGE_MAX_ITEMS]
+	);
+
+	const collectionRows = await database.select<ImageCollectionRow[]>(
+		'SELECT id FROM image_collections WHERE entity_type = $1 AND entity_id = $2 LIMIT 1',
+		[BREED_REFERENCE_IMAGE_COLLECTION_TYPE, referenceItemId]
+	);
+	const collectionId = collectionRows[0]?.id;
+	if (!collectionId) throw new Error('default_breed_reference_image_collection_not_found');
+
+	await database.execute('DELETE FROM image_collection_items WHERE collection_id = $1', [collectionId]);
+	const explicitPrimaryIndex = normalizedImages.findIndex((image) => image.primary);
+	const primaryIndex = explicitPrimaryIndex >= 0 ? explicitPrimaryIndex : 0;
+
+	for (const [index, image] of normalizedImages.entries()) {
+		const description = image.description?.trim() ?? '';
+		if (description.length > FIELD_LIMITS.imageDescription) throw new Error('field_limit_exceeded');
+		const imageBytes = await loadDefaultMedicationImageBytes(image.source);
+		await database.execute(
+			`INSERT INTO image_collection_items (
+				collection_id, image_blob, original_image_blob, description, is_primary, sort_order, updated_at
+			)
+			 VALUES ($1, ${bytesToSqlLiteral(imageBytes)}, ${bytesToSqlLiteral(imageBytes)}, $2, $3, $4, CURRENT_TIMESTAMP)`,
+			[collectionId, description || null, index === primaryIndex ? 1 : 0, index]
+		);
+	}
+}
+
 async function syncDefaultMedicationCatalog(database: Database): Promise<void> {
 	for (const item of defaultMedicationCatalogItems) {
 		const normalizedName = normalizeMedicationCatalogName(item.name);
+		const extension = stringifyMedicationCatalogExtension(item.extension);
+		if (extension.length > FIELD_LIMITS.medicationExtensionJson) throw new Error('default_medication_extension_limit_exceeded');
+
 		await database.execute(
-			`INSERT INTO medication_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
+			`INSERT INTO medication_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)
 			 ON CONFLICT(kind, normalized_name) DO UPDATE SET
 				name = excluded.name,
 				species = excluded.species,
 				aliases = excluded.aliases,
 				manufacturer = excluded.manufacturer,
 				regions = excluded.regions,
+				extension = excluded.extension,
 				updated_at = CURRENT_TIMESTAMP
 			 WHERE medication_catalog_items.origin = 'system'`,
-			[item.kind, item.name, normalizedName, JSON.stringify(item.species), JSON.stringify(item.aliases), item.manufacturer, item.origin, JSON.stringify(item.regions)]
+			[item.kind, item.name, normalizedName, JSON.stringify(item.species), JSON.stringify(item.aliases), item.manufacturer, item.origin, JSON.stringify(item.regions), extension]
 		);
 
 		const rows = await database.select<MedicationCatalogRow[]>(
@@ -215,6 +288,73 @@ async function syncDefaultMedicationCatalog(database: Database): Promise<void> {
 		const catalogItem = rows[0];
 		if (catalogItem?.origin === 'system') await ensureDefaultMedicationImages(database, catalogItem.id, item.images);
 	}
+}
+
+async function syncDefaultBreedReferenceCatalog(database: Database): Promise<void> {
+	for (const item of defaultBreedReferenceItems) {
+		const averageWeightKg = stringifyBreedSexRange(item.averageWeightKg);
+		const averageHeightCm = stringifyBreedSexRange(item.averageHeightCm);
+		const extension = stringifyBreedReferenceExtension(item.extension);
+		if (extension.length > FIELD_LIMITS.breedReferenceExtensionJson) throw new Error('default_breed_reference_extension_limit_exceeded');
+
+		await database.execute(
+			`INSERT INTO breed_reference_items (
+				breed_id,
+				species,
+				label_key,
+				origin_id,
+				origin_label_key,
+				origin_country_code,
+				origin_latitude,
+				origin_longitude,
+				size_category,
+				average_weight_kg,
+				average_height_cm,
+				extension,
+				updated_at
+			)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP)
+			 ON CONFLICT(breed_id) DO UPDATE SET
+				species = excluded.species,
+				label_key = excluded.label_key,
+				origin_id = excluded.origin_id,
+				origin_label_key = excluded.origin_label_key,
+				origin_country_code = excluded.origin_country_code,
+				origin_latitude = excluded.origin_latitude,
+				origin_longitude = excluded.origin_longitude,
+				size_category = excluded.size_category,
+				average_weight_kg = excluded.average_weight_kg,
+				average_height_cm = excluded.average_height_cm,
+				extension = excluded.extension,
+				updated_at = CURRENT_TIMESTAMP`,
+			[
+				item.id,
+				item.species,
+				item.labelKey,
+				item.origin.id,
+				item.origin.labelKey ?? null,
+				item.origin.countryCode ?? null,
+				item.origin.latitude,
+				item.origin.longitude,
+				item.sizeCategory,
+				averageWeightKg,
+				averageHeightCm,
+				extension
+			]
+		);
+
+		const rows = await database.select<BreedReferenceRow[]>(
+			'SELECT id FROM breed_reference_items WHERE breed_id = $1 LIMIT 1',
+			[item.id]
+		);
+		const referenceItem = rows[0];
+		if (referenceItem) await ensureDefaultBreedReferenceImages(database, referenceItem.id, item.images);
+	}
+}
+
+async function isBreedReferenceCatalogEmpty(database: Database): Promise<boolean> {
+	const rows = await database.select<CountRow[]>('SELECT COUNT(*) AS total FROM breed_reference_items');
+	return Number(rows[0]?.total ?? 0) === 0;
 }
 
 async function seedDefaultMedicationProtocols(database: Database): Promise<void> {
@@ -406,6 +546,28 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	`);
 
 	await database.execute(`
+		CREATE TABLE IF NOT EXISTS breed_reference_items (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			breed_id TEXT NOT NULL CHECK(${requiredTextCheck('breed_id', FIELD_LIMITS.breedReferenceId)}),
+			species TEXT NOT NULL CHECK(species IN ('canine', 'feline')),
+			label_key TEXT NOT NULL CHECK(${requiredTextCheck('label_key', FIELD_LIMITS.breedReferenceLabelKey)}),
+			origin_id TEXT NOT NULL CHECK(${requiredTextCheck('origin_id', FIELD_LIMITS.breedReferenceOriginId)}),
+			origin_label_key TEXT CHECK(${optionalTextCheck('origin_label_key', FIELD_LIMITS.breedReferenceLabelKey)}),
+			origin_country_code TEXT CHECK(${optionalTextCheck('origin_country_code', FIELD_LIMITS.breedReferenceOriginCountryCode)}),
+			origin_latitude REAL,
+			origin_longitude REAL,
+			size_category TEXT NOT NULL CHECK(size_category IN ('small', 'medium', 'large', 'giant')),
+			average_weight_kg TEXT NOT NULL CHECK(${requiredTextCheck('average_weight_kg', FIELD_LIMITS.breedReferenceRangeJson)}),
+			average_height_cm TEXT NOT NULL CHECK(${requiredTextCheck('average_height_cm', FIELD_LIMITS.breedReferenceRangeJson)}),
+			extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.breedReferenceExtensionJson)}),
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			UNIQUE(breed_id),
+			CHECK((origin_latitude IS NULL AND origin_longitude IS NULL) OR (origin_latitude BETWEEN -90 AND 90 AND origin_longitude BETWEEN -180 AND 180))
+		)
+	`);
+
+	await database.execute(`
 		CREATE TABLE IF NOT EXISTS pet_owners (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			pet_id INTEGER NOT NULL,
@@ -472,6 +634,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			manufacturer TEXT CHECK(${optionalTextCheck('manufacturer', FIELD_LIMITS.medicationManufacturer)}),
 			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
 			regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.medicationRegionsJson)}),
+			extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.medicationExtensionJson)}),
 			hidden_at TEXT,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
@@ -579,6 +742,8 @@ export async function createCurrentIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pets_name ON pets(name)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pets_species ON pets(species)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pets_breed ON pets(breed)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_breed_reference_items_species_label ON breed_reference_items(species, label_key COLLATE NOCASE)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_breed_reference_items_origin_id ON breed_reference_items(origin_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_pet_id ON medical_records(pet_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_deleted_at ON medical_records(deleted_at)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_kind_name ON medication_catalog_items(kind, name COLLATE NOCASE)');
@@ -610,12 +775,13 @@ async function assertCurrentSchema(database: Database): Promise<void> {
 		(await tableHasColumns(database, 'contacts', ['id', 'owner_id', 'responsible_id', 'veterinarian_profile_id', 'workplace_id', 'kind', 'label', 'value'])) &&
 		(await tableHasColumns(database, 'owner_additional_responsibles', ['id', 'owner_id', 'name', 'avatar_blob', 'sort_order'])) &&
 		(await tableHasColumns(database, 'pets', ['id', 'name', 'species', 'breed', 'updated_at', 'deleted_at', 'purge_after'])) &&
+		(await tableHasColumns(database, 'breed_reference_items', ['id', 'breed_id', 'species', 'label_key', 'origin_id', 'origin_label_key', 'origin_country_code', 'origin_latitude', 'origin_longitude', 'size_category', 'average_weight_kg', 'average_height_cm', 'extension'])) &&
 		(await tableHasColumns(database, 'pet_owners', ['id', 'pet_id', 'owner_id', 'sort_order'])) &&
 		(await tableHasColumns(database, 'medical_records', ['id', 'pet_id', 'title', 'description', 'admitted_at', 'discharged_at', 'deleted_at', 'purge_after'])) &&
 		(await tableHasColumns(database, 'app_settings', ['key', 'value', 'updated_at'])) &&
 		(await tableHasColumns(database, 'schema_migrations', ['version', 'name', 'app_version', 'applied_at'])) &&
 		(await tableHasColumns(database, 'backup_history', ['id', 'path', 'kind', 'created_at'])) &&
-		(await tableHasColumns(database, 'medication_catalog_items', ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'hidden_at'])) &&
+		(await tableHasColumns(database, 'medication_catalog_items', ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'extension', 'hidden_at'])) &&
 		(await tableHasColumns(database, 'medication_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'deleted_at', 'purge_after'])) &&
 		(await tableHasColumns(database, 'medication_protocol_items', ['id', 'protocol_id', 'catalog_item_id', 'sort_order'])) &&
 		(await tableHasColumns(database, 'medication_protocol_doses', ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order'])) &&
@@ -787,7 +953,7 @@ async function applyMigration(database: Database, migration: SchemaMigration): P
 }
 
 export async function runMigrations(database: Database, options: RunMigrationsOptions = {}): Promise<void> {
-	const { createIndexes = true, seedDefaultData = false, syncDefaultMedicationData = true } = options;
+	const { createIndexes = true, seedDefaultData = false, syncDefaultMedicationData = true, syncDefaultBreedReferenceData = true } = options;
 	const status = await assertDatabaseCanMigrate(database);
 	let appliedSchemaChange = false;
 
@@ -812,9 +978,11 @@ export async function runMigrations(database: Database, options: RunMigrationsOp
 			}
 		}
 
+		await createCurrentSchema(database);
 		await assertCurrentSchema(database);
 
 		if (seedDefaultData || (syncDefaultMedicationData && appliedSchemaChange)) await syncDefaultMedicationCatalog(database);
+		if (seedDefaultData || (syncDefaultBreedReferenceData && (appliedSchemaChange || (await isBreedReferenceCatalogEmpty(database))))) await syncDefaultBreedReferenceCatalog(database);
 		if (seedDefaultData) await seedDefaultMedicationProtocols(database);
 		if (createIndexes) await createCurrentIndexes(database);
 		await validateDatabaseIntegrity(database);

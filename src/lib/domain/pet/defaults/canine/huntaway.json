@@ -1,0 +1,34 @@
+{
+	"id": "huntaway",
+	"species": "canine",
+	"labelKey": "pet.breed.huntaway",
+	"origin": {
+		"id": "nz",
+		"labelKey": null,
+		"countryCode": "NZ",
+		"latitude": -40.9,
+		"longitude": 174.9
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			30,
+			45
+		],
+		"female": [
+			25,
+			38
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			58,
+			66
+		],
+		"female": [
+			56,
+			64
+		]
+	},
+	"images": []
+}

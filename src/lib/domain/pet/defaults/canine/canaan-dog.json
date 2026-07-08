@@ -1,0 +1,34 @@
+{
+	"id": "canaan-dog",
+	"species": "canine",
+	"labelKey": "pet.breed.canaanDog",
+	"origin": {
+		"id": "il",
+		"labelKey": null,
+		"countryCode": "IL",
+		"latitude": 31,
+		"longitude": 35
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			18,
+			25
+		],
+		"female": [
+			15,
+			22
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			50,
+			60
+		],
+		"female": [
+			45,
+			55
+		]
+	},
+	"images": []
+}

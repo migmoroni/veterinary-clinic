@@ -1,0 +1,34 @@
+{
+	"id": "thai-bangkaew-dog",
+	"species": "canine",
+	"labelKey": "pet.breed.thaiBangkaewDog",
+	"origin": {
+		"id": "th",
+		"labelKey": null,
+		"countryCode": "TH",
+		"latitude": 15.9,
+		"longitude": 100.9
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			16,
+			20
+		],
+		"female": [
+			14,
+			18
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			55
+		],
+		"female": [
+			41,
+			50
+		]
+	},
+	"images": []
+}

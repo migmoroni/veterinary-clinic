@@ -1,0 +1,34 @@
+{
+	"id": "german-wirehaired-pointer",
+	"species": "canine",
+	"labelKey": "pet.breed.germanWirehairedPointer",
+	"origin": {
+		"id": "de",
+		"labelKey": null,
+		"countryCode": "DE",
+		"latitude": 51.2,
+		"longitude": 10.5
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			25,
+			34
+		],
+		"female": [
+			20,
+			29
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			61,
+			68
+		],
+		"female": [
+			57,
+			64
+		]
+	},
+	"images": []
+}

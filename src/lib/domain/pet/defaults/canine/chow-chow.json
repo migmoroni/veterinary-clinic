@@ -1,0 +1,34 @@
+{
+	"id": "chow-chow",
+	"species": "canine",
+	"labelKey": "pet.breed.chowChow",
+	"origin": {
+		"id": "cn",
+		"labelKey": null,
+		"countryCode": "CN",
+		"latitude": 35.9,
+		"longitude": 104.2
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			22,
+			32
+		],
+		"female": [
+			18,
+			27
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			48,
+			56
+		],
+		"female": [
+			46,
+			51
+		]
+	},
+	"images": []
+}

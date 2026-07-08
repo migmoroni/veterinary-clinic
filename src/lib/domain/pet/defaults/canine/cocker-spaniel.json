@@ -1,0 +1,34 @@
+{
+	"id": "cocker-spaniel",
+	"species": "canine",
+	"labelKey": "pet.breed.cockerSpaniel",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			13,
+			16
+		],
+		"female": [
+			12,
+			15
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			38,
+			43
+		],
+		"female": [
+			36,
+			41
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,31 @@
+{
+	"origin": "system",
+	"name": "Nobivac DHPPi",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "MSD Animal Health",
+	"regions": [
+		"ZAF"
+	],
+	"aliases": [
+		"DHPPi",
+		"polivalente",
+		"polyvalent",
+		"múltipla canina",
+		"vacuna múltiple canina",
+		"canine combination vaccine",
+		"cinomose canina",
+		"esgana canina",
+		"moquillo canino",
+		"canine distemper",
+		"hepatite infecciosa canina",
+		"hepatitis infecciosa canina",
+		"infectious canine hepatitis",
+		"parainfluenza canina",
+		"canine parainfluenza",
+		"parvovirose canina",
+		"parvovirosis canina",
+		"canine parvovirus"
+	]
+}

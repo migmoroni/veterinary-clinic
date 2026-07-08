@@ -1,0 +1,34 @@
+{
+	"id": "parson-russell-terrier",
+	"species": "canine",
+	"labelKey": "pet.breed.parsonRussellTerrier",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			6,
+			8
+		],
+		"female": [
+			5.5,
+			7.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			33,
+			36
+		],
+		"female": [
+			31,
+			34
+		]
+	},
+	"images": []
+}

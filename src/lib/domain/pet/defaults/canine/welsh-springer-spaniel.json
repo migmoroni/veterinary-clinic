@@ -1,0 +1,34 @@
+{
+	"id": "welsh-springer-spaniel",
+	"species": "canine",
+	"labelKey": "pet.breed.welshSpringerSpaniel",
+	"origin": {
+		"id": "wales",
+		"labelKey": "breedReference.origin.wales",
+		"countryCode": null,
+		"latitude": 52.2,
+		"longitude": -3.8
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			18,
+			25
+		],
+		"female": [
+			16,
+			23
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			48
+		],
+		"female": [
+			43,
+			46
+		]
+	},
+	"images": []
+}

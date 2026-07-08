@@ -1,0 +1,18 @@
+{
+	"origin": "system",
+	"name": "Stronghold",
+	"species": [
+		"canine",
+		"feline"
+	],
+	"manufacturer": "Zoetis",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"selamectina",
+		"selamectin",
+		"endectocida",
+		"endectocide"
+	]
+}

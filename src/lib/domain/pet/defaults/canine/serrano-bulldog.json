@@ -1,0 +1,34 @@
+{
+	"id": "serrano-bulldog",
+	"species": "canine",
+	"labelKey": "pet.breed.serranoBulldog",
+	"origin": {
+		"id": "br",
+		"labelKey": null,
+		"countryCode": "BR",
+		"latitude": -14.2,
+		"longitude": -51.9
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			28,
+			40
+		],
+		"female": [
+			25,
+			35
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			48,
+			58
+		],
+		"female": [
+			45,
+			55
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,34 @@
+{
+	"id": "tibetan-spaniel",
+	"species": "canine",
+	"labelKey": "pet.breed.tibetanSpaniel",
+	"origin": {
+		"id": "tibet",
+		"labelKey": "breedReference.origin.tibet",
+		"countryCode": null,
+		"latitude": 31,
+		"longitude": 88
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			4,
+			7
+		],
+		"female": [
+			4,
+			6.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			24,
+			26
+		],
+		"female": [
+			23,
+			25
+		]
+	},
+	"images": []
+}

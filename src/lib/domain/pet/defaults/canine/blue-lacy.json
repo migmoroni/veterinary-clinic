@@ -1,0 +1,34 @@
+{
+	"id": "blue-lacy",
+	"species": "canine",
+	"labelKey": "pet.breed.blueLacy",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			16,
+			25
+		],
+		"female": [
+			11,
+			20
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			56
+		],
+		"female": [
+			43,
+			53
+		]
+	},
+	"images": []
+}

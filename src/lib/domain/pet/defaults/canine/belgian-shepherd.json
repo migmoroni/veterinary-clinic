@@ -1,0 +1,34 @@
+{
+	"id": "belgian-shepherd",
+	"species": "canine",
+	"labelKey": "pet.breed.belgianShepherd",
+	"origin": {
+		"id": "be",
+		"labelKey": null,
+		"countryCode": "BE",
+		"latitude": 50.5,
+		"longitude": 4.5
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			25,
+			30
+		],
+		"female": [
+			20,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			60,
+			66
+		],
+		"female": [
+			56,
+			62
+		]
+	},
+	"images": []
+}

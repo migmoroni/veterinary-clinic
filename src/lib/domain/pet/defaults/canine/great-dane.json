@@ -1,0 +1,34 @@
+{
+	"id": "great-dane",
+	"species": "canine",
+	"labelKey": "pet.breed.greatDane",
+	"origin": {
+		"id": "de",
+		"labelKey": null,
+		"countryCode": "DE",
+		"latitude": 51.2,
+		"longitude": 10.5
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			54,
+			90
+		],
+		"female": [
+			45,
+			59
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			76,
+			86
+		],
+		"female": [
+			71,
+			81
+		]
+	},
+	"images": []
+}

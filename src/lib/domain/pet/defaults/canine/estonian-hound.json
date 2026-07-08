@@ -1,0 +1,34 @@
+{
+	"id": "estonian-hound",
+	"species": "canine",
+	"labelKey": "pet.breed.estonianHound",
+	"origin": {
+		"id": "ee",
+		"labelKey": null,
+		"countryCode": "EE",
+		"latitude": 58.6,
+		"longitude": 25
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			15,
+			20
+		],
+		"female": [
+			13,
+			18
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			45,
+			52
+		],
+		"female": [
+			42,
+			49
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,34 @@
+{
+	"id": "irish-water-spaniel",
+	"species": "canine",
+	"labelKey": "pet.breed.irishWaterSpaniel",
+	"origin": {
+		"id": "ie",
+		"labelKey": null,
+		"countryCode": "IE",
+		"latitude": 53.4,
+		"longitude": -8.2
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			25,
+			30
+		],
+		"female": [
+			20,
+			26
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			56,
+			61
+		],
+		"female": [
+			53,
+			58
+		]
+	},
+	"images": []
+}

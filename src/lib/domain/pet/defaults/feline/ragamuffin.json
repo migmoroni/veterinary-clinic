@@ -1,0 +1,34 @@
+{
+	"id": "ragamuffin",
+	"species": "feline",
+	"labelKey": "pet.breed.ragamuffin",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			6,
+			9
+		],
+		"female": [
+			4,
+			7
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			28,
+			35
+		],
+		"female": [
+			25,
+			33
+		]
+	},
+	"images": []
+}

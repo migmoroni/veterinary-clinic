@@ -1,0 +1,34 @@
+{
+	"id": "labrador-retriever",
+	"species": "canine",
+	"labelKey": "pet.breed.labradorRetriever",
+	"origin": {
+		"id": "ca",
+		"labelKey": null,
+		"countryCode": "CA",
+		"latitude": 56.1,
+		"longitude": -106.3
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			29,
+			36
+		],
+		"female": [
+			25,
+			32
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			57,
+			62
+		],
+		"female": [
+			54,
+			60
+		]
+	},
+	"images": []
+}

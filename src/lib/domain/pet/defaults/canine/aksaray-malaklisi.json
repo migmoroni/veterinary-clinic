@@ -1,0 +1,34 @@
+{
+	"id": "aksaray-malaklisi",
+	"species": "canine",
+	"labelKey": "pet.breed.aksarayMalaklisi",
+	"origin": {
+		"id": "tr",
+		"labelKey": null,
+		"countryCode": "TR",
+		"latitude": 38.9,
+		"longitude": 35.2
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			65,
+			85
+		],
+		"female": [
+			55,
+			75
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			75,
+			85
+		],
+		"female": [
+			70,
+			80
+		]
+	},
+	"images": []
+}

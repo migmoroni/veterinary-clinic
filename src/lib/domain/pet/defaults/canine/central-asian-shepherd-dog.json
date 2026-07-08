@@ -1,0 +1,34 @@
+{
+	"id": "central-asian-shepherd-dog",
+	"species": "canine",
+	"labelKey": "pet.breed.centralAsianShepherdDog",
+	"origin": {
+		"id": "central-asia",
+		"labelKey": "breedReference.origin.centralAsia",
+		"countryCode": null,
+		"latitude": 43,
+		"longitude": 64
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			50,
+			79
+		],
+		"female": [
+			40,
+			65
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			70,
+			78
+		],
+		"female": [
+			65,
+			73
+		]
+	},
+	"images": []
+}

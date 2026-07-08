@@ -1,0 +1,34 @@
+{
+	"id": "kars-dog",
+	"species": "canine",
+	"labelKey": "pet.breed.karsDog",
+	"origin": {
+		"id": "tr",
+		"labelKey": null,
+		"countryCode": "TR",
+		"latitude": 38.9,
+		"longitude": 35.2
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			45,
+			60
+		],
+		"female": [
+			35,
+			50
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			70,
+			76
+		],
+		"female": [
+			66,
+			72
+		]
+	},
+	"images": []
+}

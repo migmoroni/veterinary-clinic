@@ -1,0 +1,34 @@
+{
+	"id": "gaucho-sheepdog",
+	"species": "canine",
+	"labelKey": "pet.breed.gauchoSheepdog",
+	"origin": {
+		"id": "br",
+		"labelKey": null,
+		"countryCode": "BR",
+		"latitude": -14.2,
+		"longitude": -51.9
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			24,
+			35
+		],
+		"female": [
+			20,
+			30
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			58,
+			65
+		],
+		"female": [
+			55,
+			62
+		]
+	},
+	"images": []
+}

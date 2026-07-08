@@ -1,0 +1,34 @@
+{
+	"id": "nova-scotia-duck-tolling-retriever",
+	"species": "canine",
+	"labelKey": "pet.breed.novaScotiaDuckTollingRetriever",
+	"origin": {
+		"id": "ca",
+		"labelKey": null,
+		"countryCode": "CA",
+		"latitude": 56.1,
+		"longitude": -106.3
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			20,
+			23
+		],
+		"female": [
+			17,
+			20
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			48,
+			53
+		],
+		"female": [
+			45,
+			50
+		]
+	},
+	"images": []
+}

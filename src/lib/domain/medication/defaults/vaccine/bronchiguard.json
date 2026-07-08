@@ -1,0 +1,22 @@
+{
+	"origin": "system",
+	"name": "BronchiGuard",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "Zoetis",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"Bordetella bronchiseptica",
+		"traqueobronquite infecciosa canina",
+		"traqueobronquite infeciosa canina",
+		"traqueobronquitis infecciosa canina",
+		"canine infectious tracheobronchitis",
+		"tosse dos canis",
+		"tosse do canil",
+		"tos de las perreras",
+		"kennel cough"
+	]
+}

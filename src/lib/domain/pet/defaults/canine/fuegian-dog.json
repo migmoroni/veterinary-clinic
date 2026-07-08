@@ -1,0 +1,34 @@
+{
+	"id": "fuegian-dog",
+	"species": "canine",
+	"labelKey": "pet.breed.fuegianDog",
+	"origin": {
+		"id": "tierra-del-fuego",
+		"labelKey": "breedReference.origin.tierraDelFuego",
+		"countryCode": null,
+		"latitude": -54.7,
+		"longitude": -68.1
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			8,
+			14
+		],
+		"female": [
+			7,
+			12
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			35,
+			45
+		],
+		"female": [
+			33,
+			42
+		]
+	},
+	"images": []
+}

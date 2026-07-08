@@ -1,0 +1,34 @@
+{
+	"id": "icelandic-sheepdog",
+	"species": "canine",
+	"labelKey": "pet.breed.icelandicSheepdog",
+	"origin": {
+		"id": "is",
+		"labelKey": null,
+		"countryCode": "IS",
+		"latitude": 64.9,
+		"longitude": -19
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			11,
+			14
+		],
+		"female": [
+			9,
+			12
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			42,
+			46
+		],
+		"female": [
+			38,
+			42
+		]
+	},
+	"images": []
+}

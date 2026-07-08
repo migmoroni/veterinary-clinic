@@ -1,4 +1,4 @@
-import { canEditMedicationCatalogItem, parseMedicationAliases, parseMedicationRegions, parseMedicationSpecies, stringifyMedicationAliases, stringifyMedicationRegions, stringifyMedicationSpecies, type MedicationCatalogOrigin } from '$lib/domain/medication/catalog.js';
+import { canEditMedicationCatalogItem, parseMedicationAliases, parseMedicationCatalogExtension, parseMedicationRegions, parseMedicationSpecies, stringifyMedicationAliases, stringifyMedicationRegions, stringifyMedicationSpecies, type MedicationCatalogOrigin } from '$lib/domain/medication/catalog.js';
 import type { ImageCollectionItem, ImageCollectionItemInput, ImageCollectionPolicy } from '$lib/domain/image-collection/image-collection.js';
 import { FIELD_LIMITS, assertTextLimit, nullableLimitedText } from '$lib/domain/shared/field-limits.js';
 import type { TreatmentCatalogItem, TreatmentCatalogItemInput, TreatmentKind } from '$lib/domain/treatment/treatment.js';
@@ -19,6 +19,7 @@ interface MedicationCatalogItemRow {
 	manufacturer: string | null;
 	origin: MedicationCatalogOrigin;
 	regions: string;
+	extension: string;
 	hidden_at: string | null;
 	updated_at: string | null;
 }
@@ -50,6 +51,8 @@ const catalogConfigs: Record<MedicationCatalogKind, MedicationCatalogConfig> = {
 	antiparasitic: treatmentCatalogConfig
 };
 
+const MEDICATION_CATALOG_COLUMNS = 'id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, hidden_at, updated_at';
+
 function configFor(kind: MedicationCatalogKind): MedicationCatalogConfig {
 	return catalogConfigs[kind];
 }
@@ -72,6 +75,7 @@ function mapCatalogItem(row: MedicationCatalogItemRow, images: ImageCollectionIt
 		primaryImage: primaryImage(images),
 		origin: row.origin,
 		regions: parseMedicationRegions(row.regions),
+		extension: parseMedicationCatalogExtension(row.extension),
 		hiddenAt: row.hidden_at,
 		updatedAt: row.updated_at
 	};
@@ -117,7 +121,7 @@ export function normalizeMedicationCatalogInput(kind: MedicationCatalogKind, val
 
 async function getMedicationCatalogItemByNormalizedName(kind: MedicationCatalogKind, normalizedName: string): Promise<MedicationCatalogItem | null> {
 	const rows = await selectMany<MedicationCatalogItemRow>(
-		`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, hidden_at, updated_at
+		`SELECT ${MEDICATION_CATALOG_COLUMNS}
 		 FROM medication_catalog_items
 		 WHERE kind = $1 AND normalized_name = $2
 		 LIMIT 1`,
@@ -159,7 +163,7 @@ export async function ensureMedicationCatalogItem(kind: MedicationCatalogKind, n
 
 export async function listMedicationCatalogItems(kind: MedicationCatalogKind, includeHidden = false): Promise<MedicationCatalogItem[]> {
 	const rows = await selectMany<MedicationCatalogItemRow>(
-		`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, hidden_at, updated_at
+		`SELECT ${MEDICATION_CATALOG_COLUMNS}
 		 FROM medication_catalog_items
 		 WHERE kind = $1 AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}
 		 ORDER BY name COLLATE NOCASE`,
@@ -190,7 +194,7 @@ export async function saveMedicationCatalogItem(kind: MedicationCatalogKind, inp
 		);
 
 		const rows = await selectMany<MedicationCatalogItemRow>(
-			`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, hidden_at, updated_at
+			`SELECT ${MEDICATION_CATALOG_COLUMNS}
 			 FROM medication_catalog_items
 			 WHERE id = $1 AND kind = $2
 			 LIMIT 1`,
@@ -232,7 +236,7 @@ export async function setMedicationCatalogItemHidden(kind: MedicationCatalogKind
 	);
 
 	const rows = await selectMany<MedicationCatalogItemRow>(
-		`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, hidden_at, updated_at
+		`SELECT ${MEDICATION_CATALOG_COLUMNS}
 		 FROM medication_catalog_items
 		 WHERE id = $1 AND kind = $2
 		 LIMIT 1`,
@@ -250,7 +254,7 @@ export async function deleteMedicationCatalogItem(kind: MedicationCatalogKind, i
 
 export async function saveMedicationCatalogItemImages(kind: MedicationCatalogKind, id: number, images: ImageCollectionItemInput[]): Promise<MedicationCatalogItem> {
 	const rows = await selectMany<MedicationCatalogItemRow>(
-		`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, hidden_at, updated_at
+		`SELECT ${MEDICATION_CATALOG_COLUMNS}
 		 FROM medication_catalog_items
 		 WHERE id = $1 AND kind = $2
 		 LIMIT 1`,

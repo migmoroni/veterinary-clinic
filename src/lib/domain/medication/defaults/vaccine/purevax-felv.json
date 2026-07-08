@@ -1,0 +1,16 @@
+{
+	"origin": "system",
+	"name": "Purevax FeLV",
+	"species": [
+		"feline"
+	],
+	"manufacturer": "Boehringer Ingelheim Animal Health",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"FeLV",
+		"leucemia felina",
+		"feline leukemia"
+	]
+}

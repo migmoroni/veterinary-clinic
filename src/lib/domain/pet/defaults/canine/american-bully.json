@@ -1,0 +1,34 @@
+{
+	"id": "american-bully",
+	"species": "canine",
+	"labelKey": "pet.breed.americanBully",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			30,
+			50
+		],
+		"female": [
+			25,
+			45
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			43,
+			51
+		],
+		"female": [
+			40,
+			48
+		]
+	},
+	"images": []
+}

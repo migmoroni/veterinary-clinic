@@ -1,0 +1,34 @@
+{
+	"id": "english-toy-spaniel",
+	"species": "canine",
+	"labelKey": "pet.breed.englishToySpaniel",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			3.6,
+			6.4
+		],
+		"female": [
+			3.6,
+			6
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			23,
+			28
+		],
+		"female": [
+			22,
+			27
+		]
+	},
+	"images": []
+}

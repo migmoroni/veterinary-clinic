@@ -1,0 +1,31 @@
+{
+	"origin": "system",
+	"name": "Purevax RCPCh",
+	"species": [
+		"feline"
+	],
+	"manufacturer": "Boehringer Ingelheim Animal Health",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"V 4",
+		"V4",
+		"RCPCh",
+		"FVRCP+Ch",
+		"quádrupla felina",
+		"cuádruple felina",
+		"feline four-way vaccine",
+		"rinotraqueíte felina",
+		"rinotraqueítis felina",
+		"feline rhinotracheitis",
+		"calicivirose felina",
+		"calicivirosis felina",
+		"feline calicivirosis",
+		"panleucopenia felina",
+		"feline panleukopenia",
+		"clamidiose felina",
+		"clamidiosis felina",
+		"feline chlamydiosis"
+	]
+}

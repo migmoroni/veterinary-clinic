@@ -1,0 +1,34 @@
+{
+	"id": "bloodhound",
+	"species": "canine",
+	"labelKey": "pet.breed.bloodhound",
+	"origin": {
+		"id": "be",
+		"labelKey": null,
+		"countryCode": "BE",
+		"latitude": 50.5,
+		"longitude": 4.5
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			41,
+			54
+		],
+		"female": [
+			36,
+			45
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			63,
+			69
+		],
+		"female": [
+			58,
+			63
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,34 @@
+{
+	"id": "beagle",
+	"species": "canine",
+	"labelKey": "pet.breed.beagle",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			10,
+			14
+		],
+		"female": [
+			9,
+			13
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			36,
+			41
+		],
+		"female": [
+			33,
+			38
+		]
+	},
+	"images": []
+}

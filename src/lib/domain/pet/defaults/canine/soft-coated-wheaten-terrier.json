@@ -1,0 +1,34 @@
+{
+	"id": "soft-coated-wheaten-terrier",
+	"species": "canine",
+	"labelKey": "pet.breed.softCoatedWheatenTerrier",
+	"origin": {
+		"id": "ie",
+		"labelKey": null,
+		"countryCode": "IE",
+		"latitude": 53.4,
+		"longitude": -8.2
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			16,
+			20
+		],
+		"female": [
+			14,
+			18
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			49
+		],
+		"female": [
+			43,
+			46
+		]
+	},
+	"images": []
+}

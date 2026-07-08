@@ -1,0 +1,34 @@
+{
+	"id": "bergamasco-shepherd",
+	"species": "canine",
+	"labelKey": "pet.breed.bergamascoShepherd",
+	"origin": {
+		"id": "it",
+		"labelKey": null,
+		"countryCode": "IT",
+		"latitude": 41.9,
+		"longitude": 12.6
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			32,
+			38
+		],
+		"female": [
+			26,
+			32
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			58,
+			62
+		],
+		"female": [
+			54,
+			58
+		]
+	},
+	"images": []
+}

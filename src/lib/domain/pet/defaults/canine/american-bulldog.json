@@ -1,0 +1,34 @@
+{
+	"id": "american-bulldog",
+	"species": "canine",
+	"labelKey": "pet.breed.americanBulldog",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			34,
+			54
+		],
+		"female": [
+			27,
+			41
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			56,
+			71
+		],
+		"female": [
+			50,
+			64
+		]
+	},
+	"images": []
+}

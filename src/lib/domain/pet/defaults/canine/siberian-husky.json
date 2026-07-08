@@ -1,0 +1,34 @@
+{
+	"id": "siberian-husky",
+	"species": "canine",
+	"labelKey": "pet.breed.siberianHusky",
+	"origin": {
+		"id": "ru",
+		"labelKey": null,
+		"countryCode": "RU",
+		"latitude": 61.5,
+		"longitude": 105.3
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			20,
+			27
+		],
+		"female": [
+			16,
+			23
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			53,
+			60
+		],
+		"female": [
+			51,
+			56
+		]
+	},
+	"images": []
+}

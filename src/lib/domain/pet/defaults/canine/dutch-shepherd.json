@@ -1,0 +1,34 @@
+{
+	"id": "dutch-shepherd",
+	"species": "canine",
+	"labelKey": "pet.breed.dutchShepherd",
+	"origin": {
+		"id": "nl",
+		"labelKey": null,
+		"countryCode": "NL",
+		"latitude": 52.1,
+		"longitude": 5.3
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			26,
+			32
+		],
+		"female": [
+			23,
+			29
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			57,
+			62
+		],
+		"female": [
+			55,
+			60
+		]
+	},
+	"images": []
+}

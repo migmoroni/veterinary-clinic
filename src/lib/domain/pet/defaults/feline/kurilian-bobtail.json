@@ -1,0 +1,34 @@
+{
+	"id": "kurilian-bobtail",
+	"species": "feline",
+	"labelKey": "pet.breed.kurilianBobtail",
+	"origin": {
+		"id": "ru",
+		"labelKey": null,
+		"countryCode": "RU",
+		"latitude": 61.5,
+		"longitude": 105.3
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			5,
+			7
+		],
+		"female": [
+			3.5,
+			5.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			32
+		],
+		"female": [
+			23,
+			30
+		]
+	},
+	"images": []
+}

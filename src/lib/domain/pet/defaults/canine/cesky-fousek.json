@@ -1,0 +1,34 @@
+{
+	"id": "cesky-fousek",
+	"species": "canine",
+	"labelKey": "pet.breed.ceskyFousek",
+	"origin": {
+		"id": "cz",
+		"labelKey": null,
+		"countryCode": "CZ",
+		"latitude": 49.8,
+		"longitude": 15.5
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			28,
+			34
+		],
+		"female": [
+			22,
+			28
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			60,
+			66
+		],
+		"female": [
+			58,
+			62
+		]
+	},
+	"images": []
+}

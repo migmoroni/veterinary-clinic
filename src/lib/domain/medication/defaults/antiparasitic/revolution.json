@@ -1,0 +1,18 @@
+{
+	"origin": "system",
+	"name": "Revolution",
+	"species": [
+		"canine",
+		"feline"
+	],
+	"manufacturer": "Zoetis",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"selamectina",
+		"selamectin",
+		"endectocida",
+		"endectocide"
+	]
+}

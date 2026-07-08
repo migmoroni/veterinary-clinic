@@ -1,0 +1,34 @@
+{
+	"id": "kai-ken",
+	"species": "canine",
+	"labelKey": "pet.breed.kaiKen",
+	"origin": {
+		"id": "jp",
+		"labelKey": null,
+		"countryCode": "JP",
+		"latitude": 36.2,
+		"longitude": 138.3
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			16,
+			25
+		],
+		"female": [
+			14,
+			20
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			56
+		],
+		"female": [
+			43,
+			51
+		]
+	},
+	"images": []
+}

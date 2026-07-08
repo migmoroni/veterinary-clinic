@@ -1,0 +1,34 @@
+{
+	"id": "treeing-walker-coonhound",
+	"species": "canine",
+	"labelKey": "pet.breed.treeingWalkerCoonhound",
+	"origin": {
+		"id": "us",
+		"labelKey": null,
+		"countryCode": "US",
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			25,
+			32
+		],
+		"female": [
+			23,
+			29
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			56,
+			69
+		],
+		"female": [
+			51,
+			64
+		]
+	},
+	"images": []
+}

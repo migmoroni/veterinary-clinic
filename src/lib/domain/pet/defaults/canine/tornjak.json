@@ -1,0 +1,34 @@
+{
+	"id": "tornjak",
+	"species": "canine",
+	"labelKey": "pet.breed.tornjak",
+	"origin": {
+		"id": "ba",
+		"labelKey": null,
+		"countryCode": "BA",
+		"latitude": 44.2,
+		"longitude": 17.8
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			35,
+			50
+		],
+		"female": [
+			28,
+			42
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			65,
+			70
+		],
+		"female": [
+			60,
+			65
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,34 @@
+{
+	"id": "danish-swedish-farmdog",
+	"species": "canine",
+	"labelKey": "pet.breed.danishSwedishFarmdog",
+	"origin": {
+		"id": "dk",
+		"labelKey": null,
+		"countryCode": "DK",
+		"latitude": 56.3,
+		"longitude": 9.5
+	},
+	"sizeCategory": "small",
+	"averageWeightKg": {
+		"male": [
+			7,
+			12
+		],
+		"female": [
+			6,
+			10
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			34,
+			37
+		],
+		"female": [
+			32,
+			35
+		]
+	},
+	"images": []
+}

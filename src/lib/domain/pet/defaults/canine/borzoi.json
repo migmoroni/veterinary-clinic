@@ -1,0 +1,34 @@
+{
+	"id": "borzoi",
+	"species": "canine",
+	"labelKey": "pet.breed.borzoi",
+	"origin": {
+		"id": "ru",
+		"labelKey": null,
+		"countryCode": "RU",
+		"latitude": 61.5,
+		"longitude": 105.3
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			34,
+			48
+		],
+		"female": [
+			27,
+			41
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			75,
+			85
+		],
+		"female": [
+			66,
+			78
+		]
+	},
+	"images": []
+}

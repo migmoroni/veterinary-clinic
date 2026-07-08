@@ -1,0 +1,39 @@
+{
+	"origin": "system",
+	"name": "Canigen MHA2PPi/L",
+	"species": [
+		"canine"
+	],
+	"manufacturer": "Virbac",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"MHA2PPi/L",
+		"V 8",
+		"V8",
+		"polivalente",
+		"polyvalent",
+		"múltipla canina",
+		"vacuna múltiple canina",
+		"canine combination vaccine",
+		"cinomose canina",
+		"esgana canina",
+		"moquillo canino",
+		"canine distemper",
+		"hepatite infecciosa canina",
+		"hepatitis infecciosa canina",
+		"infectious canine hepatitis",
+		"parainfluenza canina",
+		"canine parainfluenza",
+		"parvovirose canina",
+		"parvovirosis canina",
+		"canine parvovirus",
+		"adenovírus canino tipo 2",
+		"adenovirus canino tipo 2",
+		"canine adenovirus type 2",
+		"leptospirose canina",
+		"leptospirosis canina",
+		"canine leptospirosis"
+	]
+}

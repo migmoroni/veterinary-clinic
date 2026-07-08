@@ -1,0 +1,34 @@
+{
+	"id": "boerboel",
+	"species": "canine",
+	"labelKey": "pet.breed.boerboel",
+	"origin": {
+		"id": "za",
+		"labelKey": null,
+		"countryCode": "ZA",
+		"latitude": -30.6,
+		"longitude": 22.9
+	},
+	"sizeCategory": "giant",
+	"averageWeightKg": {
+		"male": [
+			60,
+			90
+		],
+		"female": [
+			50,
+			75
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			60,
+			70
+		],
+		"female": [
+			55,
+			65
+		]
+	},
+	"images": []
+}

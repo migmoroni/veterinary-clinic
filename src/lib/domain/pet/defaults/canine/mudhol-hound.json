@@ -1,0 +1,34 @@
+{
+	"id": "mudhol-hound",
+	"species": "canine",
+	"labelKey": "pet.breed.mudholHound",
+	"origin": {
+		"id": "in",
+		"labelKey": null,
+		"countryCode": "IN",
+		"latitude": 20.6,
+		"longitude": 78.9
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			22,
+			28
+		],
+		"female": [
+			18,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			68,
+			72
+		],
+		"female": [
+			64,
+			68
+		]
+	},
+	"images": []
+}

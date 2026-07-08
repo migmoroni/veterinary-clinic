@@ -1,0 +1,34 @@
+{
+	"id": "flat-coated-retriever",
+	"species": "canine",
+	"labelKey": "pet.breed.flatCoatedRetriever",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			27,
+			36
+		],
+		"female": [
+			25,
+			32
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			59,
+			61
+		],
+		"female": [
+			56,
+			59
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,34 @@
+{
+	"id": "croatian-sheepdog",
+	"species": "canine",
+	"labelKey": "pet.breed.croatianSheepdog",
+	"origin": {
+		"id": "hr",
+		"labelKey": null,
+		"countryCode": "HR",
+		"latitude": 45.1,
+		"longitude": 15.2
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			13,
+			20
+		],
+		"female": [
+			11,
+			18
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			45,
+			50
+		],
+		"female": [
+			43,
+			48
+		]
+	},
+	"images": []
+}

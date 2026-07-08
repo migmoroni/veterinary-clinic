@@ -1,0 +1,34 @@
+{
+	"id": "barbet",
+	"species": "canine",
+	"labelKey": "pet.breed.barbet",
+	"origin": {
+		"id": "fr",
+		"labelKey": null,
+		"countryCode": "FR",
+		"latitude": 46.2,
+		"longitude": 2.2
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			18,
+			28
+		],
+		"female": [
+			14,
+			23
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			58,
+			65
+		],
+		"female": [
+			53,
+			61
+		]
+	},
+	"images": []
+}

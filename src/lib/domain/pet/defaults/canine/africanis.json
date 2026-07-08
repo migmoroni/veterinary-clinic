@@ -1,0 +1,34 @@
+{
+	"id": "africanis",
+	"species": "canine",
+	"labelKey": "pet.breed.africanis",
+	"origin": {
+		"id": "southern-africa",
+		"labelKey": "breedReference.origin.southernAfrica",
+		"countryCode": null,
+		"latitude": -22,
+		"longitude": 24
+	},
+	"sizeCategory": "medium",
+	"averageWeightKg": {
+		"male": [
+			20,
+			30
+		],
+		"female": [
+			18,
+			27
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			52,
+			62
+		],
+		"female": [
+			50,
+			58
+		]
+	},
+	"images": []
+}

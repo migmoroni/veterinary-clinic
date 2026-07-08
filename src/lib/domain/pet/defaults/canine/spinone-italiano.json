@@ -1,0 +1,34 @@
+{
+	"id": "spinone-italiano",
+	"species": "canine",
+	"labelKey": "pet.breed.spinoneItaliano",
+	"origin": {
+		"id": "it",
+		"labelKey": null,
+		"countryCode": "IT",
+		"latitude": 41.9,
+		"longitude": 12.6
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			34,
+			39
+		],
+		"female": [
+			29,
+			34
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			60,
+			70
+		],
+		"female": [
+			58,
+			65
+		]
+	},
+	"images": []
+}

@@ -1,0 +1,34 @@
+{
+	"id": "british-shorthair",
+	"species": "feline",
+	"labelKey": "pet.breed.britishShorthair",
+	"origin": {
+		"id": "england",
+		"labelKey": "breedReference.origin.england",
+		"countryCode": null,
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"sizeCategory": "large",
+	"averageWeightKg": {
+		"male": [
+			5,
+			8
+		],
+		"female": [
+			4,
+			6
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			33
+		],
+		"female": [
+			24,
+			30
+		]
+	},
+	"images": []
+}
