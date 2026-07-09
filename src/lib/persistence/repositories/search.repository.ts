@@ -1,6 +1,8 @@
 import { selectMany } from '$lib/persistence/sqlite/client.js';
 import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
+import { normalizeSearchText, searchTermsForLocale } from '$lib/domain/shared/search-terms.js';
+import { DEFAULT_LOCALE, type Locale } from '$lib/i18n/locales.js';
 import { listOwnerAssociatedContactsByOwnerIds } from './owner.repository.js';
 
 export type SearchResultKind = 'owner' | 'pet' | 'breed' | 'medication';
@@ -30,9 +32,9 @@ interface SearchResultRow {
 	title: string;
 	subtitle: string;
 	pet_avatar_blob: unknown | null;
+	search_primary: string;
+	search_support: string;
 }
-
-type SearchTermPredicate = (placeholder: string) => string;
 
 interface ActiveSearchResultIdRow {
 	id: number;
@@ -61,15 +63,45 @@ const ownerNamesSql = `(SELECT group_concat(name, ' · ')
 		ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
 	))`;
 
+const ownerSearchSupportSql = `(SELECT group_concat(value, ' ')
+	FROM (
+		SELECT contacts.value || ' ' || COALESCE(contacts.label, '') AS value
+		FROM contacts
+		WHERE contacts.owner_id = owners.id
+
+		UNION ALL
+
+		SELECT owner_additional_responsibles.name AS value
+		FROM owner_additional_responsibles
+		WHERE owner_additional_responsibles.owner_id = owners.id
+
+		UNION ALL
+
+		SELECT contacts.value || ' ' || COALESCE(contacts.label, '') AS value
+		FROM owner_additional_responsibles
+		JOIN contacts ON contacts.responsible_id = owner_additional_responsibles.id
+		WHERE owner_additional_responsibles.owner_id = owners.id
+	))`;
+
+const petOwnerSearchSupportSql = `(SELECT group_concat(value, ' ')
+	FROM (
+		SELECT owners.name AS value
+		FROM pet_owners
+		JOIN owners ON owners.id = pet_owners.owner_id
+		WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+
+		UNION ALL
+
+		SELECT contacts.value || ' ' || COALESCE(contacts.label, '') AS value
+		FROM pet_owners
+		JOIN owners ON owners.id = pet_owners.owner_id
+		JOIN contacts ON contacts.owner_id = owners.id
+		WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+	))`;
+
 function resultHref(row: SearchResultRow): string {
 	if (row.kind === 'owner') return `/owners/${row.id}`;
 	return `/pets/${row.id}`;
-}
-
-function searchTerms(query: string): string[] {
-	const normalized = query.trim();
-	if (normalized.length < 2) return [];
-	return normalized.split(/\s+/).filter((term) => term.length > 0);
 }
 
 function searchResultId(result: SearchResult): number {
@@ -97,53 +129,29 @@ async function loadActiveIds(ids: number[], query: string): Promise<Set<number>>
 	return new Set(rows.map((row) => row.id));
 }
 
-function buildSearchFilter(predicates: SearchTermPredicate[], termCount: number): string {
-	return Array.from({ length: termCount }, (_, index) => {
-		const placeholder = `$${index + 1}`;
-		return `(${predicates.map((predicate) => predicate(placeholder)).join(' OR ')})`;
-	}).join(' AND ');
+function scoreNormalizedField(value: string, term: string, exactScore: number, prefixScore: number, containsScore: number): number {
+	const normalized = normalizeSearchText(value);
+	if (!normalized) return 0;
+
+	const words = normalized.split(/\s+/);
+	if (words.includes(term)) return exactScore;
+	if (words.some((word) => word.startsWith(term))) return prefixScore;
+	if (normalized.includes(term)) return containsScore;
+
+	return 0;
 }
 
-const ownerSearchPredicates: SearchTermPredicate[] = [
-	(placeholder) => `owners.name LIKE ${placeholder}`,
-	(placeholder) => `owners.additional_information LIKE ${placeholder}`,
-	(placeholder) => `owner_address.city LIKE ${placeholder}`,
-	(placeholder) => `EXISTS (
-		SELECT 1 FROM contacts
-		WHERE contacts.owner_id = owners.id AND (contacts.value LIKE ${placeholder} OR contacts.label LIKE ${placeholder})
-	)`,
-	(placeholder) => `EXISTS (
-		SELECT 1 FROM owner_additional_responsibles
-		WHERE owner_additional_responsibles.owner_id = owners.id AND owner_additional_responsibles.name LIKE ${placeholder}
-	)`,
-	(placeholder) => `EXISTS (
-		SELECT 1 FROM owner_additional_responsibles
-		JOIN contacts ON contacts.responsible_id = owner_additional_responsibles.id
-		WHERE owner_additional_responsibles.owner_id = owners.id AND (contacts.value LIKE ${placeholder} OR contacts.label LIKE ${placeholder})
-	)`
-];
+function scoreSearchRow(row: SearchResultRow, terms: readonly string[]): number {
+	let score = 0;
 
-const petSearchPredicates: SearchTermPredicate[] = [
-	(placeholder) => `pets.name LIKE ${placeholder}`,
-	(placeholder) => `pets.species LIKE ${placeholder}`,
-	(placeholder) => `pets.breed LIKE ${placeholder}`,
-	(placeholder) => `EXISTS (
-		SELECT 1 FROM pet_owners
-		JOIN owners ON owners.id = pet_owners.owner_id
-		LEFT JOIN addresses AS pet_owner_address ON pet_owner_address.owner_id = owners.id
-		WHERE pet_owners.pet_id = pets.id
-			AND owners.deleted_at IS NULL
-			AND (owners.name LIKE ${placeholder} OR pet_owner_address.city LIKE ${placeholder})
-	)`,
-	(placeholder) => `EXISTS (
-		SELECT 1 FROM pet_owners
-		JOIN owners ON owners.id = pet_owners.owner_id
-		JOIN contacts ON contacts.owner_id = owners.id
-		WHERE pet_owners.pet_id = pets.id
-			AND owners.deleted_at IS NULL
-			AND (contacts.value LIKE ${placeholder} OR contacts.label LIKE ${placeholder})
-	)`
-];
+	for (const term of terms) {
+		const termScore = Math.max(scoreNormalizedField(row.search_primary, term, 100, 90, 75), scoreNormalizedField(row.search_support, term, 60, 50, 35));
+		if (termScore === 0) return 0;
+		score += termScore;
+	}
+
+	return score;
+}
 
 export async function filterActiveSearchResults(results: SearchResult[]): Promise<SearchResult[]> {
 	if (results.length === 0) return [];
@@ -161,13 +169,10 @@ export async function filterActiveSearchResults(results: SearchResult[]): Promis
 	return results.filter((result) => !isClinicSearchResult(result) || activeKeys.has(searchResultActiveKey(result.kind, searchResultId(result))));
 }
 
-export async function searchClinic(query: string, kinds: readonly ClinicSearchResultKind[] = ['owner', 'pet']): Promise<SearchResult[]> {
-	const terms = searchTerms(query);
+export async function searchClinic(query: string, kinds: readonly ClinicSearchResultKind[] = ['owner', 'pet'], locale: Locale = DEFAULT_LOCALE): Promise<SearchResult[]> {
+	const terms = searchTermsForLocale(query, locale);
 	if (terms.length === 0) return [];
 
-	const ownerSearchFilter = buildSearchFilter(ownerSearchPredicates, terms.length);
-	const petSearchFilter = buildSearchFilter(petSearchPredicates, terms.length);
-	const values = terms.map((term) => `%${term}%`);
 	const activeKinds = new Set(kinds);
 	const selectStatements: string[] = [];
 
@@ -195,11 +200,12 @@ export async function searchClinic(query: string, kinds: readonly ClinicSearchRe
 				WHERE owner_additional_responsibles.owner_id = owners.id
 				ORDER BY owner_additional_responsibles.sort_order, owner_additional_responsibles.id
 				LIMIT 1
-			), owners.additional_information, owner_address.city, '') AS subtitle
+			), owners.additional_information, owner_address.city, '') AS subtitle,
+			owners.name AS search_primary,
+			COALESCE(${ownerSearchSupportSql}, '') AS search_support
 		 FROM owners
 		 LEFT JOIN addresses AS owner_address ON owner_address.owner_id = owners.id
-		 WHERE owners.deleted_at IS NULL
-			AND ${ownerSearchFilter}`);
+		 WHERE owners.deleted_at IS NULL`);
 	}
 
 	if (activeKinds.has('pet')) {
@@ -210,25 +216,30 @@ export async function searchClinic(query: string, kinds: readonly ClinicSearchRe
 			${firstOwnerAvatarSql} AS owner_avatar_blob,
 			pets.avatar_blob AS pet_avatar_blob,
 			pets.name AS title,
-			COALESCE(${ownerNamesSql}, '') AS subtitle
+			COALESCE(${ownerNamesSql}, '') AS subtitle,
+			pets.name AS search_primary,
+			COALESCE(pets.breed, '') || ' ' || COALESCE(${petOwnerSearchSupportSql}, '') AS search_support
 		 FROM pets
-		 WHERE pets.deleted_at IS NULL
-			AND ${petSearchFilter}`);
+		 WHERE pets.deleted_at IS NULL`);
 	}
 
 	if (selectStatements.length === 0) return [];
 
 	const rows = await selectMany<SearchResultRow>(
-		`${selectStatements.join('\n\nUNION ALL\n\n')}
-		 ORDER BY kind, title
-		 LIMIT 40`,
-		values
+		selectStatements.join('\n\nUNION ALL\n\n'),
+		[]
 	);
 
-	const ownerIds = rows.filter((row) => row.kind === 'owner').map((row) => row.id);
+	const scoredRows = rows
+		.map((row) => ({ row, score: scoreSearchRow(row, terms) }))
+		.filter(({ score }) => score > 0)
+		.sort((first, second) => second.score - first.score || first.row.kind.localeCompare(second.row.kind) || first.row.title.localeCompare(second.row.title))
+		.slice(0, 40);
+
+	const ownerIds = scoredRows.filter(({ row }) => row.kind === 'owner').map(({ row }) => row.id);
 	const contactsByOwnerId = await listOwnerAssociatedContactsByOwnerIds(ownerIds);
 
-	return rows.map((row) => ({
+	return scoredRows.map(({ row }) => ({
 		kind: row.kind,
 		id: row.id,
 		ownerId: row.owner_id,

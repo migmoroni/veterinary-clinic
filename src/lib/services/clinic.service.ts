@@ -4,6 +4,7 @@ import type { DashboardAnalytics } from '$lib/domain/dashboard/analytics.js';
 import type { BreedReferenceProfile } from '$lib/domain/pet/breed-reference.js';
 import { medicationLeafletSectionIds, type MedicationLeafletSectionId, type MedicationSpecies } from '$lib/domain/medication/catalog.js';
 import type { TreatmentCatalogItem, TreatmentKind } from '$lib/domain/treatment/treatment.js';
+import { normalizeSearchText, searchTermsForLocale } from '$lib/domain/shared/search-terms.js';
 import { hasDatabaseFile } from '$lib/native/database-file.js';
 import { createEmptyDatabase, getDatabase } from '$lib/persistence/sqlite/client.js';
 import { getLastEditedRecord } from '$lib/persistence/repositories/medical-record.repository.js';
@@ -39,6 +40,13 @@ export interface ClinicDashboard {
 	vaccines: ClinicTreatmentDashboard;
 	antiparasitics: ClinicTreatmentDashboard;
 	analytics: DashboardAnalytics;
+}
+
+interface SearchScoreFields {
+	primary: readonly string[];
+	support?: readonly string[];
+	metadata?: readonly string[];
+	details?: readonly string[];
 }
 
 export async function initializeClinic(): Promise<void> {
@@ -85,7 +93,7 @@ export async function searchEverywhere(query: string, kinds: readonly SearchResu
 
 	const clinicKinds = (['owner', 'pet'] as const).filter((kind): kind is ClinicSearchResultKind => shouldSearchKind(kind, kinds));
 	const [clinicResults, breedResults, medicationResults] = await Promise.all([
-		clinicKinds.length > 0 ? searchClinic(query, clinicKinds) : Promise.resolve([]),
+		clinicKinds.length > 0 ? searchClinic(query, clinicKinds, i18n.locale) : Promise.resolve([]),
 		shouldSearchKind('breed', kinds) ? searchBreedReferences(query) : Promise.resolve([]),
 		shouldSearchKind('medication', kinds) ? searchMedications(query) : Promise.resolve([])
 	]);
@@ -106,24 +114,49 @@ export async function loadOwnerAssociatedContactsByOwnerIds(ownerIds: number[]):
 	return listOwnerAssociatedContactsByOwnerIds(uniqueIds);
 }
 
-function normalizeSearchText(value: string): string {
-	return value
-		.normalize('NFD')
-		.replace(/[\u0300-\u036f]/g, '')
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, ' ')
-		.trim();
-}
-
 function searchTerms(query: string): string[] {
-	const normalized = normalizeSearchText(query);
-	if (normalized.length < 2) return [];
-	return normalized.split(/\s+/).filter((term) => term.length > 0);
+	return searchTermsForLocale(query, i18n.locale);
 }
 
-function matchesSearch(text: string, query: string): boolean {
-	const normalizedText = normalizeSearchText(text);
-	return searchTerms(query).every((term) => normalizedText.includes(term));
+function scoreNormalizedField(value: string, term: string, exactScore: number, prefixScore: number, containsScore: number): number {
+	const normalized = normalizeSearchText(value);
+	if (!normalized) return 0;
+
+	const words = normalized.split(/\s+/);
+	if (words.includes(term)) return exactScore;
+	if (words.some((word) => word.startsWith(term))) return prefixScore;
+	if (normalized.includes(term)) return containsScore;
+
+	return 0;
+}
+
+function maxFieldScore(values: readonly string[] | undefined, term: string, exactScore: number, prefixScore: number, containsScore: number): number {
+	return Math.max(0, ...(values ?? []).map((value) => scoreNormalizedField(value, term, exactScore, prefixScore, containsScore)));
+}
+
+function scoreSearchFields(fields: SearchScoreFields, terms: readonly string[]): number {
+	if (terms.length === 0) return 0;
+
+	let score = 0;
+	for (const term of terms) {
+		const termScore = Math.max(
+			maxFieldScore(fields.primary, term, 100, 90, 75),
+			maxFieldScore(fields.support, term, 80, 70, 55),
+			maxFieldScore(fields.metadata, term, 35, 30, 20),
+			maxFieldScore(fields.details, term, 20, 15, 10)
+		);
+
+		if (termScore === 0) return 0;
+		score += termScore;
+	}
+
+	return score;
+}
+
+function acceptsReferenceScore(score: number, terms: readonly string[]): boolean {
+	if (score <= 0 || terms.length === 0) return false;
+	const averageScore = score / terms.length;
+	return terms.length === 1 ? averageScore >= 55 : averageScore >= 25;
 }
 
 function searchResultKey(result: SearchResult): string {
@@ -167,40 +200,38 @@ function medicationSectionText(item: TreatmentCatalogItem, sectionId: Medication
 	return item.extension.sections[sectionId]?.trim() ?? '';
 }
 
-function breedSearchText(profile: BreedReferenceProfile): string {
-	return [
-		t(profile.labelKey),
-		profile.breedId,
-		speciesLabel(profile.species),
-		breedSizeLabel(profile.sizeCategory),
-		breedOriginLabel(profile),
-		...Object.values(profile.extension.sections)
-	]
-		.filter(Boolean)
-		.join(' ');
+function breedSearchScore(profile: BreedReferenceProfile, terms: readonly string[]): number {
+	return scoreSearchFields(
+		{
+			primary: [t(profile.labelKey), profile.breedId],
+			support: [breedOriginLabel(profile)],
+			metadata: [speciesLabel(profile.species), breedSizeLabel(profile.sizeCategory)],
+			details: Object.values(profile.extension.sections)
+		},
+		terms
+	);
 }
 
-function medicationSearchText(item: TreatmentCatalogItem): string {
-	return [
-		item.name,
-		item.manufacturer,
-		medicationTypeLabel(item.kind),
-		speciesSummary(item.species),
-		item.regions.map(regionLabel).join(' '),
-		item.aliases.join(' '),
-		item.extension.classification,
-		item.extension.commercialLine,
-		...medicationLeafletSectionIds.map((sectionId) => medicationSectionText(item, sectionId))
-	]
-		.filter(Boolean)
-		.join(' ');
+function medicationSearchScore(item: TreatmentCatalogItem, terms: readonly string[]): number {
+	return scoreSearchFields(
+		{
+			primary: [item.name, String(item.id), ...item.aliases],
+			support: [item.manufacturer ?? '', medicationTypeLabel(item.kind), item.extension.classification ?? '', item.extension.commercialLine ?? ''],
+			metadata: [speciesSummary(item.species), item.regions.map(regionLabel).join(' ')],
+			details: medicationLeafletSectionIds.map((sectionId) => medicationSectionText(item, sectionId))
+		},
+		terms
+	);
 }
 
 async function searchBreedReferences(query: string): Promise<SearchResult[]> {
+	const terms = searchTerms(query);
 	const profiles = await loadBreedReferenceProfiles(false);
 	return profiles
-		.filter((profile) => matchesSearch(breedSearchText(profile), query))
-		.map((profile) => ({
+		.map((profile) => ({ profile, score: breedSearchScore(profile, terms) }))
+		.filter(({ score }) => acceptsReferenceScore(score, terms))
+		.sort((first, second) => second.score - first.score || t(first.profile.labelKey).localeCompare(t(second.profile.labelKey)))
+		.map(({ profile }) => ({
 			kind: 'breed',
 			id: profile.breedId,
 			ownerId: null,
@@ -213,10 +244,13 @@ async function searchBreedReferences(query: string): Promise<SearchResult[]> {
 }
 
 async function searchMedications(query: string): Promise<SearchResult[]> {
+	const terms = searchTerms(query);
 	const items = await loadAllTreatmentCatalogItems(true, false);
 	return items
-		.filter((item) => matchesSearch(medicationSearchText(item), query))
-		.map((item) => ({
+		.map((item) => ({ item, score: medicationSearchScore(item, terms) }))
+		.filter(({ score }) => acceptsReferenceScore(score, terms))
+		.sort((first, second) => second.score - first.score || first.item.name.localeCompare(second.item.name))
+		.map(({ item }) => ({
 			kind: 'medication',
 			id: item.id,
 			ownerId: null,
