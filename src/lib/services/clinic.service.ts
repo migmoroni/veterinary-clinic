@@ -8,7 +8,7 @@ import { hasDatabaseFile } from '$lib/native/database-file.js';
 import { createEmptyDatabase, getDatabase } from '$lib/persistence/sqlite/client.js';
 import { getLastEditedRecord } from '$lib/persistence/repositories/medical-record.repository.js';
 import { listOwnerAssociatedContactsByOwnerIds } from '$lib/persistence/repositories/owner.repository.js';
-import { filterActiveSearchResults as filterActiveSearchResultsRepository, searchClinic, type SearchResult } from '$lib/persistence/repositories/search.repository.js';
+import { filterActiveSearchResults as filterActiveSearchResultsRepository, searchClinic, type ClinicSearchResultKind, type SearchResult, type SearchResultKind } from '$lib/persistence/repositories/search.repository.js';
 import { getClinicCounts } from '$lib/persistence/repositories/stats.repository.js';
 import { countryOptions } from '$lib/domain/geo/location.js';
 import type { TreatmentHistoryPoint } from '$lib/domain/treatment/analytics.js';
@@ -80,10 +80,15 @@ export async function loadDashboard(): Promise<ClinicDashboard> {
 	};
 }
 
-export async function searchEverywhere(query: string): Promise<SearchResult[]> {
+export async function searchEverywhere(query: string, kinds: readonly SearchResultKind[] = []): Promise<SearchResult[]> {
 	if (searchTerms(query).length === 0) return [];
 
-	const [clinicResults, breedResults, medicationResults] = await Promise.all([searchClinic(query), searchBreedReferences(query), searchMedications(query)]);
+	const clinicKinds = (['owner', 'pet'] as const).filter((kind): kind is ClinicSearchResultKind => shouldSearchKind(kind, kinds));
+	const [clinicResults, breedResults, medicationResults] = await Promise.all([
+		clinicKinds.length > 0 ? searchClinic(query, clinicKinds) : Promise.resolve([]),
+		shouldSearchKind('breed', kinds) ? searchBreedReferences(query) : Promise.resolve([]),
+		shouldSearchKind('medication', kinds) ? searchMedications(query) : Promise.resolve([])
+	]);
 	return [...clinicResults, ...breedResults, ...medicationResults].slice(0, 80);
 }
 
@@ -126,7 +131,11 @@ function searchResultKey(result: SearchResult): string {
 }
 
 function isClinicSearchResult(result: SearchResult): boolean {
-	return result.kind === 'owner' || result.kind === 'pet' || result.kind === 'record';
+	return result.kind === 'owner' || result.kind === 'pet';
+}
+
+function shouldSearchKind(kind: SearchResultKind, selectedKinds: readonly SearchResultKind[]): boolean {
+	return selectedKinds.length === 0 || selectedKinds.includes(kind);
 }
 
 function speciesLabel(species: MedicationSpecies): string {
@@ -194,7 +203,6 @@ async function searchBreedReferences(query: string): Promise<SearchResult[]> {
 		.map((profile) => ({
 			kind: 'breed',
 			id: profile.breedId,
-			recordId: null,
 			ownerId: null,
 			petId: null,
 			href: `/breeds/${profile.breedId}`,
@@ -211,7 +219,6 @@ async function searchMedications(query: string): Promise<SearchResult[]> {
 		.map((item) => ({
 			kind: 'medication',
 			id: item.id,
-			recordId: null,
 			ownerId: null,
 			petId: null,
 			href: `/formulary/${item.id}`,

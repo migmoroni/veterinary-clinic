@@ -10,31 +10,35 @@
 	import { t } from '$lib/i18n/index.js';
 	import { RECENT_SEARCH_STORAGE_KEY } from '$lib/services/client-state.service.js';
 	import { filterActiveSearchResults, loadOwnerAssociatedContactsByOwnerIds, loadOwnerAvatarsByOwnerIds, loadPetAvatarsByPetIds, searchEverywhere } from '$lib/services/clinic.service.js';
-	import ClipboardPenLine from '@lucide/svelte/icons/clipboard-pen-line';
 	import PawPrint from '@lucide/svelte/icons/paw-print';
 	import Pill from '@lucide/svelte/icons/pill';
 	import Phone from '@lucide/svelte/icons/phone';
 	import Search from '@lucide/svelte/icons/search';
 
-	const recentSearchLimit = 20;
+	const recentSearchLimit = 50;
+	const searchFilterKinds = ['owner', 'pet', 'medication', 'breed'] as const satisfies readonly SearchResultKind[];
 
 	let query = $state('');
 	let results = $state<SearchResult[]>([]);
 	let recentResults = $state<SearchResult[]>([]);
+	let selectedKinds = $state<SearchResultKind[]>([]);
 	let error = $state<string | null>(null);
 	let contactDialogOpen = $state(false);
 	let contactDialogOwnerName = $state('');
 	let contactDialogContacts = $state<OwnerAssociatedContact[]>([]);
 	let resultsListElement = $state<HTMLDivElement>();
 	let resultsListHasMoreBelow = $state(false);
+	let searchRequestId = 0;
 
-	const showRecentResults = $derived(query.trim().length === 0 && recentResults.length > 0);
-	const visibleResults = $derived(showRecentResults ? recentResults : results);
+	const hasKindFilters = $derived(selectedKinds.length > 0);
+	const filteredResults = $derived(hasKindFilters ? results.filter((result) => selectedKinds.includes(result.kind)) : results);
+	const filteredRecentResults = $derived(hasKindFilters ? recentResults.filter((result) => selectedKinds.includes(result.kind)) : recentResults);
+	const showRecentResults = $derived(query.trim().length === 0 && filteredRecentResults.length > 0);
+	const visibleResults = $derived(showRecentResults ? filteredRecentResults : filteredResults);
 
 	function kindLabel(kind: SearchResultKind): string {
 		if (kind === 'owner') return t('search.kind.owner');
 		if (kind === 'pet') return t('search.kind.pet');
-		if (kind === 'record') return t('search.kind.record');
 		if (kind === 'breed') return t('search.kind.breed');
 		return t('search.kind.medication');
 	}
@@ -52,7 +56,6 @@
 		const normalizedResult: SearchResult = {
 			kind: result.kind,
 			id: result.id,
-			recordId: result.recordId,
 			ownerId: result.ownerId,
 			petId: result.petId,
 			href: result.href,
@@ -91,18 +94,33 @@
 	}
 
 	async function runSearch() {
+		const requestId = ++searchRequestId;
+		const kinds = [...selectedKinds];
 		try {
-			results = await searchEverywhere(query);
+			const nextResults = await searchEverywhere(query, kinds);
+			if (requestId !== searchRequestId) return;
+			results = nextResults;
+			error = null;
 		} catch (exception) {
+			if (requestId !== searchRequestId) return;
 			error = exception instanceof Error ? exception.message : String(exception);
 		}
+	}
+
+	function toggleKindFilter(kind: SearchResultKind) {
+		selectedKinds = selectedKinds.includes(kind) ? selectedKinds.filter((item) => item !== kind) : [...selectedKinds, kind];
+		void runSearch();
+	}
+
+	function kindFilterClass(kind: SearchResultKind): string {
+		const baseClass = 'inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium shadow-sm transition';
+		return selectedKinds.includes(kind) ? `${baseClass} border-primary bg-primary text-primary-foreground` : `${baseClass} border-border bg-card text-foreground hover:bg-accent`;
 	}
 
 	function persistableSearchResult(result: SearchResult): SearchResult {
 		return {
 			kind: result.kind,
 			id: result.id,
-			recordId: result.recordId,
 			ownerId: result.ownerId,
 			petId: result.petId,
 			href: result.href,
@@ -189,13 +207,13 @@
 	<title>{t('search.title')} · {t('app.name')}</title>
 </svelte:head>
 
-<section class="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
-	<header class="border-b border-border pb-5">
+<section class="mx-auto flex h-full min-h-0 w-full max-w-5xl flex-col gap-5 overflow-hidden px-4 py-5 sm:px-6 lg:px-8">
+	<header class="shrink-0 border-b border-border pb-5">
 		<h2 class="text-2xl font-semibold sm:text-3xl">{t('search.title')}</h2>
 		<p class="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{t('search.description')}</p>
 	</header>
 
-	<div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+	<div class="grid shrink-0 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
 		<label class="flex min-w-0 flex-col gap-2 text-sm font-medium">
 			<span>{t('search.label')}</span>
 			<span class="relative">
@@ -209,19 +227,31 @@
 		</p>
 	</div>
 
+	<fieldset class="flex shrink-0 flex-wrap items-center gap-2">
+		<legend class="sr-only">{t('search.filters')}</legend>
+		<span class="mr-1 text-sm font-medium">{t('search.filters')}</span>
+		{#each searchFilterKinds as kind}
+			<label class={kindFilterClass(kind)}>
+				<input class="size-4 accent-primary" type="checkbox" checked={selectedKinds.includes(kind)} onchange={() => toggleKindFilter(kind)} />
+				<span>{kindLabel(kind)}</span>
+			</label>
+		{/each}
+		<span class="text-xs text-muted-foreground">{t('search.filtersEmptyHint')}</span>
+	</fieldset>
+
 	{#if error}
-		<p class="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm">{error}</p>
+		<p class="shrink-0 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm">{error}</p>
 	{/if}
 
 	{#if showRecentResults}
-		<section class="rounded-md border border-border bg-card p-4 shadow-sm">
+		<section class="shrink-0 rounded-md border border-border bg-card p-4 shadow-sm">
 			<h3 class="text-sm font-semibold">{t('search.recentTitle')}</h3>
 			<p class="mt-1 text-sm text-muted-foreground">{t('search.recentDescription')}</p>
 		</section>
 	{/if}
 
-	<div class="relative">
-		<div bind:this={resultsListElement} class="grid max-h-[min(34rem,calc(100vh-18rem))] gap-2 overflow-y-scroll pr-3 scrollbar-gutter-stable" onscroll={updateResultsListScrollHint}>
+	<div class="relative min-h-0 flex-1">
+		<div bind:this={resultsListElement} class="grid h-full content-start gap-2 overflow-y-auto overscroll-contain pr-3 scrollbar-gutter-stable" onscroll={updateResultsListScrollHint}>
 			{#each visibleResults as result (resultKey(result))}
 				{#if result.kind === 'owner'}
 					<article class="flex items-start gap-2 rounded-md border border-border bg-card p-3 shadow-sm hover:bg-accent">
@@ -253,8 +283,6 @@
 							<BinaryImage imageBytes={result.referenceImageBytes} alt={result.title} className="mt-0.5 size-10" imageClass="h-full w-full object-cover" iconClass="size-5 text-primary" fallbackIcon={PawPrint} />
 						{:else if result.kind === 'medication'}
 							<BinaryImage imageBytes={result.referenceImageBytes} alt={result.title} className="mt-0.5 size-10" imageClass="h-full w-full object-contain p-1.5" iconClass="size-5 text-primary" fallbackIcon={Pill} />
-						{:else}
-							<ClipboardPenLine class="mt-0.5 size-4 shrink-0 text-primary" />
 						{/if}
 						<span class="min-w-0 flex-1">
 							<span class="block truncate text-sm font-medium">{result.title}</span>

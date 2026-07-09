@@ -3,13 +3,12 @@ import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { listOwnerAssociatedContactsByOwnerIds } from './owner.repository.js';
 
-export type SearchResultKind = 'owner' | 'pet' | 'record' | 'breed' | 'medication';
-export type ClinicSearchResultKind = Extract<SearchResultKind, 'owner' | 'pet' | 'record'>;
+export type SearchResultKind = 'owner' | 'pet' | 'breed' | 'medication';
+export type ClinicSearchResultKind = Extract<SearchResultKind, 'owner' | 'pet'>;
 
 export interface SearchResult {
 	kind: SearchResultKind;
 	id: number | string;
-	recordId: number | null;
 	ownerId: number | null;
 	petId: number | null;
 	href: string;
@@ -25,7 +24,6 @@ export interface SearchResult {
 interface SearchResultRow {
 	kind: ClinicSearchResultKind;
 	id: number;
-	record_id: number | null;
 	owner_id: number | null;
 	pet_id: number | null;
 	owner_avatar_blob: unknown | null;
@@ -65,8 +63,7 @@ const ownerNamesSql = `(SELECT group_concat(name, ' · ')
 
 function resultHref(row: SearchResultRow): string {
 	if (row.kind === 'owner') return `/owners/${row.id}`;
-	if (row.kind === 'pet') return `/pets/${row.id}`;
-	return `/records/${row.record_id ?? row.id}`;
+	return `/pets/${row.id}`;
 }
 
 function searchTerms(query: string): string[] {
@@ -76,7 +73,6 @@ function searchTerms(query: string): string[] {
 }
 
 function searchResultId(result: SearchResult): number {
-	if (result.kind === 'record' && result.recordId !== null) return Number(result.recordId);
 	return Number(result.id);
 }
 
@@ -90,7 +86,7 @@ function idsForKind(results: SearchResult[], kind: ClinicSearchResultKind): numb
 }
 
 function isClinicSearchResult(result: SearchResult): result is SearchResult & { kind: ClinicSearchResultKind } {
-	return result.kind === 'owner' || result.kind === 'pet' || result.kind === 'record';
+	return result.kind === 'owner' || result.kind === 'pet';
 }
 
 async function loadActiveIds(ids: number[], query: string): Promise<Set<number>> {
@@ -149,80 +145,39 @@ const petSearchPredicates: SearchTermPredicate[] = [
 	)`
 ];
 
-const recordSearchPredicates: SearchTermPredicate[] = [
-	(placeholder) => `medical_records.title LIKE ${placeholder}`,
-	(placeholder) => `medical_records.description LIKE ${placeholder}`,
-	(placeholder) => `pets.name LIKE ${placeholder}`,
-	(placeholder) => `pets.species LIKE ${placeholder}`,
-	(placeholder) => `pets.breed LIKE ${placeholder}`,
-	(placeholder) => `EXISTS (
-		SELECT 1 FROM pet_owners
-		JOIN owners ON owners.id = pet_owners.owner_id
-		LEFT JOIN addresses AS record_owner_address ON record_owner_address.owner_id = owners.id
-		WHERE pet_owners.pet_id = pets.id
-			AND owners.deleted_at IS NULL
-			AND (owners.name LIKE ${placeholder} OR record_owner_address.city LIKE ${placeholder})
-	)`,
-	(placeholder) => `EXISTS (
-		SELECT 1 FROM pet_owners
-		JOIN owners ON owners.id = pet_owners.owner_id
-		JOIN contacts ON contacts.owner_id = owners.id
-		WHERE pet_owners.pet_id = pets.id
-			AND owners.deleted_at IS NULL
-			AND (contacts.value LIKE ${placeholder} OR contacts.label LIKE ${placeholder})
-	)`
-];
-
 export async function filterActiveSearchResults(results: SearchResult[]): Promise<SearchResult[]> {
 	if (results.length === 0) return [];
 
-	const [ownerIds, petIds, recordIds] = [idsForKind(results, 'owner'), idsForKind(results, 'pet'), idsForKind(results, 'record')];
-	const [activeOwnerIds, activePetIds, activeRecordIds] = await Promise.all([
+	const [ownerIds, petIds] = [idsForKind(results, 'owner'), idsForKind(results, 'pet')];
+	const [activeOwnerIds, activePetIds] = await Promise.all([
 		loadActiveIds(ownerIds, 'SELECT id FROM owners WHERE id IN (__IDS__) AND deleted_at IS NULL'),
-		loadActiveIds(petIds, 'SELECT id FROM pets WHERE id IN (__IDS__) AND deleted_at IS NULL'),
-		loadActiveIds(
-			recordIds,
-			`SELECT medical_records.id
-			 FROM medical_records
-			 JOIN pets ON pets.id = medical_records.pet_id
-			 WHERE medical_records.id IN (__IDS__)
-				AND medical_records.deleted_at IS NULL
-				AND pets.deleted_at IS NULL`
-		)
+		loadActiveIds(petIds, 'SELECT id FROM pets WHERE id IN (__IDS__) AND deleted_at IS NULL')
 	]);
 	const activeKeys = new Set<string>();
 
 	for (const id of activeOwnerIds) activeKeys.add(searchResultActiveKey('owner', id));
 	for (const id of activePetIds) activeKeys.add(searchResultActiveKey('pet', id));
-	for (const id of activeRecordIds) activeKeys.add(searchResultActiveKey('record', id));
 
 	return results.filter((result) => !isClinicSearchResult(result) || activeKeys.has(searchResultActiveKey(result.kind, searchResultId(result))));
 }
 
-export async function searchClinic(query: string): Promise<SearchResult[]> {
+export async function searchClinic(query: string, kinds: readonly ClinicSearchResultKind[] = ['owner', 'pet']): Promise<SearchResult[]> {
 	const terms = searchTerms(query);
 	if (terms.length === 0) return [];
 
 	const ownerSearchFilter = buildSearchFilter(ownerSearchPredicates, terms.length);
 	const petSearchFilter = buildSearchFilter(petSearchPredicates, terms.length);
-	const recordSearchFilter = buildSearchFilter(recordSearchPredicates, terms.length);
 	const values = terms.map((term) => `%${term}%`);
-	const rows = await selectMany<SearchResultRow>(
-		`SELECT 'owner' AS kind,
+	const activeKinds = new Set(kinds);
+	const selectStatements: string[] = [];
+
+	if (activeKinds.has('owner')) {
+		selectStatements.push(`SELECT 'owner' AS kind,
 			owners.id,
 			owners.id AS owner_id,
 			NULL AS pet_id,
 			owners.avatar_blob AS owner_avatar_blob,
 			NULL AS pet_avatar_blob,
-			(SELECT medical_records.id
-			 FROM pets
-			 JOIN pet_owners ON pet_owners.pet_id = pets.id
-			 JOIN medical_records ON medical_records.pet_id = pets.id
-			 WHERE pet_owners.owner_id = owners.id
-				AND pets.deleted_at IS NULL
-				AND medical_records.deleted_at IS NULL
-			 ORDER BY medical_records.updated_at DESC, medical_records.id DESC
-			 LIMIT 1) AS record_id,
 			owners.name AS title,
 			COALESCE((
 				SELECT CASE
@@ -244,45 +199,27 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 		 FROM owners
 		 LEFT JOIN addresses AS owner_address ON owner_address.owner_id = owners.id
 		 WHERE owners.deleted_at IS NULL
-			AND ${ownerSearchFilter}
+			AND ${ownerSearchFilter}`);
+	}
 
-		 UNION ALL
-
-		 SELECT 'pet' AS kind,
+	if (activeKinds.has('pet')) {
+		selectStatements.push(`SELECT 'pet' AS kind,
 			pets.id,
 			${firstOwnerIdSql} AS owner_id,
 			pets.id AS pet_id,
 			${firstOwnerAvatarSql} AS owner_avatar_blob,
 			pets.avatar_blob AS pet_avatar_blob,
-			(SELECT medical_records.id
-			 FROM medical_records
-			 WHERE medical_records.pet_id = pets.id
-				AND medical_records.deleted_at IS NULL
-			 ORDER BY medical_records.updated_at DESC, medical_records.id DESC
-			 LIMIT 1) AS record_id,
 			pets.name AS title,
 			COALESCE(${ownerNamesSql}, '') AS subtitle
 		 FROM pets
 		 WHERE pets.deleted_at IS NULL
-			AND ${petSearchFilter}
+			AND ${petSearchFilter}`);
+	}
 
-		 UNION ALL
+	if (selectStatements.length === 0) return [];
 
-		 SELECT 'record' AS kind,
-			medical_records.id,
-			${firstOwnerIdSql} AS owner_id,
-			pets.id AS pet_id,
-			${firstOwnerAvatarSql} AS owner_avatar_blob,
-			pets.avatar_blob AS pet_avatar_blob,
-			medical_records.id AS record_id,
-			COALESCE(medical_records.title, 'Prontuario ' || medical_records.id) AS title,
-			COALESCE(pets.name || ' · ' || ${ownerNamesSql}, pets.name) AS subtitle
-		 FROM medical_records
-		 JOIN pets ON pets.id = medical_records.pet_id
-		 WHERE medical_records.deleted_at IS NULL
-			AND pets.deleted_at IS NULL
-			AND ${recordSearchFilter}
-
+	const rows = await selectMany<SearchResultRow>(
+		`${selectStatements.join('\n\nUNION ALL\n\n')}
 		 ORDER BY kind, title
 		 LIMIT 40`,
 		values
@@ -294,7 +231,6 @@ export async function searchClinic(query: string): Promise<SearchResult[]> {
 	return rows.map((row) => ({
 		kind: row.kind,
 		id: row.id,
-		recordId: row.record_id,
 		ownerId: row.owner_id,
 		petId: row.pet_id,
 		href: resultHref(row),
