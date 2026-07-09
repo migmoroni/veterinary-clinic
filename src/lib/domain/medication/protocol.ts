@@ -1,12 +1,12 @@
 import type { MedicationSpecies } from './catalog.js';
-import type { TreatmentKind, TreatmentValidityUnit } from '$lib/domain/treatment/treatment.js';
+import type { TreatmentCatalogItemId, TreatmentKind, TreatmentValidityUnit } from '$lib/domain/treatment/treatment.js';
 
 export type MedicationProtocolKind = TreatmentKind;
 export type MedicationProtocolOrigin = 'system' | 'user';
 export type MedicationValidityUnit = TreatmentValidityUnit;
 
 export interface MedicationProtocolCatalogItem {
-	id: number;
+	id: TreatmentCatalogItemId;
 	name: string;
 	normalizedName: string;
 	species: MedicationSpecies[];
@@ -43,7 +43,7 @@ export interface MedicationProtocolInput {
 	kind: MedicationProtocolKind;
 	name: string;
 	species?: MedicationSpecies[];
-	catalogItemIds: number[];
+	catalogItemIds: TreatmentCatalogItemId[];
 	observation: string | null;
 }
 

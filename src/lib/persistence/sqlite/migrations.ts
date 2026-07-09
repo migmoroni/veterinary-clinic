@@ -41,7 +41,7 @@ interface MigrationRecordRow {
 }
 
 interface MedicationCatalogRow {
-	id: number;
+	id: string;
 	origin: string;
 }
 
@@ -150,7 +150,7 @@ function normalizedDefaultMedicationImages(images: readonly DefaultMedicationCat
 	return normalized;
 }
 
-async function medicationImageCollectionItemCount(database: Database, catalogItemId: number): Promise<number> {
+async function medicationImageCollectionItemCount(database: Database, catalogItemId: string): Promise<number> {
 	const rows = await database.select<CountRow[]>(
 		`SELECT COUNT(*) AS total
 		 FROM image_collection_items item
@@ -161,7 +161,7 @@ async function medicationImageCollectionItemCount(database: Database, catalogIte
 	return Number(rows[0]?.total ?? 0);
 }
 
-async function ensureDefaultMedicationImages(database: Database, catalogItemId: number, images: readonly DefaultMedicationCatalogImage[] | null | undefined): Promise<void> {
+async function ensureDefaultMedicationImages(database: Database, catalogItemId: string, images: readonly DefaultMedicationCatalogImage[] | null | undefined): Promise<void> {
 	const normalizedImages = normalizedDefaultMedicationImages(images);
 	if (normalizedImages.length === 0) return;
 	if ((await medicationImageCollectionItemCount(database, catalogItemId)) > 0) return;
@@ -267,8 +267,8 @@ async function syncDefaultMedicationCatalog(database: Database): Promise<void> {
 		if (extension.length > FIELD_LIMITS.medicationExtensionJson) throw new Error('default_medication_extension_limit_exceeded');
 
 		await database.execute(
-			`INSERT INTO medication_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)
+			`INSERT INTO medication_catalog_items (id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP)
 			 ON CONFLICT(kind, normalized_name) DO UPDATE SET
 				name = excluded.name,
 				species = excluded.species,
@@ -278,7 +278,7 @@ async function syncDefaultMedicationCatalog(database: Database): Promise<void> {
 				extension = excluded.extension,
 				updated_at = CURRENT_TIMESTAMP
 			 WHERE medication_catalog_items.origin = 'system'`,
-			[item.kind, item.name, normalizedName, JSON.stringify(item.species), JSON.stringify(item.aliases), item.manufacturer, item.origin, JSON.stringify(item.regions), extension]
+			[item.id, item.kind, item.name, normalizedName, JSON.stringify(item.species), JSON.stringify(item.aliases), item.manufacturer, item.origin, JSON.stringify(item.regions), extension]
 		);
 
 		const rows = await database.select<MedicationCatalogRow[]>(
@@ -373,13 +373,12 @@ async function seedDefaultMedicationProtocols(database: Database): Promise<void>
 		const protocolId = protocolRows[0]?.id;
 		if (!protocolId) throw new Error(`default_protocol_not_found:${protocol.name}`);
 
-		for (const [sortOrder, catalogItemName] of protocol.catalogItemNames.entries()) {
-			const catalogRows = await database.select<{ id: number }[]>(
-				'SELECT id FROM medication_catalog_items WHERE kind = $1 AND normalized_name = $2 LIMIT 1',
-				[protocol.kind, normalizeMedicationCatalogName(catalogItemName)]
+		for (const [sortOrder, catalogItemId] of protocol.catalogItemIds.entries()) {
+			const catalogRows = await database.select<{ id: string }[]>(
+				'SELECT id FROM medication_catalog_items WHERE kind = $1 AND id = $2 LIMIT 1',
+				[protocol.kind, catalogItemId]
 			);
-			const catalogItemId = catalogRows[0]?.id;
-			if (!catalogItemId) throw new Error(`default_protocol_catalog_item_not_found:${catalogItemName}`);
+			if (!catalogRows[0]) throw new Error(`default_protocol_catalog_item_not_found:${catalogItemId}`);
 
 			await database.execute(
 				`INSERT OR IGNORE INTO medication_protocol_items (protocol_id, catalog_item_id, sort_order, updated_at)
@@ -463,7 +462,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 		CREATE TABLE IF NOT EXISTS image_collections (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			entity_type TEXT NOT NULL CHECK(${requiredTextCheck('entity_type', FIELD_LIMITS.imageCollectionEntityType)}),
-			entity_id INTEGER NOT NULL,
+			entity_id TEXT NOT NULL CHECK(length(trim(entity_id)) > 0),
 			primary_required INTEGER NOT NULL DEFAULT 0 CHECK(primary_required IN (0, 1)),
 			max_items INTEGER CHECK(max_items IS NULL OR max_items > 0),
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -623,9 +622,9 @@ async function createCurrentSchema(database: Database): Promise<void> {
 		)
 	`);
 
-	await database.execute(`
-		CREATE TABLE IF NOT EXISTS medication_catalog_items (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
+		await database.execute(`
+			CREATE TABLE IF NOT EXISTS medication_catalog_items (
+				id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
 			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
 			name TEXT NOT NULL,
 			normalized_name TEXT NOT NULL,
@@ -663,11 +662,11 @@ async function createCurrentSchema(database: Database): Promise<void> {
 		)
 	`);
 
-	await database.execute(`
-		CREATE TABLE IF NOT EXISTS medication_protocol_items (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			protocol_id INTEGER NOT NULL,
-			catalog_item_id INTEGER NOT NULL,
+		await database.execute(`
+			CREATE TABLE IF NOT EXISTS medication_protocol_items (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				protocol_id INTEGER NOT NULL,
+				catalog_item_id TEXT NOT NULL CHECK(length(trim(catalog_item_id)) = 36 AND substr(lower(trim(catalog_item_id)), 15, 1) = '4' AND substr(lower(trim(catalog_item_id)), 20, 1) IN ('8', '9', 'a', 'b')),
 			sort_order INTEGER NOT NULL DEFAULT 0,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,

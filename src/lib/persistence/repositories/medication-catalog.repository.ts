@@ -1,7 +1,8 @@
 import { canEditMedicationCatalogItem, parseMedicationAliases, parseMedicationCatalogExtension, parseMedicationRegions, parseMedicationSpecies, stringifyMedicationAliases, stringifyMedicationRegions, stringifyMedicationSpecies, type MedicationCatalogOrigin } from '$lib/domain/medication/catalog.js';
 import type { ImageCollectionItem, ImageCollectionItemInput, ImageCollectionPolicy } from '$lib/domain/image-collection/image-collection.js';
 import { FIELD_LIMITS, assertTextLimit, nullableLimitedText } from '$lib/domain/shared/field-limits.js';
-import type { TreatmentCatalogItem, TreatmentCatalogItemInput, TreatmentKind } from '$lib/domain/treatment/treatment.js';
+import { createUuidV4 } from '$lib/domain/shared/uuid.js';
+import type { TreatmentCatalogItem, TreatmentCatalogItemId, TreatmentCatalogItemInput, TreatmentKind } from '$lib/domain/treatment/treatment.js';
 import { normalizeTreatmentName } from '$lib/domain/treatment/treatment.js';
 import { deleteImageCollection, getImageCollection, replaceImageCollection } from '$lib/persistence/repositories/image-collection.repository.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
@@ -10,7 +11,7 @@ export type MedicationCatalogKind = TreatmentKind;
 export type MedicationCatalogItem = TreatmentCatalogItem;
 
 interface MedicationCatalogItemRow {
-	id: number;
+	id: TreatmentCatalogItemId;
 	kind: MedicationCatalogKind;
 	name: string;
 	normalized_name: string;
@@ -81,7 +82,7 @@ function mapCatalogItem(row: MedicationCatalogItemRow, images: ImageCollectionIt
 	};
 }
 
-async function loadCatalogItemImages(id: number): Promise<ImageCollectionItem[]> {
+async function loadCatalogItemImages(id: TreatmentCatalogItemId): Promise<ImageCollectionItem[]> {
 	const collection = await getImageCollection(MEDICATION_CATALOG_IMAGE_COLLECTION_TYPE, id);
 	return collection?.items ?? [];
 }
@@ -131,7 +132,7 @@ async function getMedicationCatalogItemByNormalizedName(kind: MedicationCatalogK
 	return rows[0] ? mapCatalogItemWithImages(rows[0]) : null;
 }
 
-async function assertMedicationCatalogItemEditable(kind: MedicationCatalogKind, id: number): Promise<void> {
+async function assertMedicationCatalogItemEditable(kind: MedicationCatalogKind, id: TreatmentCatalogItemId): Promise<void> {
 	const rows = await selectMany<Pick<MedicationCatalogItemRow, 'origin'>>(
 		`SELECT origin
 		 FROM medication_catalog_items
@@ -147,13 +148,14 @@ export async function ensureMedicationCatalogItem(kind: MedicationCatalogKind, n
 	if (existingItem?.origin === 'system') return existingItem;
 
 	const metadata = normalizeMedicationCatalogMetadata(kind, {}, normalizedName);
+	const id = createUuidV4();
 	await execute(
-		`INSERT INTO medication_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, 'user', $7, CURRENT_TIMESTAMP)
+		`INSERT INTO medication_catalog_items (id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, 'user', $8, CURRENT_TIMESTAMP)
 		 ON CONFLICT(kind, normalized_name) DO UPDATE SET
 			name = excluded.name,
 			updated_at = CURRENT_TIMESTAMP`,
-		[kind, name, normalizedName, metadata.species, metadata.aliases, metadata.manufacturer, metadata.regions]
+		[id, kind, name, normalizedName, metadata.species, metadata.aliases, metadata.manufacturer, metadata.regions]
 	);
 
 	const item = await getMedicationCatalogItemByNormalizedName(kind, normalizedName);
@@ -176,7 +178,7 @@ export async function listMedicationCatalogItems(kind: MedicationCatalogKind, in
 	return rows.map((row, index) => mapCatalogItem(row, imagesByIndex[index] ?? []));
 }
 
-export async function getMedicationCatalogItemById(id: number, includeHidden = false, includeImages = true): Promise<MedicationCatalogItem | null> {
+export async function getMedicationCatalogItemById(id: TreatmentCatalogItemId, includeHidden = false, includeImages = true): Promise<MedicationCatalogItem | null> {
 	const rows = await selectMany<MedicationCatalogItemRow>(
 		`SELECT ${MEDICATION_CATALOG_COLUMNS}
 		 FROM medication_catalog_items
@@ -190,7 +192,7 @@ export async function getMedicationCatalogItemById(id: number, includeHidden = f
 	return includeImages ? mapCatalogItemWithImages(row) : mapCatalogItem(row);
 }
 
-export async function saveMedicationCatalogItem(kind: MedicationCatalogKind, input: TreatmentCatalogItemInput, id?: number): Promise<MedicationCatalogItem> {
+export async function saveMedicationCatalogItem(kind: MedicationCatalogKind, input: TreatmentCatalogItemInput, id?: TreatmentCatalogItemId): Promise<MedicationCatalogItem> {
 	const { name, normalizedName } = normalizeMedicationCatalogInput(kind, input.name);
 	const metadata = normalizeMedicationCatalogMetadata(kind, input, normalizedName);
 
@@ -223,9 +225,10 @@ export async function saveMedicationCatalogItem(kind: MedicationCatalogKind, inp
 	const existingItem = await getMedicationCatalogItemByNormalizedName(kind, normalizedName);
 	if (existingItem && !canEditMedicationCatalogItem(existingItem)) throw new Error('medication_catalog_system_item');
 
+	const newId = createUuidV4();
 	await execute(
-		`INSERT INTO medication_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, 'user', $7, CURRENT_TIMESTAMP)
+		`INSERT INTO medication_catalog_items (id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, 'user', $8, CURRENT_TIMESTAMP)
 		 ON CONFLICT(kind, normalized_name) DO UPDATE SET
 			name = excluded.name,
 			species = excluded.species,
@@ -234,7 +237,7 @@ export async function saveMedicationCatalogItem(kind: MedicationCatalogKind, inp
 			regions = excluded.regions,
 			hidden_at = NULL,
 			updated_at = CURRENT_TIMESTAMP`,
-		[kind, name, normalizedName, metadata.species, metadata.aliases, metadata.manufacturer, metadata.regions]
+		[newId, kind, name, normalizedName, metadata.species, metadata.aliases, metadata.manufacturer, metadata.regions]
 	);
 
 	const item = await getMedicationCatalogItemByNormalizedName(kind, normalizedName);
@@ -242,7 +245,7 @@ export async function saveMedicationCatalogItem(kind: MedicationCatalogKind, inp
 	return item;
 }
 
-export async function setMedicationCatalogItemHidden(kind: MedicationCatalogKind, id: number, hidden: boolean): Promise<MedicationCatalogItem> {
+export async function setMedicationCatalogItemHidden(kind: MedicationCatalogKind, id: TreatmentCatalogItemId, hidden: boolean): Promise<MedicationCatalogItem> {
 	await execute(
 		`UPDATE medication_catalog_items
 		 SET hidden_at = ${hidden ? 'COALESCE(hidden_at, CURRENT_TIMESTAMP)' : 'NULL'},
@@ -262,13 +265,13 @@ export async function setMedicationCatalogItemHidden(kind: MedicationCatalogKind
 	return mapCatalogItemWithImages(rows[0]);
 }
 
-export async function deleteMedicationCatalogItem(kind: MedicationCatalogKind, id: number): Promise<void> {
+export async function deleteMedicationCatalogItem(kind: MedicationCatalogKind, id: TreatmentCatalogItemId): Promise<void> {
 	await assertMedicationCatalogItemEditable(kind, id);
 	await deleteImageCollection(MEDICATION_CATALOG_IMAGE_COLLECTION_TYPE, id);
 	await execute('DELETE FROM medication_catalog_items WHERE id = $1 AND kind = $2', [id, kind]);
 }
 
-export async function saveMedicationCatalogItemImages(kind: MedicationCatalogKind, id: number, images: ImageCollectionItemInput[]): Promise<MedicationCatalogItem> {
+export async function saveMedicationCatalogItemImages(kind: MedicationCatalogKind, id: TreatmentCatalogItemId, images: ImageCollectionItemInput[]): Promise<MedicationCatalogItem> {
 	const rows = await selectMany<MedicationCatalogItemRow>(
 		`SELECT ${MEDICATION_CATALOG_COLUMNS}
 		 FROM medication_catalog_items

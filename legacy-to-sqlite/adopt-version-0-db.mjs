@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import Database from 'better-sqlite3';
 
@@ -7,8 +8,10 @@ const CURRENT_SCHEMA_VERSION = 1;
 const BASELINE_APP_VERSION = '0.2.0';
 const BASELINE_MIGRATION_NAME = '0001_baseline_current_schema';
 const PREFERENCE_SETTING_KEYS_TO_CLEAR = ['app.locale', 'app.typography'];
+const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const medicationDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/medication/defaults');
 const defaultSourcePath = path.resolve(scriptDir, 'dist/veterinary_clinic-version-0.db');
 const defaultOutputPath = path.resolve(scriptDir, `build/veterinary_clinic-version-${CURRENT_SCHEMA_VERSION}.db`);
 
@@ -129,6 +132,44 @@ function quoteSqlString(value) {
 	return `'${value.replace(/'/g, "''")}'`;
 }
 
+function normalizeMedicationCatalogName(value) {
+	return value
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '');
+}
+
+function medicationCatalogKey(kind, normalizedName) {
+	return `${kind}:${normalizedName}`;
+}
+
+function isUuidV4(value) {
+	return UUID_V4_PATTERN.test(value);
+}
+
+function createMedicationCatalogUuid() {
+	return crypto.randomUUID();
+}
+
+function readDefaultMedicationCatalogIdsByKey() {
+	const idsByKey = new Map();
+	for (const kind of ['vaccine', 'antiparasitic']) {
+		const directory = path.join(medicationDefaultsDir, kind);
+		if (!fs.existsSync(directory)) continue;
+
+		for (const fileName of fs.readdirSync(directory).filter((candidate) => candidate.endsWith('.json')).sort()) {
+			const filePath = path.join(directory, fileName);
+			const item = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+			if (typeof item.id !== 'string' || !isUuidV4(item.id)) throw new Error(`Medicamento padrão sem UUID v4: ${path.relative(scriptDir, filePath)}`);
+			if (typeof item.name !== 'string' || !item.name.trim()) throw new Error(`Medicamento padrão sem nome: ${path.relative(scriptDir, filePath)}`);
+			idsByKey.set(medicationCatalogKey(kind, normalizeMedicationCatalogName(item.name)), item.id);
+		}
+	}
+
+	return idsByKey;
+}
+
 function removeDatabaseFiles(databasePath) {
 	for (const suffix of ['', '-wal', '-shm']) {
 		const candidate = `${databasePath}${suffix}`;
@@ -190,6 +231,156 @@ function ensureMedicationCatalogExtensionColumn(database) {
 	if (columns.has('extension')) return;
 
 	database.exec("ALTER TABLE medication_catalog_items ADD COLUMN extension TEXT NOT NULL DEFAULT '{}'");
+}
+
+function convertMedicationCatalogIdsToUuidV4(database) {
+	const catalogRows = database
+		.prepare(
+			`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, hidden_at, created_at, updated_at
+			 FROM medication_catalog_items
+			 ORDER BY id`
+		)
+		.all();
+	if (catalogRows.length === 0) return;
+
+	const defaultMedicationCatalogIdsByKey = readDefaultMedicationCatalogIdsByKey();
+	const idByOldId = new Map();
+	const convertedCatalogRows = catalogRows.map((row) => {
+		const normalizedName = normalizeMedicationCatalogName(row.normalized_name);
+		const currentId = String(row.id);
+		const defaultId = row.origin === 'system' ? defaultMedicationCatalogIdsByKey.get(medicationCatalogKey(row.kind, normalizedName)) : null;
+		const id = defaultId ?? (isUuidV4(currentId) ? currentId : createMedicationCatalogUuid());
+		idByOldId.set(String(row.id), id);
+		return { ...row, id, extension: row.extension ?? '{}' };
+	});
+	const protocolItemRows = database
+		.prepare('SELECT id, protocol_id, catalog_item_id, sort_order, created_at, updated_at FROM medication_protocol_items ORDER BY id')
+		.all();
+	const imageCollectionRows = database
+		.prepare('SELECT id, entity_type, entity_id, primary_required, max_items, created_at, updated_at FROM image_collections ORDER BY id')
+		.all();
+
+	database.exec(`
+		DROP TABLE IF EXISTS medication_catalog_items_uuid;
+
+		CREATE TABLE medication_catalog_items_uuid (
+			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
+			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
+			name TEXT NOT NULL CHECK(length(trim(name)) > 0),
+			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) > 0),
+			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(length(trim(species)) > 0),
+			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) > 0),
+			manufacturer TEXT,
+			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
+			regions TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(regions)) > 0),
+			extension TEXT NOT NULL DEFAULT '{}' CHECK(length(trim(extension)) > 0),
+			hidden_at TEXT,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			UNIQUE(kind, normalized_name)
+		);
+	`);
+
+	const insertCatalogItem = database.prepare(`
+		INSERT INTO medication_catalog_items_uuid (
+			id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, hidden_at, created_at, updated_at
+		) VALUES (
+			@id, @kind, @name, @normalized_name, @species, @aliases, @manufacturer, @origin, @regions, @extension, @hidden_at, @created_at, @updated_at
+		)
+	`);
+	for (const row of convertedCatalogRows) insertCatalogItem.run(row);
+
+	database.exec(`
+		DROP INDEX IF EXISTS idx_medication_protocol_items_protocol_id;
+		DROP INDEX IF EXISTS idx_medication_protocol_items_catalog_item_id;
+		DROP INDEX IF EXISTS idx_medication_catalog_items_kind_name;
+		DROP INDEX IF EXISTS idx_medication_catalog_items_kind_normalized_name;
+		DROP INDEX IF EXISTS idx_medication_catalog_items_hidden_at;
+		DROP TABLE medication_protocol_items;
+		DROP TABLE medication_catalog_items;
+		ALTER TABLE medication_catalog_items_uuid RENAME TO medication_catalog_items;
+
+		CREATE TABLE medication_protocol_items (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			protocol_id INTEGER NOT NULL,
+			catalog_item_id TEXT NOT NULL CHECK(length(trim(catalog_item_id)) = 36 AND substr(lower(trim(catalog_item_id)), 15, 1) = '4' AND substr(lower(trim(catalog_item_id)), 20, 1) IN ('8', '9', 'a', 'b')),
+			sort_order INTEGER NOT NULL DEFAULT 0,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			FOREIGN KEY (protocol_id) REFERENCES medication_protocols(id) ON DELETE CASCADE,
+			FOREIGN KEY (catalog_item_id) REFERENCES medication_catalog_items(id) ON DELETE CASCADE,
+			UNIQUE(protocol_id, catalog_item_id)
+		);
+	`);
+
+	const insertProtocolItem = database.prepare(`
+		INSERT INTO medication_protocol_items (id, protocol_id, catalog_item_id, sort_order, created_at, updated_at)
+		VALUES (@id, @protocol_id, @catalog_item_id, @sort_order, @created_at, @updated_at)
+	`);
+	for (const row of protocolItemRows) {
+		const catalogItemId = idByOldId.get(String(row.catalog_item_id));
+		if (!catalogItemId) throw new Error(`Protocolo aponta para medicamento inexistente: ${row.catalog_item_id}`);
+		insertProtocolItem.run({ ...row, catalog_item_id: catalogItemId });
+	}
+
+	database.exec(`
+		DROP TABLE IF EXISTS image_collection_items_uuid;
+		DROP TABLE IF EXISTS image_collections_uuid;
+
+		CREATE TABLE image_collections_uuid (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			entity_type TEXT NOT NULL CHECK(length(trim(entity_type)) > 0),
+			entity_id TEXT NOT NULL CHECK(length(trim(entity_id)) > 0),
+			primary_required INTEGER NOT NULL DEFAULT 0 CHECK(primary_required IN (0, 1)),
+			max_items INTEGER CHECK(max_items IS NULL OR max_items > 0),
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			UNIQUE(entity_type, entity_id)
+		);
+	`);
+
+	const insertImageCollection = database.prepare(`
+		INSERT INTO image_collections_uuid (id, entity_type, entity_id, primary_required, max_items, created_at, updated_at)
+		VALUES (@id, @entity_type, @entity_id, @primary_required, @max_items, @created_at, @updated_at)
+	`);
+	for (const row of imageCollectionRows) {
+		const entityId = row.entity_type === 'medication_catalog_item' ? (idByOldId.get(String(row.entity_id)) ?? String(row.entity_id)) : String(row.entity_id);
+		insertImageCollection.run({ ...row, entity_id: entityId });
+	}
+
+	database.exec(`
+		CREATE TABLE image_collection_items_uuid (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			collection_id INTEGER NOT NULL,
+			image_blob BLOB NOT NULL CHECK(length(image_blob) > 0),
+			original_image_blob BLOB NOT NULL CHECK(length(original_image_blob) > 0),
+			description TEXT,
+			is_primary INTEGER NOT NULL DEFAULT 0 CHECK(is_primary IN (0, 1)),
+			sort_order INTEGER NOT NULL DEFAULT 0,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			FOREIGN KEY (collection_id) REFERENCES image_collections_uuid(id) ON DELETE CASCADE
+		);
+
+		INSERT INTO image_collection_items_uuid (
+			id, collection_id, image_blob, original_image_blob, description, is_primary, sort_order, created_at, updated_at
+		)
+		SELECT id, collection_id, image_blob, original_image_blob, description, is_primary, sort_order, created_at, updated_at
+		FROM image_collection_items
+		ORDER BY id;
+
+		DROP INDEX IF EXISTS idx_image_collections_entity;
+		DROP INDEX IF EXISTS idx_image_collection_items_collection_id;
+		DROP INDEX IF EXISTS idx_image_collection_items_primary;
+		DROP TABLE image_collection_items;
+		DROP TABLE image_collections;
+		ALTER TABLE image_collections_uuid RENAME TO image_collections;
+		ALTER TABLE image_collection_items_uuid RENAME TO image_collection_items;
+
+		CREATE INDEX IF NOT EXISTS idx_image_collections_entity ON image_collections(entity_type, entity_id);
+		CREATE INDEX IF NOT EXISTS idx_image_collection_items_collection_id ON image_collection_items(collection_id, sort_order, id);
+		CREATE UNIQUE INDEX IF NOT EXISTS idx_image_collection_items_primary ON image_collection_items(collection_id) WHERE is_primary = 1;
+	`);
 }
 
 function assertNoDeprecatedTreatmentTables(database, label) {
@@ -309,6 +500,7 @@ function migrateMedicationTables(database) {
 		`);
 	}
 	ensureMedicationCatalogExtensionColumn(database);
+	convertMedicationCatalogIdsToUuidV4(database);
 
 	database.exec(`
 		DROP INDEX IF EXISTS idx_preventive_catalog_items_kind_name;

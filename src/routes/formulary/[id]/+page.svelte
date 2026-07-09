@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import MedicationFormularyDetail from '$lib/components/medication/MedicationFormularyDetail.svelte';
 	import type { TreatmentCatalogItem } from '$lib/domain/treatment/treatment.js';
+	import { isUuidV4 } from '$lib/domain/shared/uuid.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import { loadTreatmentCatalogItem } from '$lib/services/treatment.service.js';
 
@@ -15,9 +16,9 @@
 		errorKey = null;
 		item = null;
 
-		const id = Number(page.params.id);
+		const id = page.params.id ?? '';
 
-		if (!Number.isInteger(id) || id <= 0) {
+		if (!isUuidV4(id)) {
 			errorKey = 'formulary.detailNotFound';
 			loading = false;
 			return;

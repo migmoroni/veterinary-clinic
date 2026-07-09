@@ -8,7 +8,7 @@
 	import { petSpeciesOptions, type KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
 	import { canDeleteMedicationProtocol, canEditMedicationProtocol, type MedicationProtocol, type MedicationProtocolDose, type MedicationProtocolKind, type MedicationValidityUnit } from '$lib/domain/medication/protocol.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
-	import { TREATMENT_KINDS, type TreatmentCatalogItem, type TreatmentKind } from '$lib/domain/treatment/treatment.js';
+	import { TREATMENT_KINDS, type TreatmentCatalogItem, type TreatmentCatalogItemId, type TreatmentKind } from '$lib/domain/treatment/treatment.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import { loadMedicationProtocols, removeProtocol, removeProtocolDose, saveProtocol, saveProtocolDose, setProtocolHidden } from '$lib/services/medication-protocol.service.js';
 	import { loadTreatmentCatalogItems } from '$lib/services/treatment.service.js';
@@ -31,7 +31,7 @@
 	let protocolDraftNames = $state<Record<number, string>>({});
 	let protocolDraftSpecies = $state<Record<number, KnownPetSpecies[]>>({});
 	let protocolDraftObservations = $state<Record<number, string>>({});
-	let protocolDraftItemIds = $state<Record<number, number[]>>({});
+	let protocolDraftItemIds = $state<Record<number, TreatmentCatalogItemId[]>>({});
 	let doseDraftDoses = $state<Record<number, string>>({});
 	let doseDraftValidityValues = $state<Record<number, number>>({});
 	let doseDraftValidityUnits = $state<Record<number, MedicationValidityUnit>>({});
@@ -42,7 +42,7 @@
 	let newProtocolName = $state('');
 	let newProtocolSpecies = $state<KnownPetSpecies[]>(defaultSpeciesDraft());
 	let newProtocolObservation = $state('');
-	let newProtocolItemIds = $state<number[]>([]);
+	let newProtocolItemIds = $state<TreatmentCatalogItemId[]>([]);
 	let loading = $state(true);
 	let saving = $state(false);
 	let protocolPendingRemoval = $state<MedicationProtocol | null>(null);
@@ -59,7 +59,7 @@
 	}
 
 	function sortedCatalogItems(source: CatalogItem[]): CatalogItem[] {
-		return [...source].sort((first, second) => first.name.localeCompare(second.name) || first.id - second.id);
+		return [...source].sort((first, second) => first.name.localeCompare(second.name) || first.id.localeCompare(second.id));
 	}
 
 	function inputValue(event: Event): string {
@@ -96,7 +96,7 @@
 		catalogItemsByKind = { ...catalogItemsByKind, [kind]: sortedTreatmentCatalogItems(items) };
 	}
 
-	function itemMatchesSpecies(kind: MedicationProtocolKind, itemId: number, species: KnownPetSpecies[]): boolean {
+	function itemMatchesSpecies(kind: MedicationProtocolKind, itemId: TreatmentCatalogItemId, species: KnownPetSpecies[]): boolean {
 		return catalogItems(kind).some((item) => item.id === itemId && speciesOverlap(item.species, species));
 	}
 
@@ -147,7 +147,7 @@
 		return sortedCatalogItems(catalogItems(protocol.kind).filter((item) => speciesOverlap(item.species, species)));
 	}
 
-	function visibleNewProtocolItemIds(): Set<number> {
+	function visibleNewProtocolItemIds(): Set<TreatmentCatalogItemId> {
 		return new Set(newProtocolSelectableItems.map((item) => item.id));
 	}
 
@@ -169,7 +169,7 @@
 		return protocolDraftObservations[protocol.id] ?? protocol.observation ?? '';
 	}
 
-	function selectedItemIds(protocol: MedicationProtocol): number[] {
+	function selectedItemIds(protocol: MedicationProtocol): TreatmentCatalogItemId[] {
 		return protocolDraftItemIds[protocol.id] ?? protocol.items.map((item) => item.id);
 	}
 
@@ -317,7 +317,7 @@
 		if (!saving) protocolPendingRemoval = null;
 	}
 
-	function toggleNewProtocolItem(itemId: number) {
+	function toggleNewProtocolItem(itemId: TreatmentCatalogItemId) {
 		if (!visibleNewProtocolItemIds().has(itemId)) return;
 		newProtocolItemIds = newProtocolItemIds.includes(itemId) ? newProtocolItemIds.filter((id) => id !== itemId) : [...newProtocolItemIds, itemId];
 	}
@@ -327,7 +327,7 @@
 		newProtocolItemIds = [];
 	}
 
-	function toggleProtocolItem(protocol: MedicationProtocol, itemId: number) {
+	function toggleProtocolItem(protocol: MedicationProtocol, itemId: TreatmentCatalogItemId) {
 		if (!canEditMedicationProtocol(protocol)) return;
 		const selected = selectedItemIds(protocol);
 		if (!selected.includes(itemId) && !itemMatchesSpecies(protocol.kind, itemId, protocolDraftSpeciesValue(protocol))) return;

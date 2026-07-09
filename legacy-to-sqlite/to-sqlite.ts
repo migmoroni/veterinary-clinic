@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { parse } from 'csv-parse/sync';
 import Database from 'better-sqlite3';
+import { stringifyMedicationCatalogExtension } from '../src/lib/domain/medication/catalog.js';
 import { defaultMedicationCatalogItems } from '../src/lib/domain/medication/default-catalog.js';
 import { defaultMedicationProtocols } from '../src/lib/domain/medication/default-protocol.js';
 
@@ -70,7 +71,7 @@ interface DoseSignal {
 }
 
 interface VaccineIdRow {
-  id: number;
+  id: string;
   normalized_name: string;
 }
 
@@ -225,6 +226,7 @@ const FIELD_LIMITS = {
   medicationRegionsJson: 1024,
   medicationAlias: 80,
   medicationAliasesJson: 1000,
+  medicationExtensionJson: 64000,
   medicationProtocolName: 120,
   medicationProtocolNormalizedName: 120,
   medicationProtocolDose: 120,
@@ -314,7 +316,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS image_collections (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     entity_type TEXT NOT NULL CHECK(${requiredTextCheck('entity_type', FIELD_LIMITS.imageCollectionEntityType)}),
-    entity_id INTEGER NOT NULL,
+    entity_id TEXT NOT NULL CHECK(length(trim(entity_id)) > 0),
     primary_required INTEGER NOT NULL DEFAULT 0 CHECK(primary_required IN (0, 1)),
     max_items INTEGER CHECK(max_items IS NULL OR max_items > 0),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -427,7 +429,7 @@ db.exec(`
   );
 
   CREATE TABLE IF NOT EXISTS medication_catalog_items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
     kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
     name TEXT NOT NULL,
     normalized_name TEXT NOT NULL,
@@ -436,6 +438,7 @@ db.exec(`
     manufacturer TEXT CHECK(${optionalTextCheck('manufacturer', FIELD_LIMITS.medicationManufacturer)}),
     origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
     regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.medicationRegionsJson)}),
+    extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.medicationExtensionJson)}),
     hidden_at TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
@@ -464,7 +467,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS medication_protocol_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     protocol_id INTEGER NOT NULL,
-    catalog_item_id INTEGER NOT NULL,
+    catalog_item_id TEXT NOT NULL CHECK(length(trim(catalog_item_id)) = 36 AND substr(lower(trim(catalog_item_id)), 15, 1) = '4' AND substr(lower(trim(catalog_item_id)), 20, 1) IN ('8', '9', 'a', 'b')),
     sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
@@ -613,8 +616,8 @@ const insertMedicalRecord = db.prepare(`
 `);
 
 const insertMedicationCatalogItem = db.prepare(`
-  INSERT OR IGNORE INTO medication_catalog_items (kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at)
-  VALUES (@kind, @name, @normalizedName, @species, @aliases, @manufacturer, @origin, @regions, CURRENT_TIMESTAMP)
+  INSERT OR IGNORE INTO medication_catalog_items (id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, updated_at)
+  VALUES (@id, @kind, @name, @normalizedName, @species, @aliases, @manufacturer, @origin, @regions, @extension, CURRENT_TIMESTAMP)
 `);
 
 const insertMedicationProtocol = db.prepare(`
@@ -713,6 +716,7 @@ const legacySpecificNobivacVaccineNames = new Set([
 
 for (const item of defaultMedicationCatalogItems) {
   insertMedicationCatalogItem.run({
+    id: item.id,
     kind: item.kind,
     name: item.name,
     normalizedName: normalizeVaccineName(item.name),
@@ -720,7 +724,8 @@ for (const item of defaultMedicationCatalogItems) {
     aliases: JSON.stringify(item.aliases),
     manufacturer: item.manufacturer,
     origin: item.origin,
-    regions: JSON.stringify(item.regions)
+    regions: JSON.stringify(item.regions),
+    extension: stringifyMedicationCatalogExtension(item.extension)
   });
 }
 
@@ -749,10 +754,9 @@ for (const [protocolSortOrder, protocol] of defaultMedicationProtocols.entries()
   const protocolId = (selectMedicationProtocolId.get({ kind: protocol.kind, normalizedName }) as ProtocolIdRow | undefined)?.id;
   if (!protocolId) throw new Error(`Não foi possível criar o protocolo padrão: ${protocol.name}`);
 
-  const catalogIds = protocol.kind === 'vaccine' ? vaccineIds : dewormerIds;
-  for (const [sortOrder, catalogItemName] of protocol.catalogItemNames.entries()) {
-    const catalogItemId = catalogIds.get(normalizeVaccineName(catalogItemName));
-    if (!catalogItemId) throw new Error(`Protocolo padrão aponta para item fora do catálogo oficial: ${catalogItemName}`);
+  const catalogIds = new Set((protocol.kind === 'vaccine' ? vaccineIds : dewormerIds).values());
+  for (const [sortOrder, catalogItemId] of protocol.catalogItemIds.entries()) {
+    if (!catalogIds.has(catalogItemId)) throw new Error(`Protocolo padrão aponta para item fora do catálogo oficial: ${catalogItemId}`);
     insertMedicationProtocolItem.run({ protocolId, catalogItemId, sortOrder });
   }
 
@@ -1000,7 +1004,7 @@ const legacyCsvAntiparasiticRules: LegacyCsvMedicationRule[] = [
 ];
 
 const assertLegacyRulesUseOfficialCatalog = () => {
-  const targets: Array<{ kind: 'vaccine' | 'antiparasitic'; rules: LegacyCsvMedicationRule[]; ids: Map<string, number> }> = [
+  const targets: Array<{ kind: 'vaccine' | 'antiparasitic'; rules: LegacyCsvMedicationRule[]; ids: Map<string, string> }> = [
     { kind: 'vaccine', rules: legacyCsvVaccineRules, ids: vaccineIds },
     { kind: 'antiparasitic', rules: legacyCsvAntiparasiticRules, ids: dewormerIds }
   ];

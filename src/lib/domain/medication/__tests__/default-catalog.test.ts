@@ -3,6 +3,7 @@ import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 import { medicationLeafletSectionIds, stringifyMedicationCatalogExtension } from '../catalog.js';
 import { localizedMedicationAliases } from '$lib/i18n/medication-aliases/index.js';
 import { defaultMedicationCatalogItems } from '../default-catalog.js';
+import { isUuidV4 } from '$lib/domain/shared/uuid.js';
 
 function vaccine(name: string) {
 	const item = defaultMedicationCatalogItems.find((candidate) => candidate.kind === 'vaccine' && candidate.name === name);
@@ -51,6 +52,15 @@ describe('default medication catalog', () => {
 
 	it('identifies every bundled product as system-owned', () => {
 		for (const item of defaultMedicationCatalogItems) expect(item.origin).toBe('system');
+	});
+
+	it('uses fixed UUID v4 ids for every bundled product', () => {
+		const ids = defaultMedicationCatalogItems.map((item) => item.id);
+
+		expect(new Set(ids).size).toBe(ids.length);
+		for (const item of defaultMedicationCatalogItems) {
+			expect(isUuidV4(item.id)).toBe(true);
+		}
 	});
 
 	it('provides manufacturer and market metadata for every bundled product', () => {

@@ -2,12 +2,13 @@ import type { MedicationCatalogExtension, MedicationCatalogOrigin, MedicationSpe
 import type { ImageCollectionItem } from '$lib/domain/image-collection/image-collection.js';
 
 export type TreatmentKind = 'vaccine' | 'antiparasitic';
+export type TreatmentCatalogItemId = string;
 export type TreatmentValidityUnit = 'days' | 'months' | 'years';
 
 export const TREATMENT_KINDS = ['vaccine', 'antiparasitic'] as const satisfies readonly TreatmentKind[];
 
 export interface TreatmentCatalogItem {
-	id: number;
+	id: TreatmentCatalogItemId;
 	kind: TreatmentKind;
 	name: string;
 	normalizedName: string;

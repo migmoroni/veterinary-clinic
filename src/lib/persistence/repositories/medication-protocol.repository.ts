@@ -3,6 +3,7 @@ import { parseMedicationSpecies, stringifyMedicationSpecies } from '$lib/domain/
 import { canEditMedicationProtocol, normalizeMedicationProtocolName } from '$lib/domain/medication/protocol.js';
 import { FIELD_LIMITS, assertTextLimit, nullableMultilineText } from '$lib/domain/shared/field-limits.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
+import type { TreatmentCatalogItemId } from '$lib/domain/treatment/treatment.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
 interface MedicationProtocolRow {
@@ -22,7 +23,7 @@ interface MedicationProtocolRow {
 
 interface MedicationProtocolItemRow {
 	protocol_id: number;
-	id: number;
+	id: TreatmentCatalogItemId;
 	name: string;
 	normalized_name: string;
 	species: string;
@@ -196,11 +197,11 @@ async function getProtocolById(id: number): Promise<MedicationProtocol> {
 	return protocols[0];
 }
 
-async function resolveProtocolItemIds(kind: MedicationProtocolKind, catalogItemIds: number[]): Promise<number[]> {
-	const uniqueIds = [...new Set(catalogItemIds.map((id) => Math.trunc(Number(id))).filter((id) => Number.isInteger(id) && id > 0))];
+async function resolveProtocolItemIds(kind: MedicationProtocolKind, catalogItemIds: TreatmentCatalogItemId[]): Promise<TreatmentCatalogItemId[]> {
+	const uniqueIds = [...new Set(catalogItemIds.map((id) => id.trim()).filter(Boolean))];
 	if (uniqueIds.length === 0) throw new Error('protocol_item_required');
 
-	const allowedRows = await selectMany<{ id: number }>(`SELECT id FROM medication_catalog_items WHERE kind = $1 AND id IN (${uniqueIds.map((_, index) => `$${index + 2}`).join(', ')})`, [kind, ...uniqueIds]);
+	const allowedRows = await selectMany<{ id: TreatmentCatalogItemId }>(`SELECT id FROM medication_catalog_items WHERE kind = $1 AND id IN (${uniqueIds.map((_, index) => `$${index + 2}`).join(', ')})`, [kind, ...uniqueIds]);
 	const allowedIds = new Set(allowedRows.map((row) => row.id));
 	const filteredIds = uniqueIds.filter((id) => allowedIds.has(id));
 	if (filteredIds.length === 0) throw new Error('protocol_item_required');
@@ -208,7 +209,7 @@ async function resolveProtocolItemIds(kind: MedicationProtocolKind, catalogItemI
 	return filteredIds;
 }
 
-async function saveProtocolItems(protocolId: number, catalogItemIds: number[]): Promise<void> {
+async function saveProtocolItems(protocolId: number, catalogItemIds: TreatmentCatalogItemId[]): Promise<void> {
 	await execute('DELETE FROM medication_protocol_items WHERE protocol_id = $1', [protocolId]);
 	for (const [index, catalogItemId] of catalogItemIds.entries()) {
 		await execute(

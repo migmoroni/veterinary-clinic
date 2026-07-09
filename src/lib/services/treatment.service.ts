@@ -1,5 +1,5 @@
 import type { ImageCollectionItemInput } from '$lib/domain/image-collection/image-collection.js';
-import { TREATMENT_KINDS, type PetTreatment, type PetTreatmentInput, type TreatmentCatalogItem, type TreatmentCatalogItemInput, type TreatmentKind } from '$lib/domain/treatment/treatment.js';
+import { TREATMENT_KINDS, type PetTreatment, type PetTreatmentInput, type TreatmentCatalogItem, type TreatmentCatalogItemId, type TreatmentCatalogItemInput, type TreatmentKind } from '$lib/domain/treatment/treatment.js';
 import { createTreatments, deleteTreatmentCatalogItem, getTreatmentCatalogItem, listTreatmentCatalogItems, saveTreatmentCatalogItem, saveTreatmentCatalogItemImages, setTreatmentCatalogItemHidden, setTreatmentValidityIgnored, softDeleteTreatment } from '$lib/persistence/repositories/treatment.repository.js';
 
 export async function saveNewTreatments(kind: TreatmentKind, petId: number, inputs: PetTreatmentInput[]): Promise<PetTreatment[]> {
@@ -18,7 +18,7 @@ export async function loadTreatmentCatalogItems(kind: TreatmentKind, includeHidd
 	return listTreatmentCatalogItems(kind, includeHidden, includeImages);
 }
 
-export async function loadTreatmentCatalogItem(id: number, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem | null> {
+export async function loadTreatmentCatalogItem(id: TreatmentCatalogItemId, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem | null> {
 	return getTreatmentCatalogItem(id, includeHidden, includeImages);
 }
 
@@ -27,18 +27,18 @@ export async function loadAllTreatmentCatalogItems(includeHidden = false, includ
 	return itemsByKind.flat().sort((first, second) => first.name.localeCompare(second.name));
 }
 
-export async function saveTreatmentCatalogName(kind: TreatmentKind, input: TreatmentCatalogItemInput, id?: number): Promise<TreatmentCatalogItem> {
+export async function saveTreatmentCatalogName(kind: TreatmentKind, input: TreatmentCatalogItemInput, id?: TreatmentCatalogItemId): Promise<TreatmentCatalogItem> {
 	return saveTreatmentCatalogItem(kind, input, id);
 }
 
-export async function setTreatmentCatalogNameHidden(kind: TreatmentKind, id: number, hidden: boolean): Promise<TreatmentCatalogItem> {
+export async function setTreatmentCatalogNameHidden(kind: TreatmentKind, id: TreatmentCatalogItemId, hidden: boolean): Promise<TreatmentCatalogItem> {
 	return setTreatmentCatalogItemHidden(kind, id, hidden);
 }
 
-export async function saveTreatmentCatalogImages(kind: TreatmentKind, id: number, images: ImageCollectionItemInput[]): Promise<TreatmentCatalogItem> {
+export async function saveTreatmentCatalogImages(kind: TreatmentKind, id: TreatmentCatalogItemId, images: ImageCollectionItemInput[]): Promise<TreatmentCatalogItem> {
 	return saveTreatmentCatalogItemImages(kind, id, images);
 }
 
-export async function removeTreatmentCatalogName(kind: TreatmentKind, id: number): Promise<void> {
+export async function removeTreatmentCatalogName(kind: TreatmentKind, id: TreatmentCatalogItemId): Promise<void> {
 	await deleteTreatmentCatalogItem(kind, id);
 }

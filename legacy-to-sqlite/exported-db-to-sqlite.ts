@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { randomUUID } from 'crypto';
 import { fileURLToPath } from 'url';
 import Database from 'better-sqlite3';
 
@@ -619,6 +620,7 @@ function synchronizeMedicalRecords(
 
 function ensureVaccineCatalogItem(output: Database.Database, vaccineName: string, species: string | null): string {
   const normalizedName = normalizeMedicationName(vaccineName);
+  const id = randomUUID();
   const existing = output.prepare(
     `SELECT id FROM medication_catalog_items WHERE kind = 'vaccine' AND normalized_name = ? LIMIT 1`
   ).get(normalizedName) as IdRow | undefined;
@@ -627,9 +629,9 @@ function ensureVaccineCatalogItem(output: Database.Database, vaccineName: string
   const supportedSpecies = species === 'feline' ? ['feline'] : species === 'canine' ? ['canine'] : ['canine', 'feline'];
   output.prepare(`
     INSERT INTO medication_catalog_items (
-      kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at
-    ) VALUES ('vaccine', ?, ?, ?, '[]', NULL, 'user', '[]', CURRENT_TIMESTAMP)
-  `).run(vaccineName, normalizedName, JSON.stringify(supportedSpecies));
+      id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at
+    ) VALUES (?, 'vaccine', ?, ?, ?, '[]', NULL, 'user', '[]', CURRENT_TIMESTAMP)
+  `).run(id, vaccineName, normalizedName, JSON.stringify(supportedSpecies));
   return normalizedName;
 }
 

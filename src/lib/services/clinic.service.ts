@@ -273,7 +273,7 @@ async function activeReferenceResultKeys(results: SearchResult[]): Promise<Set<s
 
 	for (const result of referenceResults) {
 		if (result.kind === 'breed' && breedIds.has(String(result.id))) activeKeys.add(searchResultKey(result));
-		if (result.kind === 'medication' && typeof result.id === 'number' && medicationIds.has(result.id)) activeKeys.add(searchResultKey(result));
+		if (result.kind === 'medication' && medicationIds.has(String(result.id))) activeKeys.add(searchResultKey(result));
 	}
 
 	return activeKeys;

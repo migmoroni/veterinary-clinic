@@ -1,5 +1,6 @@
 import type { DefaultMedicationKind, DefaultMedicationSpecies } from './default-catalog.js';
 import type { MedicationValidityUnit } from './protocol.js';
+import type { TreatmentCatalogItemId } from '$lib/domain/treatment/treatment.js';
 import vaccineProtocols from './defaults/vaccine-protocols.json' with { type: 'json' };
 import antiparasiticProtocols from './defaults/antiparasitic-protocols.json' with { type: 'json' };
 
@@ -16,7 +17,7 @@ export interface DefaultMedicationProtocol {
 	origin: 'system';
 	name: string;
 	species: DefaultMedicationSpecies[];
-	catalogItemNames: string[];
+	catalogItemIds: TreatmentCatalogItemId[];
 	observation: string | null;
 	doses: DefaultMedicationProtocolDose[];
 }

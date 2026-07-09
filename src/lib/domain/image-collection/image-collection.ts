@@ -25,11 +25,13 @@ export interface ImageCollectionItemInput {
 	isPrimary: boolean;
 }
 
+export type ImageCollectionEntityId = number | string;
+
 /** A generic image collection owned by an entity identified by type and id. */
 export interface ImageCollection {
 	id: number;
 	entityType: string;
-	entityId: number;
+	entityId: ImageCollectionEntityId;
 	primaryRequired: boolean;
 	maxItems: number | null;
 	items: ImageCollectionItem[];

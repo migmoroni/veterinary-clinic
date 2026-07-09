@@ -11,6 +11,7 @@ export interface DefaultMedicationCatalogImage {
 }
 
 export interface DefaultMedicationCatalogItem {
+	id: string;
 	kind: DefaultMedicationKind;
 	origin: 'system';
 	name: string;

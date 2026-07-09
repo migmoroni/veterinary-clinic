@@ -1,6 +1,7 @@
 import {
 	validateImageCollectionItems,
 	type ImageCollection,
+	type ImageCollectionEntityId,
 	type ImageCollectionItem,
 	type ImageCollectionItemInput,
 	type ImageCollectionPolicy
@@ -12,7 +13,7 @@ import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.j
 interface ImageCollectionRow {
 	id: number;
 	entity_type: string;
-	entity_id: number;
+	entity_id: ImageCollectionEntityId;
 	primary_required: number;
 	max_items: number | null;
 	created_at: string | null;
@@ -70,13 +71,14 @@ function normalizeItems(items: ImageCollectionItemInput[], policy: ImageCollecti
  *
  * @returns `null` when the entity has no collection record.
  */
-export async function getImageCollection(entityType: string, entityId: number): Promise<ImageCollection | null> {
+export async function getImageCollection(entityType: string, entityId: ImageCollectionEntityId): Promise<ImageCollection | null> {
 	const normalizedEntityType = requireLimitedText(entityType, FIELD_LIMITS.imageCollectionEntityType);
+	const normalizedEntityId = String(entityId);
 	const collection = await selectOne<ImageCollectionRow>(
 		`SELECT id, entity_type, entity_id, primary_required, max_items, created_at, updated_at
 		 FROM image_collections
 		 WHERE entity_type = $1 AND entity_id = $2`,
-		[normalizedEntityType, entityId]
+		[normalizedEntityType, normalizedEntityId]
 	);
 	if (!collection) return null;
 
@@ -106,11 +108,12 @@ export async function getImageCollection(entityType: string, entityId: number): 
  */
 export async function replaceImageCollection(
 	entityType: string,
-	entityId: number,
+	entityId: ImageCollectionEntityId,
 	items: ImageCollectionItemInput[],
 	policy: ImageCollectionPolicy
 ): Promise<ImageCollection> {
 	const normalizedEntityType = requireLimitedText(entityType, FIELD_LIMITS.imageCollectionEntityType);
+	const normalizedEntityId = String(entityId);
 	const normalizedItems = normalizeItems(items, policy);
 
 	await execute(
@@ -120,12 +123,12 @@ export async function replaceImageCollection(
 			primary_required = excluded.primary_required,
 			max_items = excluded.max_items,
 			updated_at = CURRENT_TIMESTAMP`,
-		[normalizedEntityType, entityId, policy.primaryRequired ? 1 : 0, policy.maxItems]
+		[normalizedEntityType, normalizedEntityId, policy.primaryRequired ? 1 : 0, policy.maxItems]
 	);
 
 	const collection = await selectOne<{ id: number }>(
 		'SELECT id FROM image_collections WHERE entity_type = $1 AND entity_id = $2',
-		[normalizedEntityType, entityId]
+		[normalizedEntityType, normalizedEntityId]
 	);
 	if (!collection) throw new Error('image_collection_save_failed');
 
@@ -140,12 +143,12 @@ export async function replaceImageCollection(
 		);
 	}
 
-	const saved = await getImageCollection(normalizedEntityType, entityId);
+	const saved = await getImageCollection(normalizedEntityType, normalizedEntityId);
 	if (!saved) throw new Error('image_collection_save_failed');
 	return saved;
 }
 
-export async function deleteImageCollection(entityType: string, entityId: number): Promise<void> {
+export async function deleteImageCollection(entityType: string, entityId: ImageCollectionEntityId): Promise<void> {
 	const normalizedEntityType = requireLimitedText(entityType, FIELD_LIMITS.imageCollectionEntityType);
-	await execute('DELETE FROM image_collections WHERE entity_type = $1 AND entity_id = $2', [normalizedEntityType, entityId]);
+	await execute('DELETE FROM image_collections WHERE entity_type = $1 AND entity_id = $2', [normalizedEntityType, String(entityId)]);
 }

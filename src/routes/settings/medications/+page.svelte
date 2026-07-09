@@ -9,7 +9,7 @@
 	import { petSpeciesOptions, type KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
 	import { canDeleteMedicationCatalogItem, canEditMedicationCatalogItem } from '$lib/domain/medication/catalog.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
-	import { TREATMENT_KINDS, type TreatmentCatalogItem, type TreatmentKind } from '$lib/domain/treatment/treatment.js';
+	import { TREATMENT_KINDS, type TreatmentCatalogItem, type TreatmentCatalogItemId, type TreatmentKind } from '$lib/domain/treatment/treatment.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import { loadTreatmentCatalogItems, removeTreatmentCatalogName, saveTreatmentCatalogImages, saveTreatmentCatalogName, setTreatmentCatalogNameHidden } from '$lib/services/treatment.service.js';
 	import Eye from '@lucide/svelte/icons/eye';
@@ -39,12 +39,12 @@
 	}
 
 	interface CatalogDrafts {
-		names: Record<number, string>;
-		aliases: Record<number, string>;
-		manufacturers: Record<number, string>;
-		regions: Record<number, string[]>;
-		species: Record<number, KnownPetSpecies[]>;
-		images: Record<number, ImageCollectionItemInput[]>;
+		names: Record<TreatmentCatalogItemId, string>;
+		aliases: Record<TreatmentCatalogItemId, string>;
+		manufacturers: Record<TreatmentCatalogItemId, string>;
+		regions: Record<TreatmentCatalogItemId, string[]>;
+		species: Record<TreatmentCatalogItemId, KnownPetSpecies[]>;
+		images: Record<TreatmentCatalogItemId, ImageCollectionItemInput[]>;
 	}
 
 	interface NewCatalogDraft {
@@ -56,7 +56,7 @@
 		images: ImageCollectionItemInput[];
 	}
 
-	type ImageManagerTarget = { kind: TreatmentKind; itemId: number | null };
+	type ImageManagerTarget = { kind: TreatmentKind; itemId: TreatmentCatalogItemId | null };
 
 	const treatmentKinds = TREATMENT_KINDS;
 
@@ -245,7 +245,7 @@
 		});
 	}
 
-	function removeCatalogDraft(kind: TreatmentKind, itemId: number) {
+	function removeCatalogDraft(kind: TreatmentKind, itemId: TreatmentCatalogItemId) {
 		const drafts = catalogDrafts[kind];
 		const { [itemId]: _removedName, ...names } = drafts.names;
 		const { [itemId]: _removedAliases, ...aliases } = drafts.aliases;
@@ -284,7 +284,7 @@
 		return primaryDraftImage(catalogDraftImages(kind, item));
 	}
 
-	function setCatalogDraftText(kind: TreatmentKind, itemId: number, field: 'names' | 'aliases' | 'manufacturers', value: string) {
+	function setCatalogDraftText(kind: TreatmentKind, itemId: TreatmentCatalogItemId, field: 'names' | 'aliases' | 'manufacturers', value: string) {
 		const drafts = catalogDrafts[kind];
 		setCatalogDrafts(kind, {
 			...drafts,
@@ -292,7 +292,7 @@
 		});
 	}
 
-	function setCatalogDraftRegions(kind: TreatmentKind, itemId: number, regions: string[]) {
+	function setCatalogDraftRegions(kind: TreatmentKind, itemId: TreatmentCatalogItemId, regions: string[]) {
 		const drafts = catalogDrafts[kind];
 		setCatalogDrafts(kind, {
 			...drafts,

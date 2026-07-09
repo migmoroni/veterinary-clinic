@@ -1,6 +1,6 @@
 import { FIELD_LIMITS, assertTextLimit, nullableMultilineText } from '$lib/domain/shared/field-limits.js';
 import type { ImageCollectionItemInput } from '$lib/domain/image-collection/image-collection.js';
-import type { PetTreatment, PetTreatmentInput, TreatmentCatalogItem, TreatmentCatalogItemInput, TreatmentKind, TreatmentValidityUnit } from '$lib/domain/treatment/treatment.js';
+import type { PetTreatment, PetTreatmentInput, TreatmentCatalogItem, TreatmentCatalogItemId, TreatmentCatalogItemInput, TreatmentKind, TreatmentValidityUnit } from '$lib/domain/treatment/treatment.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { deleteMedicationCatalogItem, ensureMedicationCatalogItem, getMedicationCatalogItemById, listMedicationCatalogItems, normalizeMedicationCatalogInput, saveMedicationCatalogItem, saveMedicationCatalogItemImages, setMedicationCatalogItemHidden } from '$lib/persistence/repositories/medication-catalog.repository.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
@@ -127,23 +127,23 @@ export async function listTreatmentCatalogItems(kind: TreatmentKind, includeHidd
 	return listMedicationCatalogItems(kind, includeHidden, includeImages);
 }
 
-export async function getTreatmentCatalogItem(id: number, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem | null> {
+export async function getTreatmentCatalogItem(id: TreatmentCatalogItemId, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem | null> {
 	return getMedicationCatalogItemById(id, includeHidden, includeImages);
 }
 
-export async function saveTreatmentCatalogItem(kind: TreatmentKind, input: TreatmentCatalogItemInput, id?: number): Promise<TreatmentCatalogItem> {
+export async function saveTreatmentCatalogItem(kind: TreatmentKind, input: TreatmentCatalogItemInput, id?: TreatmentCatalogItemId): Promise<TreatmentCatalogItem> {
 	return saveMedicationCatalogItem(kind, input, id);
 }
 
-export async function setTreatmentCatalogItemHidden(kind: TreatmentKind, id: number, hidden: boolean): Promise<TreatmentCatalogItem> {
+export async function setTreatmentCatalogItemHidden(kind: TreatmentKind, id: TreatmentCatalogItemId, hidden: boolean): Promise<TreatmentCatalogItem> {
 	return setMedicationCatalogItemHidden(kind, id, hidden);
 }
 
-export async function saveTreatmentCatalogItemImages(kind: TreatmentKind, id: number, images: ImageCollectionItemInput[]): Promise<TreatmentCatalogItem> {
+export async function saveTreatmentCatalogItemImages(kind: TreatmentKind, id: TreatmentCatalogItemId, images: ImageCollectionItemInput[]): Promise<TreatmentCatalogItem> {
 	return saveMedicationCatalogItemImages(kind, id, images);
 }
 
-export async function deleteTreatmentCatalogItem(kind: TreatmentKind, id: number): Promise<void> {
+export async function deleteTreatmentCatalogItem(kind: TreatmentKind, id: TreatmentCatalogItemId): Promise<void> {
 	await deleteMedicationCatalogItem(kind, id);
 }
 
