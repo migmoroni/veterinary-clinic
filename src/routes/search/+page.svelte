@@ -21,7 +21,7 @@
 	let query = $state('');
 	let results = $state<SearchResult[]>([]);
 	let recentResults = $state<SearchResult[]>([]);
-	let selectedKinds = $state<SearchResultKind[]>([]);
+	let selectedKind = $state<SearchResultKind | null>(null);
 	let error = $state<string | null>(null);
 	let contactDialogOpen = $state(false);
 	let contactDialogOwnerName = $state('');
@@ -30,9 +30,9 @@
 	let resultsListHasMoreBelow = $state(false);
 	let searchRequestId = 0;
 
-	const hasKindFilters = $derived(selectedKinds.length > 0);
-	const filteredResults = $derived(hasKindFilters ? results.filter((result) => selectedKinds.includes(result.kind)) : results);
-	const filteredRecentResults = $derived(hasKindFilters ? recentResults.filter((result) => selectedKinds.includes(result.kind)) : recentResults);
+	const hasKindFilter = $derived(selectedKind !== null);
+	const filteredResults = $derived(hasKindFilter ? results.filter((result) => result.kind === selectedKind) : results);
+	const filteredRecentResults = $derived(hasKindFilter ? recentResults.filter((result) => result.kind === selectedKind) : recentResults);
 	const showRecentResults = $derived(query.trim().length === 0 && filteredRecentResults.length > 0);
 	const visibleResults = $derived(showRecentResults ? filteredRecentResults : filteredResults);
 
@@ -95,7 +95,7 @@
 
 	async function runSearch() {
 		const requestId = ++searchRequestId;
-		const kinds = [...selectedKinds];
+		const kinds = selectedKind ? [selectedKind] : [];
 		try {
 			const nextResults = await searchEverywhere(query, kinds);
 			if (requestId !== searchRequestId) return;
@@ -108,13 +108,13 @@
 	}
 
 	function toggleKindFilter(kind: SearchResultKind) {
-		selectedKinds = selectedKinds.includes(kind) ? selectedKinds.filter((item) => item !== kind) : [...selectedKinds, kind];
+		selectedKind = selectedKind === kind ? null : kind;
 		void runSearch();
 	}
 
 	function kindFilterClass(kind: SearchResultKind): string {
 		const baseClass = 'inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium shadow-sm transition';
-		return selectedKinds.includes(kind) ? `${baseClass} border-primary bg-primary text-primary-foreground` : `${baseClass} border-border bg-card text-foreground hover:bg-accent`;
+		return selectedKind === kind ? `${baseClass} border-primary bg-primary text-primary-foreground` : `${baseClass} border-border bg-card text-foreground hover:bg-accent`;
 	}
 
 	function persistableSearchResult(result: SearchResult): SearchResult {
@@ -232,7 +232,7 @@
 		<span class="mr-1 text-sm font-medium">{t('search.filters')}</span>
 		{#each searchFilterKinds as kind}
 			<label class={kindFilterClass(kind)}>
-				<input class="size-4 accent-primary" type="checkbox" checked={selectedKinds.includes(kind)} onchange={() => toggleKindFilter(kind)} />
+				<input class="size-4 accent-primary" type="checkbox" checked={selectedKind === kind} onchange={() => toggleKindFilter(kind)} />
 				<span>{kindLabel(kind)}</span>
 			</label>
 		{/each}
