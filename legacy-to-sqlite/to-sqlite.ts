@@ -4,7 +4,7 @@ import { parse } from 'csv-parse/sync';
 import Database from 'better-sqlite3';
 import { stringifyMedicationCatalogExtension } from '../src/lib/domain/medication/catalog.js';
 import { defaultMedicationCatalogItems } from '../src/lib/domain/medication/default-catalog.js';
-import { defaultMedicationProtocols } from '../src/lib/domain/medication/default-protocol.js';
+import { defaultTreatmentProtocols } from '../src/lib/domain/treatment/default-protocol.js';
 
 type CsvRow = Record<string, string | undefined>;
 type OwnerContactKind = 'phone' | 'mobile' | 'email' | 'other';
@@ -76,7 +76,7 @@ interface VaccineIdRow {
 }
 
 interface ProtocolIdRow {
-  id: number;
+  id: string;
 }
 
 interface ImportedVaccinationReference {
@@ -227,10 +227,10 @@ const FIELD_LIMITS = {
   medicationAlias: 80,
   medicationAliasesJson: 1000,
   medicationExtensionJson: 64000,
-  medicationProtocolName: 120,
-  medicationProtocolNormalizedName: 120,
-  medicationProtocolDose: 120,
-  medicationProtocolObservation: 2000,
+  treatmentProtocolName: 120,
+  treatmentProtocolNormalizedName: 120,
+  treatmentProtocolDose: 120,
+  treatmentProtocolObservation: 2000,
   searchQuery: 160
 } as const;
 
@@ -243,9 +243,9 @@ db.exec(`
   DROP TABLE IF EXISTS pet_antiparasitic_treatments;
   DROP TABLE IF EXISTS pet_dewormings;
   DROP TABLE IF EXISTS pet_vaccinations;
-  DROP TABLE IF EXISTS medication_protocol_doses;
-  DROP TABLE IF EXISTS medication_protocol_items;
-  DROP TABLE IF EXISTS medication_protocols;
+  DROP TABLE IF EXISTS treatment_protocol_doses;
+  DROP TABLE IF EXISTS treatment_protocol_items;
+  DROP TABLE IF EXISTS treatment_protocols;
   DROP TABLE IF EXISTS medication_catalog_items;
   DROP TABLE IF EXISTS backup_history;
   DROP TABLE IF EXISTS app_settings;
@@ -447,45 +447,44 @@ db.exec(`
     CHECK((kind = 'vaccine' AND ${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedName)}) OR (kind = 'antiparasitic' AND ${requiredTextCheck('normalized_name', FIELD_LIMITS.antiparasiticNormalizedName)}))
   );
 
-  CREATE TABLE IF NOT EXISTS medication_protocols (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+  CREATE TABLE IF NOT EXISTS treatment_protocols (
+    id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
     kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
     origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
-    name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.medicationProtocolName)}),
-    normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.medicationProtocolNormalizedName)}),
+    name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.treatmentProtocolName)}),
+    normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.treatmentProtocolNormalizedName)}),
     species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.medicationSpeciesJson)}),
-    observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.medicationProtocolObservation)}),
+    observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.treatmentProtocolObservation)}),
     sort_order INTEGER NOT NULL DEFAULT 0,
     hidden_at TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
     deleted_at TEXT,
-    purge_after TEXT,
-    UNIQUE(kind, normalized_name)
+    purge_after TEXT
   );
 
-  CREATE TABLE IF NOT EXISTS medication_protocol_items (
+  CREATE TABLE IF NOT EXISTS treatment_protocol_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    protocol_id INTEGER NOT NULL,
+    protocol_id TEXT NOT NULL CHECK(length(trim(protocol_id)) = 36 AND substr(lower(trim(protocol_id)), 15, 1) = '4' AND substr(lower(trim(protocol_id)), 20, 1) IN ('8', '9', 'a', 'b')),
     catalog_item_id TEXT NOT NULL CHECK(length(trim(catalog_item_id)) = 36 AND substr(lower(trim(catalog_item_id)), 15, 1) = '4' AND substr(lower(trim(catalog_item_id)), 20, 1) IN ('8', '9', 'a', 'b')),
     sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
-    FOREIGN KEY (protocol_id) REFERENCES medication_protocols (id) ON DELETE CASCADE,
+    FOREIGN KEY (protocol_id) REFERENCES treatment_protocols (id) ON DELETE CASCADE,
     FOREIGN KEY (catalog_item_id) REFERENCES medication_catalog_items (id) ON DELETE CASCADE,
     UNIQUE(protocol_id, catalog_item_id)
   );
 
-  CREATE TABLE IF NOT EXISTS medication_protocol_doses (
+  CREATE TABLE IF NOT EXISTS treatment_protocol_doses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    protocol_id INTEGER NOT NULL,
-    dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', FIELD_LIMITS.medicationProtocolDose)}),
+    protocol_id TEXT NOT NULL CHECK(length(trim(protocol_id)) = 36 AND substr(lower(trim(protocol_id)), 15, 1) = '4' AND substr(lower(trim(protocol_id)), 20, 1) IN ('8', '9', 'a', 'b')),
+    dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', FIELD_LIMITS.treatmentProtocolDose)}),
     validity_value INTEGER NOT NULL CHECK(validity_value > 0),
     validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months', 'years')),
     sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
-    FOREIGN KEY (protocol_id) REFERENCES medication_protocols (id) ON DELETE CASCADE,
+    FOREIGN KEY (protocol_id) REFERENCES treatment_protocols (id) ON DELETE CASCADE,
     CHECK((validity_unit = 'days' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityDays, FIELD_LIMITS.antiparasiticTreatmentValidityDays)}) OR (validity_unit = 'months' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityMonths, FIELD_LIMITS.antiparasiticTreatmentValidityMonths)}) OR (validity_unit = 'years' AND validity_value <= ${Math.max(FIELD_LIMITS.vaccineValidityYears, FIELD_LIMITS.antiparasiticTreatmentValidityYears)}))
   );
 
@@ -553,13 +552,13 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_kind_name ON medication_catalog_items(kind, name COLLATE NOCASE);
   CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_kind_normalized_name ON medication_catalog_items(kind, normalized_name);
   CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_hidden_at ON medication_catalog_items(hidden_at);
-  CREATE INDEX IF NOT EXISTS idx_medication_protocols_kind_name ON medication_protocols(kind, name COLLATE NOCASE);
-  CREATE INDEX IF NOT EXISTS idx_medication_protocols_kind_normalized_name ON medication_protocols(kind, normalized_name);
-  CREATE INDEX IF NOT EXISTS idx_medication_protocols_hidden_at ON medication_protocols(hidden_at);
-  CREATE INDEX IF NOT EXISTS idx_medication_protocols_deleted_at ON medication_protocols(deleted_at);
-  CREATE INDEX IF NOT EXISTS idx_medication_protocol_items_protocol_id ON medication_protocol_items(protocol_id);
-  CREATE INDEX IF NOT EXISTS idx_medication_protocol_items_catalog_item_id ON medication_protocol_items(catalog_item_id);
-  CREATE INDEX IF NOT EXISTS idx_medication_protocol_doses_protocol_id ON medication_protocol_doses(protocol_id);
+  CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_name ON treatment_protocols(kind, name COLLATE NOCASE);
+  CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_normalized_name ON treatment_protocols(kind, normalized_name);
+  CREATE INDEX IF NOT EXISTS idx_treatment_protocols_hidden_at ON treatment_protocols(hidden_at);
+  CREATE INDEX IF NOT EXISTS idx_treatment_protocols_deleted_at ON treatment_protocols(deleted_at);
+  CREATE INDEX IF NOT EXISTS idx_treatment_protocol_items_protocol_id ON treatment_protocol_items(protocol_id);
+  CREATE INDEX IF NOT EXISTS idx_treatment_protocol_items_catalog_item_id ON treatment_protocol_items(catalog_item_id);
+  CREATE INDEX IF NOT EXISTS idx_treatment_protocol_doses_protocol_id ON treatment_protocol_doses(protocol_id);
   CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_pet_id ON pet_vaccinations(pet_id);
   CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_applied_at ON pet_vaccinations(applied_at);
   CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_vaccine_normalized_name ON pet_vaccinations(vaccine_normalized_name);
@@ -620,24 +619,24 @@ const insertMedicationCatalogItem = db.prepare(`
   VALUES (@id, @kind, @name, @normalizedName, @species, @aliases, @manufacturer, @origin, @regions, @extension, CURRENT_TIMESTAMP)
 `);
 
-const insertMedicationProtocol = db.prepare(`
-  INSERT OR IGNORE INTO medication_protocols (kind, origin, name, normalized_name, species, observation, sort_order, updated_at)
-  VALUES (@kind, @origin, @name, @normalizedName, @species, @observation, @sortOrder, CURRENT_TIMESTAMP)
+const insertTreatmentProtocol = db.prepare(`
+  INSERT OR IGNORE INTO treatment_protocols (id, kind, origin, name, normalized_name, species, observation, sort_order, updated_at)
+  VALUES (@id, @kind, @origin, @name, @normalizedName, @species, @observation, @sortOrder, CURRENT_TIMESTAMP)
 `);
 
-const selectMedicationProtocolId = db.prepare(`
-  SELECT id FROM medication_protocols
-  WHERE kind = @kind AND normalized_name = @normalizedName
+const selectTreatmentProtocolId = db.prepare(`
+  SELECT id FROM treatment_protocols
+  WHERE id = @id
   LIMIT 1
 `);
 
-const insertMedicationProtocolItem = db.prepare(`
-  INSERT OR IGNORE INTO medication_protocol_items (protocol_id, catalog_item_id, sort_order, updated_at)
+const insertTreatmentProtocolItem = db.prepare(`
+  INSERT OR IGNORE INTO treatment_protocol_items (protocol_id, catalog_item_id, sort_order, updated_at)
   VALUES (@protocolId, @catalogItemId, @sortOrder, CURRENT_TIMESTAMP)
 `);
 
-const insertMedicationProtocolDose = db.prepare(`
-  INSERT INTO medication_protocol_doses (protocol_id, dose, validity_value, validity_unit, sort_order, updated_at)
+const insertTreatmentProtocolDose = db.prepare(`
+  INSERT INTO treatment_protocol_doses (protocol_id, dose, validity_value, validity_unit, sort_order, updated_at)
   VALUES (@protocolId, @dose, @validityValue, @validityUnit, @sortOrder, CURRENT_TIMESTAMP)
 `);
 
@@ -739,9 +738,10 @@ const dewormerIds = new Map(
   (db.prepare("SELECT id, normalized_name FROM medication_catalog_items WHERE kind = 'antiparasitic'").all() as VaccineIdRow[]).map((dewormer) => [normalizeDewormerName(dewormer.normalized_name), dewormer.id])
 );
 
-for (const [protocolSortOrder, protocol] of defaultMedicationProtocols.entries()) {
+for (const [protocolSortOrder, protocol] of defaultTreatmentProtocols.entries()) {
   const normalizedName = normalizeVaccineName(protocol.name);
-  insertMedicationProtocol.run({
+  insertTreatmentProtocol.run({
+    id: protocol.id,
     kind: protocol.kind,
     origin: protocol.origin,
     name: protocol.name,
@@ -751,17 +751,17 @@ for (const [protocolSortOrder, protocol] of defaultMedicationProtocols.entries()
     sortOrder: protocolSortOrder
   });
 
-  const protocolId = (selectMedicationProtocolId.get({ kind: protocol.kind, normalizedName }) as ProtocolIdRow | undefined)?.id;
+  const protocolId = (selectTreatmentProtocolId.get({ id: protocol.id }) as ProtocolIdRow | undefined)?.id;
   if (!protocolId) throw new Error(`Não foi possível criar o protocolo padrão: ${protocol.name}`);
 
   const catalogIds = new Set((protocol.kind === 'vaccine' ? vaccineIds : dewormerIds).values());
   for (const [sortOrder, catalogItemId] of protocol.catalogItemIds.entries()) {
     if (!catalogIds.has(catalogItemId)) throw new Error(`Protocolo padrão aponta para item fora do catálogo oficial: ${catalogItemId}`);
-    insertMedicationProtocolItem.run({ protocolId, catalogItemId, sortOrder });
+    insertTreatmentProtocolItem.run({ protocolId, catalogItemId, sortOrder });
   }
 
   for (const [sortOrder, dose] of protocol.doses.entries()) {
-    insertMedicationProtocolDose.run({
+    insertTreatmentProtocolDose.run({
       protocolId,
       dose: dose.dose,
       validityValue: dose.validityValue,
@@ -1662,9 +1662,9 @@ const printDatabaseReport = () => {
   console.log(`- pet_owners: ${countRows('pet_owners')}`);
   console.log(`- medical_records: ${countRows('medical_records')}`);
   console.log(`- medication_catalog_items (vacinas): ${countWhere('medication_catalog_items', "kind = 'vaccine'")}`);
-  console.log(`- medication_protocols: ${countRows('medication_protocols')}`);
-  console.log(`- medication_protocol_items: ${countRows('medication_protocol_items')}`);
-  console.log(`- medication_protocol_doses: ${countRows('medication_protocol_doses')}`);
+  console.log(`- treatment_protocols: ${countRows('treatment_protocols')}`);
+  console.log(`- treatment_protocol_items: ${countRows('treatment_protocol_items')}`);
+  console.log(`- treatment_protocol_doses: ${countRows('treatment_protocol_doses')}`);
   console.log(`- pet_vaccinations: ${countRows('pet_vaccinations')}`);
   console.log(`- medication_catalog_items (antiparasitários): ${countWhere('medication_catalog_items', "kind = 'antiparasitic'")}`);
   console.log(`- pet_antiparasitic_treatments: ${countRows('pet_antiparasitic_treatments')}`);

@@ -1,7 +1,8 @@
 import type Database from '@tauri-apps/plugin-sql';
 import { defaultMedicationCatalogItems, type DefaultMedicationCatalogImage } from '$lib/domain/medication/default-catalog.js';
 import { stringifyMedicationCatalogExtension } from '$lib/domain/medication/catalog.js';
-import { defaultMedicationProtocols } from '$lib/domain/medication/default-protocol.js';
+import { defaultTreatmentProtocols } from '$lib/domain/treatment/default-protocol.js';
+import { stringifyTreatmentSpecies } from '$lib/domain/treatment/species.js';
 import { defaultBreedReferenceItems, type DefaultBreedReferenceImage } from '$lib/domain/pet/default-breed-reference.js';
 import { stringifyBreedReferenceExtension, stringifyBreedSexRange } from '$lib/domain/pet/breed-reference.js';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
@@ -49,6 +50,11 @@ interface BreedReferenceRow {
 	id: number;
 }
 
+interface TreatmentProtocolRow {
+	id: string;
+	origin: string;
+}
+
 interface ImageCollectionRow {
 	id: number;
 }
@@ -74,10 +80,15 @@ function requiredTextCheck(column: string, maxLength: number): string {
 	return `length(trim(${column})) BETWEEN 1 AND ${maxLength}`;
 }
 
+function uuidV4TextCheck(column: string): string {
+	return `length(trim(${column})) = 36 AND substr(lower(trim(${column})), 15, 1) = '4' AND substr(lower(trim(${column})), 20, 1) IN ('8', '9', 'a', 'b')`;
+}
+
 interface RunMigrationsOptions {
 	seedDefaultData?: boolean;
 	createIndexes?: boolean;
 	syncDefaultMedicationData?: boolean;
+	syncDefaultTreatmentProtocolData?: boolean;
 	syncDefaultBreedReferenceData?: boolean;
 }
 
@@ -357,21 +368,47 @@ async function isBreedReferenceCatalogEmpty(database: Database): Promise<boolean
 	return Number(rows[0]?.total ?? 0) === 0;
 }
 
-async function seedDefaultMedicationProtocols(database: Database): Promise<void> {
-	for (const protocol of defaultMedicationProtocols) {
+async function hasSystemTreatmentProtocols(database: Database): Promise<boolean> {
+	const rows = await database.select<CountRow[]>("SELECT COUNT(*) AS total FROM treatment_protocols WHERE origin = 'system'");
+	return Number(rows[0]?.total ?? 0) > 0;
+}
+
+async function syncDefaultTreatmentProtocols(database: Database): Promise<void> {
+	for (const protocol of defaultTreatmentProtocols) {
 		const normalizedName = normalizeMedicationCatalogName(protocol.name);
+		const species = stringifyTreatmentSpecies(protocol.species);
 		await database.execute(
-			`INSERT OR IGNORE INTO medication_protocols (kind, origin, name, normalized_name, species, observation, sort_order, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, $6, COALESCE((SELECT MAX(sort_order) + 1 FROM medication_protocols WHERE kind = $1), 0), CURRENT_TIMESTAMP)`,
-			[protocol.kind, protocol.origin, protocol.name, normalizedName, JSON.stringify(protocol.species), protocol.observation]
+			`INSERT INTO treatment_protocols (id, kind, origin, name, normalized_name, species, observation, sort_order, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE((SELECT MAX(sort_order) + 1 FROM treatment_protocols WHERE kind = $2), 0), CURRENT_TIMESTAMP)
+			 ON CONFLICT(id) DO NOTHING`,
+			[protocol.id, protocol.kind, protocol.origin, protocol.name, normalizedName, species, protocol.observation]
 		);
 
-		const protocolRows = await database.select<{ id: number }[]>(
-			'SELECT id FROM medication_protocols WHERE kind = $1 AND normalized_name = $2 LIMIT 1',
-			[protocol.kind, normalizedName]
+		const protocolRows = await database.select<TreatmentProtocolRow[]>(
+			`SELECT id, origin FROM treatment_protocols WHERE id = $1 LIMIT 1`,
+			[protocol.id]
 		);
-		const protocolId = protocolRows[0]?.id;
-		if (!protocolId) throw new Error(`default_protocol_not_found:${protocol.name}`);
+		const storedProtocol = protocolRows[0];
+		if (!storedProtocol) throw new Error(`default_protocol_not_found:${protocol.name}`);
+		if (storedProtocol.origin !== 'system') continue;
+
+		await database.execute(
+			`UPDATE treatment_protocols
+			 SET name = $2,
+				species = $3,
+				observation = $4,
+				updated_at = CURRENT_TIMESTAMP
+			 WHERE id = $1
+				AND origin = 'system'
+				AND (
+					name <> $2
+					OR species <> $3
+					OR COALESCE(observation, '') <> COALESCE($4, '')
+				)`,
+			[storedProtocol.id, protocol.name, species, protocol.observation]
+		);
+
+		await database.execute('DELETE FROM treatment_protocol_items WHERE protocol_id = $1', [storedProtocol.id]);
 
 		for (const [sortOrder, catalogItemId] of protocol.catalogItemIds.entries()) {
 			const catalogRows = await database.select<{ id: string }[]>(
@@ -381,20 +418,19 @@ async function seedDefaultMedicationProtocols(database: Database): Promise<void>
 			if (!catalogRows[0]) throw new Error(`default_protocol_catalog_item_not_found:${catalogItemId}`);
 
 			await database.execute(
-				`INSERT OR IGNORE INTO medication_protocol_items (protocol_id, catalog_item_id, sort_order, updated_at)
+				`INSERT INTO treatment_protocol_items (protocol_id, catalog_item_id, sort_order, updated_at)
 				 VALUES ($1, $2, $3, CURRENT_TIMESTAMP)`,
-				[protocolId, catalogItemId, sortOrder]
+				[storedProtocol.id, catalogItemId, sortOrder]
 			);
 		}
 
+		await database.execute('DELETE FROM treatment_protocol_doses WHERE protocol_id = $1', [storedProtocol.id]);
+
 		for (const [sortOrder, dose] of protocol.doses.entries()) {
 			await database.execute(
-				`INSERT INTO medication_protocol_doses (protocol_id, dose, validity_value, validity_unit, sort_order, updated_at)
-				 SELECT $1, $2, $3, $4, $5, CURRENT_TIMESTAMP
-				 WHERE NOT EXISTS (
-					SELECT 1 FROM medication_protocol_doses WHERE protocol_id = $1 AND sort_order = $5
-				 )`,
-				[protocolId, dose.dose, dose.validityValue, dose.validityUnit, sortOrder]
+				`INSERT INTO treatment_protocol_doses (protocol_id, dose, validity_value, validity_unit, sort_order, updated_at)
+				 VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`,
+				[storedProtocol.id, dose.dose, dose.validityValue, dose.validityUnit, sortOrder]
 			);
 		}
 	}
@@ -624,7 +660,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 
 		await database.execute(`
 			CREATE TABLE IF NOT EXISTS medication_catalog_items (
-				id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
+				id TEXT PRIMARY KEY CHECK(${uuidV4TextCheck('id')}),
 			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
 			name TEXT NOT NULL,
 			normalized_name TEXT NOT NULL,
@@ -644,12 +680,12 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	`);
 
 	await database.execute(`
-		CREATE TABLE IF NOT EXISTS medication_protocols (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
+		CREATE TABLE IF NOT EXISTS treatment_protocols (
+			id TEXT PRIMARY KEY CHECK(${uuidV4TextCheck('id')}),
 			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
 			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
-			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.medicationProtocolName)}),
-			normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.medicationProtocolNormalizedName)}),
+			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.treatmentProtocolName)}),
+			normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.treatmentProtocolNormalizedName)}),
 			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.medicationSpeciesJson)}),
 			observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.treatmentObservation)}),
 			sort_order INTEGER NOT NULL DEFAULT 0,
@@ -657,36 +693,35 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
 			deleted_at TEXT,
-			purge_after TEXT,
-			UNIQUE(kind, normalized_name)
+			purge_after TEXT
 		)
 	`);
 
 		await database.execute(`
-			CREATE TABLE IF NOT EXISTS medication_protocol_items (
+			CREATE TABLE IF NOT EXISTS treatment_protocol_items (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				protocol_id INTEGER NOT NULL,
-				catalog_item_id TEXT NOT NULL CHECK(length(trim(catalog_item_id)) = 36 AND substr(lower(trim(catalog_item_id)), 15, 1) = '4' AND substr(lower(trim(catalog_item_id)), 20, 1) IN ('8', '9', 'a', 'b')),
+				protocol_id TEXT NOT NULL CHECK(${uuidV4TextCheck('protocol_id')}),
+				catalog_item_id TEXT NOT NULL CHECK(${uuidV4TextCheck('catalog_item_id')}),
 			sort_order INTEGER NOT NULL DEFAULT 0,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
-			FOREIGN KEY (protocol_id) REFERENCES medication_protocols(id) ON DELETE CASCADE,
+			FOREIGN KEY (protocol_id) REFERENCES treatment_protocols(id) ON DELETE CASCADE,
 			FOREIGN KEY (catalog_item_id) REFERENCES medication_catalog_items(id) ON DELETE CASCADE,
 			UNIQUE(protocol_id, catalog_item_id)
 		)
 	`);
 
 	await database.execute(`
-		CREATE TABLE IF NOT EXISTS medication_protocol_doses (
+		CREATE TABLE IF NOT EXISTS treatment_protocol_doses (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			protocol_id INTEGER NOT NULL,
+			protocol_id TEXT NOT NULL CHECK(${uuidV4TextCheck('protocol_id')}),
 			dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', FIELD_LIMITS.treatmentDose)}),
 			validity_value INTEGER NOT NULL CHECK(validity_value > 0),
 			validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months', 'years')),
 			sort_order INTEGER NOT NULL DEFAULT 0,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
-			FOREIGN KEY (protocol_id) REFERENCES medication_protocols(id) ON DELETE CASCADE,
+			FOREIGN KEY (protocol_id) REFERENCES treatment_protocols(id) ON DELETE CASCADE,
 			CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.treatmentValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.treatmentValidityMonths}) OR (validity_unit = 'years' AND validity_value <= ${FIELD_LIMITS.treatmentValidityYears}))
 		)
 	`);
@@ -748,13 +783,13 @@ export async function createCurrentIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_kind_name ON medication_catalog_items(kind, name COLLATE NOCASE)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_kind_normalized_name ON medication_catalog_items(kind, normalized_name)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_hidden_at ON medication_catalog_items(hidden_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_protocols_kind_name ON medication_protocols(kind, name COLLATE NOCASE)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_protocols_kind_normalized_name ON medication_protocols(kind, normalized_name)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_protocols_hidden_at ON medication_protocols(hidden_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_protocols_deleted_at ON medication_protocols(deleted_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_protocol_items_protocol_id ON medication_protocol_items(protocol_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_protocol_items_catalog_item_id ON medication_protocol_items(catalog_item_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_protocol_doses_protocol_id ON medication_protocol_doses(protocol_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_name ON treatment_protocols(kind, name COLLATE NOCASE)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_normalized_name ON treatment_protocols(kind, normalized_name)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_hidden_at ON treatment_protocols(hidden_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_deleted_at ON treatment_protocols(deleted_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocol_items_protocol_id ON treatment_protocol_items(protocol_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocol_items_catalog_item_id ON treatment_protocol_items(catalog_item_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocol_doses_protocol_id ON treatment_protocol_doses(protocol_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_pet_id ON pet_treatments(pet_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_kind_applied_at ON pet_treatments(kind, applied_at)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_kind_normalized_name ON pet_treatments(kind, normalized_name)');
@@ -781,9 +816,9 @@ async function assertCurrentSchema(database: Database): Promise<void> {
 		(await tableHasColumns(database, 'schema_migrations', ['version', 'name', 'app_version', 'applied_at'])) &&
 		(await tableHasColumns(database, 'backup_history', ['id', 'path', 'kind', 'created_at'])) &&
 		(await tableHasColumns(database, 'medication_catalog_items', ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'extension', 'hidden_at'])) &&
-		(await tableHasColumns(database, 'medication_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'deleted_at', 'purge_after'])) &&
-		(await tableHasColumns(database, 'medication_protocol_items', ['id', 'protocol_id', 'catalog_item_id', 'sort_order'])) &&
-		(await tableHasColumns(database, 'medication_protocol_doses', ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order'])) &&
+		(await tableHasColumns(database, 'treatment_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'deleted_at', 'purge_after'])) &&
+		(await tableHasColumns(database, 'treatment_protocol_items', ['id', 'protocol_id', 'catalog_item_id', 'sort_order'])) &&
+		(await tableHasColumns(database, 'treatment_protocol_doses', ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order'])) &&
 		(await tableHasColumns(database, 'pet_treatments', ['id', 'pet_id', 'kind', 'applied_at', 'name', 'normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'validity_ignored_at']));
 
 	if (!valid) throw new Error('database_schema_current_invalid');
@@ -794,7 +829,7 @@ async function hasCurrentUnversionedSchema(database: Database): Promise<boolean>
 		(await tableHasColumns(database, 'owners', ['id', 'name', 'additional_information'])) &&
 		(await tableHasColumns(database, 'addresses', ['id', 'owner_id', 'workplace_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code'])) &&
 		(await tableHasColumns(database, 'contacts', ['id', 'owner_id', 'responsible_id', 'veterinarian_profile_id', 'workplace_id', 'kind', 'label', 'value'])) &&
-		(await tableHasColumns(database, 'medication_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name'])) &&
+		(await tableHasColumns(database, 'treatment_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name'])) &&
 		(await tableHasColumns(database, 'pet_treatments', ['id', 'pet_id', 'kind', 'applied_at', 'name', 'normalized_name', 'dose', 'validity_value', 'validity_unit']));
 
 	return valid;
@@ -952,7 +987,7 @@ async function applyMigration(database: Database, migration: SchemaMigration): P
 }
 
 export async function runMigrations(database: Database, options: RunMigrationsOptions = {}): Promise<void> {
-	const { createIndexes = true, seedDefaultData = false, syncDefaultMedicationData = true, syncDefaultBreedReferenceData = true } = options;
+	const { createIndexes = true, seedDefaultData = false, syncDefaultMedicationData = true, syncDefaultTreatmentProtocolData = true, syncDefaultBreedReferenceData = true } = options;
 	const status = await assertDatabaseCanMigrate(database);
 	let appliedSchemaChange = false;
 
@@ -982,7 +1017,7 @@ export async function runMigrations(database: Database, options: RunMigrationsOp
 
 		if (seedDefaultData || (syncDefaultMedicationData && appliedSchemaChange)) await syncDefaultMedicationCatalog(database);
 		if (seedDefaultData || (syncDefaultBreedReferenceData && (appliedSchemaChange || (await isBreedReferenceCatalogEmpty(database))))) await syncDefaultBreedReferenceCatalog(database);
-		if (seedDefaultData) await seedDefaultMedicationProtocols(database);
+		if (seedDefaultData || (syncDefaultTreatmentProtocolData && (appliedSchemaChange || !(await hasSystemTreatmentProtocols(database))))) await syncDefaultTreatmentProtocols(database);
 		if (createIndexes) await createCurrentIndexes(database);
 		await validateDatabaseIntegrity(database);
 		await database.execute('COMMIT');

@@ -1,8 +1,7 @@
 import { assertTextLimit } from '$lib/domain/shared/field-limits.js';
+import { defaultTreatmentSpecies, isTreatmentSpecies, normalizeTreatmentSpecies, parseTreatmentSpecies, stringifyTreatmentSpecies, type TreatmentSpecies } from '$lib/domain/treatment/species.js';
 
-const medicationSpeciesIds = ['canine', 'feline'] as const;
-
-export type MedicationSpecies = (typeof medicationSpeciesIds)[number];
+export type MedicationSpecies = TreatmentSpecies;
 export type MedicationCatalogOrigin = 'system' | 'user';
 export const medicationLeafletSectionIds = [
 	'about',
@@ -27,7 +26,7 @@ export interface MedicationCatalogExtension {
 	sections: MedicationLeafletSections;
 }
 
-export const defaultMedicationSpecies = [...medicationSpeciesIds];
+export const defaultMedicationSpecies = [...defaultTreatmentSpecies];
 export const emptyMedicationCatalogExtension: MedicationCatalogExtension = {
 	classification: null,
 	commercialLine: null,
@@ -52,27 +51,15 @@ export function canDeleteMedicationCatalogItem(item: Pick<MedicationCatalogMetad
 }
 
 export function normalizeMedicationSpecies(values: readonly string[] | null | undefined): MedicationSpecies[] {
-	const normalized: MedicationSpecies[] = [];
-	for (const value of values ?? []) {
-		if (isMedicationSpecies(value) && !normalized.includes(value)) normalized.push(value);
-	}
-
-	return normalized.length > 0 ? normalized : [...defaultMedicationSpecies];
+	return normalizeTreatmentSpecies(values);
 }
 
 export function parseMedicationSpecies(value: string | null | undefined): MedicationSpecies[] {
-	if (!value) return [...defaultMedicationSpecies];
-
-	try {
-		const parsed = JSON.parse(value);
-		return Array.isArray(parsed) ? normalizeMedicationSpecies(parsed.filter((item): item is string => typeof item === 'string')) : [...defaultMedicationSpecies];
-	} catch {
-		return [...defaultMedicationSpecies];
-	}
+	return parseTreatmentSpecies(value);
 }
 
 export function stringifyMedicationSpecies(values: readonly string[] | null | undefined): string {
-	return JSON.stringify(normalizeMedicationSpecies(values));
+	return stringifyTreatmentSpecies(values);
 }
 
 /**
@@ -139,12 +126,8 @@ export function stringifyMedicationAliases(values: readonly string[] | null | un
 }
 
 export function medicationItemMatchesSpecies(species: readonly MedicationSpecies[], petSpecies: string | null | undefined): boolean {
-	if (!isMedicationSpecies(petSpecies)) return true;
+	if (!isTreatmentSpecies(petSpecies)) return true;
 	return species.includes(petSpecies);
-}
-
-function isMedicationSpecies(value: string | null | undefined): value is MedicationSpecies {
-	return value === 'canine' || value === 'feline';
 }
 
 export function medicationItemMatchesSearch(name: string, aliases: readonly string[], query: string, normalize: (value: string) => string): boolean {

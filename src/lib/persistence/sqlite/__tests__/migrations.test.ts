@@ -4,6 +4,8 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type Database from '@tauri-apps/plugin-sql';
+import { isUuidV4 } from '$lib/domain/shared/uuid.js';
+import { defaultTreatmentProtocols } from '$lib/domain/treatment/default-protocol.js';
 import { CURRENT_SCHEMA_VERSION, runMigrations } from '../migrations.js';
 
 interface UserVersionRow {
@@ -17,6 +19,10 @@ interface CountRow {
 interface MigrationRow {
 	version: number;
 	name: string;
+}
+
+interface IdRow {
+	id: string;
 }
 
 const sqlite3Available = spawnSync('sqlite3', ['--version'], { encoding: 'utf8' }).status === 0;
@@ -79,6 +85,21 @@ describeWithSqlite('SQLite schema migrations', () => {
 		expect(versions[0]?.user_version).toBe(CURRENT_SCHEMA_VERSION);
 		expect(migrations).toEqual([{ version: 1, name: '0001_baseline_current_schema' }]);
 		expect(owners[0]?.total).toBe(0);
+	});
+
+	it('syncs default system treatment protocols into the database', async () => {
+		await runMigrations(database as unknown as Database, { syncDefaultBreedReferenceData: false });
+
+		const protocols = await database.select<CountRow[]>("SELECT COUNT(*) AS total FROM treatment_protocols WHERE origin = 'system'");
+		const protocolIds = await database.select<IdRow[]>("SELECT id FROM treatment_protocols WHERE origin = 'system' ORDER BY id");
+		const items = await database.select<CountRow[]>('SELECT COUNT(*) AS total FROM treatment_protocol_items');
+		const doses = await database.select<CountRow[]>('SELECT COUNT(*) AS total FROM treatment_protocol_doses');
+
+		expect(protocols[0]?.total).toBe(defaultTreatmentProtocols.length);
+		expect(protocolIds.map((row) => row.id)).toEqual([...defaultTreatmentProtocols.map((protocol) => protocol.id)].sort());
+		expect(protocolIds.every((row) => isUuidV4(row.id))).toBe(true);
+		expect(items[0]?.total).toBe(defaultTreatmentProtocols.reduce((total, protocol) => total + protocol.catalogItemIds.length, 0));
+		expect(doses[0]?.total).toBe(defaultTreatmentProtocols.reduce((total, protocol) => total + protocol.doses.length, 0));
 	});
 
 	it('adopts a current unversioned database without losing data', async () => {

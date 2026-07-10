@@ -20,7 +20,7 @@
   "include": [
     "to-sqlite.ts",
     "../src/lib/domain/medication/default-catalog.ts",
-    "../src/lib/domain/medication/default-protocol.ts",
+    "../src/lib/domain/treatment/default-protocol.ts",
     "../src/lib/i18n/locales.ts",
     "../src/lib/i18n/medication-aliases/**/*.ts"
   ],

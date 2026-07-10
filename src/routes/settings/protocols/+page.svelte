@@ -6,11 +6,11 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import { petSpeciesOptions, type KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
-	import { canDeleteMedicationProtocol, canEditMedicationProtocol, type MedicationProtocol, type MedicationProtocolDose, type MedicationProtocolKind, type MedicationValidityUnit } from '$lib/domain/medication/protocol.js';
+	import { canDeleteTreatmentProtocol, canEditTreatmentProtocol, type TreatmentProtocol, type TreatmentProtocolDose, type TreatmentProtocolId, type TreatmentProtocolKind, type TreatmentProtocolValidityUnit } from '$lib/domain/treatment/protocol.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import { TREATMENT_KINDS, type TreatmentCatalogItem, type TreatmentCatalogItemId, type TreatmentKind } from '$lib/domain/treatment/treatment.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
-	import { loadMedicationProtocols, removeProtocol, removeProtocolDose, saveProtocol, saveProtocolDose, setProtocolHidden } from '$lib/services/medication-protocol.service.js';
+	import { loadTreatmentProtocols, removeProtocol, removeProtocolDose, saveProtocol, saveProtocolDose, setProtocolHidden } from '$lib/services/treatment-protocol.service.js';
 	import { loadTreatmentCatalogItems } from '$lib/services/treatment.service.js';
 	import Eye from '@lucide/svelte/icons/eye';
 	import EyeOff from '@lucide/svelte/icons/eye-off';
@@ -27,25 +27,25 @@
 		vaccine: [],
 		antiparasitic: []
 	});
-	let protocols = $state<MedicationProtocol[]>([]);
-	let protocolDraftNames = $state<Record<number, string>>({});
-	let protocolDraftSpecies = $state<Record<number, KnownPetSpecies[]>>({});
-	let protocolDraftObservations = $state<Record<number, string>>({});
-	let protocolDraftItemIds = $state<Record<number, TreatmentCatalogItemId[]>>({});
+	let protocols = $state<TreatmentProtocol[]>([]);
+	let protocolDraftNames = $state<Record<TreatmentProtocolId, string>>({});
+	let protocolDraftSpecies = $state<Record<TreatmentProtocolId, KnownPetSpecies[]>>({});
+	let protocolDraftObservations = $state<Record<TreatmentProtocolId, string>>({});
+	let protocolDraftItemIds = $state<Record<TreatmentProtocolId, TreatmentCatalogItemId[]>>({});
 	let doseDraftDoses = $state<Record<number, string>>({});
 	let doseDraftValidityValues = $state<Record<number, number>>({});
-	let doseDraftValidityUnits = $state<Record<number, MedicationValidityUnit>>({});
-	let newDoseDoses = $state<Record<number, string>>({});
-	let newDoseValidityValues = $state<Record<number, number>>({});
-	let newDoseValidityUnits = $state<Record<number, MedicationValidityUnit>>({});
-	let newProtocolKind = $state<MedicationProtocolKind>('vaccine');
+	let doseDraftValidityUnits = $state<Record<number, TreatmentProtocolValidityUnit>>({});
+	let newDoseDoses = $state<Record<TreatmentProtocolId, string>>({});
+	let newDoseValidityValues = $state<Record<TreatmentProtocolId, number>>({});
+	let newDoseValidityUnits = $state<Record<TreatmentProtocolId, TreatmentProtocolValidityUnit>>({});
+	let newProtocolKind = $state<TreatmentProtocolKind>('vaccine');
 	let newProtocolName = $state('');
 	let newProtocolSpecies = $state<KnownPetSpecies[]>(defaultSpeciesDraft());
 	let newProtocolObservation = $state('');
 	let newProtocolItemIds = $state<TreatmentCatalogItemId[]>([]);
 	let loading = $state(true);
 	let saving = $state(false);
-	let protocolPendingRemoval = $state<MedicationProtocol | null>(null);
+	let protocolPendingRemoval = $state<TreatmentProtocol | null>(null);
 	let statusKey = $state<TranslationKey | null>(null);
 	let errorKey = $state<TranslationKey | null>(null);
 	let newProtocolSelectableItems = $derived(visibleCatalogItemsForSpecies(newProtocolKind, newProtocolSpecies));
@@ -54,7 +54,7 @@
 		return [...source].sort((first, second) => first.name.localeCompare(second.name));
 	}
 
-	function sortedProtocols(source: MedicationProtocol[]): MedicationProtocol[] {
+	function sortedProtocols(source: TreatmentProtocol[]): TreatmentProtocol[] {
 		return [...source].sort((first, second) => first.kind.localeCompare(second.kind) || first.sortOrder - second.sortOrder || first.name.localeCompare(second.name));
 	}
 
@@ -84,7 +84,7 @@
 		return species.map(speciesLabel).join(', ');
 	}
 
-	function protocolDraftSpeciesValue(protocol: MedicationProtocol): KnownPetSpecies[] {
+	function protocolDraftSpeciesValue(protocol: TreatmentProtocol): KnownPetSpecies[] {
 		return protocolDraftSpecies[protocol.id] ?? protocol.species;
 	}
 
@@ -96,7 +96,7 @@
 		catalogItemsByKind = { ...catalogItemsByKind, [kind]: sortedTreatmentCatalogItems(items) };
 	}
 
-	function itemMatchesSpecies(kind: MedicationProtocolKind, itemId: TreatmentCatalogItemId, species: KnownPetSpecies[]): boolean {
+	function itemMatchesSpecies(kind: TreatmentProtocolKind, itemId: TreatmentCatalogItemId, species: KnownPetSpecies[]): boolean {
 		return catalogItems(kind).some((item) => item.id === itemId && speciesOverlap(item.species, species));
 	}
 
@@ -106,7 +106,7 @@
 		newProtocolItemIds = newProtocolItemIds.filter((itemId) => itemMatchesSpecies(newProtocolKind, itemId, nextSpecies));
 	}
 
-	function setProtocolSpecies(protocol: MedicationProtocol, species: KnownPetSpecies) {
+	function setProtocolSpecies(protocol: TreatmentProtocol, species: KnownPetSpecies) {
 		const nextSpecies = toggleSpeciesDraft(protocolDraftSpeciesValue(protocol), species, true);
 		protocolDraftSpecies = { ...protocolDraftSpecies, [protocol.id]: nextSpecies };
 		protocolDraftItemIds = { ...protocolDraftItemIds, [protocol.id]: selectedItemIds(protocol).filter((itemId) => itemMatchesSpecies(protocol.kind, itemId, nextSpecies)) };
@@ -119,11 +119,11 @@
 		];
 	}
 
-	function catalogItems(kind: MedicationProtocolKind): CatalogItem[] {
+	function catalogItems(kind: TreatmentProtocolKind): CatalogItem[] {
 		return treatmentCatalogItems(kind);
 	}
 
-	function visibleCatalogItems(kind: MedicationProtocolKind): CatalogItem[] {
+	function visibleCatalogItems(kind: TreatmentProtocolKind): CatalogItem[] {
 		return catalogItems(kind).filter((item) => !item.hiddenAt);
 	}
 
@@ -131,13 +131,13 @@
 		return left.some((species) => right.includes(species));
 	}
 
-	function visibleCatalogItemsForSpecies(kind: MedicationProtocolKind, species: KnownPetSpecies[]): CatalogItem[] {
+	function visibleCatalogItemsForSpecies(kind: TreatmentProtocolKind, species: KnownPetSpecies[]): CatalogItem[] {
 		if (species.length === 0) return [];
 		return sortedCatalogItems(visibleCatalogItems(kind).filter((item) => speciesOverlap(item.species, species)));
 	}
 
-	function protocolCatalogItems(protocol: MedicationProtocol): CatalogItem[] {
-		if (!canEditMedicationProtocol(protocol)) {
+	function protocolCatalogItems(protocol: TreatmentProtocol): CatalogItem[] {
+		if (!canEditTreatmentProtocol(protocol)) {
 			const linkedItemIds = new Set(protocol.items.map((item) => item.id));
 			return sortedCatalogItems(catalogItems(protocol.kind).filter((item) => linkedItemIds.has(item.id)));
 		}
@@ -157,23 +157,23 @@
 		if (nextItemIds.length !== newProtocolItemIds.length) newProtocolItemIds = nextItemIds;
 	});
 
-	function kindLabel(kind: MedicationProtocolKind): string {
+	function kindLabel(kind: TreatmentProtocolKind): string {
 		return kind === 'vaccine' ? t('protocol.kind.vaccine') : t('protocol.kind.antiparasitic');
 	}
 
-	function protocolDraftName(protocol: MedicationProtocol): string {
+	function protocolDraftName(protocol: TreatmentProtocol): string {
 		return protocolDraftNames[protocol.id] ?? protocol.name;
 	}
 
-	function protocolDraftObservation(protocol: MedicationProtocol): string {
+	function protocolDraftObservation(protocol: TreatmentProtocol): string {
 		return protocolDraftObservations[protocol.id] ?? protocol.observation ?? '';
 	}
 
-	function selectedItemIds(protocol: MedicationProtocol): TreatmentCatalogItemId[] {
+	function selectedItemIds(protocol: TreatmentProtocol): TreatmentCatalogItemId[] {
 		return protocolDraftItemIds[protocol.id] ?? protocol.items.map((item) => item.id);
 	}
 
-	function syncProtocolDraft(protocol: MedicationProtocol) {
+	function syncProtocolDraft(protocol: TreatmentProtocol) {
 		protocolDraftNames = { ...protocolDraftNames, [protocol.id]: protocol.name };
 		protocolDraftSpecies = { ...protocolDraftSpecies, [protocol.id]: protocol.species };
 		protocolDraftObservations = { ...protocolDraftObservations, [protocol.id]: protocol.observation ?? '' };
@@ -184,21 +184,21 @@
 		newDoseValidityUnits = { ...newDoseValidityUnits, [protocol.id]: newDoseValidityUnits[protocol.id] ?? 'months' };
 	}
 
-	function syncDoseDraft(dose: MedicationProtocolDose) {
+	function syncDoseDraft(dose: TreatmentProtocolDose) {
 		doseDraftDoses = { ...doseDraftDoses, [dose.id]: dose.dose };
 		doseDraftValidityValues = { ...doseDraftValidityValues, [dose.id]: dose.validityValue };
 		doseDraftValidityUnits = { ...doseDraftValidityUnits, [dose.id]: dose.validityUnit };
 	}
 
-	function upsertProtocol(protocol: MedicationProtocol) {
-		protocols = sortedProtocols([...protocols.filter((item) => item.id !== protocol.id && !(item.kind === protocol.kind && item.normalizedName === protocol.normalizedName)), protocol]);
+	function upsertProtocol(protocol: TreatmentProtocol) {
+		protocols = sortedProtocols([...protocols.filter((item) => item.id !== protocol.id), protocol]);
 		syncProtocolDraft(protocol);
 	}
 
 	function setFailure(exception: unknown) {
 		if (exception instanceof Error && exception.message === 'field_limit_exceeded') errorKey = 'form.limitExceeded';
 		else if (exception instanceof Error && exception.message === 'field_required') errorKey = 'form.fieldRequired';
-		else if (exception instanceof Error && exception.message === 'medication_protocol_system_item') errorKey = 'medication.systemItemReadOnly';
+		else if (exception instanceof Error && exception.message === 'treatment_protocol_system_item') errorKey = 'medication.systemItemReadOnly';
 		else if (exception instanceof Error && exception.message === 'protocol_name_required') errorKey = 'protocol.nameRequired';
 		else if (exception instanceof Error && exception.message === 'protocol_item_required') errorKey = 'protocol.itemRequired';
 		else if (exception instanceof Error && exception.message === 'protocol_dose_required') errorKey = 'protocol.doseRequired';
@@ -211,7 +211,7 @@
 		errorKey = null;
 
 		try {
-			const [loadedCatalogItems, loadedProtocols] = await Promise.all([Promise.all(treatmentKinds.map((kind) => loadTreatmentCatalogItems(kind, true))), loadMedicationProtocols(undefined, true)]);
+			const [loadedCatalogItems, loadedProtocols] = await Promise.all([Promise.all(treatmentKinds.map((kind) => loadTreatmentCatalogItems(kind, true))), loadTreatmentProtocols(undefined, true)]);
 			for (const [index, kind] of treatmentKinds.entries()) {
 				const items = loadedCatalogItems[index] ?? [];
 				setTreatmentCatalogItems(kind, items);
@@ -246,8 +246,8 @@
 		}
 	}
 
-	async function saveExistingProtocol(protocol: MedicationProtocol) {
-		if (!canEditMedicationProtocol(protocol)) return;
+	async function saveExistingProtocol(protocol: TreatmentProtocol) {
+		if (!canEditTreatmentProtocol(protocol)) return;
 		saving = true;
 		statusKey = null;
 		errorKey = null;
@@ -272,7 +272,7 @@
 		}
 	}
 
-	async function toggleProtocolHidden(protocol: MedicationProtocol) {
+	async function toggleProtocolHidden(protocol: TreatmentProtocol) {
 		saving = true;
 		statusKey = null;
 		errorKey = null;
@@ -288,14 +288,14 @@
 		}
 	}
 
-	function deleteProtocol(protocol: MedicationProtocol) {
-		if (saving || !canDeleteMedicationProtocol(protocol)) return;
+	function deleteProtocol(protocol: TreatmentProtocol) {
+		if (saving || !canDeleteTreatmentProtocol(protocol)) return;
 		protocolPendingRemoval = protocol;
 	}
 
 	async function confirmProtocolRemoval() {
 		const protocol = protocolPendingRemoval;
-		if (!protocol || saving || !canDeleteMedicationProtocol(protocol)) return;
+		if (!protocol || saving || !canDeleteTreatmentProtocol(protocol)) return;
 
 		saving = true;
 		statusKey = null;
@@ -322,13 +322,13 @@
 		newProtocolItemIds = newProtocolItemIds.includes(itemId) ? newProtocolItemIds.filter((id) => id !== itemId) : [...newProtocolItemIds, itemId];
 	}
 
-	function handleNewProtocolKindChange(kind: MedicationProtocolKind) {
+	function handleNewProtocolKindChange(kind: TreatmentProtocolKind) {
 		newProtocolKind = kind;
 		newProtocolItemIds = [];
 	}
 
-	function toggleProtocolItem(protocol: MedicationProtocol, itemId: TreatmentCatalogItemId) {
-		if (!canEditMedicationProtocol(protocol)) return;
+	function toggleProtocolItem(protocol: TreatmentProtocol, itemId: TreatmentCatalogItemId) {
+		if (!canEditTreatmentProtocol(protocol)) return;
 		const selected = selectedItemIds(protocol);
 		if (!selected.includes(itemId) && !itemMatchesSpecies(protocol.kind, itemId, protocolDraftSpeciesValue(protocol))) return;
 		protocolDraftItemIds = {
@@ -337,28 +337,28 @@
 		};
 	}
 
-	function setProtocolObservation(protocol: MedicationProtocol, value: string) {
-		if (!canEditMedicationProtocol(protocol)) return;
+	function setProtocolObservation(protocol: TreatmentProtocol, value: string) {
+		if (!canEditTreatmentProtocol(protocol)) return;
 		protocolDraftObservations = { ...protocolDraftObservations, [protocol.id]: value };
 	}
 
-	function setNewDose(protocolId: number, value: string) {
+	function setNewDose(protocolId: TreatmentProtocolId, value: string) {
 		newDoseDoses = { ...newDoseDoses, [protocolId]: value };
 	}
 
-	function setNewDoseValidity(protocolId: number, value: number, unit: MedicationValidityUnit) {
+	function setNewDoseValidity(protocolId: TreatmentProtocolId, value: number, unit: TreatmentProtocolValidityUnit) {
 		newDoseValidityValues = { ...newDoseValidityValues, [protocolId]: value };
 		newDoseValidityUnits = { ...newDoseValidityUnits, [protocolId]: unit };
 	}
 
-	function setDoseValidity(doseId: number, value: number, unit: MedicationValidityUnit) {
+	function setDoseValidity(doseId: number, value: number, unit: TreatmentProtocolValidityUnit) {
 		doseDraftValidityValues = { ...doseDraftValidityValues, [doseId]: value };
 		doseDraftValidityUnits = { ...doseDraftValidityUnits, [doseId]: unit };
 	}
 
-	async function addProtocolDose(event: SubmitEvent, protocol: MedicationProtocol) {
+	async function addProtocolDose(event: SubmitEvent, protocol: TreatmentProtocol) {
 		event.preventDefault();
-		if (!canEditMedicationProtocol(protocol)) return;
+		if (!canEditTreatmentProtocol(protocol)) return;
 		saving = true;
 		statusKey = null;
 		errorKey = null;
@@ -381,9 +381,9 @@
 		}
 	}
 
-	async function saveExistingProtocolDose(event: SubmitEvent, protocol: MedicationProtocol, dose: MedicationProtocolDose) {
+	async function saveExistingProtocolDose(event: SubmitEvent, protocol: TreatmentProtocol, dose: TreatmentProtocolDose) {
 		event.preventDefault();
-		if (!canEditMedicationProtocol(protocol)) return;
+		if (!canEditTreatmentProtocol(protocol)) return;
 		saving = true;
 		statusKey = null;
 		errorKey = null;
@@ -407,8 +407,8 @@
 		}
 	}
 
-	async function deleteProtocolDose(protocol: MedicationProtocol, dose: MedicationProtocolDose) {
-		if (!canEditMedicationProtocol(protocol)) return;
+	async function deleteProtocolDose(protocol: TreatmentProtocol, dose: TreatmentProtocolDose) {
+		if (!canEditTreatmentProtocol(protocol)) return;
 		if (!window.confirm(t('protocol.doseDeleteConfirm'))) return;
 		saving = true;
 		statusKey = null;
@@ -461,9 +461,9 @@
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
 								<span>{t('protocol.name')}</span>
-								<CharacterLimitHint value={newProtocolName} max={FIELD_LIMITS.medicationProtocolName} />
+								<CharacterLimitHint value={newProtocolName} max={FIELD_LIMITS.treatmentProtocolName} />
 							</span>
-							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newProtocolName} maxlength={FIELD_LIMITS.medicationProtocolName} required />
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={newProtocolName} maxlength={FIELD_LIMITS.treatmentProtocolName} required />
 						</label>
 
 						<div class="lg:col-span-2 flex min-w-0 flex-col gap-2 text-sm font-medium">
@@ -515,11 +515,11 @@
 								<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 									<span class="flex min-w-0 items-baseline justify-between gap-2">
 										<span>{t('protocol.name')}</span>
-										<CharacterLimitHint value={protocolDraftName(protocol)} max={FIELD_LIMITS.medicationProtocolName} />
+										<CharacterLimitHint value={protocolDraftName(protocol)} max={FIELD_LIMITS.treatmentProtocolName} />
 									</span>
-									<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-70" value={protocolDraftName(protocol)} maxlength={FIELD_LIMITS.medicationProtocolName} required disabled={!canEditMedicationProtocol(protocol)} oninput={(event) => (protocolDraftNames = { ...protocolDraftNames, [protocol.id]: inputValue(event) })} />
+									<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-70" value={protocolDraftName(protocol)} maxlength={FIELD_LIMITS.treatmentProtocolName} required disabled={!canEditTreatmentProtocol(protocol)} oninput={(event) => (protocolDraftNames = { ...protocolDraftNames, [protocol.id]: inputValue(event) })} />
 								</label>
-								{#if canEditMedicationProtocol(protocol)}
+								{#if canEditTreatmentProtocol(protocol)}
 									<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
 										<Save class="size-4" />
 										{t('actions.save')}
@@ -534,7 +534,7 @@
 										{t('protocol.hide')}
 									{/if}
 								</button>
-								{#if canDeleteMedicationProtocol(protocol)}
+								{#if canDeleteTreatmentProtocol(protocol)}
 									<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={() => void deleteProtocol(protocol)}>
 										<Trash2 class="size-4" />
 										{t('actions.delete')}
@@ -546,7 +546,7 @@
 									<div class="flex flex-wrap gap-2">
 										{#each petSpeciesOptions as option}
 											<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
-												<input type="checkbox" class="size-4 accent-primary" checked={protocolDraftSpeciesValue(protocol).includes(option.id)} disabled={!canEditMedicationProtocol(protocol)} onchange={() => setProtocolSpecies(protocol, option.id)} />
+												<input type="checkbox" class="size-4 accent-primary" checked={protocolDraftSpeciesValue(protocol).includes(option.id)} disabled={!canEditTreatmentProtocol(protocol)} onchange={() => setProtocolSpecies(protocol, option.id)} />
 												<span>{t(option.labelKey)}</span>
 											</label>
 										{/each}
@@ -558,7 +558,7 @@
 									<div class="flex flex-wrap gap-2">
 										{#each protocolCatalogItems(protocol) as item (item.id)}
 											{@const selected = selectedItemIds(protocol).includes(item.id)}
-											<button type="button" class="inline-flex h-8 max-w-full items-center rounded-md border px-3 text-sm transition-colors disabled:cursor-default {selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background hover:bg-accent'} {item.hiddenAt ? 'opacity-60' : ''}" aria-pressed={selected} disabled={!canEditMedicationProtocol(protocol)} onclick={() => toggleProtocolItem(protocol, item.id)}>
+											<button type="button" class="inline-flex h-8 max-w-full items-center rounded-md border px-3 text-sm transition-colors disabled:cursor-default {selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background hover:bg-accent'} {item.hiddenAt ? 'opacity-60' : ''}" aria-pressed={selected} disabled={!canEditTreatmentProtocol(protocol)} onclick={() => toggleProtocolItem(protocol, item.id)}>
 												<span class="truncate">{item.name}</span>
 											</button>
 										{:else}
@@ -569,13 +569,13 @@
 
 								<div class="lg:col-span-full flex min-w-0 flex-col gap-1 text-sm font-medium">
 									<label for={`protocol-observation-${protocol.id}`}>{t('protocol.observation')}</label>
-									<Textarea id={`protocol-observation-${protocol.id}`} value={protocolDraftObservation(protocol)} oninput={(value) => setProtocolObservation(protocol, value)} readonly={!canEditMedicationProtocol(protocol)} ariaLabel={t('protocol.observation')} maxLength={FIELD_LIMITS.treatmentObservation} class="min-h-20" />
+									<Textarea id={`protocol-observation-${protocol.id}`} value={protocolDraftObservation(protocol)} oninput={(value) => setProtocolObservation(protocol, value)} readonly={!canEditTreatmentProtocol(protocol)} ariaLabel={t('protocol.observation')} maxLength={FIELD_LIMITS.treatmentObservation} class="min-h-20" />
 								</div>
 							</form>
 
 							<div class="mt-4 border-t border-border pt-4">
 								<h4 class="text-sm font-semibold">{t('protocol.doseTitle')}</h4>
-								{#if canEditMedicationProtocol(protocol)}
+								{#if canEditTreatmentProtocol(protocol)}
 									<form class="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_12rem_auto] lg:items-end" onsubmit={(event) => void addProtocolDose(event, protocol)}>
 										<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 											<span>{t('protocol.doseText')}</span>
@@ -597,13 +597,13 @@
 										<form class="grid gap-3 rounded-md border border-border p-3 lg:grid-cols-[minmax(0,1fr)_12rem_auto_auto] lg:items-end" onsubmit={(event) => void saveExistingProtocolDose(event, protocol, protocolDose)}>
 											<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 												<span>{t('protocol.doseText')}</span>
-												<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-70" value={doseDraftDoses[protocolDose.id] ?? protocolDose.dose} maxlength={FIELD_LIMITS.treatmentDose} required disabled={!canEditMedicationProtocol(protocol)} oninput={(event) => (doseDraftDoses = { ...doseDraftDoses, [protocolDose.id]: inputValue(event) })} />
+												<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-70" value={doseDraftDoses[protocolDose.id] ?? protocolDose.dose} maxlength={FIELD_LIMITS.treatmentDose} required disabled={!canEditTreatmentProtocol(protocol)} oninput={(event) => (doseDraftDoses = { ...doseDraftDoses, [protocolDose.id]: inputValue(event) })} />
 											</label>
 											<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 												<span>{t('protocol.doseValidity')}</span>
-												<PeriodField value={doseDraftValidityValues[protocolDose.id] ?? protocolDose.validityValue} unit={doseDraftValidityUnits[protocolDose.id] ?? protocolDose.validityUnit} disabled={!canEditMedicationProtocol(protocol)} ariaLabel={t('protocol.doseValidity')} onChange={(value, unit) => setDoseValidity(protocolDose.id, value, unit)} />
+												<PeriodField value={doseDraftValidityValues[protocolDose.id] ?? protocolDose.validityValue} unit={doseDraftValidityUnits[protocolDose.id] ?? protocolDose.validityUnit} disabled={!canEditTreatmentProtocol(protocol)} ariaLabel={t('protocol.doseValidity')} onChange={(value, unit) => setDoseValidity(protocolDose.id, value, unit)} />
 											</label>
-											{#if canEditMedicationProtocol(protocol)}
+											{#if canEditTreatmentProtocol(protocol)}
 												<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
 													<Save class="size-4" />
 													{t('actions.save')}

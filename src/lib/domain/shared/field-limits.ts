@@ -51,8 +51,8 @@ export const FIELD_LIMITS = {
 	medicationAlias: 80,
 	medicationAliasesJson: 1000,
 	medicationExtensionJson: 64000,
-	medicationProtocolName: 120,
-	medicationProtocolNormalizedName: 120,
+	treatmentProtocolName: 120,
+	treatmentProtocolNormalizedName: 120,
 	searchQuery: 160
 } as const;
 

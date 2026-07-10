@@ -10,13 +10,13 @@
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import type { PetSpecies } from '$lib/domain/pet/taxonomy.js';
 	import { medicationItemMatchesSpecies } from '$lib/domain/medication/catalog.js';
-	import type { MedicationProtocol } from '$lib/domain/medication/protocol.js';
+	import type { TreatmentProtocol, TreatmentProtocolId } from '$lib/domain/treatment/protocol.js';
 	import { formatDateForDisplay, normalizeDateInput } from '$lib/domain/shared/date-input.js';
 	import { FIELD_LIMITS, textLength } from '$lib/domain/shared/field-limits.js';
 	import type { PetTreatment, PetTreatmentInput, TreatmentCatalogItem, TreatmentKind, TreatmentValidityUnit } from '$lib/domain/treatment/treatment.js';
 	import { getTreatmentDueStatus } from '$lib/domain/treatment/treatment.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
-	import { loadMedicationProtocols } from '$lib/services/medication-protocol.service.js';
+	import { loadTreatmentProtocols } from '$lib/services/treatment-protocol.service.js';
 	import { loadTreatmentCatalogItems, removeTreatment, saveNewTreatments, setTreatmentValidity } from '$lib/services/treatment.service.js';
 	import Bell from '@lucide/svelte/icons/bell';
 	import BellOff from '@lucide/svelte/icons/bell-off';
@@ -145,12 +145,12 @@
 
 	let currentTreatments = $state<PetTreatment[]>([]);
 	let currentCatalogItems = $state<TreatmentCatalogItem[]>([]);
-	let currentProtocols = $state<MedicationProtocol[]>([]);
+	let currentProtocols = $state<TreatmentProtocol[]>([]);
 	let loadedPetId = $state<number | null>(null);
 	let loadedKind = $state<TreatmentKind | null>(null);
 	let appliedAt = $state(todayInput);
 	let treatmentName = $state('');
-	let protocolId = $state(0);
+	let protocolId = $state<TreatmentProtocolId | ''>('');
 	let protocolDoseId = $state(0);
 	let dose = $state('');
 	let validityValue = $state(0);
@@ -195,7 +195,7 @@
 	}
 
 	function protocolOptions() {
-		return [{ value: 0, label: t('protocol.none') }, ...visibleProtocols.map((protocol) => ({ value: protocol.id, label: protocol.name }))];
+		return [{ value: '', label: t('protocol.none') }, ...visibleProtocols.map((protocol) => ({ value: protocol.id, label: protocol.name }))];
 	}
 
 	function protocolDoseOptions() {
@@ -222,7 +222,7 @@
 	}
 
 	function clearProtocolSelection() {
-		protocolId = 0;
+		protocolId = '';
 		protocolDoseId = 0;
 	}
 
@@ -231,7 +231,7 @@
 		clearProtocolSelection();
 	}
 
-	function handleProtocolChange(value: number) {
+	function handleProtocolChange(value: TreatmentProtocolId | '') {
 		protocolId = value;
 		protocolDoseId = 0;
 	}
@@ -324,7 +324,7 @@
 	}
 
 	async function reloadCatalogs() {
-		const [loadedCatalogItems, loadedProtocols] = await Promise.all([loadTreatmentCatalogItems(kind), loadMedicationProtocols(kind)]);
+		const [loadedCatalogItems, loadedProtocols] = await Promise.all([loadTreatmentCatalogItems(kind), loadTreatmentProtocols(kind)]);
 		currentCatalogItems = loadedCatalogItems;
 		currentProtocols = loadedProtocols;
 		if (protocolId && !visibleProtocols.some((protocol) => protocol.id === protocolId)) clearProtocolSelection();

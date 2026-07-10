@@ -9,9 +9,22 @@ const BASELINE_APP_VERSION = '0.2.0';
 const BASELINE_MIGRATION_NAME = '0001_baseline_current_schema';
 const PREFERENCE_SETTING_KEYS_TO_CLEAR = ['app.locale', 'app.typography'];
 const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const medicationLeafletSectionIds = [
+	'about',
+	'presentations',
+	'indications',
+	'administration',
+	'interactions',
+	'pharmacology',
+	'studies',
+	'videos',
+	'distributors',
+	'references'
+];
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const medicationDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/medication/defaults');
+const treatmentDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/treatment/defaults');
 const defaultSourcePath = path.resolve(scriptDir, 'dist/veterinary_clinic-version-0.db');
 const defaultOutputPath = path.resolve(scriptDir, `build/veterinary_clinic-version-${CURRENT_SCHEMA_VERSION}.db`);
 
@@ -49,20 +62,26 @@ const medicationTableSets = {
 		protocolItems: 'preventive_protocol_items',
 		protocolDoses: 'preventive_protocol_doses'
 	},
-	current: {
+	legacyProtocolTables: {
 		catalog: 'medication_catalog_items',
 		protocols: 'medication_protocols',
 		protocolItems: 'medication_protocol_items',
 		protocolDoses: 'medication_protocol_doses'
+	},
+	current: {
+		catalog: 'medication_catalog_items',
+		protocols: 'treatment_protocols',
+		protocolItems: 'treatment_protocol_items',
+		protocolDoses: 'treatment_protocol_doses'
 	}
 };
 
 const versionedSchema = {
 	...sourceSchema,
 	medication_catalog_items: medicationSchema.catalog,
-	medication_protocols: medicationSchema.protocols,
-	medication_protocol_items: medicationSchema.protocolItems,
-	medication_protocol_doses: medicationSchema.protocolDoses,
+	treatment_protocols: medicationSchema.protocols,
+	treatment_protocol_items: medicationSchema.protocolItems,
+	treatment_protocol_doses: medicationSchema.protocolDoses,
 	breed_reference_items: ['id', 'breed_id', 'species', 'label_key', 'origin_id', 'origin_label_key', 'origin_country_code', 'origin_latitude', 'origin_longitude', 'size_category', 'average_weight_kg', 'average_height_cm', 'extension', 'created_at', 'updated_at'],
 	pet_treatments: ['id', 'pet_id', 'kind', 'applied_at', 'name', 'normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after']
 };
@@ -70,7 +89,7 @@ delete versionedSchema.pet_vaccinations;
 delete versionedSchema.pet_antiparasitic_treatments;
 
 const deprecatedTreatmentTables = ['pet_vaccinations', 'pet_antiparasitic_treatments'];
-const deprecatedMedicationTables = ['preventive_catalog_items', 'preventive_protocols', 'preventive_protocol_items', 'preventive_protocol_doses'];
+const deprecatedMedicationTables = ['preventive_catalog_items', 'preventive_protocols', 'preventive_protocol_items', 'preventive_protocol_doses', 'medication_protocols', 'medication_protocol_items', 'medication_protocol_doses'];
 
 function printUsage() {
 	console.log(`Uso:
@@ -140,7 +159,41 @@ function normalizeMedicationCatalogName(value) {
 		.replace(/[^a-z0-9]+/g, '');
 }
 
+function normalizedNullableText(value) {
+	if (typeof value !== 'string') return null;
+	const trimmed = value.trim();
+	return trimmed ? trimmed : null;
+}
+
+function normalizeMedicationCatalogExtension(value) {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) {
+		return { classification: null, commercialLine: null, sections: {} };
+	}
+
+	const sections = {};
+	const source = value;
+	const sourceSections = source.sections && typeof source.sections === 'object' && !Array.isArray(source.sections) ? source.sections : {};
+	for (const sectionId of medicationLeafletSectionIds) {
+		const text = normalizedNullableText(sourceSections[sectionId]);
+		if (text) sections[sectionId] = text;
+	}
+
+	return {
+		classification: normalizedNullableText(source.classification),
+		commercialLine: normalizedNullableText(source.commercialLine),
+		sections
+	};
+}
+
+function stringifyMedicationCatalogExtension(value) {
+	return JSON.stringify(normalizeMedicationCatalogExtension(value));
+}
+
 function medicationCatalogKey(kind, normalizedName) {
+	return `${kind}:${normalizedName}`;
+}
+
+function treatmentProtocolKey(kind, normalizedName) {
 	return `${kind}:${normalizedName}`;
 }
 
@@ -152,8 +205,36 @@ function createMedicationCatalogUuid() {
 	return crypto.randomUUID();
 }
 
+function createTreatmentProtocolUuid() {
+	return crypto.randomUUID();
+}
+
+function legacyDatabaseIdKeys(value) {
+	const keys = new Set([String(value)]);
+	const numericValue = Number(value);
+	if (Number.isFinite(numericValue) && Number.isInteger(numericValue)) keys.add(String(numericValue));
+	return keys;
+}
+
+function getMappedLegacyDatabaseId(idByOldId, value) {
+	for (const key of legacyDatabaseIdKeys(value)) {
+		const mapped = idByOldId.get(key);
+		if (mapped) return mapped;
+	}
+	return null;
+}
+
 function readDefaultMedicationCatalogIdsByKey() {
 	const idsByKey = new Map();
+	for (const item of readDefaultMedicationCatalogItems()) {
+		idsByKey.set(medicationCatalogKey(item.kind, normalizeMedicationCatalogName(item.name)), item.id);
+	}
+
+	return idsByKey;
+}
+
+function readDefaultMedicationCatalogItems() {
+	const defaultItems = [];
 	for (const kind of ['vaccine', 'antiparasitic']) {
 		const directory = path.join(medicationDefaultsDir, kind);
 		if (!fs.existsSync(directory)) continue;
@@ -163,11 +244,84 @@ function readDefaultMedicationCatalogIdsByKey() {
 			const item = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 			if (typeof item.id !== 'string' || !isUuidV4(item.id)) throw new Error(`Medicamento padrão sem UUID v4: ${path.relative(scriptDir, filePath)}`);
 			if (typeof item.name !== 'string' || !item.name.trim()) throw new Error(`Medicamento padrão sem nome: ${path.relative(scriptDir, filePath)}`);
-			idsByKey.set(medicationCatalogKey(kind, normalizeMedicationCatalogName(item.name)), item.id);
+			if (item.origin !== 'system') throw new Error(`Medicamento padrão deve ter origin system: ${path.relative(scriptDir, filePath)}`);
+			if (!Array.isArray(item.species) || item.species.length === 0) throw new Error(`Medicamento padrão sem espécies: ${path.relative(scriptDir, filePath)}`);
+			if (!Array.isArray(item.aliases)) throw new Error(`Medicamento padrão sem aliases: ${path.relative(scriptDir, filePath)}`);
+			if (!Array.isArray(item.regions)) throw new Error(`Medicamento padrão sem regiões: ${path.relative(scriptDir, filePath)}`);
+			defaultItems.push({
+				id: item.id,
+				kind,
+				origin: 'system',
+				name: item.name,
+				species: item.species,
+				aliases: item.aliases,
+				manufacturer: typeof item.manufacturer === 'string' && item.manufacturer.trim() ? item.manufacturer : null,
+				regions: item.regions,
+				extension: item.extension
+			});
 		}
 	}
 
+	return defaultItems;
+}
+
+function readDefaultTreatmentProtocolIdsByKey() {
+	const idsByKey = new Map();
+	for (const protocol of readDefaultTreatmentProtocols()) {
+		idsByKey.set(treatmentProtocolKey(protocol.kind, normalizeMedicationCatalogName(protocol.name)), protocol.id);
+	}
+
 	return idsByKey;
+}
+
+function readDefaultTreatmentProtocols() {
+	const defaultProtocols = [];
+	for (const kind of ['vaccine', 'antiparasitic']) {
+		const filePath = path.join(treatmentDefaultsDir, `${kind}-protocols.json`);
+		if (!fs.existsSync(filePath)) continue;
+
+		const protocols = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+		if (!Array.isArray(protocols)) throw new Error(`Protocolos padrão inválidos: ${path.relative(scriptDir, filePath)}`);
+		for (const [index, protocol] of protocols.entries()) {
+			const protocolLabel = `${path.relative(scriptDir, filePath)}[${index}]`;
+			if (typeof protocol.id !== 'string' || !isUuidV4(protocol.id)) throw new Error(`Protocolo padrão sem UUID v4: ${path.relative(scriptDir, filePath)}`);
+			if (typeof protocol.name !== 'string' || !protocol.name.trim()) throw new Error(`Protocolo padrão sem nome: ${path.relative(scriptDir, filePath)}`);
+			if (protocol.origin !== 'system') throw new Error(`Protocolo padrão deve ter origin system: ${protocolLabel}`);
+			if (!Array.isArray(protocol.species) || protocol.species.length === 0) throw new Error(`Protocolo padrão sem espécies: ${protocolLabel}`);
+			if (!Array.isArray(protocol.catalogItemIds)) throw new Error(`Protocolo padrão sem medicamentos: ${protocolLabel}`);
+			if (!Array.isArray(protocol.doses) || protocol.doses.length === 0) throw new Error(`Protocolo padrão sem doses: ${protocolLabel}`);
+
+			const catalogItemIds = protocol.catalogItemIds.map((catalogItemId) => {
+				if (typeof catalogItemId !== 'string' || !isUuidV4(catalogItemId)) throw new Error(`Protocolo padrão aponta para medicamento sem UUID v4: ${protocolLabel}`);
+				return catalogItemId;
+			});
+			if (new Set(catalogItemIds).size !== catalogItemIds.length) throw new Error(`Protocolo padrão repete medicamento: ${protocolLabel}`);
+
+			const doses = protocol.doses.map((dose) => {
+				if (typeof dose?.dose !== 'string' || !dose.dose.trim()) throw new Error(`Protocolo padrão tem dose sem nome: ${protocolLabel}`);
+				if (!Number.isInteger(dose.validityValue) || dose.validityValue <= 0) throw new Error(`Protocolo padrão tem validade inválida: ${protocolLabel}`);
+				if (!['days', 'months', 'years'].includes(dose.validityUnit)) throw new Error(`Protocolo padrão tem unidade inválida: ${protocolLabel}`);
+				return {
+					dose: dose.dose,
+					validityValue: dose.validityValue,
+					validityUnit: dose.validityUnit
+				};
+			});
+
+			defaultProtocols.push({
+				id: protocol.id,
+				kind,
+				origin: 'system',
+				name: protocol.name,
+				species: protocol.species,
+				catalogItemIds,
+				observation: typeof protocol.observation === 'string' && protocol.observation.trim() ? protocol.observation : null,
+				doses
+			});
+		}
+	}
+
+	return defaultProtocols;
 }
 
 function removeDatabaseFiles(databasePath) {
@@ -198,14 +352,12 @@ function assertDataSchema(database, label, schema) {
 
 function detectMedicationSourceSchema(database, label) {
 	const tables = new Set(database.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((row) => row.name));
-	const hasDeprecatedTables = Object.values(medicationTableSets.deprecated).every((table) => tables.has(table));
-	const hasCurrentTables = Object.values(medicationTableSets.current).every((table) => tables.has(table));
+	const matches = Object.entries(medicationTableSets).filter(([, tableSet]) => Object.values(tableSet).every((table) => tables.has(table)));
 
-	if (hasDeprecatedTables && hasCurrentTables) throw new Error(`${label} mistura tabelas preventive_* e medication_* para medicamentos.`);
-	if (!hasDeprecatedTables && !hasCurrentTables) throw new Error(`${label} não tem as tabelas de medicamentos esperadas.`);
+	if (matches.length > 1) throw new Error(`${label} mistura formatos diferentes de tabelas de medicamentos/protocolos.`);
+	if (matches.length === 0) throw new Error(`${label} não tem as tabelas de medicamentos esperadas.`);
 
-	const tableSetKey = hasDeprecatedTables ? 'deprecated' : 'current';
-	const tableSet = medicationTableSets[tableSetKey];
+	const [tableSetKey, tableSet] = matches[0];
 	const expectedColumnsByKey = {
 		catalog: medicationSchema.catalog,
 		protocols: medicationSchema.protocols,
@@ -233,6 +385,126 @@ function ensureMedicationCatalogExtensionColumn(database) {
 	database.exec("ALTER TABLE medication_catalog_items ADD COLUMN extension TEXT NOT NULL DEFAULT '{}'");
 }
 
+function convertTreatmentProtocolIdsToUuidV4(database) {
+	const protocolRows = database
+		.prepare(
+			`SELECT id, kind, origin, name, normalized_name, species, observation, sort_order, hidden_at, created_at, updated_at, deleted_at, purge_after
+			 FROM treatment_protocols
+			 ORDER BY kind, sort_order, id`
+		)
+		.all();
+	if (protocolRows.length === 0) return;
+
+	const defaultTreatmentProtocolIdsByKey = readDefaultTreatmentProtocolIdsByKey();
+	const idByOldId = new Map();
+	const convertedProtocolRows = protocolRows.map((row) => {
+		const normalizedName = normalizeMedicationCatalogName(row.normalized_name);
+		const currentId = String(row.id);
+		const defaultId = row.origin === 'system' ? defaultTreatmentProtocolIdsByKey.get(treatmentProtocolKey(row.kind, normalizedName)) : null;
+		const id = defaultId ?? (isUuidV4(currentId) ? currentId : createTreatmentProtocolUuid());
+		for (const key of legacyDatabaseIdKeys(row.id)) idByOldId.set(key, id);
+		return { ...row, id };
+	});
+	const protocolItemRows = database
+		.prepare('SELECT id, protocol_id, catalog_item_id, sort_order, created_at, updated_at FROM treatment_protocol_items ORDER BY id')
+		.all();
+	const protocolDoseRows = database
+		.prepare('SELECT id, protocol_id, dose, validity_value, validity_unit, sort_order, created_at, updated_at FROM treatment_protocol_doses ORDER BY id')
+		.all();
+
+	database.exec(`
+		DROP TABLE IF EXISTS treatment_protocols_uuid;
+		DROP TABLE IF EXISTS treatment_protocol_items_uuid;
+		DROP TABLE IF EXISTS treatment_protocol_doses_uuid;
+
+		CREATE TABLE treatment_protocols_uuid (
+			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
+			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
+			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
+			name TEXT NOT NULL CHECK(length(trim(name)) > 0),
+			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) > 0),
+			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(length(trim(species)) > 0),
+			observation TEXT,
+			sort_order INTEGER NOT NULL DEFAULT 0,
+			hidden_at TEXT,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			deleted_at TEXT,
+			purge_after TEXT
+		);
+	`);
+
+	const insertProtocol = database.prepare(`
+		INSERT INTO treatment_protocols_uuid (
+			id, kind, origin, name, normalized_name, species, observation, sort_order, hidden_at, created_at, updated_at, deleted_at, purge_after
+		) VALUES (
+			@id, @kind, @origin, @name, @normalized_name, @species, @observation, @sort_order, @hidden_at, @created_at, @updated_at, @deleted_at, @purge_after
+		)
+	`);
+	for (const row of convertedProtocolRows) insertProtocol.run(row);
+
+	database.exec(`
+		CREATE TABLE treatment_protocol_items_uuid (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			protocol_id TEXT NOT NULL CHECK(length(trim(protocol_id)) = 36 AND substr(lower(trim(protocol_id)), 15, 1) = '4' AND substr(lower(trim(protocol_id)), 20, 1) IN ('8', '9', 'a', 'b')),
+			catalog_item_id TEXT NOT NULL,
+			sort_order INTEGER NOT NULL DEFAULT 0,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			FOREIGN KEY (protocol_id) REFERENCES treatment_protocols_uuid(id) ON DELETE CASCADE,
+			UNIQUE(protocol_id, catalog_item_id)
+		);
+
+		CREATE TABLE treatment_protocol_doses_uuid (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			protocol_id TEXT NOT NULL CHECK(length(trim(protocol_id)) = 36 AND substr(lower(trim(protocol_id)), 15, 1) = '4' AND substr(lower(trim(protocol_id)), 20, 1) IN ('8', '9', 'a', 'b')),
+			dose TEXT NOT NULL CHECK(length(trim(dose)) > 0),
+			validity_value INTEGER NOT NULL CHECK(validity_value > 0),
+			validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months', 'years')),
+			sort_order INTEGER NOT NULL DEFAULT 0,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			FOREIGN KEY (protocol_id) REFERENCES treatment_protocols_uuid(id) ON DELETE CASCADE
+		);
+	`);
+
+	const insertProtocolItem = database.prepare(`
+		INSERT INTO treatment_protocol_items_uuid (id, protocol_id, catalog_item_id, sort_order, created_at, updated_at)
+		VALUES (@id, @protocol_id, @catalog_item_id, @sort_order, @created_at, @updated_at)
+	`);
+	for (const row of protocolItemRows) {
+		const protocolId = getMappedLegacyDatabaseId(idByOldId, row.protocol_id);
+		if (!protocolId) throw new Error(`Item aponta para protocolo inexistente: ${row.protocol_id}`);
+		insertProtocolItem.run({ ...row, protocol_id: protocolId });
+	}
+
+	const insertProtocolDose = database.prepare(`
+		INSERT INTO treatment_protocol_doses_uuid (id, protocol_id, dose, validity_value, validity_unit, sort_order, created_at, updated_at)
+		VALUES (@id, @protocol_id, @dose, @validity_value, @validity_unit, @sort_order, @created_at, @updated_at)
+	`);
+	for (const row of protocolDoseRows) {
+		const protocolId = getMappedLegacyDatabaseId(idByOldId, row.protocol_id);
+		if (!protocolId) throw new Error(`Dose aponta para protocolo inexistente: ${row.protocol_id}`);
+		insertProtocolDose.run({ ...row, protocol_id: protocolId });
+	}
+
+	database.exec(`
+		DROP INDEX IF EXISTS idx_treatment_protocols_kind_name;
+		DROP INDEX IF EXISTS idx_treatment_protocols_kind_normalized_name;
+		DROP INDEX IF EXISTS idx_treatment_protocols_hidden_at;
+		DROP INDEX IF EXISTS idx_treatment_protocols_deleted_at;
+		DROP INDEX IF EXISTS idx_treatment_protocol_items_protocol_id;
+		DROP INDEX IF EXISTS idx_treatment_protocol_items_catalog_item_id;
+		DROP INDEX IF EXISTS idx_treatment_protocol_doses_protocol_id;
+		DROP TABLE treatment_protocol_doses;
+		DROP TABLE treatment_protocol_items;
+		DROP TABLE treatment_protocols;
+		ALTER TABLE treatment_protocols_uuid RENAME TO treatment_protocols;
+		ALTER TABLE treatment_protocol_items_uuid RENAME TO treatment_protocol_items;
+		ALTER TABLE treatment_protocol_doses_uuid RENAME TO treatment_protocol_doses;
+	`);
+}
+
 function convertMedicationCatalogIdsToUuidV4(database) {
 	const catalogRows = database
 		.prepare(
@@ -250,11 +522,11 @@ function convertMedicationCatalogIdsToUuidV4(database) {
 		const currentId = String(row.id);
 		const defaultId = row.origin === 'system' ? defaultMedicationCatalogIdsByKey.get(medicationCatalogKey(row.kind, normalizedName)) : null;
 		const id = defaultId ?? (isUuidV4(currentId) ? currentId : createMedicationCatalogUuid());
-		idByOldId.set(String(row.id), id);
+		for (const key of legacyDatabaseIdKeys(row.id)) idByOldId.set(key, id);
 		return { ...row, id, extension: row.extension ?? '{}' };
 	});
 	const protocolItemRows = database
-		.prepare('SELECT id, protocol_id, catalog_item_id, sort_order, created_at, updated_at FROM medication_protocol_items ORDER BY id')
+		.prepare('SELECT id, protocol_id, catalog_item_id, sort_order, created_at, updated_at FROM treatment_protocol_items ORDER BY id')
 		.all();
 	const imageCollectionRows = database
 		.prepare('SELECT id, entity_type, entity_id, primary_required, max_items, created_at, updated_at FROM image_collections ORDER BY id')
@@ -291,34 +563,34 @@ function convertMedicationCatalogIdsToUuidV4(database) {
 	for (const row of convertedCatalogRows) insertCatalogItem.run(row);
 
 	database.exec(`
-		DROP INDEX IF EXISTS idx_medication_protocol_items_protocol_id;
-		DROP INDEX IF EXISTS idx_medication_protocol_items_catalog_item_id;
+		DROP INDEX IF EXISTS idx_treatment_protocol_items_protocol_id;
+		DROP INDEX IF EXISTS idx_treatment_protocol_items_catalog_item_id;
 		DROP INDEX IF EXISTS idx_medication_catalog_items_kind_name;
 		DROP INDEX IF EXISTS idx_medication_catalog_items_kind_normalized_name;
 		DROP INDEX IF EXISTS idx_medication_catalog_items_hidden_at;
-		DROP TABLE medication_protocol_items;
+		DROP TABLE treatment_protocol_items;
 		DROP TABLE medication_catalog_items;
 		ALTER TABLE medication_catalog_items_uuid RENAME TO medication_catalog_items;
 
-		CREATE TABLE medication_protocol_items (
+		CREATE TABLE treatment_protocol_items (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			protocol_id INTEGER NOT NULL,
+			protocol_id TEXT NOT NULL CHECK(length(trim(protocol_id)) = 36 AND substr(lower(trim(protocol_id)), 15, 1) = '4' AND substr(lower(trim(protocol_id)), 20, 1) IN ('8', '9', 'a', 'b')),
 			catalog_item_id TEXT NOT NULL CHECK(length(trim(catalog_item_id)) = 36 AND substr(lower(trim(catalog_item_id)), 15, 1) = '4' AND substr(lower(trim(catalog_item_id)), 20, 1) IN ('8', '9', 'a', 'b')),
 			sort_order INTEGER NOT NULL DEFAULT 0,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
-			FOREIGN KEY (protocol_id) REFERENCES medication_protocols(id) ON DELETE CASCADE,
+			FOREIGN KEY (protocol_id) REFERENCES treatment_protocols(id) ON DELETE CASCADE,
 			FOREIGN KEY (catalog_item_id) REFERENCES medication_catalog_items(id) ON DELETE CASCADE,
 			UNIQUE(protocol_id, catalog_item_id)
 		);
 	`);
 
 	const insertProtocolItem = database.prepare(`
-		INSERT INTO medication_protocol_items (id, protocol_id, catalog_item_id, sort_order, created_at, updated_at)
+		INSERT INTO treatment_protocol_items (id, protocol_id, catalog_item_id, sort_order, created_at, updated_at)
 		VALUES (@id, @protocol_id, @catalog_item_id, @sort_order, @created_at, @updated_at)
 	`);
 	for (const row of protocolItemRows) {
-		const catalogItemId = idByOldId.get(String(row.catalog_item_id));
+		const catalogItemId = getMappedLegacyDatabaseId(idByOldId, row.catalog_item_id);
 		if (!catalogItemId) throw new Error(`Protocolo aponta para medicamento inexistente: ${row.catalog_item_id}`);
 		insertProtocolItem.run({ ...row, catalog_item_id: catalogItemId });
 	}
@@ -383,6 +655,165 @@ function convertMedicationCatalogIdsToUuidV4(database) {
 	`);
 }
 
+function syncDefaultMedicationCatalog(database) {
+	const defaultItems = readDefaultMedicationCatalogItems();
+	if (defaultItems.length === 0) return 0;
+
+	const selectCatalogItemById = database.prepare('SELECT id, origin FROM medication_catalog_items WHERE id = ? LIMIT 1');
+	const updateCatalogItemById = database.prepare(`
+		UPDATE medication_catalog_items
+		SET kind = @kind,
+			name = @name,
+			normalized_name = @normalized_name,
+			species = @species,
+			aliases = @aliases,
+			manufacturer = @manufacturer,
+			regions = @regions,
+			extension = @extension,
+			updated_at = CURRENT_TIMESTAMP
+		WHERE id = @id
+			AND origin = 'system'
+	`);
+	const insertCatalogItem = database.prepare(`
+		INSERT INTO medication_catalog_items (id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, updated_at)
+		VALUES (@id, @kind, @name, @normalized_name, @species, @aliases, @manufacturer, 'system', @regions, @extension, CURRENT_TIMESTAMP)
+		ON CONFLICT(kind, normalized_name) DO UPDATE SET
+			name = excluded.name,
+			species = excluded.species,
+			aliases = excluded.aliases,
+			manufacturer = excluded.manufacturer,
+			regions = excluded.regions,
+			extension = excluded.extension,
+			updated_at = CURRENT_TIMESTAMP
+		WHERE medication_catalog_items.origin = 'system'
+	`);
+	const selectCatalogItemByName = database.prepare('SELECT id, origin FROM medication_catalog_items WHERE kind = ? AND normalized_name = ? LIMIT 1');
+
+	let syncedItems = 0;
+	for (const item of defaultItems) {
+		const normalizedName = normalizeMedicationCatalogName(item.name);
+		const catalogRow = {
+			id: item.id,
+			kind: item.kind,
+			name: item.name,
+			normalized_name: normalizedName,
+			species: JSON.stringify(item.species),
+			aliases: JSON.stringify(item.aliases),
+			manufacturer: item.manufacturer,
+			regions: JSON.stringify(item.regions),
+			extension: stringifyMedicationCatalogExtension(item.extension)
+		};
+
+		const storedById = selectCatalogItemById.get(item.id);
+		if (storedById?.origin === 'system') {
+			updateCatalogItemById.run(catalogRow);
+			syncedItems += 1;
+			continue;
+		}
+		if (storedById) continue;
+
+		insertCatalogItem.run(catalogRow);
+
+		const storedItem = selectCatalogItemByName.get(item.kind, normalizedName);
+		if (storedItem?.origin === 'system') syncedItems += 1;
+	}
+
+	return syncedItems;
+}
+
+function syncDefaultTreatmentProtocols(database) {
+	const defaultProtocols = readDefaultTreatmentProtocols();
+	if (defaultProtocols.length === 0) return 0;
+
+	const insertProtocol = database.prepare(`
+		INSERT INTO treatment_protocols (id, kind, origin, name, normalized_name, species, observation, sort_order, updated_at)
+		VALUES (
+			@id,
+			@kind,
+			'system',
+			@name,
+			@normalized_name,
+			@species,
+			@observation,
+			COALESCE((SELECT MAX(sort_order) + 1 FROM treatment_protocols WHERE kind = @kind), 0),
+			CURRENT_TIMESTAMP
+		)
+		ON CONFLICT(id) DO NOTHING
+	`);
+	const selectProtocol = database.prepare('SELECT id, origin FROM treatment_protocols WHERE id = ? LIMIT 1');
+	const updateProtocol = database.prepare(`
+		UPDATE treatment_protocols
+		SET name = @name,
+			species = @species,
+			observation = @observation,
+			updated_at = CURRENT_TIMESTAMP
+		WHERE id = @id
+			AND origin = 'system'
+			AND (
+				name <> @name
+				OR species <> @species
+				OR COALESCE(observation, '') <> COALESCE(@observation, '')
+			)
+	`);
+	const deleteProtocolItems = database.prepare('DELETE FROM treatment_protocol_items WHERE protocol_id = ?');
+	const deleteProtocolDoses = database.prepare('DELETE FROM treatment_protocol_doses WHERE protocol_id = ?');
+	const selectCatalogItem = database.prepare('SELECT id, kind FROM medication_catalog_items WHERE id = ? LIMIT 1');
+	const insertProtocolItem = database.prepare(`
+		INSERT INTO treatment_protocol_items (protocol_id, catalog_item_id, sort_order, updated_at)
+		VALUES (@protocol_id, @catalog_item_id, @sort_order, CURRENT_TIMESTAMP)
+	`);
+	const insertProtocolDose = database.prepare(`
+		INSERT INTO treatment_protocol_doses (protocol_id, dose, validity_value, validity_unit, sort_order, updated_at)
+		VALUES (@protocol_id, @dose, @validity_value, @validity_unit, @sort_order, CURRENT_TIMESTAMP)
+	`);
+
+	let syncedProtocols = 0;
+	for (const protocol of defaultProtocols) {
+		const protocolRow = {
+			id: protocol.id,
+			kind: protocol.kind,
+			name: protocol.name,
+			normalized_name: normalizeMedicationCatalogName(protocol.name),
+			species: JSON.stringify(protocol.species),
+			observation: protocol.observation
+		};
+		insertProtocol.run(protocolRow);
+
+		const storedProtocol = selectProtocol.get(protocol.id);
+		if (!storedProtocol) throw new Error(`Protocolo padrão não encontrado após inserir: ${protocol.name}`);
+		if (storedProtocol.origin !== 'system') continue;
+
+		updateProtocol.run(protocolRow);
+		deleteProtocolItems.run(storedProtocol.id);
+		deleteProtocolDoses.run(storedProtocol.id);
+
+		for (const [sortOrder, catalogItemId] of protocol.catalogItemIds.entries()) {
+			const catalogItem = selectCatalogItem.get(catalogItemId);
+			if (!catalogItem) throw new Error(`Protocolo padrão aponta para medicamento inexistente: ${catalogItemId}`);
+			if (catalogItem.kind !== protocol.kind) throw new Error(`Protocolo padrão aponta para medicamento de outro tipo: ${catalogItemId}`);
+			insertProtocolItem.run({
+				protocol_id: storedProtocol.id,
+				catalog_item_id: catalogItemId,
+				sort_order: sortOrder
+			});
+		}
+
+		for (const [sortOrder, dose] of protocol.doses.entries()) {
+			insertProtocolDose.run({
+				protocol_id: storedProtocol.id,
+				dose: dose.dose,
+				validity_value: dose.validityValue,
+				validity_unit: dose.validityUnit,
+				sort_order: sortOrder
+			});
+		}
+
+		syncedProtocols += 1;
+	}
+
+	return syncedProtocols;
+}
+
 function assertNoDeprecatedTreatmentTables(database, label) {
 	const tables = new Set(database.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((row) => row.name));
 	const deprecatedTables = deprecatedTreatmentTables.filter((table) => tables.has(table));
@@ -392,7 +823,7 @@ function assertNoDeprecatedTreatmentTables(database, label) {
 function assertNoDeprecatedMedicationTables(database, label) {
 	const tables = new Set(database.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((row) => row.name));
 	const deprecatedTables = deprecatedMedicationTables.filter((table) => tables.has(table));
-	if (deprecatedTables.length > 0) throw new Error(`${label} ainda contém tabelas preventivas substituídas: ${deprecatedTables.join(', ')}`);
+	if (deprecatedTables.length > 0) throw new Error(`${label} ainda contém tabelas de medicamentos/protocolos substituídas: ${deprecatedTables.join(', ')}`);
 }
 
 function assertIntegrity(database, label) {
@@ -494,13 +925,22 @@ function migrateMedicationTables(database) {
 	if (tableSetKey === 'deprecated') {
 		database.exec(`
 			ALTER TABLE preventive_catalog_items RENAME TO medication_catalog_items;
-			ALTER TABLE preventive_protocols RENAME TO medication_protocols;
-			ALTER TABLE preventive_protocol_items RENAME TO medication_protocol_items;
-			ALTER TABLE preventive_protocol_doses RENAME TO medication_protocol_doses;
+			ALTER TABLE preventive_protocols RENAME TO treatment_protocols;
+			ALTER TABLE preventive_protocol_items RENAME TO treatment_protocol_items;
+			ALTER TABLE preventive_protocol_doses RENAME TO treatment_protocol_doses;
+		`);
+	} else if (tableSetKey === 'legacyProtocolTables') {
+		database.exec(`
+			ALTER TABLE medication_protocols RENAME TO treatment_protocols;
+			ALTER TABLE medication_protocol_items RENAME TO treatment_protocol_items;
+			ALTER TABLE medication_protocol_doses RENAME TO treatment_protocol_doses;
 		`);
 	}
 	ensureMedicationCatalogExtensionColumn(database);
+	convertTreatmentProtocolIdsToUuidV4(database);
 	convertMedicationCatalogIdsToUuidV4(database);
+	const syncedDefaultCatalogRows = syncDefaultMedicationCatalog(database);
+	const syncedDefaultProtocolRows = syncDefaultTreatmentProtocols(database);
 
 	database.exec(`
 		DROP INDEX IF EXISTS idx_preventive_catalog_items_kind_name;
@@ -517,16 +957,16 @@ function migrateMedicationTables(database) {
 		CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_kind_name ON medication_catalog_items(kind, name COLLATE NOCASE);
 		CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_kind_normalized_name ON medication_catalog_items(kind, normalized_name);
 		CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_hidden_at ON medication_catalog_items(hidden_at);
-		CREATE INDEX IF NOT EXISTS idx_medication_protocols_kind_name ON medication_protocols(kind, name COLLATE NOCASE);
-		CREATE INDEX IF NOT EXISTS idx_medication_protocols_kind_normalized_name ON medication_protocols(kind, normalized_name);
-		CREATE INDEX IF NOT EXISTS idx_medication_protocols_hidden_at ON medication_protocols(hidden_at);
-		CREATE INDEX IF NOT EXISTS idx_medication_protocols_deleted_at ON medication_protocols(deleted_at);
-		CREATE INDEX IF NOT EXISTS idx_medication_protocol_items_protocol_id ON medication_protocol_items(protocol_id);
-		CREATE INDEX IF NOT EXISTS idx_medication_protocol_items_catalog_item_id ON medication_protocol_items(catalog_item_id);
-		CREATE INDEX IF NOT EXISTS idx_medication_protocol_doses_protocol_id ON medication_protocol_doses(protocol_id);
+		CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_name ON treatment_protocols(kind, name COLLATE NOCASE);
+		CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_normalized_name ON treatment_protocols(kind, normalized_name);
+		CREATE INDEX IF NOT EXISTS idx_treatment_protocols_hidden_at ON treatment_protocols(hidden_at);
+		CREATE INDEX IF NOT EXISTS idx_treatment_protocols_deleted_at ON treatment_protocols(deleted_at);
+		CREATE INDEX IF NOT EXISTS idx_treatment_protocol_items_protocol_id ON treatment_protocol_items(protocol_id);
+		CREATE INDEX IF NOT EXISTS idx_treatment_protocol_items_catalog_item_id ON treatment_protocol_items(catalog_item_id);
+		CREATE INDEX IF NOT EXISTS idx_treatment_protocol_doses_protocol_id ON treatment_protocol_doses(protocol_id);
 	`);
 
-	return { originalCatalogRows, originalProtocolRows };
+	return { originalCatalogRows, originalProtocolRows, syncedDefaultCatalogRows, syncedDefaultProtocolRows };
 }
 
 function ensureBreedReferenceTable(database) {
@@ -631,7 +1071,7 @@ function adoptVersionZeroDatabase() {
 	try {
 		let clearedPreferenceSettings = 0;
 		let treatmentMigration = { originalVaccinationRows: 0, originalAntiparasiticRows: 0 };
-		let medicationMigration = { originalCatalogRows: 0, originalProtocolRows: 0 };
+		let medicationMigration = { originalCatalogRows: 0, originalProtocolRows: 0, syncedDefaultCatalogRows: 0, syncedDefaultProtocolRows: 0 };
 		output.transaction(() => {
 			medicationMigration = migrateMedicationTables(output);
 			treatmentMigration = migrateTreatmentTables(output);
@@ -654,7 +1094,9 @@ function adoptVersionZeroDatabase() {
 		console.log(`- pets: ${countRows(output, 'pets')}`);
 		console.log(`- medical_records: ${countRows(output, 'medical_records')}`);
 		console.log(`- medication_catalog_items: ${countRows(output, 'medication_catalog_items')} de ${medicationMigration.originalCatalogRows}`);
-		console.log(`- medication_protocols: ${countRows(output, 'medication_protocols')} de ${medicationMigration.originalProtocolRows}`);
+		console.log(`  - padrões sincronizados: ${medicationMigration.syncedDefaultCatalogRows}`);
+		console.log(`- treatment_protocols: ${countRows(output, 'treatment_protocols')} de ${medicationMigration.originalProtocolRows}`);
+		console.log(`  - padrões sincronizados: ${medicationMigration.syncedDefaultProtocolRows}`);
 		console.log(`- breed_reference_items: ${countRows(output, 'breed_reference_items')}`);
 		console.log(`- pet_treatments: ${countRows(output, 'pet_treatments')}`);
 		console.log(`  - vaccine: ${countTreatments(output, 'vaccine')} de ${treatmentMigration.originalVaccinationRows}`);
