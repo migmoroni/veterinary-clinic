@@ -2,9 +2,10 @@
 name = "veterinary_clinic"
 version = "0.2.0"
 description = "Local-first veterinary clinic app"
-authors = ["Veterinary Clinic"]
-license = ""
-repository = ""
+authors = ["Miguel Eduardo Senna Moroni"]
+license = "MIT"
+homepage = "https://github.com/migmoroni/veterinary-clinic"
+repository = "https://github.com/migmoroni/veterinary-clinic"
 edition = "2021"
 rust-version = "1.77.2"
 

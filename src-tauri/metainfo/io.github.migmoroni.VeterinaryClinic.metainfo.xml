@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component type="desktop-application">
+  <id>io.github.migmoroni.VeterinaryClinic</id>
+  <name>Veterinary Clinic</name>
+  <summary>Local-first veterinary clinic app</summary>
+  <metadata_license>FSFAP</metadata_license>
+  <project_license>MIT</project_license>
+  <description>
+    <p>Local-first veterinary clinic app for managing owners, pets, medical records, vaccinations, antiparasitic treatments, backups, imports and exports with a local SQLite database.</p>
+  </description>
+  <developer id="io.github.migmoroni">
+    <name>Miguel Eduardo Senna Moroni</name>
+  </developer>
+  <url type="homepage">https://github.com/migmoroni/veterinary-clinic</url>
+  <url type="bugtracker">https://github.com/migmoroni/veterinary-clinic/issues</url>
+  <launchable type="desktop-id">Veterinary Clinic.desktop</launchable>
+  <provides>
+    <binary>veterinary_clinic</binary>
+  </provides>
+  <releases>
+    <release version="0.2.0" date="2026-07-09">
+      <description>
+        <p>Prepared the app for single-client production testing with Linux package metadata, license files and desktop integration.</p>
+      </description>
+    </release>
+  </releases>
+  <content_rating type="oars-1.1" />
+</component>

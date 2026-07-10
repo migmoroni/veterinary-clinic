@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Name=Veterinary Clinic
+GenericName=Veterinary clinic manager
+GenericName[pt_BR]=Gestor de clínica veterinária
+Comment=Local-first veterinary clinic app
+Comment[pt_BR]=Aplicativo local-first para clínica veterinária
+Categories=Science;MedicalSoftware;
+Keywords=veterinary;clinic;pets;animals;medical;records;vaccines;sqlite;
+Keywords[pt_BR]=veterinária;clínica;pets;animais;prontuários;vacinas;sqlite;
+Exec=veterinary_clinic
+Icon=veterinary_clinic
+Terminal=false
+StartupNotify=true
+StartupWMClass=veterinary_clinic
