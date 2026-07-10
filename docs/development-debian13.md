@@ -61,6 +61,19 @@ sudo apt install -y gstreamer1.0-tools v4l-utils
 
 Com elas, ficam disponiveis comandos como `gst-device-monitor-1.0` e `v4l2-ctl`.
 
+Ferramentas opcionais para gerar e validar Flatpak:
+
+```sh
+sudo apt install -y flatpak flatpak-builder appstream desktop-file-utils
+```
+
+Notas:
+
+- `flatpak` fornece o runtime, a instalacao local e o comando `flatpak build-bundle` usado para gerar o arquivo `.flatpak` final.
+- `flatpak-builder` executa o manifesto em `flatpak/io.github.migmoroni.VeterinaryClinic.json`.
+- `appstream` fornece `appstreamcli`, usado para validar o metainfo antes e durante o build Flatpak.
+- `desktop-file-utils` fornece `desktop-file-validate`, usado para validar o arquivo `.desktop` exportado.
+
 ## Node e Rust
 
 Use qualquer gerenciador de versoes que mantenha Node 22 disponivel, por exemplo `nvm`, `fnm` ou `asdf`. O projeto usa `package-lock.json`, entao em maquinas limpas prefira:
@@ -229,6 +242,47 @@ MSI deve ser gerado no Windows ou em CI apropriado:
 npm run tauri:msi
 ```
 
+Flatpak:
+
+```sh
+npm run tauri:flatpak
+```
+
+O Tauri nao possui `flatpak` como target nativo de `tauri build --bundles`; neste projeto o Flatpak e gerado por `scripts/build-flatpak.mjs`. O script primeiro executa `npm run tauri -- build --no-bundle`, copia o binario Tauri e os metadados Linux para `flatpak/staging`, valida AppStream e desktop file, executa `flatpak-builder` e entao exporta o bundle unico:
+
+```text
+flatpak/io.github.migmoroni.VeterinaryClinic.flatpak
+```
+
+Antes do primeiro build Flatpak, adicione o Flathub e instale o runtime/SDK usados pelo manifesto:
+
+```sh
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+flatpak install flathub org.gnome.Platform//50 org.gnome.Sdk//50
+```
+
+O manifesto atual usa `org.gnome.Platform//50` e `org.gnome.Sdk//50`. Se o Flathub avisar que esse branch entrou em fim de vida, atualize juntos:
+
+- `FLATPAK_RUNTIME_VERSION` em `scripts/build-flatpak.mjs`
+- `runtime-version` em `flatpak/io.github.migmoroni.VeterinaryClinic.json`
+- os comandos documentados em `flatpak/README.md` e neste arquivo
+
+Para instalar e executar o bundle localmente:
+
+```sh
+flatpak install --user flatpak/io.github.migmoroni.VeterinaryClinic.flatpak
+flatpak run io.github.migmoroni.VeterinaryClinic
+```
+
+Para conferir rapidamente se o ambiente Flatpak esta pronto:
+
+```sh
+command -v flatpak
+command -v flatpak-builder
+flatpak info org.gnome.Platform//50
+flatpak info org.gnome.Sdk//50
+```
+
 ## Conversor legado
 
 O conversor legado fica em `legacy-to-sqlite/`. Ele le `dist/old-clinic.csv` dentro desse diretorio e grava `build/veterinary_clinic.db`.
@@ -281,6 +335,7 @@ Na `0.2.0`, esse processo nao aplica transformacoes estruturais. Ele valida as t
 | `npm run build` | Build web estatico via SvelteKit |
 | `npm run tauri:appimage` | Bundle AppImage |
 | `npm run tauri:deb` | Bundle `.deb` |
+| `npm run tauri:flatpak` | Bundle `.flatpak` via `flatpak-builder` |
 
 Scripts principais dentro de `legacy-to-sqlite/`:
 
@@ -301,6 +356,10 @@ cargo --version
 npx tauri --version
 pkg-config --modversion webkit2gtk-4.1
 command -v patchelf
+command -v flatpak
+command -v flatpak-builder
+flatpak info org.gnome.Platform//50
+flatpak info org.gnome.Sdk//50
 glxinfo -B
 groups
 ls -l /dev/video* /dev/media*

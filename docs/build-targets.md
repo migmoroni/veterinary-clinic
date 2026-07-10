@@ -46,8 +46,11 @@ Before release, also test migration from the previous production database and ru
 ```sh
 npm run tauri:appimage
 npm run tauri:deb
+npm run tauri:flatpak
 npm run tauri:msi
 ```
+
+Flatpak support is implemented with `flatpak-builder`, not a native Tauri bundle target. See `flatpak/README.md` for required runtimes and local install commands.
 
 The MSI bundle should be produced on Windows or a compatible CI runner.
 

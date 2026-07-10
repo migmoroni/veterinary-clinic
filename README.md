@@ -73,6 +73,7 @@ The rebuild converter reads an exported SQLite database from `legacy-to-sqlite/d
 ```sh
 npm run tauri:appimage
 npm run tauri:deb
+npm run tauri:flatpak
 npm run tauri:msi
 ```
 

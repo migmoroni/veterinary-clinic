@@ -19,6 +19,7 @@
 		"tauri:build": "tauri build",
 		"tauri:appimage": "tauri build --bundles appimage",
 		"tauri:deb": "tauri build --bundles deb",
+		"tauri:flatpak": "node scripts/build-flatpak.mjs",
 		"tauri:msi": "tauri build --bundles msi",
 		"tauri:android:dev": "tauri android dev",
 		"tauri:android:build": "tauri android build"
