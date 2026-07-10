@@ -149,7 +149,13 @@ For complex SQLite table changes, prefer the safe rebuild pattern:
 Use one command to change the public app version:
 
 ```sh
-npm run version:bump -- 2.1.0
+npm run version:bump -- minor "Add runtime schema migration for vaccine protocols"
+```
+
+Choose `major`, `minor`, or `patch` according to the release impact. The release note can be provided as a positional string or with repeated `--change` flags:
+
+```sh
+npm run version:bump -- patch --change "Fix backup import validation" --change "Improve Linux package metadata"
 ```
 
 The script updates:
@@ -160,6 +166,8 @@ The script updates:
 - `src-tauri/Cargo.toml`
 - the app package entry in `src-tauri/Cargo.lock`
 - `src/lib/generated/app-version.ts`
+- `CHANGELOG.md`
+- `src-tauri/metainfo/io.github.migmoroni.VeterinaryClinic.metainfo.xml`
 
 The UI shows the app version in Settings. In Tauri, it reads the runtime version; in dev/web, it uses the generated fallback.
 

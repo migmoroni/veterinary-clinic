@@ -38,11 +38,13 @@ npm run test:run
 npm run build
 ```
 
-When changing the SQLite schema, add an incremental runtime migration and use the version bump script:
+When changing the SQLite schema, add an incremental runtime migration and use the version bump script with the semantic level and release note:
 
 ```sh
-npm run version:bump -- 2.1.0
+npm run version:bump -- minor "Add runtime schema migration for vaccine protocols"
 ```
+
+The version bump script calculates the next `major`, `minor`, or `patch` version and updates package metadata, the generated app version, the root changelog, and the AppStream release metadata used by Linux software centers. Use repeated `--change` flags when a release needs multiple changelog bullets.
 
 ## External database converters
 
