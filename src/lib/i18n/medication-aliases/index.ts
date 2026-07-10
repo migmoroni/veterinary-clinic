@@ -1,5 +1,6 @@
 import { enUsMedicationAliasTranslations } from './en-US.js';
 import { esEsMedicationAliasTranslations } from './es-ES.js';
+import { frFrMedicationAliasTranslations } from './fr-FR.js';
 import { gnPyMedicationAliasTranslations } from './gn-PY.js';
 import { ptBrMedicationAliasTranslations, type MedicationAliasTranslationKey } from './pt-BR.js';
 import { ptPtMedicationAliasTranslations } from './pt-PT.js';
@@ -10,7 +11,8 @@ const medicationAliasDictionaries = {
 	'pt-PT': ptPtMedicationAliasTranslations,
 	'gn-PY': gnPyMedicationAliasTranslations,
 	'en-US': enUsMedicationAliasTranslations,
-	'es-ES': esEsMedicationAliasTranslations
+	'es-ES': esEsMedicationAliasTranslations,
+	'fr-FR': frFrMedicationAliasTranslations
 } satisfies Record<Locale, Record<MedicationAliasTranslationKey, readonly string[]>>;
 
 export type { MedicationAliasTranslationKey };

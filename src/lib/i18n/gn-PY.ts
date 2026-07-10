@@ -935,6 +935,7 @@ export const gnPy = {
 	'locale.gn-PY': 'Avañe’ẽ (Paraguái)',
 	'locale.en-US': 'English (United States)',
 	'locale.es-ES': 'Español (España)',
+	'locale.fr-FR': 'Français (France)',
 	'backup.title': 'Kopia ñangareko',
 	'backup.description': 'Ejapo kopia nde po rupive base SQLite ko’ápegua, eiporavo política automática tekotevẽva ha ehecha rembiasakue ramovéva.',
 	'backup.policyTitle': 'Política automática',

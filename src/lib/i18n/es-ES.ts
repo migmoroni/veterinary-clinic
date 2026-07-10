@@ -936,6 +936,7 @@ export const esEs = {
 	'locale.gn-PY': 'Avañe’ẽ (Paraguái)',
 	'locale.en-US': 'English (United States)',
 	'locale.es-ES': 'Español (España)',
+	'locale.fr-FR': 'Français (France)',
 	'backup.title': 'Copias de seguridad',
 	'backup.description': 'Crea copias manuales de la base SQLite local, define la política automática obligatoria y revisa el historial reciente.',
 	'backup.policyTitle': 'Política automática',

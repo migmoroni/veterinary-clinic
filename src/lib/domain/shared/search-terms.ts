@@ -5,7 +5,8 @@ const searchStopWordsByLocale = {
 	'pt-PT': ['a', 'as', 'o', 'os', 'e', 'em', 'de', 'da', 'das', 'do', 'dos', 'ao', 'aos', 'por', 'para', 'com', 'sem'],
 	'en-US': ['a', 'an', 'the', 'and', 'or', 'of', 'for', 'to', 'with', 'without', 'in', 'on', 'at', 'by', 'from'],
 	'es-ES': ['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'en', 'de', 'del', 'al', 'por', 'para', 'con', 'sin'],
-	'gn-PY': ['ha', 'pe', 'ko', 'umi']
+	'gn-PY': ['ha', 'pe', 'ko', 'umi'],
+	'fr-FR': ['le', 'la', 'les', 'un', 'une', 'des', 'et', 'ou', 'de', 'du', 'au', 'aux', 'par', 'pour', 'avec', 'sans', 'en']
 } as const satisfies Record<Locale, readonly string[]>;
 
 const normalizedSearchStopWordsByLocale: Record<Locale, Set<string>> = Object.fromEntries(

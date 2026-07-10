@@ -1,5 +1,6 @@
 import { enUs } from './en-US.js';
 import { esEs } from './es-ES.js';
+import { frFr } from './fr-FR.js';
 import { gnPy } from './gn-PY.js';
 import { DEFAULT_LOCALE, isLocale, supportedLocales, type Locale } from './locales.js';
 import { ptBr, type TranslationKey } from './pt-BR.js';
@@ -11,7 +12,8 @@ const dictionaries = {
 	'pt-PT': ptPt,
 	'gn-PY': gnPy,
 	'en-US': enUs,
-	'es-ES': esEs
+	'es-ES': esEs,
+	'fr-FR': frFr
 } satisfies Record<Locale, Record<TranslationKey, string>>;
 
 export const localeOptions = supportedLocales.map((locale) => ({

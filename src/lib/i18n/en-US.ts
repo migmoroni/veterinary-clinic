@@ -936,6 +936,7 @@ export const enUs = {
 	'locale.gn-PY': 'Avañe’ẽ (Paraguái)',
 	'locale.en-US': 'English (United States)',
 	'locale.es-ES': 'Español (España)',
+	'locale.fr-FR': 'Français (France)',
 	'backup.title': 'Backups',
 	'backup.description': 'Create manual copies of the local SQLite database, define the required automatic policy, and review recent history.',
 	'backup.policyTitle': 'Automatic policy',

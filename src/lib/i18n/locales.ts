@@ -1,5 +1,5 @@
 export const DEFAULT_LOCALE = 'pt-BR';
-export const supportedLocales = ['pt-BR', 'pt-PT', 'gn-PY', 'en-US', 'es-ES'] as const;
+export const supportedLocales = ['pt-BR', 'pt-PT', 'gn-PY', 'en-US', 'es-ES', 'fr-FR'] as const;
 
 export type Locale = (typeof supportedLocales)[number];
 

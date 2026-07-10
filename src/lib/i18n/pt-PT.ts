@@ -935,6 +935,7 @@ export const ptPt = {
 	'locale.gn-PY': 'Avañe’ẽ (Paraguái)',
 	'locale.en-US': 'English (United States)',
 	'locale.es-ES': 'Español (España)',
+	'locale.fr-FR': 'Français (France)',
 	'backup.title': 'Cópias de segurança',
 	'backup.description': 'Crie cópias manuais da base SQLite local, defina a política automática obrigatória e acompanhe o historial recente.',
 	'backup.policyTitle': 'Política automática',
