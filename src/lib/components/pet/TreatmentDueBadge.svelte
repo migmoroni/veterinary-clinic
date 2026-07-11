@@ -4,37 +4,26 @@
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
 
 	const labelKeys = {
-		vaccine: {
-			validityIgnored: 'vaccine.validityIgnored',
-			validityUnknown: 'vaccine.validityUnknown',
-			expiredOn: 'vaccine.expiredOn',
-			expiresToday: 'vaccine.expiresToday',
-			validUntil: 'vaccine.validUntil',
-			expiresIn: 'vaccine.expiresIn'
-		},
-		antiparasitic: {
-			validityIgnored: 'antiparasiticTreatment.validityIgnored',
-			validityUnknown: 'antiparasiticTreatment.validityUnknown',
-			expiredOn: 'antiparasiticTreatment.expiredOn',
-			expiresToday: 'antiparasiticTreatment.expiresToday',
-			validUntil: 'antiparasiticTreatment.validUntil',
-			expiresIn: 'antiparasiticTreatment.expiresIn'
-		}
-	} satisfies Record<TreatmentKind, Record<string, TranslationKey>>;
+		validityIgnored: 'treatment.validityIgnored',
+		validityUnknown: 'treatment.validityUnknown',
+		expiredOn: 'treatment.expiredOn',
+		expiresToday: 'treatment.expiresToday',
+		validUntil: 'treatment.validUntil',
+		expiresIn: 'treatment.expiresIn'
+	} satisfies Record<string, TranslationKey>;
 
-	let { kind, status, className = '' }: { kind: TreatmentKind; status: TreatmentDueStatus; className?: string } = $props();
+	let { status, className = '' }: { kind: TreatmentKind; status: TreatmentDueStatus; className?: string } = $props();
 
 	const label = $derived.by(() => {
-		const keys = labelKeys[kind];
-		if (status.validityIgnored) return t(keys.validityIgnored);
-		if (!status.dueAt || status.daysUntilDue === null) return t(keys.validityUnknown);
+		if (status.validityIgnored) return t(labelKeys.validityIgnored);
+		if (!status.dueAt || status.daysUntilDue === null) return t(labelKeys.validityUnknown);
 
 		const formattedDueAt = formatDateForDisplay(status.dueAt, i18n.locale);
-		if (status.expired) return `${t(keys.expiredOn)} ${formattedDueAt}`;
-		if (status.daysUntilDue === 0) return `${t(keys.expiresToday)} ${formattedDueAt}`;
+		if (status.expired) return `${t(labelKeys.expiredOn)} ${formattedDueAt}`;
+		if (status.daysUntilDue === 0) return `${t(labelKeys.expiresToday)} ${formattedDueAt}`;
 
 		const dayKey = status.daysUntilDue === 1 ? 'pet.ageDaySingular' : 'pet.ageDayPlural';
-		return `${t(keys.validUntil)} ${formattedDueAt} · ${t(keys.expiresIn)} ${status.daysUntilDue} ${t(dayKey)}`;
+		return `${t(labelKeys.validUntil)} ${formattedDueAt} · ${t(labelKeys.expiresIn)} ${status.daysUntilDue} ${t(dayKey)}`;
 	});
 
 	const badgeClass = $derived(

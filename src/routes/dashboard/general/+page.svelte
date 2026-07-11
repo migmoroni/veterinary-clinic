@@ -179,7 +179,7 @@
 
 		if (studyTarget === 'antiparasitics') {
 			return [
-				{ dimension: 'antiparasiticStatus', labelKey: 'antiparasiticTreatment.analytics.filterMode.status' },
+				{ dimension: 'antiparasiticStatus', labelKey: 'treatment.analytics.filterMode.status' },
 				{ dimension: 'antiparasitic', labelKey: 'antiparasiticTreatment.name' },
 				{ dimension: 'petSpecies', labelKey: 'analysis.study.dimension.petSpecies' },
 				{ dimension: 'petBreed', labelKey: 'analysis.study.dimension.petBreed' },
@@ -474,7 +474,7 @@
 		if (studyVaccineNormalizedName) factors.push({ label: t('analysis.study.vaccine'), value: selectedStudyVaccineLabel(), count: countStudyTargetForFactor('vaccine') });
 		if (studyVaccineStatus) factors.push({ label: t('analysis.study.vaccineStatus'), value: vaccineStatusLabel(studyVaccineStatus as DashboardVaccineStatusKey), count: countStudyTargetForFactor('vaccineStatus') });
 		if (studyAntiparasiticNormalizedName) factors.push({ label: t('antiparasiticTreatment.name'), value: selectedStudyAntiparasiticLabel(), count: countStudyTargetForFactor('antiparasitic') });
-		if (studyAntiparasiticStatus) factors.push({ label: t('antiparasiticTreatment.analytics.filterMode.status'), value: antiparasiticStatusLabel(studyAntiparasiticStatus as DashboardAntiparasiticStatusKey), count: countStudyTargetForFactor('antiparasiticStatus') });
+		if (studyAntiparasiticStatus) factors.push({ label: t('treatment.analytics.filterMode.status'), value: antiparasiticStatusLabel(studyAntiparasiticStatus as DashboardAntiparasiticStatusKey), count: countStudyTargetForFactor('antiparasiticStatus') });
 		if (studySpecies) factors.push({ label: t('analysis.study.species'), value: speciesLabel(studySpecies), count: countStudyTargetForFactor('species') });
 		if (studyBreed) factors.push({ label: t('analysis.study.breed'), value: breedLabel(studyBreed), count: countStudyTargetForFactor('breed') });
 		if (studySex) factors.push({ label: t('analysis.study.sex'), value: sexLabel(studySex), count: countStudyTargetForFactor('sex') });
@@ -761,12 +761,12 @@
 
 	function vaccineStatusLabel(key: DashboardVaccineStatusKey): string {
 		if (key === 'untracked') return t('analysis.vaccineStatus.untracked');
-		return t(`vaccine.status.${key}` as TranslationKey);
+		return t(`treatment.status.${key}` as TranslationKey);
 	}
 
 	function antiparasiticStatusLabel(key: DashboardAntiparasiticStatusKey): string {
 		if (key === 'untracked') return t('analysis.antiparasiticStatus.untracked');
-		return t(`antiparasiticTreatment.status.${key}` as TranslationKey);
+		return t(`treatment.status.${key}` as TranslationKey);
 	}
 
 	function vaccineDoseLabel(vaccine: DashboardPetStudyTreatment<DashboardVaccineStatusKey>): string {
@@ -886,7 +886,7 @@
 								<Select id="study-antiparasitic" bind:value={studyAntiparasiticNormalizedName} options={studyAntiparasiticOptions()} />
 							</div>
 							<div class="space-y-1">
-								<label class="text-sm font-medium" for="study-antiparasitic-status">{t('antiparasiticTreatment.analytics.filterMode.status')}</label>
+								<label class="text-sm font-medium" for="study-antiparasitic-status">{t('treatment.analytics.filterMode.status')}</label>
 								<Select id="study-antiparasitic-status" bind:value={studyAntiparasiticStatus} options={studyAntiparasiticStatusOptions()} />
 							</div>
 						</div>
@@ -1066,7 +1066,7 @@
 										<p class="wrap-break-word text-sm font-semibold">{vaccine.name} · {vaccineDoseLabel(vaccine)} - {vaccineStatusLabel(vaccine.status)}</p>
 										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{vaccine.pet.name} - {speciesLabel(vaccine.pet.species)} - {breedLabel(vaccine.pet.breed)}</p>
 										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(vaccine.pet)} - {studyPetCityText(vaccine.pet)}</p>
-										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{t('vaccine.appliedAt')}: {formatDateForDisplay(vaccine.appliedAt)} - {t('vaccine.analytics.dueAt')}: {formatDateForDisplay(vaccine.dueAt)}</p>
+										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{t('treatment.appliedAt')}: {formatDateForDisplay(vaccine.appliedAt)} - {t('treatment.analytics.dueAt')}: {formatDateForDisplay(vaccine.dueAt)}</p>
 									</div>
 									<a href={studyPetProfileHref(vaccine.pet)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openPet')}</a>
 								</article>
@@ -1080,12 +1080,12 @@
 										<p class="wrap-break-word text-sm font-semibold">{antiparasitic.name} · {antiparasiticDoseLabel(antiparasitic)} - {antiparasiticStatusLabel(antiparasitic.status)}</p>
 										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{antiparasitic.pet.name} - {speciesLabel(antiparasitic.pet.species)} - {breedLabel(antiparasitic.pet.breed)}</p>
 										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{studyOwnerText(antiparasitic.pet)} - {studyPetCityText(antiparasitic.pet)}</p>
-										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{t('antiparasiticTreatment.appliedAt')}: {formatDateForDisplay(antiparasitic.appliedAt)} - {t('antiparasiticTreatment.analytics.dueAt')}: {formatDateForDisplay(antiparasitic.dueAt)}</p>
+										<p class="mt-1 wrap-break-word text-xs text-muted-foreground">{t('treatment.appliedAt')}: {formatDateForDisplay(antiparasitic.appliedAt)} - {t('treatment.analytics.dueAt')}: {formatDateForDisplay(antiparasitic.dueAt)}</p>
 									</div>
 									<a href={studyPetProfileHref(antiparasitic.pet)} class="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">{t('actions.openPet')}</a>
 								</article>
 							{:else}
-								<p class="p-4 text-center text-sm text-muted-foreground">{t('antiparasiticTreatment.analytics.emptyStatus')}</p>
+								<p class="p-4 text-center text-sm text-muted-foreground">{t('treatment.analytics.emptyStatus')}</p>
 							{/each}
 						{:else if studyTarget === 'owners'}
 							{#each listedStudyOwners.slice(0, 40) as owner}

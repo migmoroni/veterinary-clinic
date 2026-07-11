@@ -131,7 +131,7 @@
 
 	function vaccineStatusLabel(key: DashboardVaccineStatusKey): string {
 		if (key === 'untracked') return t('analysis.vaccineStatus.untracked');
-		return t(`vaccine.status.${key}` as TranslationKey);
+		return t(`treatment.status.${key}` as TranslationKey);
 	}
 
 	function bucketLabel(kind: PetAnalysisKind, key: string): string {
@@ -411,7 +411,7 @@
 						</span>
 					</div>
 					<div class="flex flex-col gap-2 sm:items-end">
-						<label class="text-sm font-medium" for="pet-analysis-order">{t('vaccine.analytics.order')}</label>
+						<label class="text-sm font-medium" for="pet-analysis-order">{t('treatment.analytics.order')}</label>
 						<div class="flex items-center gap-2">
 							<Select
 								id="pet-analysis-order"

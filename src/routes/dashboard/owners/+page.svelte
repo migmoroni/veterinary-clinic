@@ -200,7 +200,7 @@
 
 	function vaccineStatusLabel(key: DashboardVaccineStatusKey): string {
 		if (key === 'untracked') return t('analysis.vaccineStatus.untracked');
-		return t(`vaccine.status.${key}` as TranslationKey);
+		return t(`treatment.status.${key}` as TranslationKey);
 	}
 
 	function bucketLabelText(bucket: OwnerBucket): string {
@@ -511,7 +511,7 @@
 						<p class="mt-1 text-sm leading-6 text-muted-foreground">{t('analysis.study.relatedOwnersListDescription')}</p>
 					</div>
 					<div class="flex flex-col gap-2 sm:items-end">
-						<label class="text-sm font-medium" for="owner-analysis-order">{t('vaccine.analytics.order')}</label>
+						<label class="text-sm font-medium" for="owner-analysis-order">{t('treatment.analytics.order')}</label>
 						<div class="flex items-center gap-2">
 							<Select
 								id="owner-analysis-order"

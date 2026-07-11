@@ -31,29 +31,6 @@
 	interface TreatmentPanelConfig {
 		prefix: string;
 		sectionTitle: TranslationKey;
-		manageLabel: TranslationKey;
-		stepItem: TranslationKey;
-		stepAppliedAt: TranslationKey;
-		stepDose: TranslationKey;
-		stepValidity: TranslationKey;
-		namePlaceholder: TranslationKey;
-		nameRequired: TranslationKey;
-		doseRequired: TranslationKey;
-		validityRequired: TranslationKey;
-		observation: TranslationKey;
-		dosePlaceholder: TranslationKey;
-		addToDay: TranslationKey;
-		selectedForDay: TranslationKey;
-		removeSelected: TranslationKey;
-		saveApplications: TranslationKey;
-		saved: TranslationKey;
-		saveFailed: TranslationKey;
-		empty: TranslationKey;
-		ignoreValidity: TranslationKey;
-		restoreValidity: TranslationKey;
-		validityIgnoredSaved: TranslationKey;
-		validityRestoredSaved: TranslationKey;
-		deleteConfirm: TranslationKey;
 		nameLimit: number;
 		doseLimit: number;
 		observationLimit: number;
@@ -72,29 +49,6 @@
 			...treatmentPanelLimits,
 			prefix: 'vaccine',
 			sectionTitle: 'vaccine.sectionTitle',
-			manageLabel: 'vaccine.manageVaccines',
-			stepItem: 'vaccine.step.vaccine',
-			stepAppliedAt: 'vaccine.step.appliedAt',
-			stepDose: 'vaccine.step.dose',
-			stepValidity: 'vaccine.step.validity',
-			namePlaceholder: 'vaccine.namePlaceholder',
-			nameRequired: 'vaccine.nameRequired',
-			doseRequired: 'vaccine.doseRequired',
-			validityRequired: 'vaccine.validityRequired',
-			observation: 'vaccine.observation',
-			dosePlaceholder: 'vaccine.dosePlaceholder',
-			addToDay: 'vaccine.addToDay',
-			selectedForDay: 'vaccine.selectedForDay',
-			removeSelected: 'vaccine.removeSelected',
-			saveApplications: 'vaccine.saveApplications',
-			saved: 'vaccine.saved',
-			saveFailed: 'vaccine.saveFailed',
-			empty: 'vaccine.empty',
-			ignoreValidity: 'vaccine.ignoreValidity',
-			restoreValidity: 'vaccine.restoreValidity',
-			validityIgnoredSaved: 'vaccine.validityIgnoredSaved',
-			validityRestoredSaved: 'vaccine.validityRestoredSaved',
-			deleteConfirm: 'vaccine.deleteConfirm',
 			defaultValidityValue: 12,
 			defaultValidityUnit: 'months'
 		},
@@ -102,29 +56,6 @@
 			...treatmentPanelLimits,
 			prefix: 'antiparasiticTreatment',
 			sectionTitle: 'antiparasiticTreatment.sectionTitle',
-			manageLabel: 'antiparasiticTreatment.manageAntiparasitics',
-			stepItem: 'antiparasiticTreatment.step.antiparasitic',
-			stepAppliedAt: 'antiparasiticTreatment.step.appliedAt',
-			stepDose: 'antiparasiticTreatment.step.dose',
-			stepValidity: 'antiparasiticTreatment.step.validity',
-			namePlaceholder: 'antiparasiticTreatment.namePlaceholder',
-			nameRequired: 'antiparasiticTreatment.nameRequired',
-			doseRequired: 'antiparasiticTreatment.doseRequired',
-			validityRequired: 'antiparasiticTreatment.validityRequired',
-			observation: 'antiparasiticTreatment.observation',
-			dosePlaceholder: 'antiparasiticTreatment.dosePlaceholder',
-			addToDay: 'antiparasiticTreatment.addToDay',
-			selectedForDay: 'antiparasiticTreatment.selectedForDay',
-			removeSelected: 'antiparasiticTreatment.removeSelected',
-			saveApplications: 'antiparasiticTreatment.saveApplications',
-			saved: 'antiparasiticTreatment.saved',
-			saveFailed: 'antiparasiticTreatment.saveFailed',
-			empty: 'antiparasiticTreatment.empty',
-			ignoreValidity: 'antiparasiticTreatment.ignoreValidity',
-			restoreValidity: 'antiparasiticTreatment.restoreValidity',
-			validityIgnoredSaved: 'antiparasiticTreatment.validityIgnoredSaved',
-			validityRestoredSaved: 'antiparasiticTreatment.validityRestoredSaved',
-			deleteConfirm: 'antiparasiticTreatment.deleteConfirm',
 			defaultValidityValue: 6,
 			defaultValidityUnit: 'months'
 		}
@@ -256,7 +187,7 @@
 
 		const trimmedName = treatmentName.trim();
 		if (!trimmedName || !knownNames.includes(trimmedName)) {
-			errorKey = config.nameRequired;
+			errorKey = 'treatment.nameRequired';
 			return null;
 		}
 		if (textLength(trimmedName) > config.nameLimit) {
@@ -266,7 +197,7 @@
 
 		const trimmedDose = dose.trim();
 		if (!trimmedDose) {
-			errorKey = config.doseRequired;
+			errorKey = 'treatment.doseRequired';
 			return null;
 		}
 		if (textLength(trimmedDose) > config.doseLimit) {
@@ -275,7 +206,7 @@
 		}
 
 		if (validityValue <= 0) {
-			errorKey = config.validityRequired;
+			errorKey = 'treatment.validityRequired';
 			return null;
 		}
 
@@ -349,14 +280,14 @@
 			pendingApplications = [];
 			resetTreatmentFields();
 			await reloadCatalogs();
-			statusKey = config.saved;
+			statusKey = 'treatment.saved';
 		} catch (exception) {
 			if (exception instanceof Error && exception.message === 'date_invalid') errorKey = 'date.invalid';
 			else if (exception instanceof Error && exception.message === 'field_limit_exceeded') errorKey = 'form.limitExceeded';
-			else if (exception instanceof Error && exception.message === 'treatment_name_required') errorKey = config.nameRequired;
-			else if (exception instanceof Error && exception.message === 'treatment_dose_required') errorKey = config.doseRequired;
-			else if (exception instanceof Error && exception.message === 'treatment_validity_required') errorKey = config.validityRequired;
-			else errorKey = config.saveFailed;
+			else if (exception instanceof Error && exception.message === 'treatment_name_required') errorKey = 'treatment.nameRequired';
+			else if (exception instanceof Error && exception.message === 'treatment_dose_required') errorKey = 'treatment.doseRequired';
+			else if (exception instanceof Error && exception.message === 'treatment_validity_required') errorKey = 'treatment.validityRequired';
+			else errorKey = 'treatment.saveFailed';
 		} finally {
 			saving = false;
 		}
@@ -370,9 +301,9 @@
 		try {
 			const updated = await setTreatmentValidity(kind, treatment.id, ignored);
 			setCurrentTreatments(currentTreatments.map((item) => (item.id === updated.id ? updated : item)));
-			statusKey = ignored ? config.validityIgnoredSaved : config.validityRestoredSaved;
+			statusKey = ignored ? 'treatment.validityIgnoredSaved' : 'treatment.validityRestoredSaved';
 		} catch {
-			errorKey = config.saveFailed;
+			errorKey = 'treatment.saveFailed';
 		} finally {
 			saving = false;
 		}
@@ -396,7 +327,7 @@
 			pendingRemoval = null;
 			statusKey = 'status.deleted';
 		} catch {
-			errorKey = config.saveFailed;
+			errorKey = 'treatment.saveFailed';
 		} finally {
 			saving = false;
 		}
@@ -410,9 +341,9 @@
 <section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
 	<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 		<h3 class="min-w-0 text-base font-semibold">{t(config.sectionTitle)}</h3>
-		<a href="/settings/products" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={t(config.manageLabel)}>
+		<a href="/settings/products" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={t('treatment.manageProducts')}>
 			<Settings2 class="size-4" />
-			{t(config.manageLabel)}
+			{t('treatment.manageProducts')}
 		</a>
 	</div>
 
@@ -427,13 +358,13 @@
 	<form class="mt-4 flex flex-col gap-4" onsubmit={submitTreatments}>
 		<div class="grid gap-3 md:grid-cols-2">
 			<label class="flex flex-col gap-1 text-sm font-medium">
-				<span>{t(config.stepAppliedAt)}</span>
-				<DateField bind:value={appliedAt} ariaLabel={t(config.stepAppliedAt)} />
+				<span>{t('treatment.step.appliedAt')}</span>
+				<DateField bind:value={appliedAt} ariaLabel={t('treatment.step.appliedAt')} />
 			</label>
 
 			<div class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-				<label for={`${config.prefix}-name-${petId}`}>{t(config.stepItem)}</label>
-				<SearchableSelect id={`${config.prefix}-name-${petId}`} bind:value={treatmentName} emptyValue="" options={catalogOptions()} placeholder={t(config.namePlaceholder)} emptyLabel={t('form.noOptions')} disabled={knownNames.length === 0} showOptionMedia onchange={handleTreatmentChange} />
+				<label for={`${config.prefix}-name-${petId}`}>{t('treatment.step.treatment')}</label>
+				<SearchableSelect id={`${config.prefix}-name-${petId}`} bind:value={treatmentName} emptyValue="" options={catalogOptions()} placeholder={t('treatment.namePlaceholder')} emptyLabel={t('form.noOptions')} disabled={knownNames.length === 0} showOptionMedia onchange={handleTreatmentChange} />
 			</div>
 
 			<div class="grid gap-3 md:col-span-2 sm:grid-cols-2">
@@ -460,40 +391,40 @@
 
 			<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 				<span class="flex min-w-0 items-baseline justify-between gap-2">
-					<span>{t(config.stepDose)}</span>
+					<span>{t('treatment.step.dose')}</span>
 					<CharacterLimitHint value={dose} max={config.doseLimit} />
 				</span>
-				<input id={`${config.prefix}-dose-${petId}`} class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 read-only:opacity-70" bind:value={dose} maxlength={config.doseLimit} placeholder={t(config.dosePlaceholder)} readonly={protocolFieldsLocked} />
+				<input id={`${config.prefix}-dose-${petId}`} class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 read-only:opacity-70" bind:value={dose} maxlength={config.doseLimit} placeholder={t('treatment.dosePlaceholder')} readonly={protocolFieldsLocked} />
 			</label>
 
 			<label class="flex flex-col gap-1 text-sm font-medium">
-				<span>{t(config.stepValidity)}</span>
-				<PeriodField bind:value={validityValue} bind:unit={validityUnit} ariaLabel={t(config.stepValidity)} disabled={protocolFieldsLocked} />
+				<span>{t('treatment.step.validity')}</span>
+				<PeriodField bind:value={validityValue} bind:unit={validityUnit} ariaLabel={t('treatment.step.validity')} disabled={protocolFieldsLocked} />
 			</label>
 
 			<div class="flex min-w-0 flex-col gap-1 text-sm font-medium md:col-span-2">
-				<label for={`${config.prefix}-observation-${petId}`}>{t(config.observation)}</label>
-				<Textarea id={`${config.prefix}-observation-${petId}`} bind:value={observation} ariaLabel={t(config.observation)} maxLength={config.observationLimit} readonly={protocolFieldsLocked} class="min-h-24" />
+				<label for={`${config.prefix}-observation-${petId}`}>{t('treatment.observation')}</label>
+				<Textarea id={`${config.prefix}-observation-${petId}`} bind:value={observation} ariaLabel={t('treatment.observation')} maxLength={config.observationLimit} readonly={protocolFieldsLocked} class="min-h-24" />
 			</div>
 		</div>
 
 		<div class="flex flex-wrap gap-2">
 			<button type="button" class="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} onclick={addPendingApplication}>
 				<Plus class="size-4" />
-				{t(config.addToDay)}
+				{t('treatment.addToDay')}
 			</button>
 			<button type="submit" class="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50" disabled={saving}>
 				<Save class="size-4" />
-				{t(config.saveApplications)}
+				{t('treatment.saveApplications')}
 			</button>
 		</div>
 
 		{#if pendingApplications.length > 0}
-			<div class="flex flex-wrap gap-2" aria-label={t(config.selectedForDay)}>
+			<div class="flex flex-wrap gap-2" aria-label={t('treatment.selectedForDay')}>
 				{#each pendingApplications as application, index}
 					<span class="inline-flex h-8 max-w-full items-center gap-2 rounded-md border border-border bg-muted px-2 text-sm">
 						<span class="truncate">{pendingLabel(application)}</span>
-						<button type="button" class="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-background hover:text-foreground" aria-label={`${t(config.removeSelected)}: ${pendingLabel(application)}`} onclick={() => removePendingApplication(index)}>
+						<button type="button" class="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-background hover:text-foreground" aria-label={`${t('treatment.removeSelected')}: ${pendingLabel(application)}`} onclick={() => removePendingApplication(index)}>
 							<X class="size-3" />
 						</button>
 					</span>
@@ -517,17 +448,17 @@
 					<span class="mt-0.5 block text-xs text-muted-foreground">{formatDateForDisplay(treatment.appliedAt, i18n.locale) || t('common.notInformed')}</span>
 					<span class="mt-1 block text-xs text-muted-foreground">{validityLabel(treatment.validityValue, treatment.validityUnit)}</span>
 					{#if treatment.observation}
-						<span class="mt-1 block whitespace-pre-wrap wrap-break-word text-xs text-muted-foreground"><span class="font-medium text-foreground">{t(config.observation)}:</span> {treatment.observation}</span>
+						<span class="mt-1 block whitespace-pre-wrap wrap-break-word text-xs text-muted-foreground"><span class="font-medium text-foreground">{t('treatment.observation')}:</span> {treatment.observation}</span>
 					{/if}
 					<TreatmentDueBadge {kind} status={getTreatmentDueStatus(treatment)} className="mt-2" />
 				</span>
 				<span class="flex shrink-0 gap-1">
 					{#if treatment.validityIgnoredAt}
-						<button type="button" class="flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50" aria-label={`${t(config.restoreValidity)}: ${treatmentLabel(treatment)}`} title={t(config.restoreValidity)} disabled={saving} onclick={() => void toggleTreatmentValidity(treatment, false)}>
+						<button type="button" class="flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50" aria-label={`${t('treatment.restoreValidity')}: ${treatmentLabel(treatment)}`} title={t('treatment.restoreValidity')} disabled={saving} onclick={() => void toggleTreatmentValidity(treatment, false)}>
 							<Bell class="size-4" />
 						</button>
 					{:else}
-						<button type="button" class="flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50" aria-label={`${t(config.ignoreValidity)}: ${treatmentLabel(treatment)}`} title={t(config.ignoreValidity)} disabled={saving} onclick={() => void toggleTreatmentValidity(treatment, true)}>
+						<button type="button" class="flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50" aria-label={`${t('treatment.ignoreValidity')}: ${treatmentLabel(treatment)}`} title={t('treatment.ignoreValidity')} disabled={saving} onclick={() => void toggleTreatmentValidity(treatment, true)}>
 							<BellOff class="size-4" />
 						</button>
 					{/if}
@@ -537,9 +468,9 @@
 				</span>
 			</div>
 		{:else}
-			<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t(config.empty)}</p>
+			<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t('treatment.empty')}</p>
 		{/each}
 	</div>
 </section>
 
-<TrashRemovalDialog open={pendingRemoval !== null} messageKey={config.deleteConfirm} confirming={saving} onConfirm={() => void confirmDeleteTreatment()} onCancel={() => (pendingRemoval = null)} />
+<TrashRemovalDialog open={pendingRemoval !== null} messageKey="treatment.deleteConfirm" confirming={saving} onConfirm={() => void confirmDeleteTreatment()} onCancel={() => (pendingRemoval = null)} />

@@ -22,14 +22,10 @@
 	type ActiveTab = 'status' | 'history';
 	type SortOrder = 'recent' | 'old';
 	type HistoryPoint = { key: string; label: string; count: number };
-	type TranslationRoot = 'vaccine' | 'antiparasiticTreatment';
 
 	interface TreatmentAnalyticsConfig {
 		defaultBasePath: string;
 		historyParam: string;
-		translationRoot: TranslationRoot;
-		filterKey: TranslationKey;
-		allFilterKey: TranslationKey;
 	}
 
 	interface TreatmentAnalyticsPageProps {
@@ -40,17 +36,11 @@
 	const treatmentAnalyticsConfigs: Record<TreatmentKind, TreatmentAnalyticsConfig> = {
 		vaccine: {
 			defaultBasePath: '/vaccines',
-			historyParam: 'vaccine',
-			translationRoot: 'vaccine',
-			filterKey: 'vaccine.analytics.vaccineFilter',
-			allFilterKey: 'vaccine.analytics.allVaccines'
+			historyParam: 'vaccine'
 		},
 		antiparasitic: {
 			defaultBasePath: '/antiparasitics',
-			historyParam: 'antiparasitic',
-			translationRoot: 'antiparasiticTreatment',
-			filterKey: 'antiparasiticTreatment.analytics.antiparasiticFilter',
-			allFilterKey: 'antiparasiticTreatment.analytics.allAntiparasitics'
+			historyParam: 'antiparasitic'
 		}
 	};
 
@@ -114,11 +104,16 @@
 	const maxHistoryCount = $derived(history.reduce((max, point) => Math.max(max, point.count), 0));
 
 	function treatmentKey(path: string): TranslationKey {
-		return `${config.translationRoot}.${path}` as TranslationKey;
+		return `treatment.${path}` as TranslationKey;
 	}
 
 	function analyticsKey(path: string): TranslationKey {
-		return treatmentKey(`analytics.${path}`);
+		return `treatment.analytics.${path}` as TranslationKey;
+	}
+
+	function kindAnalyticsKey(path: string): TranslationKey {
+		const root = kind === 'vaccine' ? 'vaccine.analytics' : 'antiparasiticTreatment.analytics';
+		return `${root}.${path}` as TranslationKey;
 	}
 
 	function normalizeStatus(value: string | null): TreatmentStatusKey {
@@ -510,15 +505,15 @@
 </script>
 
 <svelte:head>
-	<title>{t(analyticsKey('title'))} | {t('app.name')}</title>
+	<title>{t(kindAnalyticsKey('title'))} | {t('app.name')}</title>
 </svelte:head>
 
 <section class="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
 	<header class="flex flex-col gap-3 border-b border-border pb-5 lg:flex-row lg:items-end lg:justify-between">
 		<div class="min-w-0">
-			<p class="text-sm font-medium text-muted-foreground">{t(analyticsKey('kicker'))}</p>
-			<h2 class="text-2xl font-semibold tracking-normal text-foreground sm:text-3xl">{t(analyticsKey('title'))}</h2>
-			<p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{t(analyticsKey('description'))}</p>
+			<p class="text-sm font-medium text-muted-foreground">{t(kindAnalyticsKey('kicker'))}</p>
+			<h2 class="text-2xl font-semibold tracking-normal text-foreground sm:text-3xl">{t(kindAnalyticsKey('title'))}</h2>
+			<p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{t(kindAnalyticsKey('description'))}</p>
 		</div>
 		<button class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium hover:bg-accent disabled:opacity-60" type="button" disabled={isRefreshing()} onclick={() => void refreshActiveTab()}>
 			<RotateCw class="size-4" />
@@ -526,7 +521,7 @@
 		</button>
 	</header>
 
-	<div class="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1" role="tablist" aria-label={t(analyticsKey('title'))}>
+	<div class="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1" role="tablist" aria-label={t(kindAnalyticsKey('title'))}>
 		<button
 			class="inline-flex h-10 items-center justify-center gap-2 rounded-sm px-3 text-sm font-medium transition-colors {activeTab === 'status' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}"
 			type="button"
@@ -659,7 +654,7 @@
 						{/each}
 					</div>
 				{:else if items.length === 0}
-					<p class="mt-4 rounded-md border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">{t(analyticsKey('emptyStatus'))}</p>
+					<p class="mt-4 rounded-md border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">{t('treatment.analytics.emptyStatus')}</p>
 				{:else}
 					<div class="mt-4 divide-y divide-border rounded-md border border-border">
 						{#each visibleItems as item (`${item.petId}:${item.normalizedName}`)}
@@ -670,7 +665,7 @@
 										<p class="wrap-break-word text-sm font-semibold">{item.petName} · {item.name}</p>
 										<p class="mt-1 wrap-break-word text-sm text-muted-foreground">{ownerDisplayName(item)}</p>
 										<div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs leading-5 text-muted-foreground">
-											<span>{t(treatmentKey('appliedAt'))}: {formatDateForDisplay(item.appliedAt)}</span>
+											<span>{t('treatment.appliedAt')}: {formatDateForDisplay(item.appliedAt)}</span>
 											<span>{t(analyticsKey('dueAt'))}: {formatDateForDisplay(item.dueAt)}</span>
 											<span>{daysText(item)}</span>
 										</div>
@@ -725,13 +720,13 @@
 					</div>
 
 					<div class="space-y-1">
-						<label class="block text-sm font-medium" for="history-treatment">{t(config.filterKey)}</label>
+						<label class="block text-sm font-medium" for="history-treatment">{t('treatment.analytics.productFilter')}</label>
 						<Select
 							id="history-treatment"
 							value={selectedNormalizedName}
 							disabled={catalogLoading || historyLoading}
 							options={[
-								{ value: '', label: t(config.allFilterKey) },
+								{ value: '', label: t('treatment.analytics.allProducts') },
 								...analyticsTreatments.map((treatment) => ({ value: treatment.normalizedName, label: treatment.name }))
 							]}
 							onchange={(value) => selectTreatment(value as string)}
