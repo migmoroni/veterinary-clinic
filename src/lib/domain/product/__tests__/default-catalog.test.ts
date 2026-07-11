@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 import { productLeafletSectionIds, stringifyProductCatalogExtension } from '../catalog.js';
-import { localizedMedicationAliases } from '$lib/i18n/medication-aliases/index.js';
+import { localizedProductAliases } from '$lib/i18n/product-aliases/index.js';
 import { defaultProductCatalogItems } from '../default-catalog.js';
 import { isUuidV4 } from '$lib/domain/shared/uuid.js';
 
@@ -38,7 +38,7 @@ describe('default product catalog', () => {
 
 	it('expands localized aliases while preserving language-independent aliases', () => {
 		const vanguard = vaccine('Vanguard Plus');
-		const localizedPolyvalentAliases = localizedMedicationAliases('medicationAlias.polyvalent');
+		const localizedPolyvalentAliases = localizedProductAliases('productAlias.polyvalent');
 
 		expect(vanguard.aliases).toEqual(expect.arrayContaining(localizedPolyvalentAliases));
 		expect(vanguard.aliases).toContain('V10');

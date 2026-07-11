@@ -22,9 +22,9 @@
     "../src/lib/domain/product/default-catalog.ts",
     "../src/lib/domain/treatment/default-protocol.ts",
     "../src/lib/i18n/locales.ts",
-    "../src/lib/i18n/medication-aliases/**/*.ts"
+    "../src/lib/i18n/product-aliases/**/*.ts"
   ],
   "exclude": [
-    "../src/lib/i18n/medication-aliases/**/__tests__/**"
+    "../src/lib/i18n/product-aliases/**/__tests__/**"
   ]
 }
