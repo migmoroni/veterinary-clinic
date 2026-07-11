@@ -64,8 +64,8 @@
 			? [
 					{ label: t('formulary.kind'), value: typeLabel(selectedItem) },
 					{ label: t('formulary.classification'), value: selectedItem.extension.classification ?? t('common.notInformed') },
-					{ label: t('medication.species'), value: speciesSummary(selectedItem.species) },
-					{ label: t('medication.regions'), value: regionSummary(selectedItem.regions) }
+					{ label: t('product.species'), value: speciesSummary(selectedItem.species) },
+					{ label: t('product.regions'), value: regionSummary(selectedItem.regions) }
 				]
 			: []
 	);
@@ -228,7 +228,7 @@
 		{cards}
 		selectedId={selectedItem ? itemKey(selectedItem) : null}
 		emptyLabel={t('formulary.noResults')}
-		openLabel={t('formulary.openMedication')}
+		openLabel={t('formulary.openProduct')}
 		listTitle={t('formulary.listTitle')}
 		listIcon={Info}
 		count={filteredItems.length}

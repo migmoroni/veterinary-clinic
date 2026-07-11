@@ -40,7 +40,7 @@
 		if (kind === 'owner') return t('search.kind.owner');
 		if (kind === 'pet') return t('search.kind.pet');
 		if (kind === 'breed') return t('search.kind.breed');
-		return t('search.kind.medication');
+		return t('search.kind.product');
 	}
 
 	function resultKey(result: SearchResult): string {

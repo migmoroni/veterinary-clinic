@@ -293,7 +293,7 @@
 
 				<a href="/formulary" class="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium hover:bg-accent" aria-label={t('actions.openFormulary')}>
 					<span class="tabular-nums">{metricFormatter(medicationReferenceCount())}</span>
-					<span>{t('stats.medications')}</span>
+					<span>{t('stats.products')}</span>
 					<ArrowRight class="size-4" />
 				</a>
 			</div>

@@ -198,7 +198,7 @@
 	function setFailure(exception: unknown) {
 		if (exception instanceof Error && exception.message === 'field_limit_exceeded') errorKey = 'form.limitExceeded';
 		else if (exception instanceof Error && exception.message === 'field_required') errorKey = 'form.fieldRequired';
-		else if (exception instanceof Error && exception.message === 'treatment_protocol_system_item') errorKey = 'medication.systemItemReadOnly';
+		else if (exception instanceof Error && exception.message === 'treatment_protocol_system_item') errorKey = 'product.systemItemReadOnly';
 		else if (exception instanceof Error && exception.message === 'protocol_name_required') errorKey = 'protocol.nameRequired';
 		else if (exception instanceof Error && exception.message === 'protocol_item_required') errorKey = 'protocol.itemRequired';
 		else if (exception instanceof Error && exception.message === 'protocol_dose_required') errorKey = 'protocol.doseRequired';
@@ -467,7 +467,7 @@
 						</label>
 
 						<div class="lg:col-span-2 flex min-w-0 flex-col gap-2 text-sm font-medium">
-							<span>{t('medication.species')}</span>
+							<span>{t('product.species')}</span>
 							<div class="flex flex-wrap gap-2">
 								{#each petSpeciesOptions as option}
 									<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">
@@ -542,7 +542,7 @@
 								{/if}
 
 								<div class="lg:col-span-full flex min-w-0 flex-col gap-2 text-sm font-medium">
-									<span>{t('medication.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(protocolDraftSpeciesValue(protocol))}</span></span>
+									<span>{t('product.species')}: <span class="font-normal text-muted-foreground">{speciesSummary(protocolDraftSpeciesValue(protocol))}</span></span>
 									<div class="flex flex-wrap gap-2">
 										{#each petSpeciesOptions as option}
 											<label class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent">

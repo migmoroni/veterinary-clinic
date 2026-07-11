@@ -130,8 +130,8 @@
 				<p>{t('formulary.kind')}: <span class="text-foreground">{typeLabel(item)}</span></p>
 				<p>{t('formulary.originFilter')}: <span class="text-foreground">{originLabel(item.origin)}</span></p>
 				<p>{t('formulary.classification')}: <span class="text-foreground">{item.extension.classification ?? t('common.notInformed')}</span></p>
-				<p>{t('medication.species')}: <span class="text-foreground">{speciesSummary(item.species)}</span></p>
-				<p class="sm:col-span-2">{t('medication.regions')}: <span class="text-foreground">{regionSummary(item.regions)}</span></p>
+				<p>{t('product.species')}: <span class="text-foreground">{speciesSummary(item.species)}</span></p>
+				<p class="sm:col-span-2">{t('product.regions')}: <span class="text-foreground">{regionSummary(item.regions)}</span></p>
 			</div>
 		</header>
 
