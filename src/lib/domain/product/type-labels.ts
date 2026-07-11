@@ -10,7 +10,7 @@ const productTypeMainLabelKeys = {
 	disinfectants: 'product.type.disinfectants'
 } as const satisfies Record<ProductTypeMain, TranslationKey>;
 
-const medicationTypeSubtypeLabelKeys = {
+const treatmentSubtypeLabelKeys = {
 	vaccine: 'protocol.kind.vaccine',
 	antiparasitic: 'protocol.kind.antiparasitic'
 } as const satisfies Record<ProductTypeSubtype<'medication'>, TranslationKey>;
@@ -23,7 +23,7 @@ export function productTypeSubtypeLabel(type: ProductType, translate: Translate)
 	const main = productTypeMain(type);
 	const subtype = productTypeSubtype(type);
 	if (subtype === null) return null;
-	if (main === 'medication') return translate(medicationTypeSubtypeLabelKeys[subtype]);
+	if (main === 'medication') return translate(treatmentSubtypeLabelKeys[subtype]);
 	return String(subtype);
 }
 
@@ -33,10 +33,10 @@ export function productTypeLabel(type: ProductType, translate: Translate): strin
 	return subtypeLabel ? `${mainLabel} / ${subtypeLabel}` : mainLabel;
 }
 
-export function medicationProductType(kind: ProductTypeSubtype<'medication'>): ProductType {
+export function treatmentProductType(kind: ProductTypeSubtype<'medication'>): ProductType {
 	return productType('medication', kind);
 }
 
-export function medicationProductTypeLabel(kind: ProductTypeSubtype<'medication'>, translate: Translate): string {
-	return productTypeLabel(medicationProductType(kind), translate);
+export function treatmentProductTypeLabel(kind: ProductTypeSubtype<'medication'>, translate: Translate): string {
+	return productTypeLabel(treatmentProductType(kind), translate);
 }

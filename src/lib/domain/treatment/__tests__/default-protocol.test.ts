@@ -4,16 +4,16 @@ import { isUuidV4 } from '../../shared/uuid.js';
 import { defaultTreatmentProtocols } from '../default-protocol.js';
 import { canDeleteTreatmentProtocol, canEditTreatmentProtocol } from '../protocol.js';
 
-function bundledMedicationId(kind: string, name: string): string {
+function bundledProductId(kind: string, name: string): string {
 	const item = defaultProductCatalogItems.find((candidate) => candidate.type[1] === kind && candidate.name === name);
-	if (!item) throw new Error(`Default medication not found: ${kind}:${name}`);
+	if (!item) throw new Error(`Default product not found: ${kind}:${name}`);
 	return item.id;
 }
 
 describe('default treatment protocols', () => {
 	it('provides the shared canine primary series for bundled vaccines', () => {
 		const protocolByName = new Map(defaultTreatmentProtocols.map((protocol) => [protocol.name, protocol]));
-		const sharedCatalogItemIds = [bundledMedicationId('vaccine', 'Vanguard Plus'), bundledMedicationId('vaccine', 'Recombitek C6')];
+		const sharedCatalogItemIds = [bundledProductId('vaccine', 'Vanguard Plus'), bundledProductId('vaccine', 'Recombitek C6')];
 
 		expect(protocolByName.get('4 doses')).toMatchObject({
 			kind: 'vaccine',

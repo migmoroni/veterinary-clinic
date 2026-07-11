@@ -4,7 +4,7 @@
 	import ProductImage from '$lib/components/product/ProductImage.svelte';
 	import ProductImageCaptureDialog from '$lib/components/product/ProductImageCaptureDialog.svelte';
 	import ProductRegionsField from '$lib/components/product/ProductRegionsField.svelte';
-	import { medicationProductTypeLabel, productTypeLabel } from '$lib/domain/product/type-labels.js';
+	import { productTypeLabel, treatmentProductTypeLabel } from '$lib/domain/product/type-labels.js';
 	import ImageCollectionOrganizer from '$lib/components/shared/ImageCollectionOrganizer.svelte';
 	import Select, { type SelectOption } from '$lib/components/ui/Select.svelte';
 	import type { ImageCollectionItem, ImageCollectionItemInput } from '$lib/domain/image-collection/image-collection.js';
@@ -62,7 +62,7 @@
 	let imageEditIndex = $state<number | null>(null);
 	let imageDialogOpen = $state(false);
 
-	const medicationKindOptions = $derived<SelectOption<TreatmentKind>[]>(treatmentKinds.map((kind) => ({ value: kind, label: medicationKindLabel(kind) })));
+	const treatmentKindOptions = $derived<SelectOption<TreatmentKind>[]>(treatmentKinds.map((kind) => ({ value: kind, label: treatmentKindLabel(kind) })));
 	const productTypeFilterOptions = $derived<SelectOption<TypeFilter>[]>([
 		{ value: 'all', label: `${t('product.allKinds')} (${filterCount('all')})` },
 		...PRODUCT_TYPES.map((type) => ({ value: typeFilterValue(type), label: `${productTypeLabel(type, t)} (${filterCount(typeFilterValue(type))})` }))
@@ -83,8 +83,8 @@
 		return [...source].sort((first, second) => first.name.localeCompare(second.name) || first.kind.localeCompare(second.kind));
 	}
 
-	function medicationKindLabel(kind: TreatmentKind): string {
-		return medicationProductTypeLabel(kind, t);
+	function treatmentKindLabel(kind: TreatmentKind): string {
+		return treatmentProductTypeLabel(kind, t);
 	}
 
 	function typeFilterValue(type: ProductType): string {
@@ -514,7 +514,7 @@
 				<form class="mt-4 grid gap-3 lg:grid-cols-2 lg:items-start" onsubmit={(event) => void submitNewCatalogItem(event)}>
 					<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 						<span>{t('product.kind')}</span>
-						<Select id="new-product-type" value={newCatalogDraft.kind} options={medicationKindOptions} onchange={setNewCatalogDraftKind} />
+						<Select id="new-product-type" value={newCatalogDraft.kind} options={treatmentKindOptions} onchange={setNewCatalogDraftKind} />
 					</label>
 					<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 						<span class="flex min-w-0 items-baseline justify-between gap-2">
@@ -585,7 +585,7 @@
 					<div class="grid min-w-0 gap-3 xl:grid-cols-[12rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto] xl:items-start">
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span>{t('product.kind')}</span>
-							<Select id={`product-type-${item.id}`} value={itemKind} options={medicationKindOptions} disabled={!canEditProductCatalogItem(item)} onchange={(value) => setCatalogDraftKind(item.id, value)} />
+							<Select id={`product-type-${item.id}`} value={itemKind} options={treatmentKindOptions} disabled={!canEditProductCatalogItem(item)} onchange={(value) => setCatalogDraftKind(item.id, value)} />
 						</label>
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">

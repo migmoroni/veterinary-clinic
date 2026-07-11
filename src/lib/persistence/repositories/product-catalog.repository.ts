@@ -32,7 +32,7 @@ interface ProductCatalogConfig {
 	normalize: (value: string) => string;
 }
 
-const medicationProductConfig: ProductCatalogConfig = {
+const treatmentProductConfig: ProductCatalogConfig = {
 	nameLimit: FIELD_LIMITS.productName,
 	normalizedNameLimit: FIELD_LIMITS.productNormalizedName,
 	requiredError: 'treatment_name_required',
@@ -49,7 +49,7 @@ export const PRODUCT_CATALOG_IMAGE_POLICY: ImageCollectionPolicy = {
 const PRODUCT_CATALOG_COLUMNS = 'id, type, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, hidden_at, updated_at';
 
 function configFor(_type: ProductTypeMain): ProductCatalogConfig {
-	return medicationProductConfig;
+	return treatmentProductConfig;
 }
 
 function primaryImage(images: ImageCollectionItem[]): ImageCollectionItem | null {
@@ -145,7 +145,7 @@ async function assertProductCatalogItemEditable(id: TreatmentCatalogItemId): Pro
 	if (rows[0] && !canEditProductCatalogItem(rows[0])) throw new Error('product_catalog_system_item');
 }
 
-export async function ensureMedicationProductCatalogItem(kind: TreatmentKind, name: string, normalizedName: string): Promise<ProductCatalogItem> {
+export async function ensureTreatmentProductCatalogItem(kind: TreatmentKind, name: string, normalizedName: string): Promise<ProductCatalogItem> {
 	const type = productType('medication', kind);
 	const serializedType = stringifyProductType(type);
 	const existingItem = await getProductCatalogItemByNormalizedName(normalizedName);
@@ -204,7 +204,7 @@ export async function getProductCatalogItemById(id: TreatmentCatalogItemId, incl
 	return includeImages ? mapCatalogItemWithImages(row) : mapCatalogItem(row);
 }
 
-export async function saveMedicationProductCatalogItem(kind: TreatmentKind, input: TreatmentCatalogItemInput, id?: TreatmentCatalogItemId): Promise<ProductCatalogItem> {
+export async function saveTreatmentProductCatalogItem(kind: TreatmentKind, input: TreatmentCatalogItemInput, id?: TreatmentCatalogItemId): Promise<ProductCatalogItem> {
 	const serializedType = stringifyProductType(productType('medication', kind));
 	const { name, normalizedName } = normalizeProductCatalogInput(kind, input.name);
 	const metadata = normalizeProductCatalogMetadata(input, normalizedName);

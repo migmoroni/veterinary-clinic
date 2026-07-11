@@ -93,12 +93,12 @@ export async function searchEverywhere(query: string, kinds: readonly SearchResu
 	if (searchTerms(query).length === 0) return [];
 
 	const clinicKinds = (['owner', 'pet'] as const).filter((kind): kind is ClinicSearchResultKind => shouldSearchKind(kind, kinds));
-	const [clinicResults, breedResults, medicationResults] = await Promise.all([
+	const [clinicResults, breedResults, productResults] = await Promise.all([
 		clinicKinds.length > 0 ? searchClinic(query, clinicKinds, i18n.locale) : Promise.resolve([]),
 		shouldSearchKind('breed', kinds) ? searchBreedReferences(query) : Promise.resolve([]),
-		shouldSearchKind('medication', kinds) ? searchMedications(query) : Promise.resolve([])
+		shouldSearchKind('product', kinds) ? searchProducts(query) : Promise.resolve([])
 	]);
-	return [...clinicResults, ...breedResults, ...medicationResults].slice(0, 80);
+	return [...clinicResults, ...breedResults, ...productResults].slice(0, 80);
 }
 
 export async function filterActiveSearchResults(results: SearchResult[]): Promise<SearchResult[]> {
@@ -180,7 +180,7 @@ function speciesSummary(species: readonly ProductSpecies[]): string {
 	return species.map(speciesLabel).join(', ');
 }
 
-function medicationTypeLabel(item: TreatmentCatalogItem): string {
+function productCatalogTypeLabel(item: TreatmentCatalogItem): string {
 	return productTypeLabel(item.type, t);
 }
 
@@ -197,7 +197,7 @@ function regionLabel(region: string): string {
 	return countryOptions(i18n.locale).find((country) => country.value === region)?.label ?? region;
 }
 
-function medicationSectionText(item: TreatmentCatalogItem, sectionId: ProductLeafletSectionId): string {
+function productSectionText(item: TreatmentCatalogItem, sectionId: ProductLeafletSectionId): string {
 	return item.extension.sections[sectionId]?.trim() ?? '';
 }
 
@@ -213,13 +213,13 @@ function breedSearchScore(profile: BreedReferenceProfile, terms: readonly string
 	);
 }
 
-function medicationSearchScore(item: TreatmentCatalogItem, terms: readonly string[]): number {
+function productSearchScore(item: TreatmentCatalogItem, terms: readonly string[]): number {
 	return scoreSearchFields(
 		{
 			primary: [item.name, String(item.id), ...item.aliases],
-			support: [item.manufacturer ?? '', medicationTypeLabel(item), item.extension.classification ?? '', item.extension.commercialLine ?? ''],
+			support: [item.manufacturer ?? '', productCatalogTypeLabel(item), item.extension.classification ?? '', item.extension.commercialLine ?? ''],
 			metadata: [speciesSummary(item.species), item.regions.map(regionLabel).join(' ')],
-			details: productLeafletSectionIds.map((sectionId) => medicationSectionText(item, sectionId))
+			details: productLeafletSectionIds.map((sectionId) => productSectionText(item, sectionId))
 		},
 		terms
 	);
@@ -244,37 +244,37 @@ async function searchBreedReferences(query: string): Promise<SearchResult[]> {
 		}));
 }
 
-async function searchMedications(query: string): Promise<SearchResult[]> {
+async function searchProducts(query: string): Promise<SearchResult[]> {
 	const terms = searchTerms(query);
 	const items = await loadAllTreatmentCatalogItems(true, false);
 	return items
-		.map((item) => ({ item, score: medicationSearchScore(item, terms) }))
+		.map((item) => ({ item, score: productSearchScore(item, terms) }))
 		.filter(({ score }) => acceptsReferenceScore(score, terms))
 		.sort((first, second) => second.score - first.score || first.item.name.localeCompare(second.item.name))
 		.map(({ item }) => ({
-			kind: 'medication',
+			kind: 'product',
 			id: item.id,
 			ownerId: null,
 			petId: null,
 			href: `/formulary/${item.id}`,
 			title: item.name,
-			subtitle: [medicationTypeLabel(item), item.manufacturer].filter(Boolean).join(' · '),
+			subtitle: [productCatalogTypeLabel(item), item.manufacturer].filter(Boolean).join(' · '),
 			referenceImageBytes: null
 		}));
 }
 
 async function activeReferenceResultKeys(results: SearchResult[]): Promise<Set<string>> {
-	const referenceResults = results.filter((result) => result.kind === 'breed' || result.kind === 'medication');
+	const referenceResults = results.filter((result) => result.kind === 'breed' || result.kind === 'product');
 	if (referenceResults.length === 0) return new Set<string>();
 
-	const [profiles, medications] = await Promise.all([loadBreedReferenceProfiles(false), loadAllTreatmentCatalogItems(true, false)]);
+	const [profiles, products] = await Promise.all([loadBreedReferenceProfiles(false), loadAllTreatmentCatalogItems(true, false)]);
 	const breedIds = new Set(profiles.map((profile) => profile.breedId));
-	const medicationIds = new Set(medications.map((item) => item.id));
+	const productIds = new Set(products.map((item) => item.id));
 	const activeKeys = new Set<string>();
 
 	for (const result of referenceResults) {
 		if (result.kind === 'breed' && breedIds.has(String(result.id))) activeKeys.add(searchResultKey(result));
-		if (result.kind === 'medication' && medicationIds.has(String(result.id))) activeKeys.add(searchResultKey(result));
+		if (result.kind === 'product' && productIds.has(String(result.id))) activeKeys.add(searchResultKey(result));
 	}
 
 	return activeKeys;

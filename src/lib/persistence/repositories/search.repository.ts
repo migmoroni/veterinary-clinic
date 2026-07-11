@@ -5,7 +5,7 @@ import { normalizeSearchText, searchTermsForLocale } from '$lib/domain/shared/se
 import { DEFAULT_LOCALE, type Locale } from '$lib/i18n/locales.js';
 import { listOwnerAssociatedContactsByOwnerIds } from './owner.repository.js';
 
-export type SearchResultKind = 'owner' | 'pet' | 'breed' | 'medication';
+export type SearchResultKind = 'owner' | 'pet' | 'breed' | 'product';
 export type ClinicSearchResultKind = Extract<SearchResultKind, 'owner' | 'pet'>;
 
 export interface SearchResult {

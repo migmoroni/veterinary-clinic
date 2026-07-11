@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
-	import MedicationFormularyDetail from '$lib/components/medication/MedicationFormularyDetail.svelte';
+	import ProductFormularyDetail from '$lib/components/product/ProductFormularyDetail.svelte';
 	import type { TreatmentCatalogItem } from '$lib/domain/treatment/treatment.js';
 	import { isUuidV4 } from '$lib/domain/shared/uuid.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
@@ -55,6 +55,6 @@
 	{:else if errorKey}
 		<p class="rounded-md border border-dashed border-border p-6 text-sm text-muted-foreground">{t(errorKey)}</p>
 	{:else if item}
-		<MedicationFormularyDetail {item} />
+		<ProductFormularyDetail {item} />
 	{/if}
 </section>

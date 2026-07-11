@@ -16,7 +16,7 @@
 	import Search from '@lucide/svelte/icons/search';
 
 	const recentSearchLimit = 50;
-	const searchFilterKinds = ['owner', 'pet', 'medication', 'breed'] as const satisfies readonly SearchResultKind[];
+	const searchFilterKinds = ['owner', 'pet', 'product', 'breed'] as const satisfies readonly SearchResultKind[];
 
 	let query = $state('');
 	let results = $state<SearchResult[]>([]);
@@ -67,7 +67,7 @@
 			ownerContacts: result.ownerContacts
 		};
 		if (normalizedResult.kind === 'breed') return { ...normalizedResult, href: `/breeds/${normalizedResult.id}` };
-		if (normalizedResult.kind === 'medication') return { ...normalizedResult, href: `/formulary/${normalizedResult.id}` };
+		if (normalizedResult.kind === 'product') return { ...normalizedResult, href: `/formulary/${normalizedResult.id}` };
 		return normalizedResult;
 	}
 
@@ -281,7 +281,7 @@
 							<PetAvatar avatarBytes={result.petAvatarBytes} petName={result.title} className="mt-0.5 size-10" iconClass="size-5 text-primary" />
 						{:else if result.kind === 'breed'}
 							<BinaryImage imageBytes={result.referenceImageBytes} alt={result.title} className="mt-0.5 size-10" imageClass="h-full w-full object-cover" iconClass="size-5 text-primary" fallbackIcon={PawPrint} />
-						{:else if result.kind === 'medication'}
+						{:else if result.kind === 'product'}
 							<BinaryImage imageBytes={result.referenceImageBytes} alt={result.title} className="mt-0.5 size-10" imageClass="h-full w-full object-contain p-1.5" iconClass="size-5 text-primary" fallbackIcon={Pill} />
 						{/if}
 						<span class="min-w-0 flex-1">
