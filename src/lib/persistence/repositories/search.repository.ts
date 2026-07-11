@@ -1,27 +1,9 @@
 import { selectMany } from '$lib/persistence/sqlite/client.js';
-import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { normalizeSearchText, searchTermsForLocale } from '$lib/domain/shared/search-terms.js';
+import { CLINIC_SEARCH_RESULT_KINDS, isClinicSearchResultKind, type ClinicSearchResultKind, type SearchResult } from '$lib/domain/search/search.js';
 import { DEFAULT_LOCALE, type Locale } from '$lib/i18n/locales.js';
 import { listOwnerAssociatedContactsByOwnerIds } from './owner.repository.js';
-
-export type SearchResultKind = 'owner' | 'pet' | 'breed' | 'product';
-export type ClinicSearchResultKind = Extract<SearchResultKind, 'owner' | 'pet'>;
-
-export interface SearchResult {
-	kind: SearchResultKind;
-	id: number | string;
-	ownerId: number | null;
-	petId: number | null;
-	href: string;
-	title: string;
-	subtitle: string;
-	referenceImageBytes?: Uint8Array | null;
-	ownerAvatarBytes?: Uint8Array | null;
-	petAvatarBytes?: Uint8Array | null;
-	ownerContacts?: OwnerAssociatedContact[];
-}
-
 
 interface SearchResultRow {
 	kind: ClinicSearchResultKind;
@@ -118,7 +100,7 @@ function idsForKind(results: SearchResult[], kind: ClinicSearchResultKind): numb
 }
 
 function isClinicSearchResult(result: SearchResult): result is SearchResult & { kind: ClinicSearchResultKind } {
-	return result.kind === 'owner' || result.kind === 'pet';
+	return isClinicSearchResultKind(result.kind);
 }
 
 async function loadActiveIds(ids: number[], query: string): Promise<Set<number>> {
@@ -169,7 +151,7 @@ export async function filterActiveSearchResults(results: SearchResult[]): Promis
 	return results.filter((result) => !isClinicSearchResult(result) || activeKeys.has(searchResultActiveKey(result.kind, searchResultId(result))));
 }
 
-export async function searchClinic(query: string, kinds: readonly ClinicSearchResultKind[] = ['owner', 'pet'], locale: Locale = DEFAULT_LOCALE): Promise<SearchResult[]> {
+export async function searchClinic(query: string, kinds: readonly ClinicSearchResultKind[] = CLINIC_SEARCH_RESULT_KINDS, locale: Locale = DEFAULT_LOCALE): Promise<SearchResult[]> {
 	const terms = searchTermsForLocale(query, locale);
 	if (terms.length === 0) return [];
 

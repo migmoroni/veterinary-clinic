@@ -8,8 +8,10 @@
 		type DashboardOwnerStudyPet,
 		type DashboardPetStudyItem,
 		type DashboardPetStudyTreatment,
+		type DashboardStudyTarget,
 		type DashboardVaccineStatusKey
 	} from '$lib/domain/dashboard/analytics.js';
+	import { dashboardTreatmentStatusWeight } from '$lib/domain/dashboard/analytics.js';
 	import { dashboardAgeBandYear } from '$lib/domain/dashboard/age-bands.js';
 	import { formatDateForDisplay } from '$lib/domain/shared/date-input.js';
 	import { getPetBreedOption, getPetSpeciesOption, isPetBreed, isPetSpecies } from '$lib/domain/pet/taxonomy.js';
@@ -24,7 +26,7 @@
 	import List from '@lucide/svelte/icons/list';
 	import X from '@lucide/svelte/icons/x';
 
-	type StudyTarget = 'vaccines' | 'antiparasitics' | 'pets' | 'owners';
+	type StudyTarget = DashboardStudyTarget;
 	type StudyPetSnapshot = DashboardPetStudyItem | DashboardOwnerStudyPet;
 	type StudyVaccineSummary = DashboardPetStudyTreatment<DashboardVaccineStatusKey> & { id: string; pet: DashboardPetStudyItem };
 	type StudyAntiparasiticSummary = DashboardPetStudyTreatment<DashboardAntiparasiticStatusKey> & { id: string; pet: DashboardPetStudyItem };
@@ -58,24 +60,6 @@
 		{ target: 'pets', labelKey: 'analysis.study.axis.pets', descriptionKey: 'analysis.study.axis.petsDescription', icon: PawPrint },
 		{ target: 'owners', labelKey: 'analysis.study.axis.owners', descriptionKey: 'analysis.study.axis.ownersDescription', icon: UserPlus }
 	] as const;
-
-	const studyVaccineStatusWeight: Record<DashboardVaccineStatusKey, number> = {
-		untracked: 0,
-		current: 1,
-		dueSoon: 2,
-		dueVerySoon: 3,
-		expired: 4,
-		overdue: 5
-	};
-
-	const studyAntiparasiticStatusWeight: Record<DashboardAntiparasiticStatusKey, number> = {
-		untracked: 0,
-		current: 1,
-		dueSoon: 2,
-		dueVerySoon: 3,
-		expired: 4,
-		overdue: 5
-	};
 
 	let studyTarget = $state<StudyTarget>('pets');
 	let studyPrimaryDimension = $state<StudyDimension>('petBreed');
@@ -557,13 +541,13 @@
 
 	function ownerVaccineStatus(owner: DashboardOwnerStudyItem): DashboardVaccineStatusKey {
 		let statusValue: DashboardVaccineStatusKey = 'untracked';
-		for (const pet of owner.pets) if (studyVaccineStatusWeight[pet.vaccineStatus] > studyVaccineStatusWeight[statusValue]) statusValue = pet.vaccineStatus;
+		for (const pet of owner.pets) if (dashboardTreatmentStatusWeight[pet.vaccineStatus] > dashboardTreatmentStatusWeight[statusValue]) statusValue = pet.vaccineStatus;
 		return statusValue;
 	}
 
 	function ownerAntiparasiticStatus(owner: DashboardOwnerStudyItem): DashboardAntiparasiticStatusKey {
 		let statusValue: DashboardAntiparasiticStatusKey = 'untracked';
-		for (const pet of owner.pets) if (studyAntiparasiticStatusWeight[pet.antiparasiticStatus] > studyAntiparasiticStatusWeight[statusValue]) statusValue = pet.antiparasiticStatus;
+		for (const pet of owner.pets) if (dashboardTreatmentStatusWeight[pet.antiparasiticStatus] > dashboardTreatmentStatusWeight[statusValue]) statusValue = pet.antiparasiticStatus;
 		return statusValue;
 	}
 

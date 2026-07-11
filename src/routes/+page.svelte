@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import OwnerContactDialog from '$lib/components/owner/OwnerContactDialog.svelte';
-	import type { DashboardAnalysisView } from '$lib/domain/dashboard/analytics.js';
+	import type { DashboardStudyTarget } from '$lib/domain/dashboard/analytics.js';
 	import { defaultProductCatalogItems } from '$lib/domain/product/default-catalog.js';
 	import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 	import { breedReferenceProfiles } from '$lib/domain/pet/breed-reference.js';
@@ -19,7 +19,7 @@
 	import PawPrint from '@lucide/svelte/icons/paw-print';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 
-	const analysisCards: { view: Exclude<DashboardAnalysisView, 'general'>; titleKey: TranslationKey; descriptionKey: TranslationKey; metricKey: TranslationKey; icon: typeof Syringe }[] = [
+	const analysisCards: { view: DashboardStudyTarget; titleKey: TranslationKey; descriptionKey: TranslationKey; metricKey: TranslationKey; icon: typeof Syringe }[] = [
 		{ view: 'vaccines', titleKey: 'analysis.card.vaccines.title', descriptionKey: 'analysis.card.vaccines.description', metricKey: 'analysis.trackedVaccineItems', icon: Syringe },
 		{ view: 'antiparasitics', titleKey: 'analysis.card.antiparasitics.title', descriptionKey: 'analysis.card.antiparasitics.description', metricKey: 'analysis.trackedAntiparasiticItems', icon: Pill },
 		{ view: 'pets', titleKey: 'analysis.card.pets.title', descriptionKey: 'analysis.card.pets.description', metricKey: 'stats.pets', icon: PawPrint },
@@ -52,7 +52,7 @@
 		return Number.isInteger(value) ? new Intl.NumberFormat(i18n.locale).format(value) : formatter.format(value);
 	}
 
-	function analysisCount(view: Exclude<DashboardAnalysisView, 'general'>): number {
+	function analysisCount(view: DashboardStudyTarget): number {
 		if (view === 'vaccines') return clinic.dashboard?.vaccines.totalTracked ?? 0;
 		if (view === 'antiparasitics') return clinic.dashboard?.antiparasitics.totalTracked ?? 0;
 		if (view === 'pets') return clinic.dashboard?.counts.pets ?? 0;

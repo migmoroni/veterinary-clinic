@@ -113,10 +113,7 @@
 	}
 
 	function kindOptions() {
-		return [
-			{ value: 'vaccine' as const, label: t('protocol.kind.vaccine') },
-			{ value: 'antiparasitic' as const, label: t('protocol.kind.antiparasitic') }
-		];
+		return treatmentKinds.map((kind) => ({ value: kind, label: kindLabel(kind) }));
 	}
 
 	function catalogItems(kind: TreatmentProtocolKind): CatalogItem[] {

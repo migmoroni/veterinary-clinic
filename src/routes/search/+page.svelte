@@ -5,8 +5,8 @@
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import BinaryImage from '$lib/components/shared/BinaryImage.svelte';
 	import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
+	import { SEARCH_RESULT_KINDS, type SearchResult, type SearchResultKind } from '$lib/domain/search/search.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
-	import type { SearchResult, SearchResultKind } from '$lib/persistence/repositories/search.repository.js';
 	import { t } from '$lib/i18n/index.js';
 	import { RECENT_SEARCH_STORAGE_KEY } from '$lib/services/client-state.service.js';
 	import { filterActiveSearchResults, loadOwnerAssociatedContactsByOwnerIds, loadOwnerAvatarsByOwnerIds, loadPetAvatarsByPetIds, searchEverywhere } from '$lib/services/clinic.service.js';
@@ -16,7 +16,7 @@
 	import Search from '@lucide/svelte/icons/search';
 
 	const recentSearchLimit = 50;
-	const searchFilterKinds = ['owner', 'pet', 'product', 'breed'] as const satisfies readonly SearchResultKind[];
+	const searchFilterKinds = SEARCH_RESULT_KINDS;
 
 	let query = $state('');
 	let results = $state<SearchResult[]>([]);

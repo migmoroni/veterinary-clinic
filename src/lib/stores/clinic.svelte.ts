@@ -1,5 +1,5 @@
 import type { ClinicDashboard } from '$lib/services/clinic.service.js';
-import type { SearchResult } from '$lib/persistence/repositories/search.repository.js';
+import type { SearchResult } from '$lib/domain/search/search.js';
 import {
 	createNewClinicDatabase,
 	hasClinicDatabase,

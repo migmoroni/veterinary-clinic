@@ -1,3 +1,4 @@
+import { dashboardTreatmentStatusWeight } from '$lib/domain/dashboard/analytics.js';
 import type {
 	DashboardAgeBandKey,
 	DashboardAnalytics,
@@ -56,24 +57,6 @@ interface LatestTreatmentAnalyticsRow {
 	validity_unit: TreatmentValidityUnit;
 }
 
-const vaccineStatusWeight: Record<DashboardVaccineStatusKey, number> = {
-	untracked: 0,
-	current: 1,
-	dueSoon: 2,
-	dueVerySoon: 3,
-	expired: 4,
-	overdue: 5
-};
-
-const antiparasiticStatusWeight: Record<DashboardAntiparasiticStatusKey, number> = {
-	untracked: 0,
-	current: 1,
-	dueSoon: 2,
-	dueVerySoon: 3,
-	expired: 4,
-	overdue: 5
-};
-
 function incrementBucket<Key extends string>(buckets: Map<Key, number>, key: Key, amount = 1): void {
 	buckets.set(key, (buckets.get(key) ?? 0) + amount);
 }
@@ -116,11 +99,11 @@ function completeAgeBuckets(buckets: Map<DashboardAgeBandKey, number>, maxYear: 
 }
 
 function worstVaccineStatus(first: DashboardVaccineStatusKey, second: DashboardVaccineStatusKey): DashboardVaccineStatusKey {
-	return vaccineStatusWeight[second] > vaccineStatusWeight[first] ? second : first;
+	return dashboardTreatmentStatusWeight[second] > dashboardTreatmentStatusWeight[first] ? second : first;
 }
 
 function worstAntiparasiticStatus(first: DashboardAntiparasiticStatusKey, second: DashboardAntiparasiticStatusKey): DashboardAntiparasiticStatusKey {
-	return antiparasiticStatusWeight[second] > antiparasiticStatusWeight[first] ? second : first;
+	return dashboardTreatmentStatusWeight[second] > dashboardTreatmentStatusWeight[first] ? second : first;
 }
 
 function locationLabel(owner: OwnerAnalyticsRow): string | null {

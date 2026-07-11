@@ -2,17 +2,42 @@ import type { PetBreed, PetSex, PetSpecies } from '$lib/domain/pet/pet.js';
 import type { TreatmentStatusKey } from '$lib/domain/treatment/analytics.js';
 
 export type DashboardAnalysisView = 'general' | 'vaccines' | 'antiparasitics' | 'pets' | 'owners';
+export type DashboardStudyTarget = Exclude<DashboardAnalysisView, 'general'>;
 export type DashboardSpeciesKey = PetSpecies | 'unknown';
 export type DashboardBreedKey = PetBreed | 'unknown';
 export type DashboardSexKey = Exclude<PetSex, null> | 'unknown';
 export type DashboardAgeBandKey = 'months0To3' | 'months3To6' | 'months6To12' | `year:${number}` | 'unknown';
 export type DashboardPetCountBandKey = 'none' | 'one' | 'two' | 'threePlus';
-export type DashboardVaccineStatusKey = TreatmentStatusKey | 'untracked';
-export type DashboardAntiparasiticStatusKey = TreatmentStatusKey | 'untracked';
+export type DashboardTreatmentStatusKey = TreatmentStatusKey | 'untracked';
+export type DashboardVaccineStatusKey = DashboardTreatmentStatusKey;
+export type DashboardAntiparasiticStatusKey = DashboardTreatmentStatusKey;
+export type DashboardBucketSortField = 'analysis' | 'count';
+export type DashboardSortDirection = 'asc' | 'desc';
+export type DashboardPetAnalysisKind = 'species' | 'breed' | 'sex' | 'age' | 'vaccineStatus';
+export type DashboardOwnerAnalysisKind = 'location' | 'petCount' | 'petSpecies' | 'petAge' | 'petVaccineStatus';
 
-export const dashboardAnalysisViews: DashboardAnalysisView[] = ['general', 'vaccines', 'antiparasitics', 'pets', 'owners'];
-export const dashboardVaccineStatusKeys: DashboardVaccineStatusKey[] = ['current', 'dueSoon', 'dueVerySoon', 'expired', 'overdue', 'untracked'];
-export const dashboardAntiparasiticStatusKeys: DashboardAntiparasiticStatusKey[] = ['current', 'dueSoon', 'dueVerySoon', 'expired', 'overdue', 'untracked'];
+export const dashboardAnalysisViews = ['general', 'vaccines', 'antiparasitics', 'pets', 'owners'] as const satisfies readonly DashboardAnalysisView[];
+export const dashboardStudyTargets = ['vaccines', 'antiparasitics', 'pets', 'owners'] as const satisfies readonly DashboardStudyTarget[];
+export const dashboardVaccineStatusKeys = ['current', 'dueSoon', 'dueVerySoon', 'expired', 'overdue', 'untracked'] as const satisfies readonly DashboardVaccineStatusKey[];
+export const dashboardAntiparasiticStatusKeys = ['current', 'dueSoon', 'dueVerySoon', 'expired', 'overdue', 'untracked'] as const satisfies readonly DashboardAntiparasiticStatusKey[];
+export const dashboardPetAnalysisKinds = ['species', 'breed', 'sex', 'age', 'vaccineStatus'] as const satisfies readonly DashboardPetAnalysisKind[];
+export const dashboardOwnerAnalysisKinds = ['location', 'petCount', 'petSpecies', 'petAge', 'petVaccineStatus'] as const satisfies readonly DashboardOwnerAnalysisKind[];
+
+export const dashboardTreatmentStatusWeight: Record<DashboardTreatmentStatusKey, number> = {
+	untracked: 0,
+	current: 1,
+	dueSoon: 2,
+	dueVerySoon: 3,
+	expired: 4,
+	overdue: 5
+};
+
+export const dashboardPetCountBandWeight: Record<DashboardPetCountBandKey, number> = {
+	none: 0,
+	one: 1,
+	two: 2,
+	threePlus: 3
+};
 
 export interface DashboardBucket<Key extends string = string> {
 	key: Key;

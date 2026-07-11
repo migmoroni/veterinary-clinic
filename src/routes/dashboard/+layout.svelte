@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { clinic } from '$lib/stores/clinic.svelte.js';
 	import { t } from '$lib/i18n/index.js';
-	import type { DashboardAnalysisView } from '$lib/domain/dashboard/analytics.js';
+	import { dashboardAnalysisViews, type DashboardAnalysisView } from '$lib/domain/dashboard/analytics.js';
 	import ChartColumn from '@lucide/svelte/icons/chart-column';
 	import PawPrint from '@lucide/svelte/icons/paw-print';
 	import Pill from '@lucide/svelte/icons/pill';
@@ -26,7 +26,7 @@
 
 	function resolveActiveView(pathname: string): DashboardAnalysisView {
 		const segment = pathname.split('/').filter(Boolean)[1];
-		if (segment === 'vaccines' || segment === 'antiparasitics' || segment === 'pets' || segment === 'owners') return segment;
+		if (dashboardAnalysisViews.includes(segment as DashboardAnalysisView)) return segment as DashboardAnalysisView;
 		return 'general';
 	}
 

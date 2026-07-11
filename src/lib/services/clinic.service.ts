@@ -4,13 +4,14 @@ import type { DashboardAnalytics } from '$lib/domain/dashboard/analytics.js';
 import type { BreedReferenceProfile } from '$lib/domain/pet/breed-reference.js';
 import { productLeafletSectionIds, type ProductLeafletSectionId, type ProductSpecies } from '$lib/domain/product/catalog.js';
 import { productTypeLabel } from '$lib/domain/product/type-labels.js';
+import { CLINIC_SEARCH_RESULT_KINDS, isClinicSearchResultKind, isReferenceSearchResultKind, type ClinicSearchResultKind, type SearchResult, type SearchResultKind } from '$lib/domain/search/search.js';
 import type { TreatmentCatalogItem } from '$lib/domain/treatment/treatment.js';
 import { normalizeSearchText, searchTermsForLocale } from '$lib/domain/shared/search-terms.js';
 import { hasDatabaseFile } from '$lib/native/database-file.js';
 import { createEmptyDatabase, getDatabase } from '$lib/persistence/sqlite/client.js';
 import { getLastEditedRecord } from '$lib/persistence/repositories/medical-record.repository.js';
 import { listOwnerAssociatedContactsByOwnerIds } from '$lib/persistence/repositories/owner.repository.js';
-import { filterActiveSearchResults as filterActiveSearchResultsRepository, searchClinic, type ClinicSearchResultKind, type SearchResult, type SearchResultKind } from '$lib/persistence/repositories/search.repository.js';
+import { filterActiveSearchResults as filterActiveSearchResultsRepository, searchClinic } from '$lib/persistence/repositories/search.repository.js';
 import { getClinicCounts } from '$lib/persistence/repositories/stats.repository.js';
 import { countryOptions } from '$lib/domain/geo/location.js';
 import type { TreatmentHistoryPoint } from '$lib/domain/treatment/analytics.js';
@@ -92,7 +93,7 @@ export async function loadDashboard(): Promise<ClinicDashboard> {
 export async function searchEverywhere(query: string, kinds: readonly SearchResultKind[] = []): Promise<SearchResult[]> {
 	if (searchTerms(query).length === 0) return [];
 
-	const clinicKinds = (['owner', 'pet'] as const).filter((kind): kind is ClinicSearchResultKind => shouldSearchKind(kind, kinds));
+	const clinicKinds = CLINIC_SEARCH_RESULT_KINDS.filter((kind): kind is ClinicSearchResultKind => shouldSearchKind(kind, kinds));
 	const [clinicResults, breedResults, productResults] = await Promise.all([
 		clinicKinds.length > 0 ? searchClinic(query, clinicKinds, i18n.locale) : Promise.resolve([]),
 		shouldSearchKind('breed', kinds) ? searchBreedReferences(query) : Promise.resolve([]),
@@ -164,8 +165,8 @@ function searchResultKey(result: SearchResult): string {
 	return `${result.kind}:${result.id}:${result.href}`;
 }
 
-function isClinicSearchResult(result: SearchResult): boolean {
-	return result.kind === 'owner' || result.kind === 'pet';
+function isClinicSearchResult(result: SearchResult): result is SearchResult & { kind: ClinicSearchResultKind } {
+	return isClinicSearchResultKind(result.kind);
 }
 
 function shouldSearchKind(kind: SearchResultKind, selectedKinds: readonly SearchResultKind[]): boolean {
@@ -264,7 +265,7 @@ async function searchProducts(query: string): Promise<SearchResult[]> {
 }
 
 async function activeReferenceResultKeys(results: SearchResult[]): Promise<Set<string>> {
-	const referenceResults = results.filter((result) => result.kind === 'breed' || result.kind === 'product');
+	const referenceResults = results.filter((result) => isReferenceSearchResultKind(result.kind));
 	if (referenceResults.length === 0) return new Set<string>();
 
 	const [profiles, products] = await Promise.all([loadBreedReferenceProfiles(false), loadAllTreatmentCatalogItems(true, false)]);
