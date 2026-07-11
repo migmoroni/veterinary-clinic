@@ -1,8 +1,9 @@
 <script lang="ts">
-	import MedicationImage from '$lib/components/medication/MedicationImage.svelte';
+	import ProductImage from '$lib/components/product/ProductImage.svelte';
+	import { productTypeLabel } from '$lib/domain/product/type-labels.js';
 	import { countryOptions } from '$lib/domain/geo/location.js';
-	import { medicationLeafletSectionIds, type MedicationCatalogOrigin, type MedicationLeafletSectionId, type MedicationSpecies } from '$lib/domain/medication/catalog.js';
-	import type { TreatmentCatalogItem, TreatmentKind } from '$lib/domain/treatment/treatment.js';
+	import { productLeafletSectionIds, type ProductCatalogOrigin, type ProductLeafletSectionId, type ProductSpecies } from '$lib/domain/product/catalog.js';
+	import type { TreatmentCatalogItem } from '$lib/domain/treatment/treatment.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
 	import BookOpenText from '@lucide/svelte/icons/book-open-text';
 	import Building2 from '@lucide/svelte/icons/building-2';
@@ -17,7 +18,7 @@
 	import type { Component } from 'svelte';
 
 	interface LeafletSectionConfig {
-		id: MedicationLeafletSectionId;
+		id: ProductLeafletSectionId;
 		labelKey: TranslationKey;
 		icon: Component;
 	}
@@ -37,21 +38,21 @@
 
 	let { item }: { item: TreatmentCatalogItem } = $props();
 
-	let activeSectionId = $state<MedicationLeafletSectionId>('about');
+	let activeSectionId = $state<ProductLeafletSectionId>('about');
 
 	const localizedCountries = $derived(countryOptions(i18n.locale));
 	const activeSectionConfig = $derived(sectionConfigs.find((section) => section.id === activeSectionId) ?? sectionConfigs[0]);
 	const activeSectionText = $derived(sectionText(item, activeSectionId));
 
-	function kindLabel(kind: TreatmentKind): string {
-		return kind === 'vaccine' ? t('protocol.kind.vaccine') : t('protocol.kind.antiparasitic');
+	function typeLabel(source: TreatmentCatalogItem): string {
+		return productTypeLabel(source.type, t);
 	}
 
-	function speciesLabel(species: MedicationSpecies): string {
+	function speciesLabel(species: ProductSpecies): string {
 		return species === 'canine' ? t('pet.speciesCanine') : t('pet.speciesFeline');
 	}
 
-	function speciesSummary(species: readonly MedicationSpecies[]): string {
+	function speciesSummary(species: readonly ProductSpecies[]): string {
 		return species.map(speciesLabel).join(', ');
 	}
 
@@ -64,16 +65,16 @@
 		return regions.map(regionLabel).join(', ');
 	}
 
-	function sectionText(source: TreatmentCatalogItem, sectionId: MedicationLeafletSectionId): string {
+	function sectionText(source: TreatmentCatalogItem, sectionId: ProductLeafletSectionId): string {
 		return source.extension.sections[sectionId]?.trim() ?? '';
 	}
 
-	function hasSectionText(source: TreatmentCatalogItem, sectionId: MedicationLeafletSectionId): boolean {
+	function hasSectionText(source: TreatmentCatalogItem, sectionId: ProductLeafletSectionId): boolean {
 		return sectionText(source, sectionId).length > 0;
 	}
 
-	function availableSectionIds(source: TreatmentCatalogItem): MedicationLeafletSectionId[] {
-		return medicationLeafletSectionIds.filter((sectionId) => hasSectionText(source, sectionId));
+	function availableSectionIds(source: TreatmentCatalogItem): ProductLeafletSectionId[] {
+		return productLeafletSectionIds.filter((sectionId) => hasSectionText(source, sectionId));
 	}
 
 	function sectionParagraphs(text: string): string[] {
@@ -83,7 +84,7 @@
 			.filter(Boolean);
 	}
 
-	function originLabel(origin: MedicationCatalogOrigin): string {
+	function originLabel(origin: ProductCatalogOrigin): string {
 		return origin === 'system' ? t('formulary.origin.system') : t('formulary.origin.user');
 	}
 
@@ -96,7 +97,7 @@
 
 <section class="grid gap-5 rounded-md border border-border bg-card p-3 shadow-sm sm:p-4 lg:grid-cols-[20rem_minmax(0,1fr)]">
 	<aside class="min-w-0 space-y-4">
-		<MedicationImage kind={item.kind} imageBytes={item.primaryImage?.imageBytes ?? null} alt={item.name} className="aspect-16/10 w-full bg-muted/60" imageClass="h-full w-full object-contain p-4" iconClass="size-12 text-primary" />
+		<ProductImage kind={item.kind} imageBytes={item.primaryImage?.imageBytes ?? null} alt={item.name} className="aspect-16/10 w-full bg-muted/60" imageClass="h-full w-full object-contain p-4" iconClass="size-12 text-primary" />
 
 		<nav class="overflow-hidden rounded-md border border-border bg-background" aria-label={t('formulary.sectionsLabel')}>
 			{#each sectionConfigs as section}
@@ -126,7 +127,7 @@
 			</p>
 
 			<div class="mt-4 grid gap-1 text-sm text-muted-foreground sm:grid-cols-2">
-				<p>{t('formulary.kind')}: <span class="text-foreground">{kindLabel(item.kind)}</span></p>
+				<p>{t('formulary.kind')}: <span class="text-foreground">{typeLabel(item)}</span></p>
 				<p>{t('formulary.originFilter')}: <span class="text-foreground">{originLabel(item.origin)}</span></p>
 				<p>{t('formulary.classification')}: <span class="text-foreground">{item.extension.classification ?? t('common.notInformed')}</span></p>
 				<p>{t('medication.species')}: <span class="text-foreground">{speciesSummary(item.species)}</span></p>

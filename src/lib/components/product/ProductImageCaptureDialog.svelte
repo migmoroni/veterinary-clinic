@@ -2,8 +2,8 @@
 	import ImageCaptureDialog from '$lib/components/shared/ImageCaptureDialog.svelte';
 
 	const labels = {
-		title: 'medication.imageCaptureTitle',
-		description: 'medication.imageCaptureDescription',
+		title: 'product.imageCaptureTitle',
+		description: 'product.imageCaptureDescription',
 		noImage: 'owner.avatarNoImage',
 		selectFile: 'owner.avatarSelectFile',
 		useCamera: 'owner.avatarUseCamera',
@@ -14,7 +14,7 @@
 		stopCamera: 'owner.avatarStopCamera',
 		zoom: 'owner.avatarZoom',
 		moveHint: 'owner.avatarMoveHint',
-		hint: 'medication.imageCaptureHint',
+		hint: 'product.imageCaptureHint',
 		apply: 'practiceProfile.imageApply',
 		remove: 'owner.avatarRemove',
 		cameraUnavailable: 'owner.avatarCameraUnavailable',

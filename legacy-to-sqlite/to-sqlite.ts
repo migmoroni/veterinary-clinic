@@ -2,9 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import { parse } from 'csv-parse/sync';
 import Database from 'better-sqlite3';
-import { stringifyMedicationCatalogExtension } from '../src/lib/domain/medication/catalog.js';
-import { defaultMedicationCatalogItems } from '../src/lib/domain/medication/default-catalog.js';
+import { PRODUCT_TYPES, productType, stringifyProductCatalogExtension, stringifyProductType } from '../src/lib/domain/product/catalog.js';
+import { defaultProductCatalogItems } from '../src/lib/domain/product/default-catalog.js';
 import { defaultTreatmentProtocols } from '../src/lib/domain/treatment/default-protocol.js';
+
+const PRODUCT_TYPE_SQL_VALUES = PRODUCT_TYPES.map((type) => `'${stringifyProductType(type).replace(/'/g, "''")}'`).join(', ');
 
 type CsvRow = Record<string, string | undefined>;
 type OwnerContactKind = 'phone' | 'mobile' | 'email' | 'other';
@@ -221,12 +223,14 @@ const FIELD_LIMITS = {
   antiparasiticTreatmentValidityMonths: 120,
   antiparasiticTreatmentValidityYears: 10,
   antiparasiticTreatmentObservation: 2000,
-  medicationManufacturer: 120,
-  medicationSpeciesJson: 256,
-  medicationRegionsJson: 1024,
-  medicationAlias: 80,
-  medicationAliasesJson: 1000,
-  medicationExtensionJson: 64000,
+  productName: 120,
+  productNormalizedName: 120,
+  productManufacturer: 120,
+  productSpeciesJson: 256,
+  productRegionsJson: 1024,
+  productAlias: 80,
+  productAliasesJson: 1000,
+  productExtensionJson: 64000,
   treatmentProtocolName: 120,
   treatmentProtocolNormalizedName: 120,
   treatmentProtocolDose: 120,
@@ -246,7 +250,7 @@ db.exec(`
   DROP TABLE IF EXISTS treatment_protocol_doses;
   DROP TABLE IF EXISTS treatment_protocol_items;
   DROP TABLE IF EXISTS treatment_protocols;
-  DROP TABLE IF EXISTS medication_catalog_items;
+  DROP TABLE IF EXISTS product_catalog_items;
   DROP TABLE IF EXISTS backup_history;
   DROP TABLE IF EXISTS app_settings;
   DROP TABLE IF EXISTS medical_records;
@@ -428,23 +432,23 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
-  CREATE TABLE IF NOT EXISTS medication_catalog_items (
+  CREATE TABLE IF NOT EXISTS product_catalog_items (
     id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
-    kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
+    type TEXT NOT NULL CHECK(type IN (${PRODUCT_TYPE_SQL_VALUES})),
     name TEXT NOT NULL,
     normalized_name TEXT NOT NULL,
-    species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.medicationSpeciesJson)}),
-    aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.medicationAliasesJson)}),
-    manufacturer TEXT CHECK(${optionalTextCheck('manufacturer', FIELD_LIMITS.medicationManufacturer)}),
+    species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.productSpeciesJson)}),
+    aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.productAliasesJson)}),
+    manufacturer TEXT CHECK(${optionalTextCheck('manufacturer', FIELD_LIMITS.productManufacturer)}),
     origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
-    regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.medicationRegionsJson)}),
-    extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.medicationExtensionJson)}),
+    regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.productRegionsJson)}),
+    extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.productExtensionJson)}),
     hidden_at TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
-    UNIQUE(kind, normalized_name),
-    CHECK((kind = 'vaccine' AND ${requiredTextCheck('name', FIELD_LIMITS.vaccineName)}) OR (kind = 'antiparasitic' AND ${requiredTextCheck('name', FIELD_LIMITS.antiparasiticName)})),
-    CHECK((kind = 'vaccine' AND ${requiredTextCheck('normalized_name', FIELD_LIMITS.vaccineNormalizedName)}) OR (kind = 'antiparasitic' AND ${requiredTextCheck('normalized_name', FIELD_LIMITS.antiparasiticNormalizedName)}))
+    UNIQUE(normalized_name),
+    CHECK(${requiredTextCheck('name', FIELD_LIMITS.productName)}),
+    CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.productNormalizedName)})
   );
 
   CREATE TABLE IF NOT EXISTS treatment_protocols (
@@ -453,7 +457,7 @@ db.exec(`
     origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
     name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.treatmentProtocolName)}),
     normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.treatmentProtocolNormalizedName)}),
-    species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.medicationSpeciesJson)}),
+    species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.productSpeciesJson)}),
     observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.treatmentProtocolObservation)}),
     sort_order INTEGER NOT NULL DEFAULT 0,
     hidden_at TEXT,
@@ -471,7 +475,7 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT,
     FOREIGN KEY (protocol_id) REFERENCES treatment_protocols (id) ON DELETE CASCADE,
-    FOREIGN KEY (catalog_item_id) REFERENCES medication_catalog_items (id) ON DELETE CASCADE,
+    FOREIGN KEY (catalog_item_id) REFERENCES product_catalog_items (id) ON DELETE CASCADE,
     UNIQUE(protocol_id, catalog_item_id)
   );
 
@@ -549,9 +553,9 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_pets_breed ON pets(breed);
   CREATE INDEX IF NOT EXISTS idx_medical_records_pet_id ON medical_records(pet_id);
   CREATE INDEX IF NOT EXISTS idx_medical_records_deleted_at ON medical_records(deleted_at);
-  CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_kind_name ON medication_catalog_items(kind, name COLLATE NOCASE);
-  CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_kind_normalized_name ON medication_catalog_items(kind, normalized_name);
-  CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_hidden_at ON medication_catalog_items(hidden_at);
+  CREATE INDEX IF NOT EXISTS idx_product_catalog_items_type_name ON product_catalog_items(type, name COLLATE NOCASE);
+  CREATE INDEX IF NOT EXISTS idx_product_catalog_items_type_normalized_name ON product_catalog_items(type, normalized_name);
+  CREATE INDEX IF NOT EXISTS idx_product_catalog_items_hidden_at ON product_catalog_items(hidden_at);
   CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_name ON treatment_protocols(kind, name COLLATE NOCASE);
   CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_normalized_name ON treatment_protocols(kind, normalized_name);
   CREATE INDEX IF NOT EXISTS idx_treatment_protocols_hidden_at ON treatment_protocols(hidden_at);
@@ -614,9 +618,9 @@ const insertMedicalRecord = db.prepare(`
   VALUES (@petId, @description, @admittedAt, @dischargedAt, CURRENT_TIMESTAMP)
 `);
 
-const insertMedicationCatalogItem = db.prepare(`
-  INSERT OR IGNORE INTO medication_catalog_items (id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, updated_at)
-  VALUES (@id, @kind, @name, @normalizedName, @species, @aliases, @manufacturer, @origin, @regions, @extension, CURRENT_TIMESTAMP)
+const insertProductCatalogItem = db.prepare(`
+  INSERT OR IGNORE INTO product_catalog_items (id, type, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, updated_at)
+  VALUES (@id, @type, @name, @normalizedName, @species, @aliases, @manufacturer, @origin, @regions, @extension, CURRENT_TIMESTAMP)
 `);
 
 const insertTreatmentProtocol = db.prepare(`
@@ -713,10 +717,10 @@ const legacySpecificNobivacVaccineNames = new Set([
   'Nobivac Feline 1-HCPCh + FeLV'
 ]);
 
-for (const item of defaultMedicationCatalogItems) {
-  insertMedicationCatalogItem.run({
+for (const item of defaultProductCatalogItems) {
+  insertProductCatalogItem.run({
     id: item.id,
-    kind: item.kind,
+    type: stringifyProductType(item.type),
     name: item.name,
     normalizedName: normalizeVaccineName(item.name),
     species: JSON.stringify(item.species),
@@ -724,18 +728,18 @@ for (const item of defaultMedicationCatalogItems) {
     manufacturer: item.manufacturer,
     origin: item.origin,
     regions: JSON.stringify(item.regions),
-    extension: stringifyMedicationCatalogExtension(item.extension)
+    extension: stringifyProductCatalogExtension(item.extension)
   });
 }
 
 insertSetting.run({ key: backupPolicyIntervalSettingKey, value: String(defaultBackupPolicyIntervalMinutes) });
 
 const vaccineIds = new Map(
-  (db.prepare("SELECT id, normalized_name FROM medication_catalog_items WHERE kind = 'vaccine'").all() as VaccineIdRow[]).map((vaccine) => [normalizeVaccineName(vaccine.normalized_name), vaccine.id])
+  (db.prepare('SELECT id, normalized_name FROM product_catalog_items WHERE type = ?').all(stringifyProductType(productType('medication', 'vaccine'))) as VaccineIdRow[]).map((vaccine) => [normalizeVaccineName(vaccine.normalized_name), vaccine.id])
 );
 
 const dewormerIds = new Map(
-  (db.prepare("SELECT id, normalized_name FROM medication_catalog_items WHERE kind = 'antiparasitic'").all() as VaccineIdRow[]).map((dewormer) => [normalizeDewormerName(dewormer.normalized_name), dewormer.id])
+  (db.prepare('SELECT id, normalized_name FROM product_catalog_items WHERE type = ?').all(stringifyProductType(productType('medication', 'antiparasitic'))) as VaccineIdRow[]).map((dewormer) => [normalizeDewormerName(dewormer.normalized_name), dewormer.id])
 );
 
 for (const [protocolSortOrder, protocol] of defaultTreatmentProtocols.entries()) {
@@ -1661,12 +1665,12 @@ const printDatabaseReport = () => {
   console.log(`- pets: ${countRows('pets')}`);
   console.log(`- pet_owners: ${countRows('pet_owners')}`);
   console.log(`- medical_records: ${countRows('medical_records')}`);
-  console.log(`- medication_catalog_items (vacinas): ${countWhere('medication_catalog_items', "kind = 'vaccine'")}`);
+  console.log(`- product_catalog_items (vacinas): ${countWhere('product_catalog_items', `type = '${stringifyProductType(productType('medication', 'vaccine')).replace(/'/g, "''")}'`)}`);
   console.log(`- treatment_protocols: ${countRows('treatment_protocols')}`);
   console.log(`- treatment_protocol_items: ${countRows('treatment_protocol_items')}`);
   console.log(`- treatment_protocol_doses: ${countRows('treatment_protocol_doses')}`);
   console.log(`- pet_vaccinations: ${countRows('pet_vaccinations')}`);
-  console.log(`- medication_catalog_items (antiparasitários): ${countWhere('medication_catalog_items', "kind = 'antiparasitic'")}`);
+  console.log(`- product_catalog_items (antiparasitários): ${countWhere('product_catalog_items', `type = '${stringifyProductType(productType('medication', 'antiparasitic')).replace(/'/g, "''")}'`)}`);
   console.log(`- pet_antiparasitic_treatments: ${countRows('pet_antiparasitic_treatments')}`);
   console.log(`- pet_vaccinations sem nome normalizado: ${vaccinationsWithoutNormalizedName}`);
   console.log(`- pet_vaccinations com dose inválida: ${vaccinationsWithInvalidDose}`);

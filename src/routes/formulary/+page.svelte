@@ -1,29 +1,30 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import MedicationImage from '$lib/components/medication/MedicationImage.svelte';
+	import ProductImage from '$lib/components/product/ProductImage.svelte';
 	import ReferenceExplorer from '$lib/components/reference/ReferenceExplorer.svelte';
 	import { type ReferenceFilterBarSelect } from '$lib/components/reference/ReferenceFilterBar.svelte';
 	import { type ReferenceGridCard } from '$lib/components/reference/ReferenceCardGrid.svelte';
 	import ReferenceSummarySidebar, { type ReferenceSummaryField } from '$lib/components/reference/ReferenceSummarySidebar.svelte';
 	import { normalizeReferenceSearch, referenceSpeciesLabel, referenceSpeciesOptions, resolveReferenceSelection } from '$lib/components/reference/reference-utils.js';
+	import { productTypeLabel } from '$lib/domain/product/type-labels.js';
 	import { countryOptions } from '$lib/domain/geo/location.js';
-	import { medicationLeafletSectionIds, type MedicationCatalogOrigin, type MedicationLeafletSectionId, type MedicationSpecies } from '$lib/domain/medication/catalog.js';
-	import type { TreatmentCatalogItem, TreatmentKind } from '$lib/domain/treatment/treatment.js';
+	import { PRODUCT_TYPES, productLeafletSectionIds, stringifyProductType, type ProductCatalogOrigin, type ProductLeafletSectionId, type ProductSpecies, type ProductType } from '$lib/domain/product/catalog.js';
+	import type { TreatmentCatalogItem } from '$lib/domain/treatment/treatment.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
 	import { loadAllTreatmentCatalogItems } from '$lib/services/treatment.service.js';
 	import Info from '@lucide/svelte/icons/info';
 	import Pill from '@lucide/svelte/icons/pill';
 	import Syringe from '@lucide/svelte/icons/syringe';
 
-	type KindFilter = 'all' | TreatmentKind;
-	type SpeciesFilter = 'all' | MedicationSpecies;
-	type OriginFilter = 'all' | MedicationCatalogOrigin;
+	type TypeFilter = 'all' | string;
+	type SpeciesFilter = 'all' | ProductSpecies;
+	type OriginFilter = 'all' | ProductCatalogOrigin;
 
 	let items = $state<TreatmentCatalogItem[]>([]);
 	let loading = $state(true);
 	let errorKey = $state<TranslationKey | null>(null);
 	let searchTerm = $state('');
-	let kindFilter = $state<KindFilter>('all');
+	let typeFilter = $state<TypeFilter>('all');
 	let speciesFilter = $state<SpeciesFilter>('all');
 	let originFilter = $state<OriginFilter>('all');
 	let manufacturerFilter = $state('');
@@ -35,7 +36,7 @@
 		const search = normalizeReferenceSearch(searchTerm);
 
 		return items.filter((item) => {
-			if (kindFilter !== 'all' && item.kind !== kindFilter) return false;
+			if (typeFilter !== 'all' && stringifyProductType(item.type) !== typeFilter) return false;
 			if (speciesFilter !== 'all' && !item.species.includes(speciesFilter)) return false;
 			if (originFilter !== 'all' && item.origin !== originFilter) return false;
 			if (manufacturerFilter && item.manufacturer !== manufacturerFilter) return false;
@@ -52,7 +53,7 @@
 			title: item.name,
 			subtitle: item.manufacturer ?? t('common.notInformed'),
 			detail: speciesSummary(item.species),
-			meta: `${kindLabel(item.kind)} · ${originLabel(item.origin)}`,
+			meta: `${typeLabel(item)} · ${originLabel(item.origin)}`,
 			imageBytes: item.primaryImage?.imageBytes ?? null,
 			imageAlt: item.name,
 			fallbackIcon: item.kind === 'vaccine' ? Syringe : Pill
@@ -61,7 +62,7 @@
 	const selectedSummaryFields = $derived<ReferenceSummaryField[]>(
 		selectedItem
 			? [
-					{ label: t('formulary.kind'), value: kindLabel(selectedItem.kind) },
+					{ label: t('formulary.kind'), value: typeLabel(selectedItem) },
 					{ label: t('formulary.classification'), value: selectedItem.extension.classification ?? t('common.notInformed') },
 					{ label: t('medication.species'), value: speciesSummary(selectedItem.species) },
 					{ label: t('medication.regions'), value: regionSummary(selectedItem.regions) }
@@ -84,13 +85,12 @@
 		{
 			id: 'formulary-kind-filter',
 			label: t('formulary.kindFilter'),
-			value: kindFilter,
+			value: typeFilter,
 			options: [
 				{ value: 'all', label: t('formulary.allKinds') },
-				{ value: 'vaccine', label: t('protocol.kind.vaccine') },
-				{ value: 'antiparasitic', label: t('protocol.kind.antiparasitic') }
+				...PRODUCT_TYPES.map((type) => ({ value: typeFilterValue(type), label: productTypeLabel(type, t) }))
 			],
-			onchange: (value) => (kindFilter = value as KindFilter)
+			onchange: (value) => (typeFilter = value as TypeFilter)
 		},
 		{
 			id: 'formulary-species-filter',
@@ -127,7 +127,7 @@
 	]);
 
 	function itemKey(item: TreatmentCatalogItem): string {
-		return `${item.kind}:${item.id}`;
+		return item.id;
 	}
 
 	function itemDetailHref(item: TreatmentCatalogItem): string {
@@ -138,32 +138,36 @@
 		return [
 			item.name,
 			item.manufacturer,
-			kindLabel(item.kind),
+			typeLabel(item),
 			originLabel(item.origin),
 			speciesSummary(item.species),
 			regionSummary(item.regions),
 			item.aliases.join(' '),
 			item.extension.classification,
 			item.extension.commercialLine,
-			...medicationLeafletSectionIds.map((sectionId) => sectionText(item, sectionId))
+			...productLeafletSectionIds.map((sectionId) => sectionText(item, sectionId))
 		]
 			.filter(Boolean)
 			.join(' ');
 	}
 
-	function kindLabel(kind: TreatmentKind): string {
-		return kind === 'vaccine' ? t('protocol.kind.vaccine') : t('protocol.kind.antiparasitic');
+	function typeLabel(item: TreatmentCatalogItem): string {
+		return productTypeLabel(item.type, t);
 	}
 
-	function originLabel(origin: MedicationCatalogOrigin): string {
+	function typeFilterValue(type: ProductType): string {
+		return stringifyProductType(type);
+	}
+
+	function originLabel(origin: ProductCatalogOrigin): string {
 		return origin === 'system' ? t('formulary.origin.system') : t('formulary.origin.user');
 	}
 
-	function speciesLabel(species: MedicationSpecies): string {
+	function speciesLabel(species: ProductSpecies): string {
 		return referenceSpeciesLabel(species, t('pet.speciesCanine'), t('pet.speciesFeline'));
 	}
 
-	function speciesSummary(species: readonly MedicationSpecies[]): string {
+	function speciesSummary(species: readonly ProductSpecies[]): string {
 		return species.map(speciesLabel).join(', ');
 	}
 
@@ -176,7 +180,7 @@
 		return regions.map(regionLabel).join(', ');
 	}
 
-	function sectionText(item: TreatmentCatalogItem, sectionId: MedicationLeafletSectionId): string {
+	function sectionText(item: TreatmentCatalogItem, sectionId: ProductLeafletSectionId): string {
 		return item.extension.sections[sectionId]?.trim() ?? '';
 	}
 
@@ -242,7 +246,7 @@
 					actionLabel={t('formulary.viewMore')}
 				>
 					{#snippet image()}
-						<MedicationImage kind={selectedItem.kind} imageBytes={selectedItem.primaryImage?.imageBytes ?? null} alt={selectedItem.name} className="aspect-16/10 w-full rounded-b-none border-0 bg-muted/60" imageClass="h-full w-full object-contain p-4" iconClass="size-12 text-primary" />
+						<ProductImage kind={selectedItem.kind} imageBytes={selectedItem.primaryImage?.imageBytes ?? null} alt={selectedItem.name} className="aspect-16/10 w-full rounded-b-none border-0 bg-muted/60" imageClass="h-full w-full object-contain p-4" iconClass="size-12 text-primary" />
 					{/snippet}
 				</ReferenceSummarySidebar>
 			{/if}

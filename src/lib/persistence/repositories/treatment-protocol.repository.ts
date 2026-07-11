@@ -1,6 +1,7 @@
 import type { TreatmentProtocol, TreatmentProtocolCatalogItem, TreatmentProtocolDose, TreatmentProtocolDoseInput, TreatmentProtocolId, TreatmentProtocolInput, TreatmentProtocolKind, TreatmentProtocolOrigin, TreatmentProtocolValidityUnit } from '$lib/domain/treatment/protocol.js';
 import { parseTreatmentSpecies, stringifyTreatmentSpecies } from '$lib/domain/treatment/species.js';
 import { canEditTreatmentProtocol, normalizeTreatmentProtocolName } from '$lib/domain/treatment/protocol.js';
+import { productType, stringifyProductType } from '$lib/domain/product/catalog.js';
 import { FIELD_LIMITS, assertTextLimit, nullableMultilineText } from '$lib/domain/shared/field-limits.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { createUuidV4 } from '$lib/domain/shared/uuid.js';
@@ -150,14 +151,14 @@ async function loadProtocolDetails(rows: TreatmentProtocolRow[]): Promise<Treatm
 	const idPlaceholders = placeholders(ids);
 	const itemRows = await selectMany<TreatmentProtocolItemRow>(
 		`SELECT treatment_protocol_items.protocol_id,
-			medication_catalog_items.id,
-			medication_catalog_items.name,
-			medication_catalog_items.normalized_name,
-			medication_catalog_items.species
+			product_catalog_items.id,
+			product_catalog_items.name,
+			product_catalog_items.normalized_name,
+			product_catalog_items.species
 		 FROM treatment_protocol_items
-		 JOIN medication_catalog_items ON medication_catalog_items.id = treatment_protocol_items.catalog_item_id
+		 JOIN product_catalog_items ON product_catalog_items.id = treatment_protocol_items.catalog_item_id
 		 WHERE treatment_protocol_items.protocol_id IN (${idPlaceholders})
-		 ORDER BY treatment_protocol_items.protocol_id, treatment_protocol_items.sort_order, medication_catalog_items.name COLLATE NOCASE`,
+		 ORDER BY treatment_protocol_items.protocol_id, treatment_protocol_items.sort_order, product_catalog_items.name COLLATE NOCASE`,
 		ids
 	);
 	const doseRows = await selectMany<TreatmentProtocolDoseRow>(
@@ -202,7 +203,10 @@ async function resolveProtocolItemIds(kind: TreatmentProtocolKind, catalogItemId
 	const uniqueIds = [...new Set(catalogItemIds.map((id) => id.trim()).filter(Boolean))];
 	if (uniqueIds.length === 0) throw new Error('protocol_item_required');
 
-	const allowedRows = await selectMany<{ id: TreatmentCatalogItemId }>(`SELECT id FROM medication_catalog_items WHERE kind = $1 AND id IN (${uniqueIds.map((_, index) => `$${index + 2}`).join(', ')})`, [kind, ...uniqueIds]);
+	const allowedRows = await selectMany<{ id: TreatmentCatalogItemId }>(
+		`SELECT id FROM product_catalog_items WHERE type = $1 AND id IN (${uniqueIds.map((_, index) => `$${index + 2}`).join(', ')})`,
+		[stringifyProductType(productType('medication', kind)), ...uniqueIds]
+	);
 	const allowedIds = new Set(allowedRows.map((row) => row.id));
 	const filteredIds = uniqueIds.filter((id) => allowedIds.has(id));
 	if (filteredIds.length === 0) throw new Error('protocol_item_required');
@@ -244,7 +248,7 @@ export async function saveTreatmentProtocol(input: TreatmentProtocolInput, id?: 
 	const kind = normalizeKind(input.kind);
 	const { name, normalizedName } = normalizeName(input.name);
 	const species = stringifyTreatmentSpecies(input.species);
-	assertTextLimit(species, FIELD_LIMITS.medicationSpeciesJson);
+	assertTextLimit(species, FIELD_LIMITS.productSpeciesJson);
 	const observation = nullableMultilineText(input.observation, FIELD_LIMITS.treatmentObservation);
 	const catalogItemIds = await resolveProtocolItemIds(kind, input.catalogItemIds);
 

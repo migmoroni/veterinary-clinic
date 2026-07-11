@@ -2,7 +2,7 @@ import { FIELD_LIMITS, assertTextLimit, nullableMultilineText } from '$lib/domai
 import type { ImageCollectionItemInput } from '$lib/domain/image-collection/image-collection.js';
 import type { PetTreatment, PetTreatmentInput, TreatmentCatalogItem, TreatmentCatalogItemId, TreatmentCatalogItemInput, TreatmentKind, TreatmentValidityUnit } from '$lib/domain/treatment/treatment.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
-import { deleteMedicationCatalogItem, ensureMedicationCatalogItem, getMedicationCatalogItemById, listMedicationCatalogItems, normalizeMedicationCatalogInput, saveMedicationCatalogItem, saveMedicationCatalogItemImages, setMedicationCatalogItemHidden } from '$lib/persistence/repositories/medication-catalog.repository.js';
+import { deleteProductCatalogItem, ensureMedicationProductCatalogItem, getProductCatalogItemById, listProductCatalogItems, normalizeProductCatalogInput, saveMedicationProductCatalogItem, saveProductCatalogItemImages, setProductCatalogItemHidden } from '$lib/persistence/repositories/product-catalog.repository.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
 interface PetTreatmentRow {
@@ -123,28 +123,28 @@ async function markPreviousEquivalentTreatmentsIgnored(kind: TreatmentKind, petI
 	}
 }
 
-export async function listTreatmentCatalogItems(kind: TreatmentKind, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem[]> {
-	return listMedicationCatalogItems(kind, includeHidden, includeImages);
+export async function listTreatmentCatalogItems(kind: TreatmentKind | null = null, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem[]> {
+	return listProductCatalogItems(kind, includeHidden, includeImages);
 }
 
 export async function getTreatmentCatalogItem(id: TreatmentCatalogItemId, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem | null> {
-	return getMedicationCatalogItemById(id, includeHidden, includeImages);
+	return getProductCatalogItemById(id, includeHidden, includeImages);
 }
 
 export async function saveTreatmentCatalogItem(kind: TreatmentKind, input: TreatmentCatalogItemInput, id?: TreatmentCatalogItemId): Promise<TreatmentCatalogItem> {
-	return saveMedicationCatalogItem(kind, input, id);
+	return saveMedicationProductCatalogItem(kind, input, id);
 }
 
 export async function setTreatmentCatalogItemHidden(kind: TreatmentKind, id: TreatmentCatalogItemId, hidden: boolean): Promise<TreatmentCatalogItem> {
-	return setMedicationCatalogItemHidden(kind, id, hidden);
+	return setProductCatalogItemHidden(kind, id, hidden);
 }
 
 export async function saveTreatmentCatalogItemImages(kind: TreatmentKind, id: TreatmentCatalogItemId, images: ImageCollectionItemInput[]): Promise<TreatmentCatalogItem> {
-	return saveMedicationCatalogItemImages(kind, id, images);
+	return saveProductCatalogItemImages(kind, id, images);
 }
 
 export async function deleteTreatmentCatalogItem(kind: TreatmentKind, id: TreatmentCatalogItemId): Promise<void> {
-	await deleteMedicationCatalogItem(kind, id);
+	await deleteProductCatalogItem(kind, id);
 }
 
 export async function listTreatmentsByPet(kind: TreatmentKind, petId: number, includeDeleted = false): Promise<PetTreatment[]> {
@@ -164,13 +164,13 @@ export async function createTreatments(kind: TreatmentKind, petId: number, input
 
 	for (const input of inputs) {
 		const appliedAt = requiredIsoDate(input.appliedAt);
-		const { name, normalizedName } = normalizeMedicationCatalogInput(kind, input.name);
+		const { name, normalizedName } = normalizeProductCatalogInput(kind, input.name);
 		const dose = normalizeDose(input.dose);
 		const validityUnit = normalizeValidityUnit(input.validityUnit);
 		const validityValue = normalizeValidityValue(Number(input.validityValue), validityUnit);
 		const observation = nullableMultilineText(input.observation, FIELD_LIMITS.treatmentObservation);
 
-		await ensureMedicationCatalogItem(kind, name, normalizedName);
+		await ensureMedicationProductCatalogItem(kind, name, normalizedName);
 		await execute(
 			`INSERT INTO pet_treatments (pet_id, kind, applied_at, name, normalized_name, dose, validity_value, validity_unit, observation, updated_at)
 			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)`,

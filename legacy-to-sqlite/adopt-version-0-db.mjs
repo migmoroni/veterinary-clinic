@@ -23,10 +23,23 @@ const medicationLeafletSectionIds = [
 ];
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const medicationDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/medication/defaults');
+const productDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/product/defaults');
 const treatmentDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/treatment/defaults');
 const defaultSourcePath = path.resolve(scriptDir, 'dist/veterinary_clinic-version-0.db');
 const defaultOutputPath = path.resolve(scriptDir, `build/veterinary_clinic-version-${CURRENT_SCHEMA_VERSION}.db`);
+const productTypeValues = {
+	medication: {
+		vaccine: JSON.stringify(['medication', 'vaccine']),
+		antiparasitic: JSON.stringify(['medication', 'antiparasitic'])
+	},
+	nutrition: JSON.stringify(['nutrition', null]),
+	hygiene: JSON.stringify(['hygiene', null]),
+	disinfectants: JSON.stringify(['disinfectants', null])
+};
+const medicationProductTypeValues = productTypeValues.medication;
+const productTypeSqlValues = [...Object.values(productTypeValues.medication), productTypeValues.nutrition, productTypeValues.hygiene, productTypeValues.disinfectants]
+	.map((value) => `'${value.replace(/'/g, "''")}'`)
+	.join(', ');
 
 const sourceSchema = {
 	owners: ['id', 'name', 'avatar_blob', 'additional_information', 'created_at', 'updated_at', 'deleted_at', 'purge_after'],
@@ -47,6 +60,7 @@ const sourceSchema = {
 };
 
 const medicationCatalogColumns = ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'];
+const productCatalogColumns = ['id', 'type', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'];
 
 const medicationSchema = {
 	catalog: medicationCatalogColumns,
@@ -78,7 +92,7 @@ const medicationTableSets = {
 
 const versionedSchema = {
 	...sourceSchema,
-	medication_catalog_items: medicationSchema.catalog,
+	product_catalog_items: productCatalogColumns,
 	treatment_protocols: medicationSchema.protocols,
 	treatment_protocol_items: medicationSchema.protocolItems,
 	treatment_protocol_doses: medicationSchema.protocolDoses,
@@ -89,7 +103,7 @@ delete versionedSchema.pet_vaccinations;
 delete versionedSchema.pet_antiparasitic_treatments;
 
 const deprecatedTreatmentTables = ['pet_vaccinations', 'pet_antiparasitic_treatments'];
-const deprecatedMedicationTables = ['preventive_catalog_items', 'preventive_protocols', 'preventive_protocol_items', 'preventive_protocol_doses', 'medication_protocols', 'medication_protocol_items', 'medication_protocol_doses'];
+const deprecatedMedicationTables = ['preventive_catalog_items', 'preventive_protocols', 'preventive_protocol_items', 'preventive_protocol_doses', 'medication_catalog_items', 'medication_protocols', 'medication_protocol_items', 'medication_protocol_doses'];
 
 function printUsage() {
 	console.log(`Uso:
@@ -189,7 +203,13 @@ function stringifyMedicationCatalogExtension(value) {
 	return JSON.stringify(normalizeMedicationCatalogExtension(value));
 }
 
-function medicationCatalogKey(kind, normalizedName) {
+function medicationProductTypeValue(kind) {
+	const value = medicationProductTypeValues[kind];
+	if (!value) throw new Error(`Tipo de medicamento inválido: ${kind}`);
+	return value;
+}
+
+function productCatalogKey(kind, normalizedName) {
 	return `${kind}:${normalizedName}`;
 }
 
@@ -224,19 +244,19 @@ function getMappedLegacyDatabaseId(idByOldId, value) {
 	return null;
 }
 
-function readDefaultMedicationCatalogIdsByKey() {
+function readDefaultProductCatalogIdsByKey() {
 	const idsByKey = new Map();
-	for (const item of readDefaultMedicationCatalogItems()) {
-		idsByKey.set(medicationCatalogKey(item.kind, normalizeMedicationCatalogName(item.name)), item.id);
+	for (const item of readDefaultProductCatalogItems()) {
+		idsByKey.set(productCatalogKey(item.kind, normalizeMedicationCatalogName(item.name)), item.id);
 	}
 
 	return idsByKey;
 }
 
-function readDefaultMedicationCatalogItems() {
+function readDefaultProductCatalogItems() {
 	const defaultItems = [];
 	for (const kind of ['vaccine', 'antiparasitic']) {
-		const directory = path.join(medicationDefaultsDir, kind);
+		const directory = path.join(productDefaultsDir, 'medication', kind);
 		if (!fs.existsSync(directory)) continue;
 
 		for (const fileName of fs.readdirSync(directory).filter((candidate) => candidate.endsWith('.json')).sort()) {
@@ -250,6 +270,7 @@ function readDefaultMedicationCatalogItems() {
 			if (!Array.isArray(item.regions)) throw new Error(`Medicamento padrão sem regiões: ${path.relative(scriptDir, filePath)}`);
 			defaultItems.push({
 				id: item.id,
+				type: medicationProductTypeValue(kind),
 				kind,
 				origin: 'system',
 				name: item.name,
@@ -505,7 +526,7 @@ function convertTreatmentProtocolIdsToUuidV4(database) {
 	`);
 }
 
-function convertMedicationCatalogIdsToUuidV4(database) {
+function convertMedicationCatalogToProductCatalog(database) {
 	const catalogRows = database
 		.prepare(
 			`SELECT id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, hidden_at, created_at, updated_at
@@ -515,15 +536,15 @@ function convertMedicationCatalogIdsToUuidV4(database) {
 		.all();
 	if (catalogRows.length === 0) return;
 
-	const defaultMedicationCatalogIdsByKey = readDefaultMedicationCatalogIdsByKey();
+	const defaultProductCatalogIdsByKey = readDefaultProductCatalogIdsByKey();
 	const idByOldId = new Map();
 	const convertedCatalogRows = catalogRows.map((row) => {
 		const normalizedName = normalizeMedicationCatalogName(row.normalized_name);
 		const currentId = String(row.id);
-		const defaultId = row.origin === 'system' ? defaultMedicationCatalogIdsByKey.get(medicationCatalogKey(row.kind, normalizedName)) : null;
+		const defaultId = row.origin === 'system' ? defaultProductCatalogIdsByKey.get(productCatalogKey(row.kind, normalizedName)) : null;
 		const id = defaultId ?? (isUuidV4(currentId) ? currentId : createMedicationCatalogUuid());
 		for (const key of legacyDatabaseIdKeys(row.id)) idByOldId.set(key, id);
-		return { ...row, id, extension: row.extension ?? '{}' };
+		return { ...row, id, type: medicationProductTypeValue(row.kind), extension: row.extension ?? '{}' };
 	});
 	const protocolItemRows = database
 		.prepare('SELECT id, protocol_id, catalog_item_id, sort_order, created_at, updated_at FROM treatment_protocol_items ORDER BY id')
@@ -533,11 +554,11 @@ function convertMedicationCatalogIdsToUuidV4(database) {
 		.all();
 
 	database.exec(`
-		DROP TABLE IF EXISTS medication_catalog_items_uuid;
+		DROP TABLE IF EXISTS product_catalog_items_uuid;
 
-		CREATE TABLE medication_catalog_items_uuid (
+		CREATE TABLE product_catalog_items_uuid (
 			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
-			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
+			type TEXT NOT NULL CHECK(type IN (${productTypeSqlValues})),
 			name TEXT NOT NULL CHECK(length(trim(name)) > 0),
 			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) > 0),
 			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(length(trim(species)) > 0),
@@ -549,15 +570,15 @@ function convertMedicationCatalogIdsToUuidV4(database) {
 			hidden_at TEXT,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
-			UNIQUE(kind, normalized_name)
+			UNIQUE(normalized_name)
 		);
 	`);
 
 	const insertCatalogItem = database.prepare(`
-		INSERT INTO medication_catalog_items_uuid (
-			id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, hidden_at, created_at, updated_at
+		INSERT INTO product_catalog_items_uuid (
+			id, type, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, hidden_at, created_at, updated_at
 		) VALUES (
-			@id, @kind, @name, @normalized_name, @species, @aliases, @manufacturer, @origin, @regions, @extension, @hidden_at, @created_at, @updated_at
+			@id, @type, @name, @normalized_name, @species, @aliases, @manufacturer, @origin, @regions, @extension, @hidden_at, @created_at, @updated_at
 		)
 	`);
 	for (const row of convertedCatalogRows) insertCatalogItem.run(row);
@@ -568,9 +589,10 @@ function convertMedicationCatalogIdsToUuidV4(database) {
 		DROP INDEX IF EXISTS idx_medication_catalog_items_kind_name;
 		DROP INDEX IF EXISTS idx_medication_catalog_items_kind_normalized_name;
 		DROP INDEX IF EXISTS idx_medication_catalog_items_hidden_at;
+		DROP INDEX IF EXISTS idx_product_catalog_items_hidden_at;
 		DROP TABLE treatment_protocol_items;
 		DROP TABLE medication_catalog_items;
-		ALTER TABLE medication_catalog_items_uuid RENAME TO medication_catalog_items;
+		ALTER TABLE product_catalog_items_uuid RENAME TO product_catalog_items;
 
 		CREATE TABLE treatment_protocol_items (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -580,7 +602,7 @@ function convertMedicationCatalogIdsToUuidV4(database) {
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
 			FOREIGN KEY (protocol_id) REFERENCES treatment_protocols(id) ON DELETE CASCADE,
-			FOREIGN KEY (catalog_item_id) REFERENCES medication_catalog_items(id) ON DELETE CASCADE,
+			FOREIGN KEY (catalog_item_id) REFERENCES product_catalog_items(id) ON DELETE CASCADE,
 			UNIQUE(protocol_id, catalog_item_id)
 		);
 	`);
@@ -616,8 +638,9 @@ function convertMedicationCatalogIdsToUuidV4(database) {
 		VALUES (@id, @entity_type, @entity_id, @primary_required, @max_items, @created_at, @updated_at)
 	`);
 	for (const row of imageCollectionRows) {
-		const entityId = row.entity_type === 'medication_catalog_item' ? (idByOldId.get(String(row.entity_id)) ?? String(row.entity_id)) : String(row.entity_id);
-		insertImageCollection.run({ ...row, entity_id: entityId });
+		const isProductCatalogImage = row.entity_type === 'medication_catalog_item' || row.entity_type === 'product_catalog_item';
+		const entityId = isProductCatalogImage ? (idByOldId.get(String(row.entity_id)) ?? String(row.entity_id)) : String(row.entity_id);
+		insertImageCollection.run({ ...row, entity_type: isProductCatalogImage ? 'product_catalog_item' : row.entity_type, entity_id: entityId });
 	}
 
 	database.exec(`
@@ -655,14 +678,14 @@ function convertMedicationCatalogIdsToUuidV4(database) {
 	`);
 }
 
-function syncDefaultMedicationCatalog(database) {
-	const defaultItems = readDefaultMedicationCatalogItems();
+function syncDefaultProductCatalog(database) {
+	const defaultItems = readDefaultProductCatalogItems();
 	if (defaultItems.length === 0) return 0;
 
-	const selectCatalogItemById = database.prepare('SELECT id, origin FROM medication_catalog_items WHERE id = ? LIMIT 1');
+	const selectCatalogItemById = database.prepare('SELECT id, origin FROM product_catalog_items WHERE id = ? LIMIT 1');
 	const updateCatalogItemById = database.prepare(`
-		UPDATE medication_catalog_items
-		SET kind = @kind,
+		UPDATE product_catalog_items
+		SET type = @type,
 			name = @name,
 			normalized_name = @normalized_name,
 			species = @species,
@@ -675,26 +698,27 @@ function syncDefaultMedicationCatalog(database) {
 			AND origin = 'system'
 	`);
 	const insertCatalogItem = database.prepare(`
-		INSERT INTO medication_catalog_items (id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, updated_at)
-		VALUES (@id, @kind, @name, @normalized_name, @species, @aliases, @manufacturer, 'system', @regions, @extension, CURRENT_TIMESTAMP)
-		ON CONFLICT(kind, normalized_name) DO UPDATE SET
+		INSERT INTO product_catalog_items (id, type, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, updated_at)
+		VALUES (@id, @type, @name, @normalized_name, @species, @aliases, @manufacturer, 'system', @regions, @extension, CURRENT_TIMESTAMP)
+		ON CONFLICT(normalized_name) DO UPDATE SET
 			name = excluded.name,
+			type = excluded.type,
 			species = excluded.species,
 			aliases = excluded.aliases,
 			manufacturer = excluded.manufacturer,
 			regions = excluded.regions,
 			extension = excluded.extension,
 			updated_at = CURRENT_TIMESTAMP
-		WHERE medication_catalog_items.origin = 'system'
+		WHERE product_catalog_items.origin = 'system'
 	`);
-	const selectCatalogItemByName = database.prepare('SELECT id, origin FROM medication_catalog_items WHERE kind = ? AND normalized_name = ? LIMIT 1');
+	const selectCatalogItemByName = database.prepare('SELECT id, origin FROM product_catalog_items WHERE normalized_name = ? LIMIT 1');
 
 	let syncedItems = 0;
 	for (const item of defaultItems) {
 		const normalizedName = normalizeMedicationCatalogName(item.name);
 		const catalogRow = {
 			id: item.id,
-			kind: item.kind,
+			type: item.type,
 			name: item.name,
 			normalized_name: normalizedName,
 			species: JSON.stringify(item.species),
@@ -714,7 +738,7 @@ function syncDefaultMedicationCatalog(database) {
 
 		insertCatalogItem.run(catalogRow);
 
-		const storedItem = selectCatalogItemByName.get(item.kind, normalizedName);
+		const storedItem = selectCatalogItemByName.get(normalizedName);
 		if (storedItem?.origin === 'system') syncedItems += 1;
 	}
 
@@ -757,7 +781,7 @@ function syncDefaultTreatmentProtocols(database) {
 	`);
 	const deleteProtocolItems = database.prepare('DELETE FROM treatment_protocol_items WHERE protocol_id = ?');
 	const deleteProtocolDoses = database.prepare('DELETE FROM treatment_protocol_doses WHERE protocol_id = ?');
-	const selectCatalogItem = database.prepare('SELECT id, kind FROM medication_catalog_items WHERE id = ? LIMIT 1');
+	const selectCatalogItem = database.prepare('SELECT id, type FROM product_catalog_items WHERE id = ? LIMIT 1');
 	const insertProtocolItem = database.prepare(`
 		INSERT INTO treatment_protocol_items (protocol_id, catalog_item_id, sort_order, updated_at)
 		VALUES (@protocol_id, @catalog_item_id, @sort_order, CURRENT_TIMESTAMP)
@@ -790,7 +814,7 @@ function syncDefaultTreatmentProtocols(database) {
 		for (const [sortOrder, catalogItemId] of protocol.catalogItemIds.entries()) {
 			const catalogItem = selectCatalogItem.get(catalogItemId);
 			if (!catalogItem) throw new Error(`Protocolo padrão aponta para medicamento inexistente: ${catalogItemId}`);
-			if (catalogItem.kind !== protocol.kind) throw new Error(`Protocolo padrão aponta para medicamento de outro tipo: ${catalogItemId}`);
+			if (catalogItem.type !== medicationProductTypeValue(protocol.kind)) throw new Error(`Protocolo padrão aponta para medicamento de outro tipo: ${catalogItemId}`);
 			insertProtocolItem.run({
 				protocol_id: storedProtocol.id,
 				catalog_item_id: catalogItemId,
@@ -938,8 +962,8 @@ function migrateMedicationTables(database) {
 	}
 	ensureMedicationCatalogExtensionColumn(database);
 	convertTreatmentProtocolIdsToUuidV4(database);
-	convertMedicationCatalogIdsToUuidV4(database);
-	const syncedDefaultCatalogRows = syncDefaultMedicationCatalog(database);
+	convertMedicationCatalogToProductCatalog(database);
+	const syncedDefaultCatalogRows = syncDefaultProductCatalog(database);
 	const syncedDefaultProtocolRows = syncDefaultTreatmentProtocols(database);
 
 	database.exec(`
@@ -954,9 +978,9 @@ function migrateMedicationTables(database) {
 		DROP INDEX IF EXISTS idx_preventive_protocol_items_catalog_item_id;
 		DROP INDEX IF EXISTS idx_preventive_protocol_doses_protocol_id;
 
-		CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_kind_name ON medication_catalog_items(kind, name COLLATE NOCASE);
-		CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_kind_normalized_name ON medication_catalog_items(kind, normalized_name);
-		CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_hidden_at ON medication_catalog_items(hidden_at);
+		CREATE INDEX IF NOT EXISTS idx_product_catalog_items_type_name ON product_catalog_items(type, name COLLATE NOCASE);
+		CREATE INDEX IF NOT EXISTS idx_product_catalog_items_type_normalized_name ON product_catalog_items(type, normalized_name);
+		CREATE INDEX IF NOT EXISTS idx_product_catalog_items_hidden_at ON product_catalog_items(hidden_at);
 		CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_name ON treatment_protocols(kind, name COLLATE NOCASE);
 		CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_normalized_name ON treatment_protocols(kind, normalized_name);
 		CREATE INDEX IF NOT EXISTS idx_treatment_protocols_hidden_at ON treatment_protocols(hidden_at);
@@ -1093,7 +1117,7 @@ function adoptVersionZeroDatabase() {
 		console.log(`- owners: ${countRows(output, 'owners')}`);
 		console.log(`- pets: ${countRows(output, 'pets')}`);
 		console.log(`- medical_records: ${countRows(output, 'medical_records')}`);
-		console.log(`- medication_catalog_items: ${countRows(output, 'medication_catalog_items')} de ${medicationMigration.originalCatalogRows}`);
+		console.log(`- product_catalog_items: ${countRows(output, 'product_catalog_items')} de ${medicationMigration.originalCatalogRows}`);
 		console.log(`  - padrões sincronizados: ${medicationMigration.syncedDefaultCatalogRows}`);
 		console.log(`- treatment_protocols: ${countRows(output, 'treatment_protocols')} de ${medicationMigration.originalProtocolRows}`);
 		console.log(`  - padrões sincronizados: ${medicationMigration.syncedDefaultProtocolRows}`);

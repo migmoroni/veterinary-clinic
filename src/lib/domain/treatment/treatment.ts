@@ -1,17 +1,18 @@
-import type { MedicationCatalogExtension, MedicationCatalogOrigin } from '$lib/domain/medication/catalog.js';
+import { productTypeOptions, type ProductCatalogExtension, type ProductCatalogOrigin, type ProductType, type ProductTypeSubtype } from '$lib/domain/product/catalog.js';
 import type { ImageCollectionItem } from '$lib/domain/image-collection/image-collection.js';
 import type { TreatmentSpecies } from '$lib/domain/treatment/species.js';
 
 export type { TreatmentSpecies } from '$lib/domain/treatment/species.js';
 
-export type TreatmentKind = 'vaccine' | 'antiparasitic';
+export type TreatmentKind = ProductTypeSubtype<'medication'>;
 export type TreatmentCatalogItemId = string;
 export type TreatmentValidityUnit = 'days' | 'months' | 'years';
 
-export const TREATMENT_KINDS = ['vaccine', 'antiparasitic'] as const satisfies readonly TreatmentKind[];
+export const TREATMENT_KINDS = productTypeOptions('medication');
 
 export interface TreatmentCatalogItem {
 	id: TreatmentCatalogItemId;
+	type: ProductType;
 	kind: TreatmentKind;
 	name: string;
 	normalizedName: string;
@@ -20,9 +21,9 @@ export interface TreatmentCatalogItem {
 	manufacturer: string | null;
 	images: ImageCollectionItem[];
 	primaryImage: ImageCollectionItem | null;
-	origin: MedicationCatalogOrigin;
+	origin: ProductCatalogOrigin;
 	regions: string[];
-	extension: MedicationCatalogExtension;
+	extension: ProductCatalogExtension;
 	hiddenAt: string | null;
 	updatedAt: string | null;
 }

@@ -9,7 +9,7 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import type { PetSpecies } from '$lib/domain/pet/taxonomy.js';
-	import { medicationItemMatchesSpecies } from '$lib/domain/medication/catalog.js';
+	import { productItemMatchesSpecies } from '$lib/domain/product/catalog.js';
 	import type { TreatmentProtocol, TreatmentProtocolId } from '$lib/domain/treatment/protocol.js';
 	import { formatDateForDisplay, normalizeDateInput } from '$lib/domain/shared/date-input.js';
 	import { FIELD_LIMITS, textLength } from '$lib/domain/shared/field-limits.js';
@@ -163,10 +163,10 @@
 	let errorKey = $state<TranslationKey | null>(null);
 
 	const sortedTreatments = $derived([...currentTreatments].sort((first, second) => second.appliedAt.localeCompare(first.appliedAt) || second.id - first.id));
-	const visibleCatalogItems = $derived(currentCatalogItems.filter((item) => !item.hiddenAt && medicationItemMatchesSpecies(item.species, petSpecies)));
+	const visibleCatalogItems = $derived(currentCatalogItems.filter((item) => !item.hiddenAt && productItemMatchesSpecies(item.species, petSpecies)));
 	const knownNames = $derived([...new Set(visibleCatalogItems.map((item) => item.name))].sort((first, second) => first.localeCompare(second)));
 	const selectedCatalogItem = $derived(visibleCatalogItems.find((item) => item.name === treatmentName) ?? null);
-	const visibleProtocols = $derived(selectedCatalogItem ? currentProtocols.filter((protocol) => !protocol.hiddenAt && medicationItemMatchesSpecies(protocol.species, petSpecies) && protocol.items.some((item) => item.id === selectedCatalogItem.id)) : []);
+	const visibleProtocols = $derived(selectedCatalogItem ? currentProtocols.filter((protocol) => !protocol.hiddenAt && productItemMatchesSpecies(protocol.species, petSpecies) && protocol.items.some((item) => item.id === selectedCatalogItem.id)) : []);
 	const selectedProtocol = $derived(visibleProtocols.find((protocol) => protocol.id === protocolId) ?? null);
 	const visibleProtocolDoses = $derived(selectedProtocol ? selectedProtocol.doses : []);
 	const selectedProtocolDose = $derived(visibleProtocolDoses.find((protocolDose) => protocolDose.id === protocolDoseId) ?? null);
@@ -410,7 +410,7 @@
 <section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
 	<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 		<h3 class="min-w-0 text-base font-semibold">{t(config.sectionTitle)}</h3>
-		<a href="/settings/medications" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={t(config.manageLabel)}>
+		<a href="/settings/products" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={t(config.manageLabel)}>
 			<Settings2 class="size-4" />
 			{t(config.manageLabel)}
 		</a>

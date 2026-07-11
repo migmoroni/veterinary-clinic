@@ -1,5 +1,5 @@
 import type { ImageCollectionItemInput } from '$lib/domain/image-collection/image-collection.js';
-import { TREATMENT_KINDS, type PetTreatment, type PetTreatmentInput, type TreatmentCatalogItem, type TreatmentCatalogItemId, type TreatmentCatalogItemInput, type TreatmentKind } from '$lib/domain/treatment/treatment.js';
+import type { PetTreatment, PetTreatmentInput, TreatmentCatalogItem, TreatmentCatalogItemId, TreatmentCatalogItemInput, TreatmentKind } from '$lib/domain/treatment/treatment.js';
 import { createTreatments, deleteTreatmentCatalogItem, getTreatmentCatalogItem, listTreatmentCatalogItems, saveTreatmentCatalogItem, saveTreatmentCatalogItemImages, setTreatmentCatalogItemHidden, setTreatmentValidityIgnored, softDeleteTreatment } from '$lib/persistence/repositories/treatment.repository.js';
 
 export async function saveNewTreatments(kind: TreatmentKind, petId: number, inputs: PetTreatmentInput[]): Promise<PetTreatment[]> {
@@ -14,7 +14,7 @@ export async function setTreatmentValidity(kind: TreatmentKind, treatmentId: num
 	return setTreatmentValidityIgnored(kind, treatmentId, ignored);
 }
 
-export async function loadTreatmentCatalogItems(kind: TreatmentKind, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem[]> {
+export async function loadTreatmentCatalogItems(kind: TreatmentKind | null = null, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem[]> {
 	return listTreatmentCatalogItems(kind, includeHidden, includeImages);
 }
 
@@ -23,8 +23,7 @@ export async function loadTreatmentCatalogItem(id: TreatmentCatalogItemId, inclu
 }
 
 export async function loadAllTreatmentCatalogItems(includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem[]> {
-	const itemsByKind = await Promise.all(TREATMENT_KINDS.map((kind) => listTreatmentCatalogItems(kind, includeHidden, includeImages)));
-	return itemsByKind.flat().sort((first, second) => first.name.localeCompare(second.name));
+	return listTreatmentCatalogItems(null, includeHidden, includeImages);
 }
 
 export async function saveTreatmentCatalogName(kind: TreatmentKind, input: TreatmentCatalogItemInput, id?: TreatmentCatalogItemId): Promise<TreatmentCatalogItem> {

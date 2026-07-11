@@ -173,6 +173,7 @@ const distDir = path.resolve(scriptDir, 'dist');
 const buildDir = path.resolve(scriptDir, 'build');
 const defaultBasePath = path.resolve(buildDir, 'veterinary_clinic.db');
 const defaultOutputPath = path.resolve(buildDir, 'veterinary_clinic.consolidated.db');
+const vaccineProductType = JSON.stringify(['medication', 'vaccine']);
 
 const legacySchema = {
   owners: ['id', 'name', 'avatar_blob', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code', 'additional_information', 'created_at', 'updated_at', 'deleted_at', 'purge_after'],
@@ -194,7 +195,7 @@ const currentSchema = {
   pets: ['id', 'name', 'birth_date', 'species', 'breed', 'sex', 'avatar_blob', 'updated_at', 'deleted_at', 'purge_after'],
   pet_owners: ['id', 'pet_id', 'owner_id', 'sort_order', 'created_at', 'updated_at'],
   medical_records: ['id', 'pet_id', 'title', 'description', 'admitted_at', 'discharged_at', 'updated_at', 'deleted_at', 'purge_after'],
-  medication_catalog_items: ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'origin', 'regions', 'created_at', 'updated_at'],
+  product_catalog_items: ['id', 'type', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'],
   pet_vaccinations: ['id', 'pet_id', 'applied_at', 'vaccine_name', 'vaccine_normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'created_at', 'validity_ignored_at', 'updated_at', 'deleted_at', 'purge_after']
 } as const;
 
@@ -622,16 +623,16 @@ function ensureVaccineCatalogItem(output: Database.Database, vaccineName: string
   const normalizedName = normalizeMedicationName(vaccineName);
   const id = randomUUID();
   const existing = output.prepare(
-    `SELECT id FROM medication_catalog_items WHERE kind = 'vaccine' AND normalized_name = ? LIMIT 1`
-  ).get(normalizedName) as IdRow | undefined;
+    'SELECT id FROM product_catalog_items WHERE type = ? AND normalized_name = ? LIMIT 1'
+  ).get(vaccineProductType, normalizedName) as IdRow | undefined;
   if (existing) return normalizedName;
 
   const supportedSpecies = species === 'feline' ? ['feline'] : species === 'canine' ? ['canine'] : ['canine', 'feline'];
   output.prepare(`
-    INSERT INTO medication_catalog_items (
-      id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at
-    ) VALUES (?, 'vaccine', ?, ?, ?, '[]', NULL, 'user', '[]', CURRENT_TIMESTAMP)
-  `).run(id, vaccineName, normalizedName, JSON.stringify(supportedSpecies));
+    INSERT INTO product_catalog_items (
+      id, type, name, normalized_name, species, aliases, manufacturer, origin, regions, updated_at
+    ) VALUES (?, ?, ?, ?, ?, '[]', NULL, 'user', '[]', CURRENT_TIMESTAMP)
+  `).run(id, vaccineProductType, vaccineName, normalizedName, JSON.stringify(supportedSpecies));
   return normalizedName;
 }
 

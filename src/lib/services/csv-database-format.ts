@@ -90,9 +90,9 @@ export const CSV_TABLES: CsvTableDefinition[] = [
 		orderBy: 'id'
 	},
 	{
-		name: 'medication_catalog_items',
-		columns: ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'],
-		orderBy: 'kind, name, id'
+		name: 'product_catalog_items',
+		columns: ['id', 'type', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'],
+		orderBy: 'type, name, id'
 	},
 	{
 		name: 'treatment_protocols',

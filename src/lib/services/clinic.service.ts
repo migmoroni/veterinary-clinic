@@ -2,8 +2,9 @@ import type { CurrentRecordSummary } from '$lib/domain/medical-record/medical-re
 import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 import type { DashboardAnalytics } from '$lib/domain/dashboard/analytics.js';
 import type { BreedReferenceProfile } from '$lib/domain/pet/breed-reference.js';
-import { medicationLeafletSectionIds, type MedicationLeafletSectionId, type MedicationSpecies } from '$lib/domain/medication/catalog.js';
-import type { TreatmentCatalogItem, TreatmentKind } from '$lib/domain/treatment/treatment.js';
+import { productLeafletSectionIds, type ProductLeafletSectionId, type ProductSpecies } from '$lib/domain/product/catalog.js';
+import { productTypeLabel } from '$lib/domain/product/type-labels.js';
+import type { TreatmentCatalogItem } from '$lib/domain/treatment/treatment.js';
 import { normalizeSearchText, searchTermsForLocale } from '$lib/domain/shared/search-terms.js';
 import { hasDatabaseFile } from '$lib/native/database-file.js';
 import { createEmptyDatabase, getDatabase } from '$lib/persistence/sqlite/client.js';
@@ -171,16 +172,16 @@ function shouldSearchKind(kind: SearchResultKind, selectedKinds: readonly Search
 	return selectedKinds.length === 0 || selectedKinds.includes(kind);
 }
 
-function speciesLabel(species: MedicationSpecies): string {
+function speciesLabel(species: ProductSpecies): string {
 	return species === 'canine' ? t('pet.speciesCanine') : t('pet.speciesFeline');
 }
 
-function speciesSummary(species: readonly MedicationSpecies[]): string {
+function speciesSummary(species: readonly ProductSpecies[]): string {
 	return species.map(speciesLabel).join(', ');
 }
 
-function medicationTypeLabel(kind: TreatmentKind): string {
-	return kind === 'vaccine' ? t('protocol.kind.vaccine') : t('protocol.kind.antiparasitic');
+function medicationTypeLabel(item: TreatmentCatalogItem): string {
+	return productTypeLabel(item.type, t);
 }
 
 function breedSizeLabel(size: BreedReferenceProfile['sizeCategory']): string {
@@ -196,7 +197,7 @@ function regionLabel(region: string): string {
 	return countryOptions(i18n.locale).find((country) => country.value === region)?.label ?? region;
 }
 
-function medicationSectionText(item: TreatmentCatalogItem, sectionId: MedicationLeafletSectionId): string {
+function medicationSectionText(item: TreatmentCatalogItem, sectionId: ProductLeafletSectionId): string {
 	return item.extension.sections[sectionId]?.trim() ?? '';
 }
 
@@ -216,9 +217,9 @@ function medicationSearchScore(item: TreatmentCatalogItem, terms: readonly strin
 	return scoreSearchFields(
 		{
 			primary: [item.name, String(item.id), ...item.aliases],
-			support: [item.manufacturer ?? '', medicationTypeLabel(item.kind), item.extension.classification ?? '', item.extension.commercialLine ?? ''],
+			support: [item.manufacturer ?? '', medicationTypeLabel(item), item.extension.classification ?? '', item.extension.commercialLine ?? ''],
 			metadata: [speciesSummary(item.species), item.regions.map(regionLabel).join(' ')],
-			details: medicationLeafletSectionIds.map((sectionId) => medicationSectionText(item, sectionId))
+			details: productLeafletSectionIds.map((sectionId) => medicationSectionText(item, sectionId))
 		},
 		terms
 	);
@@ -257,7 +258,7 @@ async function searchMedications(query: string): Promise<SearchResult[]> {
 			petId: null,
 			href: `/formulary/${item.id}`,
 			title: item.name,
-			subtitle: [medicationTypeLabel(item.kind), item.manufacturer].filter(Boolean).join(' · '),
+			subtitle: [medicationTypeLabel(item), item.manufacturer].filter(Boolean).join(' · '),
 			referenceImageBytes: null
 		}));
 }

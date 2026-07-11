@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import OwnerContactDialog from '$lib/components/owner/OwnerContactDialog.svelte';
 	import type { DashboardAnalysisView } from '$lib/domain/dashboard/analytics.js';
-	import { defaultMedicationCatalogItems } from '$lib/domain/medication/default-catalog.js';
+	import { defaultProductCatalogItems } from '$lib/domain/product/default-catalog.js';
 	import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 	import { breedReferenceProfiles } from '$lib/domain/pet/breed-reference.js';
 	import { clinic } from '$lib/stores/clinic.svelte.js';
@@ -64,7 +64,7 @@
 	}
 
 	function medicationReferenceCount(): number {
-		return defaultMedicationCatalogItems.length;
+		return defaultProductCatalogItems.length;
 	}
 
 	function openCurrentRecordContact() {

@@ -1,6 +1,6 @@
 import type Database from '@tauri-apps/plugin-sql';
-import { defaultMedicationCatalogItems, type DefaultMedicationCatalogImage } from '$lib/domain/medication/default-catalog.js';
-import { stringifyMedicationCatalogExtension } from '$lib/domain/medication/catalog.js';
+import { defaultProductCatalogItems, type DefaultProductCatalogImage } from '$lib/domain/product/default-catalog.js';
+import { PRODUCT_TYPES, productType, stringifyProductCatalogExtension, stringifyProductType } from '$lib/domain/product/catalog.js';
 import { defaultTreatmentProtocols } from '$lib/domain/treatment/default-protocol.js';
 import { stringifyTreatmentSpecies } from '$lib/domain/treatment/species.js';
 import { defaultBreedReferenceItems, type DefaultBreedReferenceImage } from '$lib/domain/pet/default-breed-reference.js';
@@ -41,7 +41,7 @@ interface MigrationRecordRow {
 	version: number;
 }
 
-interface MedicationCatalogRow {
+interface ProductCatalogRow {
 	id: string;
 	origin: string;
 }
@@ -87,17 +87,17 @@ function uuidV4TextCheck(column: string): string {
 interface RunMigrationsOptions {
 	seedDefaultData?: boolean;
 	createIndexes?: boolean;
-	syncDefaultMedicationData?: boolean;
+	syncDefaultProductData?: boolean;
 	syncDefaultTreatmentProtocolData?: boolean;
 	syncDefaultBreedReferenceData?: boolean;
 }
 
-const MEDICATION_CATALOG_IMAGE_COLLECTION_TYPE = 'medication_catalog_item';
-const MEDICATION_CATALOG_IMAGE_MAX_ITEMS = 9;
+const PRODUCT_CATALOG_IMAGE_COLLECTION_TYPE = 'product_catalog_item';
+const PRODUCT_CATALOG_IMAGE_MAX_ITEMS = 9;
 const BREED_REFERENCE_IMAGE_COLLECTION_TYPE = 'breed_reference_item';
 const BREED_REFERENCE_IMAGE_MAX_ITEMS = 9;
 
-function normalizeMedicationCatalogName(value: string): string {
+function normalizeProductCatalogName(value: string): string {
 	return value
 		.normalize('NFD')
 		.replace(/[\u0300-\u036f]/g, '')
@@ -108,6 +108,12 @@ function normalizeMedicationCatalogName(value: string): string {
 function quoteIdentifier(identifier: string): string {
 	return `"${identifier.replace(/"/g, '""')}"`;
 }
+
+function quoteSqlString(value: string): string {
+	return `'${value.replace(/'/g, "''")}'`;
+}
+
+const PRODUCT_TYPE_SQL_VALUES = PRODUCT_TYPES.map((type) => quoteSqlString(stringifyProductType(type))).join(', ');
 
 function bytesToSqlLiteral(value: Uint8Array): string {
 	if (value.length === 0) throw new Error('image_required');
@@ -121,9 +127,21 @@ async function tableHasColumns(database: Database, table: string, columns: strin
 	return columns.every((column) => names.has(column));
 }
 
+async function tableHasExactColumns(database: Database, table: string, columns: string[]): Promise<boolean> {
+	const rows = await database.select<TableColumnRow[]>(`PRAGMA table_info(${quoteIdentifier(table)})`);
+	const names = rows.map((row) => row.name);
+	if (names.length !== columns.length) return false;
+	return columns.every((column) => names.includes(column));
+}
+
 async function tableExists(database: Database, table: string): Promise<boolean> {
 	const rows = await database.select<TableNameRow[]>("SELECT name FROM sqlite_master WHERE type = 'table' AND name = $1 LIMIT 1", [table]);
 	return rows.length > 0;
+}
+
+async function productCatalogHasCurrentTypes(database: Database): Promise<boolean> {
+	const rows = await database.select<CountRow[]>(`SELECT COUNT(*) AS total FROM product_catalog_items WHERE type NOT IN (${PRODUCT_TYPE_SQL_VALUES})`);
+	return (rows[0]?.total ?? 0) === 0;
 }
 
 async function getUserVersion(database: Database): Promise<number> {
@@ -143,39 +161,39 @@ async function isEmptyDatabase(database: Database): Promise<boolean> {
 	return rows.length === 0;
 }
 
-async function loadDefaultMedicationImageBytes(source: string): Promise<Uint8Array> {
-	if (typeof fetch !== 'function') throw new Error('default_medication_image_loader_unavailable');
+async function loadDefaultProductImageBytes(source: string): Promise<Uint8Array> {
+	if (typeof fetch !== 'function') throw new Error('default_product_image_loader_unavailable');
 	const response = await fetch(source);
-	if (!response.ok) throw new Error(`default_medication_image_not_found:${source}`);
+	if (!response.ok) throw new Error(`default_product_image_not_found:${source}`);
 	const buffer = await response.arrayBuffer();
 	const bytes = new Uint8Array(buffer);
-	if (bytes.length === 0) throw new Error(`default_medication_image_empty:${source}`);
+	if (bytes.length === 0) throw new Error(`default_product_image_empty:${source}`);
 	return bytes;
 }
 
-function normalizedDefaultMedicationImages(images: readonly DefaultMedicationCatalogImage[] | null | undefined): DefaultMedicationCatalogImage[] {
+function normalizedDefaultProductImages(images: readonly DefaultProductCatalogImage[] | null | undefined): DefaultProductCatalogImage[] {
 	const normalized = (images ?? []).filter((image) => image.source.trim());
 	if (normalized.length === 0) return [];
-	if (normalized.length > MEDICATION_CATALOG_IMAGE_MAX_ITEMS) throw new Error('default_medication_image_limit_exceeded');
-	if (normalized.filter((image) => image.primary).length > 1) throw new Error('default_medication_image_multiple_primary');
+	if (normalized.length > PRODUCT_CATALOG_IMAGE_MAX_ITEMS) throw new Error('default_product_image_limit_exceeded');
+	if (normalized.filter((image) => image.primary).length > 1) throw new Error('default_product_image_multiple_primary');
 	return normalized;
 }
 
-async function medicationImageCollectionItemCount(database: Database, catalogItemId: string): Promise<number> {
+async function productImageCollectionItemCount(database: Database, catalogItemId: string): Promise<number> {
 	const rows = await database.select<CountRow[]>(
 		`SELECT COUNT(*) AS total
 		 FROM image_collection_items item
 		 INNER JOIN image_collections collection ON collection.id = item.collection_id
 		 WHERE collection.entity_type = $1 AND collection.entity_id = $2`,
-		[MEDICATION_CATALOG_IMAGE_COLLECTION_TYPE, catalogItemId]
+		[PRODUCT_CATALOG_IMAGE_COLLECTION_TYPE, catalogItemId]
 	);
 	return Number(rows[0]?.total ?? 0);
 }
 
-async function ensureDefaultMedicationImages(database: Database, catalogItemId: string, images: readonly DefaultMedicationCatalogImage[] | null | undefined): Promise<void> {
-	const normalizedImages = normalizedDefaultMedicationImages(images);
+async function ensureDefaultProductImages(database: Database, catalogItemId: string, images: readonly DefaultProductCatalogImage[] | null | undefined): Promise<void> {
+	const normalizedImages = normalizedDefaultProductImages(images);
 	if (normalizedImages.length === 0) return;
-	if ((await medicationImageCollectionItemCount(database, catalogItemId)) > 0) return;
+	if ((await productImageCollectionItemCount(database, catalogItemId)) > 0) return;
 
 	await database.execute(
 		`INSERT INTO image_collections (entity_type, entity_id, primary_required, max_items, updated_at)
@@ -184,15 +202,15 @@ async function ensureDefaultMedicationImages(database: Database, catalogItemId: 
 			primary_required = excluded.primary_required,
 			max_items = excluded.max_items,
 			updated_at = CURRENT_TIMESTAMP`,
-		[MEDICATION_CATALOG_IMAGE_COLLECTION_TYPE, catalogItemId, MEDICATION_CATALOG_IMAGE_MAX_ITEMS]
+		[PRODUCT_CATALOG_IMAGE_COLLECTION_TYPE, catalogItemId, PRODUCT_CATALOG_IMAGE_MAX_ITEMS]
 	);
 
 	const collectionRows = await database.select<ImageCollectionRow[]>(
 		'SELECT id FROM image_collections WHERE entity_type = $1 AND entity_id = $2 LIMIT 1',
-		[MEDICATION_CATALOG_IMAGE_COLLECTION_TYPE, catalogItemId]
+		[PRODUCT_CATALOG_IMAGE_COLLECTION_TYPE, catalogItemId]
 	);
 	const collectionId = collectionRows[0]?.id;
-	if (!collectionId) throw new Error('default_medication_image_collection_not_found');
+	if (!collectionId) throw new Error('default_product_image_collection_not_found');
 
 	await database.execute('DELETE FROM image_collection_items WHERE collection_id = $1', [collectionId]);
 	const explicitPrimaryIndex = normalizedImages.findIndex((image) => image.primary);
@@ -201,7 +219,7 @@ async function ensureDefaultMedicationImages(database: Database, catalogItemId: 
 	for (const [index, image] of normalizedImages.entries()) {
 		const description = image.description?.trim() ?? '';
 		if (description.length > FIELD_LIMITS.imageDescription) throw new Error('field_limit_exceeded');
-		const imageBytes = await loadDefaultMedicationImageBytes(image.source);
+		const imageBytes = await loadDefaultProductImageBytes(image.source);
 		await database.execute(
 			`INSERT INTO image_collection_items (
 				collection_id, image_blob, original_image_blob, description, is_primary, sort_order, updated_at
@@ -260,7 +278,7 @@ async function ensureDefaultBreedReferenceImages(database: Database, referenceIt
 	for (const [index, image] of normalizedImages.entries()) {
 		const description = image.description?.trim() ?? '';
 		if (description.length > FIELD_LIMITS.imageDescription) throw new Error('field_limit_exceeded');
-		const imageBytes = await loadDefaultMedicationImageBytes(image.source);
+		const imageBytes = await loadDefaultProductImageBytes(image.source);
 		await database.execute(
 			`INSERT INTO image_collection_items (
 				collection_id, image_blob, original_image_blob, description, is_primary, sort_order, updated_at
@@ -271,33 +289,58 @@ async function ensureDefaultBreedReferenceImages(database: Database, referenceIt
 	}
 }
 
-async function syncDefaultMedicationCatalog(database: Database): Promise<void> {
-	for (const item of defaultMedicationCatalogItems) {
-		const normalizedName = normalizeMedicationCatalogName(item.name);
-		const extension = stringifyMedicationCatalogExtension(item.extension);
-		if (extension.length > FIELD_LIMITS.medicationExtensionJson) throw new Error('default_medication_extension_limit_exceeded');
+async function syncDefaultProductCatalog(database: Database): Promise<void> {
+	for (const item of defaultProductCatalogItems) {
+		const normalizedName = normalizeProductCatalogName(item.name);
+		const extension = stringifyProductCatalogExtension(item.extension);
+		if (extension.length > FIELD_LIMITS.productExtensionJson) throw new Error('default_product_extension_limit_exceeded');
+		const values = [item.id, stringifyProductType(item.type), item.name, normalizedName, JSON.stringify(item.species), JSON.stringify(item.aliases), item.manufacturer, item.origin, JSON.stringify(item.regions), extension];
 
-		await database.execute(
-			`INSERT INTO medication_catalog_items (id, kind, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP)
-			 ON CONFLICT(kind, normalized_name) DO UPDATE SET
-				name = excluded.name,
-				species = excluded.species,
-				aliases = excluded.aliases,
-				manufacturer = excluded.manufacturer,
-				regions = excluded.regions,
-				extension = excluded.extension,
-				updated_at = CURRENT_TIMESTAMP
-			 WHERE medication_catalog_items.origin = 'system'`,
-			[item.id, item.kind, item.name, normalizedName, JSON.stringify(item.species), JSON.stringify(item.aliases), item.manufacturer, item.origin, JSON.stringify(item.regions), extension]
+		const rowsById = await database.select<ProductCatalogRow[]>(
+			'SELECT id, origin FROM product_catalog_items WHERE id = $1 LIMIT 1',
+			[item.id]
 		);
+		if (rowsById[0]?.origin === 'system') {
+			await database.execute(
+				`UPDATE product_catalog_items
+				 SET type = $2,
+					name = $3,
+					normalized_name = $4,
+					species = $5,
+					aliases = $6,
+					manufacturer = $7,
+					origin = $8,
+					regions = $9,
+					extension = $10,
+					updated_at = CURRENT_TIMESTAMP
+				 WHERE id = $1
+					AND origin = 'system'`,
+				values
+			);
+		} else if (!rowsById[0]) {
+			await database.execute(
+				`INSERT INTO product_catalog_items (id, type, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, updated_at)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP)
+				 ON CONFLICT(normalized_name) DO UPDATE SET
+					name = excluded.name,
+					type = excluded.type,
+					species = excluded.species,
+					aliases = excluded.aliases,
+					manufacturer = excluded.manufacturer,
+					regions = excluded.regions,
+					extension = excluded.extension,
+					updated_at = CURRENT_TIMESTAMP
+				 WHERE product_catalog_items.origin = 'system'`,
+				values
+			);
+		}
 
-		const rows = await database.select<MedicationCatalogRow[]>(
-			'SELECT id, origin FROM medication_catalog_items WHERE kind = $1 AND normalized_name = $2 LIMIT 1',
-			[item.kind, normalizedName]
+		const rows = await database.select<ProductCatalogRow[]>(
+			'SELECT id, origin FROM product_catalog_items WHERE normalized_name = $1 LIMIT 1',
+			[normalizedName]
 		);
 		const catalogItem = rows[0];
-		if (catalogItem?.origin === 'system') await ensureDefaultMedicationImages(database, catalogItem.id, item.images);
+		if (catalogItem?.origin === 'system') await ensureDefaultProductImages(database, catalogItem.id, item.images);
 	}
 }
 
@@ -375,7 +418,7 @@ async function hasSystemTreatmentProtocols(database: Database): Promise<boolean>
 
 async function syncDefaultTreatmentProtocols(database: Database): Promise<void> {
 	for (const protocol of defaultTreatmentProtocols) {
-		const normalizedName = normalizeMedicationCatalogName(protocol.name);
+		const normalizedName = normalizeProductCatalogName(protocol.name);
 		const species = stringifyTreatmentSpecies(protocol.species);
 		await database.execute(
 			`INSERT INTO treatment_protocols (id, kind, origin, name, normalized_name, species, observation, sort_order, updated_at)
@@ -411,9 +454,10 @@ async function syncDefaultTreatmentProtocols(database: Database): Promise<void> 
 		await database.execute('DELETE FROM treatment_protocol_items WHERE protocol_id = $1', [storedProtocol.id]);
 
 		for (const [sortOrder, catalogItemId] of protocol.catalogItemIds.entries()) {
+			const expectedProductType = stringifyProductType(productType('medication', protocol.kind));
 			const catalogRows = await database.select<{ id: string }[]>(
-				'SELECT id FROM medication_catalog_items WHERE kind = $1 AND id = $2 LIMIT 1',
-				[protocol.kind, catalogItemId]
+				'SELECT id FROM product_catalog_items WHERE type = $1 AND id = $2 LIMIT 1',
+				[expectedProductType, catalogItemId]
 			);
 			if (!catalogRows[0]) throw new Error(`default_protocol_catalog_item_not_found:${catalogItemId}`);
 
@@ -658,24 +702,24 @@ async function createCurrentSchema(database: Database): Promise<void> {
 		)
 	`);
 
-		await database.execute(`
-			CREATE TABLE IF NOT EXISTS medication_catalog_items (
-				id TEXT PRIMARY KEY CHECK(${uuidV4TextCheck('id')}),
-			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
+	await database.execute(`
+		CREATE TABLE IF NOT EXISTS product_catalog_items (
+			id TEXT PRIMARY KEY CHECK(${uuidV4TextCheck('id')}),
+			type TEXT NOT NULL CHECK(type IN (${PRODUCT_TYPE_SQL_VALUES})),
 			name TEXT NOT NULL,
 			normalized_name TEXT NOT NULL,
-			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.medicationSpeciesJson)}),
-			aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.medicationAliasesJson)}),
-			manufacturer TEXT CHECK(${optionalTextCheck('manufacturer', FIELD_LIMITS.medicationManufacturer)}),
+			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.productSpeciesJson)}),
+			aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.productAliasesJson)}),
+			manufacturer TEXT CHECK(${optionalTextCheck('manufacturer', FIELD_LIMITS.productManufacturer)}),
 			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
-			regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.medicationRegionsJson)}),
-			extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.medicationExtensionJson)}),
+			regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.productRegionsJson)}),
+			extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.productExtensionJson)}),
 			hidden_at TEXT,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
-			UNIQUE(kind, normalized_name),
-			CHECK(${requiredTextCheck('name', FIELD_LIMITS.treatmentName)}),
-			CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.treatmentNormalizedName)})
+			UNIQUE(normalized_name),
+			CHECK(${requiredTextCheck('name', FIELD_LIMITS.productName)}),
+			CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.productNormalizedName)})
 		)
 	`);
 
@@ -686,7 +730,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
 			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.treatmentProtocolName)}),
 			normalized_name TEXT NOT NULL CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.treatmentProtocolNormalizedName)}),
-			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.medicationSpeciesJson)}),
+			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.productSpeciesJson)}),
 			observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.treatmentObservation)}),
 			sort_order INTEGER NOT NULL DEFAULT 0,
 			hidden_at TEXT,
@@ -706,7 +750,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
 			FOREIGN KEY (protocol_id) REFERENCES treatment_protocols(id) ON DELETE CASCADE,
-			FOREIGN KEY (catalog_item_id) REFERENCES medication_catalog_items(id) ON DELETE CASCADE,
+			FOREIGN KEY (catalog_item_id) REFERENCES product_catalog_items(id) ON DELETE CASCADE,
 			UNIQUE(protocol_id, catalog_item_id)
 		)
 	`);
@@ -780,9 +824,9 @@ export async function createCurrentIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_breed_reference_items_origin_id ON breed_reference_items(origin_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_pet_id ON medical_records(pet_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_deleted_at ON medical_records(deleted_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_kind_name ON medication_catalog_items(kind, name COLLATE NOCASE)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_kind_normalized_name ON medication_catalog_items(kind, normalized_name)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_medication_catalog_items_hidden_at ON medication_catalog_items(hidden_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_product_catalog_items_type_name ON product_catalog_items(type, name COLLATE NOCASE)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_product_catalog_items_type_normalized_name ON product_catalog_items(type, normalized_name)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_product_catalog_items_hidden_at ON product_catalog_items(hidden_at)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_name ON treatment_protocols(kind, name COLLATE NOCASE)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_normalized_name ON treatment_protocols(kind, normalized_name)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_hidden_at ON treatment_protocols(hidden_at)');
@@ -815,7 +859,8 @@ async function assertCurrentSchema(database: Database): Promise<void> {
 		(await tableHasColumns(database, 'app_settings', ['key', 'value', 'updated_at'])) &&
 		(await tableHasColumns(database, 'schema_migrations', ['version', 'name', 'app_version', 'applied_at'])) &&
 		(await tableHasColumns(database, 'backup_history', ['id', 'path', 'kind', 'created_at'])) &&
-		(await tableHasColumns(database, 'medication_catalog_items', ['id', 'kind', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'extension', 'hidden_at'])) &&
+		(await tableHasExactColumns(database, 'product_catalog_items', ['id', 'type', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'])) &&
+		(await productCatalogHasCurrentTypes(database)) &&
 		(await tableHasColumns(database, 'treatment_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'deleted_at', 'purge_after'])) &&
 		(await tableHasColumns(database, 'treatment_protocol_items', ['id', 'protocol_id', 'catalog_item_id', 'sort_order'])) &&
 		(await tableHasColumns(database, 'treatment_protocol_doses', ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order'])) &&
@@ -987,7 +1032,7 @@ async function applyMigration(database: Database, migration: SchemaMigration): P
 }
 
 export async function runMigrations(database: Database, options: RunMigrationsOptions = {}): Promise<void> {
-	const { createIndexes = true, seedDefaultData = false, syncDefaultMedicationData = true, syncDefaultTreatmentProtocolData = true, syncDefaultBreedReferenceData = true } = options;
+	const { createIndexes = true, seedDefaultData = false, syncDefaultProductData = true, syncDefaultTreatmentProtocolData = true, syncDefaultBreedReferenceData = true } = options;
 	const status = await assertDatabaseCanMigrate(database);
 	let appliedSchemaChange = false;
 
@@ -1015,7 +1060,7 @@ export async function runMigrations(database: Database, options: RunMigrationsOp
 		await createCurrentSchema(database);
 		await assertCurrentSchema(database);
 
-		if (seedDefaultData || (syncDefaultMedicationData && appliedSchemaChange)) await syncDefaultMedicationCatalog(database);
+		if (seedDefaultData || (syncDefaultProductData && appliedSchemaChange)) await syncDefaultProductCatalog(database);
 		if (seedDefaultData || (syncDefaultBreedReferenceData && (appliedSchemaChange || (await isBreedReferenceCatalogEmpty(database))))) await syncDefaultBreedReferenceCatalog(database);
 		if (seedDefaultData || (syncDefaultTreatmentProtocolData && (appliedSchemaChange || !(await hasSystemTreatmentProtocols(database))))) await syncDefaultTreatmentProtocols(database);
 		if (createIndexes) await createCurrentIndexes(database);

@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
-import { medicationLeafletSectionIds, stringifyMedicationCatalogExtension } from '../catalog.js';
+import { productLeafletSectionIds, stringifyProductCatalogExtension } from '../catalog.js';
 import { localizedMedicationAliases } from '$lib/i18n/medication-aliases/index.js';
-import { defaultMedicationCatalogItems } from '../default-catalog.js';
+import { defaultProductCatalogItems } from '../default-catalog.js';
 import { isUuidV4 } from '$lib/domain/shared/uuid.js';
 
 function vaccine(name: string) {
-	const item = defaultMedicationCatalogItems.find((candidate) => candidate.kind === 'vaccine' && candidate.name === name);
+	const item = defaultProductCatalogItems.find((candidate) => candidate.type[1] === 'vaccine' && candidate.name === name);
 	if (!item) throw new Error(`Default vaccine not found: ${name}`);
 	return item;
 }
 
 function antiparasitic(name: string) {
-	const item = defaultMedicationCatalogItems.find((candidate) => candidate.kind === 'antiparasitic' && candidate.name === name);
+	const item = defaultProductCatalogItems.find((candidate) => candidate.type[1] === 'antiparasitic' && candidate.name === name);
 	if (!item) throw new Error(`Default antiparasitic not found: ${name}`);
 	return item;
 }
@@ -25,7 +25,7 @@ function normalize(value: string): string {
 		.replace(/[^a-z0-9]+/g, '');
 }
 
-describe('default medication catalog', () => {
+describe('default product catalog', () => {
 	it('allows general search aliases to be shared by multiple products', () => {
 		const recombitek = vaccine('Recombitek C6');
 		const vanguard = vaccine('Vanguard Plus');
@@ -45,30 +45,31 @@ describe('default medication catalog', () => {
 		expect(new Set(vanguard.aliases).size).toBe(vanguard.aliases.length);
 	});
 
-	it('uses one canonical catalog entry per kind and normalized name', () => {
-		const keys = defaultMedicationCatalogItems.map((item) => `${item.kind}:${item.name.toLocaleLowerCase()}`);
+	it('uses one canonical catalog entry per type and normalized name', () => {
+		const keys = defaultProductCatalogItems.map((item) => `${item.type.join(':')}:${item.name.toLocaleLowerCase()}`);
 		expect(new Set(keys).size).toBe(keys.length);
 	});
 
 	it('identifies every bundled product as system-owned', () => {
-		for (const item of defaultMedicationCatalogItems) expect(item.origin).toBe('system');
+		for (const item of defaultProductCatalogItems) expect(item.origin).toBe('system');
 	});
 
 	it('uses fixed UUID v4 ids for every bundled product', () => {
-		const ids = defaultMedicationCatalogItems.map((item) => item.id);
+		const ids = defaultProductCatalogItems.map((item) => item.id);
 
 		expect(new Set(ids).size).toBe(ids.length);
-		for (const item of defaultMedicationCatalogItems) {
+		for (const item of defaultProductCatalogItems) {
 			expect(isUuidV4(item.id)).toBe(true);
 		}
 	});
 
 	it('provides manufacturer and market metadata for every bundled product', () => {
-		for (const item of defaultMedicationCatalogItems) {
+		for (const item of defaultProductCatalogItems) {
+			expect(item.name.length).toBeLessThanOrEqual(FIELD_LIMITS.productName);
 			expect(item.manufacturer.trim().length).toBeGreaterThan(0);
-			expect(item.manufacturer.length).toBeLessThanOrEqual(FIELD_LIMITS.medicationManufacturer);
+			expect(item.manufacturer.length).toBeLessThanOrEqual(FIELD_LIMITS.productManufacturer);
 			expect(item.regions.length).toBeGreaterThan(0);
-			expect(JSON.stringify(item.regions).length).toBeLessThanOrEqual(FIELD_LIMITS.medicationRegionsJson);
+			expect(JSON.stringify(item.regions).length).toBeLessThanOrEqual(FIELD_LIMITS.productRegionsJson);
 		}
 
 		expect(vaccine('Nobivac Raiva').manufacturer).toBe('MSD Animal Health');
@@ -79,7 +80,7 @@ describe('default medication catalog', () => {
 	});
 
 	it('uses commercial products instead of generic legacy descriptions', () => {
-		const names = new Set(defaultMedicationCatalogItems.map((item) => item.name));
+		const names = new Set(defaultProductCatalogItems.map((item) => item.name));
 		const legacyDescriptions = [
 			'DHPPI',
 			'Giardia inativada',
@@ -138,9 +139,9 @@ describe('default medication catalog', () => {
 	});
 
 	it('keeps product names out of aliases', () => {
-		const normalizedProductNames = new Set(defaultMedicationCatalogItems.map((item) => normalize(item.name)));
+		const normalizedProductNames = new Set(defaultProductCatalogItems.map((item) => normalize(item.name)));
 
-		for (const item of defaultMedicationCatalogItems) {
+		for (const item of defaultProductCatalogItems) {
 			for (const alias of item.aliases) expect(normalizedProductNames).not.toContain(normalize(alias));
 		}
 	});
@@ -164,16 +165,16 @@ describe('default medication catalog', () => {
 	});
 
 	it('keeps every persisted alias payload within the database limits', () => {
-		for (const item of defaultMedicationCatalogItems) {
-			expect(item.aliases.every((alias) => alias.length <= FIELD_LIMITS.medicationAlias)).toBe(true);
+		for (const item of defaultProductCatalogItems) {
+			expect(item.aliases.every((alias) => alias.length <= FIELD_LIMITS.productAlias)).toBe(true);
 			expect(item.aliases.every((alias) => !alias.includes(','))).toBe(true);
-			expect(JSON.stringify(item.aliases).length).toBeLessThanOrEqual(FIELD_LIMITS.medicationAliasesJson);
+			expect(JSON.stringify(item.aliases).length).toBeLessThanOrEqual(FIELD_LIMITS.productAliasesJson);
 		}
 	});
 
 	it('keeps bundled formulary extensions within database limits', () => {
-		for (const item of defaultMedicationCatalogItems) {
-			expect(stringifyMedicationCatalogExtension(item.extension).length).toBeLessThanOrEqual(FIELD_LIMITS.medicationExtensionJson);
+		for (const item of defaultProductCatalogItems) {
+			expect(stringifyProductCatalogExtension(item.extension).length).toBeLessThanOrEqual(FIELD_LIMITS.productExtensionJson);
 		}
 	});
 
@@ -183,7 +184,7 @@ describe('default medication catalog', () => {
 		expect(sample.extension?.classification).toBeTruthy();
 		expect(sample.extension?.commercialLine).toBeTruthy();
 
-		for (const sectionId of medicationLeafletSectionIds) {
+		for (const sectionId of productLeafletSectionIds) {
 			expect(sample.extension?.sections?.[sectionId]?.trim().length).toBeGreaterThan(0);
 		}
 	});

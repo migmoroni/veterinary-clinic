@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { defaultMedicationCatalogItems } from '../../medication/default-catalog.js';
+import { defaultProductCatalogItems } from '../../product/default-catalog.js';
 import { isUuidV4 } from '../../shared/uuid.js';
 import { defaultTreatmentProtocols } from '../default-protocol.js';
 import { canDeleteTreatmentProtocol, canEditTreatmentProtocol } from '../protocol.js';
 
 function bundledMedicationId(kind: string, name: string): string {
-	const item = defaultMedicationCatalogItems.find((candidate) => candidate.kind === kind && candidate.name === name);
+	const item = defaultProductCatalogItems.find((candidate) => candidate.type[1] === kind && candidate.name === name);
 	if (!item) throw new Error(`Default medication not found: ${kind}:${name}`);
 	return item.id;
 }
@@ -36,7 +36,7 @@ describe('default treatment protocols', () => {
 		for (const protocol of defaultTreatmentProtocols) {
 			expect(isUuidV4(protocol.id)).toBe(true);
 			for (const catalogItemId of protocol.catalogItemIds) {
-				expect(defaultMedicationCatalogItems.some((item) => item.kind === protocol.kind && item.id === catalogItemId)).toBe(true);
+				expect(defaultProductCatalogItems.some((item) => item.type[1] === protocol.kind && item.id === catalogItemId)).toBe(true);
 			}
 		}
 	});

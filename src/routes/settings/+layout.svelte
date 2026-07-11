@@ -3,7 +3,7 @@
 	import { t } from '$lib/i18n/index.js';
 	import Archive from '@lucide/svelte/icons/archive';
 	import DatabaseBackup from '@lucide/svelte/icons/database-backup';
-	import Pill from '@lucide/svelte/icons/pill';
+	import Package from '@lucide/svelte/icons/package';
 	import ScrollText from '@lucide/svelte/icons/scroll-text';
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -34,9 +34,9 @@
 			icon: Trash2
 		},
 		{
-			href: '/settings/medications',
-			titleKey: 'settings.medications.title',
-			icon: Pill
+			href: '/settings/products',
+			titleKey: 'settings.products.title',
+			icon: Package
 		},
 		{
 			href: '/settings/protocols',
