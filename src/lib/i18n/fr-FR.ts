@@ -74,6 +74,7 @@ export const frFr = {
 	'actions.exportCsv': 'Exporter en CSV',
 	'actions.importDatabase': 'Importer une base de données',
 	'actions.importCsv': 'Importer un CSV',
+	'actions.openInFileManager': 'Ouvrir dans le gestionnaire de fichiers',
 	'actions.purgeExpired': 'Vider les éléments expirés',
 	'actions.openOwner': 'Ouvrir le propriétaire',
 	'actions.openPet': 'Ouvrir l\'animal',

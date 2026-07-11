@@ -73,6 +73,7 @@ export const ptBr = {
 	'actions.exportCsv': 'Exportar CSV',
 	'actions.importDatabase': 'Importar banco',
 	'actions.importCsv': 'Importar CSV',
+	'actions.openInFileManager': 'Abrir no gerenciador de arquivos',
 	'actions.purgeExpired': 'Limpar vencidos',
 	'actions.openOwner': 'Abrir proprietário',
 	'actions.openPet': 'Abrir pet',

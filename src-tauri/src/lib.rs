@@ -55,7 +55,7 @@ pub fn run() {
     .plugin(tauri_plugin_shell::init())
     .plugin(tauri_plugin_fs::init())
     .plugin(tauri_plugin_dialog::init())
-    .invoke_handler(tauri::generate_handler![list_system_fonts])
+    .invoke_handler(tauri::generate_handler![list_system_fonts, open_file_manager])
     .setup(|app| {
       #[cfg(target_os = "linux")]
       {
@@ -90,6 +90,62 @@ fn list_system_fonts(extra_directories: Option<Vec<String>>) -> Vec<String> {
   let mut fonts = platform_system_fonts(&extra_directories);
   fonts.extend(extra_directory_fonts(&extra_directories));
   dedupe_and_sort(fonts.into_iter())
+}
+
+#[tauri::command]
+fn open_file_manager(path: String) -> Result<(), String> {
+  let trimmed_path = path.trim();
+  if trimmed_path.is_empty() {
+    return Err("path_empty".to_string());
+  }
+
+  let path = std::path::PathBuf::from(trimmed_path);
+  let target = if path.is_file() {
+    path
+      .parent()
+      .map(std::path::Path::to_path_buf)
+      .unwrap_or(path)
+  } else {
+    path
+  };
+
+  if !target.exists() {
+    return Err(format!("path_not_found: {}", target.display()));
+  }
+
+  open_file_manager_path(&target)
+}
+
+#[cfg(target_os = "linux")]
+fn open_file_manager_path(path: &std::path::Path) -> Result<(), String> {
+  std::process::Command::new("xdg-open")
+    .arg(path)
+    .spawn()
+    .map(|_| ())
+    .map_err(|error| format!("file_manager_open_failed: {error}"))
+}
+
+#[cfg(target_os = "macos")]
+fn open_file_manager_path(path: &std::path::Path) -> Result<(), String> {
+  std::process::Command::new("open")
+    .arg(path)
+    .spawn()
+    .map(|_| ())
+    .map_err(|error| format!("file_manager_open_failed: {error}"))
+}
+
+#[cfg(target_os = "windows")]
+fn open_file_manager_path(path: &std::path::Path) -> Result<(), String> {
+  std::process::Command::new("explorer")
+    .arg(path)
+    .spawn()
+    .map(|_| ())
+    .map_err(|error| format!("file_manager_open_failed: {error}"))
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "windows", target_os = "macos")))]
+fn open_file_manager_path(_path: &std::path::Path) -> Result<(), String> {
+  Err("file_manager_open_unsupported".to_string())
 }
 
 #[cfg(target_os = "linux")]

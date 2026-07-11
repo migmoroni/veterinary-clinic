@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
+	import { openInFileManager } from '$lib/native/file-manager.js';
 	import type { BackupHistoryItem, BackupKind } from '$lib/persistence/repositories/backup.repository.js';
 	import Select from '$lib/components/ui/Select.svelte';
 	import { BACKUP_POLICY_INTERVAL_MINUTES, DEFAULT_BACKUP_POLICY_INTERVAL_MINUTES, getBackupHistory, loadBackupPolicyIntervalMinutes, saveBackupPolicyIntervalMinutes } from '$lib/services/backup.service.js';
@@ -87,6 +88,17 @@
 		}
 	}
 
+	async function openBackupPath(path: string) {
+		if (!path) return;
+
+		try {
+			error = null;
+			await openInFileManager(path);
+		} catch (exception) {
+			error = exception instanceof Error ? exception.message : String(exception);
+		}
+	}
+
 	onMount(() => {
 		void load();
 	});
@@ -112,7 +124,20 @@
 	</header>
 
 	{#if statusKey}
-		<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t(statusKey)}{#if lastPath} {lastPath}{/if}</p>
+		<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">
+			{t(statusKey)}
+			{#if lastPath}
+				<button
+					type="button"
+					class="ml-1 inline break-all rounded-sm border-0 bg-transparent p-0 text-left align-baseline font-medium text-primary underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+					aria-label={`${t('actions.openInFileManager')} ${lastPath}`}
+					title={t('actions.openInFileManager')}
+					onclick={() => void openBackupPath(lastPath)}
+				>
+					{lastPath}
+				</button>
+			{/if}
+		</p>
 	{/if}
 
 	{#if error}
@@ -133,7 +158,18 @@
 			{#each history as item}
 				<div class="rounded-md border border-border bg-background p-3">
 					<p class="text-sm font-medium">{kindLabel(item.kind)}</p>
-					<p class="mt-1 break-all text-xs text-muted-foreground">{t('common.path')}: {item.path}</p>
+					<p class="mt-1 break-all text-xs text-muted-foreground">
+						{t('common.path')}:
+						<button
+							type="button"
+							class="ml-1 inline break-all rounded-sm border-0 bg-transparent p-0 text-left align-baseline font-medium text-primary underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+							aria-label={`${t('actions.openInFileManager')} ${item.path}`}
+							title={t('actions.openInFileManager')}
+							onclick={() => void openBackupPath(item.path)}
+						>
+							{item.path}
+						</button>
+					</p>
 					<p class="mt-1 text-xs text-muted-foreground">{t('common.date')}: {item.createdAt}</p>
 				</div>
 			{:else}

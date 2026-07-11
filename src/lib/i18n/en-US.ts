@@ -74,6 +74,7 @@ export const enUs = {
 	'actions.exportCsv': 'Export CSV',
 	'actions.importDatabase': 'Import database',
 	'actions.importCsv': 'Import CSV',
+	'actions.openInFileManager': 'Open in file manager',
 	'actions.purgeExpired': 'Clear expired',
 	'actions.openOwner': 'Open owner',
 	'actions.openPet': 'Open pet',

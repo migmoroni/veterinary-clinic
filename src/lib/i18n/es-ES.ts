@@ -74,6 +74,7 @@ export const esEs = {
 	'actions.exportCsv': 'Exportar CSV',
 	'actions.importDatabase': 'Importar base',
 	'actions.importCsv': 'Importar CSV',
+	'actions.openInFileManager': 'Abrir en el gestor de archivos',
 	'actions.purgeExpired': 'Limpiar vencidos',
 	'actions.openOwner': 'Abrir propietario',
 	'actions.openPet': 'Abrir mascota',

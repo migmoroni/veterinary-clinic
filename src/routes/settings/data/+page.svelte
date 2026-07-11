@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
+	import { openInFileManager } from '$lib/native/file-manager.js';
 	import { importDatabaseFromCsv } from '$lib/services/csv-import.service.js';
 	import { exportDatabaseAsCsv } from '$lib/services/csv-export.service.js';
 	import { exportDatabase } from '$lib/services/database-export.service.js';
@@ -94,6 +95,17 @@
 			busy = false;
 		}
 	}
+
+	async function openLastPath() {
+		if (!lastPath) return;
+
+		try {
+			error = null;
+			await openInFileManager(lastPath);
+		} catch (exception) {
+			error = exception instanceof Error ? exception.message : String(exception);
+		}
+	}
 </script>
 
 <svelte:head>
@@ -106,7 +118,20 @@
 	</header>
 
 	{#if statusKey}
-		<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">{t(statusKey)} {lastPath}</p>
+		<p class="rounded-md bg-muted p-3 text-sm text-muted-foreground">
+			{t(statusKey)}
+			{#if lastPath}
+				<button
+					type="button"
+					class="ml-1 inline break-all rounded-sm border-0 bg-transparent p-0 text-left align-baseline font-medium text-primary underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+					aria-label={`${t('actions.openInFileManager')} ${lastPath}`}
+					title={t('actions.openInFileManager')}
+					onclick={() => void openLastPath()}
+				>
+					{lastPath}
+				</button>
+			{/if}
+		</p>
 	{/if}
 
 	{#if error}

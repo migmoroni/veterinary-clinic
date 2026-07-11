@@ -73,6 +73,7 @@ export const ptPt = {
 	'actions.exportCsv': 'Exportar CSV',
 	'actions.importDatabase': 'Importar base de dados',
 	'actions.importCsv': 'Importar CSV',
+	'actions.openInFileManager': 'Abrir no gestor de ficheiros',
 	'actions.purgeExpired': 'Limpar caducados',
 	'actions.openOwner': 'Abrir tutor',
 	'actions.openPet': 'Abrir animal',

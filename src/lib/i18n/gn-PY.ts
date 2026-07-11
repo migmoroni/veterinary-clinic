@@ -73,6 +73,7 @@ export const gnPy = {
 	'actions.exportCsv': 'Mondo CSV',
 	'actions.importDatabase': 'Gueru marandu renda',
 	'actions.importCsv': 'Gueru CSV',
+	'actions.openInFileManager': 'Eipe’a archivo renda ñangarekohápe',
 	'actions.purgeExpired': 'Mopotĩ ohasáva',
 	'actions.openOwner': 'Eipe’a mymba jára',
 	'actions.openPet': 'Eipe’a mymba',
