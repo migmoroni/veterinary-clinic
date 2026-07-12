@@ -717,6 +717,8 @@ export const gnPy = {
 	'formulary.section.videos': 'Ta’angamýi',
 	'formulary.section.distributors': 'Mbohasahára',
 	'formulary.section.references': 'Kuatia rehegua',
+	'catalog.all': 'Opavave',
+	'catalog.view': 'Ehecha',
 	'catalog.products': 'Produto',
 	'catalog.manufacturer': 'Apohára',
 	'catalog.manufacturers': 'Apoharakuéra',

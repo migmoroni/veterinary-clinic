@@ -718,6 +718,8 @@ export const enUs = {
 	'formulary.section.videos': 'Videos',
 	'formulary.section.distributors': 'Distributors',
 	'formulary.section.references': 'Bibliographic references',
+	'catalog.all': 'All',
+	'catalog.view': 'View',
 	'catalog.products': 'Products',
 	'catalog.manufacturer': 'Manufacturer',
 	'catalog.manufacturers': 'Manufacturers',

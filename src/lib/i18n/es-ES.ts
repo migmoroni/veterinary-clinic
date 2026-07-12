@@ -718,6 +718,8 @@ export const esEs = {
 	'formulary.section.videos': 'Vídeos',
 	'formulary.section.distributors': 'Distribuidores',
 	'formulary.section.references': 'Referencias bibliográficas',
+	'catalog.all': 'Todos',
+	'catalog.view': 'Mostrar',
 	'catalog.products': 'Productos',
 	'catalog.manufacturer': 'Fabricante',
 	'catalog.manufacturers': 'Fabricantes',

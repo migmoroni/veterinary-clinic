@@ -22,15 +22,16 @@
 	type TypeFilter = 'all' | string;
 	type SpeciesFilter = 'all' | ProductSpecies;
 	type OriginFilter = 'all' | ProductCatalogOrigin;
-	type CatalogItem = ProductCatalogItem | ManufacturerCatalogItem | ActiveIngredientCatalogItem;
+	type CatalogItem = (ProductCatalogItem & { kind: 'product' }) | (ManufacturerCatalogItem & { kind: 'manufacturer' }) | (ActiveIngredientCatalogItem & { kind: 'activeIngredient' });
 
-	let products = $state<ProductCatalogItem[]>([]);
-	let manufacturers = $state<ManufacturerCatalogItem[]>([]);
-	let activeIngredients = $state<ActiveIngredientCatalogItem[]>([]);
+	let products = $state<(ProductCatalogItem & { kind: 'product' })[]>([]);
+	let manufacturers = $state<(ManufacturerCatalogItem & { kind: 'manufacturer' })[]>([]);
+	let activeIngredients = $state<(ActiveIngredientCatalogItem & { kind: 'activeIngredient' })[]>([]);
 	let loading = $state(true);
 	let errorKey = $state<TranslationKey | null>(null);
 	let searchTerm = $state('');
-	let catalogKind = $state<CatalogEntityKind>('product');
+	type CatalogKind = 'all' | CatalogEntityKind;
+	let catalogKind = $state<CatalogKind>('all');
 	let typeFilter = $state<TypeFilter>('all');
 	let speciesFilter = $state<SpeciesFilter>('all');
 	let originFilter = $state<OriginFilter>('all');
@@ -40,7 +41,16 @@
 
 	const catalogKinds: CatalogEntityKind[] = ['product', 'manufacturer', 'activeIngredient'];
 	const localizedCountries = $derived(countryOptions(i18n.locale));
-	const currentItems = $derived<CatalogItem[]>(catalogKind === 'product' ? products : catalogKind === 'manufacturer' ? manufacturers : activeIngredients);
+	const currentItems = $derived.by<CatalogItem[]>(() => {
+		const items = catalogKind === 'all'
+			? [...products, ...manufacturers, ...activeIngredients]
+			: catalogKind === 'product'
+				? products
+				: catalogKind === 'manufacturer'
+					? manufacturers
+					: activeIngredients;
+		return [...items].sort((a, b) => a.name.localeCompare(b.name, i18n.locale));
+	});
 	const filteredItems = $derived.by<CatalogItem[]>(() => {
 		const search = normalizeReferenceSearch(searchTerm);
 
@@ -48,14 +58,14 @@
 			if (originFilter !== 'all' && item.origin !== originFilter) return false;
 			if (regionFilter && !item.regions.includes(regionFilter)) return false;
 
-			if (catalogKind === 'product') {
+			if (item.kind === 'product') {
 				const product = item as ProductCatalogItem;
 				if (typeFilter !== 'all' && stringifyProductType(product.type) !== typeFilter) return false;
 				if (speciesFilter !== 'all' && !product.species.includes(speciesFilter)) return false;
 				if (manufacturerFilter && product.manufacturerName !== manufacturerFilter) return false;
 			}
 
-			if (catalogKind === 'activeIngredient' && typeFilter !== 'all') {
+			if (item.kind === 'activeIngredient' && typeFilter !== 'all') {
 				const activeIngredient = item as ActiveIngredientCatalogItem;
 				if (JSON.stringify(activeIngredient.type) !== typeFilter) return false;
 			}
@@ -161,27 +171,31 @@
 	}
 
 	function cardForItem(item: CatalogItem): ReferenceGridCard {
-		if (catalogKind === 'product') {
+		if (item.kind === 'product') {
 			const product = item as ProductCatalogItem;
+			const metaParts = [productTypeLabel(product.type, t)];
+			if (product.origin === 'user') {
+				metaParts.push(originLabel(product.origin));
+			}
 			return {
 				id: product.id,
 				title: product.name,
 				subtitle: product.manufacturerName ?? t('common.notInformed'),
 				detail: speciesSummary(product.species),
-				meta: `${productTypeLabel(product.type, t)} · ${originLabel(product.origin)}`,
+				meta: metaParts.join(' · '),
 				imageBytes: product.primaryImage?.imageBytes ?? null,
 				imageAlt: product.name,
 				fallbackIcon: productFallbackIcon(product)
 			};
 		}
 
-		if (catalogKind === 'manufacturer') {
+		if (item.kind === 'manufacturer') {
 			return {
 				id: item.id,
 				title: item.name,
 				subtitle: t('catalog.manufacturer'),
 				detail: regionSummary(item.regions),
-				meta: originLabel(item.origin),
+				meta: item.origin === 'user' ? originLabel(item.origin) : '',
 				imageBytes: item.primaryImage?.imageBytes ?? null,
 				imageAlt: item.name,
 				fallbackIcon: Building2
@@ -194,7 +208,7 @@
 			title: activeIngredient.name,
 			subtitle: activeIngredientTypeLabel(activeIngredient.type),
 			detail: activeIngredient.extension.classification ?? null,
-			meta: originLabel(activeIngredient.origin),
+			meta: activeIngredient.origin === 'user' ? originLabel(activeIngredient.origin) : '',
 			imageBytes: activeIngredient.primaryImage?.imageBytes ?? null,
 			imageAlt: activeIngredient.name,
 			fallbackIcon: FlaskConical
@@ -202,7 +216,7 @@
 	}
 
 	function summaryFields(item: CatalogItem): ReferenceSummaryField[] {
-		if (catalogKind === 'product') {
+		if (item.kind === 'product') {
 			const product = item as ProductCatalogItem;
 			return [
 				{ label: t('formulary.kind'), value: productTypeLabel(product.type, t) },
@@ -213,7 +227,7 @@
 			];
 		}
 
-		if (catalogKind === 'activeIngredient') {
+		if (item.kind === 'activeIngredient') {
 			const activeIngredient = item as ActiveIngredientCatalogItem;
 			return [
 				{ label: t('formulary.kind'), value: activeIngredientTypeLabel(activeIngredient.type) },
@@ -229,13 +243,13 @@
 	}
 
 	function itemDetailHref(item: CatalogItem): string {
-		if (catalogKind === 'manufacturer') return `/formulary/manufacturers/${item.id}`;
-		if (catalogKind === 'activeIngredient') return `/formulary/active-ingredients/${item.id}`;
+		if (item.kind === 'manufacturer') return `/formulary/manufacturers/${item.id}`;
+		if (item.kind === 'activeIngredient') return `/formulary/active-ingredients/${item.id}`;
 		return `/formulary/${item.id}`;
 	}
 
 	function searchableText(item: CatalogItem): string {
-		if (catalogKind === 'product') {
+		if (item.kind === 'product') {
 			const product = item as ProductCatalogItem;
 			return [
 				product.name,
@@ -298,8 +312,18 @@
 		return productTypeSubtype(item.type) === 'vaccine' ? Syringe : Pill;
 	}
 
+	function getKindIcon(kind: CatalogEntityKind) {
+		if (kind === 'manufacturer') return Building2;
+		if (kind === 'activeIngredient') return FlaskConical;
+		return Pill;
+	}
+
 	function selectCatalogKind(kind: CatalogEntityKind) {
-		catalogKind = kind;
+		if (catalogKind === kind) {
+			catalogKind = 'all';
+		} else {
+			catalogKind = kind;
+		}
 		typeFilter = 'all';
 		speciesFilter = 'all';
 		manufacturerFilter = '';
@@ -311,11 +335,14 @@
 		loading = true;
 		errorKey = null;
 		try {
-			[products, manufacturers, activeIngredients] = await Promise.all([
+			const [loadedProducts, loadedManufacturers, loadedActiveIngredients] = await Promise.all([
 				loadCatalogProducts(true, true),
 				loadCatalogManufacturers(true, true),
 				loadCatalogActiveIngredients(true, true)
 			]);
+			products = loadedProducts.map((p) => ({ ...p, kind: 'product' as const }));
+			manufacturers = loadedManufacturers.map((m) => ({ ...m, kind: 'manufacturer' as const }));
+			activeIngredients = loadedActiveIngredients.map((a) => ({ ...a, kind: 'activeIngredient' as const }));
 		} catch {
 			errorKey = 'formulary.loadFailed';
 		} finally {
@@ -343,14 +370,6 @@
 		<p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{t('formulary.description')}</p>
 	</header>
 
-	<div class="flex flex-wrap gap-2">
-		{#each catalogKinds as kind}
-			<button type="button" class="inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium transition-colors {catalogKind === kind ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background hover:bg-accent'}" onclick={() => selectCatalogKind(kind)}>
-				{itemKindLabel(kind)}
-			</button>
-		{/each}
-	</div>
-
 	{#if errorKey}
 		<p class="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm">{t(errorKey)}</p>
 	{/if}
@@ -364,27 +383,47 @@
 		selectedId={selectedItem?.id ?? null}
 		emptyLabel={t('formulary.noResults')}
 		openLabel={t('formulary.viewMore')}
-		listTitle={itemKindLabel(catalogKind)}
+		listTitle={catalogKind === 'all' ? t('catalog.all') : itemKindLabel(catalogKind)}
 		listIcon={Info}
 		count={filteredItems.length}
 		{loading}
 		onselect={(id) => (selectedItemKey = id)}
 	>
+		{#snippet beforeSearch()}
+			<div class="flex flex-col gap-1">
+				<span class="text-sm font-medium">{t('catalog.view')}</span>
+				<div class="flex gap-1.5 rounded-md border border-border bg-muted/30 p-1 shrink-0 h-10 items-center">
+					{#each catalogKinds as kind}
+						{@const Icon = getKindIcon(kind)}
+						<button
+							type="button"
+							title={itemKindLabel(kind)}
+							aria-label={itemKindLabel(kind)}
+							class="inline-flex h-8 w-10 items-center justify-center rounded-sm transition-all select-none {catalogKind === kind ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}"
+							onclick={() => selectCatalogKind(kind)}
+						>
+							<Icon class="size-4" />
+						</button>
+					{/each}
+				</div>
+			</div>
+		{/snippet}
+
 		{#snippet sidebar()}
 			{#if selectedItem}
 				<ReferenceSummarySidebar
-					eyebrow={catalogKind === 'product' ? t('formulary.summaryTitle') : itemKindLabel(catalogKind)}
+					eyebrow={selectedItem.kind === 'product' ? t('formulary.summaryTitle') : itemKindLabel(selectedItem.kind)}
 					title={selectedItem.name}
-					subtitle={catalogKind === 'product' ? (asProduct(selectedItem).manufacturerName ?? t('common.notInformed')) : originLabel(selectedItem.origin)}
+					subtitle={selectedItem.kind === 'product' ? (asProduct(selectedItem).manufacturerName ?? t('common.notInformed')) : originLabel(selectedItem.origin)}
 					fields={selectedSummaryFields}
 					actionHref={itemDetailHref(selectedItem)}
 					actionLabel={t('formulary.viewMore')}
 				>
 					{#snippet image()}
-						{#if catalogKind === 'product'}
+						{#if selectedItem.kind === 'product'}
 							<BinaryImage imageBytes={asProduct(selectedItem).primaryImage?.imageBytes ?? null} alt={selectedItem.name} className="aspect-16/10 w-full rounded-b-none border-0 bg-muted/60" imageClass="h-full w-full object-contain p-4" iconClass="size-12 text-primary" fallbackIcon={productFallbackIcon(asProduct(selectedItem))} />
 						{:else}
-							<BinaryImage imageBytes={selectedItem.primaryImage?.imageBytes ?? null} alt={selectedItem.name} className="aspect-16/10 w-full rounded-b-none border-0 bg-muted/60" imageClass="h-full w-full object-contain p-4" iconClass="size-12 text-primary" fallbackIcon={catalogKind === 'manufacturer' ? Building2 : FlaskConical} />
+							<BinaryImage imageBytes={selectedItem.primaryImage?.imageBytes ?? null} alt={selectedItem.name} className="aspect-16/10 w-full rounded-b-none border-0 bg-muted/60" imageClass="h-full w-full object-contain p-4" iconClass="size-12 text-primary" fallbackIcon={selectedItem.kind === 'manufacturer' ? Building2 : FlaskConical} />
 						{/if}
 					{/snippet}
 				</ReferenceSummarySidebar>

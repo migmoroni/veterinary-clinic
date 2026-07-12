@@ -13,21 +13,28 @@
 <script lang="ts">
 	import Select from '$lib/components/ui/Select.svelte';
 	import Search from '@lucide/svelte/icons/search';
+	import type { Snippet } from 'svelte';
 
 	let {
 		searchTerm = $bindable(''),
 		searchLabel,
 		searchPlaceholder,
-		filters = []
+		filters = [],
+		beforeSearch
 	}: {
 		searchTerm: string;
 		searchLabel: string;
 		searchPlaceholder: string;
 		filters?: ReferenceFilterBarSelect[];
+		beforeSearch?: Snippet;
 	} = $props();
 </script>
 
-<section class="grid gap-3 rounded-md border border-border bg-card p-3 shadow-sm sm:p-4 lg:grid-cols-[minmax(14rem,1.2fr)_repeat(var(--reference-filter-count),minmax(10rem,0.8fr))]" style={`--reference-filter-count: ${filters.length};`}>
+<section class="grid gap-3 rounded-md border border-border bg-card p-3 shadow-sm sm:p-4 lg:[grid-template-columns:var(--grid-template-cols)]" style={`--reference-filter-count: ${filters.length}; --grid-template-cols: ${beforeSearch ? 'auto minmax(14rem,1.2fr)' : 'minmax(14rem,1.2fr)'} repeat(var(--reference-filter-count),minmax(10rem,0.8fr));`}>
+	{#if beforeSearch}
+		{@render beforeSearch()}
+	{/if}
+
 	<label class="space-y-1">
 		<span class="text-sm font-medium">{searchLabel}</span>
 		<span class="relative block">

@@ -717,6 +717,8 @@ export const ptBr = {
 	'formulary.section.videos': 'Vídeos',
 	'formulary.section.distributors': 'Distribuidores',
 	'formulary.section.references': 'Referências bibliográficas',
+	'catalog.all': 'Todos',
+	'catalog.view': 'Exibir',
 	'catalog.products': 'Produtos',
 	'catalog.manufacturer': 'Fabricante',
 	'catalog.manufacturers': 'Fabricantes',

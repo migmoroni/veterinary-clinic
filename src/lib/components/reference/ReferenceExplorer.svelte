@@ -19,7 +19,8 @@
 		loading = false,
 		skeletonCount = 10,
 		onselect,
-		sidebar
+		sidebar,
+		beforeSearch
 	}: {
 		searchTerm: string;
 		searchLabel: string;
@@ -36,13 +37,14 @@
 		skeletonCount?: number;
 		onselect: (id: string) => void;
 		sidebar?: Snippet;
+		beforeSearch?: Snippet;
 	} = $props();
 
 	const ListIcon = $derived(listIcon);
 </script>
 
 <div class="sticky top-0 z-40">
-	<ReferenceFilterBar bind:searchTerm {searchLabel} {searchPlaceholder} {filters} />
+	<ReferenceFilterBar bind:searchTerm {searchLabel} {searchPlaceholder} {filters} {beforeSearch} />
 </div>
 
 <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">

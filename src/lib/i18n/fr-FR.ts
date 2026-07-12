@@ -718,6 +718,8 @@ export const frFr = {
 	'formulary.section.videos': 'Vidéos',
 	'formulary.section.distributors': 'Distributeurs',
 	'formulary.section.references': 'Références bibliographiques',
+	'catalog.all': 'Tout',
+	'catalog.view': 'Afficher',
 	'catalog.products': 'Produits',
 	'catalog.manufacturer': 'Fabricant',
 	'catalog.manufacturers': 'Fabricants',
