@@ -192,16 +192,15 @@
 			</div>
 
 			<!-- Menu in the center -->
-			<nav class="flex h-full items-center justify-center gap-6">
+			<nav class="flex items-center justify-center gap-1.5">
 				{#each navItems as item}
 					<a
 						href={item.href}
-						class="flex h-full items-center px-1 text-sm font-semibold border-b-2 transition-all select-none {isActive(
-							item.href,
-						)
-							? 'border-primary text-primary'
-							: 'border-transparent text-muted-foreground hover:text-foreground'}"
+						class="flex items-center gap-2 rounded-md px-3 py-1 text-sm font-semibold transition-all select-none {isActive(item.href)
+							? 'bg-primary/10 text-primary'
+							: 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}"
 					>
+						<item.icon class="size-4 shrink-0" />
 						<span>{t(item.labelKey)}</span>
 					</a>
 				{/each}
