@@ -2,10 +2,9 @@ import type { CurrentRecordSummary } from '$lib/domain/medical-record/medical-re
 import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 import type { DashboardAnalytics } from '$lib/domain/dashboard/analytics.js';
 import type { BreedReferenceProfile } from '$lib/domain/pet/breed-reference.js';
-import { productLeafletSectionIds, type ProductLeafletSectionId, type ProductSpecies } from '$lib/domain/product/catalog.js';
+import { productLeafletSectionIds, type ProductCatalogItem, type ProductLeafletSectionId, type ProductSpecies } from '$lib/domain/product/catalog.js';
 import { productTypeLabel } from '$lib/domain/product/type-labels.js';
 import { CLINIC_SEARCH_RESULT_KINDS, isClinicSearchResultKind, isReferenceSearchResultKind, type ClinicSearchResultKind, type SearchResult, type SearchResultKind } from '$lib/domain/search/search.js';
-import type { TreatmentCatalogItem } from '$lib/domain/treatment/treatment.js';
 import { normalizeSearchText, searchTermsForLocale } from '$lib/domain/shared/search-terms.js';
 import { hasDatabaseFile } from '$lib/native/database-file.js';
 import { createEmptyDatabase, getDatabase } from '$lib/persistence/sqlite/client.js';
@@ -24,7 +23,7 @@ import { shouldResetOverviewLastRecordOnce } from './client-state.service.js';
 import { loadTreatmentAnalyticsOverview, loadTreatmentHistory } from './treatment-analytics.service.js';
 import { loadDashboardAnalytics } from './dashboard-analytics.service.js';
 import { requestPracticeIdentityRefresh } from './practice-profile.service.js';
-import { loadAllTreatmentCatalogItems } from './treatment.service.js';
+import { loadCatalogProducts } from './catalog.service.js';
 
 export { loadOwnerAvatarsByOwnerIds, loadPetAvatarsByPetIds } from './avatar.service.js';
 
@@ -181,7 +180,7 @@ function speciesSummary(species: readonly ProductSpecies[]): string {
 	return species.map(speciesLabel).join(', ');
 }
 
-function productCatalogTypeLabel(item: TreatmentCatalogItem): string {
+function productCatalogTypeLabel(item: ProductCatalogItem): string {
 	return productTypeLabel(item.type, t);
 }
 
@@ -198,7 +197,7 @@ function regionLabel(region: string): string {
 	return countryOptions(i18n.locale).find((country) => country.value === region)?.label ?? region;
 }
 
-function productSectionText(item: TreatmentCatalogItem, sectionId: ProductLeafletSectionId): string {
+function productSectionText(item: ProductCatalogItem, sectionId: ProductLeafletSectionId): string {
 	return item.extension.sections[sectionId]?.trim() ?? '';
 }
 
@@ -214,11 +213,11 @@ function breedSearchScore(profile: BreedReferenceProfile, terms: readonly string
 	);
 }
 
-function productSearchScore(item: TreatmentCatalogItem, terms: readonly string[]): number {
+function productSearchScore(item: ProductCatalogItem, terms: readonly string[]): number {
 	return scoreSearchFields(
 		{
 			primary: [item.name, String(item.id), ...item.aliases],
-			support: [item.manufacturer ?? '', productCatalogTypeLabel(item), item.extension.classification ?? '', item.extension.commercialLine ?? ''],
+			support: [item.manufacturerName ?? '', ...item.activeIngredients.map((ingredient) => ingredient.name), productCatalogTypeLabel(item), item.extension.classification ?? '', item.extension.commercialLine ?? ''],
 			metadata: [speciesSummary(item.species), item.regions.map(regionLabel).join(' ')],
 			details: productLeafletSectionIds.map((sectionId) => productSectionText(item, sectionId))
 		},
@@ -247,7 +246,7 @@ async function searchBreedReferences(query: string): Promise<SearchResult[]> {
 
 async function searchProducts(query: string): Promise<SearchResult[]> {
 	const terms = searchTerms(query);
-	const items = await loadAllTreatmentCatalogItems(true, false);
+	const items = await loadCatalogProducts(true, false);
 	return items
 		.map((item) => ({ item, score: productSearchScore(item, terms) }))
 		.filter(({ score }) => acceptsReferenceScore(score, terms))
@@ -259,7 +258,7 @@ async function searchProducts(query: string): Promise<SearchResult[]> {
 			petId: null,
 			href: `/formulary/${item.id}`,
 			title: item.name,
-			subtitle: [productCatalogTypeLabel(item), item.manufacturer].filter(Boolean).join(' · '),
+			subtitle: [productCatalogTypeLabel(item), item.manufacturerName].filter(Boolean).join(' · '),
 			referenceImageBytes: null
 		}));
 }
@@ -268,7 +267,7 @@ async function activeReferenceResultKeys(results: SearchResult[]): Promise<Set<s
 	const referenceResults = results.filter((result) => isReferenceSearchResultKind(result.kind));
 	if (referenceResults.length === 0) return new Set<string>();
 
-	const [profiles, products] = await Promise.all([loadBreedReferenceProfiles(false), loadAllTreatmentCatalogItems(true, false)]);
+	const [profiles, products] = await Promise.all([loadBreedReferenceProfiles(false), loadCatalogProducts(true, false)]);
 	const breedIds = new Set(profiles.map((profile) => profile.breedId));
 	const productIds = new Set(products.map((item) => item.id));
 	const activeKeys = new Set<string>();

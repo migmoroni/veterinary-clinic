@@ -90,9 +90,24 @@ export const CSV_TABLES: CsvTableDefinition[] = [
 		orderBy: 'id'
 	},
 	{
-		name: 'product_catalog_items',
-		columns: ['id', 'type', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'],
+		name: 'manufacturer_catalog_items',
+		columns: ['id', 'type', 'name', 'normalized_name', 'aliases', 'origin', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'],
 		orderBy: 'type, name, id'
+	},
+	{
+		name: 'active_ingredient_catalog_items',
+		columns: ['id', 'type', 'name', 'normalized_name', 'aliases', 'origin', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'],
+		orderBy: 'type, name, id'
+	},
+	{
+		name: 'product_catalog_items',
+		columns: ['id', 'type', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer_id', 'origin', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'],
+		orderBy: 'type, name, id'
+	},
+	{
+		name: 'product_active_ingredients',
+		columns: ['id', 'product_id', 'active_ingredient_id', 'sort_order', 'created_at', 'updated_at'],
+		orderBy: 'product_id, sort_order, id'
 	},
 	{
 		name: 'treatment_protocols',

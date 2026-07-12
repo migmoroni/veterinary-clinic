@@ -1,5 +1,4 @@
-import { productTypeOptions, type ProductCatalogExtension, type ProductCatalogOrigin, type ProductType, type ProductTypeSubtype } from '$lib/domain/product/catalog.js';
-import type { ImageCollectionItem } from '$lib/domain/image-collection/image-collection.js';
+import { productTypeOptions, type ProductCatalogItem, type ProductTypeTuple, type ProductTypeSubtype } from '$lib/domain/product/catalog.js';
 import type { TreatmentSpecies } from '$lib/domain/treatment/species.js';
 
 export type { TreatmentSpecies } from '$lib/domain/treatment/species.js';
@@ -10,29 +9,16 @@ export type TreatmentValidityUnit = 'days' | 'months' | 'years';
 
 export const TREATMENT_KINDS = productTypeOptions('medication');
 
-export interface TreatmentCatalogItem {
-	id: TreatmentCatalogItemId;
-	type: ProductType;
+export interface TreatmentCatalogItem extends Omit<ProductCatalogItem, 'type'> {
+	type: ProductTypeTuple<'medication'>;
 	kind: TreatmentKind;
-	name: string;
-	normalizedName: string;
-	species: TreatmentSpecies[];
-	aliases: string[];
-	manufacturer: string | null;
-	images: ImageCollectionItem[];
-	primaryImage: ImageCollectionItem | null;
-	origin: ProductCatalogOrigin;
-	regions: string[];
-	extension: ProductCatalogExtension;
-	hiddenAt: string | null;
-	updatedAt: string | null;
 }
 
 export interface TreatmentCatalogItemInput {
 	name: string;
 	species?: TreatmentSpecies[];
 	aliases?: string[];
-	manufacturer?: string | null;
+	manufacturerName?: string | null;
 	regions?: string[];
 }
 

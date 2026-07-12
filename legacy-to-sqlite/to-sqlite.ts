@@ -4,6 +4,10 @@ import { parse } from 'csv-parse/sync';
 import Database from 'better-sqlite3';
 import { PRODUCT_TYPES, productType, stringifyProductCatalogExtension, stringifyProductType } from '../src/lib/domain/product/catalog.js';
 import { defaultProductCatalogItems } from '../src/lib/domain/product/default-catalog.js';
+import { stringifyManufacturerType } from '../src/lib/domain/manufacturer/catalog.js';
+import { defaultManufacturerCatalogItems } from '../src/lib/domain/manufacturer/default-catalog.js';
+import { stringifyActiveIngredientType } from '../src/lib/domain/active-ingredient/catalog.js';
+import { defaultActiveIngredientCatalogItems } from '../src/lib/domain/active-ingredient/default-catalog.js';
 import { defaultTreatmentProtocols } from '../src/lib/domain/treatment/default-protocol.js';
 
 const PRODUCT_TYPE_SQL_VALUES = PRODUCT_TYPES.map((type) => `'${stringifyProductType(type).replace(/'/g, "''")}'`).join(', ');
@@ -250,7 +254,10 @@ db.exec(`
   DROP TABLE IF EXISTS treatment_protocol_doses;
   DROP TABLE IF EXISTS treatment_protocol_items;
   DROP TABLE IF EXISTS treatment_protocols;
+  DROP TABLE IF EXISTS product_active_ingredients;
   DROP TABLE IF EXISTS product_catalog_items;
+  DROP TABLE IF EXISTS active_ingredient_catalog_items;
+  DROP TABLE IF EXISTS manufacturer_catalog_items;
   DROP TABLE IF EXISTS backup_history;
   DROP TABLE IF EXISTS app_settings;
   DROP TABLE IF EXISTS medical_records;
@@ -432,14 +439,12 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
-  CREATE TABLE IF NOT EXISTS product_catalog_items (
+  CREATE TABLE IF NOT EXISTS manufacturer_catalog_items (
     id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
-    type TEXT NOT NULL CHECK(type IN (${PRODUCT_TYPE_SQL_VALUES})),
+    type TEXT NOT NULL CHECK(type = '["manufacturer",null]'),
     name TEXT NOT NULL,
     normalized_name TEXT NOT NULL,
-    species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.productSpeciesJson)}),
     aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.productAliasesJson)}),
-    manufacturer TEXT CHECK(${optionalTextCheck('manufacturer', FIELD_LIMITS.productManufacturer)}),
     origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
     regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.productRegionsJson)}),
     extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.productExtensionJson)}),
@@ -449,6 +454,55 @@ db.exec(`
     UNIQUE(normalized_name),
     CHECK(${requiredTextCheck('name', FIELD_LIMITS.productName)}),
     CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.productNormalizedName)})
+  );
+
+  CREATE TABLE IF NOT EXISTS active_ingredient_catalog_items (
+    id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
+    type TEXT NOT NULL CHECK(type IN ('["activeIngredient","substance"]', '["activeIngredient","combination"]')),
+    name TEXT NOT NULL,
+    normalized_name TEXT NOT NULL,
+    aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.productAliasesJson)}),
+    origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
+    regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.productRegionsJson)}),
+    extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.productExtensionJson)}),
+    hidden_at TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT,
+    UNIQUE(normalized_name),
+    CHECK(${requiredTextCheck('name', FIELD_LIMITS.productName)}),
+    CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.productNormalizedName)})
+  );
+
+  CREATE TABLE IF NOT EXISTS product_catalog_items (
+    id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
+    type TEXT NOT NULL CHECK(type IN (${PRODUCT_TYPE_SQL_VALUES})),
+    name TEXT NOT NULL,
+    normalized_name TEXT NOT NULL,
+    species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.productSpeciesJson)}),
+    aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.productAliasesJson)}),
+    manufacturer_id TEXT CHECK(manufacturer_id IS NULL OR (length(trim(manufacturer_id)) = 36 AND substr(lower(trim(manufacturer_id)), 15, 1) = '4' AND substr(lower(trim(manufacturer_id)), 20, 1) IN ('8', '9', 'a', 'b'))),
+    origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
+    regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.productRegionsJson)}),
+    extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.productExtensionJson)}),
+    hidden_at TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT,
+    FOREIGN KEY (manufacturer_id) REFERENCES manufacturer_catalog_items (id) ON DELETE SET NULL,
+    UNIQUE(normalized_name),
+    CHECK(${requiredTextCheck('name', FIELD_LIMITS.productName)}),
+    CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.productNormalizedName)})
+  );
+
+  CREATE TABLE IF NOT EXISTS product_active_ingredients (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id TEXT NOT NULL CHECK(length(trim(product_id)) = 36 AND substr(lower(trim(product_id)), 15, 1) = '4' AND substr(lower(trim(product_id)), 20, 1) IN ('8', '9', 'a', 'b')),
+    active_ingredient_id TEXT NOT NULL CHECK(length(trim(active_ingredient_id)) = 36 AND substr(lower(trim(active_ingredient_id)), 15, 1) = '4' AND substr(lower(trim(active_ingredient_id)), 20, 1) IN ('8', '9', 'a', 'b')),
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT,
+    FOREIGN KEY (product_id) REFERENCES product_catalog_items (id) ON DELETE CASCADE,
+    FOREIGN KEY (active_ingredient_id) REFERENCES active_ingredient_catalog_items (id) ON DELETE CASCADE,
+    UNIQUE(product_id, active_ingredient_id)
   );
 
   CREATE TABLE IF NOT EXISTS treatment_protocols (
@@ -553,9 +607,16 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_pets_breed ON pets(breed);
   CREATE INDEX IF NOT EXISTS idx_medical_records_pet_id ON medical_records(pet_id);
   CREATE INDEX IF NOT EXISTS idx_medical_records_deleted_at ON medical_records(deleted_at);
+  CREATE INDEX IF NOT EXISTS idx_manufacturer_catalog_items_type_name ON manufacturer_catalog_items(type, name COLLATE NOCASE);
+  CREATE INDEX IF NOT EXISTS idx_manufacturer_catalog_items_hidden_at ON manufacturer_catalog_items(hidden_at);
+  CREATE INDEX IF NOT EXISTS idx_active_ingredient_catalog_items_type_name ON active_ingredient_catalog_items(type, name COLLATE NOCASE);
+  CREATE INDEX IF NOT EXISTS idx_active_ingredient_catalog_items_hidden_at ON active_ingredient_catalog_items(hidden_at);
   CREATE INDEX IF NOT EXISTS idx_product_catalog_items_type_name ON product_catalog_items(type, name COLLATE NOCASE);
   CREATE INDEX IF NOT EXISTS idx_product_catalog_items_type_normalized_name ON product_catalog_items(type, normalized_name);
+  CREATE INDEX IF NOT EXISTS idx_product_catalog_items_manufacturer_id ON product_catalog_items(manufacturer_id);
   CREATE INDEX IF NOT EXISTS idx_product_catalog_items_hidden_at ON product_catalog_items(hidden_at);
+  CREATE INDEX IF NOT EXISTS idx_product_active_ingredients_product_id ON product_active_ingredients(product_id, sort_order, id);
+  CREATE INDEX IF NOT EXISTS idx_product_active_ingredients_active_ingredient_id ON product_active_ingredients(active_ingredient_id);
   CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_name ON treatment_protocols(kind, name COLLATE NOCASE);
   CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_normalized_name ON treatment_protocols(kind, normalized_name);
   CREATE INDEX IF NOT EXISTS idx_treatment_protocols_hidden_at ON treatment_protocols(hidden_at);
@@ -619,8 +680,8 @@ const insertMedicalRecord = db.prepare(`
 `);
 
 const insertProductCatalogItem = db.prepare(`
-  INSERT OR IGNORE INTO product_catalog_items (id, type, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, updated_at)
-  VALUES (@id, @type, @name, @normalizedName, @species, @aliases, @manufacturer, @origin, @regions, @extension, CURRENT_TIMESTAMP)
+  INSERT OR IGNORE INTO product_catalog_items (id, type, name, normalized_name, species, aliases, manufacturer_id, origin, regions, extension, updated_at)
+  VALUES (@id, @type, @name, @normalizedName, @species, @aliases, @manufacturerId, @origin, @regions, @extension, CURRENT_TIMESTAMP)
 `);
 
 const insertTreatmentProtocol = db.prepare(`
@@ -657,6 +718,21 @@ const insertPetVaccination = db.prepare(`
 const insertPetDeworming = db.prepare(`
   INSERT INTO pet_antiparasitic_treatments (pet_id, applied_at, antiparasitic_name, antiparasitic_normalized_name, dose, validity_value, validity_unit, observation, updated_at)
   VALUES (@petId, @appliedAt, @dewormerName, @dewormerNormalizedName, @dose, @validityValue, @validityUnit, @observation, CURRENT_TIMESTAMP)
+`);
+
+const insertManufacturerCatalogItem = db.prepare(`
+  INSERT OR IGNORE INTO manufacturer_catalog_items (id, type, name, normalized_name, aliases, origin, regions, extension, updated_at)
+  VALUES (@id, @type, @name, @normalizedName, @aliases, @origin, @regions, @extension, CURRENT_TIMESTAMP)
+`);
+
+const insertActiveIngredientCatalogItem = db.prepare(`
+  INSERT OR IGNORE INTO active_ingredient_catalog_items (id, type, name, normalized_name, aliases, origin, regions, extension, updated_at)
+  VALUES (@id, @type, @name, @normalizedName, @aliases, @origin, @regions, @extension, CURRENT_TIMESTAMP)
+`);
+
+const insertProductActiveIngredient = db.prepare(`
+  INSERT OR IGNORE INTO product_active_ingredients (product_id, active_ingredient_id, sort_order, updated_at)
+  VALUES (@productId, @activeIngredientId, @sortOrder, CURRENT_TIMESTAMP)
 `);
 
 const markVaccinationValidityIgnored = db.prepare(`
@@ -717,6 +793,32 @@ const legacySpecificNobivacVaccineNames = new Set([
   'Nobivac Feline 1-HCPCh + FeLV'
 ]);
 
+for (const item of defaultManufacturerCatalogItems) {
+  insertManufacturerCatalogItem.run({
+    id: item.id,
+    type: stringifyManufacturerType(item.type),
+    name: item.name,
+    normalizedName: normalizeVaccineName(item.name),
+    aliases: JSON.stringify(item.aliases),
+    origin: item.origin,
+    regions: JSON.stringify(item.regions),
+    extension: JSON.stringify(item.extension ?? {})
+  });
+}
+
+for (const item of defaultActiveIngredientCatalogItems) {
+  insertActiveIngredientCatalogItem.run({
+    id: item.id,
+    type: stringifyActiveIngredientType(item.type),
+    name: item.name,
+    normalizedName: normalizeVaccineName(item.name),
+    aliases: JSON.stringify(item.aliases),
+    origin: item.origin,
+    regions: JSON.stringify(item.regions),
+    extension: JSON.stringify(item.extension ?? {})
+  });
+}
+
 for (const item of defaultProductCatalogItems) {
   insertProductCatalogItem.run({
     id: item.id,
@@ -725,11 +827,15 @@ for (const item of defaultProductCatalogItems) {
     normalizedName: normalizeVaccineName(item.name),
     species: JSON.stringify(item.species),
     aliases: JSON.stringify(item.aliases),
-    manufacturer: item.manufacturer,
+    manufacturerId: item.manufacturerId,
     origin: item.origin,
     regions: JSON.stringify(item.regions),
     extension: stringifyProductCatalogExtension(item.extension)
   });
+
+  for (const [sortOrder, activeIngredientId] of (item.activeIngredientIds ?? []).entries()) {
+    insertProductActiveIngredient.run({ productId: item.id, activeIngredientId, sortOrder });
+  }
 }
 
 insertSetting.run({ key: backupPolicyIntervalSettingKey, value: String(defaultBackupPolicyIntervalMinutes) });

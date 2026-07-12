@@ -5,7 +5,6 @@
 	"species": [
 		"canine"
 	],
-	"manufacturer": "Vaxxinova",
 	"regions": [
 		"BRA"
 	],
@@ -38,5 +37,7 @@
 		"leptospirose canina",
 		"leptospirosis canina",
 		"canine leptospirosis"
-	]
+	],
+	"manufacturerId": "3e8a6566-b26d-4d9c-9700-9e86e1f671bf",
+	"activeIngredientIds": []
 }

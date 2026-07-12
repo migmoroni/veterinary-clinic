@@ -1,0 +1,19 @@
+{
+	"id": "3e8a6566-b26d-4d9c-9700-9e86e1f671bf",
+	"origin": "system",
+	"name": "Vaxxinova",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [],
+	"images": [],
+	"extension": {
+		"website": null,
+		"sections": {
+			"about": "Vaxxinova. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+			"portfolio": "Produtos e linhas comerciais cadastrados para consulta clínica.",
+			"support": "Informações de suporte e contato poderão ser estruturadas em etapa futura.",
+			"references": "Referências institucionais e bibliográficas poderão ser adicionadas aqui."
+		}
+	}
+}

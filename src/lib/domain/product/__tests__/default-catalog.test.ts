@@ -3,6 +3,7 @@ import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 import { productLeafletSectionIds, stringifyProductCatalogExtension } from '../catalog.js';
 import { localizedProductAliases } from '$lib/i18n/product-aliases/index.js';
 import { defaultProductCatalogItems } from '../default-catalog.js';
+import { defaultManufacturerCatalogItems } from '$lib/domain/manufacturer/default-catalog.js';
 import { isUuidV4 } from '$lib/domain/shared/uuid.js';
 
 function vaccine(name: string) {
@@ -23,6 +24,10 @@ function normalize(value: string): string {
 		.replace(/[\u0300-\u036f]/g, '')
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, '');
+}
+
+function manufacturerName(id: string | null): string | null {
+	return defaultManufacturerCatalogItems.find((item) => item.id === id)?.name ?? null;
 }
 
 describe('default product catalog', () => {
@@ -64,19 +69,20 @@ describe('default product catalog', () => {
 	});
 
 	it('provides manufacturer and market metadata for every bundled product', () => {
+		const manufacturerIds = new Set(defaultManufacturerCatalogItems.map((item) => item.id));
 		for (const item of defaultProductCatalogItems) {
 			expect(item.name.length).toBeLessThanOrEqual(FIELD_LIMITS.productName);
-			expect(item.manufacturer.trim().length).toBeGreaterThan(0);
-			expect(item.manufacturer.length).toBeLessThanOrEqual(FIELD_LIMITS.productManufacturer);
+			expect(item.manufacturerId).toBeTruthy();
+			expect(manufacturerIds.has(item.manufacturerId ?? '')).toBe(true);
 			expect(item.regions.length).toBeGreaterThan(0);
 			expect(JSON.stringify(item.regions).length).toBeLessThanOrEqual(FIELD_LIMITS.productRegionsJson);
 		}
 
-		expect(vaccine('Nobivac Raiva').manufacturer).toBe('MSD Animal Health');
+		expect(manufacturerName(vaccine('Nobivac Raiva').manufacturerId)).toBe('MSD Animal Health');
 		expect(vaccine('Nobivac DHPPi').regions).toContain('ZAF');
-		expect(vaccine('Vanguard Plus').manufacturer).toBe('Zoetis');
-		expect(antiparasitic('NexGard').manufacturer).toBe('Boehringer Ingelheim Animal Health');
-		expect(antiparasitic('Bravecto').manufacturer).toBe('MSD Animal Health');
+		expect(manufacturerName(vaccine('Vanguard Plus').manufacturerId)).toBe('Zoetis');
+		expect(manufacturerName(antiparasitic('NexGard').manufacturerId)).toBe('Boehringer Ingelheim Animal Health');
+		expect(manufacturerName(antiparasitic('Bravecto').manufacturerId)).toBe('MSD Animal Health');
 	});
 
 	it('uses commercial products instead of generic legacy descriptions', () => {
@@ -183,6 +189,7 @@ describe('default product catalog', () => {
 
 		expect(sample.extension?.classification).toBeTruthy();
 		expect(sample.extension?.commercialLine).toBeTruthy();
+		expect(sample.activeIngredientIds?.length).toBeGreaterThan(0);
 
 		for (const sectionId of productLeafletSectionIds) {
 			expect(sample.extension?.sections?.[sectionId]?.trim().length).toBeGreaterThan(0);

@@ -1,0 +1,19 @@
+{
+	"id": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
+	"origin": "system",
+	"name": "Zoetis",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [],
+	"images": [],
+	"extension": {
+		"website": null,
+		"sections": {
+			"about": "Zoetis. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+			"portfolio": "Produtos e linhas comerciais cadastrados para consulta clínica.",
+			"support": "Informações de suporte e contato poderão ser estruturadas em etapa futura.",
+			"references": "Referências institucionais e bibliográficas poderão ser adicionadas aqui."
+		}
+	}
+}

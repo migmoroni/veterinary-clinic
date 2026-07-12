@@ -17,7 +17,8 @@ export interface DefaultProductCatalogItem {
 	name: string;
 	species: DefaultProductSpecies[];
 	aliases: string[];
-	manufacturer: string;
+	manufacturerId: string | null;
+	activeIngredientIds?: string[];
 	images?: DefaultProductCatalogImage[];
 	regions: string[];
 	extension?: Partial<ProductCatalogExtension>;

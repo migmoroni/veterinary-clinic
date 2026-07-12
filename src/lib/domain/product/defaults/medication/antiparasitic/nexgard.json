@@ -5,7 +5,6 @@
 	"species": [
 		"canine"
 	],
-	"manufacturer": "Boehringer Ingelheim Animal Health",
 	"regions": [
 		"BRA"
 	],
@@ -19,5 +18,7 @@
 		"tratamento contra carraças",
 		"tratamiento contra garrapatas",
 		"tick treatment"
-	]
+	],
+	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"activeIngredientIds": []
 }

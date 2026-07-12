@@ -1,9 +1,8 @@
 <script lang="ts">
-	import ProductImage from '$lib/components/product/ProductImage.svelte';
+	import BinaryImage from '$lib/components/shared/BinaryImage.svelte';
 	import { productTypeLabel } from '$lib/domain/product/type-labels.js';
 	import { countryOptions } from '$lib/domain/geo/location.js';
-	import { productLeafletSectionIds, type ProductCatalogOrigin, type ProductLeafletSectionId, type ProductSpecies } from '$lib/domain/product/catalog.js';
-	import type { TreatmentCatalogItem } from '$lib/domain/treatment/treatment.js';
+	import { productLeafletSectionIds, productTypeMain, productTypeSubtype, type ProductCatalogItem, type ProductCatalogOrigin, type ProductLeafletSectionId, type ProductSpecies } from '$lib/domain/product/catalog.js';
 	import { i18n, t, type TranslationKey } from '$lib/i18n/index.js';
 	import BookOpenText from '@lucide/svelte/icons/book-open-text';
 	import Building2 from '@lucide/svelte/icons/building-2';
@@ -11,6 +10,7 @@
 	import FlaskConical from '@lucide/svelte/icons/flask-conical';
 	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
 	import Package from '@lucide/svelte/icons/package';
+	import Pill from '@lucide/svelte/icons/pill';
 	import Quote from '@lucide/svelte/icons/quote';
 	import Share2 from '@lucide/svelte/icons/share-2';
 	import Syringe from '@lucide/svelte/icons/syringe';
@@ -36,7 +36,7 @@
 		{ id: 'references', labelKey: 'formulary.section.references', icon: Quote }
 	];
 
-	let { item }: { item: TreatmentCatalogItem } = $props();
+	let { item }: { item: ProductCatalogItem } = $props();
 
 	let activeSectionId = $state<ProductLeafletSectionId>('about');
 
@@ -44,7 +44,7 @@
 	const activeSectionConfig = $derived(sectionConfigs.find((section) => section.id === activeSectionId) ?? sectionConfigs[0]);
 	const activeSectionText = $derived(sectionText(item, activeSectionId));
 
-	function typeLabel(source: TreatmentCatalogItem): string {
+	function typeLabel(source: ProductCatalogItem): string {
 		return productTypeLabel(source.type, t);
 	}
 
@@ -65,15 +65,15 @@
 		return regions.map(regionLabel).join(', ');
 	}
 
-	function sectionText(source: TreatmentCatalogItem, sectionId: ProductLeafletSectionId): string {
+	function sectionText(source: ProductCatalogItem, sectionId: ProductLeafletSectionId): string {
 		return source.extension.sections[sectionId]?.trim() ?? '';
 	}
 
-	function hasSectionText(source: TreatmentCatalogItem, sectionId: ProductLeafletSectionId): boolean {
+	function hasSectionText(source: ProductCatalogItem, sectionId: ProductLeafletSectionId): boolean {
 		return sectionText(source, sectionId).length > 0;
 	}
 
-	function availableSectionIds(source: TreatmentCatalogItem): ProductLeafletSectionId[] {
+	function availableSectionIds(source: ProductCatalogItem): ProductLeafletSectionId[] {
 		return productLeafletSectionIds.filter((sectionId) => hasSectionText(source, sectionId));
 	}
 
@@ -88,6 +88,11 @@
 		return origin === 'system' ? t('formulary.origin.system') : t('formulary.origin.user');
 	}
 
+	function productFallbackIcon(source: ProductCatalogItem) {
+		if (productTypeMain(source.type) !== 'medication') return Package;
+		return productTypeSubtype(source.type) === 'vaccine' ? Syringe : Pill;
+	}
+
 	$effect(() => {
 		const available = availableSectionIds(item);
 		if (available.length > 0 && !available.includes(activeSectionId)) activeSectionId = available[0];
@@ -97,7 +102,7 @@
 
 <section class="grid gap-5 rounded-md border border-border bg-card p-3 shadow-sm sm:p-4 lg:grid-cols-[20rem_minmax(0,1fr)]">
 	<aside class="min-w-0 space-y-4">
-		<ProductImage kind={item.kind} imageBytes={item.primaryImage?.imageBytes ?? null} alt={item.name} className="aspect-16/10 w-full bg-muted/60" imageClass="h-full w-full object-contain p-4" iconClass="size-12 text-primary" />
+		<BinaryImage imageBytes={item.primaryImage?.imageBytes ?? null} alt={item.name} className="aspect-16/10 w-full bg-muted/60" imageClass="h-full w-full object-contain p-4" iconClass="size-12 text-primary" fallbackIcon={productFallbackIcon(item)} />
 
 		<nav class="overflow-hidden rounded-md border border-border bg-background" aria-label={t('formulary.sectionsLabel')}>
 			{#each sectionConfigs as section}
@@ -120,7 +125,12 @@
 		<header class="border-b border-border pb-4">
 			<h3 class="wrap-break-word text-2xl font-semibold">{item.name}</h3>
 			<p class="mt-2 text-sm uppercase tracking-normal text-muted-foreground">
-				{t('formulary.byManufacturer')} <span class="font-medium text-primary">{item.manufacturer ?? t('common.notInformed')}</span>
+				{t('formulary.byManufacturer')}
+				{#if item.manufacturerId && item.manufacturerName}
+					<a class="font-medium text-primary hover:underline" href={`/formulary/manufacturers/${item.manufacturerId}`}>{item.manufacturerName}</a>
+				{:else}
+					<span class="font-medium text-primary">{item.manufacturerName ?? t('common.notInformed')}</span>
+				{/if}
 				{#if item.extension.commercialLine}
 					<span class="mx-2 text-border">|</span>{item.extension.commercialLine}
 				{/if}
@@ -131,6 +141,18 @@
 				<p>{t('formulary.originFilter')}: <span class="text-foreground">{originLabel(item.origin)}</span></p>
 				<p>{t('formulary.classification')}: <span class="text-foreground">{item.extension.classification ?? t('common.notInformed')}</span></p>
 				<p>{t('product.species')}: <span class="text-foreground">{speciesSummary(item.species)}</span></p>
+				<p class="sm:col-span-2">
+					{t('catalog.activeIngredients')}:
+					{#if item.activeIngredients.length > 0}
+						<span class="text-foreground">
+							{#each item.activeIngredients as ingredient, index (ingredient.id)}
+								<a class="hover:text-primary hover:underline" href={`/formulary/active-ingredients/${ingredient.id}`}>{ingredient.name}</a>{index + 1 < item.activeIngredients.length ? ', ' : ''}
+							{/each}
+						</span>
+					{:else}
+						<span class="text-foreground">{t('common.notInformed')}</span>
+					{/if}
+				</p>
 				<p class="sm:col-span-2">{t('product.regions')}: <span class="text-foreground">{regionSummary(item.regions)}</span></p>
 			</div>
 		</header>

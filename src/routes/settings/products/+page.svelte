@@ -70,7 +70,7 @@
 	const filteredCatalogItems = $derived(
 		catalogItems.filter((item) => {
 			if (typeFilter !== 'all' && stringifyProductType(item.type) !== typeFilter) return false;
-			return productItemMatchesSearch(item.name, item.aliases, searchQuery, normalizeTreatmentName) || normalizeTreatmentName(item.manufacturer ?? '').includes(normalizeTreatmentName(searchQuery));
+			return productItemMatchesSearch(item.name, item.aliases, searchQuery, normalizeTreatmentName) || normalizeTreatmentName(item.manufacturerName ?? '').includes(normalizeTreatmentName(searchQuery));
 		})
 	);
 	const newPrimaryImage = $derived(primaryDraftImage(newCatalogDraft.images));
@@ -172,7 +172,7 @@
 			kinds: Object.fromEntries(items.map((item) => [item.id, item.kind])),
 			names: Object.fromEntries(items.map((item) => [item.id, item.name])),
 			aliases: Object.fromEntries(items.map((item) => [item.id, aliasDraft(item.aliases)])),
-			manufacturers: Object.fromEntries(items.map((item) => [item.id, item.manufacturer ?? ''])),
+			manufacturers: Object.fromEntries(items.map((item) => [item.id, item.manufacturerName ?? ''])),
 			regions: Object.fromEntries(items.map((item) => [item.id, item.regions])),
 			species: Object.fromEntries(items.map((item) => [item.id, item.species])),
 			images: Object.fromEntries(items.map((item) => [item.id, imageInputs(item.images)]))
@@ -184,7 +184,7 @@
 			kinds: { ...catalogDrafts.kinds, [item.id]: item.kind },
 			names: { ...catalogDrafts.names, [item.id]: item.name },
 			aliases: { ...catalogDrafts.aliases, [item.id]: aliasDraft(item.aliases) },
-			manufacturers: { ...catalogDrafts.manufacturers, [item.id]: item.manufacturer ?? '' },
+			manufacturers: { ...catalogDrafts.manufacturers, [item.id]: item.manufacturerName ?? '' },
 			regions: { ...catalogDrafts.regions, [item.id]: item.regions },
 			species: { ...catalogDrafts.species, [item.id]: item.species },
 			images: { ...catalogDrafts.images, [item.id]: imageInputs(item.images) }
@@ -215,7 +215,7 @@
 	}
 
 	function catalogDraftManufacturer(item: CatalogItem): string {
-		return catalogDrafts.manufacturers[item.id] ?? item.manufacturer ?? '';
+		return catalogDrafts.manufacturers[item.id] ?? item.manufacturerName ?? '';
 	}
 
 	function catalogDraftRegions(item: CatalogItem): string[] {
@@ -388,7 +388,7 @@
 				name: newCatalogDraft.name,
 				species: newCatalogDraft.species,
 				aliases: parseAliases(newCatalogDraft.aliases),
-				manufacturer: newCatalogDraft.manufacturer,
+				manufacturerName: newCatalogDraft.manufacturer,
 				regions: newCatalogDraft.regions
 			});
 			if (newCatalogDraft.images.length > 0) saved = await saveTreatmentCatalogImages(saved.kind, saved.id, newCatalogDraft.images);
@@ -415,7 +415,7 @@
 					name: catalogDraftName(item),
 					species: catalogDraftSpecies(item),
 					aliases: parseAliases(catalogDraftAliases(item)),
-					manufacturer: catalogDraftManufacturer(item),
+					manufacturerName: catalogDraftManufacturer(item),
 					regions: catalogDraftRegions(item)
 				},
 				item.id

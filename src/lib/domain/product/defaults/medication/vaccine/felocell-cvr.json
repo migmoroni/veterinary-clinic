@@ -5,7 +5,6 @@
 	"species": [
 		"feline"
 	],
-	"manufacturer": "Zoetis",
 	"regions": [
 		"BRA"
 	],
@@ -24,5 +23,7 @@
 		"feline calicivirosis",
 		"panleucopenia felina",
 		"feline panleukopenia"
-	]
+	],
+	"manufacturerId": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
+	"activeIngredientIds": []
 }

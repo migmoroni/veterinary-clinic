@@ -5,7 +5,6 @@
 	"species": [
 		"feline"
 	],
-	"manufacturer": "Elanco",
 	"regions": [
 		"BRA"
 	],
@@ -18,5 +17,7 @@
 		"antiparasitário tópico felino",
 		"antiparasitario tópico felino",
 		"topical feline antiparasitic"
-	]
+	],
+	"manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
+	"activeIngredientIds": []
 }

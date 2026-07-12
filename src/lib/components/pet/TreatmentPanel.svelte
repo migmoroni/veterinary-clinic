@@ -117,8 +117,8 @@
 		return visibleCatalogItems.map((item) => ({
 			value: item.name,
 			label: item.name,
-			description: [item.manufacturer, ...item.aliases].filter(Boolean).join(' · '),
-			searchText: [item.manufacturer, ...item.aliases, ...item.regions].filter(Boolean).join(' '),
+			description: [item.manufacturerName, ...item.aliases].filter(Boolean).join(' · '),
+			searchText: [item.manufacturerName, ...item.aliases, ...item.regions].filter(Boolean).join(' '),
 			imageBytes: item.primaryImage?.imageBytes ?? null,
 			imageAlt: item.name,
 			fallbackIcon: kind === 'vaccine' ? Syringe : Pill

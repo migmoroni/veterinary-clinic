@@ -1,6 +1,10 @@
 import type Database from '@tauri-apps/plugin-sql';
 import { defaultProductCatalogItems, type DefaultProductCatalogImage } from '$lib/domain/product/default-catalog.js';
 import { PRODUCT_TYPES, productType, stringifyProductCatalogExtension, stringifyProductType } from '$lib/domain/product/catalog.js';
+import { defaultManufacturerCatalogItems, type DefaultManufacturerCatalogImage } from '$lib/domain/manufacturer/default-catalog.js';
+import { stringifyManufacturerCatalogExtension, stringifyManufacturerType } from '$lib/domain/manufacturer/catalog.js';
+import { defaultActiveIngredientCatalogItems, type DefaultActiveIngredientCatalogImage } from '$lib/domain/active-ingredient/default-catalog.js';
+import { stringifyActiveIngredientCatalogExtension, stringifyActiveIngredientType } from '$lib/domain/active-ingredient/catalog.js';
 import { defaultTreatmentProtocols } from '$lib/domain/treatment/default-protocol.js';
 import { stringifyTreatmentSpecies } from '$lib/domain/treatment/species.js';
 import { defaultBreedReferenceItems, type DefaultBreedReferenceImage } from '$lib/domain/pet/default-breed-reference.js';
@@ -42,6 +46,16 @@ interface MigrationRecordRow {
 }
 
 interface ProductCatalogRow {
+	id: string;
+	origin: string;
+}
+
+interface ManufacturerCatalogRow {
+	id: string;
+	origin: string;
+}
+
+interface ActiveIngredientCatalogRow {
 	id: string;
 	origin: string;
 }
@@ -94,6 +108,10 @@ interface RunMigrationsOptions {
 
 const PRODUCT_CATALOG_IMAGE_COLLECTION_TYPE = 'product_catalog_item';
 const PRODUCT_CATALOG_IMAGE_MAX_ITEMS = 9;
+const MANUFACTURER_CATALOG_IMAGE_COLLECTION_TYPE = 'manufacturer_catalog_item';
+const MANUFACTURER_CATALOG_IMAGE_MAX_ITEMS = 9;
+const ACTIVE_INGREDIENT_CATALOG_IMAGE_COLLECTION_TYPE = 'active_ingredient_catalog_item';
+const ACTIVE_INGREDIENT_CATALOG_IMAGE_MAX_ITEMS = 9;
 const BREED_REFERENCE_IMAGE_COLLECTION_TYPE = 'breed_reference_item';
 const BREED_REFERENCE_IMAGE_MAX_ITEMS = 9;
 
@@ -171,29 +189,35 @@ async function loadDefaultProductImageBytes(source: string): Promise<Uint8Array>
 	return bytes;
 }
 
-function normalizedDefaultProductImages(images: readonly DefaultProductCatalogImage[] | null | undefined): DefaultProductCatalogImage[] {
+interface DefaultCatalogImage {
+	source: string;
+	description?: string;
+	primary?: boolean;
+}
+
+function normalizedDefaultCatalogImages<TImage extends DefaultCatalogImage>(images: readonly TImage[] | null | undefined, maxItems: number, errorPrefix: string): TImage[] {
 	const normalized = (images ?? []).filter((image) => image.source.trim());
 	if (normalized.length === 0) return [];
-	if (normalized.length > PRODUCT_CATALOG_IMAGE_MAX_ITEMS) throw new Error('default_product_image_limit_exceeded');
-	if (normalized.filter((image) => image.primary).length > 1) throw new Error('default_product_image_multiple_primary');
+	if (normalized.length > maxItems) throw new Error(`${errorPrefix}_image_limit_exceeded`);
+	if (normalized.filter((image) => image.primary).length > 1) throw new Error(`${errorPrefix}_image_multiple_primary`);
 	return normalized;
 }
 
-async function productImageCollectionItemCount(database: Database, catalogItemId: string): Promise<number> {
+async function catalogImageCollectionItemCount(database: Database, entityType: string, entityId: string): Promise<number> {
 	const rows = await database.select<CountRow[]>(
 		`SELECT COUNT(*) AS total
 		 FROM image_collection_items item
 		 INNER JOIN image_collections collection ON collection.id = item.collection_id
 		 WHERE collection.entity_type = $1 AND collection.entity_id = $2`,
-		[PRODUCT_CATALOG_IMAGE_COLLECTION_TYPE, catalogItemId]
+		[entityType, entityId]
 	);
 	return Number(rows[0]?.total ?? 0);
 }
 
-async function ensureDefaultProductImages(database: Database, catalogItemId: string, images: readonly DefaultProductCatalogImage[] | null | undefined): Promise<void> {
-	const normalizedImages = normalizedDefaultProductImages(images);
+async function ensureDefaultCatalogImages(database: Database, entityType: string, entityId: string, maxItems: number, images: readonly DefaultCatalogImage[] | null | undefined, errorPrefix: string): Promise<void> {
+	const normalizedImages = normalizedDefaultCatalogImages(images, maxItems, errorPrefix);
 	if (normalizedImages.length === 0) return;
-	if ((await productImageCollectionItemCount(database, catalogItemId)) > 0) return;
+	if ((await catalogImageCollectionItemCount(database, entityType, entityId)) > 0) return;
 
 	await database.execute(
 		`INSERT INTO image_collections (entity_type, entity_id, primary_required, max_items, updated_at)
@@ -202,15 +226,15 @@ async function ensureDefaultProductImages(database: Database, catalogItemId: str
 			primary_required = excluded.primary_required,
 			max_items = excluded.max_items,
 			updated_at = CURRENT_TIMESTAMP`,
-		[PRODUCT_CATALOG_IMAGE_COLLECTION_TYPE, catalogItemId, PRODUCT_CATALOG_IMAGE_MAX_ITEMS]
+		[entityType, entityId, maxItems]
 	);
 
 	const collectionRows = await database.select<ImageCollectionRow[]>(
 		'SELECT id FROM image_collections WHERE entity_type = $1 AND entity_id = $2 LIMIT 1',
-		[PRODUCT_CATALOG_IMAGE_COLLECTION_TYPE, catalogItemId]
+		[entityType, entityId]
 	);
 	const collectionId = collectionRows[0]?.id;
-	if (!collectionId) throw new Error('default_product_image_collection_not_found');
+	if (!collectionId) throw new Error(`${errorPrefix}_image_collection_not_found`);
 
 	await database.execute('DELETE FROM image_collection_items WHERE collection_id = $1', [collectionId]);
 	const explicitPrimaryIndex = normalizedImages.findIndex((image) => image.primary);
@@ -228,6 +252,18 @@ async function ensureDefaultProductImages(database: Database, catalogItemId: str
 			[collectionId, description || null, index === primaryIndex ? 1 : 0, index]
 		);
 	}
+}
+
+async function ensureDefaultProductImages(database: Database, catalogItemId: string, images: readonly DefaultProductCatalogImage[] | null | undefined): Promise<void> {
+	await ensureDefaultCatalogImages(database, PRODUCT_CATALOG_IMAGE_COLLECTION_TYPE, catalogItemId, PRODUCT_CATALOG_IMAGE_MAX_ITEMS, images, 'default_product');
+}
+
+async function ensureDefaultManufacturerImages(database: Database, manufacturerId: string, images: readonly DefaultManufacturerCatalogImage[] | null | undefined): Promise<void> {
+	await ensureDefaultCatalogImages(database, MANUFACTURER_CATALOG_IMAGE_COLLECTION_TYPE, manufacturerId, MANUFACTURER_CATALOG_IMAGE_MAX_ITEMS, images, 'default_manufacturer');
+}
+
+async function ensureDefaultActiveIngredientImages(database: Database, activeIngredientId: string, images: readonly DefaultActiveIngredientCatalogImage[] | null | undefined): Promise<void> {
+	await ensureDefaultCatalogImages(database, ACTIVE_INGREDIENT_CATALOG_IMAGE_COLLECTION_TYPE, activeIngredientId, ACTIVE_INGREDIENT_CATALOG_IMAGE_MAX_ITEMS, images, 'default_active_ingredient');
 }
 
 function normalizedDefaultBreedReferenceImages(images: readonly DefaultBreedReferenceImage[] | null | undefined): DefaultBreedReferenceImage[] {
@@ -289,12 +325,114 @@ async function ensureDefaultBreedReferenceImages(database: Database, referenceIt
 	}
 }
 
+async function syncDefaultManufacturerCatalog(database: Database): Promise<void> {
+	for (const item of defaultManufacturerCatalogItems) {
+		const normalizedName = normalizeProductCatalogName(item.name);
+		const extension = stringifyManufacturerCatalogExtension(item.extension);
+		if (extension.length > FIELD_LIMITS.productExtensionJson) throw new Error('default_manufacturer_extension_limit_exceeded');
+		const values = [item.id, stringifyManufacturerType(item.type), item.name, normalizedName, JSON.stringify(item.aliases), item.origin, JSON.stringify(item.regions), extension];
+
+		const rowsById = await database.select<ManufacturerCatalogRow[]>(
+			'SELECT id, origin FROM manufacturer_catalog_items WHERE id = $1 LIMIT 1',
+			[item.id]
+		);
+		if (rowsById[0]?.origin === 'system') {
+			await database.execute(
+				`UPDATE manufacturer_catalog_items
+				 SET type = $2,
+					name = $3,
+					normalized_name = $4,
+					aliases = $5,
+					origin = $6,
+					regions = $7,
+					extension = $8,
+					updated_at = CURRENT_TIMESTAMP
+				 WHERE id = $1
+					AND origin = 'system'`,
+				values
+			);
+		} else if (!rowsById[0]) {
+			await database.execute(
+				`INSERT INTO manufacturer_catalog_items (id, type, name, normalized_name, aliases, origin, regions, extension, updated_at)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
+				 ON CONFLICT(normalized_name) DO UPDATE SET
+					name = excluded.name,
+					type = excluded.type,
+					aliases = excluded.aliases,
+					regions = excluded.regions,
+					extension = excluded.extension,
+					updated_at = CURRENT_TIMESTAMP
+				 WHERE manufacturer_catalog_items.origin = 'system'`,
+				values
+			);
+		}
+
+		const rows = await database.select<ManufacturerCatalogRow[]>(
+			'SELECT id, origin FROM manufacturer_catalog_items WHERE normalized_name = $1 LIMIT 1',
+			[normalizedName]
+		);
+		const manufacturer = rows[0];
+		if (manufacturer?.origin === 'system') await ensureDefaultManufacturerImages(database, manufacturer.id, item.images);
+	}
+}
+
+async function syncDefaultActiveIngredientCatalog(database: Database): Promise<void> {
+	for (const item of defaultActiveIngredientCatalogItems) {
+		const normalizedName = normalizeProductCatalogName(item.name);
+		const extension = stringifyActiveIngredientCatalogExtension(item.extension);
+		if (extension.length > FIELD_LIMITS.productExtensionJson) throw new Error('default_active_ingredient_extension_limit_exceeded');
+		const values = [item.id, stringifyActiveIngredientType(item.type), item.name, normalizedName, JSON.stringify(item.aliases), item.origin, JSON.stringify(item.regions), extension];
+
+		const rowsById = await database.select<ActiveIngredientCatalogRow[]>(
+			'SELECT id, origin FROM active_ingredient_catalog_items WHERE id = $1 LIMIT 1',
+			[item.id]
+		);
+		if (rowsById[0]?.origin === 'system') {
+			await database.execute(
+				`UPDATE active_ingredient_catalog_items
+				 SET type = $2,
+					name = $3,
+					normalized_name = $4,
+					aliases = $5,
+					origin = $6,
+					regions = $7,
+					extension = $8,
+					updated_at = CURRENT_TIMESTAMP
+				 WHERE id = $1
+					AND origin = 'system'`,
+				values
+			);
+		} else if (!rowsById[0]) {
+			await database.execute(
+				`INSERT INTO active_ingredient_catalog_items (id, type, name, normalized_name, aliases, origin, regions, extension, updated_at)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
+				 ON CONFLICT(normalized_name) DO UPDATE SET
+					name = excluded.name,
+					type = excluded.type,
+					aliases = excluded.aliases,
+					regions = excluded.regions,
+					extension = excluded.extension,
+					updated_at = CURRENT_TIMESTAMP
+				 WHERE active_ingredient_catalog_items.origin = 'system'`,
+				values
+			);
+		}
+
+		const rows = await database.select<ActiveIngredientCatalogRow[]>(
+			'SELECT id, origin FROM active_ingredient_catalog_items WHERE normalized_name = $1 LIMIT 1',
+			[normalizedName]
+		);
+		const activeIngredient = rows[0];
+		if (activeIngredient?.origin === 'system') await ensureDefaultActiveIngredientImages(database, activeIngredient.id, item.images);
+	}
+}
+
 async function syncDefaultProductCatalog(database: Database): Promise<void> {
 	for (const item of defaultProductCatalogItems) {
 		const normalizedName = normalizeProductCatalogName(item.name);
 		const extension = stringifyProductCatalogExtension(item.extension);
 		if (extension.length > FIELD_LIMITS.productExtensionJson) throw new Error('default_product_extension_limit_exceeded');
-		const values = [item.id, stringifyProductType(item.type), item.name, normalizedName, JSON.stringify(item.species), JSON.stringify(item.aliases), item.manufacturer, item.origin, JSON.stringify(item.regions), extension];
+		const values = [item.id, stringifyProductType(item.type), item.name, normalizedName, JSON.stringify(item.species), JSON.stringify(item.aliases), item.manufacturerId, item.origin, JSON.stringify(item.regions), extension];
 
 		const rowsById = await database.select<ProductCatalogRow[]>(
 			'SELECT id, origin FROM product_catalog_items WHERE id = $1 LIMIT 1',
@@ -308,7 +446,7 @@ async function syncDefaultProductCatalog(database: Database): Promise<void> {
 					normalized_name = $4,
 					species = $5,
 					aliases = $6,
-					manufacturer = $7,
+					manufacturer_id = $7,
 					origin = $8,
 					regions = $9,
 					extension = $10,
@@ -319,14 +457,14 @@ async function syncDefaultProductCatalog(database: Database): Promise<void> {
 			);
 		} else if (!rowsById[0]) {
 			await database.execute(
-				`INSERT INTO product_catalog_items (id, type, name, normalized_name, species, aliases, manufacturer, origin, regions, extension, updated_at)
+				`INSERT INTO product_catalog_items (id, type, name, normalized_name, species, aliases, manufacturer_id, origin, regions, extension, updated_at)
 				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP)
 				 ON CONFLICT(normalized_name) DO UPDATE SET
 					name = excluded.name,
 					type = excluded.type,
 					species = excluded.species,
 					aliases = excluded.aliases,
-					manufacturer = excluded.manufacturer,
+					manufacturer_id = excluded.manufacturer_id,
 					regions = excluded.regions,
 					extension = excluded.extension,
 					updated_at = CURRENT_TIMESTAMP
@@ -340,7 +478,25 @@ async function syncDefaultProductCatalog(database: Database): Promise<void> {
 			[normalizedName]
 		);
 		const catalogItem = rows[0];
-		if (catalogItem?.origin === 'system') await ensureDefaultProductImages(database, catalogItem.id, item.images);
+		if (catalogItem?.origin === 'system') {
+			await ensureDefaultProductImages(database, catalogItem.id, item.images);
+			await database.execute('DELETE FROM product_active_ingredients WHERE product_id = $1', [catalogItem.id]);
+			for (const [sortOrder, activeIngredientId] of (item.activeIngredientIds ?? []).entries()) {
+				const activeRows = await database.select<ActiveIngredientCatalogRow[]>(
+					'SELECT id, origin FROM active_ingredient_catalog_items WHERE id = $1 LIMIT 1',
+					[activeIngredientId]
+				);
+				if (!activeRows[0]) throw new Error(`default_product_active_ingredient_not_found:${activeIngredientId}`);
+				await database.execute(
+					`INSERT INTO product_active_ingredients (product_id, active_ingredient_id, sort_order, updated_at)
+					 VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+					 ON CONFLICT(product_id, active_ingredient_id) DO UPDATE SET
+						sort_order = excluded.sort_order,
+						updated_at = CURRENT_TIMESTAMP`,
+					[catalogItem.id, activeIngredientId, sortOrder]
+				);
+			}
+		}
 	}
 }
 
@@ -703,14 +859,31 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	`);
 
 	await database.execute(`
-		CREATE TABLE IF NOT EXISTS product_catalog_items (
+		CREATE TABLE IF NOT EXISTS manufacturer_catalog_items (
 			id TEXT PRIMARY KEY CHECK(${uuidV4TextCheck('id')}),
-			type TEXT NOT NULL CHECK(type IN (${PRODUCT_TYPE_SQL_VALUES})),
+			type TEXT NOT NULL CHECK(type = '["manufacturer",null]'),
 			name TEXT NOT NULL,
 			normalized_name TEXT NOT NULL,
-			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.productSpeciesJson)}),
 			aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.productAliasesJson)}),
-			manufacturer TEXT CHECK(${optionalTextCheck('manufacturer', FIELD_LIMITS.productManufacturer)}),
+			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
+			regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.productRegionsJson)}),
+			extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.productExtensionJson)}),
+			hidden_at TEXT,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			UNIQUE(normalized_name),
+			CHECK(${requiredTextCheck('name', FIELD_LIMITS.productManufacturer)}),
+			CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.productNormalizedName)})
+		)
+	`);
+
+	await database.execute(`
+		CREATE TABLE IF NOT EXISTS active_ingredient_catalog_items (
+			id TEXT PRIMARY KEY CHECK(${uuidV4TextCheck('id')}),
+			type TEXT NOT NULL CHECK(type IN ('["activeIngredient","substance"]', '["activeIngredient","combination"]')),
+			name TEXT NOT NULL,
+			normalized_name TEXT NOT NULL,
+			aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.productAliasesJson)}),
 			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
 			regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.productRegionsJson)}),
 			extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.productExtensionJson)}),
@@ -720,6 +893,42 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			UNIQUE(normalized_name),
 			CHECK(${requiredTextCheck('name', FIELD_LIMITS.productName)}),
 			CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.productNormalizedName)})
+		)
+	`);
+
+	await database.execute(`
+		CREATE TABLE IF NOT EXISTS product_catalog_items (
+			id TEXT PRIMARY KEY CHECK(${uuidV4TextCheck('id')}),
+			type TEXT NOT NULL CHECK(type IN (${PRODUCT_TYPE_SQL_VALUES})),
+			name TEXT NOT NULL,
+			normalized_name TEXT NOT NULL,
+			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.productSpeciesJson)}),
+			aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.productAliasesJson)}),
+			manufacturer_id TEXT CHECK(manufacturer_id IS NULL OR ${uuidV4TextCheck('manufacturer_id')}),
+			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
+			regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.productRegionsJson)}),
+			extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.productExtensionJson)}),
+			hidden_at TEXT,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			FOREIGN KEY (manufacturer_id) REFERENCES manufacturer_catalog_items(id) ON DELETE SET NULL,
+			UNIQUE(normalized_name),
+			CHECK(${requiredTextCheck('name', FIELD_LIMITS.productName)}),
+			CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.productNormalizedName)})
+		)
+	`);
+
+	await database.execute(`
+		CREATE TABLE IF NOT EXISTS product_active_ingredients (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			product_id TEXT NOT NULL CHECK(${uuidV4TextCheck('product_id')}),
+			active_ingredient_id TEXT NOT NULL CHECK(${uuidV4TextCheck('active_ingredient_id')}),
+			sort_order INTEGER NOT NULL DEFAULT 0,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			FOREIGN KEY (product_id) REFERENCES product_catalog_items(id) ON DELETE CASCADE,
+			FOREIGN KEY (active_ingredient_id) REFERENCES active_ingredient_catalog_items(id) ON DELETE CASCADE,
+			UNIQUE(product_id, active_ingredient_id)
 		)
 	`);
 
@@ -824,9 +1033,16 @@ export async function createCurrentIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_breed_reference_items_origin_id ON breed_reference_items(origin_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_pet_id ON medical_records(pet_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_deleted_at ON medical_records(deleted_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_manufacturer_catalog_items_type_name ON manufacturer_catalog_items(type, name COLLATE NOCASE)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_manufacturer_catalog_items_hidden_at ON manufacturer_catalog_items(hidden_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_active_ingredient_catalog_items_type_name ON active_ingredient_catalog_items(type, name COLLATE NOCASE)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_active_ingredient_catalog_items_hidden_at ON active_ingredient_catalog_items(hidden_at)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_product_catalog_items_type_name ON product_catalog_items(type, name COLLATE NOCASE)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_product_catalog_items_type_normalized_name ON product_catalog_items(type, normalized_name)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_product_catalog_items_manufacturer_id ON product_catalog_items(manufacturer_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_product_catalog_items_hidden_at ON product_catalog_items(hidden_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_product_active_ingredients_product_id ON product_active_ingredients(product_id, sort_order, id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_product_active_ingredients_active_ingredient_id ON product_active_ingredients(active_ingredient_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_name ON treatment_protocols(kind, name COLLATE NOCASE)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_normalized_name ON treatment_protocols(kind, normalized_name)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_hidden_at ON treatment_protocols(hidden_at)');
@@ -856,11 +1072,14 @@ async function assertCurrentSchema(database: Database): Promise<void> {
 		(await tableHasColumns(database, 'breed_reference_items', ['id', 'breed_id', 'species', 'label_key', 'origin_id', 'origin_label_key', 'origin_country_code', 'origin_latitude', 'origin_longitude', 'size_category', 'average_weight_kg', 'average_height_cm', 'extension'])) &&
 		(await tableHasColumns(database, 'pet_owners', ['id', 'pet_id', 'owner_id', 'sort_order'])) &&
 		(await tableHasColumns(database, 'medical_records', ['id', 'pet_id', 'title', 'description', 'admitted_at', 'discharged_at', 'deleted_at', 'purge_after'])) &&
-		(await tableHasColumns(database, 'app_settings', ['key', 'value', 'updated_at'])) &&
-		(await tableHasColumns(database, 'schema_migrations', ['version', 'name', 'app_version', 'applied_at'])) &&
-		(await tableHasColumns(database, 'backup_history', ['id', 'path', 'kind', 'created_at'])) &&
-		(await tableHasExactColumns(database, 'product_catalog_items', ['id', 'type', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer', 'origin', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'])) &&
-		(await productCatalogHasCurrentTypes(database)) &&
+			(await tableHasColumns(database, 'app_settings', ['key', 'value', 'updated_at'])) &&
+			(await tableHasColumns(database, 'schema_migrations', ['version', 'name', 'app_version', 'applied_at'])) &&
+			(await tableHasColumns(database, 'backup_history', ['id', 'path', 'kind', 'created_at'])) &&
+			(await tableHasExactColumns(database, 'manufacturer_catalog_items', ['id', 'type', 'name', 'normalized_name', 'aliases', 'origin', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'])) &&
+			(await tableHasExactColumns(database, 'active_ingredient_catalog_items', ['id', 'type', 'name', 'normalized_name', 'aliases', 'origin', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'])) &&
+			(await tableHasExactColumns(database, 'product_catalog_items', ['id', 'type', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer_id', 'origin', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'])) &&
+			(await tableHasColumns(database, 'product_active_ingredients', ['id', 'product_id', 'active_ingredient_id', 'sort_order'])) &&
+			(await productCatalogHasCurrentTypes(database)) &&
 		(await tableHasColumns(database, 'treatment_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'deleted_at', 'purge_after'])) &&
 		(await tableHasColumns(database, 'treatment_protocol_items', ['id', 'protocol_id', 'catalog_item_id', 'sort_order'])) &&
 		(await tableHasColumns(database, 'treatment_protocol_doses', ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order'])) &&
@@ -872,9 +1091,13 @@ async function assertCurrentSchema(database: Database): Promise<void> {
 async function hasCurrentUnversionedSchema(database: Database): Promise<boolean> {
 	const valid =
 		(await tableHasColumns(database, 'owners', ['id', 'name', 'additional_information'])) &&
-		(await tableHasColumns(database, 'addresses', ['id', 'owner_id', 'workplace_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code'])) &&
-		(await tableHasColumns(database, 'contacts', ['id', 'owner_id', 'responsible_id', 'veterinarian_profile_id', 'workplace_id', 'kind', 'label', 'value'])) &&
-		(await tableHasColumns(database, 'treatment_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name'])) &&
+			(await tableHasColumns(database, 'addresses', ['id', 'owner_id', 'workplace_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code'])) &&
+			(await tableHasColumns(database, 'contacts', ['id', 'owner_id', 'responsible_id', 'veterinarian_profile_id', 'workplace_id', 'kind', 'label', 'value'])) &&
+			(await tableHasColumns(database, 'manufacturer_catalog_items', ['id', 'type', 'name', 'normalized_name'])) &&
+			(await tableHasColumns(database, 'active_ingredient_catalog_items', ['id', 'type', 'name', 'normalized_name'])) &&
+			(await tableHasColumns(database, 'product_catalog_items', ['id', 'type', 'name', 'normalized_name', 'manufacturer_id'])) &&
+			(await tableHasColumns(database, 'product_active_ingredients', ['id', 'product_id', 'active_ingredient_id'])) &&
+			(await tableHasColumns(database, 'treatment_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name'])) &&
 		(await tableHasColumns(database, 'pet_treatments', ['id', 'pet_id', 'kind', 'applied_at', 'name', 'normalized_name', 'dose', 'validity_value', 'validity_unit']));
 
 	return valid;
@@ -1060,7 +1283,11 @@ export async function runMigrations(database: Database, options: RunMigrationsOp
 		await createCurrentSchema(database);
 		await assertCurrentSchema(database);
 
-		if (seedDefaultData || (syncDefaultProductData && appliedSchemaChange)) await syncDefaultProductCatalog(database);
+		if (seedDefaultData || (syncDefaultProductData && appliedSchemaChange)) {
+			await syncDefaultManufacturerCatalog(database);
+			await syncDefaultActiveIngredientCatalog(database);
+			await syncDefaultProductCatalog(database);
+		}
 		if (seedDefaultData || (syncDefaultBreedReferenceData && (appliedSchemaChange || (await isBreedReferenceCatalogEmpty(database))))) await syncDefaultBreedReferenceCatalog(database);
 		if (seedDefaultData || (syncDefaultTreatmentProtocolData && (appliedSchemaChange || !(await hasSystemTreatmentProtocols(database))))) await syncDefaultTreatmentProtocols(database);
 		if (createIndexes) await createCurrentIndexes(database);

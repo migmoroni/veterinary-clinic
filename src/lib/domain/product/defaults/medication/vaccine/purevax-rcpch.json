@@ -5,7 +5,6 @@
 	"species": [
 		"feline"
 	],
-	"manufacturer": "Boehringer Ingelheim Animal Health",
 	"regions": [
 		"BRA"
 	],
@@ -28,5 +27,7 @@
 		"clamidiose felina",
 		"clamidiosis felina",
 		"feline chlamydiosis"
-	]
+	],
+	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"activeIngredientIds": []
 }

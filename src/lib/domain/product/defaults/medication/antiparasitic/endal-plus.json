@@ -5,7 +5,6 @@
 	"species": [
 		"canine"
 	],
-	"manufacturer": "Ourofino Saúde Animal",
 	"regions": [
 		"BRA"
 	],
@@ -16,5 +15,7 @@
 		"antiparasitário de largo espetro",
 		"antiparasitario de amplio espectro",
 		"broad-spectrum antiparasitic"
-	]
+	],
+	"manufacturerId": "db13c7b3-7263-49a5-91c3-4cdc45ddb6b0",
+	"activeIngredientIds": []
 }

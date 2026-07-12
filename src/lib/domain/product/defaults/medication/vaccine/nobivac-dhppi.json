@@ -5,7 +5,6 @@
 	"species": [
 		"canine"
 	],
-	"manufacturer": "MSD Animal Health",
 	"regions": [
 		"ZAF"
 	],
@@ -28,5 +27,7 @@
 		"parvovirose canina",
 		"parvovirosis canina",
 		"canine parvovirus"
-	]
+	],
+	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"activeIngredientIds": []
 }

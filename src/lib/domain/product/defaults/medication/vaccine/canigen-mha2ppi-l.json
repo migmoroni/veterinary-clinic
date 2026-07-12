@@ -5,7 +5,6 @@
 	"species": [
 		"canine"
 	],
-	"manufacturer": "Virbac",
 	"regions": [
 		"BRA"
 	],
@@ -36,5 +35,7 @@
 		"leptospirose canina",
 		"leptospirosis canina",
 		"canine leptospirosis"
-	]
+	],
+	"manufacturerId": "a984d879-4d68-4282-a746-0b7961903b28",
+	"activeIngredientIds": []
 }

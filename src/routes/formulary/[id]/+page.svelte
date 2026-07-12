@@ -2,12 +2,12 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import ProductFormularyDetail from '$lib/components/product/ProductFormularyDetail.svelte';
-	import type { TreatmentCatalogItem } from '$lib/domain/treatment/treatment.js';
+	import type { ProductCatalogItem } from '$lib/domain/product/catalog.js';
 	import { isUuidV4 } from '$lib/domain/shared/uuid.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
-	import { loadTreatmentCatalogItem } from '$lib/services/treatment.service.js';
+	import { loadCatalogProduct } from '$lib/services/catalog.service.js';
 
-	let item = $state<TreatmentCatalogItem | null>(null);
+	let item = $state<ProductCatalogItem | null>(null);
 	let loading = $state(true);
 	let errorKey = $state<TranslationKey | null>(null);
 
@@ -25,7 +25,7 @@
 		}
 
 		try {
-			item = await loadTreatmentCatalogItem(id, true);
+			item = await loadCatalogProduct(id, true, true);
 			if (!item) errorKey = 'formulary.detailNotFound';
 		} catch {
 			errorKey = 'formulary.loadFailed';

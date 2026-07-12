@@ -1,0 +1,19 @@
+{
+	"id": "33e5bfd1-2843-46c9-9afd-a30f78f4b087",
+	"origin": "system",
+	"name": "World Veterinária",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [],
+	"images": [],
+	"extension": {
+		"website": null,
+		"sections": {
+			"about": "World Veterinária. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+			"portfolio": "Produtos e linhas comerciais cadastrados para consulta clínica.",
+			"support": "Informações de suporte e contato poderão ser estruturadas em etapa futura.",
+			"references": "Referências institucionais e bibliográficas poderão ser adicionadas aqui."
+		}
+	}
+}

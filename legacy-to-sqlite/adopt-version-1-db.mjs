@@ -1,0 +1,454 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+import Database from 'better-sqlite3';
+
+const CURRENT_SCHEMA_VERSION = 1;
+const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const defaultSourcePath = path.resolve(scriptDir, 'build/veterinary_clinic-version-1.db');
+const defaultOutputPath = path.resolve(scriptDir, 'build/veterinary_clinic-version-1.catalog.db');
+const productDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/product/defaults');
+const manufacturerDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/manufacturer/defaults');
+const activeIngredientDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/active-ingredient/defaults');
+
+const productTypeValues = {
+	medication: {
+		vaccine: JSON.stringify(['medication', 'vaccine']),
+		antiparasitic: JSON.stringify(['medication', 'antiparasitic'])
+	},
+	nutrition: JSON.stringify(['nutrition', null]),
+	hygiene: JSON.stringify(['hygiene', null]),
+	disinfectants: JSON.stringify(['disinfectants', null])
+};
+const productTypeSqlValues = [...Object.values(productTypeValues.medication), productTypeValues.nutrition, productTypeValues.hygiene, productTypeValues.disinfectants]
+	.map(quoteSqlString)
+	.join(', ');
+const manufacturerTypeValue = JSON.stringify(['manufacturer', null]);
+const activeIngredientTypeValues = {
+	substance: JSON.stringify(['activeIngredient', 'substance']),
+	combination: JSON.stringify(['activeIngredient', 'combination'])
+};
+
+function printUsage() {
+	console.log(`Uso:
+  node legacy-to-sqlite/adopt-version-1-db.mjs
+  node legacy-to-sqlite/adopt-version-1-db.mjs --source build/veterinary_clinic-version-1.db --output build/veterinary_clinic-version-1.catalog.db
+
+Opções:
+  --source, -s   Banco v1 gerado pelo script anterior
+  --output, -o   Cópia de saída, mantendo user_version = 1
+  --help, -h     Mostra esta ajuda
+
+Padrões:
+  source: ${path.relative(scriptDir, defaultSourcePath)}
+  output: ${path.relative(scriptDir, defaultOutputPath)}
+`);
+}
+
+function resolveInputPath(value) {
+	return path.isAbsolute(value) ? value : path.resolve(scriptDir, value);
+}
+
+function parseOptions(args) {
+	const options = {};
+	const positionals = [];
+
+	for (let index = 0; index < args.length; index += 1) {
+		const arg = args[index];
+		if (arg === '--help' || arg === '-h') {
+			options.help = true;
+			continue;
+		}
+
+		const nextValue = () => {
+			const value = args[index + 1];
+			if (!value) throw new Error(`Informe um valor após ${arg}.`);
+			index += 1;
+			return value;
+		};
+
+		if (arg === '--source' || arg === '--input' || arg === '-s') options.source = nextValue();
+		else if (arg === '--output' || arg === '-o') options.output = nextValue();
+		else if (arg.startsWith('--source=') || arg.startsWith('--input=')) options.source = arg.slice(arg.indexOf('=') + 1);
+		else if (arg.startsWith('--output=')) options.output = arg.slice(arg.indexOf('=') + 1);
+		else if (arg.startsWith('-')) throw new Error(`Opção desconhecida: ${arg}`);
+		else positionals.push(arg);
+	}
+
+	if (!options.source && positionals[0]) options.source = positionals[0];
+	if (!options.output && positionals[1]) options.output = positionals[1];
+	if (positionals.length > 2) throw new Error(`Argumentos posicionais demais: ${positionals.slice(2).join(', ')}`);
+	return options;
+}
+
+function quoteIdentifier(value) {
+	return `"${value.replace(/"/g, '""')}"`;
+}
+
+function quoteSqlString(value) {
+	return `'${value.replace(/'/g, "''")}'`;
+}
+
+function normalizeName(value) {
+	return String(value ?? '')
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '');
+}
+
+function slug(value) {
+	return String(value ?? '')
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-+|-+$/g, '') || 'item';
+}
+
+function isUuidV4(value) {
+	return UUID_V4_PATTERN.test(String(value ?? ''));
+}
+
+function readJson(file) {
+	return JSON.parse(fs.readFileSync(file, 'utf8'));
+}
+
+function readJsonFiles(directory) {
+	if (!fs.existsSync(directory)) return [];
+	return fs
+		.readdirSync(directory, { withFileTypes: true })
+		.flatMap((entry) => {
+			const fullPath = path.join(directory, entry.name);
+			if (entry.isDirectory()) return readJsonFiles(fullPath);
+			return entry.isFile() && entry.name.endsWith('.json') ? [fullPath] : [];
+		})
+		.sort((left, right) => left.localeCompare(right));
+}
+
+function readDefaultManufacturers() {
+	return readJsonFiles(manufacturerDefaultsDir).map((file) => ({
+		type: manufacturerTypeValue,
+		...readJson(file)
+	}));
+}
+
+function readDefaultActiveIngredients() {
+	return readJsonFiles(activeIngredientDefaultsDir).map((file) => {
+		const item = readJson(file);
+		return {
+			type: activeIngredientTypeValues[item.subtype] ?? activeIngredientTypeValues.substance,
+			...item
+		};
+	});
+}
+
+function productTypeFromPath(file) {
+	const parts = file.split(path.sep);
+	const medicationIndex = parts.lastIndexOf('medication');
+	if (medicationIndex >= 0) {
+		const subtype = parts[medicationIndex + 1];
+		if (productTypeValues.medication[subtype]) return productTypeValues.medication[subtype];
+	}
+	return productTypeValues.medication.vaccine;
+}
+
+function readDefaultProducts() {
+	return readJsonFiles(productDefaultsDir).map((file) => ({
+		type: productTypeFromPath(file),
+		...readJson(file)
+	}));
+}
+
+function tableExists(database, table) {
+	return Boolean(database.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1").get(table));
+}
+
+function tableColumns(database, table) {
+	return database.prepare(`PRAGMA table_info(${quoteIdentifier(table)})`).all().map((row) => row.name);
+}
+
+function hasColumn(database, table, column) {
+	return tableExists(database, table) && tableColumns(database, table).includes(column);
+}
+
+function createCatalogTables(database) {
+	database.exec(`
+		CREATE TABLE IF NOT EXISTS manufacturer_catalog_items (
+			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
+			type TEXT NOT NULL CHECK(type = '["manufacturer",null]'),
+			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
+			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) BETWEEN 1 AND 120),
+			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),
+			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
+			regions TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(regions)) BETWEEN 1 AND 1024),
+			extension TEXT NOT NULL DEFAULT '{}' CHECK(length(trim(extension)) BETWEEN 1 AND 64000),
+			hidden_at TEXT,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			UNIQUE(normalized_name)
+		);
+
+		CREATE TABLE IF NOT EXISTS active_ingredient_catalog_items (
+			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
+			type TEXT NOT NULL CHECK(type IN ('["activeIngredient","substance"]', '["activeIngredient","combination"]')),
+			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
+			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) BETWEEN 1 AND 120),
+			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),
+			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
+			regions TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(regions)) BETWEEN 1 AND 1024),
+			extension TEXT NOT NULL DEFAULT '{}' CHECK(length(trim(extension)) BETWEEN 1 AND 64000),
+			hidden_at TEXT,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			UNIQUE(normalized_name)
+		);
+
+		CREATE TABLE IF NOT EXISTS product_active_ingredients (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			product_id TEXT NOT NULL,
+			active_ingredient_id TEXT NOT NULL,
+			sort_order INTEGER NOT NULL DEFAULT 0,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			FOREIGN KEY (product_id) REFERENCES product_catalog_items(id) ON DELETE CASCADE,
+			FOREIGN KEY (active_ingredient_id) REFERENCES active_ingredient_catalog_items(id) ON DELETE CASCADE,
+			UNIQUE(product_id, active_ingredient_id)
+		);
+	`);
+}
+
+function syncDefaultManufacturers(database) {
+	const insert = database.prepare(`
+		INSERT INTO manufacturer_catalog_items (id, type, name, normalized_name, aliases, origin, regions, extension, updated_at)
+		VALUES (@id, @type, @name, @normalized_name, @aliases, 'system', @regions, @extension, CURRENT_TIMESTAMP)
+		ON CONFLICT(id) DO UPDATE SET
+			type = excluded.type,
+			name = excluded.name,
+			normalized_name = excluded.normalized_name,
+			aliases = excluded.aliases,
+			regions = excluded.regions,
+			extension = excluded.extension,
+			updated_at = CURRENT_TIMESTAMP
+		WHERE manufacturer_catalog_items.origin = 'system'
+	`);
+	for (const item of readDefaultManufacturers()) {
+		insert.run({
+			id: item.id,
+			type: item.type,
+			name: item.name,
+			normalized_name: normalizeName(item.name),
+			aliases: JSON.stringify(Array.isArray(item.aliases) ? item.aliases : []),
+			regions: JSON.stringify(Array.isArray(item.regions) ? item.regions : []),
+			extension: JSON.stringify(item.extension ?? {})
+		});
+	}
+}
+
+function syncDefaultActiveIngredients(database) {
+	const insert = database.prepare(`
+		INSERT INTO active_ingredient_catalog_items (id, type, name, normalized_name, aliases, origin, regions, extension, updated_at)
+		VALUES (@id, @type, @name, @normalized_name, @aliases, 'system', @regions, @extension, CURRENT_TIMESTAMP)
+		ON CONFLICT(id) DO UPDATE SET
+			type = excluded.type,
+			name = excluded.name,
+			normalized_name = excluded.normalized_name,
+			aliases = excluded.aliases,
+			regions = excluded.regions,
+			extension = excluded.extension,
+			updated_at = CURRENT_TIMESTAMP
+		WHERE active_ingredient_catalog_items.origin = 'system'
+	`);
+	for (const item of readDefaultActiveIngredients()) {
+		insert.run({
+			id: item.id,
+			type: item.type,
+			name: item.name,
+			normalized_name: normalizeName(item.name),
+			aliases: JSON.stringify(Array.isArray(item.aliases) ? item.aliases : []),
+			regions: JSON.stringify(Array.isArray(item.regions) ? item.regions : []),
+			extension: JSON.stringify(item.extension ?? {})
+		});
+	}
+}
+
+function ensureUserManufacturer(database, name) {
+	const normalizedName = normalizeName(name);
+	if (!normalizedName) return null;
+	const existing = database.prepare('SELECT id FROM manufacturer_catalog_items WHERE normalized_name = ? LIMIT 1').get(normalizedName);
+	if (existing?.id) return existing.id;
+	const id = crypto.randomUUID();
+	database.prepare(`
+		INSERT INTO manufacturer_catalog_items (id, type, name, normalized_name, aliases, origin, regions, extension, updated_at)
+		VALUES (?, ?, ?, ?, '[]', 'user', '[]', '{}', CURRENT_TIMESTAMP)
+	`).run(id, manufacturerTypeValue, name.trim(), normalizedName);
+	return id;
+}
+
+function rebuildProductCatalog(database) {
+	const hasNewColumn = hasColumn(database, 'product_catalog_items', 'manufacturer_id');
+	if (hasNewColumn) return;
+
+	const defaultProductsById = new Map(readDefaultProducts().map((item) => [item.id, item]));
+	const rows = tableExists(database, 'product_catalog_items')
+		? database.prepare('SELECT * FROM product_catalog_items ORDER BY name COLLATE NOCASE').all()
+		: [];
+
+	database.exec(`
+		DROP TABLE IF EXISTS product_catalog_items_next;
+		CREATE TABLE product_catalog_items_next (
+			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
+			type TEXT NOT NULL CHECK(type IN (${productTypeSqlValues})),
+			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
+			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) BETWEEN 1 AND 120),
+			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(length(trim(species)) BETWEEN 1 AND 256),
+			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),
+			manufacturer_id TEXT,
+			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
+			regions TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(regions)) BETWEEN 1 AND 1024),
+			extension TEXT NOT NULL DEFAULT '{}' CHECK(length(trim(extension)) BETWEEN 1 AND 64000),
+			hidden_at TEXT,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			FOREIGN KEY (manufacturer_id) REFERENCES manufacturer_catalog_items(id) ON DELETE SET NULL,
+			UNIQUE(normalized_name)
+		);
+	`);
+
+	const insert = database.prepare(`
+		INSERT INTO product_catalog_items_next (
+			id, type, name, normalized_name, species, aliases, manufacturer_id, origin, regions, extension, hidden_at, created_at, updated_at
+		)
+		VALUES (@id, @type, @name, @normalized_name, @species, @aliases, @manufacturer_id, @origin, @regions, @extension, @hidden_at, @created_at, @updated_at)
+	`);
+
+	for (const row of rows) {
+		const fallbackDefault = defaultProductsById.get(row.id);
+		const manufacturerId = fallbackDefault?.manufacturerId ?? ensureUserManufacturer(database, row.manufacturer ?? '');
+		insert.run({
+			id: isUuidV4(row.id) ? row.id : crypto.randomUUID(),
+			type: row.type,
+			name: row.name,
+			normalized_name: row.normalized_name || normalizeName(row.name),
+			species: row.species || '["canine","feline"]',
+			aliases: row.aliases || '[]',
+			manufacturer_id: manufacturerId,
+			origin: row.origin === 'system' ? 'system' : 'user',
+			regions: row.regions || '[]',
+			extension: row.extension || '{}',
+			hidden_at: row.hidden_at ?? null,
+			created_at: row.created_at ?? new Date().toISOString(),
+			updated_at: row.updated_at ?? null
+		});
+	}
+
+	database.exec(`
+		DROP TABLE product_catalog_items;
+		ALTER TABLE product_catalog_items_next RENAME TO product_catalog_items;
+	`);
+}
+
+function syncDefaultProducts(database) {
+	const insert = database.prepare(`
+		INSERT INTO product_catalog_items (
+			id, type, name, normalized_name, species, aliases, manufacturer_id, origin, regions, extension, updated_at
+		)
+		VALUES (@id, @type, @name, @normalized_name, @species, @aliases, @manufacturer_id, 'system', @regions, @extension, CURRENT_TIMESTAMP)
+		ON CONFLICT(id) DO UPDATE SET
+			type = excluded.type,
+			name = excluded.name,
+			normalized_name = excluded.normalized_name,
+			species = excluded.species,
+			aliases = excluded.aliases,
+			manufacturer_id = excluded.manufacturer_id,
+			regions = excluded.regions,
+			extension = excluded.extension,
+			updated_at = CURRENT_TIMESTAMP
+		WHERE product_catalog_items.origin = 'system'
+	`);
+	const clearRelations = database.prepare('DELETE FROM product_active_ingredients WHERE product_id = ?');
+	const insertRelation = database.prepare(`
+		INSERT INTO product_active_ingredients (product_id, active_ingredient_id, sort_order, updated_at)
+		VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+		ON CONFLICT(product_id, active_ingredient_id) DO UPDATE SET sort_order = excluded.sort_order, updated_at = CURRENT_TIMESTAMP
+	`);
+
+	for (const item of readDefaultProducts()) {
+		insert.run({
+			id: item.id,
+			type: item.type,
+			name: item.name,
+			normalized_name: normalizeName(item.name),
+			species: JSON.stringify(Array.isArray(item.species) ? item.species : ['canine', 'feline']),
+			aliases: JSON.stringify(Array.isArray(item.aliases) ? item.aliases : []),
+			manufacturer_id: item.manufacturerId ?? null,
+			regions: JSON.stringify(Array.isArray(item.regions) ? item.regions : []),
+			extension: JSON.stringify(item.extension ?? {})
+		});
+
+		clearRelations.run(item.id);
+		for (const [sortOrder, activeIngredientId] of (item.activeIngredientIds ?? []).entries()) {
+			insertRelation.run(item.id, activeIngredientId, sortOrder);
+		}
+	}
+}
+
+function createIndexes(database) {
+	database.exec(`
+		CREATE INDEX IF NOT EXISTS idx_manufacturer_catalog_items_type_name ON manufacturer_catalog_items(type, name COLLATE NOCASE);
+		CREATE INDEX IF NOT EXISTS idx_manufacturer_catalog_items_hidden_at ON manufacturer_catalog_items(hidden_at);
+		CREATE INDEX IF NOT EXISTS idx_active_ingredient_catalog_items_type_name ON active_ingredient_catalog_items(type, name COLLATE NOCASE);
+		CREATE INDEX IF NOT EXISTS idx_active_ingredient_catalog_items_hidden_at ON active_ingredient_catalog_items(hidden_at);
+		CREATE INDEX IF NOT EXISTS idx_product_catalog_items_type_name ON product_catalog_items(type, name COLLATE NOCASE);
+		CREATE INDEX IF NOT EXISTS idx_product_catalog_items_type_normalized_name ON product_catalog_items(type, normalized_name);
+		CREATE INDEX IF NOT EXISTS idx_product_catalog_items_manufacturer_id ON product_catalog_items(manufacturer_id);
+		CREATE INDEX IF NOT EXISTS idx_product_catalog_items_hidden_at ON product_catalog_items(hidden_at);
+		CREATE INDEX IF NOT EXISTS idx_product_active_ingredients_product_id ON product_active_ingredients(product_id, sort_order, id);
+		CREATE INDEX IF NOT EXISTS idx_product_active_ingredients_active_ingredient_id ON product_active_ingredients(active_ingredient_id);
+	`);
+}
+
+function adoptDatabase(sourcePath, outputPath) {
+	if (!fs.existsSync(sourcePath)) throw new Error(`Banco de origem não encontrado: ${sourcePath}`);
+	fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+	if (path.resolve(sourcePath) !== path.resolve(outputPath)) fs.copyFileSync(sourcePath, outputPath);
+
+	const database = new Database(outputPath);
+	database.pragma('foreign_keys = OFF');
+
+	try {
+		database.transaction(() => {
+			createCatalogTables(database);
+			syncDefaultManufacturers(database);
+			syncDefaultActiveIngredients(database);
+			rebuildProductCatalog(database);
+			syncDefaultProducts(database);
+			createIndexes(database);
+			database.pragma(`user_version = ${CURRENT_SCHEMA_VERSION}`);
+		})();
+		database.pragma('foreign_keys = ON');
+		const foreignKeyErrors = database.prepare('PRAGMA foreign_key_check').all();
+		if (foreignKeyErrors.length > 0) throw new Error(`Falha em foreign_key_check: ${JSON.stringify(foreignKeyErrors.slice(0, 5))}`);
+		database.pragma('wal_checkpoint(TRUNCATE)');
+	} finally {
+		database.close();
+	}
+}
+
+try {
+	const options = parseOptions(process.argv.slice(2));
+	if (options.help) {
+		printUsage();
+		process.exit(0);
+	}
+
+	const sourcePath = resolveInputPath(options.source ?? defaultSourcePath);
+	const outputPath = resolveInputPath(options.output ?? defaultOutputPath);
+	adoptDatabase(sourcePath, outputPath);
+	console.log(`Banco v1 atualizado para catálogo amplo: ${path.relative(scriptDir, outputPath)}`);
+} catch (error) {
+	console.error(error instanceof Error ? error.message : error);
+	process.exit(1);
+}

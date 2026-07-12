@@ -5,7 +5,6 @@
 	"species": [
 		"canine"
 	],
-	"manufacturer": "Ceva Saúde Animal",
 	"regions": [
 		"BRA"
 	],
@@ -15,5 +14,7 @@
 		"leishmaniasis",
 		"calazar",
 		"kala-azar"
-	]
+	],
+	"manufacturerId": "131b3da4-334e-42ee-a185-5e57df388a49",
+	"activeIngredientIds": []
 }

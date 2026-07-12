@@ -6,7 +6,6 @@
 		"canine",
 		"feline"
 	],
-	"manufacturer": "Chemitec",
 	"regions": [
 		"BRA"
 	],
@@ -18,5 +17,7 @@
 		"endoparasitas",
 		"endoparásitos",
 		"endoparasites"
-	]
+	],
+	"manufacturerId": "f72b2273-c561-44d8-882e-ac7d0c8fd268",
+	"activeIngredientIds": []
 }

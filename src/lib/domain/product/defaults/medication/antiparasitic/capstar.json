@@ -6,7 +6,6 @@
 		"canine",
 		"feline"
 	],
-	"manufacturer": "Elanco",
 	"regions": [
 		"BRA"
 	],
@@ -17,5 +16,7 @@
 		"ectoparasiticide",
 		"antipulgas",
 		"flea treatment"
-	]
+	],
+	"manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
+	"activeIngredientIds": []
 }

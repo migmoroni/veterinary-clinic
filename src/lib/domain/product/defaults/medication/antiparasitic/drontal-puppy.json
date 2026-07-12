@@ -5,7 +5,6 @@
 	"species": [
 		"canine"
 	],
-	"manufacturer": "Elanco",
 	"regions": [
 		"BRA"
 	],
@@ -16,5 +15,7 @@
 		"antiparasitário de largo espetro",
 		"antiparasitario de amplio espectro",
 		"broad-spectrum antiparasitic"
-	]
+	],
+	"manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
+	"activeIngredientIds": []
 }

@@ -1,0 +1,19 @@
+{
+	"id": "a984d879-4d68-4282-a746-0b7961903b28",
+	"origin": "system",
+	"name": "Virbac",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [],
+	"images": [],
+	"extension": {
+		"website": null,
+		"sections": {
+			"about": "Virbac. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+			"portfolio": "Produtos e linhas comerciais cadastrados para consulta clínica.",
+			"support": "Informações de suporte e contato poderão ser estruturadas em etapa futura.",
+			"references": "Referências institucionais e bibliográficas poderão ser adicionadas aqui."
+		}
+	}
+}

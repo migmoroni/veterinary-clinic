@@ -6,7 +6,6 @@
 		"canine",
 		"feline"
 	],
-	"manufacturer": "Virbac",
 	"regions": [
 		"BRA"
 	],
@@ -17,5 +16,7 @@
 		"antiparasitário de largo espetro",
 		"antiparasitario de amplio espectro",
 		"broad-spectrum antiparasitic"
-	]
+	],
+	"manufacturerId": "a984d879-4d68-4282-a746-0b7961903b28",
+	"activeIngredientIds": []
 }

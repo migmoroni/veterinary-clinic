@@ -5,7 +5,6 @@
 	"species": [
 		"canine"
 	],
-	"manufacturer": "Ceva Saúde Animal",
 	"regions": [
 		"BRA"
 	],
@@ -16,5 +15,7 @@
 		"antiparasitário de largo espetro",
 		"antiparasitario de amplio espectro",
 		"broad-spectrum antiparasitic"
-	]
+	],
+	"manufacturerId": "131b3da4-334e-42ee-a185-5e57df388a49",
+	"activeIngredientIds": []
 }

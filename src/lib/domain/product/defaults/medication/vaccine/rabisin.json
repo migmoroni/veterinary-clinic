@@ -6,7 +6,6 @@
 		"canine",
 		"feline"
 	],
-	"manufacturer": "Boehringer Ingelheim Animal Health",
 	"regions": [
 		"BRA"
 	],
@@ -15,5 +14,7 @@
 		"antirrábica",
 		"rabia",
 		"rabies"
-	]
+	],
+	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"activeIngredientIds": []
 }

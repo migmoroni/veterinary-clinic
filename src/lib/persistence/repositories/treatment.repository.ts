@@ -2,7 +2,7 @@ import { FIELD_LIMITS, assertTextLimit, nullableMultilineText } from '$lib/domai
 import type { ImageCollectionItemInput } from '$lib/domain/image-collection/image-collection.js';
 import type { PetTreatment, PetTreatmentInput, TreatmentCatalogItem, TreatmentCatalogItemId, TreatmentCatalogItemInput, TreatmentKind, TreatmentValidityUnit } from '$lib/domain/treatment/treatment.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
-import { deleteProductCatalogItem, ensureTreatmentProductCatalogItem, getProductCatalogItemById, listProductCatalogItems, normalizeProductCatalogInput, saveProductCatalogItemImages, saveTreatmentProductCatalogItem, setProductCatalogItemHidden } from '$lib/persistence/repositories/product-catalog.repository.js';
+import { deleteProductCatalogItem, ensureTreatmentProductCatalogItem, getTreatmentProductCatalogItemById, listTreatmentProductCatalogItems, normalizeProductCatalogInput, saveProductCatalogItemImages, saveTreatmentProductCatalogItem, setProductCatalogItemHidden } from '$lib/persistence/repositories/product-catalog.repository.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
 interface PetTreatmentRow {
@@ -124,11 +124,11 @@ async function markPreviousEquivalentTreatmentsIgnored(kind: TreatmentKind, petI
 }
 
 export async function listTreatmentCatalogItems(kind: TreatmentKind | null = null, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem[]> {
-	return listProductCatalogItems(kind, includeHidden, includeImages);
+	return listTreatmentProductCatalogItems(kind, includeHidden, includeImages);
 }
 
 export async function getTreatmentCatalogItem(id: TreatmentCatalogItemId, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem | null> {
-	return getProductCatalogItemById(id, includeHidden, includeImages);
+	return getTreatmentProductCatalogItemById(id, includeHidden, includeImages);
 }
 
 export async function saveTreatmentCatalogItem(kind: TreatmentKind, input: TreatmentCatalogItemInput, id?: TreatmentCatalogItemId): Promise<TreatmentCatalogItem> {

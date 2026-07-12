@@ -5,7 +5,6 @@
 	"species": [
 		"canine"
 	],
-	"manufacturer": "Boehringer Ingelheim Animal Health",
 	"regions": [
 		"BRA"
 	],
@@ -18,5 +17,7 @@
 		"múltipla canina",
 		"vacuna múltiple canina",
 		"canine combination vaccine"
-	]
+	],
+	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"activeIngredientIds": []
 }

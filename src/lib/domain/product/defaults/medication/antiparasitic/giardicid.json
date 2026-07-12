@@ -5,7 +5,6 @@
 	"species": [
 		"canine"
 	],
-	"manufacturer": "Agener União Saúde Animal",
 	"regions": [
 		"BRA"
 	],
@@ -16,5 +15,7 @@
 		"verme redondo",
 		"gusano redondo",
 		"roundworm"
-	]
+	],
+	"manufacturerId": "d7569f36-cd2f-416b-906f-ee89e82145cb",
+	"activeIngredientIds": []
 }

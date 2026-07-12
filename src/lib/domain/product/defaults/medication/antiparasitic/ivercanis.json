@@ -5,7 +5,6 @@
 	"species": [
 		"canine"
 	],
-	"manufacturer": "World Veterinária",
 	"regions": [
 		"BRA"
 	],
@@ -14,5 +13,7 @@
 		"ivermectin",
 		"endectocida",
 		"endectocide"
-	]
+	],
+	"manufacturerId": "33e5bfd1-2843-46c9-9afd-a30f78f4b087",
+	"activeIngredientIds": []
 }

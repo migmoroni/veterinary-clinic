@@ -5,7 +5,6 @@
 	"species": [
 		"canine"
 	],
-	"manufacturer": "Zoetis",
 	"regions": [
 		"BRA"
 	],
@@ -14,5 +13,7 @@
 		"sarolaner moxidectin pyrantel",
 		"endectocida",
 		"endectocide"
-	]
+	],
+	"manufacturerId": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
+	"activeIngredientIds": []
 }

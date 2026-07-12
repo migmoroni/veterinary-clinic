@@ -5,7 +5,6 @@
 	"species": [
 		"canine"
 	],
-	"manufacturer": "MSD Animal Health",
 	"regions": [
 		"BRA"
 	],
@@ -34,5 +33,7 @@
 		"leptospirose canina",
 		"leptospirosis canina",
 		"canine leptospirosis"
-	]
+	],
+	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"activeIngredientIds": []
 }
