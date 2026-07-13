@@ -1,4 +1,4 @@
-import { canEditProductCatalogItem, parseProductAliases, parseProductCatalogExtension, parseProductRegions, parseProductSpecies, parseProductType, productType, productTypeMain, productTypeSubtype, stringifyProductAliases, stringifyProductRegions, stringifyProductSpecies, stringifyProductType, type ProductCatalogItem, type ProductCatalogOrigin, type ProductType, type ProductTypeMain, type ProductTypeTuple } from '$lib/domain/product/catalog.js';
+import { canEditProductCatalogItem, parseCatalogAliases, parseProductCatalogExtension, parseProductRegions, parseProductSpecies, parseProductType, productType, productTypeMain, productTypeSubtype, stringifyCatalogAliases, stringifyProductRegions, stringifyProductSpecies, stringifyProductType, type ProductCatalogItem, type ProductCatalogOrigin, type ProductType, type ProductTypeMain, type ProductTypeTuple } from '$lib/domain/product/catalog.js';
 import type { ImageCollectionItem, ImageCollectionItemInput, ImageCollectionPolicy } from '$lib/domain/image-collection/image-collection.js';
 import { FIELD_LIMITS, assertTextLimit, nullableLimitedText } from '$lib/domain/shared/field-limits.js';
 import { createUuidV4 } from '$lib/domain/shared/uuid.js';
@@ -94,7 +94,7 @@ async function mapCatalogItem(row: ProductCatalogItemRow, images: ImageCollectio
 		name: row.name,
 		normalizedName: row.normalized_name,
 		species: parseProductSpecies(row.species),
-		aliases: parseProductAliases(row.aliases, FIELD_LIMITS.productAlias, config.normalize, row.normalized_name),
+		aliases: parseCatalogAliases(row.aliases, FIELD_LIMITS.catalogAlias, config.normalize, row.normalized_name),
 		manufacturerId: row.manufacturer_id,
 		manufacturerName: row.manufacturer_name,
 		activeIngredientIds,
@@ -141,11 +141,11 @@ function normalizeProductCatalogMetadata(
 ): { species: string; aliases: string; manufacturerName: string | null; regions: string } {
 	const config = configFor('medication');
 	const species = stringifyProductSpecies(input.species);
-	const aliases = stringifyProductAliases(input.aliases, FIELD_LIMITS.productAlias, config.normalize, normalizedName);
+	const aliases = stringifyCatalogAliases(input.aliases, FIELD_LIMITS.catalogAlias, config.normalize, normalizedName);
 	const manufacturerName = nullableLimitedText(input.manufacturerName, FIELD_LIMITS.productManufacturer);
 	const regions = stringifyProductRegions(input.regions);
 	assertTextLimit(species, FIELD_LIMITS.productSpeciesJson);
-	assertTextLimit(aliases, FIELD_LIMITS.productAliasesJson);
+	assertTextLimit(aliases, FIELD_LIMITS.catalogAliasesJson);
 	assertTextLimit(regions, FIELD_LIMITS.productRegionsJson);
 	return { species, aliases, manufacturerName, regions };
 }

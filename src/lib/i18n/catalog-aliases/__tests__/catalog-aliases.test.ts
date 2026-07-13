@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { localizedProductAliases } from '../index.js';
+import { localizedCatalogAliases } from '../index.js';
 
-describe('product alias translations', () => {
+describe('catalog alias translations', () => {
 	it('collects localized terms without duplicates', () => {
-		const aliases = localizedProductAliases('productAlias.polyvalent');
+		const aliases = localizedCatalogAliases('catalogAlias.polyvalent');
 
 		expect(aliases).toContain('polivalente');
 		expect(aliases).toContain('polyvalent');
@@ -11,6 +11,6 @@ describe('product alias translations', () => {
 	});
 
 	it('keeps language-independent codes outside translation dictionaries', () => {
-		expect(localizedProductAliases('productAlias.polyvalent')).not.toContain('V10');
+		expect(localizedCatalogAliases('catalogAlias.polyvalent')).not.toContain('V10');
 	});
 });

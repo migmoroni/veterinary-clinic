@@ -5,14 +5,14 @@ import {
 	catalogTypeSubtype,
 	catalogTypesFromTree,
 	isCatalogType,
-	normalizeCatalogAliases,
+	normalizeCatalogAliases as normalizeBaseCatalogAliases,
 	normalizeCatalogRegions,
 	normalizedNullableText,
 	normalizedSectionTexts,
-	parseCatalogAliases,
+	parseCatalogAliases as parseBaseCatalogAliases,
 	parseCatalogRegions,
 	parseCatalogType,
-	stringifyCatalogAliases,
+	stringifyCatalogAliases as stringifyBaseCatalogAliases,
 	stringifyCatalogRegions,
 	stringifyCatalogType,
 	type CatalogEntityBase,
@@ -156,16 +156,16 @@ export function stringifyProductRegions(values: readonly string[] | null | undef
 	return stringifyCatalogRegions(values);
 }
 
-export function normalizeProductAliases(values: readonly string[] | null | undefined, maxLength: number, normalize: (value: string) => string, canonicalNormalizedName = ''): string[] {
-	return normalizeCatalogAliases(values, maxLength, normalize, canonicalNormalizedName);
+export function normalizeCatalogAliases(values: readonly string[] | null | undefined, maxLength: number, normalize: (value: string) => string, canonicalNormalizedName = ''): string[] {
+	return normalizeBaseCatalogAliases(values, maxLength, normalize, canonicalNormalizedName);
 }
 
-export function parseProductAliases(value: string | null | undefined, maxLength: number, normalize: (value: string) => string, canonicalNormalizedName = ''): string[] {
-	return parseCatalogAliases(value, maxLength, normalize, canonicalNormalizedName);
+export function parseCatalogAliases(value: string | null | undefined, maxLength: number, normalize: (value: string) => string, canonicalNormalizedName = ''): string[] {
+	return parseBaseCatalogAliases(value, maxLength, normalize, canonicalNormalizedName);
 }
 
-export function stringifyProductAliases(values: readonly string[] | null | undefined, maxLength: number, normalize: (value: string) => string, canonicalNormalizedName = ''): string {
-	return stringifyCatalogAliases(values, maxLength, normalize, canonicalNormalizedName);
+export function stringifyCatalogAliases(values: readonly string[] | null | undefined, maxLength: number, normalize: (value: string) => string, canonicalNormalizedName = ''): string {
+	return stringifyBaseCatalogAliases(values, maxLength, normalize, canonicalNormalizedName);
 }
 
 export function productItemMatchesSpecies(species: readonly ProductSpecies[], petSpecies: string | null | undefined): boolean {

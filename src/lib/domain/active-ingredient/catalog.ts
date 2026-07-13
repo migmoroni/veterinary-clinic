@@ -71,11 +71,11 @@ export function stringifyActiveIngredientType(type: ActiveIngredientType): strin
 }
 
 export function parseActiveIngredientAliases(value: string | null | undefined, canonicalNormalizedName = ''): string[] {
-	return parseCatalogAliases(value, FIELD_LIMITS.productAlias, normalizeTreatmentName, canonicalNormalizedName);
+	return parseCatalogAliases(value, FIELD_LIMITS.catalogAlias, normalizeTreatmentName, canonicalNormalizedName);
 }
 
 export function stringifyActiveIngredientAliases(values: readonly string[] | null | undefined, canonicalNormalizedName = ''): string {
-	return stringifyCatalogAliases(values, FIELD_LIMITS.productAlias, normalizeTreatmentName, canonicalNormalizedName);
+	return stringifyCatalogAliases(values, FIELD_LIMITS.catalogAlias, normalizeTreatmentName, canonicalNormalizedName);
 }
 
 export const parseActiveIngredientRegions = parseCatalogRegions;

@@ -85,7 +85,7 @@ function normalizeManufacturerCatalogMetadata(
 	const aliases = stringifyManufacturerAliases(input.aliases, normalizedName);
 	const regions = stringifyManufacturerRegions(input.regions);
 	const extension = stringifyManufacturerCatalogExtension(input.extension);
-	assertTextLimit(aliases, FIELD_LIMITS.productAliasesJson);
+	assertTextLimit(aliases, FIELD_LIMITS.catalogAliasesJson);
 	assertTextLimit(regions, FIELD_LIMITS.productRegionsJson);
 	assertTextLimit(extension, FIELD_LIMITS.productExtensionJson);
 	return { aliases, regions, extension };

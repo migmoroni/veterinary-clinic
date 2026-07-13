@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 import { productLeafletSectionIds, stringifyProductCatalogExtension } from '../catalog.js';
-import { localizedProductAliases } from '$lib/i18n/product-aliases/index.js';
+import { localizedCatalogAliases } from '$lib/i18n/catalog-aliases/index.js';
 import { defaultProductCatalogItems } from '../default-catalog.js';
 import { defaultManufacturerCatalogItems } from '$lib/domain/manufacturer/default-catalog.js';
 import { isUuidV4 } from '$lib/domain/shared/uuid.js';
@@ -43,7 +43,7 @@ describe('default product catalog', () => {
 
 	it('expands localized aliases while preserving language-independent aliases', () => {
 		const vanguard = vaccine('Vanguard Plus');
-		const localizedPolyvalentAliases = localizedProductAliases('productAlias.polyvalent');
+		const localizedPolyvalentAliases = localizedCatalogAliases('catalogAlias.polyvalent');
 
 		expect(vanguard.aliases).toEqual(expect.arrayContaining(localizedPolyvalentAliases));
 		expect(vanguard.aliases).toContain('V10');
@@ -172,9 +172,9 @@ describe('default product catalog', () => {
 
 	it('keeps every persisted alias payload within the database limits', () => {
 		for (const item of defaultProductCatalogItems) {
-			expect(item.aliases.every((alias) => alias.length <= FIELD_LIMITS.productAlias)).toBe(true);
+			expect(item.aliases.every((alias) => alias.length <= FIELD_LIMITS.catalogAlias)).toBe(true);
 			expect(item.aliases.every((alias) => !alias.includes(','))).toBe(true);
-			expect(JSON.stringify(item.aliases).length).toBeLessThanOrEqual(FIELD_LIMITS.productAliasesJson);
+			expect(JSON.stringify(item.aliases).length).toBeLessThanOrEqual(FIELD_LIMITS.catalogAliasesJson);
 		}
 	});
 

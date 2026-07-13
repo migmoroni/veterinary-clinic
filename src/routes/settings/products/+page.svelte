@@ -533,9 +533,9 @@
 					<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 						<span class="flex min-w-0 items-baseline justify-between gap-2">
 							<span>{t('product.aliases')}</span>
-							<CharacterLimitHint value={newCatalogDraft.aliases} max={FIELD_LIMITS.productAliasesJson} />
+							<CharacterLimitHint value={newCatalogDraft.aliases} max={FIELD_LIMITS.catalogAliasesJson} />
 						</span>
-						<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={newCatalogDraft.aliases} maxlength={FIELD_LIMITS.productAliasesJson} placeholder={t('product.aliasesPlaceholder')} oninput={(event) => setNewCatalogDraftText('aliases', inputValue(event))} />
+						<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={newCatalogDraft.aliases} maxlength={FIELD_LIMITS.catalogAliasesJson} placeholder={t('product.aliasesPlaceholder')} oninput={(event) => setNewCatalogDraftText('aliases', inputValue(event))} />
 					</label>
 					<div class="flex min-w-0 flex-col gap-2 text-sm font-medium">
 						<span>{t('product.species')}</span>
@@ -604,9 +604,9 @@
 						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 							<span class="flex min-w-0 items-baseline justify-between gap-2">
 								<span>{t('product.aliases')}</span>
-								<CharacterLimitHint value={catalogDraftAliases(item)} max={FIELD_LIMITS.productAliasesJson} />
+								<CharacterLimitHint value={catalogDraftAliases(item)} max={FIELD_LIMITS.catalogAliasesJson} />
 							</span>
-							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={catalogDraftAliases(item)} maxlength={FIELD_LIMITS.productAliasesJson} placeholder={t('product.aliasesPlaceholder')} disabled={!canEditProductCatalogItem(item)} oninput={(event) => setCatalogDraftText(item.id, 'aliases', inputValue(event))} />
+							<input class="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:bg-muted/40 disabled:text-muted-foreground" value={catalogDraftAliases(item)} maxlength={FIELD_LIMITS.catalogAliasesJson} placeholder={t('product.aliasesPlaceholder')} disabled={!canEditProductCatalogItem(item)} oninput={(event) => setCatalogDraftText(item.id, 'aliases', inputValue(event))} />
 						</label>
 						{#if canEditProductCatalogItem(item)}
 							<button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving}>
