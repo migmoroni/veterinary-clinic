@@ -67,6 +67,7 @@
 	let mapZoom = $state<MapZoomLevel>("world");
 	let mapFocus = $state<MapFocus>({ left: 52.5, top: 25 });
 	let mapDragState = $state<MapDragState | null>(null);
+	let activeTab = $state<"list" | "map">("list");
 
 	const filteredProfiles = $derived.by(() => {
 		const search = normalizeReferenceSearch(searchTerm);
@@ -512,164 +513,161 @@
 	<title>{t("breedReference.title")} | {t("app.name")}</title>
 </svelte:head>
 
-<section
-	class="mx-auto flex w-full max-w-360 flex-col gap-4 px-4 py-4 sm:px-5 lg:px-6"
->
+<section class="mx-auto flex w-full max-w-360 flex-col gap-4 px-4 py-4 sm:px-5 lg:px-6">
+	<header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border/40 pb-4">
+		<div>
+			<h2 class="text-2xl font-semibold tracking-normal text-foreground">{t("breedReference.title")}</h2>
+			<p class="mt-1 text-sm text-muted-foreground">{t("breedReference.description")}</p>
+		</div>
+		<div class="grid w-full max-w-[20rem] grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1 shrink-0" role="tablist">
+			<button
+				type="button"
+				role="tab"
+				aria-selected={activeTab === "list"}
+				class="inline-flex h-9 items-center justify-center rounded-sm px-3 text-sm font-medium transition-all select-none {activeTab === 'list' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}"
+				onclick={() => activeTab = "list"}
+			>
+				{t("breedReference.listTitle")}
+			</button>
+			<button
+				type="button"
+				role="tab"
+				aria-selected={activeTab === "map"}
+				class="inline-flex h-9 items-center justify-center rounded-sm px-3 text-sm font-medium transition-all select-none {activeTab === 'map' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}"
+				onclick={() => activeTab = "map"}
+			>
+				{t("breedReference.mapTitle")}
+			</button>
+		</div>
+	</header>
+
 	{#if loadFailed}
-		<p
-			class="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm"
-		>
+		<p class="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm">
 			{t("breedReference.loadFailed")}
 		</p>
 	{/if}
 
-	<section
-		class="rounded-md border border-border bg-card p-3 shadow-sm sm:p-4"
-	>
-		<div
-			class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
-		>
-			<div class="min-w-0">
-				<div
-					class="flex items-center gap-2 text-sm font-medium text-muted-foreground"
-				>
-					<MapPin class="size-4" />
-					{t("breedReference.mapTitle")}
+	{#if activeTab === "map"}
+		<section class="rounded-md border border-border bg-card p-3 shadow-sm sm:p-4 animate-fade-in">
+			<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+				<div class="min-w-0">
+					<div class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+						<MapPin class="size-4" />
+						{t("breedReference.mapTitle")}
+					</div>
+					<p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+						{t("breedReference.mapDescription")}
+					</p>
 				</div>
-				<p
-					class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground"
-				>
-					{t("breedReference.mapDescription")}
-				</p>
-			</div>
-			{#if originFilter}
-				<button
-					class="inline-flex h-9 shrink-0 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent"
-					type="button"
-					onclick={() => (originFilter = "")}
-					>{t("breedReference.clearOrigin")}</button
-				>
-			{/if}
-		</div>
-		<div
-			class="mt-4 grid w-full max-w-xs grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1"
-			role="tablist"
-			aria-label={t("breedReference.mapZoomLabel")}
-		>
-			<button
-				class="inline-flex h-9 items-center justify-center rounded-sm px-3 text-sm font-medium transition-colors {mapZoom ===
-				'world'
-					? 'bg-background text-foreground shadow-sm'
-					: 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}"
-				type="button"
-				role="tab"
-				aria-selected={mapZoom === "world"}
-				onclick={() => setMapZoom("world")}
-				>{t("breedReference.mapZoomWorld")}</button
-			>
-			<button
-				class="inline-flex h-9 items-center justify-center rounded-sm px-3 text-sm font-medium transition-colors {mapZoom ===
-				'detail'
-					? 'bg-background text-foreground shadow-sm'
-					: 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}"
-				type="button"
-				role="tab"
-				aria-selected={mapZoom === "detail"}
-				onclick={() => setMapZoom("detail")}
-				>{t("breedReference.mapZoomDetail")}</button
-			>
-		</div>
-
-		<div
-			class="relative mt-4 aspect-2/1 min-h-56 touch-none overflow-hidden rounded-md border border-border bg-muted/60 sm:min-h-72 {mapZoom ===
-			'detail'
-				? mapDragState
-					? 'cursor-grabbing'
-					: 'cursor-grab'
-				: ''}"
-			role="region"
-			aria-label={t("breedReference.mapPanArea")}
-			onpointerdown={startMapPan}
-			onpointermove={panMap}
-			onpointerup={stopMapPan}
-			onpointercancel={stopMapPan}
-		>
-			<div
-				class="pointer-events-none absolute inset-0 transition-transform ease-out {mapDragState
-					? 'duration-0'
-					: 'duration-300'}"
-				style={`transform: ${mapLayerTransform}; transform-origin: top left;`}
-			>
-				<img
-					class="absolute inset-0 h-full w-full object-fill"
-					src="/images/Equal-Earth-Physical-No-Type.jpeg"
-					alt=""
-					aria-hidden="true"
-					draggable="false"
-				/>
-				<div class="absolute inset-0 bg-background/10"></div>
-			</div>
-			<div
-				class="pointer-events-none absolute inset-0 transition-transform ease-out {mapDragState
-					? 'duration-0'
-					: 'duration-300'}"
-				style={`transform: ${mapLayerTransform}; transform-origin: top left;`}
-			>
-				{#each mapPoints as point}
+				{#if originFilter}
 					<button
+						class="inline-flex h-9 shrink-0 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent"
 						type="button"
-						class="pointer-events-auto absolute inline-flex size-9 items-center justify-center rounded-full border text-xs font-semibold tabular-nums shadow-sm ring-2 ring-background transition-colors {point.kind ===
-							'origin' && originFilter === point.origin.id
-							? 'border-primary bg-primary text-primary-foreground'
-							: 'border-primary/50 bg-background/95 text-primary hover:bg-primary hover:text-primary-foreground'}"
-						style={`left: ${point.left}%; top: ${point.top}%; transform: translate(-50%, -50%) scale(${mapPointScale});`}
-						title={mapPointTitle(point)}
-						aria-label={mapPointAriaLabel(point)}
-						onpointerdown={(event) => event.stopPropagation()}
-						onclick={() => selectMapPoint(point)}
+						onclick={() => (originFilter = "")}
+						>{t("breedReference.clearOrigin")}</button
 					>
-						{point.count}
-					</button>
-				{/each}
+				{/if}
 			</div>
-		</div>
-	</section>
-
-	<ReferenceExplorer
-		bind:searchTerm
-		title={t("breedReference.title")}
-		searchPlaceholder={t("breedReference.searchPlaceholder")}
-		filters={filterControls}
-		cards={breedCards}
-		selectedId={selectedProfile?.breedId ?? null}
-		emptyLabel={t("breedReference.noResults")}
-		openLabel={t("breedReference.openBreed")}
-		{loading}
-		onselect={selectBreedId}
-		ondismiss={() => (selectedBreedId = null)}
-	>
-		{#snippet sidebar()}
-			{#if selectedProfile}
-				<ReferenceSummarySidebar
-					title={breedName(selectedProfile)}
-					fields={selectedSummaryFields}
-					actionHref={breedDetailHref(selectedProfile)}
-					actionLabel={t("breedReference.viewMore")}
-					ondismiss={() => (selectedBreedId = null)}
+			<div
+				class="mt-4 grid w-full max-w-xs grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1"
+				role="tablist"
+				aria-label={t("breedReference.mapZoomLabel")}
+			>
+				<button
+					class="inline-flex h-9 items-center justify-center rounded-sm px-3 text-sm font-medium transition-colors {mapZoom === 'world' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}"
+					type="button"
+					role="tab"
+					aria-selected={mapZoom === "world"}
+					onclick={() => setMapZoom("world")}
+					>{t("breedReference.mapZoomWorld")}</button
 				>
-					{#snippet image()}
-						<BinaryImage
-							imageBytes={selectedProfile.primaryImage
-								?.imageBytes ?? null}
-							alt={breedName(selectedProfile)}
-							className="h-[18vh] min-h-[90px] max-h-[170px] w-full rounded-b-none border-0 bg-muted/60"
-							imageClass="h-full w-full object-contain p-3"
-							iconClass="size-12 text-muted-foreground"
-							fallbackIcon={PawPrint}
-						/>
-					{/snippet}
-				</ReferenceSummarySidebar>
-			{/if}
-		{/snippet}
-	</ReferenceExplorer>
+				<button
+					class="inline-flex h-9 items-center justify-center rounded-sm px-3 text-sm font-medium transition-colors {mapZoom === 'detail' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}"
+					type="button"
+					role="tab"
+					aria-selected={mapZoom === "detail"}
+					onclick={() => setMapZoom("detail")}
+					>{t("breedReference.mapZoomDetail")}</button
+				>
+			</div>
+
+			<div
+				class="relative mt-4 aspect-2/1 min-h-56 touch-none overflow-hidden rounded-md border border-border bg-muted/60 sm:min-h-72 {mapZoom === 'detail' ? mapDragState ? 'cursor-grabbing' : 'cursor-grab' : ''}"
+				role="region"
+				aria-label={t("breedReference.mapPanArea")}
+				onpointerdown={startMapPan}
+				onpointermove={panMap}
+				onpointerup={stopMapPan}
+				onpointercancel={stopMapPan}
+			>
+				<div
+					class="pointer-events-none absolute inset-0 transition-transform ease-out {mapDragState ? 'duration-0' : 'duration-300'}"
+					style={`transform: ${mapLayerTransform}; transform-origin: top left;`}
+				>
+					<img
+						class="absolute inset-0 h-full w-full object-fill"
+						src="/images/Equal-Earth-Physical-No-Type.jpeg"
+						alt=""
+						aria-hidden="true"
+						draggable="false"
+					/>
+					<div class="absolute inset-0 bg-background/10"></div>
+				</div>
+				<div
+					class="pointer-events-none absolute inset-0 transition-transform ease-out {mapDragState ? 'duration-0' : 'duration-300'}"
+					style={`transform: ${mapLayerTransform}; transform-origin: top left;`}
+				>
+					{#each mapPoints as point}
+						<button
+							type="button"
+							class="pointer-events-auto absolute inline-flex size-9 items-center justify-center rounded-full border text-xs font-semibold tabular-nums shadow-sm ring-2 ring-background transition-colors {point.kind === 'origin' && originFilter === point.origin.id ? 'border-primary bg-primary text-primary-foreground' : 'border-primary/50 bg-background/95 text-primary hover:bg-primary hover:text-primary-foreground'}"
+							style={`left: ${point.left}%; top: ${point.top}%; transform: translate(-50%, -50%) scale(${mapPointScale});`}
+							title={mapPointTitle(point)}
+							aria-label={mapPointAriaLabel(point)}
+							onpointerdown={(event) => event.stopPropagation()}
+							onclick={() => selectMapPoint(point)}
+						>
+							{point.count}
+						</button>
+					{/each}
+				</div>
+			</div>
+		</section>
+	{:else}
+		<ReferenceExplorer
+			bind:searchTerm
+			searchPlaceholder={t("breedReference.searchPlaceholder")}
+			filters={filterControls}
+			cards={breedCards}
+			selectedId={selectedProfile?.breedId ?? null}
+			emptyLabel={t("breedReference.noResults")}
+			openLabel={t("breedReference.openBreed")}
+			{loading}
+			onselect={selectBreedId}
+			ondismiss={() => (selectedBreedId = null)}
+		>
+			{#snippet sidebar()}
+				{#if selectedProfile}
+					<ReferenceSummarySidebar
+						title={breedName(selectedProfile)}
+						fields={selectedSummaryFields}
+						actionHref={breedDetailHref(selectedProfile)}
+						actionLabel={t("breedReference.viewMore")}
+						ondismiss={() => (selectedBreedId = null)}
+					>
+						{#snippet image()}
+							<BinaryImage
+								imageBytes={selectedProfile.primaryImage?.imageBytes ?? null}
+								alt={breedName(selectedProfile)}
+								className="h-[18vh] min-h-[90px] max-h-[170px] w-full rounded-b-none border-0 bg-muted/60"
+								imageClass="h-full w-full object-contain p-3"
+								iconClass="size-12 text-muted-foreground"
+								fallbackIcon={PawPrint}
+							/>
+						{/snippet}
+					</ReferenceSummarySidebar>
+				{/if}
+			{/snippet}
+		</ReferenceExplorer>
+	{/if}
 </section>
