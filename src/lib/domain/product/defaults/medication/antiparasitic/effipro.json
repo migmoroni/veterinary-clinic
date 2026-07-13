@@ -1,5 +1,9 @@
 {
 	"id": "dc7cf197-26a5-411e-ad58-1699684a7f29",
+	"type": [
+		"medication",
+		"antiparasitic"
+	],
 	"origin": "system",
 	"name": "Effipro",
 	"species": [

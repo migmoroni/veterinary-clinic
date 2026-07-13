@@ -1,5 +1,9 @@
 {
 	"id": "661d17b4-632a-4a7d-be9a-92c25758bdd4",
+	"type": [
+		"medication",
+		"antiparasitic"
+	],
 	"origin": "system",
 	"name": "Profender",
 	"species": [

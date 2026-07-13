@@ -1,5 +1,9 @@
 {
 	"id": "7e01becd-732d-43b2-bf2d-e3334fb252da",
+	"type": [
+		"medication",
+		"vaccine"
+	],
 	"origin": "system",
 	"name": "Nobivac DHPPI+L",
 	"species": [

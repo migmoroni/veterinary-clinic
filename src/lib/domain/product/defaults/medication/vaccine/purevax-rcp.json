@@ -1,5 +1,9 @@
 {
 	"id": "b1478112-bba1-4a72-8f48-53fa715554c1",
+	"type": [
+		"medication",
+		"vaccine"
+	],
 	"origin": "system",
 	"name": "Purevax RCP",
 	"species": [

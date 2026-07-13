@@ -1,5 +1,9 @@
 {
 	"id": "edd8883b-d135-4128-814a-117a23a22adc",
+	"type": [
+		"medication",
+		"antiparasitic"
+	],
 	"origin": "system",
 	"name": "Defenza",
 	"species": [

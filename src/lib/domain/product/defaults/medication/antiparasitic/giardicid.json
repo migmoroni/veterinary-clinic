@@ -1,5 +1,9 @@
 {
 	"id": "1e7b2bb2-31e3-4866-8606-1e9ea4c39ff7",
+	"type": [
+		"medication",
+		"antiparasitic"
+	],
 	"origin": "system",
 	"name": "Giardicid",
 	"species": [

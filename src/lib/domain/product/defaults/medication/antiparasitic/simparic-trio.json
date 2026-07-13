@@ -1,5 +1,9 @@
 {
 	"id": "5ac62e14-f4b9-465a-8451-2b98bca77269",
+	"type": [
+		"medication",
+		"antiparasitic"
+	],
 	"origin": "system",
 	"name": "Simparic Trio",
 	"species": [

@@ -1,5 +1,9 @@
 {
 	"id": "05b77d6a-af87-4edb-905c-bbe5b49bc262",
+	"type": [
+		"medication",
+		"vaccine"
+	],
 	"origin": "system",
 	"name": "Nobivac Intra-Trac Oral Bb",
 	"species": [

@@ -1,5 +1,9 @@
 {
 	"id": "f6f32821-74e7-4e1a-8eb6-515bc26a1e67",
+	"type": [
+		"medication",
+		"antiparasitic"
+	],
 	"origin": "system",
 	"name": "Canex Premium",
 	"species": [

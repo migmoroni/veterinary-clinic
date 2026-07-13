@@ -1,5 +1,9 @@
 {
 	"id": "b52f5d2c-4954-4a8a-8ce1-58634c72b9a5",
+	"type": [
+		"medication",
+		"antiparasitic"
+	],
 	"origin": "system",
 	"name": "Fiprolex",
 	"species": [

@@ -1,5 +1,9 @@
 {
 	"id": "9b8b5e0f-0dd3-40fb-876b-090c8dfbfbfb",
+	"type": [
+		"medication",
+		"vaccine"
+	],
 	"origin": "system",
 	"name": "Nobivac Feline 1-HCPCh + FeLV",
 	"species": [

@@ -1,5 +1,9 @@
 {
 	"id": "eac581fc-0dfa-40d6-b521-96586233ed23",
+	"type": [
+		"medication",
+		"vaccine"
+	],
 	"origin": "system",
 	"name": "Nobivac Feline 1-HCP",
 	"species": [

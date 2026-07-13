@@ -1,5 +1,9 @@
 {
 	"id": "ae407967-8756-49a6-8946-21d53bc3a159",
+	"type": [
+		"medication",
+		"vaccine"
+	],
 	"origin": "system",
 	"name": "Nobivac Raiva",
 	"species": [

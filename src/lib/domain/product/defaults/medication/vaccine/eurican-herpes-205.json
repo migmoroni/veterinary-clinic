@@ -1,5 +1,9 @@
 {
 	"id": "4e091d82-2480-4d8e-812e-0ea2693a268d",
+	"type": [
+		"medication",
+		"vaccine"
+	],
 	"origin": "system",
 	"name": "Eurican Herpes 205",
 	"species": [

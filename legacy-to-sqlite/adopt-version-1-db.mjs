@@ -137,47 +137,19 @@ function readJsonFiles(directory) {
 }
 
 function readDefaultManufacturers() {
-	return readJsonFiles(manufacturerDefaultsDir).map((file) => ({
-		type: manufacturerTypeValue,
-		...readJson(file)
-	}));
+	return readJsonFiles(manufacturerDefaultsDir).map(readJson);
 }
 
 function readDefaultActiveIngredients() {
-	return readJsonFiles(activeIngredientDefaultsDir).map((file) => {
-		const item = readJson(file);
-		return {
-			type: activeIngredientTypeValues[item.subtype] ?? activeIngredientTypeValues.substance,
-			...item
-		};
-	});
+	return readJsonFiles(activeIngredientDefaultsDir).map(readJson);
 }
 
 function readDefaultConditions() {
-	return readJsonFiles(conditionDefaultsDir).map((file) => {
-		const item = readJson(file);
-		return {
-			type: conditionTypeValues[item.subtype] ?? conditionTypeValues.disease,
-			...item
-		};
-	});
-}
-
-function productTypeFromPath(file) {
-	const parts = file.split(path.sep);
-	const medicationIndex = parts.lastIndexOf('medication');
-	if (medicationIndex >= 0) {
-		const subtype = parts[medicationIndex + 1];
-		if (productTypeValues.medication[subtype]) return productTypeValues.medication[subtype];
-	}
-	return productTypeValues.medication.vaccine;
+	return readJsonFiles(conditionDefaultsDir).map(readJson);
 }
 
 function readDefaultProducts() {
-	return readJsonFiles(productDefaultsDir).map((file) => ({
-		type: productTypeFromPath(file),
-		...readJson(file)
-	}));
+	return readJsonFiles(productDefaultsDir).map(readJson);
 }
 
 function tableExists(database, table) {
@@ -253,6 +225,13 @@ function createCatalogTables(database) {
 	`);
 }
 
+function stringifyCatalogTypeFromJson(type, source) {
+	if (!Array.isArray(type) || type.length !== 2 || typeof type[0] !== 'string' || (type[1] !== null && typeof type[1] !== 'string')) {
+		throw new Error(`Tipo de catálogo inválido em ${source}`);
+	}
+	return JSON.stringify(type);
+}
+
 function syncDefaultManufacturers(database) {
 	const insert = database.prepare(`
 		INSERT INTO manufacturer_catalog_items (id, type, name, normalized_name, aliases, origin, regions, extension, updated_at)
@@ -270,7 +249,7 @@ function syncDefaultManufacturers(database) {
 	for (const item of readDefaultManufacturers()) {
 		insert.run({
 			id: item.id,
-			type: item.type,
+			type: stringifyCatalogTypeFromJson(item.type, item.name),
 			name: item.name,
 			normalized_name: normalizeName(item.name),
 			aliases: JSON.stringify(Array.isArray(item.aliases) ? item.aliases : []),
@@ -297,7 +276,7 @@ function syncDefaultActiveIngredients(database) {
 	for (const item of readDefaultActiveIngredients()) {
 		insert.run({
 			id: item.id,
-			type: item.type,
+			type: stringifyCatalogTypeFromJson(item.type, item.name),
 			name: item.name,
 			normalized_name: normalizeName(item.name),
 			aliases: JSON.stringify(Array.isArray(item.aliases) ? item.aliases : []),
@@ -324,7 +303,7 @@ function syncDefaultConditions(database) {
 	for (const item of readDefaultConditions()) {
 		insert.run({
 			id: item.id,
-			type: item.type,
+			type: stringifyCatalogTypeFromJson(item.type, item.name),
 			name: item.name,
 			normalized_name: normalizeName(item.name),
 			aliases: JSON.stringify(Array.isArray(item.aliases) ? item.aliases : []),
@@ -438,7 +417,7 @@ function syncDefaultProducts(database) {
 	for (const item of readDefaultProducts()) {
 		insert.run({
 			id: item.id,
-			type: item.type,
+			type: stringifyCatalogTypeFromJson(item.type, item.name),
 			name: item.name,
 			normalized_name: normalizeName(item.name),
 			species: JSON.stringify(Array.isArray(item.species) ? item.species : ['canine', 'feline']),

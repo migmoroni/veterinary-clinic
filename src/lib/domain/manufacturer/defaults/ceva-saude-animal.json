@@ -1,5 +1,9 @@
 {
 	"id": "131b3da4-334e-42ee-a185-5e57df388a49",
+	"type": [
+		"manufacturer",
+		null
+	],
 	"origin": "system",
 	"name": "Ceva Saúde Animal",
 	"regions": [

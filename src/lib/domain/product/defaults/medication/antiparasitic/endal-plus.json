@@ -1,5 +1,9 @@
 {
 	"id": "f0fc60a8-af68-4137-949d-68f3674877b0",
+	"type": [
+		"medication",
+		"antiparasitic"
+	],
 	"origin": "system",
 	"name": "Endal Plus",
 	"species": [

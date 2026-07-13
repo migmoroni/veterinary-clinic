@@ -1,5 +1,9 @@
 {
 	"id": "4b398223-b658-4ae8-9d71-ec272f07ab00",
+	"type": [
+		"medication",
+		"antiparasitic"
+	],
 	"origin": "system",
 	"name": "Simparic",
 	"species": [

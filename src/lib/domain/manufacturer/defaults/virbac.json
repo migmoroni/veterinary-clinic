@@ -1,5 +1,9 @@
 {
 	"id": "a984d879-4d68-4282-a746-0b7961903b28",
+	"type": [
+		"manufacturer",
+		null
+	],
 	"origin": "system",
 	"name": "Virbac",
 	"regions": [

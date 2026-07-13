@@ -1,6 +1,9 @@
 {
 	"id": "bd38c772-1063-4c45-bf34-7c2a35dac1b6",
-	"subtype": "disease",
+	"type": [
+		"condition",
+		"disease"
+	],
 	"origin": "system",
 	"name": "Condição Fictícia",
 	"regions": [

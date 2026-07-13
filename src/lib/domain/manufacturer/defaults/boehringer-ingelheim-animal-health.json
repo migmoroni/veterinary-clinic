@@ -1,5 +1,9 @@
 {
 	"id": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"type": [
+		"manufacturer",
+		null
+	],
 	"origin": "system",
 	"name": "Boehringer Ingelheim Animal Health",
 	"regions": [

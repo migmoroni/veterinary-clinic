@@ -1,5 +1,9 @@
 {
 	"id": "7a886b26-3683-4e5a-8807-46979cf65fdf",
+	"type": [
+		"medication",
+		"vaccine"
+	],
 	"origin": "system",
 	"name": "Nobivac Tricat Trio",
 	"species": [

@@ -1,5 +1,9 @@
 {
 	"id": "1d6833fe-0137-4e7f-908e-4d59ae318e79",
+	"type": [
+		"medication",
+		"vaccine"
+	],
 	"origin": "system",
 	"name": "Rabisin",
 	"species": [

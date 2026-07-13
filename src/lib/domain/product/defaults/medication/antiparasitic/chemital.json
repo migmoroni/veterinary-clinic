@@ -1,5 +1,9 @@
 {
 	"id": "cce0eddf-bdbe-4837-bb32-926575e689a0",
+	"type": [
+		"medication",
+		"antiparasitic"
+	],
 	"origin": "system",
 	"name": "Chemital",
 	"species": [

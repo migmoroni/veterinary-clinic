@@ -1,5 +1,9 @@
 {
 	"id": "7e8221a6-267a-42f4-9fc9-daec5fbc9086",
+	"type": [
+		"medication",
+		"antiparasitic"
+	],
 	"origin": "system",
 	"name": "Advocate",
 	"species": [

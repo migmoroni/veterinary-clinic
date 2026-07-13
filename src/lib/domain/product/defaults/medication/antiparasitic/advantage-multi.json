@@ -1,5 +1,9 @@
 {
 	"id": "6ec796e0-fd74-4cae-90b2-7328b957080a",
+	"type": [
+		"medication",
+		"antiparasitic"
+	],
 	"origin": "system",
 	"name": "Advantage Multi",
 	"species": [

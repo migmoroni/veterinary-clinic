@@ -1,5 +1,9 @@
 {
 	"id": "62305289-42b7-44c6-bca4-eb731d69eb7b",
+	"type": [
+		"medication",
+		"vaccine"
+	],
 	"origin": "system",
 	"name": "Produto Ficticio Bulário",
 	"species": [
@@ -14,6 +18,11 @@
 		"teste bulario",
 		"lorem ipsum",
 		"medicamento ficticio"
+	],
+	"manufacturerId": "dd7c932c-9c9a-4ee0-82eb-5e1f516ac9e1",
+	"activeIngredientIds": [
+		"b173a72a-5666-4df0-8ef9-3ed4fc5cae0f",
+		"a8f032f0-a093-4680-9a69-16b7a32ee8f8"
 	],
 	"images": [],
 	"extension": {
@@ -31,10 +40,5 @@
 			"distributors": "Distribuidores fictícios. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Contatos, regiões atendidas e observações comerciais ficam em texto corrido por enquanto.",
 			"references": "Referências bibliográficas fictícias. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fontes e documentos poderão receber estrutura própria depois."
 		}
-	},
-	"manufacturerId": "dd7c932c-9c9a-4ee0-82eb-5e1f516ac9e1",
-	"activeIngredientIds": [
-		"b173a72a-5666-4df0-8ef9-3ed4fc5cae0f",
-		"a8f032f0-a093-4680-9a69-16b7a32ee8f8"
-	]
+	}
 }

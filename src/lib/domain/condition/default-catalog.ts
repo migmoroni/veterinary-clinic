@@ -1,4 +1,4 @@
-import { conditionType, type ConditionCatalogExtension, type ConditionType, type ConditionTypeSubtype } from '$lib/domain/condition/catalog.js';
+import type { ConditionCatalogExtension, ConditionType } from '$lib/domain/condition/catalog.js';
 
 export interface DefaultConditionCatalogImage {
 	source: string;
@@ -17,15 +17,10 @@ export interface DefaultConditionCatalogItem {
 	extension?: Partial<ConditionCatalogExtension>;
 }
 
-type DefaultConditionCatalogJsonItem = Omit<DefaultConditionCatalogItem, 'type'> & {
-	subtype?: ConditionTypeSubtype<'condition'>;
-};
+type DefaultConditionCatalogJsonItem = DefaultConditionCatalogItem;
 
-const conditionCatalogModules = import.meta.glob('./defaults/*.json', { eager: true, import: 'default' }) as Record<string, DefaultConditionCatalogJsonItem>;
+const conditionCatalogModules = import.meta.glob('./defaults/**/*.json', { eager: true, import: 'default' }) as Record<string, DefaultConditionCatalogJsonItem>;
 
 export const defaultConditionCatalogItems: DefaultConditionCatalogItem[] = Object.entries(conditionCatalogModules)
 	.sort(([leftPath], [rightPath]) => leftPath.localeCompare(rightPath))
-	.map(([, item]) => {
-		const { subtype = 'disease', ...rest } = item;
-		return { type: conditionType('condition', subtype), ...rest };
-	});
+	.map(([, item]) => item);

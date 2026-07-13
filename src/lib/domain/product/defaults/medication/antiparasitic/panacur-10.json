@@ -1,5 +1,9 @@
 {
 	"id": "10ebef6d-019c-49f2-b045-5ca347e89741",
+	"type": [
+		"medication",
+		"antiparasitic"
+	],
 	"origin": "system",
 	"name": "Panacur 10%",
 	"species": [

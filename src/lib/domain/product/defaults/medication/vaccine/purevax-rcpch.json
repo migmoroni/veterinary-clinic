@@ -1,5 +1,9 @@
 {
 	"id": "06acc655-a202-48fc-b153-ebec8833ab4c",
+	"type": [
+		"medication",
+		"vaccine"
+	],
 	"origin": "system",
 	"name": "Purevax RCPCh",
 	"species": [

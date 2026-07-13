@@ -1,5 +1,9 @@
 {
 	"id": "a7d7d7f0-ac43-4c53-a656-ccd0fec67dd3",
+	"type": [
+		"medication",
+		"antiparasitic"
+	],
 	"origin": "system",
 	"name": "Top Dog",
 	"species": [

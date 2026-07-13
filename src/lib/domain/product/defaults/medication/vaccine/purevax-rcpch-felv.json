@@ -1,5 +1,9 @@
 {
 	"id": "9bdc1261-89fe-4549-87ea-f5d9a8c24cb9",
+	"type": [
+		"medication",
+		"vaccine"
+	],
 	"origin": "system",
 	"name": "Purevax RCPCh FeLV",
 	"species": [

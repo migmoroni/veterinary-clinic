@@ -1,5 +1,9 @@
 {
 	"id": "e63d3560-a77e-41ed-9f40-632ebcecc7f4",
+	"type": [
+		"medication",
+		"vaccine"
+	],
 	"origin": "system",
 	"name": "Recombitek C6",
 	"species": [

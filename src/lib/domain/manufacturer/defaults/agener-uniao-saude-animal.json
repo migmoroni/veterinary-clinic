@@ -1,5 +1,9 @@
 {
 	"id": "d7569f36-cd2f-416b-906f-ee89e82145cb",
+	"type": [
+		"manufacturer",
+		null
+	],
 	"origin": "system",
 	"name": "Agener União Saúde Animal",
 	"regions": [

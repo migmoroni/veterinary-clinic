@@ -1,4 +1,4 @@
-import { manufacturerType, type ManufacturerCatalogExtension, type ManufacturerType } from '$lib/domain/manufacturer/catalog.js';
+import type { ManufacturerCatalogExtension, ManufacturerType } from '$lib/domain/manufacturer/catalog.js';
 
 export interface DefaultManufacturerCatalogImage {
 	source: string;
@@ -17,10 +17,10 @@ export interface DefaultManufacturerCatalogItem {
 	extension?: Partial<ManufacturerCatalogExtension>;
 }
 
-type DefaultManufacturerCatalogJsonItem = Omit<DefaultManufacturerCatalogItem, 'type'>;
+type DefaultManufacturerCatalogJsonItem = DefaultManufacturerCatalogItem;
 
-const manufacturerCatalogModules = import.meta.glob('./defaults/*.json', { eager: true, import: 'default' }) as Record<string, DefaultManufacturerCatalogJsonItem>;
+const manufacturerCatalogModules = import.meta.glob('./defaults/**/*.json', { eager: true, import: 'default' }) as Record<string, DefaultManufacturerCatalogJsonItem>;
 
 export const defaultManufacturerCatalogItems: DefaultManufacturerCatalogItem[] = Object.entries(manufacturerCatalogModules)
 	.sort(([leftPath], [rightPath]) => leftPath.localeCompare(rightPath))
-	.map(([, item]) => ({ type: manufacturerType('manufacturer', null), ...item }));
+	.map(([, item]) => item);

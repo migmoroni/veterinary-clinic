@@ -1,5 +1,9 @@
 {
 	"id": "0b3e7a19-616b-4840-a245-ee07fb508814",
+	"type": [
+		"medication",
+		"vaccine"
+	],
 	"origin": "system",
 	"name": "Nobivac Puppy DP",
 	"species": [

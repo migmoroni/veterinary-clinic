@@ -1,5 +1,9 @@
 {
 	"id": "3530dac4-8212-4383-81c5-138f4bda81b7",
+	"type": [
+		"medication",
+		"vaccine"
+	],
 	"origin": "system",
 	"name": "Nobivac KC",
 	"species": [

@@ -1,4 +1,4 @@
-import { activeIngredientType, type ActiveIngredientCatalogExtension, type ActiveIngredientType, type ActiveIngredientTypeSubtype } from '$lib/domain/active-ingredient/catalog.js';
+import type { ActiveIngredientCatalogExtension, ActiveIngredientType } from '$lib/domain/active-ingredient/catalog.js';
 
 export interface DefaultActiveIngredientCatalogImage {
 	source: string;
@@ -17,15 +17,10 @@ export interface DefaultActiveIngredientCatalogItem {
 	extension?: Partial<ActiveIngredientCatalogExtension>;
 }
 
-type DefaultActiveIngredientCatalogJsonItem = Omit<DefaultActiveIngredientCatalogItem, 'type'> & {
-	subtype?: ActiveIngredientTypeSubtype<'activeIngredient'>;
-};
+type DefaultActiveIngredientCatalogJsonItem = DefaultActiveIngredientCatalogItem;
 
-const activeIngredientCatalogModules = import.meta.glob('./defaults/*.json', { eager: true, import: 'default' }) as Record<string, DefaultActiveIngredientCatalogJsonItem>;
+const activeIngredientCatalogModules = import.meta.glob('./defaults/**/*.json', { eager: true, import: 'default' }) as Record<string, DefaultActiveIngredientCatalogJsonItem>;
 
 export const defaultActiveIngredientCatalogItems: DefaultActiveIngredientCatalogItem[] = Object.entries(activeIngredientCatalogModules)
 	.sort(([leftPath], [rightPath]) => leftPath.localeCompare(rightPath))
-	.map(([, item]) => {
-		const { subtype = 'substance', ...rest } = item;
-		return { type: activeIngredientType('activeIngredient', subtype), ...rest };
-	});
+	.map(([, item]) => item);

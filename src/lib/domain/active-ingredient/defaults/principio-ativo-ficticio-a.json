@@ -1,6 +1,9 @@
 {
 	"id": "b173a72a-5666-4df0-8ef9-3ed4fc5cae0f",
-	"subtype": "substance",
+	"type": [
+		"activeIngredient",
+		"substance"
+	],
 	"origin": "system",
 	"name": "Princípio Ativo Fictício A",
 	"regions": [

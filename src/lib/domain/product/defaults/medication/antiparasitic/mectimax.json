@@ -1,5 +1,9 @@
 {
 	"id": "fe51d5e2-6ed5-4e6a-b316-7e079a1e6db6",
+	"type": [
+		"medication",
+		"antiparasitic"
+	],
 	"origin": "system",
 	"name": "Mectimax",
 	"species": [

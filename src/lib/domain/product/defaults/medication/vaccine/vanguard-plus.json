@@ -1,5 +1,9 @@
 {
 	"id": "a25157b1-925c-4f61-aa2f-c3c3db3213de",
+	"type": [
+		"medication",
+		"vaccine"
+	],
 	"origin": "system",
 	"name": "Vanguard Plus",
 	"species": [

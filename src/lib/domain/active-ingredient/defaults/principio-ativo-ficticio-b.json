@@ -1,6 +1,9 @@
 {
 	"id": "a8f032f0-a093-4680-9a69-16b7a32ee8f8",
-	"subtype": "substance",
+	"type": [
+		"activeIngredient",
+		"substance"
+	],
 	"origin": "system",
 	"name": "Princípio Ativo Fictício B",
 	"regions": [

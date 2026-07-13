@@ -1,5 +1,9 @@
 {
 	"id": "8200973c-fc8a-4213-b992-7aeef3779ef4",
+	"type": [
+		"medication",
+		"antiparasitic"
+	],
 	"origin": "system",
 	"name": "NexGard",
 	"species": [
