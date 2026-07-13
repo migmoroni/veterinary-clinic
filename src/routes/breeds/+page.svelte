@@ -8,6 +8,10 @@
 		type ReferenceSummaryField,
 	} from "$lib/components/reference/ReferenceSummarySidebar.svelte";
 	import {
+		readReferenceRouteState,
+		replaceReferenceRouteState,
+	} from "$lib/components/reference/reference-route-state.js";
+	import {
 		normalizeReferenceSearch,
 		referenceRangeRows,
 		referenceSpeciesLabel,
@@ -68,6 +72,31 @@
 	let mapFocus = $state<MapFocus>({ left: 52.5, top: 25 });
 	let mapDragState = $state<MapDragState | null>(null);
 	let activeTab = $state<"list" | "map">("list");
+	let routeStateReady = $state(false);
+	let restoredMapFocusFromRoute = $state(false);
+
+	const routeStateKeys = [
+		"q",
+		"species",
+		"size",
+		"origin",
+		"selected",
+		"view",
+		"zoom",
+		"left",
+		"top",
+	] as const;
+	const routeStateDefaults = {
+		q: "",
+		species: "all",
+		size: "",
+		origin: "",
+		selected: "",
+		view: "list",
+		zoom: "world",
+		left: "",
+		top: "",
+	};
 
 	const filteredProfiles = $derived.by(() => {
 		const search = normalizeReferenceSearch(searchTerm);
@@ -158,7 +187,7 @@
 			label: t("breedReference.originFilter"),
 			value: originFilter,
 			options: originOptions(),
-			onchange: (value) => (originFilter = value),
+			onchange: setOriginFilter,
 		},
 	]);
 	const originPoints = $derived(buildOriginPoints(filteredProfiles));
@@ -366,12 +395,90 @@
 		return Math.min(87.5, Math.max(12.5, value));
 	}
 
+	function validSpeciesFilter(value: string | undefined): SpeciesFilter {
+		return value === "canine" || value === "feline" ? value : "all";
+	}
+
+	function validSizeFilter(value: string | undefined): string {
+		return value === "small" ||
+			value === "medium" ||
+			value === "large" ||
+			value === "giant"
+			? value
+			: "";
+	}
+
+	function validTab(value: string | undefined): "list" | "map" {
+		return value === "map" ? "map" : "list";
+	}
+
+	function validMapZoom(value: string | undefined): MapZoomLevel {
+		return value === "detail" ? "detail" : "world";
+	}
+
+	function routeNumber(value: string | undefined): number | null {
+		if (!value) return null;
+		const number = Number(value);
+		return Number.isFinite(number) ? number : null;
+	}
+
+	function routeDecimal(value: number): string {
+		return String(Math.round(value * 100) / 100);
+	}
+
+	function restoreRouteState(): void {
+		const state = readReferenceRouteState(routeStateKeys);
+		searchTerm = state.q ?? "";
+		speciesFilter = validSpeciesFilter(state.species);
+		sizeFilter = validSizeFilter(state.size);
+		originFilter = state.origin ?? "";
+		selectedBreedId = state.selected || null;
+		activeTab = validTab(state.view);
+		mapZoom = validMapZoom(state.zoom);
+
+		const left = routeNumber(state.left);
+		const top = routeNumber(state.top);
+		if (left !== null && top !== null) {
+			mapFocus = { left: clampMapFocus(left), top: clampMapFocus(top) };
+			restoredMapFocusFromRoute = true;
+		}
+	}
+
+	function syncRouteState(): void {
+		if (!routeStateReady) return;
+		replaceReferenceRouteState(
+			{
+				q: searchTerm,
+				species: speciesFilter,
+				size: sizeFilter,
+				origin: originFilter,
+				selected: selectedBreedId,
+				view: activeTab,
+				zoom: mapZoom,
+				left: mapZoom === "detail" ? routeDecimal(mapFocus.left) : "",
+				top: mapZoom === "detail" ? routeDecimal(mapFocus.top) : "",
+			},
+			routeStateDefaults,
+		);
+	}
+
 	function selectBreedId(id: string): void {
 		selectedBreedId = id;
+		syncRouteState();
+	}
+
+	function openSelectedBreed(): void {
+		if (selectedProfile) selectedBreedId = selectedProfile.breedId;
+		syncRouteState();
 	}
 
 	function selectOrigin(origin: BreedReferenceOrigin): void {
-		originFilter = originFilter === origin.id ? "" : origin.id;
+		setOriginFilter(originFilter === origin.id ? "" : origin.id);
+	}
+
+	function setOriginFilter(value: string): void {
+		restoredMapFocusFromRoute = false;
+		originFilter = value;
 	}
 
 	function breedDetailHref(profile: BreedReferenceProfile): string {
@@ -485,10 +592,13 @@
 	}
 
 	onMount(() => {
+		restoreRouteState();
+		routeStateReady = true;
 		void loadProfiles();
 	});
 
 	$effect(() => {
+		if (loading) return;
 		selectedBreedId = resolveReferenceSelection(
 			filteredProfiles,
 			selectedBreedId,
@@ -503,9 +613,14 @@
 			(originPoint) => originPoint.origin.id === originFilter,
 		);
 		if (!point) return;
+		if (restoredMapFocusFromRoute) return;
 
 		mapZoom = "detail";
 		mapFocus = { left: point.left, top: point.top };
+	});
+
+	$effect(() => {
+		syncRouteState();
 	});
 </script>
 
@@ -563,7 +678,7 @@
 					<button
 						class="inline-flex h-9 shrink-0 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent"
 						type="button"
-						onclick={() => (originFilter = "")}
+						onclick={() => setOriginFilter("")}
 						>{t("breedReference.clearOrigin")}</button
 					>
 				{/if}
@@ -653,6 +768,7 @@
 						fields={selectedSummaryFields}
 						actionHref={breedDetailHref(selectedProfile)}
 						actionLabel={t("breedReference.viewMore")}
+						onopen={openSelectedBreed}
 						ondismiss={() => (selectedBreedId = null)}
 					>
 						{#snippet image()}

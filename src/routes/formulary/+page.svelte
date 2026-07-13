@@ -8,6 +8,10 @@
 		type ReferenceSummaryField,
 	} from "$lib/components/reference/ReferenceSummarySidebar.svelte";
 	import {
+		readReferenceRouteState,
+		replaceReferenceRouteState,
+	} from "$lib/components/reference/reference-route-state.js";
+	import {
 		normalizeReferenceSearch,
 		referenceSpeciesLabel,
 		referenceSpeciesOptions,
@@ -71,6 +75,28 @@
 	let manufacturerFilter = $state("");
 	let regionFilter = $state("");
 	let selectedItemKey = $state<string | null>(null);
+	let routeStateReady = $state(false);
+
+	const routeStateKeys = [
+		"q",
+		"catalog",
+		"type",
+		"species",
+		"origin",
+		"manufacturer",
+		"region",
+		"selected",
+	] as const;
+	const routeStateDefaults = {
+		q: "",
+		catalog: "all",
+		type: "all",
+		species: "all",
+		origin: "all",
+		manufacturer: "",
+		region: "",
+		selected: "",
+	};
 
 	const catalogKinds: CatalogEntityKind[] = [
 		"product",
@@ -463,6 +489,53 @@
 		return productTypeSubtype(item.type) === "vaccine" ? Syringe : Pill;
 	}
 
+	function validCatalogKind(value: string | undefined): CatalogKind {
+		if (
+			value === "product" ||
+			value === "manufacturer" ||
+			value === "activeIngredient"
+		)
+			return value;
+		return "all";
+	}
+
+	function validSpeciesFilter(value: string | undefined): SpeciesFilter {
+		return value === "canine" || value === "feline" ? value : "all";
+	}
+
+	function validOriginFilter(value: string | undefined): OriginFilter {
+		return value === "system" || value === "user" ? value : "all";
+	}
+
+	function restoreRouteState(): void {
+		const state = readReferenceRouteState(routeStateKeys);
+		searchTerm = state.q ?? "";
+		catalogKind = validCatalogKind(state.catalog);
+		typeFilter = state.type ?? "all";
+		speciesFilter = validSpeciesFilter(state.species);
+		originFilter = validOriginFilter(state.origin);
+		manufacturerFilter = state.manufacturer ?? "";
+		regionFilter = state.region ?? "";
+		selectedItemKey = state.selected || null;
+	}
+
+	function syncRouteState(): void {
+		if (!routeStateReady) return;
+		replaceReferenceRouteState(
+			{
+				q: searchTerm,
+				catalog: catalogKind,
+				type: typeFilter,
+				species: speciesFilter,
+				origin: originFilter,
+				manufacturer: manufacturerFilter,
+				region: regionFilter,
+				selected: selectedItemKey,
+			},
+			routeStateDefaults,
+		);
+	}
+
 	function getKindIcon(kind: CatalogEntityKind) {
 		if (kind === "manufacturer") return Building2;
 		if (kind === "activeIngredient") return FlaskConical;
@@ -480,6 +553,16 @@
 		manufacturerFilter = "";
 		regionFilter = "";
 		selectedItemKey = null;
+	}
+
+	function selectItem(id: string): void {
+		selectedItemKey = id;
+		syncRouteState();
+	}
+
+	function openSelectedItem(): void {
+		if (selectedItem) selectedItemKey = selectedItem.id;
+		syncRouteState();
 	}
 
 	async function loadItems() {
@@ -515,15 +598,22 @@
 	}
 
 	onMount(() => {
+		restoreRouteState();
+		routeStateReady = true;
 		void loadItems();
 	});
 
 	$effect(() => {
+		if (loading) return;
 		selectedItemKey = resolveReferenceSelection(
 			filteredItems,
 			selectedItemKey,
 			(item) => item.id,
 		);
+	});
+
+	$effect(() => {
+		syncRouteState();
 	});
 </script>
 
@@ -552,7 +642,7 @@
 		emptyLabel={t("formulary.noResults")}
 		openLabel={t("formulary.viewMore")}
 		{loading}
-		onselect={(id) => (selectedItemKey = id)}
+		onselect={selectItem}
 		ondismiss={() => (selectedItemKey = null)}
 	>
 		{#snippet beforeSearch()}
@@ -590,6 +680,7 @@
 					fields={selectedSummaryFields}
 					actionHref={itemDetailHref(selectedItem)}
 					actionLabel={t("formulary.viewMore")}
+					onopen={openSelectedItem}
 					ondismiss={() => (selectedItemKey = null)}
 				>
 					{#snippet image()}

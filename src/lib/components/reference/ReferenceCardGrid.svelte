@@ -18,6 +18,7 @@
 <script lang="ts">
 	import BinaryImage from '$lib/components/shared/BinaryImage.svelte';
 	import ImageIcon from '@lucide/svelte/icons/image';
+	import { tick } from 'svelte';
 
 	let {
 		cards,
@@ -33,6 +34,8 @@
 		onselect: (id: string) => void;
 	} = $props();
 
+	let gridElement = $state<HTMLElement | null>(null);
+
 	function useFallbackImage(event: Event, fallbackImagePath: string | null | undefined) {
 		if (!fallbackImagePath) return;
 
@@ -42,11 +45,36 @@
 		image.dataset.fallbackApplied = 'true';
 		image.src = fallbackImagePath;
 	}
+
+	function selectedCardElement(id: string): HTMLElement | null {
+		return [...(gridElement?.querySelectorAll<HTMLElement>('[data-reference-card-id]') ?? [])].find((element) => element.dataset.referenceCardId === id) ?? null;
+	}
+
+	function isFullyVisible(element: HTMLElement): boolean {
+		const rect = element.getBoundingClientRect();
+		const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+		const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+		return rect.top >= 0 && rect.left >= 0 && rect.bottom <= viewportHeight && rect.right <= viewportWidth;
+	}
+
+	async function scrollSelectedCardIntoView(id: string | null | undefined): Promise<void> {
+		if (!id) return;
+		await tick();
+
+		const element = selectedCardElement(id);
+		if (!element || isFullyVisible(element)) return;
+		element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+	}
+
+	$effect(() => {
+		cards.map((card) => card.id).join('\0');
+		void scrollSelectedCardIntoView(selectedId);
+	});
 </script>
 
-<div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+<div bind:this={gridElement} class="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
 	{#each cards as card (card.id)}
-		<button type="button" class="group flex min-h-48 flex-col overflow-hidden rounded-lg border text-left transition-all duration-200 hover:shadow-md {selectedId === card.id ? 'border-primary ring-2 ring-primary/20 bg-primary/5' : 'border-border/60 bg-card hover:border-border'}" aria-label={`${openLabel}: ${card.title}`} onclick={() => onselect(card.id)}>
+		<button type="button" data-reference-card-id={card.id} class="group flex min-h-48 flex-col overflow-hidden rounded-lg border text-left transition-all duration-200 hover:shadow-md {selectedId === card.id ? 'border-primary ring-2 ring-primary/20 bg-primary/5' : 'border-border/60 bg-card hover:border-border'}" aria-label={`${openLabel}: ${card.title}`} onclick={() => onselect(card.id)}>
 			{#if card.imageBytes !== undefined || card.fallbackIcon}
 				<BinaryImage imageBytes={card.imageBytes ?? null} alt={card.imageAlt ?? ''} className="aspect-5/4 w-full rounded-none border-0 bg-muted/40" imageClass="h-full w-full object-contain p-3" iconClass="size-9 text-primary/60" fallbackIcon={card.fallbackIcon ?? ImageIcon} />
 			{:else if card.imageUrl}

@@ -25,6 +25,7 @@
 		fields,
 		actionHref,
 		actionLabel,
+		onopen = undefined,
 		image,
 		meta,
 	}: {
@@ -33,9 +34,10 @@
 		fields: ReferenceSummaryField[];
 		actionHref: string;
 		actionLabel: string;
+		onopen?: () => void;
 		image?: Snippet;
 		meta?: Snippet;
-		ondismiss: () => void;
+		ondismiss?: () => void;
 	} = $props();
 </script>
 
@@ -113,6 +115,7 @@
 
 		<a
 			href={actionHref}
+			onclick={() => onopen?.()}
 			class="mt-4 inline-flex h-10 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
 		>
 			{actionLabel}
