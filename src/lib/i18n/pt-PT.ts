@@ -30,6 +30,7 @@ export const ptPt = {
 	'common.loading': 'A carregar',
 	'common.notInformed': 'Não indicado',
 	'common.back': 'Voltar',
+	'common.details': 'Detalhes',
 	'common.error': 'Erro',
 	'common.and': 'e',
 	'common.path': 'Caminho',

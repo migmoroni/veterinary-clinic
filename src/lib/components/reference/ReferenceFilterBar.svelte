@@ -12,41 +12,41 @@
 
 <script lang="ts">
 	import Select from '$lib/components/ui/Select.svelte';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Search from '@lucide/svelte/icons/search';
 	import type { Snippet } from 'svelte';
 
 	let {
 		searchTerm = $bindable(''),
-		searchLabel,
 		searchPlaceholder,
 		filters = [],
 		beforeSearch
 	}: {
 		searchTerm: string;
-		searchLabel: string;
 		searchPlaceholder: string;
 		filters?: ReferenceFilterBarSelect[];
 		beforeSearch?: Snippet;
 	} = $props();
 </script>
 
-<section class="grid gap-3 rounded-md border border-border bg-card p-3 shadow-sm sm:p-4 lg:[grid-template-columns:var(--grid-template-cols)]" style={`--reference-filter-count: ${filters.length}; --grid-template-cols: ${beforeSearch ? 'auto minmax(14rem,1.2fr)' : 'minmax(14rem,1.2fr)'} repeat(var(--reference-filter-count),minmax(10rem,0.8fr));`}>
+<section class="flex flex-nowrap items-center gap-2 py-3">
 	{#if beforeSearch}
 		{@render beforeSearch()}
 	{/if}
 
-	<label class="space-y-1">
-		<span class="text-sm font-medium">{searchLabel}</span>
-		<span class="relative block">
-			<Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-			<input class="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30" bind:value={searchTerm} placeholder={searchPlaceholder} />
-		</span>
+	<label class="relative block w-full max-w-xs min-w-0 shrink">
+		<Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+		<input class="h-9 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30" bind:value={searchTerm} placeholder={searchPlaceholder} />
 	</label>
 
 	{#each filters as filter (filter.id)}
-		<div class="space-y-1">
-			<label class="text-sm font-medium" for={filter.id}>{filter.label}</label>
-			<Select id={filter.id} value={filter.value} options={filter.options} onchange={filter.onchange} />
-		</div>
+		<Select id={filter.id} class="shrink min-w-0" value={filter.value} options={filter.options} onchange={filter.onchange} ariaLabel={filter.label}>
+			{#snippet trigger({ selectedLabel, open })}
+				<button type="button" class="inline-flex h-9 max-w-44 w-full shrink min-w-0 items-center justify-between gap-1.5 rounded-lg border border-input bg-background px-3 text-sm font-medium transition-colors hover:bg-accent {open ? 'border-primary ring-2 ring-ring/30' : ''}">
+					<span class="truncate block min-w-0 text-left">{selectedLabel}</span>
+					<ChevronDown class="size-3.5 shrink-0 opacity-50 transition-transform {open ? 'rotate-180' : ''}" />
+				</button>
+			{/snippet}
+		</Select>
 	{/each}
 </section>

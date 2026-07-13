@@ -31,6 +31,7 @@ export const frFr = {
 	'common.loading': 'Chargement',
 	'common.notInformed': 'Non renseigné',
 	'common.back': 'Retour',
+	'common.details': 'Détails',
 	'common.error': 'Erreur',
 	'common.and': 'et',
 	'common.path': 'Chemin',

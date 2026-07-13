@@ -31,6 +31,7 @@ export const enUs = {
 	'common.loading': 'Loading',
 	'common.notInformed': 'Not provided',
 	'common.back': 'Back',
+	'common.details': 'Details',
 	'common.error': 'Error',
 	'common.and': 'and',
 	'common.path': 'Path',

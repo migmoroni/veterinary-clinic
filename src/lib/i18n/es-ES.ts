@@ -31,6 +31,7 @@ export const esEs = {
 	'common.loading': 'Cargando',
 	'common.notInformed': 'No informado',
 	'common.back': 'Volver',
+	'common.details': 'Detalles',
 	'common.error': 'Error',
 	'common.and': 'y',
 	'common.path': 'Ruta',

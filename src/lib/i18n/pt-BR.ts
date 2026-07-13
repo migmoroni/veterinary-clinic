@@ -30,6 +30,7 @@ export const ptBr = {
 	'common.loading': 'Carregando',
 	'common.notInformed': 'Não informado',
 	'common.back': 'Voltar',
+	'common.details': 'Detalhes',
 	'common.error': 'Erro',
 	'common.and': 'e',
 	'common.path': 'Caminho',

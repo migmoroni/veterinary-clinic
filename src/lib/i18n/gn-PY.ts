@@ -30,6 +30,7 @@ export const gnPy = {
 	'common.loading': 'Oñemyanyhẽhína',
 	'common.notInformed': 'Noñemombe’úi',
 	'common.back': 'Jejey',
+	'common.details': "Mba'emichã",
 	'common.error': 'Jejavy',
 	'common.and': 'ha',
 	'common.path': 'Tape',
