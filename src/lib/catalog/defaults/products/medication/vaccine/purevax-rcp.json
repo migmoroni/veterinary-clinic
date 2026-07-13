@@ -1,0 +1,35 @@
+{
+	"id": "b1478112-bba1-4a72-8f48-53fa715554c1",
+	"type": [
+		"product",
+		"medication",
+		"vaccine"
+	],
+	"origin": "system",
+	"name": "Purevax RCP",
+	"species": [
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"V 3",
+		"V3",
+		"RCP",
+		"FVRCP",
+		"tríplice felina",
+		"triple felina",
+		"feline three-way vaccine",
+		"rinotraqueíte felina",
+		"rinotraqueítis felina",
+		"feline rhinotracheitis",
+		"calicivirose felina",
+		"calicivirosis felina",
+		"feline calicivirosis",
+		"panleucopenia felina",
+		"feline panleukopenia"
+	],
+	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"activeIngredientIds": []
+}

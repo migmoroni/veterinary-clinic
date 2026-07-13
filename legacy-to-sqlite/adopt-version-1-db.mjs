@@ -9,35 +9,51 @@ const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const defaultSourcePath = path.resolve(scriptDir, 'build/veterinary_clinic-version-1.db');
 const defaultOutputPath = path.resolve(scriptDir, 'build/veterinary_clinic-version-1.catalog.db');
-const productDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/product/defaults');
-const manufacturerDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/manufacturer/defaults');
-const activeIngredientDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/active-ingredient/defaults');
-const conditionDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/condition/defaults');
+const catalogDefaultsDir = path.resolve(scriptDir, '../src/lib/catalog/defaults');
+const productDefaultsDir = path.join(catalogDefaultsDir, 'products');
+const manufacturerDefaultsDir = path.join(catalogDefaultsDir, 'manufacturers');
+const activeIngredientDefaultsDir = path.join(catalogDefaultsDir, 'active-ingredients');
+const conditionDefaultsDir = path.join(catalogDefaultsDir, 'conditions');
 
 const productTypeValues = {
 	medication: {
-		vaccine: JSON.stringify(['medication', 'vaccine']),
-		antiparasitic: JSON.stringify(['medication', 'antiparasitic'])
+		vaccine: JSON.stringify(['product', 'medication', 'vaccine']),
+		antiparasitic: JSON.stringify(['product', 'medication', 'antiparasitic'])
 	},
-	nutrition: JSON.stringify(['nutrition', null]),
-	hygiene: JSON.stringify(['hygiene', null]),
-	disinfectants: JSON.stringify(['disinfectants', null])
+	nutrition: JSON.stringify(['product', 'nutrition', null]),
+	hygiene: JSON.stringify(['product', 'hygiene', null]),
+	disinfectants: JSON.stringify(['product', 'disinfectants', null])
 };
 const productTypeSqlValues = [...Object.values(productTypeValues.medication), productTypeValues.nutrition, productTypeValues.hygiene, productTypeValues.disinfectants]
 	.map(quoteSqlString)
 	.join(', ');
-const manufacturerTypeValue = JSON.stringify(['manufacturer', null]);
+const manufacturerTypeValue = JSON.stringify(['manufacturer', null, null]);
 const activeIngredientTypeValues = {
-	substance: JSON.stringify(['activeIngredient', 'substance']),
-	combination: JSON.stringify(['activeIngredient', 'combination'])
+	substance: JSON.stringify(['activeIngredient', 'substance', null]),
+	combination: JSON.stringify(['activeIngredient', 'combination', null])
 };
+const activeIngredientTypeSqlValues = Object.values(activeIngredientTypeValues).map(quoteSqlString).join(', ');
 const conditionTypeValues = {
-	disease: JSON.stringify(['condition', 'disease']),
-	syndrome: JSON.stringify(['condition', 'syndrome']),
-	disorder: JSON.stringify(['condition', 'disorder']),
-	injury: JSON.stringify(['condition', 'injury'])
+	disease: JSON.stringify(['condition', 'disease', null]),
+	syndrome: JSON.stringify(['condition', 'syndrome', null]),
+	disorder: JSON.stringify(['condition', 'disorder', null]),
+	injury: JSON.stringify(['condition', 'injury', null])
 };
 const conditionTypeSqlValues = Object.values(conditionTypeValues).map(quoteSqlString).join(', ');
+const storedCatalogTypeReplacements = new Map([
+	[JSON.stringify(['medication', 'vaccine']), productTypeValues.medication.vaccine],
+	[JSON.stringify(['medication', 'antiparasitic']), productTypeValues.medication.antiparasitic],
+	[JSON.stringify(['nutrition', null]), productTypeValues.nutrition],
+	[JSON.stringify(['hygiene', null]), productTypeValues.hygiene],
+	[JSON.stringify(['disinfectants', null]), productTypeValues.disinfectants],
+	[JSON.stringify(['manufacturer', null]), manufacturerTypeValue],
+	[JSON.stringify(['activeIngredient', 'substance']), activeIngredientTypeValues.substance],
+	[JSON.stringify(['activeIngredient', 'combination']), activeIngredientTypeValues.combination],
+	[JSON.stringify(['condition', 'disease']), conditionTypeValues.disease],
+	[JSON.stringify(['condition', 'syndrome']), conditionTypeValues.syndrome],
+	[JSON.stringify(['condition', 'disorder']), conditionTypeValues.disorder],
+	[JSON.stringify(['condition', 'injury']), conditionTypeValues.injury]
+]);
 
 function printUsage() {
 	console.log(`Uso:
@@ -168,7 +184,7 @@ function createCatalogTables(database) {
 	database.exec(`
 		CREATE TABLE IF NOT EXISTS manufacturer_catalog_items (
 			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
-			type TEXT NOT NULL CHECK(type = '["manufacturer",null]'),
+			type TEXT NOT NULL CHECK(type = '["manufacturer",null,null]'),
 			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
 			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) BETWEEN 1 AND 120),
 			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),
@@ -183,7 +199,7 @@ function createCatalogTables(database) {
 
 		CREATE TABLE IF NOT EXISTS active_ingredient_catalog_items (
 			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
-			type TEXT NOT NULL CHECK(type IN ('["activeIngredient","substance"]', '["activeIngredient","combination"]')),
+			type TEXT NOT NULL CHECK(type IN (${activeIngredientTypeSqlValues})),
 			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
 			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) BETWEEN 1 AND 120),
 			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),
@@ -225,11 +241,157 @@ function createCatalogTables(database) {
 	`);
 }
 
+function normalizeStoredCatalogType(type, fallbackType) {
+	if (typeof type !== 'string' || !type.trim()) return fallbackType;
+	return storedCatalogTypeReplacements.get(type) ?? type;
+}
+
 function stringifyCatalogTypeFromJson(type, source) {
-	if (!Array.isArray(type) || type.length !== 2 || typeof type[0] !== 'string' || (type[1] !== null && typeof type[1] !== 'string')) {
+	if (!Array.isArray(type) || type.length !== 3 || typeof type[0] !== 'string' || (type[1] !== null && typeof type[1] !== 'string') || (type[2] !== null && typeof type[2] !== 'string')) {
 		throw new Error(`Tipo de catálogo inválido em ${source}`);
 	}
 	return JSON.stringify(type);
+}
+
+function rebuildManufacturerCatalog(database) {
+	const rows = tableExists(database, 'manufacturer_catalog_items') ? database.prepare('SELECT * FROM manufacturer_catalog_items ORDER BY name COLLATE NOCASE').all() : [];
+	database.exec(`
+		DROP TABLE IF EXISTS manufacturer_catalog_items_next;
+		CREATE TABLE manufacturer_catalog_items_next (
+			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
+			type TEXT NOT NULL CHECK(type = '["manufacturer",null,null]'),
+			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
+			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) BETWEEN 1 AND 120),
+			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),
+			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
+			regions TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(regions)) BETWEEN 1 AND 1024),
+			extension TEXT NOT NULL DEFAULT '{}' CHECK(length(trim(extension)) BETWEEN 1 AND 64000),
+			hidden_at TEXT,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			UNIQUE(normalized_name)
+		);
+	`);
+	const insert = database.prepare(`
+		INSERT OR IGNORE INTO manufacturer_catalog_items_next (id, type, name, normalized_name, aliases, origin, regions, extension, hidden_at, created_at, updated_at)
+		VALUES (@id, @type, @name, @normalized_name, @aliases, @origin, @regions, @extension, @hidden_at, @created_at, @updated_at)
+	`);
+	for (const row of rows) {
+		const name = String(row.name ?? '').trim();
+		const normalizedName = String(row.normalized_name ?? normalizeName(name)).trim();
+		if (!name || !normalizedName) continue;
+		insert.run({
+			id: isUuidV4(row.id) ? row.id : crypto.randomUUID(),
+			type: normalizeStoredCatalogType(row.type, manufacturerTypeValue),
+			name,
+			normalized_name: normalizedName,
+			aliases: row.aliases || '[]',
+			origin: row.origin === 'system' ? 'system' : 'user',
+			regions: row.regions || '[]',
+			extension: row.extension || '{}',
+			hidden_at: row.hidden_at ?? null,
+			created_at: row.created_at ?? new Date().toISOString(),
+			updated_at: row.updated_at ?? null
+		});
+	}
+	database.exec(`
+		DROP TABLE IF EXISTS manufacturer_catalog_items;
+		ALTER TABLE manufacturer_catalog_items_next RENAME TO manufacturer_catalog_items;
+	`);
+}
+
+function rebuildActiveIngredientCatalog(database) {
+	const rows = tableExists(database, 'active_ingredient_catalog_items') ? database.prepare('SELECT * FROM active_ingredient_catalog_items ORDER BY name COLLATE NOCASE').all() : [];
+	database.exec(`
+		DROP TABLE IF EXISTS active_ingredient_catalog_items_next;
+		CREATE TABLE active_ingredient_catalog_items_next (
+			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
+			type TEXT NOT NULL CHECK(type IN (${activeIngredientTypeSqlValues})),
+			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
+			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) BETWEEN 1 AND 120),
+			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),
+			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
+			regions TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(regions)) BETWEEN 1 AND 1024),
+			extension TEXT NOT NULL DEFAULT '{}' CHECK(length(trim(extension)) BETWEEN 1 AND 64000),
+			hidden_at TEXT,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			UNIQUE(normalized_name)
+		);
+	`);
+	const insert = database.prepare(`
+		INSERT OR IGNORE INTO active_ingredient_catalog_items_next (id, type, name, normalized_name, aliases, origin, regions, extension, hidden_at, created_at, updated_at)
+		VALUES (@id, @type, @name, @normalized_name, @aliases, @origin, @regions, @extension, @hidden_at, @created_at, @updated_at)
+	`);
+	for (const row of rows) {
+		const name = String(row.name ?? '').trim();
+		const normalizedName = String(row.normalized_name ?? normalizeName(name)).trim();
+		if (!name || !normalizedName) continue;
+		insert.run({
+			id: isUuidV4(row.id) ? row.id : crypto.randomUUID(),
+			type: normalizeStoredCatalogType(row.type, activeIngredientTypeValues.substance),
+			name,
+			normalized_name: normalizedName,
+			aliases: row.aliases || '[]',
+			origin: row.origin === 'system' ? 'system' : 'user',
+			regions: row.regions || '[]',
+			extension: row.extension || '{}',
+			hidden_at: row.hidden_at ?? null,
+			created_at: row.created_at ?? new Date().toISOString(),
+			updated_at: row.updated_at ?? null
+		});
+	}
+	database.exec(`
+		DROP TABLE IF EXISTS active_ingredient_catalog_items;
+		ALTER TABLE active_ingredient_catalog_items_next RENAME TO active_ingredient_catalog_items;
+	`);
+}
+
+function rebuildConditionCatalog(database) {
+	const rows = tableExists(database, 'condition_catalog_items') ? database.prepare('SELECT * FROM condition_catalog_items ORDER BY name COLLATE NOCASE').all() : [];
+	database.exec(`
+		DROP TABLE IF EXISTS condition_catalog_items_next;
+		CREATE TABLE condition_catalog_items_next (
+			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
+			type TEXT NOT NULL CHECK(type IN (${conditionTypeSqlValues})),
+			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
+			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) BETWEEN 1 AND 120),
+			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),
+			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
+			regions TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(regions)) BETWEEN 1 AND 1024),
+			extension TEXT NOT NULL DEFAULT '{}' CHECK(length(trim(extension)) BETWEEN 1 AND 64000),
+			hidden_at TEXT,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			UNIQUE(normalized_name)
+		);
+	`);
+	const insert = database.prepare(`
+		INSERT OR IGNORE INTO condition_catalog_items_next (id, type, name, normalized_name, aliases, origin, regions, extension, hidden_at, created_at, updated_at)
+		VALUES (@id, @type, @name, @normalized_name, @aliases, @origin, @regions, @extension, @hidden_at, @created_at, @updated_at)
+	`);
+	for (const row of rows) {
+		const name = String(row.name ?? '').trim();
+		const normalizedName = String(row.normalized_name ?? normalizeName(name)).trim();
+		if (!name || !normalizedName) continue;
+		insert.run({
+			id: isUuidV4(row.id) ? row.id : crypto.randomUUID(),
+			type: normalizeStoredCatalogType(row.type, conditionTypeValues.disease),
+			name,
+			normalized_name: normalizedName,
+			aliases: row.aliases || '[]',
+			origin: row.origin === 'system' ? 'system' : 'user',
+			regions: row.regions || '[]',
+			extension: row.extension || '{}',
+			hidden_at: row.hidden_at ?? null,
+			created_at: row.created_at ?? new Date().toISOString(),
+			updated_at: row.updated_at ?? null
+		});
+	}
+	database.exec(`
+		DROP TABLE IF EXISTS condition_catalog_items;
+		ALTER TABLE condition_catalog_items_next RENAME TO condition_catalog_items;
+	`);
 }
 
 function syncDefaultManufacturers(database) {
@@ -327,9 +489,6 @@ function ensureUserManufacturer(database, name) {
 }
 
 function rebuildProductCatalog(database) {
-	const hasNewColumn = hasColumn(database, 'product_catalog_items', 'manufacturer_id');
-	if (hasNewColumn) return;
-
 	const defaultProductsById = new Map(readDefaultProducts().map((item) => [item.id, item]));
 	const rows = tableExists(database, 'product_catalog_items')
 		? database.prepare('SELECT * FROM product_catalog_items ORDER BY name COLLATE NOCASE').all()
@@ -365,10 +524,10 @@ function rebuildProductCatalog(database) {
 
 	for (const row of rows) {
 		const fallbackDefault = defaultProductsById.get(row.id);
-		const manufacturerId = fallbackDefault?.manufacturerId ?? ensureUserManufacturer(database, row.manufacturer ?? '');
+		const manufacturerId = row.manufacturer_id ?? fallbackDefault?.manufacturerId ?? ensureUserManufacturer(database, row.manufacturer ?? '');
 		insert.run({
 			id: isUuidV4(row.id) ? row.id : crypto.randomUUID(),
-			type: row.type,
+			type: normalizeStoredCatalogType(row.type, productTypeValues.medication.vaccine),
 			name: row.name,
 			normalized_name: row.normalized_name || normalizeName(row.name),
 			species: row.species || '["canine","feline"]',
@@ -462,6 +621,9 @@ function adoptDatabase(sourcePath, outputPath) {
 	try {
 		database.transaction(() => {
 			createCatalogTables(database);
+			rebuildManufacturerCatalog(database);
+			rebuildActiveIngredientCatalog(database);
+			rebuildConditionCatalog(database);
 			syncDefaultManufacturers(database);
 			syncDefaultActiveIngredients(database);
 			syncDefaultConditions(database);

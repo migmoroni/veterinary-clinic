@@ -1,0 +1,44 @@
+{
+	"id": "f4e49a9e-5a5b-4132-b957-320d3e12c3a6",
+	"type": [
+		"product",
+		"medication",
+		"vaccine"
+	],
+	"origin": "system",
+	"name": "Nobivac Canine 1-DAPPVL2+CV",
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"DAPPVL2+CV",
+		"polivalente",
+		"polyvalent",
+		"múltipla canina",
+		"vacuna múltiple canina",
+		"canine combination vaccine",
+		"cinomose canina",
+		"esgana canina",
+		"moquillo canino",
+		"canine distemper",
+		"adenovírus canino tipo 2",
+		"adenovirus canino tipo 2",
+		"canine adenovirus type 2",
+		"coronavirose canina",
+		"coronavirus canino",
+		"canine coronavirus",
+		"parainfluenza canina",
+		"canine parainfluenza",
+		"parvovirose canina",
+		"parvovirosis canina",
+		"canine parvovirus",
+		"leptospirose canina",
+		"leptospirosis canina",
+		"canine leptospirosis"
+	],
+	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"activeIngredientIds": []
+}

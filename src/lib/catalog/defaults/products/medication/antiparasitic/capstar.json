@@ -1,0 +1,27 @@
+{
+	"id": "f881d856-3d4e-41e6-b4ff-b6a77c3808f9",
+	"type": [
+		"product",
+		"medication",
+		"antiparasitic"
+	],
+	"origin": "system",
+	"name": "Capstar",
+	"species": [
+		"canine",
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"nitenpiram",
+		"nitenpyram",
+		"ectoparasiticida",
+		"ectoparasiticide",
+		"antipulgas",
+		"flea treatment"
+	],
+	"manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
+	"activeIngredientIds": []
+}

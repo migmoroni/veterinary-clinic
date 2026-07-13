@@ -1,0 +1,25 @@
+{
+	"id": "1d6833fe-0137-4e7f-908e-4d59ae318e79",
+	"type": [
+		"product",
+		"medication",
+		"vaccine"
+	],
+	"origin": "system",
+	"name": "Rabisin",
+	"species": [
+		"canine",
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"raiva",
+		"antirrábica",
+		"rabia",
+		"rabies"
+	],
+	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"activeIngredientIds": []
+}

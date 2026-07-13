@@ -1,0 +1,27 @@
+{
+	"id": "de7674ed-ca95-48ed-bba2-c54a742b37f7",
+	"type": [
+		"product",
+		"medication",
+		"antiparasitic"
+	],
+	"origin": "system",
+	"name": "Milpro",
+	"species": [
+		"canine",
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"milbemicina oxima praziquantel",
+		"milbemycin oxime praziquantel",
+		"antiparasitário de amplo espectro",
+		"antiparasitário de largo espetro",
+		"antiparasitario de amplio espectro",
+		"broad-spectrum antiparasitic"
+	],
+	"manufacturerId": "a984d879-4d68-4282-a746-0b7961903b28",
+	"activeIngredientIds": []
+}

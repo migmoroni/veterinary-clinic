@@ -1,0 +1,27 @@
+{
+	"id": "a25157b1-925c-4f61-aa2f-c3c3db3213de",
+	"type": [
+		"product",
+		"medication",
+		"vaccine"
+	],
+	"origin": "system",
+	"name": "Vanguard Plus",
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"V 10",
+		"V10",
+		"polivalente",
+		"polyvalent",
+		"múltipla canina",
+		"vacuna múltiple canina",
+		"canine combination vaccine"
+	],
+	"manufacturerId": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
+	"activeIngredientIds": []
+}

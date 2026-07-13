@@ -19,18 +19,18 @@ describe('product catalog metadata', () => {
 		expect(productTypeOptions('hygiene')).toEqual([]);
 		expect(productTypeOptions('disinfectants')).toEqual([]);
 		expect(PRODUCT_TYPES).toEqual([
-			['medication', 'vaccine'],
-			['medication', 'antiparasitic'],
-			['nutrition', null],
-			['hygiene', null],
-			['disinfectants', null]
+			['product', 'medication', 'vaccine'],
+			['product', 'medication', 'antiparasitic'],
+			['product', 'nutrition', null],
+			['product', 'hygiene', null],
+			['product', 'disinfectants', null]
 		]);
 	});
 
 	it('round-trips product type tuples and rejects invalid branches', () => {
-		expect(parseProductType(stringifyProductType(productType('medication', 'vaccine')))).toEqual(['medication', 'vaccine']);
-		expect(parseProductType(stringifyProductType(productType('nutrition', null)))).toEqual(['nutrition', null]);
-		expect(() => parseProductType(JSON.stringify(['nutrition', 'vaccine']))).toThrow('product_type_invalid');
+		expect(parseProductType(stringifyProductType(productType('medication', 'vaccine')))).toEqual(['product', 'medication', 'vaccine']);
+		expect(parseProductType(stringifyProductType(productType('nutrition', null)))).toEqual(['product', 'nutrition', null]);
+		expect(() => parseProductType(JSON.stringify(['product', 'nutrition', 'vaccine']))).toThrow('product_type_invalid');
 	});
 
 	it('normalizes unique ISO alpha-3 market country codes', () => {

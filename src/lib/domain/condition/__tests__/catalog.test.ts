@@ -8,16 +8,16 @@ describe('condition catalog metadata', () => {
 	it('defines condition types as direct tuples from the type tree', () => {
 		expect(conditionTypeOptions('condition')).toEqual(['disease', 'syndrome', 'disorder', 'injury']);
 		expect(CONDITION_TYPES).toEqual([
-			['condition', 'disease'],
-			['condition', 'syndrome'],
-			['condition', 'disorder'],
-			['condition', 'injury']
+			['condition', 'disease', null],
+			['condition', 'syndrome', null],
+			['condition', 'disorder', null],
+			['condition', 'injury', null]
 		]);
 	});
 
 	it('round-trips condition type tuples', () => {
-		expect(parseConditionType(stringifyConditionType(conditionType('condition', 'disease')))).toEqual(['condition', 'disease']);
-		expect(parseConditionType(stringifyConditionType(conditionType('condition', 'injury')))).toEqual(['condition', 'injury']);
+		expect(parseConditionType(stringifyConditionType(conditionType('condition', 'disease')))).toEqual(['condition', 'disease', null]);
+		expect(parseConditionType(stringifyConditionType(conditionType('condition', 'injury')))).toEqual(['condition', 'injury', null]);
 	});
 
 	it('includes a complete fictitious condition sample', () => {

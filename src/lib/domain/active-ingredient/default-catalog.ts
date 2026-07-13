@@ -19,7 +19,7 @@ export interface DefaultActiveIngredientCatalogItem {
 
 type DefaultActiveIngredientCatalogJsonItem = DefaultActiveIngredientCatalogItem;
 
-const activeIngredientCatalogModules = import.meta.glob('./defaults/**/*.json', { eager: true, import: 'default' }) as Record<string, DefaultActiveIngredientCatalogJsonItem>;
+const activeIngredientCatalogModules = import.meta.glob('../../catalog/defaults/active-ingredients/**/*.json', { eager: true, import: 'default' }) as Record<string, DefaultActiveIngredientCatalogJsonItem>;
 
 export const defaultActiveIngredientCatalogItems: DefaultActiveIngredientCatalogItem[] = Object.entries(activeIngredientCatalogModules)
 	.sort(([leftPath], [rightPath]) => leftPath.localeCompare(rightPath))

@@ -1,8 +1,8 @@
 import {
 	catalogType,
-	catalogTypeMain,
-	catalogTypeOptions,
-	catalogTypeSubtype,
+	catalogTypeCategory,
+	catalogTypeEntity,
+	catalogTypeCategories,
 	catalogTypesFromTree,
 	normalizedNullableText,
 	normalizedSectionTexts,
@@ -20,12 +20,15 @@ import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 import { normalizeTreatmentName } from '$lib/domain/treatment/treatment.js';
 
 export const ACTIVE_INGREDIENT_TYPE_TREE = {
-	activeIngredient: ['substance', 'combination']
+	activeIngredient: {
+		substance: [],
+		combination: []
+	}
 } as const;
 
 export type ActiveIngredientTypeTree = typeof ACTIVE_INGREDIENT_TYPE_TREE;
 export type ActiveIngredientTypeMain = keyof ActiveIngredientTypeTree;
-export type ActiveIngredientTypeSubtype<TMain extends ActiveIngredientTypeMain> = ActiveIngredientTypeTree[TMain][number];
+export type ActiveIngredientTypeSubtype<TMain extends ActiveIngredientTypeMain> = keyof ActiveIngredientTypeTree[TMain] & string;
 export type ActiveIngredientType = CatalogTypeTuple<ActiveIngredientTypeTree>;
 
 export const ACTIVE_INGREDIENT_TYPES = catalogTypesFromTree(ACTIVE_INGREDIENT_TYPE_TREE);
@@ -47,19 +50,19 @@ export const emptyActiveIngredientCatalogExtension: ActiveIngredientCatalogExten
 };
 
 export function activeIngredientType<TMain extends ActiveIngredientTypeMain>(main: TMain, subtype: ActiveIngredientTypeSubtype<TMain> extends never ? null : ActiveIngredientTypeSubtype<TMain>): ActiveIngredientType {
-	return catalogType(ACTIVE_INGREDIENT_TYPE_TREE, main, subtype) as ActiveIngredientType;
+	return catalogType(ACTIVE_INGREDIENT_TYPE_TREE, main, subtype, null) as ActiveIngredientType;
 }
 
 export function activeIngredientTypeOptions<TMain extends ActiveIngredientTypeMain>(main: TMain): readonly ActiveIngredientTypeSubtype<TMain>[] {
-	return catalogTypeOptions(ACTIVE_INGREDIENT_TYPE_TREE, main);
+	return catalogTypeCategories(ACTIVE_INGREDIENT_TYPE_TREE, main) as readonly ActiveIngredientTypeSubtype<TMain>[];
 }
 
 export function activeIngredientTypeMain(type: ActiveIngredientType): ActiveIngredientTypeMain {
-	return catalogTypeMain(type) as ActiveIngredientTypeMain;
+	return catalogTypeEntity(type) as ActiveIngredientTypeMain;
 }
 
 export function activeIngredientTypeSubtype<TMain extends ActiveIngredientTypeMain>(type: ActiveIngredientType): ActiveIngredientTypeSubtype<TMain> | null {
-	return catalogTypeSubtype(type) as ActiveIngredientTypeSubtype<TMain> | null;
+	return catalogTypeCategory(type) as ActiveIngredientTypeSubtype<TMain> | null;
 }
 
 export function parseActiveIngredientType(value: string): ActiveIngredientType {

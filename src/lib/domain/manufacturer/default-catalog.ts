@@ -19,7 +19,7 @@ export interface DefaultManufacturerCatalogItem {
 
 type DefaultManufacturerCatalogJsonItem = DefaultManufacturerCatalogItem;
 
-const manufacturerCatalogModules = import.meta.glob('./defaults/**/*.json', { eager: true, import: 'default' }) as Record<string, DefaultManufacturerCatalogJsonItem>;
+const manufacturerCatalogModules = import.meta.glob('../../catalog/defaults/manufacturers/**/*.json', { eager: true, import: 'default' }) as Record<string, DefaultManufacturerCatalogJsonItem>;
 
 export const defaultManufacturerCatalogItems: DefaultManufacturerCatalogItem[] = Object.entries(manufacturerCatalogModules)
 	.sort(([leftPath], [rightPath]) => leftPath.localeCompare(rightPath))

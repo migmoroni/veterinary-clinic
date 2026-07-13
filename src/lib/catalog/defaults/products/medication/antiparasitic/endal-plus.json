@@ -1,0 +1,26 @@
+{
+	"id": "f0fc60a8-af68-4137-949d-68f3674877b0",
+	"type": [
+		"product",
+		"medication",
+		"antiparasitic"
+	],
+	"origin": "system",
+	"name": "Endal Plus",
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"praziquantel pamoato de pirantel febantel",
+		"praziquantel pyrantel pamoate febantel",
+		"antiparasitário de amplo espectro",
+		"antiparasitário de largo espetro",
+		"antiparasitario de amplio espectro",
+		"broad-spectrum antiparasitic"
+	],
+	"manufacturerId": "db13c7b3-7263-49a5-91c3-4cdc45ddb6b0",
+	"activeIngredientIds": []
+}

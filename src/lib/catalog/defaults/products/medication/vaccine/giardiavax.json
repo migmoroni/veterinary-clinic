@@ -1,0 +1,24 @@
+{
+	"id": "9aeb65ab-96c4-4051-b7f0-99700bf456fa",
+	"type": [
+		"product",
+		"medication",
+		"vaccine"
+	],
+	"origin": "system",
+	"name": "GiardiaVax",
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"giárdia",
+		"giardia",
+		"giardíase",
+		"giardiasis"
+	],
+	"manufacturerId": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
+	"activeIngredientIds": []
+}

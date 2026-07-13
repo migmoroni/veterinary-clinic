@@ -1,8 +1,8 @@
 import {
 	catalogType,
-	catalogTypeMain,
-	catalogTypeOptions,
-	catalogTypeSubtype,
+	catalogTypeCategory,
+	catalogTypeSubcategory,
+	catalogTypeSubcategoryOptions,
 	catalogTypesFromTree,
 	isCatalogType,
 	normalizeCatalogAliases as normalizeBaseCatalogAliases,
@@ -23,16 +23,18 @@ import type { ActiveIngredientCatalogItem } from '$lib/domain/active-ingredient/
 import { defaultTreatmentSpecies, isTreatmentSpecies, normalizeTreatmentSpecies, parseTreatmentSpecies, stringifyTreatmentSpecies, type TreatmentSpecies } from '$lib/domain/treatment/species.js';
 
 export const PRODUCT_TYPE_TREE = {
-	medication: ['vaccine', 'antiparasitic'],
-	nutrition: [],
-	hygiene: [],
-	disinfectants: []
+	product: {
+		medication: ['vaccine', 'antiparasitic'],
+		nutrition: [],
+		hygiene: [],
+		disinfectants: []
+	}
 } as const;
 
 export type ProductTypeTree = typeof PRODUCT_TYPE_TREE;
-export type ProductTypeMain = keyof ProductTypeTree;
-export type ProductTypeSubtype<TMain extends ProductTypeMain> = ProductTypeTree[TMain][number];
-export type ProductTypeTuple<TMain extends ProductTypeMain = ProductTypeMain> = Extract<CatalogTypeTuple<ProductTypeTree>, readonly [TMain, string | null]>;
+export type ProductTypeMain = keyof ProductTypeTree['product'];
+export type ProductTypeSubtype<TMain extends ProductTypeMain> = ProductTypeTree['product'][TMain][number];
+export type ProductTypeTuple<TMain extends ProductTypeMain = ProductTypeMain> = Extract<CatalogTypeTuple<ProductTypeTree>, readonly ['product', TMain, string | null]>;
 export type ProductType = ProductTypeTuple;
 export type ProductSpecies = TreatmentSpecies;
 export type ProductCatalogOrigin = CatalogEntityOrigin;
@@ -40,19 +42,19 @@ export type ProductCatalogOrigin = CatalogEntityOrigin;
 export const PRODUCT_TYPES = catalogTypesFromTree(PRODUCT_TYPE_TREE) as ProductType[];
 
 export function productTypeOptions<TMain extends ProductTypeMain>(main: TMain): readonly ProductTypeSubtype<TMain>[] {
-	return catalogTypeOptions(PRODUCT_TYPE_TREE, main);
+	return catalogTypeSubcategoryOptions(PRODUCT_TYPE_TREE, 'product', main);
 }
 
 export function productType<TMain extends ProductTypeMain>(main: TMain, subtype: ProductTypeSubtype<TMain> extends never ? null : ProductTypeSubtype<TMain>): ProductTypeTuple<TMain> {
-	return catalogType(PRODUCT_TYPE_TREE, main, subtype) as ProductTypeTuple<TMain>;
+	return catalogType(PRODUCT_TYPE_TREE, 'product', main, subtype) as ProductTypeTuple<TMain>;
 }
 
 export function productTypeMain(type: ProductType): ProductTypeMain {
-	return catalogTypeMain(type) as ProductTypeMain;
+	return catalogTypeCategory(type) as ProductTypeMain;
 }
 
-export function productTypeSubtype<TMain extends ProductTypeMain>(type: ProductTypeTuple<TMain>): ProductTypeTuple<TMain>[1] {
-	return catalogTypeSubtype(type) as ProductTypeTuple<TMain>[1];
+export function productTypeSubtype<TMain extends ProductTypeMain>(type: ProductTypeTuple<TMain>): ProductTypeTuple<TMain>[2] {
+	return catalogTypeSubcategory(type) as ProductTypeTuple<TMain>[2];
 }
 
 export function isProductType(value: unknown): value is ProductType {

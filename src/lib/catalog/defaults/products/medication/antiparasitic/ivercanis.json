@@ -1,0 +1,24 @@
+{
+	"id": "1bffd0e4-e328-444f-83e5-fa6b6d138770",
+	"type": [
+		"product",
+		"medication",
+		"antiparasitic"
+	],
+	"origin": "system",
+	"name": "Ivercanis",
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"ivermectina",
+		"ivermectin",
+		"endectocida",
+		"endectocide"
+	],
+	"manufacturerId": "33e5bfd1-2843-46c9-9afd-a30f78f4b087",
+	"activeIngredientIds": []
+}

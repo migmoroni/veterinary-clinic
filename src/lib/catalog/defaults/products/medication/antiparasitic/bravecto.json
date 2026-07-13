@@ -1,0 +1,30 @@
+{
+	"id": "7270fda6-7dc5-4ae8-95da-fde8f5744a11",
+	"type": [
+		"product",
+		"medication",
+		"antiparasitic"
+	],
+	"origin": "system",
+	"name": "Bravecto",
+	"species": [
+		"canine",
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"fluralaner",
+		"ectoparasiticida",
+		"ectoparasiticide",
+		"antipulgas",
+		"flea treatment",
+		"carrapaticida",
+		"tratamento contra carraças",
+		"tratamiento contra garrapatas",
+		"tick treatment"
+	],
+	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"activeIngredientIds": []
+}

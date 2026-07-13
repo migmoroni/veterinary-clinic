@@ -1,0 +1,23 @@
+{
+	"id": "4e091d82-2480-4d8e-812e-0ea2693a268d",
+	"type": [
+		"product",
+		"medication",
+		"vaccine"
+	],
+	"origin": "system",
+	"name": "Eurican Herpes 205",
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"herpesvírus canino",
+		"herpesvirus canino",
+		"canine herpesvirus"
+	],
+	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"activeIngredientIds": []
+}

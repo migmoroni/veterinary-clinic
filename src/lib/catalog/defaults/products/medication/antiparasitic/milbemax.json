@@ -1,0 +1,27 @@
+{
+	"id": "a96daab2-a453-4bb6-8fcc-091ec65db0af",
+	"type": [
+		"product",
+		"medication",
+		"antiparasitic"
+	],
+	"origin": "system",
+	"name": "Milbemax",
+	"species": [
+		"canine",
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"milbemicina oxima praziquantel",
+		"milbemycin oxime praziquantel",
+		"antiparasitário de amplo espectro",
+		"antiparasitário de largo espetro",
+		"antiparasitario de amplio espectro",
+		"broad-spectrum antiparasitic"
+	],
+	"manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
+	"activeIngredientIds": []
+}

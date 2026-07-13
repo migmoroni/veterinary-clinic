@@ -1,0 +1,24 @@
+{
+	"id": "f12a7466-ea74-4d71-b923-5e714c671f8a",
+	"type": [
+		"manufacturer",
+		null,
+		null
+	],
+	"origin": "system",
+	"name": "Elanco",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [],
+	"images": [],
+	"extension": {
+		"website": null,
+		"sections": {
+			"about": "Elanco. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+			"portfolio": "Produtos e linhas comerciais cadastrados para consulta clínica.",
+			"support": "Informações de suporte e contato poderão ser estruturadas em etapa futura.",
+			"references": "Referências institucionais e bibliográficas poderão ser adicionadas aqui."
+		}
+	}
+}

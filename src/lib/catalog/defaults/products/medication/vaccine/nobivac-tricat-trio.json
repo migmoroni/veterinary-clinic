@@ -1,0 +1,34 @@
+{
+	"id": "7a886b26-3683-4e5a-8807-46979cf65fdf",
+	"type": [
+		"product",
+		"medication",
+		"vaccine"
+	],
+	"origin": "system",
+	"name": "Nobivac Tricat Trio",
+	"species": [
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"V 3",
+		"V3",
+		"FVRCP",
+		"tríplice felina",
+		"triple felina",
+		"feline three-way vaccine",
+		"rinotraqueíte felina",
+		"rinotraqueítis felina",
+		"feline rhinotracheitis",
+		"calicivirose felina",
+		"calicivirosis felina",
+		"feline calicivirosis",
+		"panleucopenia felina",
+		"feline panleukopenia"
+	],
+	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"activeIngredientIds": []
+}

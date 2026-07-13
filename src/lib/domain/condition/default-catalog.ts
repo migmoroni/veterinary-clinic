@@ -19,7 +19,7 @@ export interface DefaultConditionCatalogItem {
 
 type DefaultConditionCatalogJsonItem = DefaultConditionCatalogItem;
 
-const conditionCatalogModules = import.meta.glob('./defaults/**/*.json', { eager: true, import: 'default' }) as Record<string, DefaultConditionCatalogJsonItem>;
+const conditionCatalogModules = import.meta.glob('../../catalog/defaults/conditions/**/*.json', { eager: true, import: 'default' }) as Record<string, DefaultConditionCatalogJsonItem>;
 
 export const defaultConditionCatalogItems: DefaultConditionCatalogItem[] = Object.entries(conditionCatalogModules)
 	.sort(([leftPath], [rightPath]) => leftPath.localeCompare(rightPath))

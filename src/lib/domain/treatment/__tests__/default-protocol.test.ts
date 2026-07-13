@@ -5,7 +5,7 @@ import { defaultTreatmentProtocols } from '../default-protocol.js';
 import { canDeleteTreatmentProtocol, canEditTreatmentProtocol } from '../protocol.js';
 
 function bundledProductId(kind: string, name: string): string {
-	const item = defaultProductCatalogItems.find((candidate) => candidate.type[1] === kind && candidate.name === name);
+	const item = defaultProductCatalogItems.find((candidate) => candidate.type[2] === kind && candidate.name === name);
 	if (!item) throw new Error(`Default product not found: ${kind}:${name}`);
 	return item.id;
 }
@@ -36,7 +36,7 @@ describe('default treatment protocols', () => {
 		for (const protocol of defaultTreatmentProtocols) {
 			expect(isUuidV4(protocol.id)).toBe(true);
 			for (const catalogItemId of protocol.catalogItemIds) {
-				expect(defaultProductCatalogItems.some((item) => item.type[1] === protocol.kind && item.id === catalogItemId)).toBe(true);
+				expect(defaultProductCatalogItems.some((item) => item.type[2] === protocol.kind && item.id === catalogItemId)).toBe(true);
 			}
 		}
 	});

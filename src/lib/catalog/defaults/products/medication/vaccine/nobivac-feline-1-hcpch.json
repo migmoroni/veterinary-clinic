@@ -1,0 +1,38 @@
+{
+	"id": "ebc97309-ebfe-40a2-a8ec-6802bbf09324",
+	"type": [
+		"product",
+		"medication",
+		"vaccine"
+	],
+	"origin": "system",
+	"name": "Nobivac Feline 1-HCPCh",
+	"species": [
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"V 4",
+		"V4",
+		"HCPCh",
+		"FVRCP+Ch",
+		"quádrupla felina",
+		"cuádruple felina",
+		"feline four-way vaccine",
+		"rinotraqueíte felina",
+		"rinotraqueítis felina",
+		"feline rhinotracheitis",
+		"calicivirose felina",
+		"calicivirosis felina",
+		"feline calicivirosis",
+		"panleucopenia felina",
+		"feline panleukopenia",
+		"clamidiose felina",
+		"clamidiosis felina",
+		"feline chlamydiosis"
+	],
+	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"activeIngredientIds": []
+}

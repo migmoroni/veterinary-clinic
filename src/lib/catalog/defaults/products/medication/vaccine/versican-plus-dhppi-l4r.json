@@ -1,0 +1,45 @@
+{
+	"id": "19e28b02-007a-4c09-82a3-4a33f1c54d1d",
+	"type": [
+		"product",
+		"medication",
+		"vaccine"
+	],
+	"origin": "system",
+	"name": "Versican Plus DHPPi/L4R",
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"DHPPi/L4R",
+		"polivalente",
+		"polyvalent",
+		"múltipla canina",
+		"vacuna múltiple canina",
+		"canine combination vaccine",
+		"cinomose canina",
+		"esgana canina",
+		"moquillo canino",
+		"canine distemper",
+		"adenovírus canino tipo 2",
+		"adenovirus canino tipo 2",
+		"canine adenovirus type 2",
+		"parainfluenza canina",
+		"canine parainfluenza",
+		"parvovirose canina",
+		"parvovirosis canina",
+		"canine parvovirus",
+		"leptospirose canina",
+		"leptospirosis canina",
+		"canine leptospirosis",
+		"raiva",
+		"antirrábica",
+		"rabia",
+		"rabies"
+	],
+	"manufacturerId": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
+	"activeIngredientIds": []
+}

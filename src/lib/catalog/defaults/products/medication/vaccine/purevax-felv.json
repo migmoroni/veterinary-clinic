@@ -1,0 +1,23 @@
+{
+	"id": "97ec09ac-4f38-4707-97df-e91ce7e3a266",
+	"type": [
+		"product",
+		"medication",
+		"vaccine"
+	],
+	"origin": "system",
+	"name": "Purevax FeLV",
+	"species": [
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"FeLV",
+		"leucemia felina",
+		"feline leukemia"
+	],
+	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"activeIngredientIds": []
+}

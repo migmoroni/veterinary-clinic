@@ -1,0 +1,23 @@
+{
+	"id": "31108229-a13d-4cba-a6d9-07cf4e020b9d",
+	"type": [
+		"product",
+		"medication",
+		"vaccine"
+	],
+	"origin": "system",
+	"name": "Versifel FeLV",
+	"species": [
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"FeLV",
+		"leucemia felina",
+		"feline leukemia"
+	],
+	"manufacturerId": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
+	"activeIngredientIds": []
+}

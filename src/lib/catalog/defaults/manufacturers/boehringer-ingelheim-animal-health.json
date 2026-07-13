@@ -1,0 +1,24 @@
+{
+	"id": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"type": [
+		"manufacturer",
+		null,
+		null
+	],
+	"origin": "system",
+	"name": "Boehringer Ingelheim Animal Health",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [],
+	"images": [],
+	"extension": {
+		"website": null,
+		"sections": {
+			"about": "Boehringer Ingelheim Animal Health. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+			"portfolio": "Produtos e linhas comerciais cadastrados para consulta clínica.",
+			"support": "Informações de suporte e contato poderão ser estruturadas em etapa futura.",
+			"references": "Referências institucionais e bibliográficas poderão ser adicionadas aqui."
+		}
+	}
+}

@@ -1,8 +1,8 @@
 import {
 	catalogType,
-	catalogTypeMain,
-	catalogTypeOptions,
-	catalogTypeSubtype,
+	catalogTypeCategory,
+	catalogTypeEntity,
+	catalogTypeCategories,
 	catalogTypesFromTree,
 	normalizedNullableText,
 	normalizedSectionTexts,
@@ -20,12 +20,17 @@ import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 import { normalizeTreatmentName } from '$lib/domain/treatment/treatment.js';
 
 export const CONDITION_TYPE_TREE = {
-	condition: ['disease', 'syndrome', 'disorder', 'injury']
+	condition: {
+		disease: [],
+		syndrome: [],
+		disorder: [],
+		injury: []
+	}
 } as const;
 
 export type ConditionTypeTree = typeof CONDITION_TYPE_TREE;
 export type ConditionTypeMain = keyof ConditionTypeTree;
-export type ConditionTypeSubtype<TMain extends ConditionTypeMain> = ConditionTypeTree[TMain][number];
+export type ConditionTypeSubtype<TMain extends ConditionTypeMain> = keyof ConditionTypeTree[TMain] & string;
 export type ConditionType = CatalogTypeTuple<ConditionTypeTree>;
 export type ConditionCatalogOrigin = CatalogEntityOrigin;
 
@@ -48,19 +53,19 @@ export const emptyConditionCatalogExtension: ConditionCatalogExtension = {
 };
 
 export function conditionType<TMain extends ConditionTypeMain>(main: TMain, subtype: ConditionTypeSubtype<TMain> extends never ? null : ConditionTypeSubtype<TMain>): ConditionType {
-	return catalogType(CONDITION_TYPE_TREE, main, subtype) as ConditionType;
+	return catalogType(CONDITION_TYPE_TREE, main, subtype, null) as ConditionType;
 }
 
 export function conditionTypeOptions<TMain extends ConditionTypeMain>(main: TMain): readonly ConditionTypeSubtype<TMain>[] {
-	return catalogTypeOptions(CONDITION_TYPE_TREE, main);
+	return catalogTypeCategories(CONDITION_TYPE_TREE, main) as readonly ConditionTypeSubtype<TMain>[];
 }
 
 export function conditionTypeMain(type: ConditionType): ConditionTypeMain {
-	return catalogTypeMain(type) as ConditionTypeMain;
+	return catalogTypeEntity(type) as ConditionTypeMain;
 }
 
 export function conditionTypeSubtype<TMain extends ConditionTypeMain>(type: ConditionType): ConditionTypeSubtype<TMain> | null {
-	return catalogTypeSubtype(type) as ConditionTypeSubtype<TMain> | null;
+	return catalogTypeCategory(type) as ConditionTypeSubtype<TMain> | null;
 }
 
 export function parseConditionType(value: string): ConditionType {

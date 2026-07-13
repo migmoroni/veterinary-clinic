@@ -26,7 +26,7 @@ export interface DefaultProductCatalogItem {
 
 type DefaultProductCatalogJsonItem = DefaultProductCatalogItem;
 
-const productCatalogModules = import.meta.glob('./defaults/**/*.json', { eager: true, import: 'default' }) as Record<string, DefaultProductCatalogJsonItem>;
+const productCatalogModules = import.meta.glob('../../catalog/defaults/products/**/*.json', { eager: true, import: 'default' }) as Record<string, DefaultProductCatalogJsonItem>;
 
 export const defaultProductCatalogItems: DefaultProductCatalogItem[] = Object.entries(productCatalogModules)
 	.sort(([leftPath], [rightPath]) => leftPath.localeCompare(rightPath))

@@ -23,18 +23,18 @@ const medicationLeafletSectionIds = [
 ];
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const productDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/product/defaults');
+const productDefaultsDir = path.resolve(scriptDir, '../src/lib/catalog/defaults/products');
 const treatmentDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/treatment/defaults');
 const defaultSourcePath = path.resolve(scriptDir, 'dist/veterinary_clinic-version-0.db');
 const defaultOutputPath = path.resolve(scriptDir, `build/veterinary_clinic-version-${CURRENT_SCHEMA_VERSION}.db`);
 const productTypeValues = {
 	medication: {
-		vaccine: JSON.stringify(['medication', 'vaccine']),
-		antiparasitic: JSON.stringify(['medication', 'antiparasitic'])
+		vaccine: JSON.stringify(['product', 'medication', 'vaccine']),
+		antiparasitic: JSON.stringify(['product', 'medication', 'antiparasitic'])
 	},
-	nutrition: JSON.stringify(['nutrition', null]),
-	hygiene: JSON.stringify(['hygiene', null]),
-	disinfectants: JSON.stringify(['disinfectants', null])
+	nutrition: JSON.stringify(['product', 'nutrition', null]),
+	hygiene: JSON.stringify(['product', 'hygiene', null]),
+	disinfectants: JSON.stringify(['product', 'disinfectants', null])
 };
 const medicationProductTypeValues = productTypeValues.medication;
 const productTypeSqlValues = [...Object.values(productTypeValues.medication), productTypeValues.nutrition, productTypeValues.hygiene, productTypeValues.disinfectants]

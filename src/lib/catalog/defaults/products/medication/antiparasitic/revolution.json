@@ -1,0 +1,25 @@
+{
+	"id": "4aaf41c6-144b-4f0d-a7dc-c20a5cbfa719",
+	"type": [
+		"product",
+		"medication",
+		"antiparasitic"
+	],
+	"origin": "system",
+	"name": "Revolution",
+	"species": [
+		"canine",
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"selamectina",
+		"selamectin",
+		"endectocida",
+		"endectocide"
+	],
+	"manufacturerId": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
+	"activeIngredientIds": []
+}

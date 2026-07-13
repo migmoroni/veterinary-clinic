@@ -1,0 +1,24 @@
+{
+	"id": "dd7c932c-9c9a-4ee0-82eb-5e1f516ac9e1",
+	"type": [
+		"manufacturer",
+		null,
+		null
+	],
+	"origin": "system",
+	"name": "Fabricante Ficticio",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [],
+	"images": [],
+	"extension": {
+		"website": null,
+		"sections": {
+			"about": "Fabricante Ficticio. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+			"portfolio": "Produtos e linhas comerciais cadastrados para consulta clínica.",
+			"support": "Informações de suporte e contato poderão ser estruturadas em etapa futura.",
+			"references": "Referências institucionais e bibliográficas poderão ser adicionadas aqui."
+		}
+	}
+}

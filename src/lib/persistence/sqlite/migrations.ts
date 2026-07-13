@@ -2,9 +2,9 @@ import type Database from '@tauri-apps/plugin-sql';
 import { defaultProductCatalogItems, type DefaultProductCatalogImage } from '$lib/domain/product/default-catalog.js';
 import { PRODUCT_TYPES, productType, stringifyProductCatalogExtension, stringifyProductType } from '$lib/domain/product/catalog.js';
 import { defaultManufacturerCatalogItems, type DefaultManufacturerCatalogImage } from '$lib/domain/manufacturer/default-catalog.js';
-import { stringifyManufacturerCatalogExtension, stringifyManufacturerType } from '$lib/domain/manufacturer/catalog.js';
+import { MANUFACTURER_TYPES, stringifyManufacturerCatalogExtension, stringifyManufacturerType } from '$lib/domain/manufacturer/catalog.js';
 import { defaultActiveIngredientCatalogItems, type DefaultActiveIngredientCatalogImage } from '$lib/domain/active-ingredient/default-catalog.js';
-import { stringifyActiveIngredientCatalogExtension, stringifyActiveIngredientType } from '$lib/domain/active-ingredient/catalog.js';
+import { ACTIVE_INGREDIENT_TYPES, stringifyActiveIngredientCatalogExtension, stringifyActiveIngredientType } from '$lib/domain/active-ingredient/catalog.js';
 import { defaultConditionCatalogItems, type DefaultConditionCatalogImage } from '$lib/domain/condition/default-catalog.js';
 import { CONDITION_TYPES, stringifyConditionCatalogExtension, stringifyConditionType } from '$lib/domain/condition/catalog.js';
 import { defaultTreatmentProtocols } from '$lib/domain/treatment/default-protocol.js';
@@ -141,6 +141,8 @@ function quoteSqlString(value: string): string {
 }
 
 const PRODUCT_TYPE_SQL_VALUES = PRODUCT_TYPES.map((type) => quoteSqlString(stringifyProductType(type))).join(', ');
+const MANUFACTURER_TYPE_SQL_VALUES = MANUFACTURER_TYPES.map((type) => quoteSqlString(stringifyManufacturerType(type))).join(', ');
+const ACTIVE_INGREDIENT_TYPE_SQL_VALUES = ACTIVE_INGREDIENT_TYPES.map((type) => quoteSqlString(stringifyActiveIngredientType(type))).join(', ');
 const CONDITION_TYPE_SQL_VALUES = CONDITION_TYPES.map((type) => quoteSqlString(stringifyConditionType(type))).join(', ');
 
 function bytesToSqlLiteral(value: Uint8Array): string {
@@ -926,7 +928,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS manufacturer_catalog_items (
 			id TEXT PRIMARY KEY CHECK(${uuidV4TextCheck('id')}),
-			type TEXT NOT NULL CHECK(type = '["manufacturer",null]'),
+			type TEXT NOT NULL CHECK(type IN (${MANUFACTURER_TYPE_SQL_VALUES})),
 			name TEXT NOT NULL,
 			normalized_name TEXT NOT NULL,
 			aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.catalogAliasesJson)}),
@@ -945,7 +947,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS active_ingredient_catalog_items (
 			id TEXT PRIMARY KEY CHECK(${uuidV4TextCheck('id')}),
-			type TEXT NOT NULL CHECK(type IN ('["activeIngredient","substance"]', '["activeIngredient","combination"]')),
+			type TEXT NOT NULL CHECK(type IN (${ACTIVE_INGREDIENT_TYPE_SQL_VALUES})),
 			name TEXT NOT NULL,
 			normalized_name TEXT NOT NULL,
 			aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.catalogAliasesJson)}),

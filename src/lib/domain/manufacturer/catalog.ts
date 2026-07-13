@@ -1,8 +1,7 @@
 import {
 	catalogType,
-	catalogTypeMain,
-	catalogTypeOptions,
-	catalogTypeSubtype,
+	catalogTypeCategory,
+	catalogTypeEntity,
 	catalogTypesFromTree,
 	normalizedNullableText,
 	normalizedSectionTexts,
@@ -20,12 +19,12 @@ import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 import { normalizeTreatmentName } from '$lib/domain/treatment/treatment.js';
 
 export const MANUFACTURER_TYPE_TREE = {
-	manufacturer: []
+	manufacturer: {}
 } as const;
 
 export type ManufacturerTypeTree = typeof MANUFACTURER_TYPE_TREE;
 export type ManufacturerTypeMain = keyof ManufacturerTypeTree;
-export type ManufacturerTypeSubtype<TMain extends ManufacturerTypeMain> = ManufacturerTypeTree[TMain][number];
+export type ManufacturerTypeSubtype<TMain extends ManufacturerTypeMain> = never;
 export type ManufacturerType = CatalogTypeTuple<ManufacturerTypeTree>;
 
 export const MANUFACTURER_TYPES = catalogTypesFromTree(MANUFACTURER_TYPE_TREE);
@@ -47,19 +46,20 @@ export const emptyManufacturerCatalogExtension: ManufacturerCatalogExtension = {
 };
 
 export function manufacturerType<TMain extends ManufacturerTypeMain>(main: TMain, subtype: ManufacturerTypeSubtype<TMain> extends never ? null : ManufacturerTypeSubtype<TMain>): ManufacturerType {
-	return catalogType(MANUFACTURER_TYPE_TREE, main, subtype) as ManufacturerType;
+	if (subtype !== null) throw new Error('catalog_type_invalid');
+	return catalogType(MANUFACTURER_TYPE_TREE, main, null, null) as ManufacturerType;
 }
 
 export function manufacturerTypeOptions<TMain extends ManufacturerTypeMain>(main: TMain): readonly ManufacturerTypeSubtype<TMain>[] {
-	return catalogTypeOptions(MANUFACTURER_TYPE_TREE, main);
+	return [];
 }
 
 export function manufacturerTypeMain(type: ManufacturerType): ManufacturerTypeMain {
-	return catalogTypeMain(type) as ManufacturerTypeMain;
+	return catalogTypeEntity(type) as ManufacturerTypeMain;
 }
 
 export function manufacturerTypeSubtype<TMain extends ManufacturerTypeMain>(type: ManufacturerType): ManufacturerTypeSubtype<TMain> | null {
-	return catalogTypeSubtype(type) as ManufacturerTypeSubtype<TMain> | null;
+	return catalogTypeCategory(type) as ManufacturerTypeSubtype<TMain> | null;
 }
 
 export function parseManufacturerType(value: string): ManufacturerType {

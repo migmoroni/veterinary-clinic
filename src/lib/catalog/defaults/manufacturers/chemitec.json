@@ -1,0 +1,24 @@
+{
+	"id": "f72b2273-c561-44d8-882e-ac7d0c8fd268",
+	"type": [
+		"manufacturer",
+		null,
+		null
+	],
+	"origin": "system",
+	"name": "Chemitec",
+	"regions": [
+		"BRA"
+	],
+	"aliases": [],
+	"images": [],
+	"extension": {
+		"website": null,
+		"sections": {
+			"about": "Chemitec. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+			"portfolio": "Produtos e linhas comerciais cadastrados para consulta clínica.",
+			"support": "Informações de suporte e contato poderão ser estruturadas em etapa futura.",
+			"references": "Referências institucionais e bibliográficas poderão ser adicionadas aqui."
+		}
+	}
+}

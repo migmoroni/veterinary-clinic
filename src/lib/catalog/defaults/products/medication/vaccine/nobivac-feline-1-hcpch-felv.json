@@ -1,0 +1,41 @@
+{
+	"id": "9b8b5e0f-0dd3-40fb-876b-090c8dfbfbfb",
+	"type": [
+		"product",
+		"medication",
+		"vaccine"
+	],
+	"origin": "system",
+	"name": "Nobivac Feline 1-HCPCh + FeLV",
+	"species": [
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"V 5",
+		"V5",
+		"HCPCh+FeLV",
+		"FVRCP+Ch+FeLV",
+		"FeLV",
+		"quíntupla felina",
+		"quíntuple felina",
+		"feline five-way vaccine",
+		"rinotraqueíte felina",
+		"rinotraqueítis felina",
+		"feline rhinotracheitis",
+		"calicivirose felina",
+		"calicivirosis felina",
+		"feline calicivirosis",
+		"panleucopenia felina",
+		"feline panleukopenia",
+		"clamidiose felina",
+		"clamidiosis felina",
+		"feline chlamydiosis",
+		"leucemia felina",
+		"feline leukemia"
+	],
+	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"activeIngredientIds": []
+}

@@ -1,0 +1,24 @@
+{
+	"id": "be582967-68f0-4793-ba31-763c136f7d46",
+	"type": [
+		"product",
+		"medication",
+		"antiparasitic"
+	],
+	"origin": "system",
+	"name": "Drontal Gatos",
+	"species": [
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"praziquantel pamoato de pirantel",
+		"praziquantel pyrantel pamoate",
+		"tenicida",
+		"tapeworm treatment"
+	],
+	"manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
+	"activeIngredientIds": []
+}

@@ -1,0 +1,23 @@
+{
+	"id": "a6fd6ba3-fef0-46bc-85df-8b90f42bd0e0",
+	"type": [
+		"product",
+		"medication",
+		"vaccine"
+	],
+	"origin": "system",
+	"name": "Leucogen",
+	"species": [
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"FeLV",
+		"leucemia felina",
+		"feline leukemia"
+	],
+	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"activeIngredientIds": []
+}

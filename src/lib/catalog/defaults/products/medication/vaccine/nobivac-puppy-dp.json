@@ -1,0 +1,32 @@
+{
+	"id": "0b3e7a19-616b-4840-a245-ee07fb508814",
+	"type": [
+		"product",
+		"medication",
+		"vaccine"
+	],
+	"origin": "system",
+	"name": "Nobivac Puppy DP",
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"DP",
+		"filhote",
+		"cachorro",
+		"jagua ra’y",
+		"puppy",
+		"cinomose canina",
+		"esgana canina",
+		"moquillo canino",
+		"canine distemper",
+		"parvovirose canina",
+		"parvovirosis canina",
+		"canine parvovirus"
+	],
+	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"activeIngredientIds": []
+}

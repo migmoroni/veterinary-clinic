@@ -7,13 +7,13 @@ import { defaultManufacturerCatalogItems } from '$lib/domain/manufacturer/defaul
 import { isUuidV4 } from '$lib/domain/shared/uuid.js';
 
 function vaccine(name: string) {
-	const item = defaultProductCatalogItems.find((candidate) => candidate.type[1] === 'vaccine' && candidate.name === name);
+	const item = defaultProductCatalogItems.find((candidate) => candidate.type[2] === 'vaccine' && candidate.name === name);
 	if (!item) throw new Error(`Default vaccine not found: ${name}`);
 	return item;
 }
 
 function antiparasitic(name: string) {
-	const item = defaultProductCatalogItems.find((candidate) => candidate.type[1] === 'antiparasitic' && candidate.name === name);
+	const item = defaultProductCatalogItems.find((candidate) => candidate.type[2] === 'antiparasitic' && candidate.name === name);
 	if (!item) throw new Error(`Default antiparasitic not found: ${name}`);
 	return item;
 }

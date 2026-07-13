@@ -2,12 +2,16 @@ import type { ImageCollectionItem } from '$lib/domain/image-collection/image-col
 import { assertTextLimit } from '$lib/domain/shared/field-limits.js';
 
 export type CatalogEntityOrigin = 'system' | 'user';
-export type CatalogTypeTree = Record<string, readonly string[]>;
+export type CatalogTypeTree = Record<string, Record<string, readonly string[]>>;
 export type CatalogTypeTuple<TTree extends CatalogTypeTree = CatalogTypeTree> = {
-	[Main in keyof TTree & string]: readonly [Main, TTree[Main][number] extends never ? null : TTree[Main][number]];
+	[Entity in keyof TTree & string]: keyof TTree[Entity] extends never
+		? readonly [Entity, null, null]
+		: {
+				[Category in keyof TTree[Entity] & string]: TTree[Entity][Category][number] extends never ? readonly [Entity, Category, null] : readonly [Entity, Category, TTree[Entity][Category][number]];
+			}[keyof TTree[Entity] & string];
 }[keyof TTree & string];
 
-export interface CatalogEntityBase<TType extends readonly [string, string | null], TExtension> {
+export interface CatalogEntityBase<TType extends readonly [string, string | null, string | null], TExtension> {
 	id: string;
 	type: TType;
 	name: string;
@@ -25,46 +29,67 @@ export interface CatalogEntityBase<TType extends readonly [string, string | null
 export function catalogTypesFromTree<TTree extends CatalogTypeTree>(tree: TTree): CatalogTypeTuple<TTree>[] {
 	const types: CatalogTypeTuple<TTree>[] = [];
 
-	for (const main of Object.keys(tree) as Array<keyof TTree & string>) {
-		const subtypes = tree[main] as readonly string[];
-		if (subtypes.length === 0) {
-			types.push([main, null] as unknown as CatalogTypeTuple<TTree>);
+	for (const entity of Object.keys(tree) as Array<keyof TTree & string>) {
+		const categories = tree[entity];
+		const categoryNames = Object.keys(categories) as Array<keyof typeof categories & string>;
+		if (categoryNames.length === 0) {
+			types.push([entity, null, null] as unknown as CatalogTypeTuple<TTree>);
 			continue;
 		}
 
-		for (const subtype of subtypes) {
-			types.push([main, subtype] as unknown as CatalogTypeTuple<TTree>);
+		for (const category of categoryNames) {
+			const subcategories = categories[category] as readonly string[];
+			if (subcategories.length === 0) {
+				types.push([entity, category, null] as unknown as CatalogTypeTuple<TTree>);
+				continue;
+			}
+
+			for (const subcategory of subcategories) {
+				types.push([entity, category, subcategory] as unknown as CatalogTypeTuple<TTree>);
+			}
 		}
 	}
 
 	return types;
 }
 
-export function catalogTypeOptions<TTree extends CatalogTypeTree, TMain extends keyof TTree & string>(tree: TTree, main: TMain): readonly TTree[TMain][number][] {
-	return tree[main] as readonly TTree[TMain][number][];
+export function catalogTypeCategories<TTree extends CatalogTypeTree, TEntity extends keyof TTree & string>(tree: TTree, entity: TEntity): readonly (keyof TTree[TEntity] & string)[] {
+	return Object.keys(tree[entity]) as Array<keyof TTree[TEntity] & string>;
 }
 
-export function catalogType<TTree extends CatalogTypeTree, TMain extends keyof TTree & string>(tree: TTree, main: TMain, subtype: TTree[TMain][number] extends never ? null : TTree[TMain][number]): CatalogTypeTuple<TTree> {
-	const candidate = [main, subtype] as CatalogTypeTuple<TTree>;
+export function catalogTypeSubcategoryOptions<TTree extends CatalogTypeTree, TEntity extends keyof TTree & string, TCategory extends keyof TTree[TEntity] & string>(tree: TTree, entity: TEntity, category: TCategory): readonly TTree[TEntity][TCategory][number][] {
+	return tree[entity][category] as readonly TTree[TEntity][TCategory][number][];
+}
+
+export function catalogType<TTree extends CatalogTypeTree>(tree: TTree, entity: keyof TTree & string, category: string | null, subcategory: string | null): CatalogTypeTuple<TTree> {
+	const candidate = [entity, category, subcategory] as unknown as CatalogTypeTuple<TTree>;
 	if (!isCatalogType(candidate, tree)) throw new Error('catalog_type_invalid');
 	return candidate;
 }
 
-export function catalogTypeMain<TType extends readonly [string, string | null]>(type: TType): TType[0] {
+export function catalogTypeEntity<TType extends readonly [string, string | null, string | null]>(type: TType): TType[0] {
 	return type[0];
 }
 
-export function catalogTypeSubtype<TType extends readonly [string, string | null]>(type: TType): TType[1] {
+export function catalogTypeCategory<TType extends readonly [string, string | null, string | null]>(type: TType): TType[1] {
 	return type[1];
 }
 
-export function isCatalogType<TTree extends CatalogTypeTree>(value: unknown, tree: TTree): value is CatalogTypeTuple<TTree> {
-	if (!Array.isArray(value) || value.length !== 2) return false;
-	const [main, subtype] = value;
-	if (typeof main !== 'string' || !(main in tree)) return false;
+export function catalogTypeSubcategory<TType extends readonly [string, string | null, string | null]>(type: TType): TType[2] {
+	return type[2];
+}
 
-	const validSubtypes = tree[main] as readonly string[];
-	return validSubtypes.length === 0 ? subtype === null : typeof subtype === 'string' && validSubtypes.includes(subtype);
+export function isCatalogType<TTree extends CatalogTypeTree>(value: unknown, tree: TTree): value is CatalogTypeTuple<TTree> {
+	if (!Array.isArray(value) || value.length !== 3) return false;
+	const [entity, category, subcategory] = value;
+	if (typeof entity !== 'string' || !(entity in tree)) return false;
+
+	const categories = tree[entity];
+	if (Object.keys(categories).length === 0) return category === null && subcategory === null;
+	if (typeof category !== 'string' || !(category in categories)) return false;
+
+	const validSubcategories = categories[category] as readonly string[];
+	return validSubcategories.length === 0 ? subcategory === null : typeof subcategory === 'string' && validSubcategories.includes(subcategory);
 }
 
 export function parseCatalogType<TTree extends CatalogTypeTree>(value: string, tree: TTree): CatalogTypeTuple<TTree> {
@@ -73,7 +98,7 @@ export function parseCatalogType<TTree extends CatalogTypeTree>(value: string, t
 	return parsed;
 }
 
-export function stringifyCatalogType(type: readonly [string, string | null]): string {
+export function stringifyCatalogType(type: readonly [string, string | null, string | null]): string {
 	return JSON.stringify(type);
 }
 

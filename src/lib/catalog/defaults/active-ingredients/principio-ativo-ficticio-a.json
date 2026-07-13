@@ -1,0 +1,28 @@
+{
+	"id": "b173a72a-5666-4df0-8ef9-3ed4fc5cae0f",
+	"type": [
+		"activeIngredient",
+		"substance",
+		null
+	],
+	"origin": "system",
+	"name": "Princípio Ativo Fictício A",
+	"regions": [
+		"BRA",
+		"PRT"
+	],
+	"aliases": [
+		"ativo ficticio a",
+		"lorem active a"
+	],
+	"images": [],
+	"extension": {
+		"classification": "Substância demonstrativa",
+		"sections": {
+			"about": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae justo sed arcu facilisis luctus.",
+			"uses": "Uso demonstrativo em produtos fictícios para validar relação N:N no catálogo.",
+			"safety": "Segurança demonstrativa. Suspendisse potenti. Donec non mi ac augue facilisis volutpat.",
+			"references": "Referências fictícias para teste do catálogo."
+		}
+	}
+}

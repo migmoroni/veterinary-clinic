@@ -1,0 +1,24 @@
+{
+	"id": "fe51d5e2-6ed5-4e6a-b316-7e079a1e6db6",
+	"type": [
+		"product",
+		"medication",
+		"antiparasitic"
+	],
+	"origin": "system",
+	"name": "Mectimax",
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"aliases": [
+		"ivermectina",
+		"ivermectin",
+		"endectocida",
+		"endectocide"
+	],
+	"manufacturerId": "d7569f36-cd2f-416b-906f-ee89e82145cb",
+	"activeIngredientIds": []
+}

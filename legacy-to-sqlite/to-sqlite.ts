@@ -4,15 +4,17 @@ import { parse } from 'csv-parse/sync';
 import Database from 'better-sqlite3';
 import { PRODUCT_TYPES, productType, stringifyProductCatalogExtension, stringifyProductType } from '../src/lib/domain/product/catalog.js';
 import { defaultProductCatalogItems } from '../src/lib/domain/product/default-catalog.js';
-import { stringifyManufacturerType } from '../src/lib/domain/manufacturer/catalog.js';
+import { MANUFACTURER_TYPES, stringifyManufacturerType } from '../src/lib/domain/manufacturer/catalog.js';
 import { defaultManufacturerCatalogItems } from '../src/lib/domain/manufacturer/default-catalog.js';
-import { stringifyActiveIngredientType } from '../src/lib/domain/active-ingredient/catalog.js';
+import { ACTIVE_INGREDIENT_TYPES, stringifyActiveIngredientType } from '../src/lib/domain/active-ingredient/catalog.js';
 import { defaultActiveIngredientCatalogItems } from '../src/lib/domain/active-ingredient/default-catalog.js';
 import { CONDITION_TYPES, stringifyConditionCatalogExtension, stringifyConditionType } from '../src/lib/domain/condition/catalog.js';
 import { defaultConditionCatalogItems } from '../src/lib/domain/condition/default-catalog.js';
 import { defaultTreatmentProtocols } from '../src/lib/domain/treatment/default-protocol.js';
 
 const PRODUCT_TYPE_SQL_VALUES = PRODUCT_TYPES.map((type) => `'${stringifyProductType(type).replace(/'/g, "''")}'`).join(', ');
+const MANUFACTURER_TYPE_SQL_VALUES = MANUFACTURER_TYPES.map((type) => `'${stringifyManufacturerType(type).replace(/'/g, "''")}'`).join(', ');
+const ACTIVE_INGREDIENT_TYPE_SQL_VALUES = ACTIVE_INGREDIENT_TYPES.map((type) => `'${stringifyActiveIngredientType(type).replace(/'/g, "''")}'`).join(', ');
 const CONDITION_TYPE_SQL_VALUES = CONDITION_TYPES.map((type) => `'${stringifyConditionType(type).replace(/'/g, "''")}'`).join(', ');
 
 type CsvRow = Record<string, string | undefined>;
@@ -445,7 +447,7 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS manufacturer_catalog_items (
     id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
-    type TEXT NOT NULL CHECK(type = '["manufacturer",null]'),
+    type TEXT NOT NULL CHECK(type IN (${MANUFACTURER_TYPE_SQL_VALUES})),
     name TEXT NOT NULL,
     normalized_name TEXT NOT NULL,
     aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.catalogAliasesJson)}),
@@ -462,7 +464,7 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS active_ingredient_catalog_items (
     id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
-    type TEXT NOT NULL CHECK(type IN ('["activeIngredient","substance"]', '["activeIngredient","combination"]')),
+    type TEXT NOT NULL CHECK(type IN (${ACTIVE_INGREDIENT_TYPE_SQL_VALUES})),
     name TEXT NOT NULL,
     normalized_name TEXT NOT NULL,
     aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.catalogAliasesJson)}),
