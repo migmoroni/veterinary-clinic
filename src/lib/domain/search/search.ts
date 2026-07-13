@@ -1,12 +1,12 @@
 import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 
-export const SEARCH_RESULT_KINDS = ['owner', 'pet', 'product', 'manufacturer', 'activeIngredient', 'breed'] as const;
+export const SEARCH_RESULT_KINDS = ['owner', 'pet', 'product', 'manufacturer', 'activeIngredient', 'condition', 'breed'] as const;
 export type SearchResultKind = (typeof SEARCH_RESULT_KINDS)[number];
 
 export const CLINIC_SEARCH_RESULT_KINDS = ['owner', 'pet'] as const satisfies readonly SearchResultKind[];
 export type ClinicSearchResultKind = (typeof CLINIC_SEARCH_RESULT_KINDS)[number];
 
-export const REFERENCE_SEARCH_RESULT_KINDS = ['product', 'manufacturer', 'activeIngredient', 'breed'] as const satisfies readonly SearchResultKind[];
+export const REFERENCE_SEARCH_RESULT_KINDS = ['product', 'manufacturer', 'activeIngredient', 'condition', 'breed'] as const satisfies readonly SearchResultKind[];
 export type ReferenceSearchResultKind = (typeof REFERENCE_SEARCH_RESULT_KINDS)[number];
 
 export interface SearchResult {

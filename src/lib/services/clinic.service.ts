@@ -2,6 +2,7 @@ import type { CurrentRecordSummary } from '$lib/domain/medical-record/medical-re
 import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 import type { DashboardAnalytics } from '$lib/domain/dashboard/analytics.js';
 import { activeIngredientTypeSubtype, type ActiveIngredientCatalogItem } from '$lib/domain/active-ingredient/catalog.js';
+import { conditionTypeSubtype, type ConditionCatalogItem } from '$lib/domain/condition/catalog.js';
 import type { ManufacturerCatalogItem } from '$lib/domain/manufacturer/catalog.js';
 import type { BreedReferenceProfile } from '$lib/domain/pet/breed-reference.js';
 import { productLeafletSectionIds, type ProductCatalogItem, type ProductLeafletSectionId, type ProductSpecies } from '$lib/domain/product/catalog.js';
@@ -25,7 +26,7 @@ import { shouldResetOverviewLastRecordOnce } from './client-state.service.js';
 import { loadTreatmentAnalyticsOverview, loadTreatmentHistory } from './treatment-analytics.service.js';
 import { loadDashboardAnalytics } from './dashboard-analytics.service.js';
 import { requestPracticeIdentityRefresh } from './practice-profile.service.js';
-import { loadCatalogActiveIngredients, loadCatalogManufacturers, loadCatalogProducts } from './catalog.service.js';
+import { loadCatalogActiveIngredients, loadCatalogConditions, loadCatalogManufacturers, loadCatalogProducts } from './catalog.service.js';
 
 export { loadOwnerAvatarsByOwnerIds, loadPetAvatarsByPetIds } from './avatar.service.js';
 
@@ -95,14 +96,15 @@ export async function searchEverywhere(query: string, kinds: readonly SearchResu
 	if (searchTerms(query).length === 0) return [];
 
 	const clinicKinds = CLINIC_SEARCH_RESULT_KINDS.filter((kind): kind is ClinicSearchResultKind => shouldSearchKind(kind, kinds));
-	const [clinicResults, breedResults, productResults, manufacturerResults, activeIngredientResults] = await Promise.all([
+	const [clinicResults, breedResults, productResults, manufacturerResults, activeIngredientResults, conditionResults] = await Promise.all([
 		clinicKinds.length > 0 ? searchClinic(query, clinicKinds, i18n.locale) : Promise.resolve([]),
 		shouldSearchKind('breed', kinds) ? searchBreedReferences(query) : Promise.resolve([]),
 		shouldSearchKind('product', kinds) ? searchProducts(query) : Promise.resolve([]),
 		shouldSearchKind('manufacturer', kinds) ? searchManufacturers(query) : Promise.resolve([]),
-		shouldSearchKind('activeIngredient', kinds) ? searchActiveIngredients(query) : Promise.resolve([])
+		shouldSearchKind('activeIngredient', kinds) ? searchActiveIngredients(query) : Promise.resolve([]),
+		shouldSearchKind('condition', kinds) ? searchConditions(query) : Promise.resolve([])
 	]);
-	return [...clinicResults, ...breedResults, ...productResults, ...manufacturerResults, ...activeIngredientResults].slice(0, 80);
+	return [...clinicResults, ...breedResults, ...productResults, ...manufacturerResults, ...activeIngredientResults, ...conditionResults].slice(0, 80);
 }
 
 export async function filterActiveSearchResults(results: SearchResult[]): Promise<SearchResult[]> {
@@ -213,6 +215,10 @@ function activeIngredientSectionText(item: ActiveIngredientCatalogItem): string[
 	return Object.values(item.extension.sections).map((text) => text?.trim() ?? '');
 }
 
+function conditionSectionText(item: ConditionCatalogItem): string[] {
+	return Object.values(item.extension.sections).map((text) => text?.trim() ?? '');
+}
+
 function breedSearchScore(profile: BreedReferenceProfile, terms: readonly string[]): number {
 	return scoreSearchFields(
 		{
@@ -260,6 +266,26 @@ function activeIngredientSearchScore(item: ActiveIngredientCatalogItem, terms: r
 			support: [t('catalog.activeIngredient'), activeIngredientTypeLabel(item), item.extension.classification ?? ''],
 			metadata: [item.regions.map(regionLabel).join(' ')],
 			details: activeIngredientSectionText(item)
+		},
+		terms
+	);
+}
+
+function conditionTypeLabel(item: ConditionCatalogItem): string {
+	const subtype = conditionTypeSubtype(item.type);
+	if (subtype === 'syndrome') return t('catalog.condition.type.syndrome');
+	if (subtype === 'disorder') return t('catalog.condition.type.disorder');
+	if (subtype === 'injury') return t('catalog.condition.type.injury');
+	return t('catalog.condition.type.disease');
+}
+
+function conditionSearchScore(item: ConditionCatalogItem, terms: readonly string[]): number {
+	return scoreSearchFields(
+		{
+			primary: [item.name, String(item.id), ...item.aliases],
+			support: [t('catalog.condition'), conditionTypeLabel(item), item.extension.classification ?? ''],
+			metadata: [item.regions.map(regionLabel).join(' ')],
+			details: conditionSectionText(item)
 		},
 		terms
 	);
@@ -341,20 +367,41 @@ async function searchActiveIngredients(query: string): Promise<SearchResult[]> {
 		}));
 }
 
+async function searchConditions(query: string): Promise<SearchResult[]> {
+	const terms = searchTerms(query);
+	const items = await loadCatalogConditions(true, false);
+	return items
+		.map((item) => ({ item, score: conditionSearchScore(item, terms) }))
+		.filter(({ score }) => acceptsReferenceScore(score, terms))
+		.sort((first, second) => second.score - first.score || first.item.name.localeCompare(second.item.name))
+		.map(({ item }) => ({
+			kind: 'condition',
+			id: item.id,
+			ownerId: null,
+			petId: null,
+			href: `/formulary/conditions/${item.id}`,
+			title: item.name,
+			subtitle: [t('catalog.condition'), conditionTypeLabel(item)].join(' · '),
+			referenceImageBytes: null
+		}));
+}
+
 async function activeReferenceResultKeys(results: SearchResult[]): Promise<Set<string>> {
 	const referenceResults = results.filter((result) => isReferenceSearchResultKind(result.kind));
 	if (referenceResults.length === 0) return new Set<string>();
 
-	const [profiles, products, manufacturers, activeIngredients] = await Promise.all([
+	const [profiles, products, manufacturers, activeIngredients, conditions] = await Promise.all([
 		loadBreedReferenceProfiles(false),
 		loadCatalogProducts(true, false),
 		loadCatalogManufacturers(true, false),
-		loadCatalogActiveIngredients(true, false)
+		loadCatalogActiveIngredients(true, false),
+		loadCatalogConditions(true, false)
 	]);
 	const breedIds = new Set(profiles.map((profile) => profile.breedId));
 	const productIds = new Set(products.map((item) => item.id));
 	const manufacturerIds = new Set(manufacturers.map((item) => item.id));
 	const activeIngredientIds = new Set(activeIngredients.map((item) => item.id));
+	const conditionIds = new Set(conditions.map((item) => item.id));
 	const activeKeys = new Set<string>();
 
 	for (const result of referenceResults) {
@@ -362,6 +409,7 @@ async function activeReferenceResultKeys(results: SearchResult[]): Promise<Set<s
 		if (result.kind === 'product' && productIds.has(String(result.id))) activeKeys.add(searchResultKey(result));
 		if (result.kind === 'manufacturer' && manufacturerIds.has(String(result.id))) activeKeys.add(searchResultKey(result));
 		if (result.kind === 'activeIngredient' && activeIngredientIds.has(String(result.id))) activeKeys.add(searchResultKey(result));
+		if (result.kind === 'condition' && conditionIds.has(String(result.id))) activeKeys.add(searchResultKey(result));
 	}
 
 	return activeKeys;

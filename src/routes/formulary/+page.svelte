@@ -27,6 +27,12 @@
 		activeIngredientTypeSubtype,
 		type ActiveIngredientCatalogItem,
 	} from "$lib/domain/active-ingredient/catalog.js";
+	import {
+		CONDITION_TYPES,
+		conditionTypeSubtype,
+		stringifyConditionType,
+		type ConditionCatalogItem,
+	} from "$lib/domain/condition/catalog.js";
 	import { type ManufacturerCatalogItem } from "$lib/domain/manufacturer/catalog.js";
 	import {
 		PRODUCT_TYPES,
@@ -43,10 +49,12 @@
 	import { i18n, t, type TranslationKey } from "$lib/i18n/index.js";
 	import {
 		loadCatalogActiveIngredients,
+		loadCatalogConditions,
 		loadCatalogManufacturers,
 		loadCatalogProducts,
 		type CatalogEntityKind,
 	} from "$lib/services/catalog.service.js";
+	import Activity from "@lucide/svelte/icons/activity";
 	import Building2 from "@lucide/svelte/icons/building-2";
 	import FlaskConical from "@lucide/svelte/icons/flask-conical";
 	import Info from "@lucide/svelte/icons/info";
@@ -59,7 +67,8 @@
 	type CatalogItem =
 		| (ProductCatalogItem & { kind: "product" })
 		| (ManufacturerCatalogItem & { kind: "manufacturer" })
-		| (ActiveIngredientCatalogItem & { kind: "activeIngredient" });
+		| (ActiveIngredientCatalogItem & { kind: "activeIngredient" })
+		| (ConditionCatalogItem & { kind: "condition" });
 
 	let products = $state<(ProductCatalogItem & { kind: "product" })[]>([]);
 	let manufacturers = $state<
@@ -68,6 +77,9 @@
 	let activeIngredients = $state<
 		(ActiveIngredientCatalogItem & { kind: "activeIngredient" })[]
 	>([]);
+	let conditions = $state<(ConditionCatalogItem & { kind: "condition" })[]>(
+		[],
+	);
 	let loading = $state(true);
 	let errorKey = $state<TranslationKey | null>(null);
 	let searchTerm = $state("");
@@ -106,16 +118,19 @@
 		"product",
 		"manufacturer",
 		"activeIngredient",
+		"condition",
 	];
 	const currentItems = $derived.by<CatalogItem[]>(() => {
 		const items =
 			catalogKind === "all"
-				? [...products, ...manufacturers, ...activeIngredients]
+				? [...products, ...manufacturers, ...activeIngredients, ...conditions]
 				: catalogKind === "product"
 					? products
 					: catalogKind === "manufacturer"
 						? manufacturers
-						: activeIngredients;
+						: catalogKind === "activeIngredient"
+							? activeIngredients
+							: conditions;
 		return [...items].sort((a, b) =>
 			a.name.localeCompare(b.name, i18n.locale),
 		);
@@ -151,6 +166,12 @@
 			if (item.kind === "activeIngredient" && typeFilter !== "all") {
 				const activeIngredient = item as ActiveIngredientCatalogItem;
 				if (JSON.stringify(activeIngredient.type) !== typeFilter)
+					return false;
+			}
+
+			if (item.kind === "condition" && typeFilter !== "all") {
+				const condition = item as ConditionCatalogItem;
+				if (stringifyConditionType(condition.type) !== typeFilter)
 					return false;
 			}
 
@@ -276,12 +297,32 @@
 			];
 		}
 
+		if (catalogKind === "condition") {
+			return [
+				{
+					id: "formulary-condition-type-filter",
+					label: t("formulary.kindFilter"),
+					value: typeFilter,
+					options: [
+						{ value: "all", label: t("formulary.allKinds") },
+						...CONDITION_TYPES.map((type) => ({
+							value: stringifyConditionType(type),
+							label: conditionTypeLabel(type as ConditionCatalogItem["type"]),
+						})),
+					],
+					onchange: (value) => (typeFilter = value as TypeFilter),
+				},
+				...controls,
+			];
+		}
+
 		return controls;
 	});
 
 	function itemKindLabel(kind: CatalogEntityKind): string {
 		if (kind === "manufacturer") return t("catalog.manufacturers");
 		if (kind === "activeIngredient") return t("catalog.activeIngredients");
+		if (kind === "condition") return t("catalog.conditions");
 		return t("catalog.products");
 	}
 
@@ -318,6 +359,23 @@
 				imageBytes: item.primaryImage?.imageBytes ?? null,
 				imageAlt: item.name,
 				fallbackIcon: Building2,
+			};
+		}
+
+		if (item.kind === "condition") {
+			const condition = item as ConditionCatalogItem;
+			return {
+				id: condition.id,
+				title: condition.name,
+				subtitle: conditionTypeLabel(condition.type),
+				detail: condition.extension.classification ?? null,
+				meta:
+					condition.origin === "user"
+						? catalogOriginLabel(condition.origin)
+						: "",
+				imageBytes: condition.primaryImage?.imageBytes ?? null,
+				imageAlt: condition.name,
+				fallbackIcon: Activity,
 			};
 		}
 
@@ -386,6 +444,26 @@
 			];
 		}
 
+		if (item.kind === "condition") {
+			const condition = item as ConditionCatalogItem;
+			return [
+				{
+					label: t("formulary.kind"),
+					value: conditionTypeLabel(condition.type),
+				},
+				{
+					label: t("formulary.classification"),
+					value:
+						condition.extension.classification ??
+						t("common.notInformed"),
+				},
+				{
+					label: t("product.regions"),
+					value: catalogRegionSummary(condition.regions),
+				},
+			];
+		}
+
 		return [
 			{
 				label: t("formulary.originFilter"),
@@ -400,6 +478,8 @@
 			return `/formulary/manufacturers/${item.id}`;
 		if (item.kind === "activeIngredient")
 			return `/formulary/active-ingredients/${item.id}`;
+		if (item.kind === "condition")
+			return `/formulary/conditions/${item.id}`;
 		return `/formulary/products/${item.id}`;
 	}
 
@@ -429,6 +509,12 @@
 		return [
 			item.name,
 			item.aliases.join(" "),
+			item.kind === "condition"
+				? conditionTypeLabel((item as ConditionCatalogItem).type)
+				: "",
+			item.kind === "condition"
+				? ((item as ConditionCatalogItem).extension.classification ?? "")
+				: "",
 			catalogOriginLabel(item.origin),
 			catalogRegionSummary(item.regions),
 			...Object.values(item.extension.sections ?? {}),
@@ -447,6 +533,14 @@
 		return activeIngredientTypeSubtype(type) === "combination"
 			? t("catalog.activeIngredient.type.combination")
 			: t("catalog.activeIngredient.type.substance");
+	}
+
+	function conditionTypeLabel(type: ConditionCatalogItem["type"]): string {
+		const subtype = conditionTypeSubtype(type);
+		if (subtype === "syndrome") return t("catalog.condition.type.syndrome");
+		if (subtype === "disorder") return t("catalog.condition.type.disorder");
+		if (subtype === "injury") return t("catalog.condition.type.injury");
+		return t("catalog.condition.type.disease");
 	}
 
 	function speciesLabel(species: ProductSpecies): string {
@@ -478,7 +572,8 @@
 		if (
 			value === "product" ||
 			value === "manufacturer" ||
-			value === "activeIngredient"
+			value === "activeIngredient" ||
+			value === "condition"
 		)
 			return value;
 		return "all";
@@ -524,7 +619,15 @@
 	function getKindIcon(kind: CatalogEntityKind) {
 		if (kind === "manufacturer") return Building2;
 		if (kind === "activeIngredient") return FlaskConical;
+		if (kind === "condition") return Activity;
 		return Pill;
+	}
+
+	function catalogFallbackIcon(item: CatalogItem) {
+		if (item.kind === "manufacturer") return Building2;
+		if (item.kind === "activeIngredient") return FlaskConical;
+		if (item.kind === "condition") return Activity;
+		return productFallbackIcon(item as ProductCatalogItem);
 	}
 
 	function selectCatalogKind(kind: CatalogEntityKind) {
@@ -558,10 +661,12 @@
 				loadedProducts,
 				loadedManufacturers,
 				loadedActiveIngredients,
+				loadedConditions,
 			] = await Promise.all([
 				loadCatalogProducts(true, true),
 				loadCatalogManufacturers(true, true),
 				loadCatalogActiveIngredients(true, true),
+				loadCatalogConditions(true, true),
 			]);
 			products = loadedProducts.map((p) => ({
 				...p,
@@ -574,6 +679,10 @@
 			activeIngredients = loadedActiveIngredients.map((a) => ({
 				...a,
 				kind: "activeIngredient" as const,
+			}));
+			conditions = loadedConditions.map((condition) => ({
+				...condition,
+				kind: "condition" as const,
 			}));
 		} catch {
 			errorKey = "formulary.loadFailed";
@@ -689,10 +798,7 @@
 								className="h-[18vh] min-h-[90px] max-h-[170px] w-full rounded-b-none border-0 bg-muted/60"
 								imageClass="h-full w-full object-contain p-3"
 								iconClass="size-10 text-primary"
-								fallbackIcon={selectedItem.kind ===
-								"manufacturer"
-									? Building2
-									: FlaskConical}
+								fallbackIcon={catalogFallbackIcon(selectedItem)}
 							/>
 						{/if}
 					{/snippet}

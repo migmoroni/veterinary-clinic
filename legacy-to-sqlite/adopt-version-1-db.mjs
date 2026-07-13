@@ -12,6 +12,7 @@ const defaultOutputPath = path.resolve(scriptDir, 'build/veterinary_clinic-versi
 const productDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/product/defaults');
 const manufacturerDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/manufacturer/defaults');
 const activeIngredientDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/active-ingredient/defaults');
+const conditionDefaultsDir = path.resolve(scriptDir, '../src/lib/domain/condition/defaults');
 
 const productTypeValues = {
 	medication: {
@@ -30,6 +31,13 @@ const activeIngredientTypeValues = {
 	substance: JSON.stringify(['activeIngredient', 'substance']),
 	combination: JSON.stringify(['activeIngredient', 'combination'])
 };
+const conditionTypeValues = {
+	disease: JSON.stringify(['condition', 'disease']),
+	syndrome: JSON.stringify(['condition', 'syndrome']),
+	disorder: JSON.stringify(['condition', 'disorder']),
+	injury: JSON.stringify(['condition', 'injury'])
+};
+const conditionTypeSqlValues = Object.values(conditionTypeValues).map(quoteSqlString).join(', ');
 
 function printUsage() {
 	console.log(`Uso:
@@ -145,6 +153,16 @@ function readDefaultActiveIngredients() {
 	});
 }
 
+function readDefaultConditions() {
+	return readJsonFiles(conditionDefaultsDir).map((file) => {
+		const item = readJson(file);
+		return {
+			type: conditionTypeValues[item.subtype] ?? conditionTypeValues.disease,
+			...item
+		};
+	});
+}
+
 function productTypeFromPath(file) {
 	const parts = file.split(path.sep);
 	const medicationIndex = parts.lastIndexOf('medication');
@@ -194,6 +212,21 @@ function createCatalogTables(database) {
 		CREATE TABLE IF NOT EXISTS active_ingredient_catalog_items (
 			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
 			type TEXT NOT NULL CHECK(type IN ('["activeIngredient","substance"]', '["activeIngredient","combination"]')),
+			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
+			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) BETWEEN 1 AND 120),
+			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),
+			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
+			regions TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(regions)) BETWEEN 1 AND 1024),
+			extension TEXT NOT NULL DEFAULT '{}' CHECK(length(trim(extension)) BETWEEN 1 AND 64000),
+			hidden_at TEXT,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			UNIQUE(normalized_name)
+		);
+
+		CREATE TABLE IF NOT EXISTS condition_catalog_items (
+			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
+			type TEXT NOT NULL CHECK(type IN (${conditionTypeSqlValues})),
 			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
 			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) BETWEEN 1 AND 120),
 			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),
@@ -262,6 +295,33 @@ function syncDefaultActiveIngredients(database) {
 		WHERE active_ingredient_catalog_items.origin = 'system'
 	`);
 	for (const item of readDefaultActiveIngredients()) {
+		insert.run({
+			id: item.id,
+			type: item.type,
+			name: item.name,
+			normalized_name: normalizeName(item.name),
+			aliases: JSON.stringify(Array.isArray(item.aliases) ? item.aliases : []),
+			regions: JSON.stringify(Array.isArray(item.regions) ? item.regions : []),
+			extension: JSON.stringify(item.extension ?? {})
+		});
+	}
+}
+
+function syncDefaultConditions(database) {
+	const insert = database.prepare(`
+		INSERT INTO condition_catalog_items (id, type, name, normalized_name, aliases, origin, regions, extension, updated_at)
+		VALUES (@id, @type, @name, @normalized_name, @aliases, 'system', @regions, @extension, CURRENT_TIMESTAMP)
+		ON CONFLICT(id) DO UPDATE SET
+			type = excluded.type,
+			name = excluded.name,
+			normalized_name = excluded.normalized_name,
+			aliases = excluded.aliases,
+			regions = excluded.regions,
+			extension = excluded.extension,
+			updated_at = CURRENT_TIMESTAMP
+		WHERE condition_catalog_items.origin = 'system'
+	`);
+	for (const item of readDefaultConditions()) {
 		insert.run({
 			id: item.id,
 			type: item.type,
@@ -401,6 +461,8 @@ function createIndexes(database) {
 		CREATE INDEX IF NOT EXISTS idx_manufacturer_catalog_items_hidden_at ON manufacturer_catalog_items(hidden_at);
 		CREATE INDEX IF NOT EXISTS idx_active_ingredient_catalog_items_type_name ON active_ingredient_catalog_items(type, name COLLATE NOCASE);
 		CREATE INDEX IF NOT EXISTS idx_active_ingredient_catalog_items_hidden_at ON active_ingredient_catalog_items(hidden_at);
+		CREATE INDEX IF NOT EXISTS idx_condition_catalog_items_type_name ON condition_catalog_items(type, name COLLATE NOCASE);
+		CREATE INDEX IF NOT EXISTS idx_condition_catalog_items_hidden_at ON condition_catalog_items(hidden_at);
 		CREATE INDEX IF NOT EXISTS idx_product_catalog_items_type_name ON product_catalog_items(type, name COLLATE NOCASE);
 		CREATE INDEX IF NOT EXISTS idx_product_catalog_items_type_normalized_name ON product_catalog_items(type, normalized_name);
 		CREATE INDEX IF NOT EXISTS idx_product_catalog_items_manufacturer_id ON product_catalog_items(manufacturer_id);
@@ -423,6 +485,7 @@ function adoptDatabase(sourcePath, outputPath) {
 			createCatalogTables(database);
 			syncDefaultManufacturers(database);
 			syncDefaultActiveIngredients(database);
+			syncDefaultConditions(database);
 			rebuildProductCatalog(database);
 			syncDefaultProducts(database);
 			createIndexes(database);

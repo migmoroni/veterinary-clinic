@@ -8,9 +8,12 @@ import { stringifyManufacturerType } from '../src/lib/domain/manufacturer/catalo
 import { defaultManufacturerCatalogItems } from '../src/lib/domain/manufacturer/default-catalog.js';
 import { stringifyActiveIngredientType } from '../src/lib/domain/active-ingredient/catalog.js';
 import { defaultActiveIngredientCatalogItems } from '../src/lib/domain/active-ingredient/default-catalog.js';
+import { CONDITION_TYPES, stringifyConditionCatalogExtension, stringifyConditionType } from '../src/lib/domain/condition/catalog.js';
+import { defaultConditionCatalogItems } from '../src/lib/domain/condition/default-catalog.js';
 import { defaultTreatmentProtocols } from '../src/lib/domain/treatment/default-protocol.js';
 
 const PRODUCT_TYPE_SQL_VALUES = PRODUCT_TYPES.map((type) => `'${stringifyProductType(type).replace(/'/g, "''")}'`).join(', ');
+const CONDITION_TYPE_SQL_VALUES = CONDITION_TYPES.map((type) => `'${stringifyConditionType(type).replace(/'/g, "''")}'`).join(', ');
 
 type CsvRow = Record<string, string | undefined>;
 type OwnerContactKind = 'phone' | 'mobile' | 'email' | 'other';
@@ -256,6 +259,7 @@ db.exec(`
   DROP TABLE IF EXISTS treatment_protocols;
   DROP TABLE IF EXISTS product_active_ingredients;
   DROP TABLE IF EXISTS product_catalog_items;
+  DROP TABLE IF EXISTS condition_catalog_items;
   DROP TABLE IF EXISTS active_ingredient_catalog_items;
   DROP TABLE IF EXISTS manufacturer_catalog_items;
   DROP TABLE IF EXISTS backup_history;
@@ -473,6 +477,23 @@ db.exec(`
     CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.productNormalizedName)})
   );
 
+  CREATE TABLE IF NOT EXISTS condition_catalog_items (
+    id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
+    type TEXT NOT NULL CHECK(type IN (${CONDITION_TYPE_SQL_VALUES})),
+    name TEXT NOT NULL,
+    normalized_name TEXT NOT NULL,
+    aliases TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('aliases', FIELD_LIMITS.catalogAliasesJson)}),
+    origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
+    regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.productRegionsJson)}),
+    extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.productExtensionJson)}),
+    hidden_at TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT,
+    UNIQUE(normalized_name),
+    CHECK(${requiredTextCheck('name', FIELD_LIMITS.productName)}),
+    CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.productNormalizedName)})
+  );
+
   CREATE TABLE IF NOT EXISTS product_catalog_items (
     id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
     type TEXT NOT NULL CHECK(type IN (${PRODUCT_TYPE_SQL_VALUES})),
@@ -611,6 +632,8 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_manufacturer_catalog_items_hidden_at ON manufacturer_catalog_items(hidden_at);
   CREATE INDEX IF NOT EXISTS idx_active_ingredient_catalog_items_type_name ON active_ingredient_catalog_items(type, name COLLATE NOCASE);
   CREATE INDEX IF NOT EXISTS idx_active_ingredient_catalog_items_hidden_at ON active_ingredient_catalog_items(hidden_at);
+  CREATE INDEX IF NOT EXISTS idx_condition_catalog_items_type_name ON condition_catalog_items(type, name COLLATE NOCASE);
+  CREATE INDEX IF NOT EXISTS idx_condition_catalog_items_hidden_at ON condition_catalog_items(hidden_at);
   CREATE INDEX IF NOT EXISTS idx_product_catalog_items_type_name ON product_catalog_items(type, name COLLATE NOCASE);
   CREATE INDEX IF NOT EXISTS idx_product_catalog_items_type_normalized_name ON product_catalog_items(type, normalized_name);
   CREATE INDEX IF NOT EXISTS idx_product_catalog_items_manufacturer_id ON product_catalog_items(manufacturer_id);
@@ -730,6 +753,11 @@ const insertActiveIngredientCatalogItem = db.prepare(`
   VALUES (@id, @type, @name, @normalizedName, @aliases, @origin, @regions, @extension, CURRENT_TIMESTAMP)
 `);
 
+const insertConditionCatalogItem = db.prepare(`
+  INSERT OR IGNORE INTO condition_catalog_items (id, type, name, normalized_name, aliases, origin, regions, extension, updated_at)
+  VALUES (@id, @type, @name, @normalizedName, @aliases, @origin, @regions, @extension, CURRENT_TIMESTAMP)
+`);
+
 const insertProductActiveIngredient = db.prepare(`
   INSERT OR IGNORE INTO product_active_ingredients (product_id, active_ingredient_id, sort_order, updated_at)
   VALUES (@productId, @activeIngredientId, @sortOrder, CURRENT_TIMESTAMP)
@@ -816,6 +844,19 @@ for (const item of defaultActiveIngredientCatalogItems) {
     origin: item.origin,
     regions: JSON.stringify(item.regions),
     extension: JSON.stringify(item.extension ?? {})
+  });
+}
+
+for (const item of defaultConditionCatalogItems) {
+  insertConditionCatalogItem.run({
+    id: item.id,
+    type: stringifyConditionType(item.type),
+    name: item.name,
+    normalizedName: normalizeVaccineName(item.name),
+    aliases: JSON.stringify(item.aliases),
+    origin: item.origin,
+    regions: JSON.stringify(item.regions),
+    extension: stringifyConditionCatalogExtension(item.extension)
   });
 }
 
