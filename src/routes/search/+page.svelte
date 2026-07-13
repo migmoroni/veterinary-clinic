@@ -10,6 +10,8 @@
 	import { t } from '$lib/i18n/index.js';
 	import { RECENT_SEARCH_STORAGE_KEY } from '$lib/services/client-state.service.js';
 	import { filterActiveSearchResults, loadOwnerAssociatedContactsByOwnerIds, loadOwnerAvatarsByOwnerIds, loadPetAvatarsByPetIds, searchEverywhere } from '$lib/services/clinic.service.js';
+	import Building2 from '@lucide/svelte/icons/building-2';
+	import FlaskConical from '@lucide/svelte/icons/flask-conical';
 	import PawPrint from '@lucide/svelte/icons/paw-print';
 	import Pill from '@lucide/svelte/icons/pill';
 	import Phone from '@lucide/svelte/icons/phone';
@@ -40,7 +42,9 @@
 		if (kind === 'owner') return t('search.kind.owner');
 		if (kind === 'pet') return t('search.kind.pet');
 		if (kind === 'breed') return t('search.kind.breed');
-		return t('search.kind.product');
+		if (kind === 'product') return t('search.kind.product');
+		if (kind === 'manufacturer') return t('search.kind.manufacturer');
+		return t('search.kind.activeIngredient');
 	}
 
 	function resultKey(result: SearchResult): string {
@@ -68,6 +72,8 @@
 		};
 		if (normalizedResult.kind === 'breed') return { ...normalizedResult, href: `/breeds/${normalizedResult.id}` };
 		if (normalizedResult.kind === 'product') return { ...normalizedResult, href: `/formulary/products/${normalizedResult.id}` };
+		if (normalizedResult.kind === 'manufacturer') return { ...normalizedResult, href: `/formulary/manufacturers/${normalizedResult.id}` };
+		if (normalizedResult.kind === 'activeIngredient') return { ...normalizedResult, href: `/formulary/active-ingredients/${normalizedResult.id}` };
 		return normalizedResult;
 	}
 
@@ -283,6 +289,10 @@
 							<BinaryImage imageBytes={result.referenceImageBytes} alt={result.title} className="mt-0.5 size-10" imageClass="h-full w-full object-cover" iconClass="size-5 text-primary" fallbackIcon={PawPrint} />
 						{:else if result.kind === 'product'}
 							<BinaryImage imageBytes={result.referenceImageBytes} alt={result.title} className="mt-0.5 size-10" imageClass="h-full w-full object-contain p-1.5" iconClass="size-5 text-primary" fallbackIcon={Pill} />
+						{:else if result.kind === 'manufacturer'}
+							<BinaryImage imageBytes={result.referenceImageBytes} alt={result.title} className="mt-0.5 size-10" imageClass="h-full w-full object-contain p-1.5" iconClass="size-5 text-primary" fallbackIcon={Building2} />
+						{:else if result.kind === 'activeIngredient'}
+							<BinaryImage imageBytes={result.referenceImageBytes} alt={result.title} className="mt-0.5 size-10" imageClass="h-full w-full object-contain p-1.5" iconClass="size-5 text-primary" fallbackIcon={FlaskConical} />
 						{/if}
 						<span class="min-w-0 flex-1">
 							<span class="block truncate text-sm font-medium">{result.title}</span>

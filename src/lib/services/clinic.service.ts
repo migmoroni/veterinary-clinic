@@ -1,6 +1,8 @@
 import type { CurrentRecordSummary } from '$lib/domain/medical-record/medical-record.js';
 import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 import type { DashboardAnalytics } from '$lib/domain/dashboard/analytics.js';
+import { activeIngredientTypeSubtype, type ActiveIngredientCatalogItem } from '$lib/domain/active-ingredient/catalog.js';
+import type { ManufacturerCatalogItem } from '$lib/domain/manufacturer/catalog.js';
 import type { BreedReferenceProfile } from '$lib/domain/pet/breed-reference.js';
 import { productLeafletSectionIds, type ProductCatalogItem, type ProductLeafletSectionId, type ProductSpecies } from '$lib/domain/product/catalog.js';
 import { productTypeLabel } from '$lib/domain/product/type-labels.js';
@@ -23,7 +25,7 @@ import { shouldResetOverviewLastRecordOnce } from './client-state.service.js';
 import { loadTreatmentAnalyticsOverview, loadTreatmentHistory } from './treatment-analytics.service.js';
 import { loadDashboardAnalytics } from './dashboard-analytics.service.js';
 import { requestPracticeIdentityRefresh } from './practice-profile.service.js';
-import { loadCatalogProducts } from './catalog.service.js';
+import { loadCatalogActiveIngredients, loadCatalogManufacturers, loadCatalogProducts } from './catalog.service.js';
 
 export { loadOwnerAvatarsByOwnerIds, loadPetAvatarsByPetIds } from './avatar.service.js';
 
@@ -93,12 +95,14 @@ export async function searchEverywhere(query: string, kinds: readonly SearchResu
 	if (searchTerms(query).length === 0) return [];
 
 	const clinicKinds = CLINIC_SEARCH_RESULT_KINDS.filter((kind): kind is ClinicSearchResultKind => shouldSearchKind(kind, kinds));
-	const [clinicResults, breedResults, productResults] = await Promise.all([
+	const [clinicResults, breedResults, productResults, manufacturerResults, activeIngredientResults] = await Promise.all([
 		clinicKinds.length > 0 ? searchClinic(query, clinicKinds, i18n.locale) : Promise.resolve([]),
 		shouldSearchKind('breed', kinds) ? searchBreedReferences(query) : Promise.resolve([]),
-		shouldSearchKind('product', kinds) ? searchProducts(query) : Promise.resolve([])
+		shouldSearchKind('product', kinds) ? searchProducts(query) : Promise.resolve([]),
+		shouldSearchKind('manufacturer', kinds) ? searchManufacturers(query) : Promise.resolve([]),
+		shouldSearchKind('activeIngredient', kinds) ? searchActiveIngredients(query) : Promise.resolve([])
 	]);
-	return [...clinicResults, ...breedResults, ...productResults].slice(0, 80);
+	return [...clinicResults, ...breedResults, ...productResults, ...manufacturerResults, ...activeIngredientResults].slice(0, 80);
 }
 
 export async function filterActiveSearchResults(results: SearchResult[]): Promise<SearchResult[]> {
@@ -201,6 +205,14 @@ function productSectionText(item: ProductCatalogItem, sectionId: ProductLeafletS
 	return item.extension.sections[sectionId]?.trim() ?? '';
 }
 
+function manufacturerSectionText(item: ManufacturerCatalogItem): string[] {
+	return Object.values(item.extension.sections).map((text) => text?.trim() ?? '');
+}
+
+function activeIngredientSectionText(item: ActiveIngredientCatalogItem): string[] {
+	return Object.values(item.extension.sections).map((text) => text?.trim() ?? '');
+}
+
 function breedSearchScore(profile: BreedReferenceProfile, terms: readonly string[]): number {
 	return scoreSearchFields(
 		{
@@ -220,6 +232,34 @@ function productSearchScore(item: ProductCatalogItem, terms: readonly string[]):
 			support: [item.manufacturerName ?? '', ...item.activeIngredients.map((ingredient) => ingredient.name), productCatalogTypeLabel(item), item.extension.classification ?? '', item.extension.commercialLine ?? ''],
 			metadata: [speciesSummary(item.species), item.regions.map(regionLabel).join(' ')],
 			details: productLeafletSectionIds.map((sectionId) => productSectionText(item, sectionId))
+		},
+		terms
+	);
+}
+
+function manufacturerSearchScore(item: ManufacturerCatalogItem, terms: readonly string[]): number {
+	return scoreSearchFields(
+		{
+			primary: [item.name, String(item.id), ...item.aliases],
+			support: [t('catalog.manufacturer'), item.extension.website ?? ''],
+			metadata: [item.regions.map(regionLabel).join(' ')],
+			details: manufacturerSectionText(item)
+		},
+		terms
+	);
+}
+
+function activeIngredientTypeLabel(item: ActiveIngredientCatalogItem): string {
+	return activeIngredientTypeSubtype(item.type) === 'combination' ? t('catalog.activeIngredient.type.combination') : t('catalog.activeIngredient.type.substance');
+}
+
+function activeIngredientSearchScore(item: ActiveIngredientCatalogItem, terms: readonly string[]): number {
+	return scoreSearchFields(
+		{
+			primary: [item.name, String(item.id), ...item.aliases],
+			support: [t('catalog.activeIngredient'), activeIngredientTypeLabel(item), item.extension.classification ?? ''],
+			metadata: [item.regions.map(regionLabel).join(' ')],
+			details: activeIngredientSectionText(item)
 		},
 		terms
 	);
@@ -263,18 +303,65 @@ async function searchProducts(query: string): Promise<SearchResult[]> {
 		}));
 }
 
+async function searchManufacturers(query: string): Promise<SearchResult[]> {
+	const terms = searchTerms(query);
+	const items = await loadCatalogManufacturers(true, false);
+	return items
+		.map((item) => ({ item, score: manufacturerSearchScore(item, terms) }))
+		.filter(({ score }) => acceptsReferenceScore(score, terms))
+		.sort((first, second) => second.score - first.score || first.item.name.localeCompare(second.item.name))
+		.map(({ item }) => ({
+			kind: 'manufacturer',
+			id: item.id,
+			ownerId: null,
+			petId: null,
+			href: `/formulary/manufacturers/${item.id}`,
+			title: item.name,
+			subtitle: t('catalog.manufacturer'),
+			referenceImageBytes: null
+		}));
+}
+
+async function searchActiveIngredients(query: string): Promise<SearchResult[]> {
+	const terms = searchTerms(query);
+	const items = await loadCatalogActiveIngredients(true, false);
+	return items
+		.map((item) => ({ item, score: activeIngredientSearchScore(item, terms) }))
+		.filter(({ score }) => acceptsReferenceScore(score, terms))
+		.sort((first, second) => second.score - first.score || first.item.name.localeCompare(second.item.name))
+		.map(({ item }) => ({
+			kind: 'activeIngredient',
+			id: item.id,
+			ownerId: null,
+			petId: null,
+			href: `/formulary/active-ingredients/${item.id}`,
+			title: item.name,
+			subtitle: [t('catalog.activeIngredient'), activeIngredientTypeLabel(item)].join(' · '),
+			referenceImageBytes: null
+		}));
+}
+
 async function activeReferenceResultKeys(results: SearchResult[]): Promise<Set<string>> {
 	const referenceResults = results.filter((result) => isReferenceSearchResultKind(result.kind));
 	if (referenceResults.length === 0) return new Set<string>();
 
-	const [profiles, products] = await Promise.all([loadBreedReferenceProfiles(false), loadCatalogProducts(true, false)]);
+	const [profiles, products, manufacturers, activeIngredients] = await Promise.all([
+		loadBreedReferenceProfiles(false),
+		loadCatalogProducts(true, false),
+		loadCatalogManufacturers(true, false),
+		loadCatalogActiveIngredients(true, false)
+	]);
 	const breedIds = new Set(profiles.map((profile) => profile.breedId));
 	const productIds = new Set(products.map((item) => item.id));
+	const manufacturerIds = new Set(manufacturers.map((item) => item.id));
+	const activeIngredientIds = new Set(activeIngredients.map((item) => item.id));
 	const activeKeys = new Set<string>();
 
 	for (const result of referenceResults) {
 		if (result.kind === 'breed' && breedIds.has(String(result.id))) activeKeys.add(searchResultKey(result));
 		if (result.kind === 'product' && productIds.has(String(result.id))) activeKeys.add(searchResultKey(result));
+		if (result.kind === 'manufacturer' && manufacturerIds.has(String(result.id))) activeKeys.add(searchResultKey(result));
+		if (result.kind === 'activeIngredient' && activeIngredientIds.has(String(result.id))) activeKeys.add(searchResultKey(result));
 	}
 
 	return activeKeys;
