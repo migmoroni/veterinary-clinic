@@ -256,7 +256,7 @@ async function searchProducts(query: string): Promise<SearchResult[]> {
 			id: item.id,
 			ownerId: null,
 			petId: null,
-			href: `/formulary/${item.id}`,
+			href: `/formulary/products/${item.id}`,
 			title: item.name,
 			subtitle: [productCatalogTypeLabel(item), item.manufacturerName].filter(Boolean).join(' · '),
 			referenceImageBytes: null

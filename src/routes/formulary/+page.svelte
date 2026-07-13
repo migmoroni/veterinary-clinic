@@ -8,6 +8,11 @@
 		type ReferenceSummaryField,
 	} from "$lib/components/reference/ReferenceSummarySidebar.svelte";
 	import {
+		catalogOriginLabel,
+		catalogRegionLabel,
+		catalogRegionSummary,
+	} from "$lib/components/catalog/catalog-detail-utils.js";
+	import {
 		readReferenceRouteState,
 		replaceReferenceRouteState,
 	} from "$lib/components/reference/reference-route-state.js";
@@ -22,7 +27,6 @@
 		activeIngredientTypeSubtype,
 		type ActiveIngredientCatalogItem,
 	} from "$lib/domain/active-ingredient/catalog.js";
-	import { countryOptions } from "$lib/domain/geo/location.js";
 	import { type ManufacturerCatalogItem } from "$lib/domain/manufacturer/catalog.js";
 	import {
 		PRODUCT_TYPES,
@@ -103,7 +107,6 @@
 		"manufacturer",
 		"activeIngredient",
 	];
-	const localizedCountries = $derived(countryOptions(i18n.locale));
 	const currentItems = $derived.by<CatalogItem[]>(() => {
 		const items =
 			catalogKind === "all"
@@ -185,12 +188,12 @@
 		{ value: "", label: t("formulary.allRegions") },
 		...[...new Set(currentItems.flatMap((item) => item.regions))]
 			.sort((left, right) =>
-				regionLabel(left).localeCompare(
-					regionLabel(right),
+				catalogRegionLabel(left).localeCompare(
+					catalogRegionLabel(right),
 					i18n.locale,
 				),
 			)
-			.map((region) => ({ value: region, label: regionLabel(region) })),
+			.map((region) => ({ value: region, label: catalogRegionLabel(region) })),
 	]);
 	const filterControls = $derived.by<ReferenceFilterBarSelect[]>(() => {
 		const controls: ReferenceFilterBarSelect[] = [
@@ -291,7 +294,7 @@
 			const product = item as ProductCatalogItem;
 			const metaParts = [productTypeLabel(product.type, t)];
 			if (product.origin === "user") {
-				metaParts.push(originLabel(product.origin));
+				metaParts.push(catalogOriginLabel(product.origin));
 			}
 			return {
 				id: product.id,
@@ -310,8 +313,8 @@
 				id: item.id,
 				title: item.name,
 				subtitle: t("catalog.manufacturer"),
-				detail: regionSummary(item.regions),
-				meta: item.origin === "user" ? originLabel(item.origin) : "",
+				detail: catalogRegionSummary(item.regions),
+				meta: item.origin === "user" ? catalogOriginLabel(item.origin) : "",
 				imageBytes: item.primaryImage?.imageBytes ?? null,
 				imageAlt: item.name,
 				fallbackIcon: Building2,
@@ -326,7 +329,7 @@
 			detail: activeIngredient.extension.classification ?? null,
 			meta:
 				activeIngredient.origin === "user"
-					? originLabel(activeIngredient.origin)
+					? catalogOriginLabel(activeIngredient.origin)
 					: "",
 			imageBytes: activeIngredient.primaryImage?.imageBytes ?? null,
 			imageAlt: activeIngredient.name,
@@ -358,7 +361,7 @@
 				},
 				{
 					label: t("product.regions"),
-					value: regionSummary(product.regions),
+					value: catalogRegionSummary(product.regions),
 				},
 			];
 		}
@@ -378,7 +381,7 @@
 				},
 				{
 					label: t("product.regions"),
-					value: regionSummary(activeIngredient.regions),
+					value: catalogRegionSummary(activeIngredient.regions),
 				},
 			];
 		}
@@ -386,9 +389,9 @@
 		return [
 			{
 				label: t("formulary.originFilter"),
-				value: originLabel(item.origin),
+				value: catalogOriginLabel(item.origin),
 			},
-			{ label: t("product.regions"), value: regionSummary(item.regions) },
+			{ label: t("product.regions"), value: catalogRegionSummary(item.regions) },
 		];
 	}
 
@@ -397,7 +400,7 @@
 			return `/formulary/manufacturers/${item.id}`;
 		if (item.kind === "activeIngredient")
 			return `/formulary/active-ingredients/${item.id}`;
-		return `/formulary/${item.id}`;
+		return `/formulary/products/${item.id}`;
 	}
 
 	function searchableText(item: CatalogItem): string {
@@ -408,9 +411,9 @@
 				product.manufacturerName,
 				activeIngredientSummary(product),
 				productTypeLabel(product.type, t),
-				originLabel(product.origin),
+				catalogOriginLabel(product.origin),
 				speciesSummary(product.species),
-				regionSummary(product.regions),
+				catalogRegionSummary(product.regions),
 				product.aliases.join(" "),
 				product.extension.classification,
 				product.extension.commercialLine,
@@ -426,8 +429,8 @@
 		return [
 			item.name,
 			item.aliases.join(" "),
-			originLabel(item.origin),
-			regionSummary(item.regions),
+			catalogOriginLabel(item.origin),
+			catalogRegionSummary(item.regions),
 			...Object.values(item.extension.sections ?? {}),
 		]
 			.filter(Boolean)
@@ -446,12 +449,6 @@
 			: t("catalog.activeIngredient.type.substance");
 	}
 
-	function originLabel(origin: ProductCatalogOrigin): string {
-		return origin === "system"
-			? t("formulary.origin.system")
-			: t("formulary.origin.user");
-	}
-
 	function speciesLabel(species: ProductSpecies): string {
 		return referenceSpeciesLabel(
 			species,
@@ -462,18 +459,6 @@
 
 	function speciesSummary(species: readonly ProductSpecies[]): string {
 		return species.map(speciesLabel).join(", ");
-	}
-
-	function regionLabel(region: string): string {
-		return (
-			localizedCountries.find((country) => country.value === region)
-				?.label ?? region
-		);
-	}
-
-	function regionSummary(regions: readonly string[]): string {
-		if (regions.length === 0) return t("common.notInformed");
-		return regions.map(regionLabel).join(", ");
 	}
 
 	function activeIngredientSummary(item: ProductCatalogItem): string {
@@ -676,7 +661,7 @@
 					subtitle={selectedItem.kind === "product"
 						? (asProduct(selectedItem).manufacturerName ??
 							t("common.notInformed"))
-						: originLabel(selectedItem.origin)}
+						: catalogOriginLabel(selectedItem.origin)}
 					fields={selectedSummaryFields}
 					actionHref={itemDetailHref(selectedItem)}
 					actionLabel={t("formulary.viewMore")}

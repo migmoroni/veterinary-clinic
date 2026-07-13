@@ -4,7 +4,14 @@
 
 	export interface CatalogEntityDetailField {
 		label: string;
-		value: string;
+		value?: string | null;
+		items?: CatalogEntityDetailFieldItem[];
+		fullWidth?: boolean;
+	}
+
+	export interface CatalogEntityDetailFieldItem {
+		label: string;
+		href?: string | null;
 	}
 
 	export interface CatalogEntityDetailSection<TSectionId extends string = string> {
@@ -18,25 +25,30 @@
 	import BinaryImage from '$lib/components/shared/BinaryImage.svelte';
 	import { t } from '$lib/i18n/index.js';
 	import ImageIcon from '@lucide/svelte/icons/image';
+	import type { Snippet } from 'svelte';
 
 	let {
 		title,
 		subtitle = null,
+		subtitleContent,
 		imageBytes = null,
 		imageAlt = '',
 		fallbackIcon = ImageIcon,
 		fields = [],
 		sections,
-		sectionTexts
+		sectionTexts,
+		sectionsLabelKey = 'catalog.sectionsLabel'
 	}: {
 		title: string;
 		subtitle?: string | null;
+		subtitleContent?: Snippet;
 		imageBytes?: Uint8Array | null;
 		imageAlt?: string;
 		fallbackIcon?: Component;
 		fields?: CatalogEntityDetailField[];
 		sections: CatalogEntityDetailSection[];
 		sectionTexts: Record<string, string | undefined>;
+		sectionsLabelKey?: TranslationKey;
 	} = $props();
 
 	let activeSectionId = $state('');
@@ -74,7 +86,7 @@
 	<aside class="min-w-0 space-y-4">
 		<BinaryImage imageBytes={imageBytes} alt={imageAlt} className="aspect-16/10 w-full bg-muted/60" imageClass="h-full w-full object-contain p-4" iconClass="size-12 text-primary" {fallbackIcon} />
 
-		<nav class="overflow-hidden rounded-md border border-border bg-background" aria-label={t('catalog.sectionsLabel')}>
+		<nav class="overflow-hidden rounded-md border border-border bg-background" aria-label={t(sectionsLabelKey)}>
 			{#each sections as section}
 				{@const hasText = hasSectionText(section.id)}
 				<button
@@ -94,14 +106,33 @@
 	<article class="min-w-0">
 		<header class="border-b border-border pb-4">
 			<h3 class="wrap-break-word text-2xl font-semibold">{title}</h3>
-			{#if subtitle}
+			{#if subtitleContent}
+				<div class="mt-2 text-sm uppercase tracking-normal text-muted-foreground">
+					{@render subtitleContent()}
+				</div>
+			{:else if subtitle}
 				<p class="mt-2 text-sm uppercase tracking-normal text-muted-foreground">{subtitle}</p>
 			{/if}
 
 			{#if fields.length > 0}
 				<div class="mt-4 grid gap-1 text-sm text-muted-foreground sm:grid-cols-2">
 					{#each fields as field}
-						<p>{field.label}: <span class="text-foreground">{field.value}</span></p>
+						<p class={field.fullWidth ? 'sm:col-span-2' : ''}>
+							{field.label}:
+							<span class="text-foreground">
+								{#if field.items?.length}
+									{#each field.items as item, index}
+										{#if item.href}
+											<a class="hover:text-primary hover:underline" href={item.href}>{item.label}</a>
+										{:else}
+											<span>{item.label}</span>
+										{/if}{index + 1 < field.items.length ? ', ' : ''}
+									{/each}
+								{:else}
+									{field.value || t('common.notInformed')}
+								{/if}
+							</span>
+						</p>
 					{/each}
 				</div>
 			{/if}

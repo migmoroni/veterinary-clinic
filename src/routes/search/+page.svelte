@@ -67,7 +67,7 @@
 			ownerContacts: result.ownerContacts
 		};
 		if (normalizedResult.kind === 'breed') return { ...normalizedResult, href: `/breeds/${normalizedResult.id}` };
-		if (normalizedResult.kind === 'product') return { ...normalizedResult, href: `/formulary/${normalizedResult.id}` };
+		if (normalizedResult.kind === 'product') return { ...normalizedResult, href: `/formulary/products/${normalizedResult.id}` };
 		return normalizedResult;
 	}
 
