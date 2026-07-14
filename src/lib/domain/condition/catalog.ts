@@ -16,6 +16,7 @@ import {
 	type CatalogEntityOrigin,
 	type CatalogTypeTuple
 } from '$lib/domain/catalog/catalog-entity.js';
+import { emptyCatalogClassification, normalizeCatalogClassification, type CatalogClassification } from '$lib/domain/catalog/classification.js';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 import { normalizeTreatmentName } from '$lib/domain/treatment/treatment.js';
 
@@ -28,10 +29,17 @@ export const CONDITION_TYPE_TREE = {
 	}
 } as const;
 
+export const CONDITION_CLASSIFICATION_AXES = [
+	{ id: 'etiology', values: ['infectious', 'genetic', 'traumatic', 'metabolic', 'immune', 'neoplastic', 'environmental', 'idiopathic'] },
+	{ id: 'course', values: ['acute', 'subacute', 'chronic', 'recurrent'] },
+	{ id: 'severity', values: ['mild', 'moderate', 'severe', 'critical'] }
+] as const;
+
 export type ConditionTypeTree = typeof CONDITION_TYPE_TREE;
 export type ConditionTypeMain = keyof ConditionTypeTree;
 export type ConditionTypeSubtype<TMain extends ConditionTypeMain> = keyof ConditionTypeTree[TMain] & string;
 export type ConditionType = CatalogTypeTuple<ConditionTypeTree>;
+export type ConditionClassification = CatalogClassification;
 export type ConditionCatalogOrigin = CatalogEntityOrigin;
 
 export const CONDITION_TYPES = catalogTypesFromTree(CONDITION_TYPE_TREE);
@@ -41,14 +49,14 @@ export type ConditionProfileSectionId = (typeof conditionProfileSectionIds)[numb
 export type ConditionProfileSections = Partial<Record<ConditionProfileSectionId, string>>;
 
 export interface ConditionCatalogExtension {
-	classification: string | null;
+	classification: ConditionClassification;
 	sections: ConditionProfileSections;
 }
 
 export interface ConditionCatalogItem extends CatalogEntityBase<ConditionType, ConditionCatalogExtension> {}
 
 export const emptyConditionCatalogExtension: ConditionCatalogExtension = {
-	classification: null,
+	classification: emptyCatalogClassification,
 	sections: {}
 };
 
@@ -92,7 +100,7 @@ export function normalizeConditionCatalogExtension(value: unknown): ConditionCat
 
 	const source = value as Record<string, unknown>;
 	return {
-		classification: normalizedNullableText(source.classification),
+		classification: normalizeCatalogClassification(source.classification, CONDITION_CLASSIFICATION_AXES),
 		sections: normalizedSectionTexts(source.sections, conditionProfileSectionIds)
 	};
 }

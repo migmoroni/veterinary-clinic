@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	canDeleteProductCatalogItem,
 	canEditProductCatalogItem,
+	normalizeProductCatalogExtension,
 	normalizeProductRegions,
 	parseProductRegions,
 	parseProductType,
@@ -48,5 +49,55 @@ describe('product catalog metadata', () => {
 		expect(canEditProductCatalogItem({ origin: 'system' })).toBe(false);
 		expect(canDeleteProductCatalogItem({ origin: 'user' })).toBe(true);
 		expect(canDeleteProductCatalogItem({ origin: 'system' })).toBe(false);
+	});
+
+	it('normalizes product extension clinical and regulatory classification fields', () => {
+		expect(
+			normalizeProductCatalogExtension({
+				classification: {
+					commercialTherapeutic: {
+						compositionOrigin: 'biological',
+						commercialCategory: 'reference',
+						therapeuticAction: 'prophylactic'
+					},
+					formAndAdministration: {
+						pharmaceuticalForm: 'injectableSolution',
+						administrationRoutes: ['subcutaneous', 'invalid', 'subcutaneous', 'intramuscular'],
+						presentationDosage: ' 1 mL por dose '
+					},
+					targetSpecies: {
+						warnings: [' Confirmar especie-alvo. ', '', 'Confirmar especie-alvo.']
+					},
+					regulatoryIdentifiers: {
+						brazilMapa: ' MAPA 00000/2026 ',
+						unitedStatesNada: ' NADA 000-000 ',
+						unitedStatesAnada: '',
+						gtinEan: ' 7890000000000 '
+					}
+				}
+			})
+		).toMatchObject({
+			classification: {
+				commercialTherapeutic: {
+					compositionOrigin: 'biological',
+					commercialCategory: 'reference',
+					therapeuticAction: 'prophylactic'
+				},
+				formAndAdministration: {
+					pharmaceuticalForm: 'injectableSolution',
+					administrationRoutes: ['subcutaneous', 'intramuscular'],
+					presentationDosage: '1 mL por dose'
+				},
+				targetSpecies: {
+					warnings: ['Confirmar especie-alvo.']
+				},
+				regulatoryIdentifiers: {
+					brazilMapa: 'MAPA 00000/2026',
+					unitedStatesNada: 'NADA 000-000',
+					unitedStatesAnada: null,
+					gtinEan: '7890000000000'
+				}
+			}
+		});
 	});
 });

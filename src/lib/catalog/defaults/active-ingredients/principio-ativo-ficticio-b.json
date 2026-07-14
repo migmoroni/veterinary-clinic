@@ -16,7 +16,82 @@
 	],
 	"images": [],
 	"extension": {
-		"classification": "Substância demonstrativa",
+		"classification": {
+			"nomenclature": {
+				"scientificName": "Substantia ficticia beta",
+				"denominations": [
+					{
+						"standard": "inn",
+						"label": {
+							"pt-BR": "Fictirolida",
+							"pt-PT": "Fictirolida",
+							"gn-PY": "Fictirolida",
+							"en-US": "Fictirolide",
+							"es-ES": "Fictirolida",
+							"fr-FR": "Fictirolide"
+						}
+					},
+					{
+						"standard": "dcb",
+						"label": {
+							"pt-BR": "Fictirolida"
+						}
+					}
+				],
+				"casNumber": "7654-32-1"
+			},
+			"atcVet": {
+				"code": "QJ01XX99",
+				"system": {
+					"label": {
+						"pt-BR": "Antiinfecciosos para uso sistêmico",
+						"pt-PT": "Antiinfecciosos para uso sistémico",
+						"gn-PY": "Antiinfecciosos para uso sistêmico",
+						"en-US": "Antiinfectives for systemic use",
+						"es-ES": "Antiinfecciosos para uso sistémico",
+						"fr-FR": "Anti-infectieux à usage systémique"
+					}
+				}
+			},
+			"chemicalActionMechanism": {
+				"behavior": {
+					"label": {
+						"pt-BR": "Inibidor",
+						"pt-PT": "Inibidor",
+						"gn-PY": "Inibidor",
+						"en-US": "Inhibitor",
+						"es-ES": "Inhibidor",
+						"fr-FR": "Inhibiteur"
+					}
+				},
+				"target": {
+					"label": {
+						"pt-BR": "di-hidrofolato redutase",
+						"pt-PT": "di-hidrofolato redutase",
+						"gn-PY": "di-hidrofolato redutase",
+						"en-US": "dihydrofolate reductase",
+						"es-ES": "dihidrofolato reductasa",
+						"fr-FR": "dihydrofolate réductase"
+					},
+					"family": {
+						"label": {
+							"pt-BR": "Enzima",
+							"pt-PT": "Enzima",
+							"gn-PY": "Enzima",
+							"en-US": "Enzyme",
+							"es-ES": "Enzima",
+							"fr-FR": "Enzyme"
+						}
+					}
+				}
+			},
+			"regulatoryControl": {
+				"brazil": "antimicrobialPrescriptionRetention",
+				"unitedStates": "prescriptionOnly",
+				"europe": "veterinaryPrescriptionOnly"
+			},
+			"veterinaryRestriction": "clinicalUseOnly"
+		},
 		"sections": {
 			"about": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus euismod magna vitae sem tristique.",
 			"uses": "Uso demonstrativo para produtos com mais de um princípio ativo.",

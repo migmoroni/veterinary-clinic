@@ -17,7 +17,82 @@
 	],
 	"images": [],
 	"extension": {
-		"classification": "Substância demonstrativa",
+		"classification": {
+			"nomenclature": {
+				"scientificName": "Substantia ficticia alfa",
+				"denominations": [
+					{
+						"standard": "inn",
+						"label": {
+							"pt-BR": "Fictioxamina",
+							"pt-PT": "Fictioxamina",
+							"gn-PY": "Fictioxamina",
+							"en-US": "Fictioxamine",
+							"es-ES": "Fictioxamina",
+							"fr-FR": "Fictioxamine"
+						}
+					},
+					{
+						"standard": "dcb",
+						"label": {
+							"pt-BR": "Fictioxamina"
+						}
+					}
+				],
+				"casNumber": "1234-56-7"
+			},
+			"atcVet": {
+				"code": "QP54AA99",
+				"system": {
+					"label": {
+						"pt-BR": "Antiparasitários, inseticidas e repelentes",
+						"pt-PT": "Antiparasitários, insecticidas e repelentes",
+						"gn-PY": "Antiparasitários, inseticidas e repelentes",
+						"en-US": "Antiparasitic products, insecticides and repellents",
+						"es-ES": "Antiparasitarios, insecticidas y repelentes",
+						"fr-FR": "Antiparasitaires, insecticides et répulsifs"
+					}
+				}
+			},
+			"chemicalActionMechanism": {
+				"behavior": {
+					"label": {
+						"pt-BR": "Modulador",
+						"pt-PT": "Modulador",
+						"gn-PY": "Modulador",
+						"en-US": "Modulator",
+						"es-ES": "Modulador",
+						"fr-FR": "Modulateur"
+					}
+				},
+				"target": {
+					"label": {
+						"pt-BR": "canal de cloro ativado por glutamato",
+						"pt-PT": "canal de cloro ativado por glutamato",
+						"gn-PY": "canal de cloro ativado por glutamato",
+						"en-US": "glutamate-gated chloride channel",
+						"es-ES": "canal de cloro activado por glutamato",
+						"fr-FR": "canal chlorure activé par le glutamate"
+					},
+					"family": {
+						"label": {
+							"pt-BR": "Canal iônico ativado por ligante",
+							"pt-PT": "Canal iónico ativado por ligando",
+							"gn-PY": "Canal iônico ativado por ligante",
+							"en-US": "Ligand-gated ion channel",
+							"es-ES": "Canal iónico activado por ligando",
+							"fr-FR": "Canal ionique activé par ligand"
+						}
+					}
+				}
+			},
+			"regulatoryControl": {
+				"brazil": "prescriptionOnly",
+				"unitedStates": "prescriptionOnly",
+				"europe": "veterinaryPrescriptionOnly"
+			},
+			"veterinaryRestriction": "prescriptionOnly"
+		},
 		"sections": {
 			"about": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae justo sed arcu facilisis luctus.",
 			"uses": "Uso demonstrativo em produtos fictícios para validar relação N:N no catálogo.",

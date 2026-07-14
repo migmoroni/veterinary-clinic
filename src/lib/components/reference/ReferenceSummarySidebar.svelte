@@ -3,14 +3,23 @@
 
 	export interface ReferenceSummaryFieldRow {
 		label: string;
+		labelDescription?: string | null;
 		value: string;
+	}
+
+	export interface ReferenceSummaryFieldRowGroup {
+		label: string;
+		rows: ReferenceSummaryFieldRow[];
 	}
 
 	export interface ReferenceSummaryField {
 		label: string;
+		labelDescription?: string | null;
 		value?: string | null;
 		icon?: Component;
 		rows?: ReferenceSummaryFieldRow[];
+		rowGroups?: ReferenceSummaryFieldRowGroup[];
+		stackedRows?: boolean;
 	}
 </script>
 
@@ -84,23 +93,54 @@
 								class="size-3 text-muted-foreground/80"
 							/>
 						{/if}
-						{field.label}
+						<span title={field.labelDescription ?? undefined}>
+							{field.label}<span class="sr-only">{field.labelDescription ? ` (${field.labelDescription})` : ''}</span>
+						</span>
 					</div>
 					<div class="mt-1">
-						{#if field.rows?.length}
+						{#if field.rowGroups?.length}
+							<div class="grid gap-2 text-xs">
+								{#each field.rowGroups as group}
+									<div class="border-b border-border/10 pb-2 last:border-b-0 last:pb-0">
+										<div class="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{group.label}</div>
+										<div class="mt-1 grid gap-1.5">
+											{#each group.rows as row}
+												<div>
+													{#if row.label}
+														<div class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80" title={row.labelDescription ?? undefined}>
+															{row.label}<span class="sr-only">{row.labelDescription ? ` (${row.labelDescription})` : ''}</span>
+														</div>
+													{/if}
+													<div class="font-semibold text-foreground">{row.value}</div>
+												</div>
+											{/each}
+										</div>
+									</div>
+								{/each}
+							</div>
+						{:else if field.rows?.length}
 							<div class="grid gap-1.5 text-xs">
 								{#each field.rows as row}
-									<div
-										class="flex items-baseline justify-between gap-2 border-b border-border/10 pb-1 last:border-b-0 last:pb-0"
-									>
-										<span class="text-muted-foreground"
-											>{row.label}</span
+									{#if field.stackedRows}
+										<div class="border-b border-border/10 pb-1.5 last:border-b-0 last:pb-0">
+											<div class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground" title={row.labelDescription ?? undefined}>
+												{row.label}<span class="sr-only">{row.labelDescription ? ` (${row.labelDescription})` : ''}</span>
+											</div>
+											<div class="mt-0.5 font-semibold text-foreground">{row.value}</div>
+										</div>
+									{:else}
+										<div
+											class="flex items-baseline justify-between gap-2 border-b border-border/10 pb-1 last:border-b-0 last:pb-0"
 										>
-										<span
-											class="font-semibold tabular-nums text-foreground"
-											>{row.value}</span
-										>
-									</div>
+											<span class="text-muted-foreground" title={row.labelDescription ?? undefined}>
+												{row.label}<span class="sr-only">{row.labelDescription ? ` (${row.labelDescription})` : ''}</span>
+											</span>
+											<span
+												class="font-semibold tabular-nums text-foreground"
+												>{row.value}</span
+											>
+										</div>
+									{/if}
 								{/each}
 							</div>
 						{:else}

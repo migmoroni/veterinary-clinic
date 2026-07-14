@@ -20,5 +20,28 @@
 		"endectocide"
 	],
 	"manufacturerId": "d7569f36-cd2f-416b-906f-ee89e82145cb",
-	"activeIngredientIds": []
+	"activeIngredientIds": [],
+	"extension": {
+		"classification": {
+			"commercialTherapeutic": {
+				"compositionOrigin": "allopathic",
+				"commercialCategory": null,
+				"therapeuticAction": "control"
+			},
+			"formAndAdministration": {
+				"pharmaceuticalForm": null,
+				"administrationRoutes": [],
+				"presentationDosage": null
+			},
+			"targetSpecies": {
+				"warnings": []
+			},
+			"regulatoryIdentifiers": {
+				"brazilMapa": null,
+				"unitedStatesNada": null,
+				"unitedStatesAnada": null,
+				"gtinEan": null
+			}
+		}
+	}
 }

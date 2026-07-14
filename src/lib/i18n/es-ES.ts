@@ -1,5 +1,9 @@
 import type { TranslationKey } from './pt-BR.js';
 import { esEsBreedTranslations } from './breeds/es-ES.js';
+import { esEsProductClassificationTranslations } from './classification/product/es-ES.js';
+import { esEsManufacturerClassificationTranslations } from './classification/manufacturer/es-ES.js';
+import { esEsActiveIngredientClassificationTranslations } from './classification/active-ingredient/es-ES.js';
+import { esEsConditionClassificationTranslations } from './classification/condition/es-ES.js';
 
 export const esEs = {
 	'app.name': 'Veterinary Clinic',
@@ -304,6 +308,10 @@ export const esEs = {
 	'pet.manualBreedNamePlaceholder': 'Escribe el nombre de la raza',
 	'pet.useManualBreed': 'Usar esta raza',
 	...esEsBreedTranslations,
+	...esEsProductClassificationTranslations,
+	...esEsManufacturerClassificationTranslations,
+	...esEsActiveIngredientClassificationTranslations,
+	...esEsConditionClassificationTranslations,
 	'pet.sex': 'Sexo',
 	'pet.contextLabel': 'Mascota',
 	'pet.unsavedDialogTitle': 'Cambios no guardados',

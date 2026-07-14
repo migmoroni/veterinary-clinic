@@ -26,5 +26,28 @@
 		"tick treatment"
 	],
 	"manufacturerId": "131b3da4-334e-42ee-a185-5e57df388a49",
-	"activeIngredientIds": []
+	"activeIngredientIds": [],
+	"extension": {
+		"classification": {
+			"commercialTherapeutic": {
+				"compositionOrigin": "allopathic",
+				"commercialCategory": null,
+				"therapeuticAction": "control"
+			},
+			"formAndAdministration": {
+				"pharmaceuticalForm": null,
+				"administrationRoutes": [],
+				"presentationDosage": null
+			},
+			"targetSpecies": {
+				"warnings": []
+			},
+			"regulatoryIdentifiers": {
+				"brazilMapa": null,
+				"unitedStatesNada": null,
+				"unitedStatesAnada": null,
+				"gtinEan": null
+			}
+		}
+	}
 }

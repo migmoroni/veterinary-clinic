@@ -1,4 +1,8 @@
 import { ptBrBreedTranslations } from './breeds/pt-BR.js';
+import { ptBrProductClassificationTranslations } from './classification/product/pt-BR.js';
+import { ptBrManufacturerClassificationTranslations } from './classification/manufacturer/pt-BR.js';
+import { ptBrActiveIngredientClassificationTranslations } from './classification/active-ingredient/pt-BR.js';
+import { ptBrConditionClassificationTranslations } from './classification/condition/pt-BR.js';
 
 export const ptBr = {
 	'app.name': 'Veterinary Clinic',
@@ -303,6 +307,10 @@ export const ptBr = {
 	'pet.manualBreedNamePlaceholder': 'Digite o nome da raça',
 	'pet.useManualBreed': 'Usar esta raça',
 	...ptBrBreedTranslations,
+	...ptBrProductClassificationTranslations,
+	...ptBrManufacturerClassificationTranslations,
+	...ptBrActiveIngredientClassificationTranslations,
+	...ptBrConditionClassificationTranslations,
 	'pet.sex': 'Sexo',
 	'pet.contextLabel': 'Pet',
 	'pet.unsavedDialogTitle': 'Alterações não salvas',

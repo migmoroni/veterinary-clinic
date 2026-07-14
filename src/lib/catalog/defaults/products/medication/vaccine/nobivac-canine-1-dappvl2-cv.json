@@ -40,5 +40,28 @@
 		"canine leptospirosis"
 	],
 	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
-	"activeIngredientIds": []
+	"activeIngredientIds": [],
+	"extension": {
+		"classification": {
+			"commercialTherapeutic": {
+				"compositionOrigin": "biological",
+				"commercialCategory": null,
+				"therapeuticAction": "prophylactic"
+			},
+			"formAndAdministration": {
+				"pharmaceuticalForm": null,
+				"administrationRoutes": [],
+				"presentationDosage": null
+			},
+			"targetSpecies": {
+				"warnings": []
+			},
+			"regulatoryIdentifiers": {
+				"brazilMapa": null,
+				"unitedStatesNada": null,
+				"unitedStatesAnada": null,
+				"gtinEan": null
+			}
+		}
+	}
 }

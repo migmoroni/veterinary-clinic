@@ -4,9 +4,23 @@
 
 	export interface CatalogEntityDetailField {
 		label: string;
+		labelDescription?: string | null;
 		value?: string | null;
 		items?: CatalogEntityDetailFieldItem[];
+		rows?: CatalogEntityDetailFieldRow[];
+		rowGroups?: CatalogEntityDetailFieldRowGroup[];
 		fullWidth?: boolean;
+	}
+
+	export interface CatalogEntityDetailFieldRowGroup {
+		label: string;
+		rows: CatalogEntityDetailFieldRow[];
+	}
+
+	export interface CatalogEntityDetailFieldRow {
+		label: string;
+		labelDescription?: string | null;
+		value: string;
 	}
 
 	export interface CatalogEntityDetailFieldItem {
@@ -37,6 +51,7 @@
 		fields = [],
 		sections,
 		sectionTexts,
+		sectionFields = {},
 		sectionsLabelKey = 'catalog.sectionsLabel'
 	}: {
 		title: string;
@@ -48,6 +63,7 @@
 		fields?: CatalogEntityDetailField[];
 		sections: CatalogEntityDetailSection[];
 		sectionTexts: Record<string, string | undefined>;
+		sectionFields?: Record<string, CatalogEntityDetailField[] | undefined>;
 		sectionsLabelKey?: TranslationKey;
 	} = $props();
 
@@ -55,6 +71,7 @@
 
 	const activeSection = $derived(sections.find((section) => section.id === activeSectionId) ?? sections[0]);
 	const activeSectionText = $derived(sectionText(activeSection?.id ?? ''));
+	const activeSectionFields = $derived(sectionFields[activeSection?.id ?? ''] ?? []);
 
 	function sectionText(sectionId: string): string {
 		return sectionTexts[sectionId]?.trim() ?? '';
@@ -64,8 +81,16 @@
 		return sectionText(sectionId).length > 0;
 	}
 
+	function hasSectionFields(sectionId: string): boolean {
+		return (sectionFields[sectionId]?.length ?? 0) > 0;
+	}
+
+	function hasSectionContent(sectionId: string): boolean {
+		return hasSectionText(sectionId) || hasSectionFields(sectionId);
+	}
+
 	function availableSectionIds(): string[] {
-		return sections.filter((section) => hasSectionText(section.id)).map((section) => section.id);
+		return sections.filter((section) => hasSectionContent(section.id)).map((section) => section.id);
 	}
 
 	function sectionParagraphs(text: string): string[] {
@@ -88,7 +113,7 @@
 
 		<nav class="overflow-hidden rounded-md border border-border bg-background" aria-label={t(sectionsLabelKey)}>
 			{#each sections as section}
-				{@const hasText = hasSectionText(section.id)}
+				{@const hasText = hasSectionContent(section.id)}
 				<button
 					type="button"
 					class="flex min-h-12 w-full items-center gap-3 border-b border-border px-3 text-left text-sm transition-colors last:border-b-0 {activeSectionId === section.id ? 'bg-primary/10 text-primary' : hasText ? 'hover:bg-accent' : 'text-muted-foreground/60'}"
@@ -117,22 +142,65 @@
 			{#if fields.length > 0}
 				<div class="mt-4 grid gap-1 text-sm text-muted-foreground sm:grid-cols-2">
 					{#each fields as field}
-						<p class={field.fullWidth ? 'sm:col-span-2' : ''}>
-							{field.label}:
-							<span class="text-foreground">
-								{#if field.items?.length}
-									{#each field.items as item, index}
-										{#if item.href}
-											<a class="hover:text-primary hover:underline" href={item.href}>{item.label}</a>
-										{:else}
-											<span>{item.label}</span>
-										{/if}{index + 1 < field.items.length ? ', ' : ''}
+						<div class={field.fullWidth ? 'sm:col-span-2' : ''}>
+							{#if field.rowGroups?.length}
+								<div title={field.labelDescription ?? undefined} class="font-medium text-foreground">
+									{field.label}<span class="sr-only">{field.labelDescription ? ` (${field.labelDescription})` : ''}</span>
+								</div>
+								<div class="mt-2 grid gap-3 md:grid-cols-2">
+									{#each field.rowGroups as group}
+										<div class="rounded-md border border-border/60 bg-muted/10 px-3 py-2.5">
+											<div class="text-xs font-semibold uppercase tracking-normal text-muted-foreground">{group.label}</div>
+											<div class="mt-2 grid gap-2">
+												{#each group.rows as row}
+													<div>
+														{#if row.label}
+															<div class="text-[11px] font-semibold uppercase tracking-normal text-muted-foreground" title={row.labelDescription ?? undefined}>
+																{row.label}<span class="sr-only">{row.labelDescription ? ` (${row.labelDescription})` : ''}</span>
+															</div>
+														{/if}
+														<div class={row.label ? 'mt-0.5 text-foreground' : 'text-foreground'}>{row.value || t('common.notInformed')}</div>
+													</div>
+												{/each}
+											</div>
+										</div>
 									{/each}
-								{:else}
-									{field.value || t('common.notInformed')}
-								{/if}
-							</span>
-						</p>
+								</div>
+							{:else if field.rows?.length}
+								<div title={field.labelDescription ?? undefined} class="font-medium text-foreground">
+									{field.label}<span class="sr-only">{field.labelDescription ? ` (${field.labelDescription})` : ''}</span>
+								</div>
+								<div class="mt-2 grid gap-x-6 gap-y-2 sm:grid-cols-2">
+									{#each field.rows as row}
+										<div class="border-b border-border/50 pb-2">
+											<div class="text-xs font-semibold uppercase tracking-normal text-muted-foreground" title={row.labelDescription ?? undefined}>
+												{row.label}<span class="sr-only">{row.labelDescription ? ` (${row.labelDescription})` : ''}</span>
+											</div>
+											<div class="mt-1 text-foreground">{row.value || t('common.notInformed')}</div>
+										</div>
+									{/each}
+								</div>
+							{:else}
+								<p>
+									<span title={field.labelDescription ?? undefined}>
+										{field.label}<span class="sr-only">{field.labelDescription ? ` (${field.labelDescription})` : ''}</span>
+									</span>:
+									<span class="text-foreground">
+										{#if field.items?.length}
+											{#each field.items as item, index}
+												{#if item.href}
+													<a class="hover:text-primary hover:underline" href={item.href}>{item.label}</a>
+												{:else}
+													<span>{item.label}</span>
+												{/if}{index + 1 < field.items.length ? ', ' : ''}
+											{/each}
+										{:else}
+											{field.value || t('common.notInformed')}
+										{/if}
+									</span>
+								</p>
+							{/if}
+						</div>
 					{/each}
 				</div>
 			{/if}
@@ -140,7 +208,63 @@
 
 		<section class="pt-5">
 			<h4 class="text-xl font-semibold">{activeSection ? t(activeSection.labelKey) : title}</h4>
-			{#if activeSectionText}
+			{#if activeSectionFields.length > 0}
+				<div class="mt-5 grid gap-4">
+					{#each activeSectionFields as field}
+						<div>
+							{#if field.label}
+								<div title={field.labelDescription ?? undefined} class="font-medium text-foreground">
+									{field.label}<span class="sr-only">{field.labelDescription ? ` (${field.labelDescription})` : ''}</span>
+								</div>
+							{/if}
+							{#if field.rowGroups?.length}
+								<div class={field.label ? 'mt-4 grid gap-5' : 'grid gap-5'}>
+									{#each field.rowGroups as group}
+										<div class="border-b border-border pb-4 last:border-b-0 last:pb-0">
+											<div class="text-sm font-semibold text-foreground">{group.label}</div>
+											<div class="mt-3 grid gap-x-8 gap-y-3 sm:grid-cols-2">
+												{#each group.rows as row}
+													<div>
+														{#if row.label}
+															<div class="text-[11px] font-semibold uppercase tracking-normal text-muted-foreground" title={row.labelDescription ?? undefined}>
+																{row.label}<span class="sr-only">{row.labelDescription ? ` (${row.labelDescription})` : ''}</span>
+															</div>
+														{/if}
+														<div class={row.label ? 'mt-0.5 text-foreground' : 'text-foreground'}>{row.value || t('common.notInformed')}</div>
+													</div>
+												{/each}
+											</div>
+										</div>
+									{/each}
+								</div>
+							{:else if field.rows?.length}
+								<div class={field.label ? 'mt-2 grid gap-x-6 gap-y-3 sm:grid-cols-2' : 'grid gap-x-6 gap-y-3 sm:grid-cols-2'}>
+									{#each field.rows as row}
+										<div class="border-b border-border/50 pb-2">
+											<div class="text-xs font-semibold uppercase tracking-normal text-muted-foreground" title={row.labelDescription ?? undefined}>
+												{row.label}<span class="sr-only">{row.labelDescription ? ` (${row.labelDescription})` : ''}</span>
+											</div>
+											<div class="mt-1 text-foreground">{row.value || t('common.notInformed')}</div>
+										</div>
+									{/each}
+								</div>
+							{:else if field.items?.length}
+								<p class={field.label ? 'mt-1 text-foreground' : 'text-foreground'}>
+									{#each field.items as item, index}
+										{#if item.href}
+											<a class="hover:text-primary hover:underline" href={item.href}>{item.label}</a>
+										{:else}
+											<span>{item.label}</span>
+										{/if}{index + 1 < field.items.length ? ', ' : ''}
+									{/each}
+								</p>
+							{:else}
+								<p class={field.label ? 'mt-1 text-foreground' : 'text-foreground'}>{field.value || t('common.notInformed')}</p>
+							{/if}
+						</div>
+					{/each}
+				</div>
+			{:else if activeSectionText}
 				<div class="mt-5 space-y-4 text-base leading-7 text-foreground/85">
 					{#each sectionParagraphs(activeSectionText) as paragraph}
 						<p class="whitespace-pre-line">{paragraph}</p>

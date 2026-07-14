@@ -31,13 +31,69 @@ export const PRODUCT_TYPE_TREE = {
 	}
 } as const;
 
+export const PRODUCT_CLASSIFICATION_AXES = [
+	{ id: 'origin', values: ['allopathic', 'phytotherapeutic', 'homeopathic', 'biological'] },
+	{ id: 'commercial', values: ['reference', 'generic', 'similar', 'branded', 'compounded', 'nonApplicable'] },
+	{ id: 'therapeuticAction', values: ['prophylactic', 'curative', 'palliative', 'control'] }
+] as const;
+
+export const PRODUCT_PHARMACEUTICAL_FORMS = [
+	'palatableTablet',
+	'tablet',
+	'capsule',
+	'oralSuspension',
+	'injectableSolution',
+	'spotOn',
+	'oticOintment',
+	'ophthalmicSolution',
+	'topicalSpray',
+	'shampoo'
+] as const;
+
+export const PRODUCT_ADMINISTRATION_ROUTES = ['oral', 'intravenous', 'intramuscular', 'subcutaneous', 'topical', 'otic', 'ophthalmic', 'intranasal'] as const;
+
 export type ProductTypeTree = typeof PRODUCT_TYPE_TREE;
 export type ProductTypeMain = keyof ProductTypeTree['product'];
 export type ProductTypeSubtype<TMain extends ProductTypeMain> = ProductTypeTree['product'][TMain][number];
 export type ProductTypeTuple<TMain extends ProductTypeMain = ProductTypeMain> = Extract<CatalogTypeTuple<ProductTypeTree>, readonly ['product', TMain, string | null]>;
 export type ProductType = ProductTypeTuple;
+export type ProductCompositionOrigin = (typeof PRODUCT_CLASSIFICATION_AXES)[0]['values'][number];
+export type ProductCommercialCategory = (typeof PRODUCT_CLASSIFICATION_AXES)[1]['values'][number];
+export type ProductTherapeuticAction = (typeof PRODUCT_CLASSIFICATION_AXES)[2]['values'][number];
+export type ProductPharmaceuticalForm = (typeof PRODUCT_PHARMACEUTICAL_FORMS)[number];
+export type ProductAdministrationRoute = (typeof PRODUCT_ADMINISTRATION_ROUTES)[number];
 export type ProductSpecies = TreatmentSpecies;
 export type ProductCatalogOrigin = CatalogEntityOrigin;
+
+export interface ProductCommercialTherapeuticClassification {
+	compositionOrigin: ProductCompositionOrigin | null;
+	commercialCategory: ProductCommercialCategory | null;
+	therapeuticAction: ProductTherapeuticAction | null;
+}
+
+export interface ProductFormClassification {
+	pharmaceuticalForm: ProductPharmaceuticalForm | null;
+	administrationRoutes: ProductAdministrationRoute[];
+	presentationDosage: string | null;
+}
+
+export interface ProductRegulatoryIdentifiers {
+	brazilMapa: string | null;
+	unitedStatesNada: string | null;
+	unitedStatesAnada: string | null;
+	gtinEan: string | null;
+}
+
+export interface ProductTargetSpeciesClassification {
+	warnings: string[];
+}
+
+export interface ProductClassification {
+	commercialTherapeutic: ProductCommercialTherapeuticClassification;
+	formAndAdministration: ProductFormClassification;
+	targetSpecies: ProductTargetSpeciesClassification;
+	regulatoryIdentifiers: ProductRegulatoryIdentifiers;
+}
 
 export const PRODUCT_TYPES = catalogTypesFromTree(PRODUCT_TYPE_TREE) as ProductType[];
 
@@ -91,14 +147,38 @@ export type ProductLeafletSectionId = (typeof productLeafletSectionIds)[number];
 export type ProductLeafletSections = Partial<Record<ProductLeafletSectionId, string>>;
 
 export interface ProductCatalogExtension {
-	classification: string | null;
+	classification: ProductClassification;
 	commercialLine: string | null;
 	sections: ProductLeafletSections;
 }
 
 export const defaultProductSpecies = [...defaultTreatmentSpecies];
+export const emptyProductCommercialTherapeuticClassification: ProductCommercialTherapeuticClassification = {
+	compositionOrigin: null,
+	commercialCategory: null,
+	therapeuticAction: null
+};
+export const emptyProductFormClassification: ProductFormClassification = {
+	pharmaceuticalForm: null,
+	administrationRoutes: [],
+	presentationDosage: null
+};
+export const emptyProductTargetSpeciesClassification: ProductTargetSpeciesClassification = {
+	warnings: []
+};
+export const emptyProductRegulatoryIdentifiers: ProductRegulatoryIdentifiers = {
+	brazilMapa: null,
+	unitedStatesNada: null,
+	unitedStatesAnada: null,
+	gtinEan: null
+};
 export const emptyProductCatalogExtension: ProductCatalogExtension = {
-	classification: null,
+	classification: {
+		commercialTherapeutic: emptyProductCommercialTherapeuticClassification,
+		formAndAdministration: emptyProductFormClassification,
+		targetSpecies: emptyProductTargetSpeciesClassification,
+		regulatoryIdentifiers: emptyProductRegulatoryIdentifiers
+	},
 	commercialLine: null,
 	sections: {}
 };
@@ -186,12 +266,101 @@ function normalizedLeafletSections(value: unknown): ProductLeafletSections {
 	return normalizedSectionTexts(value, productLeafletSectionIds);
 }
 
+function normalizedProductOption<TOption extends string>(value: unknown, options: readonly TOption[]): TOption | null {
+	if (typeof value !== 'string') return null;
+	return (options as readonly string[]).includes(value) ? (value as TOption) : null;
+}
+
+function normalizedProductOptionList<TOption extends string>(value: unknown, options: readonly TOption[]): TOption[] {
+	if (!Array.isArray(value)) return [];
+
+	const normalized: TOption[] = [];
+	for (const item of value) {
+		const option = normalizedProductOption(item, options);
+		if (option && !normalized.includes(option)) normalized.push(option);
+	}
+	return normalized;
+}
+
+function normalizedTextList(value: unknown): string[] {
+	if (!Array.isArray(value)) return [];
+
+	const normalized: string[] = [];
+	for (const item of value) {
+		const text = normalizedNullableText(item);
+		if (text && !normalized.includes(text)) normalized.push(text);
+	}
+	return normalized;
+}
+
+export function normalizeProductFormClassification(value: unknown): ProductFormClassification {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...emptyProductFormClassification, administrationRoutes: [] };
+
+	const source = value as Record<string, unknown>;
+	return {
+		pharmaceuticalForm: normalizedProductOption(source.pharmaceuticalForm, PRODUCT_PHARMACEUTICAL_FORMS),
+		administrationRoutes: normalizedProductOptionList(source.administrationRoutes, PRODUCT_ADMINISTRATION_ROUTES),
+		presentationDosage: normalizedNullableText(source.presentationDosage)
+	};
+}
+
+export function normalizeProductCommercialTherapeuticClassification(value: unknown): ProductCommercialTherapeuticClassification {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...emptyProductCommercialTherapeuticClassification };
+
+	const source = value as Record<string, unknown>;
+	return {
+		compositionOrigin: normalizedProductOption(source.compositionOrigin, PRODUCT_CLASSIFICATION_AXES[0].values),
+		commercialCategory: normalizedProductOption(source.commercialCategory, PRODUCT_CLASSIFICATION_AXES[1].values),
+		therapeuticAction: normalizedProductOption(source.therapeuticAction, PRODUCT_CLASSIFICATION_AXES[2].values)
+	};
+}
+
+export function normalizeProductTargetSpeciesClassification(value: unknown): ProductTargetSpeciesClassification {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return { warnings: [] };
+
+	const source = value as Record<string, unknown>;
+	return {
+		warnings: normalizedTextList(source.warnings)
+	};
+}
+
+export function normalizeProductRegulatoryIdentifiers(value: unknown): ProductRegulatoryIdentifiers {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...emptyProductRegulatoryIdentifiers };
+
+	const source = value as Record<string, unknown>;
+	return {
+		brazilMapa: normalizedNullableText(source.brazilMapa),
+		unitedStatesNada: normalizedNullableText(source.unitedStatesNada),
+		unitedStatesAnada: normalizedNullableText(source.unitedStatesAnada),
+		gtinEan: normalizedNullableText(source.gtinEan)
+	};
+}
+
+export function normalizeProductClassification(value: unknown): ProductClassification {
+	if (!value || typeof value !== 'object') {
+		return {
+			commercialTherapeutic: { ...emptyProductCommercialTherapeuticClassification },
+			formAndAdministration: { ...emptyProductFormClassification, administrationRoutes: [] },
+			targetSpecies: { warnings: [] },
+			regulatoryIdentifiers: { ...emptyProductRegulatoryIdentifiers }
+		};
+	}
+
+	const source = value as Record<string, unknown>;
+	return {
+		commercialTherapeutic: normalizeProductCommercialTherapeuticClassification(source.commercialTherapeutic),
+		formAndAdministration: normalizeProductFormClassification(source.formAndAdministration),
+		targetSpecies: normalizeProductTargetSpeciesClassification(source.targetSpecies),
+		regulatoryIdentifiers: normalizeProductRegulatoryIdentifiers(source.regulatoryIdentifiers)
+	};
+}
+
 export function normalizeProductCatalogExtension(value: unknown): ProductCatalogExtension {
 	if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...emptyProductCatalogExtension, sections: {} };
 
 	const source = value as Record<string, unknown>;
 	return {
-		classification: normalizedNullableText(source.classification),
+		classification: normalizeProductClassification(source.classification),
 		commercialLine: normalizedNullableText(source.commercialLine),
 		sections: normalizedLeafletSections(source.sections)
 	};

@@ -1,0 +1,16 @@
+export const gnPyManufacturerClassificationTranslations = {
+	'catalog.manufacturer.classification.role': 'Atuação',
+	'catalog.manufacturer.classification.role.manufacturer': 'Fabricante',
+	'catalog.manufacturer.classification.role.distributor': 'Distribuidor',
+	'catalog.manufacturer.classification.role.importer': 'Importador',
+	'catalog.manufacturer.classification.role.laboratory': 'Laboratório',
+	'catalog.manufacturer.classification.scope': 'Abrangência',
+	'catalog.manufacturer.classification.scope.local': 'Local',
+	'catalog.manufacturer.classification.scope.national': 'Nacional',
+	'catalog.manufacturer.classification.scope.multinational': 'Multinacional',
+	'catalog.manufacturer.classification.segment': 'Segmento',
+	'catalog.manufacturer.classification.segment.animalHealth': 'Saúde animal',
+	'catalog.manufacturer.classification.segment.biologics': 'Biológicos',
+	'catalog.manufacturer.classification.segment.pharmaceuticals': 'Farmacêuticos',
+	'catalog.manufacturer.classification.segment.mixed': 'Misto',
+} as const;

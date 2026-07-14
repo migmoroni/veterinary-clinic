@@ -2,11 +2,14 @@ import type { CurrentRecordSummary } from '$lib/domain/medical-record/medical-re
 import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 import type { DashboardAnalytics } from '$lib/domain/dashboard/analytics.js';
 import { activeIngredientTypeSubtype, type ActiveIngredientCatalogItem } from '$lib/domain/active-ingredient/catalog.js';
-import { conditionTypeSubtype, type ConditionCatalogItem } from '$lib/domain/condition/catalog.js';
-import type { ManufacturerCatalogItem } from '$lib/domain/manufacturer/catalog.js';
+import { activeIngredientClassificationLabel, activeIngredientClassificationSearchText } from '$lib/domain/active-ingredient/classification.js';
+import { productClassificationLabel, productClassificationSearchText } from '$lib/domain/product/classification.js';
+import { CONDITION_CLASSIFICATION_AXES, conditionTypeSubtype, type ConditionCatalogItem } from '$lib/domain/condition/catalog.js';
+import { MANUFACTURER_CLASSIFICATION_AXES, type ManufacturerCatalogItem } from '$lib/domain/manufacturer/catalog.js';
 import type { BreedReferenceProfile } from '$lib/domain/pet/breed-reference.js';
 import { productLeafletSectionIds, type ProductCatalogItem, type ProductLeafletSectionId, type ProductSpecies } from '$lib/domain/product/catalog.js';
 import { productTypeLabel } from '$lib/domain/product/type-labels.js';
+import { conditionClassificationLabel, manufacturerClassificationLabel } from '$lib/domain/catalog/classification-labels.js';
 import { CLINIC_SEARCH_RESULT_KINDS, isClinicSearchResultKind, isReferenceSearchResultKind, type ClinicSearchResultKind, type SearchResult, type SearchResultKind } from '$lib/domain/search/search.js';
 import { normalizeSearchText, searchTermsForLocale } from '$lib/domain/shared/search-terms.js';
 import { hasDatabaseFile } from '$lib/native/database-file.js';
@@ -190,6 +193,26 @@ function productCatalogTypeLabel(item: ProductCatalogItem): string {
 	return productTypeLabel(item.type, t);
 }
 
+function productCatalogClassificationLabel(item: ProductCatalogItem): string {
+	return productClassificationLabel(item, t) ?? '';
+}
+
+function manufacturerCatalogClassificationLabel(item: ManufacturerCatalogItem): string {
+	return manufacturerClassificationLabel(item.extension.classification, MANUFACTURER_CLASSIFICATION_AXES, t) ?? '';
+}
+
+function activeIngredientCatalogClassificationLabel(item: ActiveIngredientCatalogItem): string {
+	return activeIngredientClassificationLabel(item.extension.classification, t, i18n.locale) ?? '';
+}
+
+function activeIngredientCatalogClassificationSearchText(item: ActiveIngredientCatalogItem): string {
+	return activeIngredientClassificationSearchText(item.extension.classification, t, i18n.locale);
+}
+
+function conditionCatalogClassificationLabel(item: ConditionCatalogItem): string {
+	return conditionClassificationLabel(item.extension.classification, CONDITION_CLASSIFICATION_AXES, t) ?? '';
+}
+
 function breedSizeLabel(size: BreedReferenceProfile['sizeCategory']): string {
 	return t(`breedReference.size.${size}` as TranslationKey);
 }
@@ -235,7 +258,7 @@ function productSearchScore(item: ProductCatalogItem, terms: readonly string[]):
 	return scoreSearchFields(
 		{
 			primary: [item.name, String(item.id), ...item.aliases],
-			support: [item.manufacturerName ?? '', ...item.activeIngredients.map((ingredient) => ingredient.name), productCatalogTypeLabel(item), item.extension.classification ?? '', item.extension.commercialLine ?? ''],
+			support: [item.manufacturerName ?? '', ...item.activeIngredients.map((ingredient) => ingredient.name), productCatalogTypeLabel(item), productCatalogClassificationLabel(item), productClassificationSearchText(item, t), item.extension.commercialLine ?? ''],
 			metadata: [speciesSummary(item.species), item.regions.map(regionLabel).join(' ')],
 			details: productLeafletSectionIds.map((sectionId) => productSectionText(item, sectionId))
 		},
@@ -247,7 +270,7 @@ function manufacturerSearchScore(item: ManufacturerCatalogItem, terms: readonly 
 	return scoreSearchFields(
 		{
 			primary: [item.name, String(item.id), ...item.aliases],
-			support: [t('catalog.manufacturer'), item.extension.website ?? ''],
+			support: [t('catalog.manufacturer'), manufacturerCatalogClassificationLabel(item), item.extension.website ?? ''],
 			metadata: [item.regions.map(regionLabel).join(' ')],
 			details: manufacturerSectionText(item)
 		},
@@ -263,7 +286,7 @@ function activeIngredientSearchScore(item: ActiveIngredientCatalogItem, terms: r
 	return scoreSearchFields(
 		{
 			primary: [item.name, String(item.id), ...item.aliases],
-			support: [t('catalog.activeIngredient'), activeIngredientTypeLabel(item), item.extension.classification ?? ''],
+			support: [t('catalog.activeIngredient'), activeIngredientTypeLabel(item), activeIngredientCatalogClassificationLabel(item), activeIngredientCatalogClassificationSearchText(item)],
 			metadata: [item.regions.map(regionLabel).join(' ')],
 			details: activeIngredientSectionText(item)
 		},
@@ -283,7 +306,7 @@ function conditionSearchScore(item: ConditionCatalogItem, terms: readonly string
 	return scoreSearchFields(
 		{
 			primary: [item.name, String(item.id), ...item.aliases],
-			support: [t('catalog.condition'), conditionTypeLabel(item), item.extension.classification ?? ''],
+			support: [t('catalog.condition'), conditionTypeLabel(item), conditionCatalogClassificationLabel(item)],
 			metadata: [item.regions.map(regionLabel).join(' ')],
 			details: conditionSectionText(item)
 		},

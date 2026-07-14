@@ -7,11 +7,23 @@
 	import ReferenceSummarySidebar, {
 		type ReferenceSummaryField,
 	} from "$lib/components/reference/ReferenceSummarySidebar.svelte";
+	import { activeIngredientSummaryClassificationGroups } from "$lib/components/catalog/active-ingredient-detail-utils.js";
+	import { productClassificationLabel, productClassificationSearchText, productSummaryClassificationGroups } from "$lib/domain/product/classification.js";
 	import {
 		catalogOriginLabel,
 		catalogRegionLabel,
 		catalogRegionSummary,
 	} from "$lib/components/catalog/catalog-detail-utils.js";
+	import {
+		conditionClassificationLabel,
+		conditionClassificationGroups,
+		manufacturerClassificationLabel,
+		manufacturerClassificationGroups,
+	} from "$lib/domain/catalog/classification-labels.js";
+	import {
+		activeIngredientClassificationLabel,
+		activeIngredientClassificationSearchText,
+	} from "$lib/domain/active-ingredient/classification.js";
 	import {
 		readReferenceRouteState,
 		replaceReferenceRouteState,
@@ -28,6 +40,7 @@
 		type ActiveIngredientCatalogItem,
 	} from "$lib/domain/active-ingredient/catalog.js";
 	import {
+		CONDITION_CLASSIFICATION_AXES,
 		CONDITION_TYPES,
 		conditionTypeSubtype,
 		stringifyConditionType,
@@ -39,13 +52,16 @@
 		productLeafletSectionIds,
 		productTypeMain,
 		productTypeSubtype,
-		stringifyProductType,
 		type ProductCatalogItem,
 		type ProductCatalogOrigin,
 		type ProductSpecies,
-		type ProductType,
 	} from "$lib/domain/product/catalog.js";
-	import { productTypeLabel } from "$lib/domain/product/type-labels.js";
+	import {
+		productTypeHierarchicalFilterOptions,
+		productTypeLabel,
+		productTypeMatchesFilter,
+	} from "$lib/domain/product/type-labels.js";
+	import { MANUFACTURER_CLASSIFICATION_AXES } from "$lib/domain/manufacturer/catalog.js";
 	import { i18n, t, type TranslationKey } from "$lib/i18n/index.js";
 	import {
 		loadCatalogActiveIngredients,
@@ -148,7 +164,7 @@
 				const product = item as ProductCatalogItem;
 				if (
 					typeFilter !== "all" &&
-					stringifyProductType(product.type) !== typeFilter
+					!productTypeMatchesFilter(product.type, typeFilter)
 				)
 					return false;
 				if (
@@ -246,10 +262,11 @@
 					value: typeFilter,
 					options: [
 						{ value: "all", label: t("formulary.allKinds") },
-						...PRODUCT_TYPES.map((type) => ({
-							value: typeFilterValue(type),
-							label: productTypeLabel(type, t),
-						})),
+						...productTypeHierarchicalFilterOptions(
+							PRODUCT_TYPES,
+							t,
+							t("formulary.allKinds"),
+						).slice(1),
 					],
 					onchange: (value) => (typeFilter = value as TypeFilter),
 				},
@@ -354,7 +371,7 @@
 				id: item.id,
 				title: item.name,
 				subtitle: t("catalog.manufacturer"),
-				detail: catalogRegionSummary(item.regions),
+				detail: manufacturerClassificationSummary(item),
 				meta: item.origin === "user" ? catalogOriginLabel(item.origin) : "",
 				imageBytes: item.primaryImage?.imageBytes ?? null,
 				imageAlt: item.name,
@@ -368,7 +385,7 @@
 				id: condition.id,
 				title: condition.name,
 				subtitle: conditionTypeLabel(condition.type),
-				detail: condition.extension.classification ?? null,
+				detail: conditionClassificationSummary(condition),
 				meta:
 					condition.origin === "user"
 						? catalogOriginLabel(condition.origin)
@@ -384,7 +401,7 @@
 			id: activeIngredient.id,
 			title: activeIngredient.name,
 			subtitle: activeIngredientTypeLabel(activeIngredient.type),
-			detail: activeIngredient.extension.classification ?? null,
+			detail: activeIngredientClassificationSummary(activeIngredient),
 			meta:
 				activeIngredient.origin === "user"
 					? catalogOriginLabel(activeIngredient.origin)
@@ -405,9 +422,11 @@
 				},
 				{
 					label: t("formulary.classification"),
-					value:
-						product.extension.classification ??
+					rowGroups: productSummaryClassificationGroups(
+						product,
+						t,
 						t("common.notInformed"),
+					),
 				},
 				{
 					label: t("product.species"),
@@ -433,9 +452,12 @@
 				},
 				{
 					label: t("formulary.classification"),
-					value:
-						activeIngredient.extension.classification ??
+					rowGroups: activeIngredientSummaryClassificationGroups(
+						activeIngredient,
+						t,
+						i18n.locale,
 						t("common.notInformed"),
+					),
 				},
 				{
 					label: t("product.regions"),
@@ -453,9 +475,12 @@
 				},
 				{
 					label: t("formulary.classification"),
-					value:
-						condition.extension.classification ??
+					rowGroups: conditionClassificationGroups(
+						condition.extension.classification,
+						CONDITION_CLASSIFICATION_AXES,
+						t,
 						t("common.notInformed"),
+					),
 				},
 				{
 					label: t("product.regions"),
@@ -465,6 +490,19 @@
 		}
 
 		return [
+			{
+				label: t("formulary.kind"),
+				value: t("catalog.manufacturer"),
+			},
+			{
+				label: t("formulary.classification"),
+				rowGroups: manufacturerClassificationGroups(
+					(item as ManufacturerCatalogItem).extension.classification,
+					MANUFACTURER_CLASSIFICATION_AXES,
+					t,
+					t("common.notInformed"),
+				),
+			},
 			{
 				label: t("formulary.originFilter"),
 				value: catalogOriginLabel(item.origin),
@@ -495,7 +533,8 @@
 				speciesSummary(product.species),
 				catalogRegionSummary(product.regions),
 				product.aliases.join(" "),
-				product.extension.classification,
+				productClassificationSummary(product),
+				productClassificationSearchText(product, t),
 				product.extension.commercialLine,
 				...productLeafletSectionIds.map(
 					(sectionId) =>
@@ -513,7 +552,22 @@
 				? conditionTypeLabel((item as ConditionCatalogItem).type)
 				: "",
 			item.kind === "condition"
-				? ((item as ConditionCatalogItem).extension.classification ?? "")
+				? conditionClassificationSummary(item as ConditionCatalogItem)
+				: "",
+			item.kind === "activeIngredient"
+				? activeIngredientClassificationSummary(
+						item as ActiveIngredientCatalogItem,
+					)
+				: "",
+			item.kind === "activeIngredient"
+				? activeIngredientClassificationSearchText(
+						(item as ActiveIngredientCatalogItem).extension.classification,
+						t,
+						i18n.locale,
+					)
+				: "",
+			item.kind === "manufacturer"
+				? manufacturerClassificationSummary(item as ManufacturerCatalogItem)
 				: "",
 			catalogOriginLabel(item.origin),
 			catalogRegionSummary(item.regions),
@@ -523,8 +577,44 @@
 			.join(" ");
 	}
 
-	function typeFilterValue(type: ProductType): string {
-		return stringifyProductType(type);
+	function productClassificationSummary(product: ProductCatalogItem): string {
+		return productClassificationLabel(product, t) ?? t("common.notInformed");
+	}
+
+	function manufacturerClassificationSummary(
+		manufacturer: ManufacturerCatalogItem,
+	): string {
+		return (
+			manufacturerClassificationLabel(
+				manufacturer.extension.classification,
+				MANUFACTURER_CLASSIFICATION_AXES,
+				t,
+			) ?? t("common.notInformed")
+		);
+	}
+
+	function activeIngredientClassificationSummary(
+		activeIngredient: ActiveIngredientCatalogItem,
+	): string {
+		return (
+			activeIngredientClassificationLabel(
+				activeIngredient.extension.classification,
+				t,
+				i18n.locale,
+			) ?? t("common.notInformed")
+		);
+	}
+
+	function conditionClassificationSummary(
+		condition: ConditionCatalogItem,
+	): string {
+		return (
+			conditionClassificationLabel(
+				condition.extension.classification,
+				CONDITION_CLASSIFICATION_AXES,
+				t,
+			) ?? t("common.notInformed")
+		);
 	}
 
 	function activeIngredientTypeLabel(

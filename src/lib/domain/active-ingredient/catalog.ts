@@ -16,6 +16,7 @@ import {
 	type CatalogEntityOrigin,
 	type CatalogTypeTuple
 } from '$lib/domain/catalog/catalog-entity.js';
+import { emptyActiveIngredientClassification, normalizeActiveIngredientClassification, type ActiveIngredientClassification } from '$lib/domain/active-ingredient/classification.js';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 import { normalizeTreatmentName } from '$lib/domain/treatment/treatment.js';
 
@@ -38,14 +39,14 @@ export type ActiveIngredientProfileSectionId = (typeof activeIngredientProfileSe
 export type ActiveIngredientProfileSections = Partial<Record<ActiveIngredientProfileSectionId, string>>;
 
 export interface ActiveIngredientCatalogExtension {
-	classification: string | null;
+	classification: ActiveIngredientClassification;
 	sections: ActiveIngredientProfileSections;
 }
 
 export interface ActiveIngredientCatalogItem extends CatalogEntityBase<ActiveIngredientType, ActiveIngredientCatalogExtension> {}
 
 export const emptyActiveIngredientCatalogExtension: ActiveIngredientCatalogExtension = {
-	classification: null,
+	classification: emptyActiveIngredientClassification,
 	sections: {}
 };
 
@@ -89,7 +90,7 @@ export function normalizeActiveIngredientCatalogExtension(value: unknown): Activ
 
 	const source = value as Record<string, unknown>;
 	return {
-		classification: normalizedNullableText(source.classification),
+		classification: normalizeActiveIngredientClassification(source.classification),
 		sections: normalizedSectionTexts(source.sections, activeIngredientProfileSectionIds)
 	};
 }

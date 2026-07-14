@@ -1,6 +1,7 @@
 <script lang="ts">
 	import CatalogEntityDetail, { type CatalogEntityDetailField, type CatalogEntityDetailSection } from '$lib/components/catalog/CatalogEntityDetail.svelte';
 	import { catalogOriginLabel, catalogRegionSummary, catalogSectionTexts } from '$lib/components/catalog/catalog-detail-utils.js';
+	import { productClassificationGroups } from '$lib/domain/product/classification.js';
 	import { productLeafletSectionIds, productTypeMain, productTypeSubtype, type ProductCatalogItem, type ProductLeafletSectionId, type ProductSpecies } from '$lib/domain/product/catalog.js';
 	import { productTypeLabel } from '$lib/domain/product/type-labels.js';
 	import { t } from '$lib/i18n/index.js';
@@ -13,12 +14,16 @@
 	import Pill from '@lucide/svelte/icons/pill';
 	import Quote from '@lucide/svelte/icons/quote';
 	import Share2 from '@lucide/svelte/icons/share-2';
+	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import Syringe from '@lucide/svelte/icons/syringe';
 	import Video from '@lucide/svelte/icons/video';
 
 	let { item }: { item: ProductCatalogItem } = $props();
 
-	const sectionConfigs: CatalogEntityDetailSection<ProductLeafletSectionId>[] = [
+	type ProductDetailSectionId = 'classification' | ProductLeafletSectionId;
+
+	const sectionConfigs: CatalogEntityDetailSection<ProductDetailSectionId>[] = [
+		{ id: 'classification', labelKey: 'formulary.classification', icon: SlidersHorizontal },
 		{ id: 'about', labelKey: 'formulary.section.about', icon: BookOpenText },
 		{ id: 'presentations', labelKey: 'formulary.section.presentations', icon: Package },
 		{ id: 'indications', labelKey: 'formulary.section.indications', icon: ClipboardList },
@@ -33,7 +38,6 @@
 	const fields = $derived<CatalogEntityDetailField[]>([
 		{ label: t('formulary.kind'), value: productTypeLabel(item.type, t) },
 		{ label: t('formulary.originFilter'), value: catalogOriginLabel(item.origin) },
-		{ label: t('formulary.classification'), value: item.extension.classification ?? t('common.notInformed') },
 		{ label: t('product.species'), value: speciesSummary(item.species) },
 		{
 			label: t('catalog.activeIngredients'),
@@ -45,6 +49,9 @@
 		},
 		{ label: t('product.regions'), value: catalogRegionSummary(item.regions), fullWidth: true }
 	]);
+	const sectionFields = $derived<Record<string, CatalogEntityDetailField[]>>({
+		classification: productClassificationFields(item)
+	});
 	const sectionTexts = $derived(catalogSectionTexts(productLeafletSectionIds, item.extension.sections));
 
 	function speciesLabel(species: ProductSpecies): string {
@@ -53,6 +60,15 @@
 
 	function speciesSummary(species: readonly ProductSpecies[]): string {
 		return species.map(speciesLabel).join(', ');
+	}
+
+	function productClassificationFields(source: ProductCatalogItem): CatalogEntityDetailField[] {
+		return [
+			{
+				label: '',
+				rowGroups: productClassificationGroups(source, t, t('common.notInformed'))
+			}
+		];
 	}
 
 	function productFallbackIcon(source: ProductCatalogItem) {
@@ -69,6 +85,7 @@
 	{fields}
 	sections={sectionConfigs}
 	{sectionTexts}
+	{sectionFields}
 	sectionsLabelKey="formulary.sectionsLabel"
 >
 	{#snippet subtitleContent()}

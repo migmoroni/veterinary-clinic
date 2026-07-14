@@ -1,4 +1,8 @@
 import { gnPyBreedTranslations } from './breeds/gn-PY.js';
+import { gnPyProductClassificationTranslations } from './classification/product/gn-PY.js';
+import { gnPyManufacturerClassificationTranslations } from './classification/manufacturer/gn-PY.js';
+import { gnPyActiveIngredientClassificationTranslations } from './classification/active-ingredient/gn-PY.js';
+import { gnPyConditionClassificationTranslations } from './classification/condition/gn-PY.js';
 
 export const gnPy = {
 	'app.name': 'Veterinary Clinic',
@@ -303,6 +307,10 @@ export const gnPy = {
 	'pet.manualBreedNamePlaceholder': 'Ehai rása réra',
 	'pet.useManualBreed': 'Eipuru ko rása',
 	...gnPyBreedTranslations,
+	...gnPyProductClassificationTranslations,
+	...gnPyManufacturerClassificationTranslations,
+	...gnPyActiveIngredientClassificationTranslations,
+	...gnPyConditionClassificationTranslations,
 	'pet.sex': 'Meña',
 	'pet.contextLabel': 'Mymba',
 	'pet.unsavedDialogTitle': 'Ñemoambue noñongatúiva',

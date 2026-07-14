@@ -19,6 +19,11 @@
 			"portfolio": "Produtos e linhas comerciais cadastrados para consulta clínica.",
 			"support": "Informações de suporte e contato poderão ser estruturadas em etapa futura.",
 			"references": "Referências institucionais e bibliográficas poderão ser adicionadas aqui."
-		}
+		},
+		"classification": [
+			"manufacturer",
+			"national",
+			"mixed"
+		]
 	}
 }

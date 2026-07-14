@@ -1,0 +1,16 @@
+export const esEsManufacturerClassificationTranslations = {
+	'catalog.manufacturer.classification.role': 'Función',
+	'catalog.manufacturer.classification.role.manufacturer': 'Fabricante',
+	'catalog.manufacturer.classification.role.distributor': 'Distribuidor',
+	'catalog.manufacturer.classification.role.importer': 'Importador',
+	'catalog.manufacturer.classification.role.laboratory': 'Laboratorio',
+	'catalog.manufacturer.classification.scope': 'Alcance',
+	'catalog.manufacturer.classification.scope.local': 'Local',
+	'catalog.manufacturer.classification.scope.national': 'Nacional',
+	'catalog.manufacturer.classification.scope.multinational': 'Multinacional',
+	'catalog.manufacturer.classification.segment': 'Segmento',
+	'catalog.manufacturer.classification.segment.animalHealth': 'Salud animal',
+	'catalog.manufacturer.classification.segment.biologics': 'Biológicos',
+	'catalog.manufacturer.classification.segment.pharmaceuticals': 'Farmacéuticos',
+	'catalog.manufacturer.classification.segment.mixed': 'Mixto',
+} as const;

@@ -1,0 +1,16 @@
+export const frFrManufacturerClassificationTranslations = {
+	'catalog.manufacturer.classification.role': 'Rôle',
+	'catalog.manufacturer.classification.role.manufacturer': 'Fabricant',
+	'catalog.manufacturer.classification.role.distributor': 'Distributeur',
+	'catalog.manufacturer.classification.role.importer': 'Importateur',
+	'catalog.manufacturer.classification.role.laboratory': 'Laboratoire',
+	'catalog.manufacturer.classification.scope': 'Portée',
+	'catalog.manufacturer.classification.scope.local': 'Local',
+	'catalog.manufacturer.classification.scope.national': 'National',
+	'catalog.manufacturer.classification.scope.multinational': 'Multinational',
+	'catalog.manufacturer.classification.segment': 'Segment',
+	'catalog.manufacturer.classification.segment.animalHealth': 'Santé animale',
+	'catalog.manufacturer.classification.segment.biologics': 'Biologiques',
+	'catalog.manufacturer.classification.segment.pharmaceuticals': 'Pharmaceutiques',
+	'catalog.manufacturer.classification.segment.mixed': 'Mixte',
+} as const;

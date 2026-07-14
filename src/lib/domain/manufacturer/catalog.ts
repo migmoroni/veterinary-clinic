@@ -15,6 +15,7 @@ import {
 	type CatalogEntityOrigin,
 	type CatalogTypeTuple
 } from '$lib/domain/catalog/catalog-entity.js';
+import { emptyCatalogClassification, normalizeCatalogClassification, type CatalogClassification } from '$lib/domain/catalog/classification.js';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 import { normalizeTreatmentName } from '$lib/domain/treatment/treatment.js';
 
@@ -22,10 +23,17 @@ export const MANUFACTURER_TYPE_TREE = {
 	manufacturer: {}
 } as const;
 
+export const MANUFACTURER_CLASSIFICATION_AXES = [
+	{ id: 'role', values: ['manufacturer', 'distributor', 'importer', 'laboratory'] },
+	{ id: 'scope', values: ['local', 'national', 'multinational'] },
+	{ id: 'segment', values: ['animalHealth', 'biologics', 'pharmaceuticals', 'mixed'] }
+] as const;
+
 export type ManufacturerTypeTree = typeof MANUFACTURER_TYPE_TREE;
 export type ManufacturerTypeMain = keyof ManufacturerTypeTree;
 export type ManufacturerTypeSubtype<TMain extends ManufacturerTypeMain> = never;
 export type ManufacturerType = CatalogTypeTuple<ManufacturerTypeTree>;
+export type ManufacturerClassification = CatalogClassification;
 
 export const MANUFACTURER_TYPES = catalogTypesFromTree(MANUFACTURER_TYPE_TREE);
 
@@ -34,6 +42,7 @@ export type ManufacturerProfileSectionId = (typeof manufacturerProfileSectionIds
 export type ManufacturerProfileSections = Partial<Record<ManufacturerProfileSectionId, string>>;
 
 export interface ManufacturerCatalogExtension {
+	classification: ManufacturerClassification;
 	website: string | null;
 	sections: ManufacturerProfileSections;
 }
@@ -41,6 +50,7 @@ export interface ManufacturerCatalogExtension {
 export interface ManufacturerCatalogItem extends CatalogEntityBase<ManufacturerType, ManufacturerCatalogExtension> {}
 
 export const emptyManufacturerCatalogExtension: ManufacturerCatalogExtension = {
+	classification: emptyCatalogClassification,
 	website: null,
 	sections: {}
 };
@@ -86,6 +96,7 @@ export function normalizeManufacturerCatalogExtension(value: unknown): Manufactu
 
 	const source = value as Record<string, unknown>;
 	return {
+		classification: normalizeCatalogClassification(source.classification, MANUFACTURER_CLASSIFICATION_AXES),
 		website: normalizedNullableText(source.website),
 		sections: normalizedSectionTexts(source.sections, manufacturerProfileSectionIds)
 	};

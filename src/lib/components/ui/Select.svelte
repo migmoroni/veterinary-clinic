@@ -2,6 +2,7 @@
 	export type SelectOption<T> = {
 		value: T;
 		label: string;
+		level?: number;
 	};
 </script>
 
@@ -153,7 +154,7 @@
 							<Check class="size-4" />
 						{/if}
 					</span>
-					<span class="truncate">{option.label}</span>
+					<span class="truncate" style:margin-left={`${option.level ?? 0}rem`}>{option.label}</span>
 				</button>
 			{/each}
 		</div>

@@ -4,11 +4,11 @@
 	import ProductImage from '$lib/components/product/ProductImage.svelte';
 	import ProductImageCaptureDialog from '$lib/components/product/ProductImageCaptureDialog.svelte';
 	import ProductRegionsField from '$lib/components/product/ProductRegionsField.svelte';
-	import { productTypeLabel, treatmentProductTypeLabel } from '$lib/domain/product/type-labels.js';
+	import { productTypeHierarchicalFilterOptions, productTypeMatchesFilter, treatmentProductTypeLabel, type ProductTypeFilterValue } from '$lib/domain/product/type-labels.js';
 	import ImageCollectionOrganizer from '$lib/components/shared/ImageCollectionOrganizer.svelte';
 	import Select, { type SelectOption } from '$lib/components/ui/Select.svelte';
 	import type { ImageCollectionItem, ImageCollectionItemInput } from '$lib/domain/image-collection/image-collection.js';
-	import { canDeleteProductCatalogItem, canEditProductCatalogItem, PRODUCT_TYPES, productItemMatchesSearch, stringifyProductType, type ProductType } from '$lib/domain/product/catalog.js';
+	import { canDeleteProductCatalogItem, canEditProductCatalogItem, PRODUCT_TYPES, productItemMatchesSearch } from '$lib/domain/product/catalog.js';
 	import { petSpeciesOptions, type KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import { TREATMENT_KINDS, normalizeTreatmentName, type TreatmentCatalogItem, type TreatmentCatalogItemId, type TreatmentKind } from '$lib/domain/treatment/treatment.js';
@@ -22,7 +22,7 @@
 	import Search from '@lucide/svelte/icons/search';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
-	type TypeFilter = 'all' | string;
+	type TypeFilter = ProductTypeFilterValue;
 	type CatalogItem = TreatmentCatalogItem;
 	type ImageManagerTarget = { kind: TreatmentKind; itemId: TreatmentCatalogItemId | null };
 
@@ -64,12 +64,14 @@
 
 	const treatmentKindOptions = $derived<SelectOption<TreatmentKind>[]>(treatmentKinds.map((kind) => ({ value: kind, label: treatmentKindLabel(kind) })));
 	const productTypeFilterOptions = $derived<SelectOption<TypeFilter>[]>([
-		{ value: 'all', label: `${t('product.allKinds')} (${filterCount('all')})` },
-		...PRODUCT_TYPES.map((type) => ({ value: typeFilterValue(type), label: `${productTypeLabel(type, t)} (${filterCount(typeFilterValue(type))})` }))
+		...productTypeHierarchicalFilterOptions(PRODUCT_TYPES, t, t('product.allKinds')).map((option) => ({
+			...option,
+			label: `${option.label} (${filterCount(option.value)})`
+		}))
 	]);
 	const filteredCatalogItems = $derived(
 		catalogItems.filter((item) => {
-			if (typeFilter !== 'all' && stringifyProductType(item.type) !== typeFilter) return false;
+			if (!productTypeMatchesFilter(item.type, typeFilter)) return false;
 			return productItemMatchesSearch(item.name, item.aliases, searchQuery, normalizeTreatmentName) || normalizeTreatmentName(item.manufacturerName ?? '').includes(normalizeTreatmentName(searchQuery));
 		})
 	);
@@ -87,13 +89,9 @@
 		return treatmentProductTypeLabel(kind, t);
 	}
 
-	function typeFilterValue(type: ProductType): string {
-		return stringifyProductType(type);
-	}
-
 	function filterCount(type: TypeFilter): number {
 		if (type === 'all') return catalogItems.length;
-		return catalogItems.filter((item) => stringifyProductType(item.type) === type).length;
+		return catalogItems.filter((item) => productTypeMatchesFilter(item.type, type)).length;
 	}
 
 	function defaultSpeciesDraft(): KnownPetSpecies[] {

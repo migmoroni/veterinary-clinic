@@ -27,7 +27,32 @@
 	],
 	"images": [],
 	"extension": {
-		"classification": "Medicamento ficticio de referência",
+		"classification": {
+			"commercialTherapeutic": {
+				"compositionOrigin": "biological",
+				"commercialCategory": "reference",
+				"therapeuticAction": "prophylactic"
+			},
+			"formAndAdministration": {
+				"pharmaceuticalForm": "injectableSolution",
+				"administrationRoutes": [
+					"subcutaneous",
+					"intramuscular"
+				],
+				"presentationDosage": "Frasco com 1 dose; 1 mL por dose"
+			},
+			"targetSpecies": {
+				"warnings": [
+					"Exemplo demonstrativo: confirmar a espécie-alvo antes de administrar produtos comerciais."
+				]
+			},
+			"regulatoryIdentifiers": {
+				"brazilMapa": "MAPA 00000/2026",
+				"unitedStatesNada": "NADA 000-000",
+				"unitedStatesAnada": null,
+				"gtinEan": "7890000000000"
+			}
+		},
 		"commercialLine": "Linha demonstrativa",
 		"sections": {
 			"about": "Receita simples. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae justo sed arcu facilisis luctus. Composição demonstrativa com ativos fictícios para visualização do bulário.",

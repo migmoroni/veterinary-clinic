@@ -1,7 +1,8 @@
 <script lang="ts">
 	import CatalogEntityDetail, { type CatalogEntityDetailField, type CatalogEntityDetailSection } from '$lib/components/catalog/CatalogEntityDetail.svelte';
 	import { catalogOriginLabel, catalogRegionSummary, catalogSectionTexts } from '$lib/components/catalog/catalog-detail-utils.js';
-	import { conditionProfileSectionIds, conditionTypeSubtype, type ConditionCatalogItem, type ConditionProfileSectionId } from '$lib/domain/condition/catalog.js';
+	import { conditionClassificationGroups } from '$lib/domain/catalog/classification-labels.js';
+	import { CONDITION_CLASSIFICATION_AXES, conditionProfileSectionIds, conditionTypeSubtype, type ConditionCatalogItem, type ConditionProfileSectionId } from '$lib/domain/condition/catalog.js';
 	import { t } from '$lib/i18n/index.js';
 	import Activity from '@lucide/svelte/icons/activity';
 	import BookOpenText from '@lucide/svelte/icons/book-open-text';
@@ -9,11 +10,15 @@
 	import HeartPulse from '@lucide/svelte/icons/heart-pulse';
 	import Quote from '@lucide/svelte/icons/quote';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import Stethoscope from '@lucide/svelte/icons/stethoscope';
 
 	let { item }: { item: ConditionCatalogItem } = $props();
 
-	const sectionConfigs: CatalogEntityDetailSection<ConditionProfileSectionId>[] = [
+	type ConditionDetailSectionId = 'classification' | ConditionProfileSectionId;
+
+	const sectionConfigs: CatalogEntityDetailSection<ConditionDetailSectionId>[] = [
+		{ id: 'classification', labelKey: 'formulary.classification', icon: SlidersHorizontal },
 		{ id: 'about', labelKey: 'catalog.section.about', icon: BookOpenText },
 		{ id: 'clinicalSigns', labelKey: 'catalog.condition.section.clinicalSigns', icon: HeartPulse },
 		{ id: 'diagnosis', labelKey: 'catalog.condition.section.diagnosis', icon: ClipboardCheck },
@@ -22,11 +27,13 @@
 		{ id: 'references', labelKey: 'catalog.section.references', icon: Quote }
 	];
 	const fields = $derived<CatalogEntityDetailField[]>([
-		{ label: t('product.kind'), value: conditionTypeLabel(item) },
-		{ label: t('formulary.classification'), value: item.extension.classification ?? t('common.notInformed') },
+		{ label: t('formulary.kind'), value: conditionTypeLabel(item) },
 		{ label: t('formulary.originFilter'), value: catalogOriginLabel(item.origin) },
 		{ label: t('product.regions'), value: catalogRegionSummary(item.regions) }
 	]);
+	const sectionFields = $derived<Record<string, CatalogEntityDetailField[]>>({
+		classification: conditionClassificationFields(item)
+	});
 	const sectionTexts = $derived(catalogSectionTexts(conditionProfileSectionIds, item.extension.sections));
 
 	function conditionTypeLabel(source: ConditionCatalogItem): string {
@@ -35,6 +42,15 @@
 		if (subtype === 'disorder') return t('catalog.condition.type.disorder');
 		if (subtype === 'injury') return t('catalog.condition.type.injury');
 		return t('catalog.condition.type.disease');
+	}
+
+	function conditionClassificationFields(source: ConditionCatalogItem): CatalogEntityDetailField[] {
+		return [
+			{
+				label: '',
+				rowGroups: conditionClassificationGroups(source.extension.classification, CONDITION_CLASSIFICATION_AXES, t, t('common.notInformed'))
+			}
+		];
 	}
 </script>
 
@@ -47,4 +63,5 @@
 	{fields}
 	sections={sectionConfigs}
 	{sectionTexts}
+	{sectionFields}
 />

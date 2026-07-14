@@ -27,6 +27,14 @@ const productTypeValues = {
 const productTypeSqlValues = [...Object.values(productTypeValues.medication), productTypeValues.nutrition, productTypeValues.hygiene, productTypeValues.disinfectants]
 	.map(quoteSqlString)
 	.join(', ');
+const productCompositionOrigins = ['allopathic', 'phytotherapeutic', 'homeopathic', 'biological'];
+const productCommercialCategories = ['reference', 'generic', 'similar', 'branded', 'compounded', 'nonApplicable'];
+const productTherapeuticActions = ['prophylactic', 'curative', 'palliative', 'control'];
+const productPharmaceuticalForms = ['palatableTablet', 'tablet', 'capsule', 'oralSuspension', 'injectableSolution', 'spotOn', 'oticOintment', 'ophthalmicSolution', 'topicalSpray', 'shampoo'];
+const productAdministrationRoutes = ['oral', 'intravenous', 'intramuscular', 'subcutaneous', 'topical', 'otic', 'ophthalmic', 'intranasal'];
+const emptyProductCommercialTherapeutic = { compositionOrigin: null, commercialCategory: null, therapeuticAction: null };
+const emptyProductForm = { pharmaceuticalForm: null, administrationRoutes: [], presentationDosage: null };
+const emptyProductRegulatoryIdentifiers = { brazilMapa: null, unitedStatesNada: null, unitedStatesAnada: null, gtinEan: null };
 const manufacturerTypeValue = JSON.stringify(['manufacturer', null, null]);
 const activeIngredientTypeValues = {
 	substance: JSON.stringify(['activeIngredient', 'substance', null]),
@@ -121,6 +129,120 @@ function normalizeName(value) {
 		.replace(/[\u0300-\u036f]/g, '')
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, '');
+}
+
+function normalizedNullableText(value) {
+	if (typeof value !== 'string') return null;
+	const trimmed = value.trim();
+	return trimmed ? trimmed : null;
+}
+
+function normalizedEnum(value, options) {
+	return typeof value === 'string' && options.includes(value) ? value : null;
+}
+
+function normalizedEnumList(value, options) {
+	if (!Array.isArray(value)) return [];
+	const normalized = [];
+	for (const item of value) {
+		const option = normalizedEnum(item, options);
+		if (option && !normalized.includes(option)) normalized.push(option);
+	}
+	return normalized;
+}
+
+function normalizedTextList(value) {
+	if (!Array.isArray(value)) return [];
+	const normalized = [];
+	for (const item of value) {
+		const text = normalizedNullableText(item);
+		if (text && !normalized.includes(text)) normalized.push(text);
+	}
+	return normalized;
+}
+
+function normalizeProductForm(value) {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...emptyProductForm, administrationRoutes: [] };
+	return {
+		pharmaceuticalForm: normalizedEnum(value.pharmaceuticalForm, productPharmaceuticalForms),
+		administrationRoutes: normalizedEnumList(value.administrationRoutes, productAdministrationRoutes),
+		presentationDosage: normalizedNullableText(value.presentationDosage)
+	};
+}
+
+function normalizeProductCommercialTherapeutic(value) {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...emptyProductCommercialTherapeutic };
+	return {
+		compositionOrigin: normalizedEnum(value.compositionOrigin, productCompositionOrigins),
+		commercialCategory: normalizedEnum(value.commercialCategory, productCommercialCategories),
+		therapeuticAction: normalizedEnum(value.therapeuticAction, productTherapeuticActions)
+	};
+}
+
+function normalizeProductTargetSpecies(value) {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return { warnings: [] };
+	return {
+		warnings: normalizedTextList(value.warnings)
+	};
+}
+
+function normalizeProductRegulatoryIdentifiers(value) {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...emptyProductRegulatoryIdentifiers };
+	return {
+		brazilMapa: normalizedNullableText(value.brazilMapa),
+		unitedStatesNada: normalizedNullableText(value.unitedStatesNada),
+		unitedStatesAnada: normalizedNullableText(value.unitedStatesAnada),
+		gtinEan: normalizedNullableText(value.gtinEan)
+	};
+}
+
+function normalizeProductClassification(value, legacySource = {}) {
+	if (Array.isArray(value)) {
+		return {
+			commercialTherapeutic: {
+				compositionOrigin: normalizedEnum(value[0], productCompositionOrigins),
+				commercialCategory: normalizedEnum(value[1], productCommercialCategories),
+				therapeuticAction: normalizedEnum(value[2], productTherapeuticActions)
+			},
+			formAndAdministration: normalizeProductForm(legacySource.form),
+			targetSpecies: { warnings: normalizedTextList(legacySource.targetSpeciesWarnings) },
+			regulatoryIdentifiers: normalizeProductRegulatoryIdentifiers(legacySource.regulatoryIdentifiers)
+		};
+	}
+
+	if (!value || typeof value !== 'object' || Array.isArray(value)) {
+		return {
+			commercialTherapeutic: { ...emptyProductCommercialTherapeutic },
+			formAndAdministration: { ...emptyProductForm, administrationRoutes: [] },
+			targetSpecies: { warnings: [] },
+			regulatoryIdentifiers: { ...emptyProductRegulatoryIdentifiers }
+		};
+	}
+
+	return {
+		commercialTherapeutic: normalizeProductCommercialTherapeutic(value.commercialTherapeutic),
+		formAndAdministration: normalizeProductForm(value.formAndAdministration),
+		targetSpecies: normalizeProductTargetSpecies(value.targetSpecies),
+		regulatoryIdentifiers: normalizeProductRegulatoryIdentifiers(value.regulatoryIdentifiers)
+	};
+}
+
+function normalizeProductExtension(value) {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return { classification: normalizeProductClassification(null), commercialLine: null, sections: {} };
+	const source = value;
+	return {
+		classification: normalizeProductClassification(source.classification, source),
+		commercialLine: normalizedNullableText(source.commercialLine),
+		sections: source.sections && typeof source.sections === 'object' && !Array.isArray(source.sections) ? source.sections : {}
+	};
+}
+
+function normalizeProductExtensionText(value) {
+	try {
+		return JSON.stringify(normalizeProductExtension(JSON.parse(value || '{}')));
+	} catch {
+		return JSON.stringify(normalizeProductExtension(null));
+	}
 }
 
 function slug(value) {
@@ -288,7 +410,7 @@ function rebuildManufacturerCatalog(database) {
 			aliases: row.aliases || '[]',
 			origin: row.origin === 'system' ? 'system' : 'user',
 			regions: row.regions || '[]',
-			extension: row.extension || '{}',
+			extension: normalizeProductExtensionText(row.extension),
 			hidden_at: row.hidden_at ?? null,
 			created_at: row.created_at ?? new Date().toISOString(),
 			updated_at: row.updated_at ?? null
@@ -583,7 +705,7 @@ function syncDefaultProducts(database) {
 			aliases: JSON.stringify(Array.isArray(item.aliases) ? item.aliases : []),
 			manufacturer_id: item.manufacturerId ?? null,
 			regions: JSON.stringify(Array.isArray(item.regions) ? item.regions : []),
-			extension: JSON.stringify(item.extension ?? {})
+			extension: JSON.stringify(normalizeProductExtension(item.extension ?? {}))
 		});
 
 		clearRelations.run(item.id);

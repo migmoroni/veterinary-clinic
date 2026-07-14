@@ -21,6 +21,26 @@ const medicationLeafletSectionIds = [
 	'distributors',
 	'references'
 ];
+const productCompositionOrigins = ['allopathic', 'phytotherapeutic', 'homeopathic', 'biological'];
+const productCommercialCategories = ['reference', 'generic', 'similar', 'branded', 'compounded', 'nonApplicable'];
+const productTherapeuticActions = ['prophylactic', 'curative', 'palliative', 'control'];
+const productPharmaceuticalForms = [
+	'palatableTablet',
+	'tablet',
+	'capsule',
+	'oralSuspension',
+	'injectableSolution',
+	'spotOn',
+	'oticOintment',
+	'ophthalmicSolution',
+	'topicalSpray',
+	'shampoo'
+];
+const productAdministrationRoutes = ['oral', 'intravenous', 'intramuscular', 'subcutaneous', 'topical', 'otic', 'ophthalmic', 'intranasal'];
+const emptyProductCommercialTherapeutic = { compositionOrigin: null, commercialCategory: null, therapeuticAction: null };
+const emptyProductForm = { pharmaceuticalForm: null, administrationRoutes: [], presentationDosage: null };
+const emptyProductTargetSpecies = { warnings: [] };
+const emptyProductRegulatoryIdentifiers = { brazilMapa: null, unitedStatesNada: null, unitedStatesAnada: null, gtinEan: null };
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const productDefaultsDir = path.resolve(scriptDir, '../src/lib/catalog/defaults/products');
@@ -179,9 +199,103 @@ function normalizedNullableText(value) {
 	return trimmed ? trimmed : null;
 }
 
+function normalizedEnum(value, options) {
+	return typeof value === 'string' && options.includes(value) ? value : null;
+}
+
+function normalizedEnumList(value, options) {
+	if (!Array.isArray(value)) return [];
+	const normalized = [];
+	for (const item of value) {
+		const option = normalizedEnum(item, options);
+		if (option && !normalized.includes(option)) normalized.push(option);
+	}
+	return normalized;
+}
+
+function normalizedTextList(value) {
+	if (!Array.isArray(value)) return [];
+	const normalized = [];
+	for (const item of value) {
+		const text = normalizedNullableText(item);
+		if (text && !normalized.includes(text)) normalized.push(text);
+	}
+	return normalized;
+}
+
+function normalizeProductForm(value) {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...emptyProductForm, administrationRoutes: [] };
+	return {
+		pharmaceuticalForm: normalizedEnum(value.pharmaceuticalForm, productPharmaceuticalForms),
+		administrationRoutes: normalizedEnumList(value.administrationRoutes, productAdministrationRoutes),
+		presentationDosage: normalizedNullableText(value.presentationDosage)
+	};
+}
+
+function normalizeProductCommercialTherapeutic(value) {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...emptyProductCommercialTherapeutic };
+	return {
+		compositionOrigin: normalizedEnum(value.compositionOrigin, productCompositionOrigins),
+		commercialCategory: normalizedEnum(value.commercialCategory, productCommercialCategories),
+		therapeuticAction: normalizedEnum(value.therapeuticAction, productTherapeuticActions)
+	};
+}
+
+function normalizeProductTargetSpecies(value) {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return { warnings: [] };
+	return {
+		warnings: normalizedTextList(value.warnings)
+	};
+}
+
+function normalizeProductRegulatoryIdentifiers(value) {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...emptyProductRegulatoryIdentifiers };
+	return {
+		brazilMapa: normalizedNullableText(value.brazilMapa),
+		unitedStatesNada: normalizedNullableText(value.unitedStatesNada),
+		unitedStatesAnada: normalizedNullableText(value.unitedStatesAnada),
+		gtinEan: normalizedNullableText(value.gtinEan)
+	};
+}
+
+function normalizeProductClassification(value, legacySource = {}) {
+	if (Array.isArray(value)) {
+		return {
+			commercialTherapeutic: {
+				compositionOrigin: normalizedEnum(value[0], productCompositionOrigins),
+				commercialCategory: normalizedEnum(value[1], productCommercialCategories),
+				therapeuticAction: normalizedEnum(value[2], productTherapeuticActions)
+			},
+			formAndAdministration: normalizeProductForm(legacySource.form),
+			targetSpecies: { warnings: normalizedTextList(legacySource.targetSpeciesWarnings) },
+			regulatoryIdentifiers: normalizeProductRegulatoryIdentifiers(legacySource.regulatoryIdentifiers)
+		};
+	}
+
+	if (!value || typeof value !== 'object' || Array.isArray(value)) {
+		return {
+			commercialTherapeutic: { ...emptyProductCommercialTherapeutic },
+			formAndAdministration: { ...emptyProductForm, administrationRoutes: [] },
+			targetSpecies: { warnings: [] },
+			regulatoryIdentifiers: { ...emptyProductRegulatoryIdentifiers }
+		};
+	}
+
+	return {
+		commercialTherapeutic: normalizeProductCommercialTherapeutic(value.commercialTherapeutic),
+		formAndAdministration: normalizeProductForm(value.formAndAdministration),
+		targetSpecies: normalizeProductTargetSpecies(value.targetSpecies),
+		regulatoryIdentifiers: normalizeProductRegulatoryIdentifiers(value.regulatoryIdentifiers)
+	};
+}
+
 function normalizeMedicationCatalogExtension(value) {
 	if (!value || typeof value !== 'object' || Array.isArray(value)) {
-		return { classification: null, commercialLine: null, sections: {} };
+		return {
+			classification: normalizeProductClassification(null),
+			commercialLine: null,
+			sections: {}
+		};
 	}
 
 	const sections = {};
@@ -193,7 +307,7 @@ function normalizeMedicationCatalogExtension(value) {
 	}
 
 	return {
-		classification: normalizedNullableText(source.classification),
+		classification: normalizeProductClassification(source.classification, source),
 		commercialLine: normalizedNullableText(source.commercialLine),
 		sections
 	};
