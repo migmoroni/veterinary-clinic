@@ -1,12 +1,9 @@
 import { DEFAULT_LOCALE, type Locale } from '$lib/i18n/locales.js';
 import {
 	activeIngredientLocalizedLabel,
-	activeIngredientLocalizedTermLabel,
 	activeIngredientLocalizedValues,
 	normalizeActiveIngredientLocalizedText,
-	normalizeActiveIngredientLocalizedTerm,
 	normalizeActiveIngredientText,
-	type ActiveIngredientLocalizedTerm,
 	type ActiveIngredientLocalizedText
 } from './localized-text.js';
 
@@ -38,7 +35,6 @@ export const ACTIVE_INGREDIENT_UNITED_STATES_REGULATORY_CONTROLS = [
 export const ACTIVE_INGREDIENT_EUROPE_REGULATORY_CONTROLS = ['notControlled', 'controlledSubstance', 'prescriptionOnly', 'veterinaryPrescriptionOnly', 'notInformed'] as const;
 
 export const ACTIVE_INGREDIENT_VETERINARY_RESTRICTIONS = ['none', 'prescriptionOnly', 'clinicalUseOnly', 'hospitalUseOnly', 'productionAnimalRestricted', 'prohibitedDirectTutorSale', 'notInformed'] as const;
-const ACTIVE_INGREDIENT_MECHANISM_BEHAVIOR_TARGET_PATTERN_KEY = 'catalog.activeIngredient.classification.mechanism.behaviorTargetPattern' as const;
 
 export type ActiveIngredientNomenclatureStandard = (typeof ACTIVE_INGREDIENT_NOMENCLATURE_STANDARDS)[number];
 export type ActiveIngredientDenominationStandard = (typeof ACTIVE_INGREDIENT_DENOMINATION_STANDARDS)[number];
@@ -47,10 +43,9 @@ export type ActiveIngredientUnitedStatesRegulatoryControl = (typeof ACTIVE_INGRE
 export type ActiveIngredientEuropeRegulatoryControl = (typeof ACTIVE_INGREDIENT_EUROPE_REGULATORY_CONTROLS)[number];
 export type ActiveIngredientVeterinaryRestriction = (typeof ACTIVE_INGREDIENT_VETERINARY_RESTRICTIONS)[number];
 
-export interface ActiveIngredientNomenclatureDenomination {
+export type ActiveIngredientNomenclatureDenomination = {
 	standard: ActiveIngredientDenominationStandard;
-	label: ActiveIngredientLocalizedText;
-}
+} & ActiveIngredientLocalizedText;
 
 export interface ActiveIngredientNomenclature {
 	scientificName: string | null;
@@ -60,7 +55,7 @@ export interface ActiveIngredientNomenclature {
 
 export interface ActiveIngredientAtcVetClassification {
 	code: string | null;
-	system: ActiveIngredientLocalizedTerm | null;
+	system: ActiveIngredientLocalizedText | null;
 }
 
 export interface ActiveIngredientRegulatoryClassification {
@@ -69,65 +64,12 @@ export interface ActiveIngredientRegulatoryClassification {
 	europe: ActiveIngredientEuropeRegulatoryControl | null;
 }
 
-export type ActiveIngredientMechanismTerm = ActiveIngredientLocalizedTerm;
-
-export interface ActiveIngredientMechanismTarget {
-	label: ActiveIngredientLocalizedText;
-	family: ActiveIngredientMechanismTerm | null;
-}
-
-export interface ActiveIngredientChemicalActionMechanism {
-	label: ActiveIngredientLocalizedText;
-	behavior: ActiveIngredientMechanismTerm | null;
-	target: ActiveIngredientMechanismTarget;
-	note: ActiveIngredientLocalizedText;
-}
-
-export const emptyActiveIngredientMechanismTarget: ActiveIngredientMechanismTarget = {
-	label: {},
-	family: null
-};
-
-export const emptyActiveIngredientChemicalActionMechanism: ActiveIngredientChemicalActionMechanism = {
-	label: {},
-	behavior: null,
-	target: emptyActiveIngredientMechanismTarget,
-	note: {}
-};
-
 export interface ActiveIngredientClassification {
 	nomenclature: ActiveIngredientNomenclature;
 	atcVet: ActiveIngredientAtcVetClassification;
-	chemicalActionMechanism: ActiveIngredientChemicalActionMechanism;
 	regulatoryControl: ActiveIngredientRegulatoryClassification;
 	veterinaryRestriction: ActiveIngredientVeterinaryRestriction | null;
 }
-
-function emptyClassification(): ActiveIngredientClassification {
-	return {
-		nomenclature: {
-			scientificName: null,
-			denominations: [],
-			casNumber: null
-		},
-		atcVet: {
-			code: null,
-			system: null
-		},
-		chemicalActionMechanism: {
-			...emptyActiveIngredientChemicalActionMechanism,
-			target: { ...emptyActiveIngredientChemicalActionMechanism.target }
-		},
-		regulatoryControl: {
-			brazil: null,
-			unitedStates: null,
-			europe: null
-		},
-		veterinaryRestriction: null
-	};
-}
-
-export const emptyActiveIngredientClassification: ActiveIngredientClassification = emptyClassification();
 
 function emptyNomenclature(): ActiveIngredientNomenclature {
 	return {
@@ -151,6 +93,17 @@ function emptyRegulatoryControl(): ActiveIngredientRegulatoryClassification {
 		europe: null
 	};
 }
+
+function emptyClassification(): ActiveIngredientClassification {
+	return {
+		nomenclature: emptyNomenclature(),
+		atcVet: emptyAtcVet(),
+		regulatoryControl: emptyRegulatoryControl(),
+		veterinaryRestriction: null
+	};
+}
+
+export const emptyActiveIngredientClassification: ActiveIngredientClassification = emptyClassification();
 
 const brazilRegulatoryControlLabelKeys = {
 	notControlled: 'catalog.activeIngredient.classification.regulatory.brazil.notControlled',
@@ -209,33 +162,9 @@ type ActiveIngredientClassificationLabelKey =
 	| (typeof brazilRegulatoryControlLabelKeys)[keyof typeof brazilRegulatoryControlLabelKeys]
 	| (typeof unitedStatesRegulatoryControlLabelKeys)[keyof typeof unitedStatesRegulatoryControlLabelKeys]
 	| (typeof europeRegulatoryControlLabelKeys)[keyof typeof europeRegulatoryControlLabelKeys]
-	| (typeof veterinaryRestrictionLabelKeys)[keyof typeof veterinaryRestrictionLabelKeys]
-	| typeof ACTIVE_INGREDIENT_MECHANISM_BEHAVIOR_TARGET_PATTERN_KEY;
+	| (typeof veterinaryRestrictionLabelKeys)[keyof typeof veterinaryRestrictionLabelKeys];
 
 type Translate = (key: ActiveIngredientClassificationLabelKey) => string;
-
-function comparableText(value: string): string {
-	return value
-		.normalize('NFD')
-		.replace(/\p{Diacritic}/gu, '')
-		.toLocaleLowerCase()
-		.trim()
-		.replace(/\s+/g, ' ');
-}
-
-function formattedBehaviorTargetLabel(behaviorLabel: string | null, targetLabel: string | null, translate: Translate): string | null {
-	if (!behaviorLabel || !targetLabel) return null;
-	return translate(ACTIVE_INGREDIENT_MECHANISM_BEHAVIOR_TARGET_PATTERN_KEY).replace('{behavior}', behaviorLabel).replace('{target}', targetLabel);
-}
-
-const warnedRedundantMechanismLabels = new Set<string>();
-
-function warnRedundantMechanismLabel(locale: Locale, label: string) {
-	const key = `${locale}:${label}`;
-	if (warnedRedundantMechanismLabels.has(key) || typeof console === 'undefined') return;
-	warnedRedundantMechanismLabels.add(key);
-	console.warn('chemicalActionMechanism.label duplicates behavior + target; remove the label and use the i18n behaviorTargetPattern instead.', { locale, label });
-}
 
 function normalizedCode(value: unknown): string | null {
 	const text = normalizeActiveIngredientText(value, 32);
@@ -255,11 +184,12 @@ function normalizeDenomination(value: unknown): ActiveIngredientNomenclatureDeno
 	const source = value as Record<string, unknown>;
 	const standard = normalizedDenominationStandard(source.standard);
 	if (!standard) return null;
+	const localized = normalizeActiveIngredientLocalizedText(source, 180);
 	const denomination: ActiveIngredientNomenclatureDenomination = {
 		standard,
-		label: normalizeActiveIngredientLocalizedText(source.label, 180)
+		...localized
 	};
-	return activeIngredientLocalizedValues(denomination.label).length > 0 ? denomination : null;
+	return activeIngredientLocalizedValues(denomination).length > 0 ? denomination : null;
 }
 
 function normalizeNomenclature(value: unknown): ActiveIngredientNomenclature {
@@ -275,31 +205,10 @@ function normalizeNomenclature(value: unknown): ActiveIngredientNomenclature {
 function normalizeAtcVet(value: unknown): ActiveIngredientAtcVetClassification {
 	if (!value || typeof value !== 'object' || Array.isArray(value)) return emptyAtcVet();
 	const source = value as Record<string, unknown>;
+	const system = normalizeActiveIngredientLocalizedText(source.system);
 	return {
 		code: normalizedCode(source.code),
-		system: normalizeActiveIngredientLocalizedTerm(source.system)
-	};
-}
-
-function normalizeMechanismTarget(value: unknown): ActiveIngredientMechanismTarget {
-	if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...emptyActiveIngredientMechanismTarget };
-	const source = value as Record<string, unknown>;
-	return {
-		label: normalizeActiveIngredientLocalizedText(source.label),
-		family: normalizeActiveIngredientLocalizedTerm(source.family)
-	};
-}
-
-export function normalizeActiveIngredientChemicalActionMechanism(value: unknown): ActiveIngredientChemicalActionMechanism {
-	if (!value || typeof value !== 'object' || Array.isArray(value)) {
-		return { ...emptyActiveIngredientChemicalActionMechanism, target: { ...emptyActiveIngredientMechanismTarget } };
-	}
-	const source = value as Record<string, unknown>;
-	return {
-		label: normalizeActiveIngredientLocalizedText(source.label),
-		behavior: normalizeActiveIngredientLocalizedTerm(source.behavior),
-		target: normalizeMechanismTarget(source.target),
-		note: normalizeActiveIngredientLocalizedText(source.note, 500)
+		system: activeIngredientLocalizedValues(system).length > 0 ? system : null
 	};
 }
 
@@ -322,7 +231,6 @@ export function normalizeActiveIngredientClassification(value: unknown): ActiveI
 	return {
 		nomenclature: normalizeNomenclature(source.nomenclature),
 		atcVet: normalizeAtcVet(source.atcVet),
-		chemicalActionMechanism: normalizeActiveIngredientChemicalActionMechanism(source.chemicalActionMechanism),
 		regulatoryControl: normalizeRegulatoryControl(source.regulatoryControl),
 		veterinaryRestriction: normalizedOption(source.veterinaryRestriction, ACTIVE_INGREDIENT_VETERINARY_RESTRICTIONS)
 	};
@@ -343,7 +251,8 @@ export function activeIngredientNomenclatureEntryStandardDescription(standard: A
 
 export function activeIngredientNomenclatureEntryValue(classification: ActiveIngredientClassification, standard: ActiveIngredientNomenclatureStandard, locale: Locale = DEFAULT_LOCALE): string | null {
 	if (standard === 'scientificName') return classification.nomenclature.scientificName;
-	return activeIngredientLocalizedLabel(activeIngredientNomenclatureDenomination(classification, standard)?.label ?? {}, locale);
+	const denomination = activeIngredientNomenclatureDenomination(classification, standard);
+	return denomination ? activeIngredientLocalizedLabel(denomination, locale) : null;
 }
 
 function activeIngredientNomenclatureEntrySummary(classification: ActiveIngredientClassification, standard: ActiveIngredientNomenclatureStandard, translate: Translate, locale: Locale): string | null {
@@ -364,8 +273,8 @@ export function activeIngredientNomenclaturePreferredStandards(locale: Locale = 
 	return ['inn'];
 }
 
-export function activeIngredientAtcVetSystemLabel(system: ActiveIngredientLocalizedTerm | null, locale: Locale = DEFAULT_LOCALE): string | null {
-	return activeIngredientLocalizedTermLabel(system, locale);
+export function activeIngredientAtcVetSystemLabel(system: ActiveIngredientLocalizedText | null, locale: Locale = DEFAULT_LOCALE): string | null {
+	return system ? activeIngredientLocalizedLabel(system, locale) : null;
 }
 
 export function activeIngredientAtcVetLabel(classification: ActiveIngredientClassification, locale: Locale = DEFAULT_LOCALE): string | null {
@@ -373,50 +282,6 @@ export function activeIngredientAtcVetLabel(classification: ActiveIngredientClas
 	const systemLabel = activeIngredientAtcVetSystemLabel(system, locale);
 	if (code && systemLabel) return `${code} (${systemLabel})`;
 	return code ?? systemLabel;
-}
-
-function activeIngredientMechanismTermLabel(term: ActiveIngredientMechanismTerm | null, locale: Locale): string | null {
-	return activeIngredientLocalizedTermLabel(term, locale);
-}
-
-function activeIngredientMechanismTargetNameLabel(target: ActiveIngredientMechanismTarget, locale: Locale): string | null {
-	return activeIngredientLocalizedLabel(target.label, locale);
-}
-
-export function activeIngredientChemicalActionMechanismLabel(mechanism: ActiveIngredientChemicalActionMechanism, locale: Locale, translate: Translate): string | null {
-	const label = activeIngredientLocalizedLabel(mechanism.label, locale);
-	const behaviorLabel = activeIngredientMechanismTermLabel(mechanism.behavior, locale);
-	const targetLabel = activeIngredientMechanismTargetNameLabel(mechanism.target, locale);
-	const composedLabel = formattedBehaviorTargetLabel(behaviorLabel, targetLabel, translate);
-
-	if (label) {
-		if (composedLabel && comparableText(label) === comparableText(composedLabel)) {
-			warnRedundantMechanismLabel(locale, label);
-			return composedLabel;
-		}
-		return label;
-	}
-
-	if (composedLabel) return composedLabel;
-	return behaviorLabel ?? targetLabel;
-}
-
-function activeIngredientChemicalActionMechanismSearchText(mechanism: ActiveIngredientChemicalActionMechanism, locale: Locale, translate: Translate): string {
-	const behaviorLabel = activeIngredientMechanismTermLabel(mechanism.behavior, locale);
-	const targetLabel = activeIngredientMechanismTargetNameLabel(mechanism.target, locale);
-	return [
-		activeIngredientChemicalActionMechanismLabel(mechanism, locale, translate),
-		...activeIngredientLocalizedValues(mechanism.label),
-		behaviorLabel,
-		...activeIngredientLocalizedValues(mechanism.behavior?.label ?? {}),
-		targetLabel,
-		...activeIngredientLocalizedValues(mechanism.target.label),
-		activeIngredientMechanismTermLabel(mechanism.target.family, locale),
-		...activeIngredientLocalizedValues(mechanism.target.family?.label ?? {}),
-		...activeIngredientLocalizedValues(mechanism.note)
-	]
-		.filter(Boolean)
-		.join(' ');
 }
 
 export function activeIngredientBrazilRegulatoryControlLabel(value: ActiveIngredientBrazilRegulatoryControl | null, translate: Translate): string | null {
@@ -438,7 +303,6 @@ export function activeIngredientVeterinaryRestrictionLabel(value: ActiveIngredie
 export function activeIngredientClassificationLabel(classification: ActiveIngredientClassification, translate: Translate, locale: Locale = DEFAULT_LOCALE): string | null {
 	const parts = [
 		activeIngredientAtcVetLabel(classification, locale),
-		activeIngredientChemicalActionMechanismLabel(classification.chemicalActionMechanism, locale, translate),
 		activeIngredientBrazilRegulatoryControlLabel(classification.regulatoryControl.brazil, translate)
 	].filter((value): value is string => Boolean(value));
 
@@ -449,11 +313,10 @@ export function activeIngredientClassificationSearchText(classification: ActiveI
 	return [
 		activeIngredientNomenclatureLabel(classification, translate, locale),
 		classification.nomenclature.scientificName,
-		...classification.nomenclature.denominations.flatMap((entry) => [activeIngredientNomenclatureEntryStandardLabel(entry.standard, translate), ...activeIngredientLocalizedValues(entry.label)]),
+		...classification.nomenclature.denominations.flatMap((entry) => [activeIngredientNomenclatureEntryStandardLabel(entry.standard, translate), ...activeIngredientLocalizedValues(entry)]),
 		classification.nomenclature.casNumber,
 		activeIngredientAtcVetLabel(classification, locale),
-		...activeIngredientLocalizedValues(classification.atcVet.system?.label ?? {}),
-		activeIngredientChemicalActionMechanismSearchText(classification.chemicalActionMechanism, locale, translate),
+		...activeIngredientLocalizedValues(classification.atcVet.system ?? {}),
 		activeIngredientBrazilRegulatoryControlLabel(classification.regulatoryControl.brazil, translate),
 		activeIngredientUnitedStatesRegulatoryControlLabel(classification.regulatoryControl.unitedStates, translate),
 		activeIngredientEuropeRegulatoryControlLabel(classification.regulatoryControl.europe, translate),

@@ -10,8 +10,6 @@ export const gnPyActiveIngredientClassificationTranslations = {
 	'catalog.activeIngredient.classification.casNumber': 'Número CAS',
 	'catalog.activeIngredient.classification.atcVetCode': 'Código ATCvet',
 	'catalog.activeIngredient.classification.atcVetSystem': 'Sistema ATCvet',
-	'catalog.activeIngredient.classification.mechanism': 'Mecanismo de ação',
-	'catalog.activeIngredient.classification.mechanism.behaviorTargetPattern': '{behavior} de {target}',
 	'catalog.activeIngredient.classification.regulatoryBrazil': 'Regulação (Brasil)',
 	'catalog.activeIngredient.classification.regulatoryUnitedStates': 'Regulação (EUA)',
 	'catalog.activeIngredient.classification.regulatoryEurope': 'Regulação (Europa)',

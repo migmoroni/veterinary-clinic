@@ -1,5 +1,4 @@
 import {
-	activeIngredientChemicalActionMechanismLabel,
 	activeIngredientAtcVetSystemLabel,
 	activeIngredientBrazilRegulatoryControlLabel,
 	activeIngredientEuropeRegulatoryControlLabel,
@@ -47,15 +46,6 @@ export function activeIngredientClassificationGroups(source: ActiveIngredientCat
 				{
 					label: translate('catalog.activeIngredient.classification.atcVetSystem'),
 					value: valueOrFallback(activeIngredientAtcVetSystemLabel(classification.atcVet.system, locale))
-				}
-			]
-		},
-		{
-			label: translate('catalog.activeIngredient.classification.mechanism'),
-			rows: [
-				{
-					label: '',
-					value: valueOrFallback(activeIngredientChemicalActionMechanismLabel(classification.chemicalActionMechanism, locale, translate))
 				}
 			]
 		},

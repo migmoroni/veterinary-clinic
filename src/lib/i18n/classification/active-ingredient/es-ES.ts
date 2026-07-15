@@ -10,8 +10,6 @@ export const esEsActiveIngredientClassificationTranslations = {
 	'catalog.activeIngredient.classification.casNumber': 'Número CAS',
 	'catalog.activeIngredient.classification.atcVetCode': 'Código ATCvet',
 	'catalog.activeIngredient.classification.atcVetSystem': 'Sistema ATCvet',
-	'catalog.activeIngredient.classification.mechanism': 'Mecanismo de acción',
-	'catalog.activeIngredient.classification.mechanism.behaviorTargetPattern': '{behavior} de {target}',
 	'catalog.activeIngredient.classification.regulatoryBrazil': 'Regulación (Brasil)',
 	'catalog.activeIngredient.classification.regulatoryUnitedStates': 'Regulación (EE. UU.)',
 	'catalog.activeIngredient.classification.regulatoryEurope': 'Regulación (Europa)',
