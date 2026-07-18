@@ -2,8 +2,8 @@
 	"id": "33e5bfd1-2843-46c9-9afd-a30f78f4b087",
 	"type": [
 		"manufacturer",
-		null,
-		null
+		"veterinaryIndustrial",
+		"veterinaryIndustrialLaboratory"
 	],
 	"origin": "system",
 	"name": "World Veterinária",
@@ -21,9 +21,9 @@
 			"references": "Referências institucionais e bibliográficas poderão ser adicionadas aqui."
 		},
 		"classification": [
-			"manufacturer",
-			"multinational",
-			"animalHealth"
+			"veterinaryIndustrial",
+			"distributorNetwork",
+			"gmpCertified"
 		]
 	}
 }

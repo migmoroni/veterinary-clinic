@@ -17,43 +17,71 @@ const conditionDefaultsDir = path.join(catalogDefaultsDir, 'conditions');
 
 const productTypeValues = {
 	medication: {
-		vaccine: JSON.stringify(['product', 'medication', 'vaccine']),
-		antiparasitic: JSON.stringify(['product', 'medication', 'antiparasitic'])
+		vaccine: JSON.stringify(['product', 'medication', 'biologicalAndImmunological', 'vaccine']),
+		antiparasitic: JSON.stringify(['product', 'medication', 'antiparasitic', null]),
+		antimicrobial: JSON.stringify(['product', 'medication', 'antimicrobial', null]),
+		therapeutical: JSON.stringify(['product', 'medication', 'internalMedicine', null]),
+		anesthetic: JSON.stringify(['product', 'medication', 'anestheticAndControlled', null])
 	},
-	nutrition: JSON.stringify(['product', 'nutrition', null]),
-	hygiene: JSON.stringify(['product', 'hygiene', null]),
-	disinfectants: JSON.stringify(['product', 'disinfectants', null])
+	nutrition: {
+		maintenance: JSON.stringify(['product', 'nutrition', 'completeDiet', null]),
+		therapeutic: JSON.stringify(['product', 'nutrition', 'prescriptionDiet', null]),
+		supplement: JSON.stringify(['product', 'nutrition', 'supplementAndNutraceutical', null])
+	},
+	hygiene: {
+		cosmetic: JSON.stringify(['product', 'hygieneAndAesthetics', 'coatAndSkin', null]),
+		dermatological: JSON.stringify(['product', 'hygieneAndAesthetics', 'coatAndSkin', 'medicatedShampoo'])
+	},
+	environment: {
+		disinfectant: JSON.stringify(['product', 'environmentAndSanitation', 'facilitySanitizer', 'hospitalDisinfectant']),
+		repellent: JSON.stringify(['product', 'environmentAndSanitation', 'environmentalPestControl', 'repellent'])
+	},
+	consumable: {
+		surgical: JSON.stringify(['product', 'clinicalConsumable', 'woundAndSurgicalCare', 'sutureMaterial']),
+		disposable: JSON.stringify(['product', 'clinicalConsumable', 'injectionAndInfusion', 'syringeAndNeedle'])
+	}
 };
-const productTypeSqlValues = [...Object.values(productTypeValues.medication), productTypeValues.nutrition, productTypeValues.hygiene, productTypeValues.disinfectants]
+const productTypeSqlValues = Object.values(productTypeValues)
+	.flatMap((subtypes) => Object.values(subtypes))
 	.map(quoteSqlString)
 	.join(', ');
 const productCompositionOrigins = ['allopathic', 'phytotherapeutic', 'homeopathic', 'biological'];
-const productCommercialCategories = ['reference', 'generic', 'similar', 'branded', 'compounded', 'nonApplicable'];
+const productCommercialCategories = ['reference', 'generic', 'similar', 'compounded', 'nonApplicable'];
 const productTherapeuticActions = ['prophylactic', 'curative', 'palliative', 'control'];
-const productPharmaceuticalForms = ['palatableTablet', 'tablet', 'capsule', 'oralSuspension', 'injectableSolution', 'spotOn', 'oticOintment', 'ophthalmicSolution', 'topicalSpray', 'shampoo'];
-const productAdministrationRoutes = ['oral', 'intravenous', 'intramuscular', 'subcutaneous', 'topical', 'otic', 'ophthalmic', 'intranasal'];
+const productPharmaceuticalForms = ['tablet', 'palatableTablet', 'capsule', 'powder', 'oralSuspension', 'injectableSolution', 'spotOn', 'pourOn', 'ointmentOrCream', 'solution', 'shampoo', 'soapOrBar', 'collar', 'feedOrKibble', 'deviceOrConsumable', 'nonApplicable'];
+const productAdministrationRoutes = ['oral', 'intravenous', 'intramuscular', 'subcutaneous', 'topical', 'otic', 'ophthalmic', 'intranasal', 'epidural', 'intraarticular', 'inhaled', 'rectal', 'nonApplicable'];
+const productPharmaceuticalFormReplacements = new Map([
+	['oticOintment', 'ointmentOrCream'],
+	['ophthalmicSolution', 'solution'],
+	['topicalSpray', 'solution']
+]);
 const emptyProductCommercialTherapeutic = { compositionOrigin: null, commercialCategory: null, therapeuticAction: null };
 const emptyProductForm = { pharmaceuticalForm: null, administrationRoutes: [], presentationDosage: null };
 const emptyProductRegulatoryIdentifiers = { brazilMapa: null, unitedStatesNada: null, unitedStatesAnada: null, gtinEan: null };
-const manufacturerTypeValue = JSON.stringify(['manufacturer', null, null]);
+const manufacturerTypeValue = JSON.stringify(['manufacturer', 'veterinaryIndustrial', 'veterinaryIndustrialLaboratory']);
 const activeIngredientTypeValues = {
-	substance: JSON.stringify(['activeIngredient', 'substance', null]),
-	combination: JSON.stringify(['activeIngredient', 'combination', null])
+	substance: JSON.stringify(['activeIngredient', 'antiInfective', 'antiparasitic', 'macrocyclicLactones']),
+	combination: JSON.stringify(['activeIngredient', 'antiInfective', 'antibacterial', 'macrolides'])
 };
 const activeIngredientTypeSqlValues = Object.values(activeIngredientTypeValues).map(quoteSqlString).join(', ');
 const conditionTypeValues = {
-	disease: JSON.stringify(['condition', 'disease', null]),
-	syndrome: JSON.stringify(['condition', 'syndrome', null]),
-	disorder: JSON.stringify(['condition', 'disorder', null]),
-	injury: JSON.stringify(['condition', 'injury', null])
+	disease: JSON.stringify(['condition', 'disease', 'infectiousAndParasitic', 'viral']),
+	syndrome: JSON.stringify(['condition', 'syndrome', 'acuteEmergency', 'systemicInflammatoryResponse']),
+	disorder: JSON.stringify(['condition', 'disorder', 'behavioralAndCognitive', 'behavioralDisorder']),
+	injury: JSON.stringify(['condition', 'injury', 'mechanicalAndTraumatic', 'softTissueTrauma'])
 };
 const conditionTypeSqlValues = Object.values(conditionTypeValues).map(quoteSqlString).join(', ');
 const storedCatalogTypeReplacements = new Map([
 	[JSON.stringify(['medication', 'vaccine']), productTypeValues.medication.vaccine],
 	[JSON.stringify(['medication', 'antiparasitic']), productTypeValues.medication.antiparasitic],
-	[JSON.stringify(['nutrition', null]), productTypeValues.nutrition],
-	[JSON.stringify(['hygiene', null]), productTypeValues.hygiene],
-	[JSON.stringify(['disinfectants', null]), productTypeValues.disinfectants],
+	[JSON.stringify(['product', 'medication', 'vaccine']), productTypeValues.medication.vaccine],
+	[JSON.stringify(['product', 'medication', 'antiparasitic']), productTypeValues.medication.antiparasitic],
+	[JSON.stringify(['nutrition', null]), productTypeValues.nutrition.maintenance],
+	[JSON.stringify(['hygiene', null]), productTypeValues.hygiene.cosmetic],
+	[JSON.stringify(['disinfectants', null]), productTypeValues.environment.disinfectant],
+	[JSON.stringify(['product', 'nutrition', null]), productTypeValues.nutrition.maintenance],
+	[JSON.stringify(['product', 'hygiene', null]), productTypeValues.hygiene.cosmetic],
+	[JSON.stringify(['product', 'disinfectants', null]), productTypeValues.environment.disinfectant],
 	[JSON.stringify(['manufacturer', null]), manufacturerTypeValue],
 	[JSON.stringify(['activeIngredient', 'substance']), activeIngredientTypeValues.substance],
 	[JSON.stringify(['activeIngredient', 'combination']), activeIngredientTypeValues.combination],
@@ -141,6 +169,11 @@ function normalizedEnum(value, options) {
 	return typeof value === 'string' && options.includes(value) ? value : null;
 }
 
+function normalizedProductPharmaceuticalForm(value) {
+	if (typeof value !== 'string') return null;
+	return normalizedEnum(productPharmaceuticalFormReplacements.get(value) ?? value, productPharmaceuticalForms);
+}
+
 function normalizedEnumList(value, options) {
 	if (!Array.isArray(value)) return [];
 	const normalized = [];
@@ -164,7 +197,7 @@ function normalizedTextList(value) {
 function normalizeProductForm(value) {
 	if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...emptyProductForm, administrationRoutes: [] };
 	return {
-		pharmaceuticalForm: normalizedEnum(value.pharmaceuticalForm, productPharmaceuticalForms),
+		pharmaceuticalForm: normalizedProductPharmaceuticalForm(value.pharmaceuticalForm),
 		administrationRoutes: normalizedEnumList(value.administrationRoutes, productAdministrationRoutes),
 		presentationDosage: normalizedNullableText(value.presentationDosage)
 	};
@@ -306,7 +339,7 @@ function createCatalogTables(database) {
 	database.exec(`
 		CREATE TABLE IF NOT EXISTS manufacturer_catalog_items (
 			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
-			type TEXT NOT NULL CHECK(type = '["manufacturer",null,null]'),
+			type TEXT NOT NULL CHECK(type = ${quoteSqlString(manufacturerTypeValue)}),
 			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
 			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) BETWEEN 1 AND 120),
 			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),
@@ -369,7 +402,7 @@ function normalizeStoredCatalogType(type, fallbackType) {
 }
 
 function stringifyCatalogTypeFromJson(type, source) {
-	if (!Array.isArray(type) || type.length !== 3 || typeof type[0] !== 'string' || (type[1] !== null && typeof type[1] !== 'string') || (type[2] !== null && typeof type[2] !== 'string')) {
+	if (!Array.isArray(type) || ![3, 4].includes(type.length) || typeof type[0] !== 'string' || type.slice(1).some((item) => item !== null && typeof item !== 'string')) {
 		throw new Error(`Tipo de catálogo inválido em ${source}`);
 	}
 	return JSON.stringify(type);
@@ -381,7 +414,7 @@ function rebuildManufacturerCatalog(database) {
 		DROP TABLE IF EXISTS manufacturer_catalog_items_next;
 		CREATE TABLE manufacturer_catalog_items_next (
 			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
-			type TEXT NOT NULL CHECK(type = '["manufacturer",null,null]'),
+			type TEXT NOT NULL CHECK(type = ${quoteSqlString(manufacturerTypeValue)}),
 			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
 			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) BETWEEN 1 AND 120),
 			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),

@@ -9,7 +9,23 @@
 		items?: CatalogEntityDetailFieldItem[];
 		rows?: CatalogEntityDetailFieldRow[];
 		rowGroups?: CatalogEntityDetailFieldRowGroup[];
+		tables?: CatalogEntityDetailFieldTable[];
 		fullWidth?: boolean;
+	}
+
+	export interface CatalogEntityDetailFieldTable {
+		label?: string | null;
+		columns: string[];
+		rows: CatalogEntityDetailFieldTableRow[];
+	}
+
+	export interface CatalogEntityDetailFieldTableRow {
+		cells: CatalogEntityDetailFieldTableCell[];
+	}
+
+	export interface CatalogEntityDetailFieldTableCell {
+		value: string;
+		href?: string | null;
 	}
 
 	export interface CatalogEntityDetailFieldRowGroup {
@@ -245,6 +261,43 @@
 												{row.label}<span class="sr-only">{row.labelDescription ? ` (${row.labelDescription})` : ''}</span>
 											</div>
 											<div class="mt-1 text-foreground">{row.value || t('common.notInformed')}</div>
+										</div>
+									{/each}
+								</div>
+							{:else if field.tables?.length}
+								<div class={field.label ? 'mt-3 grid gap-4' : 'grid gap-4'}>
+									{#each field.tables as table}
+										<div class="overflow-hidden rounded-md border border-border">
+											{#if table.label}
+												<div class="border-b border-border bg-muted/30 px-3 py-2 text-sm font-semibold text-foreground">{table.label}</div>
+											{/if}
+											<div class="overflow-x-auto">
+												<table class="w-full min-w-[40rem] text-left text-sm">
+													<thead class="bg-muted/40 text-primary">
+														<tr>
+															{#each table.columns as column}
+																<th class="px-3 py-2 text-xs font-semibold uppercase tracking-normal">{column}</th>
+															{/each}
+														</tr>
+													</thead>
+													<tbody class="divide-y divide-border/70">
+														{#each table.rows as row}
+															<tr class="bg-background align-top">
+																{#each table.columns as _column, index}
+																	{@const cell = row.cells[index]}
+																	<td class="px-3 py-3 text-foreground">
+																		{#if cell?.href}
+																			<a class="font-medium text-primary hover:underline" href={cell.href}>{cell.value || t('common.notInformed')}</a>
+																		{:else}
+																			<span>{cell?.value || t('common.notInformed')}</span>
+																		{/if}
+																	</td>
+																{/each}
+															</tr>
+														{/each}
+													</tbody>
+												</table>
+											</div>
 										</div>
 									{/each}
 								</div>

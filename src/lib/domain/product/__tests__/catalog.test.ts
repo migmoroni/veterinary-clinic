@@ -15,23 +15,19 @@ import {
 
 describe('product catalog metadata', () => {
 	it('defines product types as direct tuples from the type tree', () => {
-		expect(productTypeOptions('medication')).toEqual(['vaccine', 'antiparasitic']);
-		expect(productTypeOptions('nutrition')).toEqual([]);
-		expect(productTypeOptions('hygiene')).toEqual([]);
-		expect(productTypeOptions('disinfectants')).toEqual([]);
-		expect(PRODUCT_TYPES).toEqual([
-			['product', 'medication', 'vaccine'],
-			['product', 'medication', 'antiparasitic'],
-			['product', 'nutrition', null],
-			['product', 'hygiene', null],
-			['product', 'disinfectants', null]
-		]);
+		expect(productTypeOptions('medication')).toContain('biologicalAndImmunological');
+		expect(productTypeOptions('medication')).toContain('antiparasitic');
+		expect(productTypeOptions('nutrition')).toContain('completeDiet');
+		expect(productTypeOptions('hygieneAndAesthetics')).toContain('coatAndSkin');
+		expect(productTypeOptions('environmentAndSanitation')).toContain('facilitySanitizer');
+		expect(PRODUCT_TYPES).toEqual(expect.arrayContaining([['product', 'medication', 'antiparasitic', null], ['product', 'medication', 'biologicalAndImmunological', 'vaccine']]));
 	});
 
 	it('round-trips product type tuples and rejects invalid branches', () => {
-		expect(parseProductType(stringifyProductType(productType('medication', 'vaccine')))).toEqual(['product', 'medication', 'vaccine']);
-		expect(parseProductType(stringifyProductType(productType('nutrition', null)))).toEqual(['product', 'nutrition', null]);
-		expect(() => parseProductType(JSON.stringify(['product', 'nutrition', 'vaccine']))).toThrow('product_type_invalid');
+		expect(parseProductType(stringifyProductType(productType('medication', 'biologicalAndImmunological', 'vaccine')))).toEqual(['product', 'medication', 'biologicalAndImmunological', 'vaccine']);
+		expect(parseProductType(stringifyProductType(productType('medication', 'antiparasitic', null)))).toEqual(['product', 'medication', 'antiparasitic', null]);
+		expect(parseProductType(stringifyProductType(productType('nutrition', 'prescriptionDiet', 'therapeuticDry')))).toEqual(['product', 'nutrition', 'prescriptionDiet', 'therapeuticDry']);
+		expect(() => parseProductType(JSON.stringify(['product', 'nutrition', 'vaccine', null]))).toThrow('product_type_invalid');
 	});
 
 	it('normalizes unique ISO alpha-3 market country codes', () => {
@@ -61,8 +57,8 @@ describe('product catalog metadata', () => {
 						therapeuticAction: 'prophylactic'
 					},
 					formAndAdministration: {
-						pharmaceuticalForm: 'injectableSolution',
-						administrationRoutes: ['subcutaneous', 'invalid', 'subcutaneous', 'intramuscular'],
+						pharmaceuticalForm: 'powder',
+						administrationRoutes: ['subcutaneous', 'invalid', 'subcutaneous', 'inhaled'],
 						presentationDosage: ' 1 mL por dose '
 					},
 					targetSpecies: {
@@ -84,8 +80,8 @@ describe('product catalog metadata', () => {
 					therapeuticAction: 'prophylactic'
 				},
 				formAndAdministration: {
-					pharmaceuticalForm: 'injectableSolution',
-					administrationRoutes: ['subcutaneous', 'intramuscular'],
+					pharmaceuticalForm: 'powder',
+					administrationRoutes: ['subcutaneous', 'inhaled'],
 					presentationDosage: '1 mL por dose'
 				},
 				targetSpecies: {

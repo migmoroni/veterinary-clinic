@@ -2,8 +2,8 @@
 	"id": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
 	"type": [
 		"manufacturer",
-		null,
-		null
+		"veterinaryIndustrial",
+		"veterinaryIndustrialLaboratory"
 	],
 	"origin": "system",
 	"name": "Zoetis",
@@ -21,9 +21,9 @@
 			"references": "Referências institucionais e bibliográficas poderão ser adicionadas aqui."
 		},
 		"classification": [
-			"manufacturer",
-			"multinational",
-			"animalHealth"
+			"veterinaryIndustrial",
+			"distributorNetwork",
+			"gmpCertified"
 		]
 	}
 }

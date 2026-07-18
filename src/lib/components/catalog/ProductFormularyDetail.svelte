@@ -2,7 +2,7 @@
 	import CatalogEntityDetail, { type CatalogEntityDetailField, type CatalogEntityDetailSection } from '$lib/components/catalog/CatalogEntityDetail.svelte';
 	import { catalogOriginLabel, catalogRegionSummary, catalogSectionTexts } from '$lib/components/catalog/catalog-detail-utils.js';
 	import { productClassificationGroups } from '$lib/domain/product/classification.js';
-	import { productLeafletSectionIds, productTypeMain, productTypeSubtype, type ProductCatalogItem, type ProductLeafletSectionId, type ProductSpecies } from '$lib/domain/product/catalog.js';
+	import { productLeafletSectionIds, productTreatmentKind, productTypeMain, type ProductCatalogItem, type ProductLeafletSectionId, type ProductSpecies } from '$lib/domain/product/catalog.js';
 	import { productTypeLabel } from '$lib/domain/product/type-labels.js';
 	import { t } from '$lib/i18n/index.js';
 	import BookOpenText from '@lucide/svelte/icons/book-open-text';
@@ -73,7 +73,7 @@
 
 	function productFallbackIcon(source: ProductCatalogItem) {
 		if (productTypeMain(source.type) !== 'medication') return Package;
-		return productTypeSubtype(source.type) === 'vaccine' ? Syringe : Pill;
+		return productTreatmentKind(source.type) === 'vaccine' ? Syringe : Pill;
 	}
 </script>
 

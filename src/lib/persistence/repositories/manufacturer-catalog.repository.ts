@@ -138,7 +138,7 @@ export async function ensureManufacturerCatalogItem(nameValue: string | null | u
 	if (existing) return existing;
 
 	const id = createUuidV4();
-	const type: ManufacturerType = manufacturerType('manufacturer', null);
+	const type: ManufacturerType = manufacturerType('veterinaryIndustrial', 'veterinaryIndustrialLaboratory');
 	const metadata = normalizeManufacturerCatalogMetadata({ regions: [] }, normalizedName);
 	await execute(
 		`INSERT INTO manufacturer_catalog_items (id, type, name, normalized_name, aliases, origin, regions, extension, updated_at)

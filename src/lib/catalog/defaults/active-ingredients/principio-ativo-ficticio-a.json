@@ -2,8 +2,9 @@
 	"id": "b173a72a-5666-4df0-8ef9-3ed4fc5cae0f",
 	"type": [
 		"activeIngredient",
-		"substance",
-		null
+		"antiInfective",
+		"antiparasitic",
+		"macrocyclicLactones"
 	],
 	"origin": "system",
 	"name": "Princípio Ativo Fictício A",

@@ -1,6 +1,7 @@
 import {
-	catalogType,
 	catalogTypeCategory,
+	catalogTypeDetail,
+	catalogTypeDetailOptions,
 	catalogTypeSubcategory,
 	catalogTypeSubcategoryOptions,
 	catalogTypesFromTree,
@@ -17,46 +18,309 @@ import {
 	stringifyCatalogType,
 	type CatalogEntityBase,
 	type CatalogEntityOrigin,
+	type CatalogTypeTree,
 	type CatalogTypeTuple
 } from '$lib/domain/catalog/catalog-entity.js';
 import type { ActiveIngredientCatalogItem } from '$lib/domain/active-ingredient/catalog.js';
 import { defaultTreatmentSpecies, isTreatmentSpecies, normalizeTreatmentSpecies, parseTreatmentSpecies, stringifyTreatmentSpecies, type TreatmentSpecies } from '$lib/domain/treatment/species.js';
 
+/**
+ * Árvore hierárquica de organização de produtos veterinários (4 Níveis).
+ * - Nível 1: Tipo de Entidade (Produto)
+ * - Nível 2: Categoria Principal (Chave do objeto)
+ * - Nível 3: Subcategoria (Propriedade do objeto)
+ * - Nível 4: Tipo/Especialidade (Valores do Array)
+ */
+
 export const PRODUCT_TYPE_TREE = {
-	product: {
-		medication: ['vaccine', 'antiparasitic'],
-		nutrition: [],
-		hygiene: [],
-		disinfectants: []
-	}
+    product: {
+        
+        /** 1. FARMÁCIA: Medicamentos e Biológicos (A prateleira da clínica) */
+        medication: {
+            biologicalAndImmunological: [
+                'vaccine',              // Vacinas preventivas
+                'hyperimmuneSerum',     // Soros hiperimunes (Antiofídico, Antitetânico)
+                'monoclonalAntibody',   // Terapias biológicas (Cytopoint, Librela)
+                'allergenExtract'       // Imunoterapia para alergias
+            ],
+            antimicrobial: [
+                'antibiotic',           // Antibacterianos orais e injetáveis
+                'antifungal',           // Antifúngicos sistêmicos
+                'antiviral'             // Antivirais
+            ],
+            antiparasitic: [
+                'endoparasiticide',     // Vermífugos internos
+                'ectoparasiticide',     // Antipulgas, carrapatos, sarnicidas (Coleiras, pipetas, comprimidos)
+                'endectocide'           // Ação conjunta interna e externa
+            ],
+            anestheticAndControlled: [
+                'generalAnesthetic',    // Anestésicos inalatórios e injetáveis
+                'localAnesthetic',      // Anestésicos locais
+                'sedativeAndTranquilizer',// Sedativos e tranquilizantes (Controle especial)
+                'euthanasiaSolution'    // Fármacos exclusivos para eutanásia
+            ],
+            painAndInflammation: [
+                'antiInflammatory',     // AINEs e Corticoides
+                'analgesic'             // Analgésicos comuns e opioides
+            ],
+            internalMedicine: [         // Prateleira de medicamentos gerais
+                'cardiorespiratory',    // Fármacos para coração e pulmão
+                'gastrointestinal',     // Antieméticos, protetores gástricos
+                'endocrinological',     // Insulinas, reguladores de tireoide
+                'neurological',         // Anticonvulsivantes
+                'ophthalmic',           // Colírios e pomadas oftalmológicas
+                'otic'                  // Gotas e tratamentos para otite
+            ],
+            oncological: [
+                'chemotherapy',         // Quimioterápicos citotóxicos
+                'targetedTherapy'       // Inibidores de quinase e antineoplásicos modernos
+            ],
+            fluidTherapy: [
+                'crystalloidSolution',  // Soro Fisiológico, Ringer Lactato
+                'colloidSolution',      // Dextrana, Hetastarch
+                'bloodBag'              // Bolsas de Sangue, Plasma, Hemácias
+            ]
+        },
+
+        /** 2. NUTRIÇÃO: Alimentos, Dietas e Suplementos (O salão do Pet Shop e UTI) */
+        nutrition: {
+            completeDiet: [
+                'dryFood',              // Ração seca de manutenção
+                'wetFood',              // Ração úmida comum (sachês, latas)
+                'naturalDiet'           // Alimentação natural (AN) comercial
+            ],
+            prescriptionDiet: [
+                'therapeuticDry',       // Ração seca coadjuvante (Renal, Hipoalergênica, Urinária)
+                'therapeuticWet',       // Ração úmida coadjuvante
+                'enteralAndParenteral'  // Alimentação líquida para sondas e nutrição IV
+            ],
+            supplementAndNutraceutical: [
+                'vitaminAndMineral',    // Complexos vitamínicos puros
+                'probioticAndPrebiotic',// Repositores de flora intestinal
+                'jointSupport',         // Condroprotetores (Glucosamina, Condroitina)
+                'omegaFattyAcids'       // Suplementos de Ômega 3/6/9
+            ],
+            treatAndSnack: [
+                'biscuitAndCookie',     // Biscoitos comuns
+                'chewAndBone',          // Ossos e mastigáveis (nylon, couro, cascos)
+                'functionalTreat'       // Petiscos com funções (tártaro, relaxamento)
+            ],
+            milkReplacer: [
+                'puppyAndKittenFormula' // Leite em pó/sucedâneos para órfãos
+            ]
+        },
+
+        /** 3. HIGIENE E ESTÉTICA: Banho, Tosa e Limpeza Pessoal */
+        hygieneAndAesthetics: {
+            coatAndSkin: [
+                'shampooAndConditioner',// Cosmética de manutenção
+                'medicatedShampoo',     // Shampoos de tratamento (Clorexidina, Cetoconazol)
+                'perfumeAndCologne',    // Fragrâncias
+                'detanglerAndFinisher'  // Desembaraçadores e finalizadores
+            ],
+            specificCare: [
+                'earCleanser',          // Limpadores auriculares (ceruminolíticos)
+                'eyeCleanser',          // Limpa-lágrimas
+                'pawBalm',              // Hidratantes de coxins e focinhos
+                'dentalCare'            // Pastas de dente, escovas, enxaguantes bucais vet
+            ]
+        },
+
+        /** 4. INSUMOS CLÍNICOS E DESCARTÁVEIS (O Almoxarifado / Estoque Interno) */
+        clinicalConsumable: {
+            injectionAndInfusion: [
+                'syringeAndNeedle',     // Seringas e Agulhas
+                'catheterAndScalp',     // Cateteres IV, Scalps
+                'ivTubingAndStopcock'   // Equipos de soro, torneirinhas de 3 vias
+            ],
+            woundAndSurgicalCare: [
+                'sutureMaterial',       // Fios de sutura (Nylon, Catgut, absorvíveis)
+                'surgicalBlade',        // Lâminas de bisturi
+                'surgicalDrape',        // Campos cirúrgicos e compressas estéreis
+                'bandageAndGauze'       // Ataduras, gazes, esparadrapos, Vetrap
+            ],
+            diagnosticConsumable: [
+                'rapidTest',            // Testes rápidos / Snap tests (FIV/FeLV, Leishmaniose)
+                'collectionTube',       // Tubos de coleta de sangue (EDTA, Heparina)
+                'urineStrip',           // Fitas reativas de urina
+                'microscopeSlide'       // Lâminas e lamínulas de microscopia
+            ],
+            ppeAndSafety: [
+                'glove',                // Luvas de procedimento e cirúrgicas
+                'maskAndCap',           // Máscaras, toucas
+                'surgicalGown'          // Aventais estéreis e não estéreis
+            ]
+        },
+
+        /** 5. ACESSÓRIOS, REABILITAÇÃO E ENRIQUECIMENTO (O mundo do Pet Shop e Fisioterapia) */
+        accessoryAndEnrichment: {
+            postSurgicalAndRehab: [
+                'elizabethanCollar',    // Colares elizabetanos (Cone) e infláveis
+                'recoverySuit',         // Roupas cirúrgicas
+                'diaperAndPad',         // Fraldas pet
+                'wheelchairAndHarness'  // Cadeiras de rodas e cintos de suporte traseiro
+            ],
+            walkingAndRestraint: [
+                'collarAndHarness',     // Coleiras e peitorais
+                'leash',                // Guias comuns e retráteis
+                'muzzle'                // Focinheiras
+            ],
+            habitatAndTransport: [
+                'carrierBox',           // Caixas de transporte (padrão IATA, etc.)
+                'bedAndMat',            // Camas, colchonetes, tocas
+                'cageAndTerrarium'      // Gaiolas (aves), terrários (exóticos)
+            ],
+            feedingUtensil: [
+                'bowlAndFeeder',        // Comedouros convencionais e bebedouros
+                'waterFountain',        // Fontes de água elétricas (vital para gatos)
+                'slowFeeder'            // Comedouros lentos/interativos
+            ],
+            toyAndEnrichment: [
+                'chewToy',              // Brinquedos de destruição/roer
+                'plushToy',             // Pelúcias
+                'interactiveToy',       // Brinquedos cognitivos (KONG, quebra-cabeças)
+                'scratchingPost'        // Arranhadores para gatos
+            ],
+            clothingAndWearable: [
+                'clothes',              // Roupas de frio, capas de chuva
+                'shoesAndSocks',        // Sapatos, meias antiderrapantes
+                'bandanaAndBow'         // Bandanas e laços
+            ]
+        },
+
+        /** 6. AMBIENTE E SANEAMENTO (Biosegurança e Casa do Tutor) */
+        environmentAndSanitation: {
+            wasteManagement: [
+                'trainingPad',          // Tapetes higiênicos
+                'catLitter',            // Areia para gatos (sílica, madeira, bentonita)
+                'wasteBag',             // Cata-caca (saquinhos)
+                'odorNeutralizer'       // Eliminadores de odor e removedores de manchas
+            ],
+            facilitySanitizer: [
+                'hospitalDisinfectant', // Desinfetantes clínicos (Quaternário de amônia)
+                'enzymaticCleaner',     // Detergentes enzimáticos para instrumentais
+                'chemicalSterilant'     // Soluções esterilizantes a frio (Glutaraldeído)
+            ],
+            environmentalPestControl: [
+                'environmentalInsecticide', // Sprays de ambiente contra pulgas/carrapatos
+                'repellent'                 // Repelentes ultrassônicos ou sprays de citronela
+            ]
+        },
+
+        /** 7. EQUIPAMENTOS E INSTRUMENTAIS CLÍNICOS (Ativos do Hospital) */
+        equipmentAndInstrument: {
+            surgicalInstrument: [
+                'forcepsAndScissor',    // Pinças, tesouras
+                'needleHolder',         // Porta-agulhas
+                'retractor'             // Afastadores
+            ],
+            diagnosticDevice: [
+                'stethoscope',          // Estetoscópios
+                'thermometer',          // Termômetros
+                'otoscopeAndOphthalmoscope', // Otoscópios, oftalmoscópios
+                'glucometer'            // Glicosímetros veterinários
+            ]
+        }
+    }
 } as const;
 
 export const PRODUCT_CLASSIFICATION_AXES = [
-	{ id: 'origin', values: ['allopathic', 'phytotherapeutic', 'homeopathic', 'biological'] },
-	{ id: 'commercial', values: ['reference', 'generic', 'similar', 'branded', 'compounded', 'nonApplicable'] },
-	{ id: 'therapeuticAction', values: ['prophylactic', 'curative', 'palliative', 'control'] }
+    {
+        id: 'origin',
+        values: [
+            /** Medicamento convencional químico (sintético/analítico) */
+            'allopathic',
+            /** Medicamento de origem exclusivamente vegetal (plantas medicinais) */
+            'phytotherapeutic',
+            /** Medicamento baseado em substâncias diluídas/dinamizadas */
+            'homeopathic',
+            /** Produtos derivados de organismos vivos (vacinas, soros, anticorpos) */
+            'biological'
+        ]
+    },
+    {
+        id: 'commercial',
+        values: [
+            /** Medicamento inovador registrado pelo laboratório criador da molécula */
+            'reference',
+            /** Equivalente de referência, sem nome comercial (apenas o princípio ativo) */
+            'generic',
+            /** Equivalente com marca própria e características físicas próprias */
+            'similar',
+            /** Medicamento feito sob medida em farmácia de manipulação veterinária */
+            'compounded',
+            /** Insumos, alimentos e acessórios que não se enquadram como medicamentos */
+            'nonApplicable'
+        ]
+    },
+    {
+        id: 'therapeuticAction',
+        values: [
+            /** Destinado à prevenção de patologias e infestações (vacinas, vermífugos) */
+            'prophylactic',
+            /** Destinado à eliminação da causa ativa de uma doença (antibióticos) */
+            'curative',
+            /** Focado no alívio de sintomas e dor em quadros terminais ou sem cura */
+            'palliative',
+            /** Medicamentos de uso contínuo para gerenciar enfermidades crônicas */
+            'control'
+        ]
+    }
 ] as const;
+
+const PRODUCT_RUNTIME_TYPE_TREE: CatalogTypeTree = PRODUCT_TYPE_TREE;
 
 export const PRODUCT_PHARMACEUTICAL_FORMS = [
-	'palatableTablet',
-	'tablet',
-	'capsule',
-	'oralSuspension',
-	'injectableSolution',
-	'spotOn',
-	'oticOintment',
-	'ophthalmicSolution',
-	'topicalSpray',
-	'shampoo'
+    // Sólidos e Semi-sólidos Orais
+    'tablet',            // Comprimido convencional
+    'palatableTablet',   // Comprimido palatável/mastigável (altamente comum na veterinária)
+    'capsule',           // Cápsula (inclui gelatinosas e duras)
+    'powder',            // Pó / Grânulos / Sachês (ex: probióticos, suplementos)
+
+    // Líquidos Orais e Injetáveis
+    'oralSuspension',    // Suspensão ou solução oral (gotas, xaropes)
+    'injectableSolution',// Soluções, suspensões e emulsões injetáveis (frascos-ampola, ampolas)
+
+    // Aplicação Cutânea / Dermatológica
+    'spotOn',            // Pipetas de aplicação direta na pele do pescoço/nuca
+    'pourOn',            // Líquidos aplicados na linha dorsal (crucial para bovinos, ovinos e equinos)
+    'ointmentOrCream',   // Cremes, pomadas, pastas e géis (para uso dermatológico, oftálmico ou ótico)
+    'solution',          // Soluções líquidas de uso geral (colírios, sprays, loções, soluções otológicas)
+
+    // Higiene e Cosmética
+    'shampoo',           // Shampoos medicinais ou cosméticos
+    'soapOrBar',         // Sabonetes em barra ou líquidos
+
+    // Acessórios, Dispositivos e Outros
+    'collar',            // Coleiras (parasitárias ou de passeio)
+    'feedOrKibble',      // Alimentos, rações secas/úmidas, petiscos e sachês alimentares
+    'deviceOrConsumable',// Insumos físicos (seringas, agulhas, equipos, gazes, fios de sutura)
+    'nonApplicable'      // Outros produtos que não possuem uma forma farmacêutica clássica
 ] as const;
 
-export const PRODUCT_ADMINISTRATION_ROUTES = ['oral', 'intravenous', 'intramuscular', 'subcutaneous', 'topical', 'otic', 'ophthalmic', 'intranasal'] as const;
+export const PRODUCT_ADMINISTRATION_ROUTES = [
+    'oral',              // Via oral (boca, ingestão direta ou misturado ao alimento)
+    'intravenous',       // Via intravenosa / endovenosa (direto na corrente sanguínea)
+    'intramuscular',     // Via intramuscular (aplicação no tecido muscular)
+    'subcutaneous',      // Via subcutânea (sob a pele do animal)
+    'topical',           // Via tópica / cutânea (aplicado sobre a pele externa)
+    'otic',              // Via ótica / auricular (aplicado no conduto auditivo)
+    'ophthalmic',        // Via oftálmica (aplicado na superfície do olho ou saco conjuntival)
+    'intranasal',        // Via intranasal (aplicação por spray/gotas nas narinas - comum em certas vacinas)
+    'epidural',          // Via epidural (bloqueios anestésicos no canal espinhal)
+    'intraarticular',    // Via intra-articular (infiltrações diretamente nas articulações)
+    'inhaled',           // Via inalatória / nebulização (aerossóis e bombinhas de asma)
+    'rectal',            // Via retal (enemas, supositórios, diazepam de emergência)
+    'nonApplicable'      // Não aplicável (para rações, shampoos de uso livre, coleiras comuns ou insumos cirúrgicos)
+] as const;
 
 export type ProductTypeTree = typeof PRODUCT_TYPE_TREE;
-export type ProductTypeMain = keyof ProductTypeTree['product'];
-export type ProductTypeSubtype<TMain extends ProductTypeMain> = ProductTypeTree['product'][TMain][number];
-export type ProductTypeTuple<TMain extends ProductTypeMain = ProductTypeMain> = Extract<CatalogTypeTuple<ProductTypeTree>, readonly ['product', TMain, string | null]>;
+export type ProductTypeMain = keyof ProductTypeTree['product'] & string;
+export type ProductTypeSubtype<TMain extends ProductTypeMain> = keyof ProductTypeTree['product'][TMain] & string;
+export type ProductTypeDetail<TMain extends ProductTypeMain, TSubtype extends ProductTypeSubtype<TMain>> = ProductTypeTree['product'][TMain][TSubtype] extends readonly string[] ? ProductTypeTree['product'][TMain][TSubtype][number] : never;
+export type ProductTypeTuple<TMain extends ProductTypeMain = ProductTypeMain> = Extract<CatalogTypeTuple<ProductTypeTree>, readonly ['product', TMain, string | null, string | null]>;
 export type ProductType = ProductTypeTuple;
+export type ProductTreatmentKind = 'vaccine' | 'antiparasitic';
 export type ProductCompositionOrigin = (typeof PRODUCT_CLASSIFICATION_AXES)[0]['values'][number];
 export type ProductCommercialCategory = (typeof PRODUCT_CLASSIFICATION_AXES)[1]['values'][number];
 export type ProductTherapeuticAction = (typeof PRODUCT_CLASSIFICATION_AXES)[2]['values'][number];
@@ -98,11 +362,21 @@ export interface ProductClassification {
 export const PRODUCT_TYPES = catalogTypesFromTree(PRODUCT_TYPE_TREE) as ProductType[];
 
 export function productTypeOptions<TMain extends ProductTypeMain>(main: TMain): readonly ProductTypeSubtype<TMain>[] {
-	return catalogTypeSubcategoryOptions(PRODUCT_TYPE_TREE, 'product', main);
+	return catalogTypeSubcategoryOptions(PRODUCT_TYPE_TREE, 'product', main) as readonly ProductTypeSubtype<TMain>[];
 }
 
-export function productType<TMain extends ProductTypeMain>(main: TMain, subtype: ProductTypeSubtype<TMain> extends never ? null : ProductTypeSubtype<TMain>): ProductTypeTuple<TMain> {
-	return catalogType(PRODUCT_TYPE_TREE, 'product', main, subtype) as ProductTypeTuple<TMain>;
+export function productType<TMain extends ProductTypeMain, TSubtype extends ProductTypeSubtype<TMain>>(
+	main: TMain,
+	subtype: TSubtype,
+	detail: ProductTypeDetail<TMain, TSubtype> | null = null
+): ProductTypeTuple<TMain> {
+	const candidate = ['product', main, subtype, detail] as const;
+	if (!isCatalogType(candidate, PRODUCT_RUNTIME_TYPE_TREE)) throw new Error('product_type_invalid');
+	return candidate as unknown as ProductTypeTuple<TMain>;
+}
+
+export function productTypeDetailOptions<TMain extends ProductTypeMain, TSubtype extends ProductTypeSubtype<TMain>>(main: TMain, subtype: TSubtype): readonly ProductTypeDetail<TMain, TSubtype>[] {
+	return catalogTypeDetailOptions(PRODUCT_TYPE_TREE, 'product', main, subtype) as readonly ProductTypeDetail<TMain, TSubtype>[];
 }
 
 export function productTypeMain(type: ProductType): ProductTypeMain {
@@ -111,6 +385,28 @@ export function productTypeMain(type: ProductType): ProductTypeMain {
 
 export function productTypeSubtype<TMain extends ProductTypeMain>(type: ProductTypeTuple<TMain>): ProductTypeTuple<TMain>[2] {
 	return catalogTypeSubcategory(type) as ProductTypeTuple<TMain>[2];
+}
+
+export function productTypeDetail<TMain extends ProductTypeMain>(type: ProductTypeTuple<TMain>): ProductTypeTuple<TMain>[3] | null {
+	return catalogTypeDetail(type) as ProductTypeTuple<TMain>[3] | null;
+}
+
+export function productTypeForTreatmentKind(kind: ProductTreatmentKind): ProductTypeTuple<'medication'> {
+	if (kind === 'vaccine') return productType('medication', 'biologicalAndImmunological', 'vaccine');
+	return productType('medication', 'antiparasitic', null);
+}
+
+export function productTreatmentKind(type: ProductType): ProductTreatmentKind | null {
+	if (productTypeMain(type) !== 'medication') return null;
+	const subtype = productTypeSubtype(type as ProductTypeTuple<'medication'>);
+	const detail = productTypeDetail(type as ProductTypeTuple<'medication'>);
+	if (detail === 'vaccine') return 'vaccine';
+	if (subtype === 'antiparasitic') return 'antiparasitic';
+	return null;
+}
+
+export function productTypeMatchesTreatmentKind(type: ProductType, kind: ProductTreatmentKind): boolean {
+	return productTreatmentKind(type) === kind;
 }
 
 export function isProductType(value: unknown): value is ProductType {

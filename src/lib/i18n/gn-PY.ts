@@ -1,4 +1,8 @@
 import { gnPyBreedTranslations } from './breeds/gn-PY.js';
+import { gnPyProductTypeTreeTranslations } from './type-tree/product/gn-PY.js';
+import { gnPyManufacturerTypeTreeTranslations } from './type-tree/manufacturer/gn-PY.js';
+import { gnPyActiveIngredientTypeTreeTranslations } from './type-tree/active-ingredient/gn-PY.js';
+import { gnPyConditionTypeTreeTranslations } from './type-tree/condition/gn-PY.js';
 import { gnPyProductClassificationTranslations } from './classification/product/gn-PY.js';
 import { gnPyManufacturerClassificationTranslations } from './classification/manufacturer/gn-PY.js';
 import { gnPyActiveIngredientClassificationTranslations } from './classification/active-ingredient/gn-PY.js';
@@ -307,6 +311,10 @@ export const gnPy = {
 	'pet.manualBreedNamePlaceholder': 'Ehai rása réra',
 	'pet.useManualBreed': 'Eipuru ko rása',
 	...gnPyBreedTranslations,
+	...gnPyProductTypeTreeTranslations,
+	...gnPyManufacturerTypeTreeTranslations,
+	...gnPyActiveIngredientTypeTreeTranslations,
+	...gnPyConditionTypeTreeTranslations,
 	...gnPyProductClassificationTranslations,
 	...gnPyManufacturerClassificationTranslations,
 	...gnPyActiveIngredientClassificationTranslations,
@@ -401,10 +409,6 @@ export const gnPy = {
 	'product.kind': 'Tipo',
 	'product.kindFilter': 'Tipo',
 	'product.allKinds': 'Opaite tipo',
-	'product.type.medication': 'Medicamento',
-	'product.type.nutrition': 'Nutrição',
-	'product.type.hygiene': 'Higiene',
-	'product.type.disinfectants': 'Desinfetantes',
 	'product.list.add': 'Moĩ produto',
 	'product.list.title': 'Produto oñeñongatúva',
 	'product.list.show': 'Hechauka produto',
@@ -748,12 +752,11 @@ export const gnPy = {
 	'catalog.section.uses': 'Jeporu',
 	'catalog.section.safety': 'Tekorosã',
 	'catalog.section.references': 'Referencias',
-	'catalog.activeIngredient.type.substance': 'Substancia',
-	'catalog.activeIngredient.type.combination': 'Ñembojehe’a',
-	'catalog.condition.type.disease': 'Mba’asy',
-	'catalog.condition.type.syndrome': 'Síndrome',
-	'catalog.condition.type.disorder': 'Disturbio',
-	'catalog.condition.type.injury': 'Lesión',
+	'catalog.manufacturer.portfolio.description': 'Producto ha línea comercial oñemboguapýva consulta clínica-rã.',
+	'catalog.manufacturer.portfolio.empty': 'Ndaipóri producto oñemboguapýva ko fabricante-pe.',
+	'catalog.manufacturer.portfolio.product': 'Producto réra',
+	'catalog.manufacturer.portfolio.category': 'Categoría',
+	'catalog.manufacturer.portfolio.activeIngredient': 'Principio activo',
 	'catalog.condition.section.clinicalSigns': 'Señal clínica',
 	'catalog.condition.section.diagnosis': 'Diagnóstico',
 	'catalog.condition.section.management': 'Ñangareko',

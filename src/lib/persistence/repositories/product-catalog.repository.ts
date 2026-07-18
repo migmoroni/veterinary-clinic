@@ -1,4 +1,25 @@
-import { canEditProductCatalogItem, parseCatalogAliases, parseProductCatalogExtension, parseProductRegions, parseProductSpecies, parseProductType, productType, productTypeMain, productTypeSubtype, stringifyCatalogAliases, stringifyProductRegions, stringifyProductSpecies, stringifyProductType, type ProductCatalogItem, type ProductCatalogOrigin, type ProductType, type ProductTypeMain, type ProductTypeTuple } from '$lib/domain/product/catalog.js';
+import {
+	PRODUCT_TYPES,
+	canEditProductCatalogItem,
+	parseCatalogAliases,
+	parseProductCatalogExtension,
+	parseProductRegions,
+	parseProductSpecies,
+	parseProductType,
+	productTreatmentKind,
+	productTypeForTreatmentKind,
+	productTypeMain,
+	productTypeMatchesTreatmentKind,
+	stringifyCatalogAliases,
+	stringifyProductRegions,
+	stringifyProductSpecies,
+	stringifyProductType,
+	type ProductCatalogItem,
+	type ProductCatalogOrigin,
+	type ProductType,
+	type ProductTypeMain,
+	type ProductTypeTuple
+} from '$lib/domain/product/catalog.js';
 import type { ImageCollectionItem, ImageCollectionItemInput, ImageCollectionPolicy } from '$lib/domain/image-collection/image-collection.js';
 import { FIELD_LIMITS, assertTextLimit, nullableLimitedText } from '$lib/domain/shared/field-limits.js';
 import { createUuidV4 } from '$lib/domain/shared/uuid.js';
@@ -62,7 +83,15 @@ const PRODUCT_CATALOG_COLUMNS = `product.id AS id,
 	product.updated_at AS updated_at`;
 const PRODUCT_CATALOG_FROM = `product_catalog_items product
 	LEFT JOIN manufacturer_catalog_items manufacturer ON manufacturer.id = product.manufacturer_id`;
-const TREATMENT_PRODUCT_TYPES = [stringifyProductType(productType('medication', 'vaccine')), stringifyProductType(productType('medication', 'antiparasitic'))];
+const TREATMENT_KINDS = ['vaccine', 'antiparasitic'] as const satisfies readonly TreatmentKind[];
+
+function treatmentProductTypeValues(kind: TreatmentKind): string[] {
+	const values = PRODUCT_TYPES.filter((type) => productTypeMatchesTreatmentKind(type, kind)).map(stringifyProductType);
+	values.unshift(stringifyProductType(productTypeForTreatmentKind(kind)));
+	return [...new Set(values)];
+}
+
+const TREATMENT_PRODUCT_TYPES = [...new Set(TREATMENT_KINDS.flatMap((kind) => treatmentProductTypeValues(kind)))];
 
 function configFor(_type: ProductTypeMain): ProductCatalogConfig {
 	return treatmentProductConfig;
@@ -110,10 +139,9 @@ async function mapCatalogItem(row: ProductCatalogItemRow, images: ImageCollectio
 }
 
 function productCatalogTreatmentKind(type: ProductType): TreatmentKind {
-	if (productTypeMain(type) !== 'medication') throw new Error('product_catalog_type_invalid');
-	const subtype = productTypeSubtype(type);
-	if (subtype !== 'vaccine' && subtype !== 'antiparasitic') throw new Error('product_catalog_type_invalid');
-	return subtype;
+	const kind = productTreatmentKind(type);
+	if (!kind) throw new Error('product_catalog_type_invalid');
+	return kind;
 }
 
 async function mapTreatmentCatalogItem(row: ProductCatalogItemRow, images: ImageCollectionItem[] = [], includeActiveIngredients = true): Promise<TreatmentCatalogItem> {
@@ -187,11 +215,11 @@ async function assertProductCatalogItemEditable(id: TreatmentCatalogItemId): Pro
 }
 
 export async function ensureTreatmentProductCatalogItem(kind: TreatmentKind, name: string, normalizedName: string): Promise<TreatmentCatalogItem> {
-	const type = productType('medication', kind);
+	const type = productTypeForTreatmentKind(kind);
 	const serializedType = stringifyProductType(type);
 	const existingItem = await getProductCatalogItemByNormalizedName(normalizedName);
 	if (existingItem) {
-		if (stringifyProductType(existingItem.type) !== serializedType) throw new Error('product_catalog_type_mismatch');
+		if (!productTypeMatchesTreatmentKind(existingItem.type, kind)) throw new Error('product_catalog_type_mismatch');
 		return { ...existingItem, type: existingItem.type as ProductTypeTuple<'medication'>, kind };
 	}
 
@@ -228,14 +256,10 @@ export async function listProductCatalogItems(includeHidden = false, includeImag
 export async function listTreatmentProductCatalogItems(kind: TreatmentKind | null = null, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem[]> {
 	const filters = [includeHidden ? '1 = 1' : 'product.hidden_at IS NULL'];
 	const values: unknown[] = [];
-	if (kind) {
-		values.push(stringifyProductType(productType('medication', kind)));
-		filters.push(`product.type = $${values.length}`);
-	} else {
-		const placeholders = TREATMENT_PRODUCT_TYPES.map((_, index) => `$${values.length + index + 1}`).join(', ');
-		filters.push(`product.type IN (${placeholders})`);
-		values.push(...TREATMENT_PRODUCT_TYPES);
-	}
+	const typeValues = kind ? treatmentProductTypeValues(kind) : TREATMENT_PRODUCT_TYPES;
+	const placeholders = typeValues.map((_, index) => `$${values.length + index + 1}`).join(', ');
+	filters.push(`product.type IN (${placeholders})`);
+	values.push(...typeValues);
 
 	const rows = await selectMany<ProductCatalogItemRow>(
 		`SELECT ${PRODUCT_CATALOG_COLUMNS}
@@ -280,7 +304,7 @@ export async function getTreatmentProductCatalogItemById(id: TreatmentCatalogIte
 }
 
 export async function saveTreatmentProductCatalogItem(kind: TreatmentKind, input: TreatmentCatalogItemInput, id?: TreatmentCatalogItemId): Promise<TreatmentCatalogItem> {
-	const serializedType = stringifyProductType(productType('medication', kind));
+	const serializedType = stringifyProductType(productTypeForTreatmentKind(kind));
 	const { name, normalizedName } = normalizeProductCatalogInput(kind, input.name);
 	const metadata = normalizeProductCatalogMetadata(input, normalizedName);
 	const manufacturer = await ensureManufacturerCatalogItem(metadata.manufacturerName);

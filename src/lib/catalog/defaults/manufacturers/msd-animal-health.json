@@ -2,8 +2,8 @@
 	"id": "453bf23c-08cf-4b91-a370-483b1ef6646d",
 	"type": [
 		"manufacturer",
-		null,
-		null
+		"veterinaryIndustrial",
+		"veterinaryIndustrialLaboratory"
 	],
 	"origin": "system",
 	"name": "MSD Animal Health",
@@ -21,9 +21,9 @@
 			"references": "Referências institucionais e bibliográficas poderão ser adicionadas aqui."
 		},
 		"classification": [
-			"manufacturer",
-			"multinational",
-			"animalHealth"
+			"veterinaryIndustrial",
+			"distributorNetwork",
+			"gmpCertified"
 		]
 	}
 }

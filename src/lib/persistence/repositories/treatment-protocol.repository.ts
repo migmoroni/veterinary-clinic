@@ -1,7 +1,7 @@
 import type { TreatmentProtocol, TreatmentProtocolCatalogItem, TreatmentProtocolDose, TreatmentProtocolDoseInput, TreatmentProtocolId, TreatmentProtocolInput, TreatmentProtocolKind, TreatmentProtocolOrigin, TreatmentProtocolValidityUnit } from '$lib/domain/treatment/protocol.js';
 import { parseTreatmentSpecies, stringifyTreatmentSpecies } from '$lib/domain/treatment/species.js';
 import { canEditTreatmentProtocol, normalizeTreatmentProtocolName } from '$lib/domain/treatment/protocol.js';
-import { productType, stringifyProductType } from '$lib/domain/product/catalog.js';
+import { PRODUCT_TYPES, productTypeForTreatmentKind, productTypeMatchesTreatmentKind, stringifyProductType } from '$lib/domain/product/catalog.js';
 import { FIELD_LIMITS, assertTextLimit, nullableMultilineText } from '$lib/domain/shared/field-limits.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { createUuidV4 } from '$lib/domain/shared/uuid.js';
@@ -203,9 +203,15 @@ async function resolveProtocolItemIds(kind: TreatmentProtocolKind, catalogItemId
 	const uniqueIds = [...new Set(catalogItemIds.map((id) => id.trim()).filter(Boolean))];
 	if (uniqueIds.length === 0) throw new Error('protocol_item_required');
 
+	const allowedTypeValues = [
+		stringifyProductType(productTypeForTreatmentKind(kind)),
+		...PRODUCT_TYPES.filter((type) => productTypeMatchesTreatmentKind(type, kind)).map(stringifyProductType)
+	].filter((value, index, values) => values.indexOf(value) === index);
+	const typePlaceholders = allowedTypeValues.map((_, index) => `$${index + 1}`).join(', ');
+	const idPlaceholders = uniqueIds.map((_, index) => `$${allowedTypeValues.length + index + 1}`).join(', ');
 	const allowedRows = await selectMany<{ id: TreatmentCatalogItemId }>(
-		`SELECT id FROM product_catalog_items WHERE type = $1 AND id IN (${uniqueIds.map((_, index) => `$${index + 2}`).join(', ')})`,
-		[stringifyProductType(productType('medication', kind)), ...uniqueIds]
+		`SELECT id FROM product_catalog_items WHERE type IN (${typePlaceholders}) AND id IN (${idPlaceholders})`,
+		[...allowedTypeValues, ...uniqueIds]
 	);
 	const allowedIds = new Set(allowedRows.map((row) => row.id));
 	const filteredIds = uniqueIds.filter((id) => allowedIds.has(id));

@@ -2,8 +2,8 @@
 	"id": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
 	"type": [
 		"manufacturer",
-		null,
-		null
+		"veterinaryIndustrial",
+		"veterinaryIndustrialLaboratory"
 	],
 	"origin": "system",
 	"name": "Boehringer Ingelheim Animal Health",
@@ -21,9 +21,9 @@
 			"references": "Referências institucionais e bibliográficas poderão ser adicionadas aqui."
 		},
 		"classification": [
-			"manufacturer",
-			"multinational",
-			"animalHealth"
+			"veterinaryIndustrial",
+			"distributorNetwork",
+			"gmpCertified"
 		]
 	}
 }

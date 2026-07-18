@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
-import { productLeafletSectionIds, stringifyProductCatalogExtension } from '../catalog.js';
+import { productLeafletSectionIds, productTreatmentKind, stringifyProductCatalogExtension } from '../catalog.js';
 import { localizedCatalogAliases } from '$lib/i18n/catalog-aliases/index.js';
 import { defaultProductCatalogItems } from '../default-catalog.js';
 import { defaultManufacturerCatalogItems } from '$lib/domain/manufacturer/default-catalog.js';
 import { isUuidV4 } from '$lib/domain/shared/uuid.js';
 
 function vaccine(name: string) {
-	const item = defaultProductCatalogItems.find((candidate) => candidate.type[2] === 'vaccine' && candidate.name === name);
+	const item = defaultProductCatalogItems.find((candidate) => productTreatmentKind(candidate.type) === 'vaccine' && candidate.name === name);
 	if (!item) throw new Error(`Default vaccine not found: ${name}`);
 	return item;
 }
 
 function antiparasitic(name: string) {
-	const item = defaultProductCatalogItems.find((candidate) => candidate.type[2] === 'antiparasitic' && candidate.name === name);
+	const item = defaultProductCatalogItems.find((candidate) => productTreatmentKind(candidate.type) === 'antiparasitic' && candidate.name === name);
 	if (!item) throw new Error(`Default antiparasitic not found: ${name}`);
 	return item;
 }

@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { parse } from 'csv-parse/sync';
 import Database from 'better-sqlite3';
-import { PRODUCT_TYPES, productType, stringifyProductCatalogExtension, stringifyProductType } from '../src/lib/domain/product/catalog.js';
+import { PRODUCT_TYPES, productTypeForTreatmentKind, stringifyProductCatalogExtension, stringifyProductType } from '../src/lib/domain/product/catalog.js';
 import { defaultProductCatalogItems } from '../src/lib/domain/product/default-catalog.js';
 import { MANUFACTURER_TYPES, stringifyManufacturerType } from '../src/lib/domain/manufacturer/catalog.js';
 import { defaultManufacturerCatalogItems } from '../src/lib/domain/manufacturer/default-catalog.js';
@@ -884,11 +884,11 @@ for (const item of defaultProductCatalogItems) {
 insertSetting.run({ key: backupPolicyIntervalSettingKey, value: String(defaultBackupPolicyIntervalMinutes) });
 
 const vaccineIds = new Map(
-  (db.prepare('SELECT id, normalized_name FROM product_catalog_items WHERE type = ?').all(stringifyProductType(productType('medication', 'vaccine'))) as VaccineIdRow[]).map((vaccine) => [normalizeVaccineName(vaccine.normalized_name), vaccine.id])
+  (db.prepare('SELECT id, normalized_name FROM product_catalog_items WHERE type = ?').all(stringifyProductType(productTypeForTreatmentKind('vaccine'))) as VaccineIdRow[]).map((vaccine) => [normalizeVaccineName(vaccine.normalized_name), vaccine.id])
 );
 
 const dewormerIds = new Map(
-  (db.prepare('SELECT id, normalized_name FROM product_catalog_items WHERE type = ?').all(stringifyProductType(productType('medication', 'antiparasitic'))) as VaccineIdRow[]).map((dewormer) => [normalizeDewormerName(dewormer.normalized_name), dewormer.id])
+  (db.prepare('SELECT id, normalized_name FROM product_catalog_items WHERE type = ?').all(stringifyProductType(productTypeForTreatmentKind('antiparasitic'))) as VaccineIdRow[]).map((dewormer) => [normalizeDewormerName(dewormer.normalized_name), dewormer.id])
 );
 
 for (const [protocolSortOrder, protocol] of defaultTreatmentProtocols.entries()) {
@@ -1814,12 +1814,12 @@ const printDatabaseReport = () => {
   console.log(`- pets: ${countRows('pets')}`);
   console.log(`- pet_owners: ${countRows('pet_owners')}`);
   console.log(`- medical_records: ${countRows('medical_records')}`);
-  console.log(`- product_catalog_items (vacinas): ${countWhere('product_catalog_items', `type = '${stringifyProductType(productType('medication', 'vaccine')).replace(/'/g, "''")}'`)}`);
+  console.log(`- product_catalog_items (vacinas): ${countWhere('product_catalog_items', `type = '${stringifyProductType(productTypeForTreatmentKind('vaccine')).replace(/'/g, "''")}'`)}`);
   console.log(`- treatment_protocols: ${countRows('treatment_protocols')}`);
   console.log(`- treatment_protocol_items: ${countRows('treatment_protocol_items')}`);
   console.log(`- treatment_protocol_doses: ${countRows('treatment_protocol_doses')}`);
   console.log(`- pet_vaccinations: ${countRows('pet_vaccinations')}`);
-  console.log(`- product_catalog_items (antiparasitários): ${countWhere('product_catalog_items', `type = '${stringifyProductType(productType('medication', 'antiparasitic')).replace(/'/g, "''")}'`)}`);
+  console.log(`- product_catalog_items (antiparasitários): ${countWhere('product_catalog_items', `type = '${stringifyProductType(productTypeForTreatmentKind('antiparasitic')).replace(/'/g, "''")}'`)}`);
   console.log(`- pet_antiparasitic_treatments: ${countRows('pet_antiparasitic_treatments')}`);
   console.log(`- pet_vaccinations sem nome normalizado: ${vaccinationsWithoutNormalizedName}`);
   console.log(`- pet_vaccinations com dose inválida: ${vaccinationsWithInvalidDose}`);

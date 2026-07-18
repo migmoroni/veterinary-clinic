@@ -3,7 +3,8 @@
 	"type": [
 		"condition",
 		"disease",
-		null
+		"infectiousAndParasitic",
+		"viral"
 	],
 	"origin": "system",
 	"name": "Condição Fictícia",
@@ -18,9 +19,8 @@
 	"images": [],
 	"extension": {
 		"classification": [
-			"infectious",
-			"acute",
-			"moderate"
+			"moderate",
+			"compulsory"
 		],
 		"sections": {
 			"about": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam luctus, lorem id viverra volutpat, justo arcu posuere neque, nec dignissim nibh lorem sed ligula.",

@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { defaultProductCatalogItems } from '../../product/default-catalog.js';
+import { productTreatmentKind } from '../../product/catalog.js';
 import { isUuidV4 } from '../../shared/uuid.js';
 import { defaultTreatmentProtocols } from '../default-protocol.js';
 import { canDeleteTreatmentProtocol, canEditTreatmentProtocol } from '../protocol.js';
 
 function bundledProductId(kind: string, name: string): string {
-	const item = defaultProductCatalogItems.find((candidate) => candidate.type[2] === kind && candidate.name === name);
+	const item = defaultProductCatalogItems.find((candidate) => productTreatmentKind(candidate.type) === kind && candidate.name === name);
 	if (!item) throw new Error(`Default product not found: ${kind}:${name}`);
 	return item.id;
 }
@@ -36,7 +37,7 @@ describe('default treatment protocols', () => {
 		for (const protocol of defaultTreatmentProtocols) {
 			expect(isUuidV4(protocol.id)).toBe(true);
 			for (const catalogItemId of protocol.catalogItemIds) {
-				expect(defaultProductCatalogItems.some((item) => item.type[2] === protocol.kind && item.id === catalogItemId)).toBe(true);
+				expect(defaultProductCatalogItems.some((item) => productTreatmentKind(item.type) === protocol.kind && item.id === catalogItemId)).toBe(true);
 			}
 		}
 	});

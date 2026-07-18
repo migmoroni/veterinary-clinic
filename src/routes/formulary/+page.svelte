@@ -20,6 +20,7 @@
 		manufacturerClassificationLabel,
 		manufacturerClassificationGroups,
 	} from "$lib/domain/catalog/classification-labels.js";
+	import { catalogPathTypeLabel } from "$lib/domain/catalog/type-labels.js";
 	import {
 		activeIngredientClassificationLabel,
 		activeIngredientClassificationSearchText,
@@ -36,13 +37,12 @@
 	} from "$lib/components/reference/reference-utils.js";
 	import {
 		ACTIVE_INGREDIENT_TYPES,
-		activeIngredientTypeSubtype,
+		stringifyActiveIngredientType,
 		type ActiveIngredientCatalogItem,
 	} from "$lib/domain/active-ingredient/catalog.js";
 	import {
 		CONDITION_CLASSIFICATION_AXES,
 		CONDITION_TYPES,
-		conditionTypeSubtype,
 		stringifyConditionType,
 		type ConditionCatalogItem,
 	} from "$lib/domain/condition/catalog.js";
@@ -50,8 +50,8 @@
 	import {
 		PRODUCT_TYPES,
 		productLeafletSectionIds,
+		productTreatmentKind,
 		productTypeMain,
-		productTypeSubtype,
 		type ProductCatalogItem,
 		type ProductCatalogOrigin,
 		type ProductSpecies,
@@ -181,13 +181,13 @@
 
 			if (item.kind === "activeIngredient" && typeFilter !== "all") {
 				const activeIngredient = item as ActiveIngredientCatalogItem;
-				if (JSON.stringify(activeIngredient.type) !== typeFilter)
+				if (!catalogTypeMatchesFilter(activeIngredient.type, typeFilter))
 					return false;
 			}
 
 			if (item.kind === "condition" && typeFilter !== "all") {
 				const condition = item as ConditionCatalogItem;
-				if (stringifyConditionType(condition.type) !== typeFilter)
+				if (!catalogTypeMatchesFilter(condition.type, typeFilter))
 					return false;
 			}
 
@@ -302,7 +302,7 @@
 					options: [
 						{ value: "all", label: t("formulary.allKinds") },
 						...ACTIVE_INGREDIENT_TYPES.map((type) => ({
-							value: JSON.stringify(type),
+							value: stringifyActiveIngredientType(type),
 							label: activeIngredientTypeLabel(
 								type as ActiveIngredientCatalogItem["type"],
 							),
@@ -620,17 +620,26 @@
 	function activeIngredientTypeLabel(
 		type: ActiveIngredientCatalogItem["type"],
 	): string {
-		return activeIngredientTypeSubtype(type) === "combination"
-			? t("catalog.activeIngredient.type.combination")
-			: t("catalog.activeIngredient.type.substance");
+		return catalogPathTypeLabel("catalog.activeIngredient.type", type, t);
 	}
 
 	function conditionTypeLabel(type: ConditionCatalogItem["type"]): string {
-		const subtype = conditionTypeSubtype(type);
-		if (subtype === "syndrome") return t("catalog.condition.type.syndrome");
-		if (subtype === "disorder") return t("catalog.condition.type.disorder");
-		if (subtype === "injury") return t("catalog.condition.type.injury");
-		return t("catalog.condition.type.disease");
+		return catalogPathTypeLabel("catalog.condition.type", type, t);
+	}
+
+	function catalogTypeMatchesFilter(
+		type: readonly (string | null)[],
+		filter: string,
+	): boolean {
+		try {
+			const parsed = JSON.parse(filter);
+			if (!Array.isArray(parsed)) return false;
+			return parsed.every(
+				(segment, index) => segment === null || type[index] === segment,
+			);
+		} catch {
+			return false;
+		}
 	}
 
 	function speciesLabel(species: ProductSpecies): string {
@@ -655,7 +664,7 @@
 
 	function productFallbackIcon(item: ProductCatalogItem) {
 		if (productTypeMain(item.type) !== "medication") return Info;
-		return productTypeSubtype(item.type) === "vaccine" ? Syringe : Pill;
+		return productTreatmentKind(item.type) === "vaccine" ? Syringe : Pill;
 	}
 
 	function validCatalogKind(value: string | undefined): CatalogKind {

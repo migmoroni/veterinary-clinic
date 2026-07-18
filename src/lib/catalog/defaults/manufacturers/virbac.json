@@ -2,8 +2,8 @@
 	"id": "a984d879-4d68-4282-a746-0b7961903b28",
 	"type": [
 		"manufacturer",
-		null,
-		null
+		"veterinaryIndustrial",
+		"veterinaryIndustrialLaboratory"
 	],
 	"origin": "system",
 	"name": "Virbac",
@@ -21,9 +21,9 @@
 			"references": "Referências institucionais e bibliográficas poderão ser adicionadas aqui."
 		},
 		"classification": [
-			"manufacturer",
-			"multinational",
-			"animalHealth"
+			"veterinaryIndustrial",
+			"distributorNetwork",
+			"gmpCertified"
 		]
 	}
 }

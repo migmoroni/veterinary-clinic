@@ -1,5 +1,9 @@
 import type { TranslationKey } from './pt-BR.js';
 import { enUsBreedTranslations } from './breeds/en-US.js';
+import { enUsProductTypeTreeTranslations } from './type-tree/product/en-US.js';
+import { enUsManufacturerTypeTreeTranslations } from './type-tree/manufacturer/en-US.js';
+import { enUsActiveIngredientTypeTreeTranslations } from './type-tree/active-ingredient/en-US.js';
+import { enUsConditionTypeTreeTranslations } from './type-tree/condition/en-US.js';
 import { enUsProductClassificationTranslations } from './classification/product/en-US.js';
 import { enUsManufacturerClassificationTranslations } from './classification/manufacturer/en-US.js';
 import { enUsActiveIngredientClassificationTranslations } from './classification/active-ingredient/en-US.js';
@@ -308,6 +312,10 @@ export const enUs = {
 	'pet.manualBreedNamePlaceholder': 'Type the breed name',
 	'pet.useManualBreed': 'Use this breed',
 	...enUsBreedTranslations,
+	...enUsProductTypeTreeTranslations,
+	...enUsManufacturerTypeTreeTranslations,
+	...enUsActiveIngredientTypeTreeTranslations,
+	...enUsConditionTypeTreeTranslations,
 	...enUsProductClassificationTranslations,
 	...enUsManufacturerClassificationTranslations,
 	...enUsActiveIngredientClassificationTranslations,
@@ -402,10 +410,6 @@ export const enUs = {
 	'product.kind': 'Type',
 	'product.kindFilter': 'Type',
 	'product.allKinds': 'All types',
-	'product.type.medication': 'Medication',
-	'product.type.nutrition': 'Nutrition',
-	'product.type.hygiene': 'Hygiene',
-	'product.type.disinfectants': 'Disinfectants',
 	'product.list.add': 'Add product',
 	'product.list.title': 'Saved products',
 	'product.list.show': 'Show product',
@@ -749,12 +753,11 @@ export const enUs = {
 	'catalog.section.uses': 'Uses',
 	'catalog.section.safety': 'Safety',
 	'catalog.section.references': 'References',
-	'catalog.activeIngredient.type.substance': 'Substance',
-	'catalog.activeIngredient.type.combination': 'Combination',
-	'catalog.condition.type.disease': 'Disease',
-	'catalog.condition.type.syndrome': 'Syndrome',
-	'catalog.condition.type.disorder': 'Disorder',
-	'catalog.condition.type.injury': 'Injury',
+	'catalog.manufacturer.portfolio.description': 'Registered products and commercial lines for clinical reference.',
+	'catalog.manufacturer.portfolio.empty': 'No products registered for this manufacturer.',
+	'catalog.manufacturer.portfolio.product': 'Product name',
+	'catalog.manufacturer.portfolio.category': 'Category',
+	'catalog.manufacturer.portfolio.activeIngredient': 'Active ingredient',
 	'catalog.condition.section.clinicalSigns': 'Clinical signs',
 	'catalog.condition.section.diagnosis': 'Diagnosis',
 	'catalog.condition.section.management': 'Management',

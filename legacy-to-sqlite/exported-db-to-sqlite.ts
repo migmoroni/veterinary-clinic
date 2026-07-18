@@ -173,7 +173,7 @@ const distDir = path.resolve(scriptDir, 'dist');
 const buildDir = path.resolve(scriptDir, 'build');
 const defaultBasePath = path.resolve(buildDir, 'veterinary_clinic.db');
 const defaultOutputPath = path.resolve(buildDir, 'veterinary_clinic.consolidated.db');
-const vaccineProductType = JSON.stringify(['product', 'medication', 'vaccine']);
+const vaccineProductType = JSON.stringify(['product', 'medication', 'biologicalAndImmunological', 'vaccine']);
 
 const legacySchema = {
   owners: ['id', 'name', 'avatar_blob', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code', 'additional_information', 'created_at', 'updated_at', 'deleted_at', 'purge_after'],

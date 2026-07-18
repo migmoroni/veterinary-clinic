@@ -6,18 +6,14 @@ import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 
 describe('condition catalog metadata', () => {
 	it('defines condition types as direct tuples from the type tree', () => {
-		expect(conditionTypeOptions('condition')).toEqual(['disease', 'syndrome', 'disorder', 'injury']);
-		expect(CONDITION_TYPES).toEqual([
-			['condition', 'disease', null],
-			['condition', 'syndrome', null],
-			['condition', 'disorder', null],
-			['condition', 'injury', null]
-		]);
+		expect(conditionTypeOptions('disease')).toEqual(['infectiousAndParasitic', 'neoplastic', 'immuneAndInflammatory', 'systemicAndMetabolic', 'geneticAndDevelopmental']);
+		expect(conditionTypeOptions('injury')).toContain('mechanicalAndTraumatic');
+		expect(CONDITION_TYPES).toEqual(expect.arrayContaining([['condition', 'disease', 'infectiousAndParasitic', 'viral'], ['condition', 'injury', 'mechanicalAndTraumatic', 'softTissueTrauma']]));
 	});
 
 	it('round-trips condition type tuples', () => {
-		expect(parseConditionType(stringifyConditionType(conditionType('condition', 'disease')))).toEqual(['condition', 'disease', null]);
-		expect(parseConditionType(stringifyConditionType(conditionType('condition', 'injury')))).toEqual(['condition', 'injury', null]);
+		expect(parseConditionType(stringifyConditionType(conditionType('disease', 'infectiousAndParasitic', 'viral')))).toEqual(['condition', 'disease', 'infectiousAndParasitic', 'viral']);
+		expect(parseConditionType(stringifyConditionType(conditionType('injury', 'mechanicalAndTraumatic', 'softTissueTrauma')))).toEqual(['condition', 'injury', 'mechanicalAndTraumatic', 'softTissueTrauma']);
 	});
 
 	it('includes a complete fictitious condition sample', () => {

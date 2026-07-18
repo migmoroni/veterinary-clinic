@@ -1,15 +1,16 @@
 import type { CurrentRecordSummary } from '$lib/domain/medical-record/medical-record.js';
 import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 import type { DashboardAnalytics } from '$lib/domain/dashboard/analytics.js';
-import { activeIngredientTypeSubtype, type ActiveIngredientCatalogItem } from '$lib/domain/active-ingredient/catalog.js';
+import type { ActiveIngredientCatalogItem } from '$lib/domain/active-ingredient/catalog.js';
 import { activeIngredientClassificationLabel, activeIngredientClassificationSearchText } from '$lib/domain/active-ingredient/classification.js';
 import { productClassificationLabel, productClassificationSearchText } from '$lib/domain/product/classification.js';
-import { CONDITION_CLASSIFICATION_AXES, conditionTypeSubtype, type ConditionCatalogItem } from '$lib/domain/condition/catalog.js';
+import { CONDITION_CLASSIFICATION_AXES, type ConditionCatalogItem } from '$lib/domain/condition/catalog.js';
 import { MANUFACTURER_CLASSIFICATION_AXES, type ManufacturerCatalogItem } from '$lib/domain/manufacturer/catalog.js';
 import type { BreedReferenceProfile } from '$lib/domain/pet/breed-reference.js';
 import { productLeafletSectionIds, type ProductCatalogItem, type ProductLeafletSectionId, type ProductSpecies } from '$lib/domain/product/catalog.js';
 import { productTypeLabel } from '$lib/domain/product/type-labels.js';
 import { conditionClassificationLabel, manufacturerClassificationLabel } from '$lib/domain/catalog/classification-labels.js';
+import { catalogPathTypeLabel } from '$lib/domain/catalog/type-labels.js';
 import { CLINIC_SEARCH_RESULT_KINDS, isClinicSearchResultKind, isReferenceSearchResultKind, type ClinicSearchResultKind, type SearchResult, type SearchResultKind } from '$lib/domain/search/search.js';
 import { normalizeSearchText, searchTermsForLocale } from '$lib/domain/shared/search-terms.js';
 import { hasDatabaseFile } from '$lib/native/database-file.js';
@@ -279,7 +280,7 @@ function manufacturerSearchScore(item: ManufacturerCatalogItem, terms: readonly 
 }
 
 function activeIngredientTypeLabel(item: ActiveIngredientCatalogItem): string {
-	return activeIngredientTypeSubtype(item.type) === 'combination' ? t('catalog.activeIngredient.type.combination') : t('catalog.activeIngredient.type.substance');
+	return catalogPathTypeLabel('catalog.activeIngredient.type', item.type, t);
 }
 
 function activeIngredientSearchScore(item: ActiveIngredientCatalogItem, terms: readonly string[]): number {
@@ -295,11 +296,7 @@ function activeIngredientSearchScore(item: ActiveIngredientCatalogItem, terms: r
 }
 
 function conditionTypeLabel(item: ConditionCatalogItem): string {
-	const subtype = conditionTypeSubtype(item.type);
-	if (subtype === 'syndrome') return t('catalog.condition.type.syndrome');
-	if (subtype === 'disorder') return t('catalog.condition.type.disorder');
-	if (subtype === 'injury') return t('catalog.condition.type.injury');
-	return t('catalog.condition.type.disease');
+	return catalogPathTypeLabel('catalog.condition.type', item.type, t);
 }
 
 function conditionSearchScore(item: ConditionCatalogItem, terms: readonly string[]): number {

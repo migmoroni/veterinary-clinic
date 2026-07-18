@@ -1,6 +1,6 @@
 import type Database from '@tauri-apps/plugin-sql';
 import { defaultProductCatalogItems, type DefaultProductCatalogImage } from '$lib/domain/product/default-catalog.js';
-import { PRODUCT_TYPES, productType, stringifyProductCatalogExtension, stringifyProductType } from '$lib/domain/product/catalog.js';
+import { PRODUCT_TYPES, productTypeForTreatmentKind, productTypeMatchesTreatmentKind, stringifyProductCatalogExtension, stringifyProductType } from '$lib/domain/product/catalog.js';
 import { defaultManufacturerCatalogItems, type DefaultManufacturerCatalogImage } from '$lib/domain/manufacturer/default-catalog.js';
 import { MANUFACTURER_TYPES, stringifyManufacturerCatalogExtension, stringifyManufacturerType } from '$lib/domain/manufacturer/catalog.js';
 import { defaultActiveIngredientCatalogItems, type DefaultActiveIngredientCatalogImage } from '$lib/domain/active-ingredient/default-catalog.js';
@@ -677,10 +677,14 @@ async function syncDefaultTreatmentProtocols(database: Database): Promise<void> 
 		await database.execute('DELETE FROM treatment_protocol_items WHERE protocol_id = $1', [storedProtocol.id]);
 
 		for (const [sortOrder, catalogItemId] of protocol.catalogItemIds.entries()) {
-			const expectedProductType = stringifyProductType(productType('medication', protocol.kind));
+			const expectedProductTypes = [
+				stringifyProductType(productTypeForTreatmentKind(protocol.kind)),
+				...PRODUCT_TYPES.filter((type) => productTypeMatchesTreatmentKind(type, protocol.kind)).map(stringifyProductType)
+			].filter((value, index, values) => values.indexOf(value) === index);
+			const placeholders = expectedProductTypes.map((_, index) => `$${index + 1}`).join(', ');
 			const catalogRows = await database.select<{ id: string }[]>(
-				'SELECT id FROM product_catalog_items WHERE type = $1 AND id = $2 LIMIT 1',
-				[expectedProductType, catalogItemId]
+				`SELECT id FROM product_catalog_items WHERE type IN (${placeholders}) AND id = $${expectedProductTypes.length + 1} LIMIT 1`,
+				[...expectedProductTypes, catalogItemId]
 			);
 			if (!catalogRows[0]) throw new Error(`default_protocol_catalog_item_not_found:${catalogItemId}`);
 

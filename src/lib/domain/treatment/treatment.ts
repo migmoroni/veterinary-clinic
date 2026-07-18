@@ -1,13 +1,13 @@
-import { productTypeOptions, type ProductCatalogItem, type ProductTypeTuple, type ProductTypeSubtype } from '$lib/domain/product/catalog.js';
+import type { ProductCatalogItem, ProductTreatmentKind, ProductTypeTuple } from '$lib/domain/product/catalog.js';
 import type { TreatmentSpecies } from '$lib/domain/treatment/species.js';
 
 export type { TreatmentSpecies } from '$lib/domain/treatment/species.js';
 
-export type TreatmentKind = ProductTypeSubtype<'medication'>;
+export type TreatmentKind = ProductTreatmentKind;
 export type TreatmentCatalogItemId = string;
 export type TreatmentValidityUnit = 'days' | 'months' | 'years';
 
-export const TREATMENT_KINDS = productTypeOptions('medication');
+export const TREATMENT_KINDS = ['vaccine', 'antiparasitic'] as const satisfies readonly TreatmentKind[];
 
 export interface TreatmentCatalogItem extends Omit<ProductCatalogItem, 'type'> {
 	type: ProductTypeTuple<'medication'>;

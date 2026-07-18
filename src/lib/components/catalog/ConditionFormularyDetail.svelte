@@ -2,7 +2,8 @@
 	import CatalogEntityDetail, { type CatalogEntityDetailField, type CatalogEntityDetailSection } from '$lib/components/catalog/CatalogEntityDetail.svelte';
 	import { catalogOriginLabel, catalogRegionSummary, catalogSectionTexts } from '$lib/components/catalog/catalog-detail-utils.js';
 	import { conditionClassificationGroups } from '$lib/domain/catalog/classification-labels.js';
-	import { CONDITION_CLASSIFICATION_AXES, conditionProfileSectionIds, conditionTypeSubtype, type ConditionCatalogItem, type ConditionProfileSectionId } from '$lib/domain/condition/catalog.js';
+	import { catalogPathTypeLabel } from '$lib/domain/catalog/type-labels.js';
+	import { CONDITION_CLASSIFICATION_AXES, conditionProfileSectionIds, type ConditionCatalogItem, type ConditionProfileSectionId } from '$lib/domain/condition/catalog.js';
 	import { t } from '$lib/i18n/index.js';
 	import Activity from '@lucide/svelte/icons/activity';
 	import BookOpenText from '@lucide/svelte/icons/book-open-text';
@@ -27,7 +28,7 @@
 		{ id: 'references', labelKey: 'catalog.section.references', icon: Quote }
 	];
 	const fields = $derived<CatalogEntityDetailField[]>([
-		{ label: t('formulary.kind'), value: conditionTypeLabel(item) },
+		{ label: t('formulary.kind'), value: catalogPathTypeLabel('catalog.condition.type', item.type, t) },
 		{ label: t('formulary.originFilter'), value: catalogOriginLabel(item.origin) },
 		{ label: t('product.regions'), value: catalogRegionSummary(item.regions) }
 	]);
@@ -35,14 +36,6 @@
 		classification: conditionClassificationFields(item)
 	});
 	const sectionTexts = $derived(catalogSectionTexts(conditionProfileSectionIds, item.extension.sections));
-
-	function conditionTypeLabel(source: ConditionCatalogItem): string {
-		const subtype = conditionTypeSubtype(source.type);
-		if (subtype === 'syndrome') return t('catalog.condition.type.syndrome');
-		if (subtype === 'disorder') return t('catalog.condition.type.disorder');
-		if (subtype === 'injury') return t('catalog.condition.type.injury');
-		return t('catalog.condition.type.disease');
-	}
 
 	function conditionClassificationFields(source: ConditionCatalogItem): CatalogEntityDetailField[] {
 		return [

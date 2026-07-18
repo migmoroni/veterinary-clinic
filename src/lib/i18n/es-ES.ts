@@ -1,5 +1,9 @@
 import type { TranslationKey } from './pt-BR.js';
 import { esEsBreedTranslations } from './breeds/es-ES.js';
+import { esEsProductTypeTreeTranslations } from './type-tree/product/es-ES.js';
+import { esEsManufacturerTypeTreeTranslations } from './type-tree/manufacturer/es-ES.js';
+import { esEsActiveIngredientTypeTreeTranslations } from './type-tree/active-ingredient/es-ES.js';
+import { esEsConditionTypeTreeTranslations } from './type-tree/condition/es-ES.js';
 import { esEsProductClassificationTranslations } from './classification/product/es-ES.js';
 import { esEsManufacturerClassificationTranslations } from './classification/manufacturer/es-ES.js';
 import { esEsActiveIngredientClassificationTranslations } from './classification/active-ingredient/es-ES.js';
@@ -308,6 +312,10 @@ export const esEs = {
 	'pet.manualBreedNamePlaceholder': 'Escribe el nombre de la raza',
 	'pet.useManualBreed': 'Usar esta raza',
 	...esEsBreedTranslations,
+	...esEsProductTypeTreeTranslations,
+	...esEsManufacturerTypeTreeTranslations,
+	...esEsActiveIngredientTypeTreeTranslations,
+	...esEsConditionTypeTreeTranslations,
 	...esEsProductClassificationTranslations,
 	...esEsManufacturerClassificationTranslations,
 	...esEsActiveIngredientClassificationTranslations,
@@ -402,10 +410,6 @@ export const esEs = {
 	'product.kind': 'Tipo',
 	'product.kindFilter': 'Tipo',
 	'product.allKinds': 'Todos los tipos',
-	'product.type.medication': 'Medicamento',
-	'product.type.nutrition': 'Nutrición',
-	'product.type.hygiene': 'Higiene',
-	'product.type.disinfectants': 'Desinfectantes',
 	'product.list.add': 'Añadir producto',
 	'product.list.title': 'Productos guardados',
 	'product.list.show': 'Mostrar producto',
@@ -749,12 +753,11 @@ export const esEs = {
 	'catalog.section.uses': 'Usos',
 	'catalog.section.safety': 'Seguridad',
 	'catalog.section.references': 'Referencias',
-	'catalog.activeIngredient.type.substance': 'Sustancia',
-	'catalog.activeIngredient.type.combination': 'Combinación',
-	'catalog.condition.type.disease': 'Enfermedad',
-	'catalog.condition.type.syndrome': 'Síndrome',
-	'catalog.condition.type.disorder': 'Trastorno',
-	'catalog.condition.type.injury': 'Lesión',
+	'catalog.manufacturer.portfolio.description': 'Productos y líneas comerciales registrados para consulta clínica.',
+	'catalog.manufacturer.portfolio.empty': 'No hay productos registrados para este fabricante.',
+	'catalog.manufacturer.portfolio.product': 'Nombre del producto',
+	'catalog.manufacturer.portfolio.category': 'Categoría',
+	'catalog.manufacturer.portfolio.activeIngredient': 'Principio activo',
 	'catalog.condition.section.clinicalSigns': 'Signos clínicos',
 	'catalog.condition.section.diagnosis': 'Diagnóstico',
 	'catalog.condition.section.management': 'Manejo',

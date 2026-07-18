@@ -22,21 +22,32 @@ const medicationLeafletSectionIds = [
 	'references'
 ];
 const productCompositionOrigins = ['allopathic', 'phytotherapeutic', 'homeopathic', 'biological'];
-const productCommercialCategories = ['reference', 'generic', 'similar', 'branded', 'compounded', 'nonApplicable'];
+const productCommercialCategories = ['reference', 'generic', 'similar', 'compounded', 'nonApplicable'];
 const productTherapeuticActions = ['prophylactic', 'curative', 'palliative', 'control'];
 const productPharmaceuticalForms = [
-	'palatableTablet',
 	'tablet',
+	'palatableTablet',
 	'capsule',
+	'powder',
 	'oralSuspension',
 	'injectableSolution',
 	'spotOn',
-	'oticOintment',
-	'ophthalmicSolution',
-	'topicalSpray',
-	'shampoo'
+	'pourOn',
+	'ointmentOrCream',
+	'solution',
+	'shampoo',
+	'soapOrBar',
+	'collar',
+	'feedOrKibble',
+	'deviceOrConsumable',
+	'nonApplicable'
 ];
-const productAdministrationRoutes = ['oral', 'intravenous', 'intramuscular', 'subcutaneous', 'topical', 'otic', 'ophthalmic', 'intranasal'];
+const productAdministrationRoutes = ['oral', 'intravenous', 'intramuscular', 'subcutaneous', 'topical', 'otic', 'ophthalmic', 'intranasal', 'epidural', 'intraarticular', 'inhaled', 'rectal', 'nonApplicable'];
+const productPharmaceuticalFormReplacements = new Map([
+	['oticOintment', 'ointmentOrCream'],
+	['ophthalmicSolution', 'solution'],
+	['topicalSpray', 'solution']
+]);
 const emptyProductCommercialTherapeutic = { compositionOrigin: null, commercialCategory: null, therapeuticAction: null };
 const emptyProductForm = { pharmaceuticalForm: null, administrationRoutes: [], presentationDosage: null };
 const emptyProductTargetSpecies = { warnings: [] };
@@ -49,15 +60,33 @@ const defaultSourcePath = path.resolve(scriptDir, 'dist/veterinary_clinic-versio
 const defaultOutputPath = path.resolve(scriptDir, `build/veterinary_clinic-version-${CURRENT_SCHEMA_VERSION}.db`);
 const productTypeValues = {
 	medication: {
-		vaccine: JSON.stringify(['product', 'medication', 'vaccine']),
-		antiparasitic: JSON.stringify(['product', 'medication', 'antiparasitic'])
+		vaccine: JSON.stringify(['product', 'medication', 'biologicalAndImmunological', 'vaccine']),
+		antiparasitic: JSON.stringify(['product', 'medication', 'antiparasitic', null]),
+		antimicrobial: JSON.stringify(['product', 'medication', 'antimicrobial', null]),
+		therapeutical: JSON.stringify(['product', 'medication', 'internalMedicine', null]),
+		anesthetic: JSON.stringify(['product', 'medication', 'anestheticAndControlled', null])
 	},
-	nutrition: JSON.stringify(['product', 'nutrition', null]),
-	hygiene: JSON.stringify(['product', 'hygiene', null]),
-	disinfectants: JSON.stringify(['product', 'disinfectants', null])
+	nutrition: {
+		maintenance: JSON.stringify(['product', 'nutrition', 'completeDiet', null]),
+		therapeutic: JSON.stringify(['product', 'nutrition', 'prescriptionDiet', null]),
+		supplement: JSON.stringify(['product', 'nutrition', 'supplementAndNutraceutical', null])
+	},
+	hygiene: {
+		cosmetic: JSON.stringify(['product', 'hygieneAndAesthetics', 'coatAndSkin', null]),
+		dermatological: JSON.stringify(['product', 'hygieneAndAesthetics', 'coatAndSkin', 'medicatedShampoo'])
+	},
+	environment: {
+		disinfectant: JSON.stringify(['product', 'environmentAndSanitation', 'facilitySanitizer', 'hospitalDisinfectant']),
+		repellent: JSON.stringify(['product', 'environmentAndSanitation', 'environmentalPestControl', 'repellent'])
+	},
+	consumable: {
+		surgical: JSON.stringify(['product', 'clinicalConsumable', 'woundAndSurgicalCare', 'sutureMaterial']),
+		disposable: JSON.stringify(['product', 'clinicalConsumable', 'injectionAndInfusion', 'syringeAndNeedle'])
+	}
 };
 const medicationProductTypeValues = productTypeValues.medication;
-const productTypeSqlValues = [...Object.values(productTypeValues.medication), productTypeValues.nutrition, productTypeValues.hygiene, productTypeValues.disinfectants]
+const productTypeSqlValues = Object.values(productTypeValues)
+	.flatMap((subtypes) => Object.values(subtypes))
 	.map((value) => `'${value.replace(/'/g, "''")}'`)
 	.join(', ');
 
@@ -203,6 +232,11 @@ function normalizedEnum(value, options) {
 	return typeof value === 'string' && options.includes(value) ? value : null;
 }
 
+function normalizedProductPharmaceuticalForm(value) {
+	if (typeof value !== 'string') return null;
+	return normalizedEnum(productPharmaceuticalFormReplacements.get(value) ?? value, productPharmaceuticalForms);
+}
+
 function normalizedEnumList(value, options) {
 	if (!Array.isArray(value)) return [];
 	const normalized = [];
@@ -226,7 +260,7 @@ function normalizedTextList(value) {
 function normalizeProductForm(value) {
 	if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...emptyProductForm, administrationRoutes: [] };
 	return {
-		pharmaceuticalForm: normalizedEnum(value.pharmaceuticalForm, productPharmaceuticalForms),
+		pharmaceuticalForm: normalizedProductPharmaceuticalForm(value.pharmaceuticalForm),
 		administrationRoutes: normalizedEnumList(value.administrationRoutes, productAdministrationRoutes),
 		presentationDosage: normalizedNullableText(value.presentationDosage)
 	};

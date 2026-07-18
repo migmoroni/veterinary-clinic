@@ -3,7 +3,8 @@
 	"type": [
 		"product",
 		"medication",
-		"antiparasitic"
+		"antiparasitic",
+		null
 	],
 	"origin": "system",
 	"name": "Bravecto",
