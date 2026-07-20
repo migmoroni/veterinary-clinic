@@ -8,7 +8,7 @@
 	import ImageCollectionOrganizer from '$lib/components/shared/ImageCollectionOrganizer.svelte';
 	import Select, { type SelectOption } from '$lib/components/ui/Select.svelte';
 	import type { ImageCollectionItem, ImageCollectionItemInput } from '$lib/domain/image-collection/image-collection.js';
-	import { canDeleteProductCatalogItem, canEditProductCatalogItem, PRODUCT_TYPES, productItemMatchesSearch } from '$lib/domain/product/catalog.js';
+	import { canDeleteProductCatalogItem, canEditProductCatalogItem, PRODUCT_TYPES, productItemMatchesSearch, type ProductCatalogSource } from '$lib/domain/product/catalog.js';
 	import { petSpeciesOptions, type KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import { TREATMENT_KINDS, normalizeTreatmentName, type TreatmentCatalogItem, type TreatmentCatalogItemId, type TreatmentKind } from '$lib/domain/treatment/treatment.js';
@@ -24,6 +24,7 @@
 
 	type TypeFilter = ProductTypeFilterValue;
 	type CatalogItem = TreatmentCatalogItem;
+	type ProductListSource = ProductCatalogSource;
 	type ImageManagerTarget = { kind: TreatmentKind; itemId: TreatmentCatalogItemId | null };
 
 	interface CatalogDrafts {
@@ -51,6 +52,7 @@
 	let catalogItems = $state<CatalogItem[]>([]);
 	let catalogDrafts = $state<CatalogDrafts>(emptyCatalogDrafts());
 	let newCatalogDraft = $state<CatalogDraftInput>(createNewCatalogDraft());
+	let selectedProductSource = $state<ProductListSource>('user');
 	let typeFilter = $state<TypeFilter>('all');
 	let searchQuery = $state('');
 	let loading = $state(true);
@@ -63,6 +65,12 @@
 	let imageDialogOpen = $state(false);
 
 	const treatmentKindOptions = $derived<SelectOption<TreatmentKind>[]>(treatmentKinds.map((kind) => ({ value: kind, label: treatmentKindLabel(kind) })));
+	const sourceCatalogItems = $derived(catalogItems.filter((item) => item.source === selectedProductSource));
+	const currentListTitle = $derived(selectedProductSource === 'system' ? t('product.list.systemTitle') : t('product.list.userTitle'));
+	const productSourceOptions = $derived<{ value: ProductListSource; label: string; count: number }[]>([
+		{ value: 'user', label: t('product.list.userProducts'), count: catalogItems.filter((item) => item.source === 'user').length },
+		{ value: 'system', label: t('product.list.systemProducts'), count: catalogItems.filter((item) => item.source === 'system').length }
+	]);
 	const productTypeFilterOptions = $derived<SelectOption<TypeFilter>[]>([
 		...productTypeHierarchicalFilterOptions(PRODUCT_TYPES, t, t('product.allKinds')).map((option) => ({
 			...option,
@@ -70,7 +78,7 @@
 		}))
 	]);
 	const filteredCatalogItems = $derived(
-		catalogItems.filter((item) => {
+		sourceCatalogItems.filter((item) => {
 			if (!productTypeMatchesFilter(item.type, typeFilter)) return false;
 			return productItemMatchesSearch(item.name, item.aliases, searchQuery, normalizeTreatmentName) || normalizeTreatmentName(item.manufacturerName ?? '').includes(normalizeTreatmentName(searchQuery));
 		})
@@ -90,8 +98,8 @@
 	}
 
 	function filterCount(type: TypeFilter): number {
-		if (type === 'all') return catalogItems.length;
-		return catalogItems.filter((item) => productTypeMatchesFilter(item.type, type)).length;
+		if (type === 'all') return sourceCatalogItems.length;
+		return sourceCatalogItems.filter((item) => productTypeMatchesFilter(item.type, type)).length;
 	}
 
 	function defaultSpeciesDraft(): KnownPetSpecies[] {
@@ -474,6 +482,19 @@
 <section class="flex w-full flex-col gap-5">
 	<header class="border-b border-border pb-5">
 		<h2 class="text-2xl font-semibold sm:text-3xl">{t('settings.products.title')}</h2>
+		<div class="mt-4 inline-flex max-w-full flex-wrap gap-2 rounded-md border border-border bg-card p-1 shadow-sm">
+			{#each productSourceOptions as option}
+				<button
+					type="button"
+					class="inline-flex h-10 min-w-36 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium transition-colors {selectedProductSource === option.value ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}"
+					aria-pressed={selectedProductSource === option.value}
+					onclick={() => (selectedProductSource = option.value)}
+				>
+					<span>{option.label}</span>
+					<span class="rounded bg-background/80 px-2 py-0.5 text-xs text-foreground">{option.count}</span>
+				</button>
+			{/each}
+		</div>
 	</header>
 
 	{#if errorKey}
@@ -498,7 +519,8 @@
 		</label>
 	</div>
 
-	<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
+	{#if selectedProductSource === 'user'}
+		<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
 			<div class="grid gap-4 lg:grid-cols-[9rem_minmax(0,1fr)]">
 				<div class="flex min-w-0 flex-col gap-2">
 					<ProductImage kind={newCatalogDraft.kind} imageBytes={newPrimaryImage?.imageBytes ?? null} alt={t('product.imageAlt')} className="h-32 w-full bg-muted/60" imageClass="h-full w-full object-contain" iconClass="size-9 text-primary" />
@@ -557,12 +579,13 @@
 				</form>
 			</div>
 		</div>
-	</section>
+		</section>
+	{/if}
 
 	<section class="flex flex-col gap-3">
 		<div class="flex items-center justify-between gap-3">
-			<h3 class="text-base font-semibold">{t('product.list.title')}</h3>
-			<span class="text-sm text-muted-foreground">{filteredCatalogItems.length} / {catalogItems.length}</span>
+			<h3 class="text-base font-semibold">{currentListTitle}</h3>
+			<span class="text-sm text-muted-foreground">{filteredCatalogItems.length} / {sourceCatalogItems.length}</span>
 		</div>
 		{#if loading}
 			<div class="h-28 animate-pulse rounded-md bg-muted"></div>
@@ -612,15 +635,17 @@
 								{t('actions.save')}
 							</button>
 						{/if}
-						<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} title={item.hiddenAt ? t('product.list.show') : t('product.list.hide')} onclick={() => void toggleCatalogItemHidden(item)}>
-							{#if item.hiddenAt}
-								<Eye class="size-4" />
-								{t('product.list.show')}
-							{:else}
-								<EyeOff class="size-4" />
-								{t('product.list.hide')}
-							{/if}
-						</button>
+						{#if canEditProductCatalogItem(item)}
+							<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={saving} title={item.hiddenAt ? t('product.list.show') : t('product.list.hide')} onclick={() => void toggleCatalogItemHidden(item)}>
+								{#if item.hiddenAt}
+									<Eye class="size-4" />
+									{t('product.list.show')}
+								{:else}
+									<EyeOff class="size-4" />
+									{t('product.list.hide')}
+								{/if}
+							</button>
+						{/if}
 						{#if canDeleteProductCatalogItem(item)}
 							<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-background px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={saving} onclick={() => void deleteCatalogItem(item)}>
 								<Trash2 class="size-4" />

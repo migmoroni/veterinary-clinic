@@ -6,7 +6,8 @@ import { FIELD_LIMITS, assertTextLimit, nullableMultilineText } from '$lib/domai
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
 import { createUuidV4 } from '$lib/domain/shared/uuid.js';
 import type { TreatmentCatalogItemId } from '$lib/domain/treatment/treatment.js';
-import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
+import { getTreatmentProductCatalogItemById } from '$lib/persistence/repositories/product-catalog.repository.js';
+import { execute, selectMany, selectSystemMany } from '$lib/persistence/sqlite/client.js';
 
 interface TreatmentProtocolRow {
 	id: TreatmentProtocolId;
@@ -25,10 +26,8 @@ interface TreatmentProtocolRow {
 
 interface TreatmentProtocolItemRow {
 	protocol_id: TreatmentProtocolId;
-	id: TreatmentCatalogItemId;
-	name: string;
-	normalized_name: string;
-	species: string;
+	catalog_item_id: TreatmentCatalogItemId;
+	sort_order: number;
 }
 
 interface TreatmentProtocolDoseRow {
@@ -78,15 +77,6 @@ function normalizeValidityValue(value: number, unit: TreatmentProtocolValidityUn
 	return normalized;
 }
 
-function mapItem(row: TreatmentProtocolItemRow): TreatmentProtocolCatalogItem {
-	return {
-		id: row.id,
-		name: row.name,
-		normalizedName: row.normalized_name,
-		species: parseTreatmentSpecies(row.species)
-	};
-}
-
 function mapDose(row: TreatmentProtocolDoseRow): TreatmentProtocolDose {
 	return {
 		id: row.id,
@@ -133,14 +123,13 @@ async function nextDoseSortOrder(protocolId: TreatmentProtocolId): Promise<numbe
 }
 
 async function protocolKind(protocolId: TreatmentProtocolId): Promise<TreatmentProtocolKind> {
-	const rows = await selectMany<{ kind: TreatmentProtocolKind }>('SELECT kind FROM treatment_protocols WHERE id = $1 AND deleted_at IS NULL LIMIT 1', [protocolId]);
-	if (!rows[0]) throw new Error('protocol_not_found');
-	return rows[0].kind;
+	const row = await selectProtocolRowById(protocolId);
+	if (!row) throw new Error('protocol_not_found');
+	return row.kind;
 }
 
 async function assertTreatmentProtocolEditable(protocolId: TreatmentProtocolId): Promise<void> {
-	const rows = await selectMany<{ origin: TreatmentProtocolOrigin }>('SELECT origin FROM treatment_protocols WHERE id = $1 AND deleted_at IS NULL LIMIT 1', [protocolId]);
-	const protocol = rows[0];
+	const protocol = await selectProtocolRowById(protocolId);
 	if (!protocol) throw new Error('protocol_not_found');
 	if (!canEditTreatmentProtocol(protocol)) throw new Error('treatment_protocol_system_item');
 }
@@ -149,30 +138,46 @@ async function loadProtocolDetails(rows: TreatmentProtocolRow[]): Promise<Treatm
 	if (rows.length === 0) return [];
 	const ids = rows.map((row) => row.id);
 	const idPlaceholders = placeholders(ids);
-	const itemRows = await selectMany<TreatmentProtocolItemRow>(
-		`SELECT treatment_protocol_items.protocol_id,
-			product_catalog_items.id,
-			product_catalog_items.name,
-			product_catalog_items.normalized_name,
-			product_catalog_items.species
-		 FROM treatment_protocol_items
-		 JOIN product_catalog_items ON product_catalog_items.id = treatment_protocol_items.catalog_item_id
-		 WHERE treatment_protocol_items.protocol_id IN (${idPlaceholders})
-		 ORDER BY treatment_protocol_items.protocol_id, treatment_protocol_items.sort_order, product_catalog_items.name COLLATE NOCASE`,
-		ids
-	);
-	const doseRows = await selectMany<TreatmentProtocolDoseRow>(
-		`SELECT id, protocol_id, dose, validity_value, validity_unit, sort_order, updated_at
-		 FROM treatment_protocol_doses
-		 WHERE protocol_id IN (${idPlaceholders})
-		 ORDER BY protocol_id, sort_order, id`,
-		ids
-	);
+	const [userItemRows, referenceItemRows, userDoseRows, referenceDoseRows] = await Promise.all([
+		selectMany<TreatmentProtocolItemRow>(
+			`SELECT protocol_id, catalog_item_id, sort_order
+			 FROM treatment_protocol_items
+			 WHERE protocol_id IN (${idPlaceholders})`,
+			ids
+		),
+		selectSystemMany<TreatmentProtocolItemRow>(
+			`SELECT protocol_id, catalog_item_id, sort_order
+			 FROM treatment_protocol_items
+			 WHERE protocol_id IN (${idPlaceholders})`,
+			ids
+		),
+		selectMany<TreatmentProtocolDoseRow>(
+			`SELECT id, protocol_id, dose, validity_value, validity_unit, sort_order, updated_at
+			 FROM treatment_protocol_doses
+			 WHERE protocol_id IN (${idPlaceholders})`,
+			ids
+		),
+		selectSystemMany<TreatmentProtocolDoseRow>(
+			`SELECT id, protocol_id, dose, validity_value, validity_unit, sort_order, updated_at
+			 FROM treatment_protocol_doses
+			 WHERE protocol_id IN (${idPlaceholders})`,
+			ids
+		)
+	]);
+	const itemRows = [...referenceItemRows, ...userItemRows].sort((first, second) => first.protocol_id.localeCompare(second.protocol_id) || first.sort_order - second.sort_order || first.catalog_item_id.localeCompare(second.catalog_item_id));
+	const doseRows = [...referenceDoseRows, ...userDoseRows].sort((first, second) => first.protocol_id.localeCompare(second.protocol_id) || first.sort_order - second.sort_order || first.id - second.id);
 
 	const itemsByProtocol = new Map<TreatmentProtocolId, TreatmentProtocolCatalogItem[]>();
 	for (const row of itemRows) {
+		const catalogItem = await getTreatmentProductCatalogItemById(row.catalog_item_id, true, false);
+		if (!catalogItem) continue;
 		const items = itemsByProtocol.get(row.protocol_id) ?? [];
-		items.push(mapItem(row));
+		items.push({
+			id: catalogItem.id,
+			name: catalogItem.name,
+			normalizedName: catalogItem.normalizedName,
+			species: catalogItem.species
+		});
 		itemsByProtocol.set(row.protocol_id, items);
 	}
 
@@ -186,15 +191,28 @@ async function loadProtocolDetails(rows: TreatmentProtocolRow[]): Promise<Treatm
 	return rows.map((row) => mapProtocol(row, itemsByProtocol.get(row.id) ?? [], dosesByProtocol.get(row.id) ?? []));
 }
 
-async function getProtocolById(id: TreatmentProtocolId): Promise<TreatmentProtocol> {
-	const rows = await selectMany<TreatmentProtocolRow>(
+async function selectProtocolRowById(id: TreatmentProtocolId): Promise<TreatmentProtocolRow | null> {
+	const userRows = await selectMany<TreatmentProtocolRow>(
 		`SELECT id, kind, origin, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
 		 FROM treatment_protocols
 		 WHERE id = $1 AND deleted_at IS NULL
 		 LIMIT 1`,
 		[id]
 	);
-	const protocols = await loadProtocolDetails(rows);
+	if (userRows[0]) return userRows[0];
+	const referenceRows = await selectSystemMany<TreatmentProtocolRow>(
+		`SELECT id, kind, origin, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
+		 FROM treatment_protocols
+		 WHERE id = $1 AND deleted_at IS NULL
+		 LIMIT 1`,
+		[id]
+	);
+	return referenceRows[0] ?? null;
+}
+
+async function getProtocolById(id: TreatmentProtocolId): Promise<TreatmentProtocol> {
+	const row = await selectProtocolRowById(id);
+	const protocols = await loadProtocolDetails(row ? [row] : []);
 	if (!protocols[0]) throw new Error('protocol_not_found');
 	return protocols[0];
 }
@@ -207,13 +225,11 @@ async function resolveProtocolItemIds(kind: TreatmentProtocolKind, catalogItemId
 		stringifyProductType(productTypeForTreatmentKind(kind)),
 		...PRODUCT_TYPES.filter((type) => productTypeMatchesTreatmentKind(type, kind)).map(stringifyProductType)
 	].filter((value, index, values) => values.indexOf(value) === index);
-	const typePlaceholders = allowedTypeValues.map((_, index) => `$${index + 1}`).join(', ');
-	const idPlaceholders = uniqueIds.map((_, index) => `$${allowedTypeValues.length + index + 1}`).join(', ');
-	const allowedRows = await selectMany<{ id: TreatmentCatalogItemId }>(
-		`SELECT id FROM product_catalog_items WHERE type IN (${typePlaceholders}) AND id IN (${idPlaceholders})`,
-		[...allowedTypeValues, ...uniqueIds]
-	);
-	const allowedIds = new Set(allowedRows.map((row) => row.id));
+	const allowedIds = new Set<TreatmentCatalogItemId>();
+	for (const id of uniqueIds) {
+		const item = await getTreatmentProductCatalogItemById(id, true, false);
+		if (item && allowedTypeValues.includes(stringifyProductType(item.type))) allowedIds.add(id);
+	}
 	const filteredIds = uniqueIds.filter((id) => allowedIds.has(id));
 	if (filteredIds.length === 0) throw new Error('protocol_item_required');
 
@@ -232,20 +248,25 @@ async function saveProtocolItems(protocolId: TreatmentProtocolId, catalogItemIds
 }
 
 export async function listTreatmentProtocols(kind?: TreatmentProtocolKind, includeHidden = false): Promise<TreatmentProtocol[]> {
-	const rows = kind
-		? await selectMany<TreatmentProtocolRow>(
-				`SELECT id, kind, origin, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
-				 FROM treatment_protocols
-				 WHERE kind = $1 AND deleted_at IS NULL AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}
-				 ORDER BY sort_order, name COLLATE NOCASE`,
-				[kind]
-			)
-		: await selectMany<TreatmentProtocolRow>(
-				`SELECT id, kind, origin, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
-				 FROM treatment_protocols
-				 WHERE deleted_at IS NULL AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}
-				 ORDER BY kind, sort_order, name COLLATE NOCASE`
-			);
+	const where = kind ? `kind = $1 AND deleted_at IS NULL AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}` : `deleted_at IS NULL AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}`;
+	const values = kind ? [kind] : [];
+	const [userRows, referenceRows] = await Promise.all([
+		selectMany<TreatmentProtocolRow>(
+			`SELECT id, kind, origin, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
+			 FROM treatment_protocols
+			 WHERE ${where}`,
+			values
+		),
+		selectSystemMany<TreatmentProtocolRow>(
+			`SELECT id, kind, origin, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
+			 FROM treatment_protocols
+			 WHERE ${where}`,
+			values
+		)
+	]);
+	const rows = [...referenceRows, ...userRows].sort(
+		(first, second) => first.kind.localeCompare(second.kind) || first.sort_order - second.sort_order || first.name.localeCompare(second.name)
+	);
 
 	return loadProtocolDetails(rows);
 }
@@ -287,6 +308,7 @@ export async function saveTreatmentProtocol(input: TreatmentProtocolInput, id?: 
 }
 
 export async function setTreatmentProtocolHidden(id: TreatmentProtocolId, hidden: boolean): Promise<TreatmentProtocol> {
+	await assertTreatmentProtocolEditable(id);
 	await execute(
 		`UPDATE treatment_protocols
 		 SET hidden_at = ${hidden ? 'COALESCE(hidden_at, CURRENT_TIMESTAMP)' : 'NULL'},

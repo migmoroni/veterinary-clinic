@@ -1,6 +1,6 @@
 <script lang="ts">
 	import CatalogEntityDetail, { type CatalogEntityDetailField, type CatalogEntityDetailFieldTable, type CatalogEntityDetailSection } from '$lib/components/catalog/CatalogEntityDetail.svelte';
-	import { catalogOriginLabel, catalogRegionSummary, catalogSectionTexts } from '$lib/components/catalog/catalog-detail-utils.js';
+	import { catalogRegionSummary, catalogSectionTexts } from '$lib/components/catalog/catalog-detail-utils.js';
 	import { manufacturerClassificationGroups } from '$lib/domain/catalog/classification-labels.js';
 	import { MANUFACTURER_CLASSIFICATION_AXES, manufacturerProfileSectionIds, type ManufacturerCatalogItem, type ManufacturerProfileSectionId } from '$lib/domain/manufacturer/catalog.js';
 	import { productTypeLabel, productTypeSubtypeLabel, productTypeMainLabel } from '$lib/domain/product/type-labels.js';
@@ -30,7 +30,6 @@
 	];
 	const fields = $derived<CatalogEntityDetailField[]>([
 		{ label: t('formulary.kind'), value: t('catalog.manufacturer') },
-		{ label: t('formulary.originFilter'), value: catalogOriginLabel(item.origin) },
 		{ label: t('product.regions'), value: catalogRegionSummary(item.regions) }
 	]);
 	const sectionFields = $derived<Record<string, CatalogEntityDetailField[]>>({

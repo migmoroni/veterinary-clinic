@@ -13,7 +13,6 @@ import {
 	stringifyCatalogRegions,
 	stringifyCatalogType,
 	type CatalogEntityBase,
-	type CatalogEntityOrigin,
 	type CatalogTypeTuple
 } from '$lib/domain/catalog/catalog-entity.js';
 import { emptyCatalogClassification, normalizeCatalogClassification, type CatalogClassification } from '$lib/domain/catalog/classification.js';
@@ -178,12 +177,4 @@ export function parseManufacturerCatalogExtension(value: string | null | undefin
 
 export function stringifyManufacturerCatalogExtension(value: unknown): string {
 	return JSON.stringify(normalizeManufacturerCatalogExtension(value));
-}
-
-export function canEditManufacturerCatalogItem(item: Pick<ManufacturerCatalogItem, 'origin'> | { origin: CatalogEntityOrigin }): boolean {
-	return item.origin === 'user';
-}
-
-export function canDeleteManufacturerCatalogItem(item: Pick<ManufacturerCatalogItem, 'origin'> | { origin: CatalogEntityOrigin }): boolean {
-	return canEditManufacturerCatalogItem(item);
 }

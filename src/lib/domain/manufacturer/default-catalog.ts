@@ -9,7 +9,6 @@ export interface DefaultManufacturerCatalogImage {
 export interface DefaultManufacturerCatalogItem {
 	id: string;
 	type: ManufacturerType;
-	origin: 'system';
 	name: string;
 	aliases: string[];
 	images?: DefaultManufacturerCatalogImage[];

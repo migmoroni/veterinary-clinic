@@ -8,12 +8,7 @@ const CURRENT_SCHEMA_VERSION = 1;
 const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const defaultSourcePath = path.resolve(scriptDir, 'build/veterinary_clinic-version-1.db');
-const defaultOutputPath = path.resolve(scriptDir, 'build/veterinary_clinic-version-1.catalog.db');
-const catalogDefaultsDir = path.resolve(scriptDir, '../src/lib/catalog/defaults');
-const productDefaultsDir = path.join(catalogDefaultsDir, 'products');
-const manufacturerDefaultsDir = path.join(catalogDefaultsDir, 'manufacturers');
-const activeIngredientDefaultsDir = path.join(catalogDefaultsDir, 'active-ingredients');
-const conditionDefaultsDir = path.join(catalogDefaultsDir, 'conditions');
+const defaultOutputPath = path.resolve(scriptDir, 'build/veterinary_clinic-version-1.user.db');
 
 const productTypeValues = {
 	medication: {
@@ -58,19 +53,17 @@ const productPharmaceuticalFormReplacements = new Map([
 const emptyProductCommercialTherapeutic = { compositionOrigin: null, commercialCategory: null, therapeuticAction: null };
 const emptyProductForm = { pharmaceuticalForm: null, administrationRoutes: [], presentationDosage: null };
 const emptyProductRegulatoryIdentifiers = { brazilMapa: null, unitedStatesNada: null, unitedStatesAnada: null, gtinEan: null };
-const manufacturerTypeValue = JSON.stringify(['manufacturer', 'veterinaryIndustrial', 'veterinaryIndustrialLaboratory']);
-const activeIngredientTypeValues = {
-	substance: JSON.stringify(['activeIngredient', 'antiInfective', 'antiparasitic', 'macrocyclicLactones']),
-	combination: JSON.stringify(['activeIngredient', 'antiInfective', 'antibacterial', 'macrolides'])
-};
-const activeIngredientTypeSqlValues = Object.values(activeIngredientTypeValues).map(quoteSqlString).join(', ');
-const conditionTypeValues = {
-	disease: JSON.stringify(['condition', 'disease', 'infectiousAndParasitic', 'viral']),
-	syndrome: JSON.stringify(['condition', 'syndrome', 'acuteEmergency', 'systemicInflammatoryResponse']),
-	disorder: JSON.stringify(['condition', 'disorder', 'behavioralAndCognitive', 'behavioralDisorder']),
-	injury: JSON.stringify(['condition', 'injury', 'mechanicalAndTraumatic', 'softTissueTrauma'])
-};
-const conditionTypeSqlValues = Object.values(conditionTypeValues).map(quoteSqlString).join(', ');
+const retiredUserTables = [
+	'tag_assignments',
+	'tags',
+	'vaccine_dose_options',
+	'vaccine_dose_types',
+	'vaccine_preset_doses',
+	'vaccine_presets',
+	'vaccine_protocols',
+	'vaccine_validity_options',
+	'vaccines'
+];
 const storedCatalogTypeReplacements = new Map([
 	[JSON.stringify(['medication', 'vaccine']), productTypeValues.medication.vaccine],
 	[JSON.stringify(['medication', 'antiparasitic']), productTypeValues.medication.antiparasitic],
@@ -81,20 +74,13 @@ const storedCatalogTypeReplacements = new Map([
 	[JSON.stringify(['disinfectants', null]), productTypeValues.environment.disinfectant],
 	[JSON.stringify(['product', 'nutrition', null]), productTypeValues.nutrition.maintenance],
 	[JSON.stringify(['product', 'hygiene', null]), productTypeValues.hygiene.cosmetic],
-	[JSON.stringify(['product', 'disinfectants', null]), productTypeValues.environment.disinfectant],
-	[JSON.stringify(['manufacturer', null]), manufacturerTypeValue],
-	[JSON.stringify(['activeIngredient', 'substance']), activeIngredientTypeValues.substance],
-	[JSON.stringify(['activeIngredient', 'combination']), activeIngredientTypeValues.combination],
-	[JSON.stringify(['condition', 'disease']), conditionTypeValues.disease],
-	[JSON.stringify(['condition', 'syndrome']), conditionTypeValues.syndrome],
-	[JSON.stringify(['condition', 'disorder']), conditionTypeValues.disorder],
-	[JSON.stringify(['condition', 'injury']), conditionTypeValues.injury]
+	[JSON.stringify(['product', 'disinfectants', null]), productTypeValues.environment.disinfectant]
 ]);
 
 function printUsage() {
 	console.log(`Uso:
   node legacy-to-sqlite/adopt-version-1-db.mjs
-  node legacy-to-sqlite/adopt-version-1-db.mjs --source build/veterinary_clinic-version-1.db --output build/veterinary_clinic-version-1.catalog.db
+  node legacy-to-sqlite/adopt-version-1-db.mjs --source build/veterinary_clinic-version-1.db --output build/veterinary_clinic-version-1.user.db
 
 Opções:
   --source, -s   Banco v1 gerado pelo script anterior
@@ -291,38 +277,6 @@ function isUuidV4(value) {
 	return UUID_V4_PATTERN.test(String(value ?? ''));
 }
 
-function readJson(file) {
-	return JSON.parse(fs.readFileSync(file, 'utf8'));
-}
-
-function readJsonFiles(directory) {
-	if (!fs.existsSync(directory)) return [];
-	return fs
-		.readdirSync(directory, { withFileTypes: true })
-		.flatMap((entry) => {
-			const fullPath = path.join(directory, entry.name);
-			if (entry.isDirectory()) return readJsonFiles(fullPath);
-			return entry.isFile() && entry.name.endsWith('.json') ? [fullPath] : [];
-		})
-		.sort((left, right) => left.localeCompare(right));
-}
-
-function readDefaultManufacturers() {
-	return readJsonFiles(manufacturerDefaultsDir).map(readJson);
-}
-
-function readDefaultActiveIngredients() {
-	return readJsonFiles(activeIngredientDefaultsDir).map(readJson);
-}
-
-function readDefaultConditions() {
-	return readJsonFiles(conditionDefaultsDir).map(readJson);
-}
-
-function readDefaultProducts() {
-	return readJsonFiles(productDefaultsDir).map(readJson);
-}
-
 function tableExists(database, table) {
 	return Boolean(database.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1").get(table));
 }
@@ -335,63 +289,23 @@ function hasColumn(database, table, column) {
 	return tableExists(database, table) && tableColumns(database, table).includes(column);
 }
 
-function createCatalogTables(database) {
+function createUserCatalogTables(database) {
 	database.exec(`
-		CREATE TABLE IF NOT EXISTS manufacturer_catalog_items (
+		CREATE TABLE IF NOT EXISTS user_product_catalog_items (
 			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
-			type TEXT NOT NULL CHECK(type = ${quoteSqlString(manufacturerTypeValue)}),
+			type TEXT NOT NULL CHECK(type IN (${productTypeSqlValues})),
 			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
 			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) BETWEEN 1 AND 120),
+			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(length(trim(species)) BETWEEN 1 AND 256),
 			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),
-			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
+			manufacturer_id TEXT,
+			manufacturer_name TEXT CHECK(manufacturer_name IS NULL OR length(manufacturer_name) <= 120),
 			regions TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(regions)) BETWEEN 1 AND 1024),
 			extension TEXT NOT NULL DEFAULT '{}' CHECK(length(trim(extension)) BETWEEN 1 AND 64000),
 			hidden_at TEXT,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
 			UNIQUE(normalized_name)
-		);
-
-		CREATE TABLE IF NOT EXISTS active_ingredient_catalog_items (
-			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
-			type TEXT NOT NULL CHECK(type IN (${activeIngredientTypeSqlValues})),
-			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
-			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) BETWEEN 1 AND 120),
-			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),
-			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
-			regions TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(regions)) BETWEEN 1 AND 1024),
-			extension TEXT NOT NULL DEFAULT '{}' CHECK(length(trim(extension)) BETWEEN 1 AND 64000),
-			hidden_at TEXT,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
-			UNIQUE(normalized_name)
-		);
-
-		CREATE TABLE IF NOT EXISTS condition_catalog_items (
-			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
-			type TEXT NOT NULL CHECK(type IN (${conditionTypeSqlValues})),
-			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
-			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) BETWEEN 1 AND 120),
-			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),
-			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
-			regions TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(regions)) BETWEEN 1 AND 1024),
-			extension TEXT NOT NULL DEFAULT '{}' CHECK(length(trim(extension)) BETWEEN 1 AND 64000),
-			hidden_at TEXT,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
-			UNIQUE(normalized_name)
-		);
-
-		CREATE TABLE IF NOT EXISTS product_active_ingredients (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			product_id TEXT NOT NULL,
-			active_ingredient_id TEXT NOT NULL,
-			sort_order INTEGER NOT NULL DEFAULT 0,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
-			FOREIGN KEY (product_id) REFERENCES product_catalog_items(id) ON DELETE CASCADE,
-			FOREIGN KEY (active_ingredient_id) REFERENCES active_ingredient_catalog_items(id) ON DELETE CASCADE,
-			UNIQUE(product_id, active_ingredient_id)
 		);
 	`);
 }
@@ -401,257 +315,27 @@ function normalizeStoredCatalogType(type, fallbackType) {
 	return storedCatalogTypeReplacements.get(type) ?? type;
 }
 
-function stringifyCatalogTypeFromJson(type, source) {
-	if (!Array.isArray(type) || ![3, 4].includes(type.length) || typeof type[0] !== 'string' || type.slice(1).some((item) => item !== null && typeof item !== 'string')) {
-		throw new Error(`Tipo de catálogo inválido em ${source}`);
-	}
-	return JSON.stringify(type);
-}
-
-function rebuildManufacturerCatalog(database) {
-	const rows = tableExists(database, 'manufacturer_catalog_items') ? database.prepare('SELECT * FROM manufacturer_catalog_items ORDER BY name COLLATE NOCASE').all() : [];
-	database.exec(`
-		DROP TABLE IF EXISTS manufacturer_catalog_items_next;
-		CREATE TABLE manufacturer_catalog_items_next (
-			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
-			type TEXT NOT NULL CHECK(type = ${quoteSqlString(manufacturerTypeValue)}),
-			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
-			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) BETWEEN 1 AND 120),
-			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),
-			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
-			regions TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(regions)) BETWEEN 1 AND 1024),
-			extension TEXT NOT NULL DEFAULT '{}' CHECK(length(trim(extension)) BETWEEN 1 AND 64000),
-			hidden_at TEXT,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
-			UNIQUE(normalized_name)
-		);
-	`);
-	const insert = database.prepare(`
-		INSERT OR IGNORE INTO manufacturer_catalog_items_next (id, type, name, normalized_name, aliases, origin, regions, extension, hidden_at, created_at, updated_at)
-		VALUES (@id, @type, @name, @normalized_name, @aliases, @origin, @regions, @extension, @hidden_at, @created_at, @updated_at)
-	`);
-	for (const row of rows) {
-		const name = String(row.name ?? '').trim();
-		const normalizedName = String(row.normalized_name ?? normalizeName(name)).trim();
-		if (!name || !normalizedName) continue;
-		insert.run({
-			id: isUuidV4(row.id) ? row.id : crypto.randomUUID(),
-			type: normalizeStoredCatalogType(row.type, manufacturerTypeValue),
-			name,
-			normalized_name: normalizedName,
-			aliases: row.aliases || '[]',
-			origin: row.origin === 'system' ? 'system' : 'user',
-			regions: row.regions || '[]',
-			extension: normalizeProductExtensionText(row.extension),
-			hidden_at: row.hidden_at ?? null,
-			created_at: row.created_at ?? new Date().toISOString(),
-			updated_at: row.updated_at ?? null
-		});
-	}
-	database.exec(`
-		DROP TABLE IF EXISTS manufacturer_catalog_items;
-		ALTER TABLE manufacturer_catalog_items_next RENAME TO manufacturer_catalog_items;
-	`);
-}
-
-function rebuildActiveIngredientCatalog(database) {
-	const rows = tableExists(database, 'active_ingredient_catalog_items') ? database.prepare('SELECT * FROM active_ingredient_catalog_items ORDER BY name COLLATE NOCASE').all() : [];
-	database.exec(`
-		DROP TABLE IF EXISTS active_ingredient_catalog_items_next;
-		CREATE TABLE active_ingredient_catalog_items_next (
-			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
-			type TEXT NOT NULL CHECK(type IN (${activeIngredientTypeSqlValues})),
-			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
-			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) BETWEEN 1 AND 120),
-			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),
-			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
-			regions TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(regions)) BETWEEN 1 AND 1024),
-			extension TEXT NOT NULL DEFAULT '{}' CHECK(length(trim(extension)) BETWEEN 1 AND 64000),
-			hidden_at TEXT,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
-			UNIQUE(normalized_name)
-		);
-	`);
-	const insert = database.prepare(`
-		INSERT OR IGNORE INTO active_ingredient_catalog_items_next (id, type, name, normalized_name, aliases, origin, regions, extension, hidden_at, created_at, updated_at)
-		VALUES (@id, @type, @name, @normalized_name, @aliases, @origin, @regions, @extension, @hidden_at, @created_at, @updated_at)
-	`);
-	for (const row of rows) {
-		const name = String(row.name ?? '').trim();
-		const normalizedName = String(row.normalized_name ?? normalizeName(name)).trim();
-		if (!name || !normalizedName) continue;
-		insert.run({
-			id: isUuidV4(row.id) ? row.id : crypto.randomUUID(),
-			type: normalizeStoredCatalogType(row.type, activeIngredientTypeValues.substance),
-			name,
-			normalized_name: normalizedName,
-			aliases: row.aliases || '[]',
-			origin: row.origin === 'system' ? 'system' : 'user',
-			regions: row.regions || '[]',
-			extension: row.extension || '{}',
-			hidden_at: row.hidden_at ?? null,
-			created_at: row.created_at ?? new Date().toISOString(),
-			updated_at: row.updated_at ?? null
-		});
-	}
-	database.exec(`
-		DROP TABLE IF EXISTS active_ingredient_catalog_items;
-		ALTER TABLE active_ingredient_catalog_items_next RENAME TO active_ingredient_catalog_items;
-	`);
-}
-
-function rebuildConditionCatalog(database) {
-	const rows = tableExists(database, 'condition_catalog_items') ? database.prepare('SELECT * FROM condition_catalog_items ORDER BY name COLLATE NOCASE').all() : [];
-	database.exec(`
-		DROP TABLE IF EXISTS condition_catalog_items_next;
-		CREATE TABLE condition_catalog_items_next (
-			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
-			type TEXT NOT NULL CHECK(type IN (${conditionTypeSqlValues})),
-			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
-			normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) BETWEEN 1 AND 120),
-			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),
-			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
-			regions TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(regions)) BETWEEN 1 AND 1024),
-			extension TEXT NOT NULL DEFAULT '{}' CHECK(length(trim(extension)) BETWEEN 1 AND 64000),
-			hidden_at TEXT,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
-			UNIQUE(normalized_name)
-		);
-	`);
-	const insert = database.prepare(`
-		INSERT OR IGNORE INTO condition_catalog_items_next (id, type, name, normalized_name, aliases, origin, regions, extension, hidden_at, created_at, updated_at)
-		VALUES (@id, @type, @name, @normalized_name, @aliases, @origin, @regions, @extension, @hidden_at, @created_at, @updated_at)
-	`);
-	for (const row of rows) {
-		const name = String(row.name ?? '').trim();
-		const normalizedName = String(row.normalized_name ?? normalizeName(name)).trim();
-		if (!name || !normalizedName) continue;
-		insert.run({
-			id: isUuidV4(row.id) ? row.id : crypto.randomUUID(),
-			type: normalizeStoredCatalogType(row.type, conditionTypeValues.disease),
-			name,
-			normalized_name: normalizedName,
-			aliases: row.aliases || '[]',
-			origin: row.origin === 'system' ? 'system' : 'user',
-			regions: row.regions || '[]',
-			extension: row.extension || '{}',
-			hidden_at: row.hidden_at ?? null,
-			created_at: row.created_at ?? new Date().toISOString(),
-			updated_at: row.updated_at ?? null
-		});
-	}
-	database.exec(`
-		DROP TABLE IF EXISTS condition_catalog_items;
-		ALTER TABLE condition_catalog_items_next RENAME TO condition_catalog_items;
-	`);
-}
-
-function syncDefaultManufacturers(database) {
-	const insert = database.prepare(`
-		INSERT INTO manufacturer_catalog_items (id, type, name, normalized_name, aliases, origin, regions, extension, updated_at)
-		VALUES (@id, @type, @name, @normalized_name, @aliases, 'system', @regions, @extension, CURRENT_TIMESTAMP)
-		ON CONFLICT(id) DO UPDATE SET
-			type = excluded.type,
-			name = excluded.name,
-			normalized_name = excluded.normalized_name,
-			aliases = excluded.aliases,
-			regions = excluded.regions,
-			extension = excluded.extension,
-			updated_at = CURRENT_TIMESTAMP
-		WHERE manufacturer_catalog_items.origin = 'system'
-	`);
-	for (const item of readDefaultManufacturers()) {
-		insert.run({
-			id: item.id,
-			type: stringifyCatalogTypeFromJson(item.type, item.name),
-			name: item.name,
-			normalized_name: normalizeName(item.name),
-			aliases: JSON.stringify(Array.isArray(item.aliases) ? item.aliases : []),
-			regions: JSON.stringify(Array.isArray(item.regions) ? item.regions : []),
-			extension: JSON.stringify(item.extension ?? {})
-		});
-	}
-}
-
-function syncDefaultActiveIngredients(database) {
-	const insert = database.prepare(`
-		INSERT INTO active_ingredient_catalog_items (id, type, name, normalized_name, aliases, origin, regions, extension, updated_at)
-		VALUES (@id, @type, @name, @normalized_name, @aliases, 'system', @regions, @extension, CURRENT_TIMESTAMP)
-		ON CONFLICT(id) DO UPDATE SET
-			type = excluded.type,
-			name = excluded.name,
-			normalized_name = excluded.normalized_name,
-			aliases = excluded.aliases,
-			regions = excluded.regions,
-			extension = excluded.extension,
-			updated_at = CURRENT_TIMESTAMP
-		WHERE active_ingredient_catalog_items.origin = 'system'
-	`);
-	for (const item of readDefaultActiveIngredients()) {
-		insert.run({
-			id: item.id,
-			type: stringifyCatalogTypeFromJson(item.type, item.name),
-			name: item.name,
-			normalized_name: normalizeName(item.name),
-			aliases: JSON.stringify(Array.isArray(item.aliases) ? item.aliases : []),
-			regions: JSON.stringify(Array.isArray(item.regions) ? item.regions : []),
-			extension: JSON.stringify(item.extension ?? {})
-		});
-	}
-}
-
-function syncDefaultConditions(database) {
-	const insert = database.prepare(`
-		INSERT INTO condition_catalog_items (id, type, name, normalized_name, aliases, origin, regions, extension, updated_at)
-		VALUES (@id, @type, @name, @normalized_name, @aliases, 'system', @regions, @extension, CURRENT_TIMESTAMP)
-		ON CONFLICT(id) DO UPDATE SET
-			type = excluded.type,
-			name = excluded.name,
-			normalized_name = excluded.normalized_name,
-			aliases = excluded.aliases,
-			regions = excluded.regions,
-			extension = excluded.extension,
-			updated_at = CURRENT_TIMESTAMP
-		WHERE condition_catalog_items.origin = 'system'
-	`);
-	for (const item of readDefaultConditions()) {
-		insert.run({
-			id: item.id,
-			type: stringifyCatalogTypeFromJson(item.type, item.name),
-			name: item.name,
-			normalized_name: normalizeName(item.name),
-			aliases: JSON.stringify(Array.isArray(item.aliases) ? item.aliases : []),
-			regions: JSON.stringify(Array.isArray(item.regions) ? item.regions : []),
-			extension: JSON.stringify(item.extension ?? {})
-		});
-	}
-}
-
-function ensureUserManufacturer(database, name) {
-	const normalizedName = normalizeName(name);
-	if (!normalizedName) return null;
-	const existing = database.prepare('SELECT id FROM manufacturer_catalog_items WHERE normalized_name = ? LIMIT 1').get(normalizedName);
-	if (existing?.id) return existing.id;
-	const id = crypto.randomUUID();
-	database.prepare(`
-		INSERT INTO manufacturer_catalog_items (id, type, name, normalized_name, aliases, origin, regions, extension, updated_at)
-		VALUES (?, ?, ?, ?, '[]', 'user', '[]', '{}', CURRENT_TIMESTAMP)
-	`).run(id, manufacturerTypeValue, name.trim(), normalizedName);
-	return id;
+function readManufacturerNamesById(database) {
+	if (!tableExists(database, 'manufacturer_catalog_items')) return new Map();
+	return new Map(
+		database
+			.prepare('SELECT id, name FROM manufacturer_catalog_items')
+			.all()
+			.map((row) => [row.id, normalizedNullableText(row.name)])
+			.filter(([, name]) => Boolean(name))
+	);
 }
 
 function rebuildProductCatalog(database) {
-	const defaultProductsById = new Map(readDefaultProducts().map((item) => [item.id, item]));
-	const rows = tableExists(database, 'product_catalog_items')
-		? database.prepare('SELECT * FROM product_catalog_items ORDER BY name COLLATE NOCASE').all()
-		: [];
+	const manufacturerNamesById = readManufacturerNamesById(database);
+	const rows = [
+		...(tableExists(database, 'user_product_catalog_items') ? database.prepare('SELECT * FROM user_product_catalog_items ORDER BY name COLLATE NOCASE').all() : []),
+		...(tableExists(database, 'product_catalog_items') ? database.prepare('SELECT * FROM product_catalog_items ORDER BY name COLLATE NOCASE').all() : [])
+	];
 
 	database.exec(`
-		DROP TABLE IF EXISTS product_catalog_items_next;
-		CREATE TABLE product_catalog_items_next (
+		DROP TABLE IF EXISTS user_product_catalog_items_next;
+		CREATE TABLE user_product_catalog_items_next (
 			id TEXT PRIMARY KEY CHECK(length(trim(id)) = 36 AND substr(lower(trim(id)), 15, 1) = '4' AND substr(lower(trim(id)), 20, 1) IN ('8', '9', 'a', 'b')),
 			type TEXT NOT NULL CHECK(type IN (${productTypeSqlValues})),
 			name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 120),
@@ -659,27 +343,31 @@ function rebuildProductCatalog(database) {
 			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(length(trim(species)) BETWEEN 1 AND 256),
 			aliases TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(aliases)) BETWEEN 1 AND 1000),
 			manufacturer_id TEXT,
-			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin IN ('system', 'user')),
+			manufacturer_name TEXT CHECK(manufacturer_name IS NULL OR length(manufacturer_name) <= 120),
 			regions TEXT NOT NULL DEFAULT '[]' CHECK(length(trim(regions)) BETWEEN 1 AND 1024),
 			extension TEXT NOT NULL DEFAULT '{}' CHECK(length(trim(extension)) BETWEEN 1 AND 64000),
 			hidden_at TEXT,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
-			FOREIGN KEY (manufacturer_id) REFERENCES manufacturer_catalog_items(id) ON DELETE SET NULL,
 			UNIQUE(normalized_name)
 		);
 	`);
 
 	const insert = database.prepare(`
-		INSERT INTO product_catalog_items_next (
-			id, type, name, normalized_name, species, aliases, manufacturer_id, origin, regions, extension, hidden_at, created_at, updated_at
+		INSERT INTO user_product_catalog_items_next (
+			id, type, name, normalized_name, species, aliases, manufacturer_id, manufacturer_name, regions, extension, hidden_at, created_at, updated_at
 		)
-		VALUES (@id, @type, @name, @normalized_name, @species, @aliases, @manufacturer_id, @origin, @regions, @extension, @hidden_at, @created_at, @updated_at)
+		VALUES (@id, @type, @name, @normalized_name, @species, @aliases, @manufacturer_id, @manufacturer_name, @regions, @extension, @hidden_at, @created_at, @updated_at)
 	`);
 
 	for (const row of rows) {
-		const fallbackDefault = defaultProductsById.get(row.id);
-		const manufacturerId = row.manufacturer_id ?? fallbackDefault?.manufacturerId ?? ensureUserManufacturer(database, row.manufacturer ?? '');
+		if (row.origin === 'system') continue;
+		const manufacturerId = isUuidV4(row.manufacturer_id) ? row.manufacturer_id : null;
+		const manufacturerName =
+			normalizedNullableText(row.manufacturer_name) ??
+			normalizedNullableText(row.manufacturer) ??
+			(manufacturerId ? manufacturerNamesById.get(manufacturerId) : null) ??
+			null;
 		insert.run({
 			id: isUuidV4(row.id) ? row.id : crypto.randomUUID(),
 			type: normalizeStoredCatalogType(row.type, productTypeValues.medication.vaccine),
@@ -688,9 +376,9 @@ function rebuildProductCatalog(database) {
 			species: row.species || '["canine","feline"]',
 			aliases: row.aliases || '[]',
 			manufacturer_id: manufacturerId,
-			origin: row.origin === 'system' ? 'system' : 'user',
+			manufacturer_name: manufacturerName,
 			regions: row.regions || '[]',
-			extension: row.extension || '{}',
+			extension: normalizeProductExtensionText(row.extension),
 			hidden_at: row.hidden_at ?? null,
 			created_at: row.created_at ?? new Date().toISOString(),
 			updated_at: row.updated_at ?? null
@@ -698,70 +386,113 @@ function rebuildProductCatalog(database) {
 	}
 
 	database.exec(`
-		DROP TABLE product_catalog_items;
-		ALTER TABLE product_catalog_items_next RENAME TO product_catalog_items;
+		DROP TABLE IF EXISTS user_product_catalog_items;
+		ALTER TABLE user_product_catalog_items_next RENAME TO user_product_catalog_items;
 	`);
 }
 
-function syncDefaultProducts(database) {
+function rebuildTreatmentProtocolItems(database) {
+	if (!tableExists(database, 'treatment_protocol_items')) return;
+	const rows = database.prepare('SELECT * FROM treatment_protocol_items ORDER BY protocol_id, sort_order, id').all();
+	database.exec(`
+		DROP TABLE IF EXISTS treatment_protocol_items_next;
+		CREATE TABLE treatment_protocol_items_next (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			protocol_id TEXT NOT NULL,
+			catalog_item_id TEXT NOT NULL,
+			sort_order INTEGER NOT NULL DEFAULT 0,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT,
+			FOREIGN KEY (protocol_id) REFERENCES treatment_protocols(id) ON DELETE CASCADE,
+			UNIQUE(protocol_id, catalog_item_id)
+		);
+	`);
+	const protocolExists = database.prepare('SELECT id FROM treatment_protocols WHERE id = ? LIMIT 1');
 	const insert = database.prepare(`
-		INSERT INTO product_catalog_items (
-			id, type, name, normalized_name, species, aliases, manufacturer_id, origin, regions, extension, updated_at
-		)
-		VALUES (@id, @type, @name, @normalized_name, @species, @aliases, @manufacturer_id, 'system', @regions, @extension, CURRENT_TIMESTAMP)
-		ON CONFLICT(id) DO UPDATE SET
-			type = excluded.type,
-			name = excluded.name,
-			normalized_name = excluded.normalized_name,
-			species = excluded.species,
-			aliases = excluded.aliases,
-			manufacturer_id = excluded.manufacturer_id,
-			regions = excluded.regions,
-			extension = excluded.extension,
-			updated_at = CURRENT_TIMESTAMP
-		WHERE product_catalog_items.origin = 'system'
+		INSERT OR IGNORE INTO treatment_protocol_items_next (id, protocol_id, catalog_item_id, sort_order, created_at, updated_at)
+		VALUES (@id, @protocol_id, @catalog_item_id, @sort_order, @created_at, @updated_at)
 	`);
-	const clearRelations = database.prepare('DELETE FROM product_active_ingredients WHERE product_id = ?');
-	const insertRelation = database.prepare(`
-		INSERT INTO product_active_ingredients (product_id, active_ingredient_id, sort_order, updated_at)
-		VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-		ON CONFLICT(product_id, active_ingredient_id) DO UPDATE SET sort_order = excluded.sort_order, updated_at = CURRENT_TIMESTAMP
-	`);
-
-	for (const item of readDefaultProducts()) {
+	for (const row of rows) {
+		if (!protocolExists.get(row.protocol_id)) continue;
 		insert.run({
-			id: item.id,
-			type: stringifyCatalogTypeFromJson(item.type, item.name),
-			name: item.name,
-			normalized_name: normalizeName(item.name),
-			species: JSON.stringify(Array.isArray(item.species) ? item.species : ['canine', 'feline']),
-			aliases: JSON.stringify(Array.isArray(item.aliases) ? item.aliases : []),
-			manufacturer_id: item.manufacturerId ?? null,
-			regions: JSON.stringify(Array.isArray(item.regions) ? item.regions : []),
-			extension: JSON.stringify(normalizeProductExtension(item.extension ?? {}))
+			id: row.id,
+			protocol_id: row.protocol_id,
+			catalog_item_id: row.catalog_item_id,
+			sort_order: Number.isFinite(Number(row.sort_order)) ? Number(row.sort_order) : 0,
+			created_at: row.created_at ?? new Date().toISOString(),
+			updated_at: row.updated_at ?? null
 		});
+	}
+	database.exec(`
+		DROP TABLE IF EXISTS treatment_protocol_items;
+		ALTER TABLE treatment_protocol_items_next RENAME TO treatment_protocol_items;
+	`);
+}
 
-		clearRelations.run(item.id);
-		for (const [sortOrder, activeIngredientId] of (item.activeIngredientIds ?? []).entries()) {
-			insertRelation.run(item.id, activeIngredientId, sortOrder);
+function deleteImageCollectionsForEntitySubquery(database, entityType, entityIdSubquery) {
+	if (!tableExists(database, 'image_collections') || !tableExists(database, 'image_collection_items')) return;
+	database.exec(`
+		DELETE FROM image_collection_items
+		WHERE collection_id IN (
+			SELECT id
+			FROM image_collections
+			WHERE entity_type = ${quoteSqlString(entityType)}
+				AND entity_id IN (${entityIdSubquery})
+		);
+		DELETE FROM image_collections
+		WHERE entity_type = ${quoteSqlString(entityType)}
+			AND entity_id IN (${entityIdSubquery});
+	`);
+}
+
+function removeSystemReferenceData(database) {
+	if (tableExists(database, 'breed_reference_items')) {
+		deleteImageCollectionsForEntitySubquery(database, 'breed_reference_item', 'SELECT CAST(id AS TEXT) FROM breed_reference_items');
+	}
+	if (tableExists(database, 'product_catalog_items')) {
+		if (hasColumn(database, 'product_catalog_items', 'origin')) {
+			deleteImageCollectionsForEntitySubquery(database, 'product_catalog_item', "SELECT id FROM product_catalog_items WHERE origin = 'system'");
 		}
+	}
+	if (tableExists(database, 'manufacturer_catalog_items')) {
+		deleteImageCollectionsForEntitySubquery(database, 'manufacturer_catalog_item', 'SELECT id FROM manufacturer_catalog_items');
+	}
+	if (tableExists(database, 'active_ingredient_catalog_items')) {
+		deleteImageCollectionsForEntitySubquery(database, 'active_ingredient_catalog_item', 'SELECT id FROM active_ingredient_catalog_items');
+	}
+	if (tableExists(database, 'condition_catalog_items')) {
+		deleteImageCollectionsForEntitySubquery(database, 'condition_catalog_item', 'SELECT id FROM condition_catalog_items');
+	}
+
+	if (tableExists(database, 'treatment_protocols')) {
+		database.exec(`
+			DELETE FROM treatment_protocol_doses WHERE protocol_id IN (SELECT id FROM treatment_protocols WHERE origin = 'system');
+			DELETE FROM treatment_protocol_items WHERE protocol_id IN (SELECT id FROM treatment_protocols WHERE origin = 'system');
+			DELETE FROM treatment_protocols WHERE origin = 'system';
+		`);
+		rebuildTreatmentProtocolItems(database);
+		if (tableExists(database, 'treatment_protocol_doses')) {
+			database.exec('DELETE FROM treatment_protocol_doses WHERE protocol_id NOT IN (SELECT id FROM treatment_protocols)');
+		}
+	}
+
+	if (tableExists(database, 'product_active_ingredients')) database.exec('DROP TABLE IF EXISTS product_active_ingredients');
+	if (tableExists(database, 'product_catalog_items')) database.exec('DROP TABLE IF EXISTS product_catalog_items');
+	if (tableExists(database, 'breed_reference_items')) database.exec('DROP TABLE IF EXISTS breed_reference_items');
+	if (tableExists(database, 'condition_catalog_items')) database.exec('DROP TABLE IF EXISTS condition_catalog_items');
+	if (tableExists(database, 'active_ingredient_catalog_items')) database.exec('DROP TABLE IF EXISTS active_ingredient_catalog_items');
+	if (tableExists(database, 'manufacturer_catalog_items')) database.exec('DROP TABLE IF EXISTS manufacturer_catalog_items');
+	for (const table of retiredUserTables) {
+		database.exec(`DROP TABLE IF EXISTS ${quoteIdentifier(table)}`);
 	}
 }
 
 function createIndexes(database) {
 	database.exec(`
-		CREATE INDEX IF NOT EXISTS idx_manufacturer_catalog_items_type_name ON manufacturer_catalog_items(type, name COLLATE NOCASE);
-		CREATE INDEX IF NOT EXISTS idx_manufacturer_catalog_items_hidden_at ON manufacturer_catalog_items(hidden_at);
-		CREATE INDEX IF NOT EXISTS idx_active_ingredient_catalog_items_type_name ON active_ingredient_catalog_items(type, name COLLATE NOCASE);
-		CREATE INDEX IF NOT EXISTS idx_active_ingredient_catalog_items_hidden_at ON active_ingredient_catalog_items(hidden_at);
-		CREATE INDEX IF NOT EXISTS idx_condition_catalog_items_type_name ON condition_catalog_items(type, name COLLATE NOCASE);
-		CREATE INDEX IF NOT EXISTS idx_condition_catalog_items_hidden_at ON condition_catalog_items(hidden_at);
-		CREATE INDEX IF NOT EXISTS idx_product_catalog_items_type_name ON product_catalog_items(type, name COLLATE NOCASE);
-		CREATE INDEX IF NOT EXISTS idx_product_catalog_items_type_normalized_name ON product_catalog_items(type, normalized_name);
-		CREATE INDEX IF NOT EXISTS idx_product_catalog_items_manufacturer_id ON product_catalog_items(manufacturer_id);
-		CREATE INDEX IF NOT EXISTS idx_product_catalog_items_hidden_at ON product_catalog_items(hidden_at);
-		CREATE INDEX IF NOT EXISTS idx_product_active_ingredients_product_id ON product_active_ingredients(product_id, sort_order, id);
-		CREATE INDEX IF NOT EXISTS idx_product_active_ingredients_active_ingredient_id ON product_active_ingredients(active_ingredient_id);
+		CREATE INDEX IF NOT EXISTS idx_user_product_catalog_items_type_name ON user_product_catalog_items(type, name COLLATE NOCASE);
+		CREATE INDEX IF NOT EXISTS idx_user_product_catalog_items_type_normalized_name ON user_product_catalog_items(type, normalized_name);
+		CREATE INDEX IF NOT EXISTS idx_user_product_catalog_items_manufacturer_id ON user_product_catalog_items(manufacturer_id);
+		CREATE INDEX IF NOT EXISTS idx_user_product_catalog_items_hidden_at ON user_product_catalog_items(hidden_at);
 	`);
 }
 
@@ -775,15 +506,9 @@ function adoptDatabase(sourcePath, outputPath) {
 
 	try {
 		database.transaction(() => {
-			createCatalogTables(database);
-			rebuildManufacturerCatalog(database);
-			rebuildActiveIngredientCatalog(database);
-			rebuildConditionCatalog(database);
-			syncDefaultManufacturers(database);
-			syncDefaultActiveIngredients(database);
-			syncDefaultConditions(database);
+			createUserCatalogTables(database);
 			rebuildProductCatalog(database);
-			syncDefaultProducts(database);
+			removeSystemReferenceData(database);
 			createIndexes(database);
 			database.pragma(`user_version = ${CURRENT_SCHEMA_VERSION}`);
 		})();
@@ -806,7 +531,7 @@ try {
 	const sourcePath = resolveInputPath(options.source ?? defaultSourcePath);
 	const outputPath = resolveInputPath(options.output ?? defaultOutputPath);
 	adoptDatabase(sourcePath, outputPath);
-	console.log(`Banco v1 atualizado para catálogo amplo: ${path.relative(scriptDir, outputPath)}`);
+	console.log(`Banco v1 do usuário atualizado sem dados do sistema: ${path.relative(scriptDir, outputPath)}`);
 } catch (error) {
 	console.error(error instanceof Error ? error.message : error);
 	process.exit(1);

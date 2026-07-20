@@ -1,6 +1,6 @@
 <script lang="ts">
 	import CatalogEntityDetail, { type CatalogEntityDetailField, type CatalogEntityDetailSection } from '$lib/components/catalog/CatalogEntityDetail.svelte';
-	import { catalogOriginLabel, catalogRegionSummary, catalogSectionTexts } from '$lib/components/catalog/catalog-detail-utils.js';
+	import { catalogRegionSummary, catalogSectionTexts } from '$lib/components/catalog/catalog-detail-utils.js';
 	import { productClassificationGroups } from '$lib/domain/product/classification.js';
 	import { productLeafletSectionIds, productTreatmentKind, productTypeMain, type ProductCatalogItem, type ProductLeafletSectionId, type ProductSpecies } from '$lib/domain/product/catalog.js';
 	import { productTypeLabel } from '$lib/domain/product/type-labels.js';
@@ -37,7 +37,6 @@
 	];
 	const fields = $derived<CatalogEntityDetailField[]>([
 		{ label: t('formulary.kind'), value: productTypeLabel(item.type, t) },
-		{ label: t('formulary.originFilter'), value: catalogOriginLabel(item.origin) },
 		{ label: t('product.species'), value: speciesSummary(item.species) },
 		{
 			label: t('catalog.activeIngredients'),

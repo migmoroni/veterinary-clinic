@@ -69,7 +69,7 @@
   },
   "plugins": {
     "sql": {
-      "preload": ["sqlite:veterinary_clinic.db"]
+      "preload": ["sqlite:veterinary_clinic_user.db", "sqlite:veterinary_clinic_system.db"]
     }
   }
 }

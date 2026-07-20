@@ -1,7 +1,6 @@
 import type { ImageCollectionItem } from '$lib/domain/image-collection/image-collection.js';
 import { assertTextLimit } from '$lib/domain/shared/field-limits.js';
 
-export type CatalogEntityOrigin = 'system' | 'user';
 export type CatalogTypeBranch = Record<string, readonly string[] | Record<string, readonly string[]>>;
 export type CatalogTypeTree = Record<string, CatalogTypeBranch>;
 export type CatalogTypeTuple<TTree extends CatalogTypeTree = CatalogTypeTree> = {
@@ -30,7 +29,6 @@ export interface CatalogEntityBase<TType extends readonly [string, ...(string | 
 	aliases: string[];
 	images: ImageCollectionItem[];
 	primaryImage: ImageCollectionItem | null;
-	origin: CatalogEntityOrigin;
 	regions: string[];
 	extension: TExtension;
 	hiddenAt: string | null;

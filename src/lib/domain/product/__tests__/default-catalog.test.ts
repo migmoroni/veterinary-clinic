@@ -55,10 +55,6 @@ describe('default product catalog', () => {
 		expect(new Set(keys).size).toBe(keys.length);
 	});
 
-	it('identifies every bundled product as system-owned', () => {
-		for (const item of defaultProductCatalogItems) expect(item.origin).toBe('system');
-	});
-
 	it('uses fixed UUID v4 ids for every bundled product', () => {
 		const ids = defaultProductCatalogItems.map((item) => item.id);
 

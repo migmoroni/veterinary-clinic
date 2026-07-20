@@ -15,7 +15,6 @@ import {
 	stringifyCatalogRegions,
 	stringifyCatalogType,
 	type CatalogEntityBase,
-	type CatalogEntityOrigin,
 	type CatalogTypeTuple
 } from '$lib/domain/catalog/catalog-entity.js';
 import { emptyActiveIngredientClassification, normalizeActiveIngredientClassification, type ActiveIngredientClassification } from '$lib/domain/active-ingredient/classification.js';
@@ -511,12 +510,4 @@ export function parseActiveIngredientCatalogExtension(value: string | null | und
 
 export function stringifyActiveIngredientCatalogExtension(value: unknown): string {
 	return JSON.stringify(normalizeActiveIngredientCatalogExtension(value));
-}
-
-export function canEditActiveIngredientCatalogItem(item: Pick<ActiveIngredientCatalogItem, 'origin'> | { origin: CatalogEntityOrigin }): boolean {
-	return item.origin === 'user';
-}
-
-export function canDeleteActiveIngredientCatalogItem(item: Pick<ActiveIngredientCatalogItem, 'origin'> | { origin: CatalogEntityOrigin }): boolean {
-	return canEditActiveIngredientCatalogItem(item);
 }

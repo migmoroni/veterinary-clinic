@@ -20,7 +20,6 @@ describe('condition catalog metadata', () => {
 		const sample = defaultConditionCatalogItems.find((item) => item.name === 'Condição Fictícia');
 
 		expect(sample).toBeTruthy();
-		expect(sample?.origin).toBe('system');
 		expect(isUuidV4(sample?.id ?? '')).toBe(true);
 		expect(sample?.aliases.every((alias) => alias.length <= FIELD_LIMITS.catalogAlias)).toBe(true);
 		expect(stringifyConditionCatalogExtension(sample?.extension).length).toBeLessThanOrEqual(FIELD_LIMITS.productExtensionJson);

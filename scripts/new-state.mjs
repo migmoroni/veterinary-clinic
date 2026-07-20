@@ -7,8 +7,10 @@ import { fileURLToPath } from 'node:url';
 const projectRoot = fileURLToPath(new URL('..', import.meta.url));
 const tauriConfig = JSON.parse(await readFile(join(projectRoot, 'src-tauri', 'tauri.conf.json'), 'utf8'));
 const appIdentifier = tauriConfig.identifier ?? 'app.veterinary-clinic.local';
-const sqlPreload = tauriConfig.plugins?.sql?.preload?.find((item) => typeof item === 'string' && item.startsWith('sqlite:'));
-const databaseFile = sqlPreload?.replace(/^sqlite:/, '') || 'veterinary_clinic.db';
+const databaseFiles = (tauriConfig.plugins?.sql?.preload ?? [])
+	.filter((item) => typeof item === 'string' && item.startsWith('sqlite:'))
+	.map((item) => item.replace(/^sqlite:/, ''));
+if (databaseFiles.length === 0) databaseFiles.push('veterinary_clinic_user.db');
 
 function appConfigRoot() {
 	if (platform() === 'win32') return process.env.APPDATA || join(homedir(), 'AppData', 'Roaming');
@@ -44,8 +46,10 @@ async function removeIfPresent(filePath) {
 }
 
 const appConfigDir = join(appConfigRoot(), appIdentifier);
-for (const fileName of [databaseFile, `${databaseFile}-wal`, `${databaseFile}-shm`, `${databaseFile}-journal`]) {
-	await removeIfPresent(join(appConfigDir, fileName));
+for (const databaseFile of databaseFiles) {
+	for (const fileName of [databaseFile, `${databaseFile}-wal`, `${databaseFile}-shm`, `${databaseFile}-journal`]) {
+		await removeIfPresent(join(appConfigDir, fileName));
+	}
 }
 
 const webStorageNames = ['localstorage', 'Local Storage', 'Session Storage', 'IndexedDB', 'databases', 'CacheStorage', 'Service Worker', 'blob_storage'];

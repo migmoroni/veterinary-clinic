@@ -9,7 +9,7 @@ import {
 } from '$lib/domain/pet/breed-reference.js';
 import type { TranslationKey } from '$lib/i18n/index.js';
 import { getImageCollection } from '$lib/persistence/repositories/image-collection.repository.js';
-import { selectMany } from '$lib/persistence/sqlite/client.js';
+import { selectSystemMany } from '$lib/persistence/sqlite/client.js';
 
 export const BREED_REFERENCE_IMAGE_COLLECTION_TYPE = 'breed_reference_item';
 
@@ -52,7 +52,7 @@ function primaryImage(images: ImageCollectionItem[]): ImageCollectionItem | null
 }
 
 async function loadBreedReferenceImages(id: number): Promise<ImageCollectionItem[]> {
-	const collection = await getImageCollection(BREED_REFERENCE_IMAGE_COLLECTION_TYPE, id);
+	const collection = await getImageCollection(BREED_REFERENCE_IMAGE_COLLECTION_TYPE, id, 'system');
 	return collection?.items ?? [];
 }
 
@@ -81,7 +81,7 @@ function mapBreedReference(row: BreedReferenceRow, images: ImageCollectionItem[]
 }
 
 export async function listBreedReferences(includeImages = true): Promise<BreedReferenceProfile[]> {
-	const rows = await selectMany<BreedReferenceRow>(
+	const rows = await selectSystemMany<BreedReferenceRow>(
 		`SELECT ${BREED_REFERENCE_COLUMNS}
 		 FROM breed_reference_items
 		 ORDER BY species, label_key COLLATE NOCASE, breed_id`
@@ -94,7 +94,7 @@ export async function listBreedReferences(includeImages = true): Promise<BreedRe
 }
 
 export async function getBreedReferenceByBreedId(breedId: string): Promise<BreedReferenceProfile | null> {
-	const rows = await selectMany<BreedReferenceRow>(
+	const rows = await selectSystemMany<BreedReferenceRow>(
 		`SELECT ${BREED_REFERENCE_COLUMNS}
 		 FROM breed_reference_items
 		 WHERE breed_id = $1

@@ -10,7 +10,6 @@
 	import { activeIngredientSummaryClassificationGroups } from "$lib/components/catalog/active-ingredient-detail-utils.js";
 	import { productClassificationLabel, productClassificationSearchText, productSummaryClassificationGroups } from "$lib/domain/product/classification.js";
 	import {
-		catalogOriginLabel,
 		catalogRegionLabel,
 		catalogRegionSummary,
 	} from "$lib/components/catalog/catalog-detail-utils.js";
@@ -53,7 +52,6 @@
 		productTreatmentKind,
 		productTypeMain,
 		type ProductCatalogItem,
-		type ProductCatalogOrigin,
 		type ProductSpecies,
 	} from "$lib/domain/product/catalog.js";
 	import {
@@ -79,7 +77,6 @@
 
 	type TypeFilter = "all" | string;
 	type SpeciesFilter = "all" | ProductSpecies;
-	type OriginFilter = "all" | ProductCatalogOrigin;
 	type CatalogItem =
 		| (ProductCatalogItem & { kind: "product" })
 		| (ManufacturerCatalogItem & { kind: "manufacturer" })
@@ -103,7 +100,6 @@
 	let catalogKind = $state<CatalogKind>("all");
 	let typeFilter = $state<TypeFilter>("all");
 	let speciesFilter = $state<SpeciesFilter>("all");
-	let originFilter = $state<OriginFilter>("all");
 	let manufacturerFilter = $state("");
 	let regionFilter = $state("");
 	let selectedItemKey = $state<string | null>(null);
@@ -114,7 +110,6 @@
 		"catalog",
 		"type",
 		"species",
-		"origin",
 		"manufacturer",
 		"region",
 		"selected",
@@ -124,7 +119,6 @@
 		catalog: "all",
 		type: "all",
 		species: "all",
-		origin: "all",
 		manufacturer: "",
 		region: "",
 		selected: "",
@@ -155,8 +149,6 @@
 		const search = normalizeReferenceSearch(searchTerm);
 
 		return currentItems.filter((item) => {
-			if (originFilter !== "all" && item.origin !== originFilter)
-				return false;
 			if (regionFilter && !item.regions.includes(regionFilter))
 				return false;
 
@@ -234,17 +226,6 @@
 	]);
 	const filterControls = $derived.by<ReferenceFilterBarSelect[]>(() => {
 		const controls: ReferenceFilterBarSelect[] = [
-			{
-				id: "formulary-origin-filter",
-				label: t("formulary.originFilter"),
-				value: originFilter,
-				options: [
-					{ value: "all", label: t("formulary.allOrigins") },
-					{ value: "system", label: t("formulary.origin.system") },
-					{ value: "user", label: t("formulary.origin.user") },
-				],
-				onchange: (value) => (originFilter = value as OriginFilter),
-			},
 			{
 				id: "formulary-region-filter",
 				label: t("formulary.regionFilter"),
@@ -351,9 +332,6 @@
 		if (item.kind === "product") {
 			const product = item as ProductCatalogItem;
 			const metaParts = [productTypeLabel(product.type, t)];
-			if (product.origin === "user") {
-				metaParts.push(catalogOriginLabel(product.origin));
-			}
 			return {
 				id: product.id,
 				title: product.name,
@@ -372,7 +350,7 @@
 				title: item.name,
 				subtitle: t("catalog.manufacturer"),
 				detail: manufacturerClassificationSummary(item),
-				meta: item.origin === "user" ? catalogOriginLabel(item.origin) : "",
+				meta: "",
 				imageBytes: item.primaryImage?.imageBytes ?? null,
 				imageAlt: item.name,
 				fallbackIcon: Building2,
@@ -386,10 +364,7 @@
 				title: condition.name,
 				subtitle: conditionTypeLabel(condition.type),
 				detail: conditionClassificationSummary(condition),
-				meta:
-					condition.origin === "user"
-						? catalogOriginLabel(condition.origin)
-						: "",
+				meta: "",
 				imageBytes: condition.primaryImage?.imageBytes ?? null,
 				imageAlt: condition.name,
 				fallbackIcon: Activity,
@@ -402,10 +377,7 @@
 			title: activeIngredient.name,
 			subtitle: activeIngredientTypeLabel(activeIngredient.type),
 			detail: activeIngredientClassificationSummary(activeIngredient),
-			meta:
-				activeIngredient.origin === "user"
-					? catalogOriginLabel(activeIngredient.origin)
-					: "",
+			meta: "",
 			imageBytes: activeIngredient.primaryImage?.imageBytes ?? null,
 			imageAlt: activeIngredient.name,
 			fallbackIcon: FlaskConical,
@@ -503,10 +475,6 @@
 					t("common.notInformed"),
 				),
 			},
-			{
-				label: t("formulary.originFilter"),
-				value: catalogOriginLabel(item.origin),
-			},
 			{ label: t("product.regions"), value: catalogRegionSummary(item.regions) },
 		];
 	}
@@ -529,7 +497,6 @@
 				product.manufacturerName,
 				activeIngredientSummary(product),
 				productTypeLabel(product.type, t),
-				catalogOriginLabel(product.origin),
 				speciesSummary(product.species),
 				catalogRegionSummary(product.regions),
 				product.aliases.join(" "),
@@ -569,7 +536,6 @@
 			item.kind === "manufacturer"
 				? manufacturerClassificationSummary(item as ManufacturerCatalogItem)
 				: "",
-			catalogOriginLabel(item.origin),
 			catalogRegionSummary(item.regions),
 			...Object.values(item.extension.sections ?? {}),
 		]
@@ -682,17 +648,12 @@
 		return value === "canine" || value === "feline" ? value : "all";
 	}
 
-	function validOriginFilter(value: string | undefined): OriginFilter {
-		return value === "system" || value === "user" ? value : "all";
-	}
-
 	function restoreRouteState(): void {
 		const state = readReferenceRouteState(routeStateKeys);
 		searchTerm = state.q ?? "";
 		catalogKind = validCatalogKind(state.catalog);
 		typeFilter = state.type ?? "all";
 		speciesFilter = validSpeciesFilter(state.species);
-		originFilter = validOriginFilter(state.origin);
 		manufacturerFilter = state.manufacturer ?? "";
 		regionFilter = state.region ?? "";
 		selectedItemKey = state.selected || null;
@@ -706,7 +667,6 @@
 				catalog: catalogKind,
 				type: typeFilter,
 				species: speciesFilter,
-				origin: originFilter,
 				manufacturer: manufacturerFilter,
 				region: regionFilter,
 				selected: selectedItemKey,
@@ -869,7 +829,7 @@
 					subtitle={selectedItem.kind === "product"
 						? (asProduct(selectedItem).manufacturerName ??
 							t("common.notInformed"))
-						: catalogOriginLabel(selectedItem.origin)}
+						: itemKindLabel(selectedItem.kind)}
 					fields={selectedSummaryFields}
 					actionHref={itemDetailHref(selectedItem)}
 					actionLabel={t("formulary.viewMore")}

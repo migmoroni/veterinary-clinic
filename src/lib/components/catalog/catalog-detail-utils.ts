@@ -1,10 +1,5 @@
-import type { CatalogEntityOrigin } from '$lib/domain/catalog/catalog-entity.js';
 import { countryOptions } from '$lib/domain/geo/location.js';
 import { i18n, t } from '$lib/i18n/index.js';
-
-export function catalogOriginLabel(origin: CatalogEntityOrigin): string {
-	return origin === 'system' ? t('formulary.origin.system') : t('formulary.origin.user');
-}
 
 export function catalogRegionLabel(region: string): string {
 	return countryOptions(i18n.locale).find((country) => country.value === region)?.label ?? region;

@@ -7,7 +7,7 @@ import {
 	type ActiveIngredientCatalogItem
 } from '$lib/domain/active-ingredient/catalog.js';
 import { getImageCollection } from '$lib/persistence/repositories/image-collection.repository.js';
-import { selectMany } from '$lib/persistence/sqlite/client.js';
+import { selectSystemMany } from '$lib/persistence/sqlite/client.js';
 
 export const ACTIVE_INGREDIENT_CATALOG_IMAGE_COLLECTION_TYPE = 'active_ingredient_catalog_item';
 export const ACTIVE_INGREDIENT_CATALOG_IMAGE_POLICY: ImageCollectionPolicy = {
@@ -21,7 +21,6 @@ function activeIngredientCatalogColumns(alias = 'active_ingredient_catalog_items
 		${alias}.name AS name,
 		${alias}.normalized_name AS normalized_name,
 		${alias}.aliases AS aliases,
-		${alias}.origin AS origin,
 		${alias}.regions AS regions,
 		${alias}.extension AS extension,
 		${alias}.hidden_at AS hidden_at,
@@ -34,7 +33,6 @@ interface ActiveIngredientCatalogItemRow {
 	name: string;
 	normalized_name: string;
 	aliases: string;
-	origin: 'system' | 'user';
 	regions: string;
 	extension: string;
 	hidden_at: string | null;
@@ -54,7 +52,6 @@ function mapActiveIngredientCatalogItem(row: ActiveIngredientCatalogItemRow, ima
 		aliases: parseActiveIngredientAliases(row.aliases, row.normalized_name),
 		images,
 		primaryImage: primaryImage(images),
-		origin: row.origin,
 		regions: parseActiveIngredientRegions(row.regions),
 		extension: parseActiveIngredientCatalogExtension(row.extension),
 		hiddenAt: row.hidden_at,
@@ -63,7 +60,7 @@ function mapActiveIngredientCatalogItem(row: ActiveIngredientCatalogItemRow, ima
 }
 
 async function loadActiveIngredientCatalogImages(id: string): Promise<ImageCollectionItem[]> {
-	const collection = await getImageCollection(ACTIVE_INGREDIENT_CATALOG_IMAGE_COLLECTION_TYPE, id);
+	const collection = await getImageCollection(ACTIVE_INGREDIENT_CATALOG_IMAGE_COLLECTION_TYPE, id, 'system');
 	return collection?.items ?? [];
 }
 
@@ -72,12 +69,14 @@ async function mapActiveIngredientCatalogItemWithImages(row: ActiveIngredientCat
 }
 
 export async function listActiveIngredientCatalogItems(includeHidden = false, includeImages = true): Promise<ActiveIngredientCatalogItem[]> {
-	const rows = await selectMany<ActiveIngredientCatalogItemRow>(
-		`SELECT ${activeIngredientCatalogColumns()}
-		 FROM active_ingredient_catalog_items
-		 WHERE ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}
-		 ORDER BY name COLLATE NOCASE`
-	);
+	const where = includeHidden ? '1 = 1' : 'hidden_at IS NULL';
+	const rows = (
+		await selectSystemMany<ActiveIngredientCatalogItemRow>(
+			`SELECT ${activeIngredientCatalogColumns()}
+			 FROM active_ingredient_catalog_items
+			 WHERE ${where}`
+		)
+	).sort((first, second) => first.name.localeCompare(second.name));
 
 	if (!includeImages) return rows.map((row) => mapActiveIngredientCatalogItem(row));
 
@@ -85,29 +84,28 @@ export async function listActiveIngredientCatalogItems(includeHidden = false, in
 	return rows.map((row, index) => mapActiveIngredientCatalogItem(row, imagesByIndex[index] ?? []));
 }
 
-export async function getActiveIngredientCatalogItemById(id: string, includeHidden = false, includeImages = true): Promise<ActiveIngredientCatalogItem | null> {
-	const rows = await selectMany<ActiveIngredientCatalogItemRow>(
+async function selectActiveIngredientCatalogRowsByIds(ids: readonly string[], includeHidden = true): Promise<ActiveIngredientCatalogItemRow[]> {
+	if (ids.length === 0) return [];
+	const uniqueIds = [...new Set(ids)];
+	const placeholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
+	const where = `id IN (${placeholders}) AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}`;
+	return selectSystemMany<ActiveIngredientCatalogItemRow>(
 		`SELECT ${activeIngredientCatalogColumns()}
 		 FROM active_ingredient_catalog_items
-		 WHERE id = $1 AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}
-		 LIMIT 1`,
-		[id]
+		 WHERE ${where}`,
+		uniqueIds
 	);
-	const row = rows[0];
+}
+
+export async function getActiveIngredientCatalogItemById(id: string, includeHidden = false, includeImages = true): Promise<ActiveIngredientCatalogItem | null> {
+	const row = (await selectActiveIngredientCatalogRowsByIds([id], includeHidden))[0];
 	if (!row) return null;
 	return includeImages ? mapActiveIngredientCatalogItemWithImages(row) : mapActiveIngredientCatalogItem(row);
 }
 
 export async function listActiveIngredientCatalogItemsByIds(ids: readonly string[], includeImages = true): Promise<ActiveIngredientCatalogItem[]> {
-	if (ids.length === 0) return [];
-	const placeholders = ids.map((_, index) => `$${index + 1}`).join(', ');
-	const rows = await selectMany<ActiveIngredientCatalogItemRow>(
-		`SELECT ${activeIngredientCatalogColumns()}
-		 FROM active_ingredient_catalog_items
-		 WHERE id IN (${placeholders})
-		 ORDER BY name COLLATE NOCASE`,
-		[...ids]
-	);
+	const rowsById = new Map((await selectActiveIngredientCatalogRowsByIds(ids)).map((row) => [row.id, row]));
+	const rows = [...new Set(ids)].map((id) => rowsById.get(id)).filter((row): row is ActiveIngredientCatalogItemRow => Boolean(row));
 
 	if (!includeImages) return rows.map((row) => mapActiveIngredientCatalogItem(row));
 
@@ -116,17 +114,18 @@ export async function listActiveIngredientCatalogItemsByIds(ids: readonly string
 }
 
 export async function listActiveIngredientCatalogItemsByProductId(productId: string, includeImages = true): Promise<ActiveIngredientCatalogItem[]> {
-	const rows = await selectMany<ActiveIngredientCatalogItemRow>(
-		`SELECT ${activeIngredientCatalogColumns('ingredient')}
-		 FROM active_ingredient_catalog_items ingredient
-		 INNER JOIN product_active_ingredients relation ON relation.active_ingredient_id = ingredient.id
-		 WHERE relation.product_id = $1
-		 ORDER BY relation.sort_order, ingredient.name COLLATE NOCASE`,
-		[productId]
+	const relationRows = (
+		await selectSystemMany<{ active_ingredient_id: string; sort_order: number }>(
+			`SELECT active_ingredient_id, sort_order
+			 FROM product_active_ingredients
+			 WHERE product_id = $1`,
+			[productId]
+		)
+	).sort((first, second) => first.sort_order - second.sort_order || first.active_ingredient_id.localeCompare(second.active_ingredient_id));
+	const items = await listActiveIngredientCatalogItemsByIds(
+		relationRows.map((row) => row.active_ingredient_id),
+		includeImages
 	);
-
-	if (!includeImages) return rows.map((row) => mapActiveIngredientCatalogItem(row));
-
-	const imagesByIndex = await Promise.all(rows.map((row) => loadActiveIngredientCatalogImages(row.id)));
-	return rows.map((row, index) => mapActiveIngredientCatalogItem(row, imagesByIndex[index] ?? []));
+	const itemById = new Map(items.map((item) => [item.id, item]));
+	return relationRows.map((row) => itemById.get(row.active_ingredient_id)).filter((item): item is ActiveIngredientCatalogItem => Boolean(item));
 }

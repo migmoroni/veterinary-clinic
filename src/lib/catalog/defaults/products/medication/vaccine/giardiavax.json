@@ -6,7 +6,6 @@
 		"biologicalAndImmunological",
 		"vaccine"
 	],
-	"origin": "system",
 	"name": "GiardiaVax",
 	"species": [
 		"canine"

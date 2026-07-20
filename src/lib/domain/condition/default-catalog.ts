@@ -9,7 +9,6 @@ export interface DefaultConditionCatalogImage {
 export interface DefaultConditionCatalogItem {
 	id: string;
 	type: ConditionType;
-	origin: 'system';
 	name: string;
 	aliases: string[];
 	images?: DefaultConditionCatalogImage[];

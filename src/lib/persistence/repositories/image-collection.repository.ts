@@ -8,7 +8,7 @@ import {
 } from '$lib/domain/image-collection/image-collection.js';
 import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { FIELD_LIMITS, nullableMultilineText, requireLimitedText } from '$lib/domain/shared/field-limits.js';
-import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
+import { execute, selectMany, selectOne, selectSystemMany, selectSystemOne } from '$lib/persistence/sqlite/client.js';
 
 interface ImageCollectionRow {
 	id: number;
@@ -53,6 +53,15 @@ function mapItem(row: ImageCollectionItemRow): ImageCollectionItem {
 	};
 }
 
+type ImageCollectionSource = 'user' | 'system';
+
+function imageCollectionSelect(source: ImageCollectionSource): {
+	selectMany: typeof selectMany;
+	selectOne: typeof selectOne;
+} {
+	return source === 'system' ? { selectMany: selectSystemMany, selectOne: selectSystemOne } : { selectMany, selectOne };
+}
+
 /** Validates policy invariants and normalizes optional descriptions. */
 function normalizeItems(items: ImageCollectionItemInput[], policy: ImageCollectionPolicy): ImageCollectionItemInput[] {
 	validateImageCollectionItems(items, policy);
@@ -71,10 +80,11 @@ function normalizeItems(items: ImageCollectionItemInput[], policy: ImageCollecti
  *
  * @returns `null` when the entity has no collection record.
  */
-export async function getImageCollection(entityType: string, entityId: ImageCollectionEntityId): Promise<ImageCollection | null> {
+export async function getImageCollection(entityType: string, entityId: ImageCollectionEntityId, source: ImageCollectionSource = 'user'): Promise<ImageCollection | null> {
 	const normalizedEntityType = requireLimitedText(entityType, FIELD_LIMITS.imageCollectionEntityType);
 	const normalizedEntityId = String(entityId);
-	const collection = await selectOne<ImageCollectionRow>(
+	const database = imageCollectionSelect(source);
+	const collection = await database.selectOne<ImageCollectionRow>(
 		`SELECT id, entity_type, entity_id, primary_required, max_items, created_at, updated_at
 		 FROM image_collections
 		 WHERE entity_type = $1 AND entity_id = $2`,
@@ -82,7 +92,7 @@ export async function getImageCollection(entityType: string, entityId: ImageColl
 	);
 	if (!collection) return null;
 
-	const items = await selectMany<ImageCollectionItemRow>(
+	const items = await database.selectMany<ImageCollectionItemRow>(
 		`SELECT id, image_blob, original_image_blob, description, is_primary, sort_order, created_at, updated_at
 		 FROM image_collection_items
 		 WHERE collection_id = $1

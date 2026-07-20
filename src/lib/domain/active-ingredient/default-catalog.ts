@@ -9,7 +9,6 @@ export interface DefaultActiveIngredientCatalogImage {
 export interface DefaultActiveIngredientCatalogItem {
 	id: string;
 	type: ActiveIngredientType;
-	origin: 'system';
 	name: string;
 	aliases: string[];
 	images?: DefaultActiveIngredientCatalogImage[];

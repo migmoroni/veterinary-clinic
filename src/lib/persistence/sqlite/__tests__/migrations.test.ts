@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type Database from '@tauri-apps/plugin-sql';
 import { isUuidV4 } from '$lib/domain/shared/uuid.js';
 import { defaultTreatmentProtocols } from '$lib/domain/treatment/default-protocol.js';
-import { CURRENT_SCHEMA_VERSION, runMigrations } from '../migrations.js';
+import { CURRENT_SCHEMA_VERSION, runMigrations, runSystemMigrations } from '../migrations.js';
 
 interface UserVersionRow {
 	user_version: number;
@@ -23,6 +23,10 @@ interface MigrationRow {
 
 interface IdRow {
 	id: string;
+}
+
+interface TableNameRow {
+	name: string;
 }
 
 const sqlite3Available = spawnSync('sqlite3', ['--version'], { encoding: 'utf8' }).status === 0;
@@ -81,14 +85,30 @@ describeWithSqlite('SQLite schema migrations', () => {
 		const versions = await database.select<UserVersionRow[]>('PRAGMA user_version');
 		const migrations = await database.select<MigrationRow[]>('SELECT version, name FROM schema_migrations ORDER BY version');
 		const owners = await database.select<CountRow[]>('SELECT COUNT(*) AS total FROM owners');
+		const systemOnlyTables = await database.select<TableNameRow[]>(`
+			SELECT name
+			FROM sqlite_master
+			WHERE type = 'table'
+				AND name IN ('breed_reference_items', 'manufacturer_catalog_items', 'active_ingredient_catalog_items', 'condition_catalog_items')
+			ORDER BY name
+		`);
+		const forbiddenProductTables = await database.select<TableNameRow[]>(`
+			SELECT name
+			FROM sqlite_master
+			WHERE type = 'table'
+				AND name IN ('product_catalog_items', 'product_active_ingredients')
+			ORDER BY name
+		`);
 
 		expect(versions[0]?.user_version).toBe(CURRENT_SCHEMA_VERSION);
 		expect(migrations).toEqual([{ version: 1, name: '0001_baseline_current_schema' }]);
 		expect(owners[0]?.total).toBe(0);
+		expect(systemOnlyTables).toEqual([]);
+		expect(forbiddenProductTables).toEqual([]);
 	});
 
-	it('syncs default system treatment protocols into the database', async () => {
-		await runMigrations(database as unknown as Database, { syncDefaultBreedReferenceData: false });
+	it('keeps default system treatment protocols in the system database', async () => {
+		await runSystemMigrations(database as unknown as Database);
 
 		const protocols = await database.select<CountRow[]>("SELECT COUNT(*) AS total FROM treatment_protocols WHERE origin = 'system'");
 		const protocolIds = await database.select<IdRow[]>("SELECT id FROM treatment_protocols WHERE origin = 'system' ORDER BY id");
@@ -100,7 +120,7 @@ describeWithSqlite('SQLite schema migrations', () => {
 		expect(protocolIds.every((row) => isUuidV4(row.id))).toBe(true);
 		expect(items[0]?.total).toBe(defaultTreatmentProtocols.reduce((total, protocol) => total + protocol.catalogItemIds.length, 0));
 		expect(doses[0]?.total).toBe(defaultTreatmentProtocols.reduce((total, protocol) => total + protocol.doses.length, 0));
-	});
+	}, 15000);
 
 	it('adopts a current unversioned database without losing data', async () => {
 		await runMigrations(database as unknown as Database, { syncDefaultBreedReferenceData: false });

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import CatalogEntityDetail, { type CatalogEntityDetailField, type CatalogEntityDetailSection } from '$lib/components/catalog/CatalogEntityDetail.svelte';
 	import { activeIngredientClassificationGroups } from '$lib/components/catalog/active-ingredient-detail-utils.js';
-	import { catalogOriginLabel, catalogRegionSummary, catalogSectionTexts } from '$lib/components/catalog/catalog-detail-utils.js';
+	import { catalogRegionSummary, catalogSectionTexts } from '$lib/components/catalog/catalog-detail-utils.js';
 	import { activeIngredientProfileSectionIds, type ActiveIngredientCatalogItem, type ActiveIngredientProfileSectionId } from '$lib/domain/active-ingredient/catalog.js';
 	import { catalogPathTypeLabel } from '$lib/domain/catalog/type-labels.js';
 	import { i18n, t } from '$lib/i18n/index.js';
@@ -25,7 +25,6 @@
 	];
 	const fields = $derived<CatalogEntityDetailField[]>([
 		{ label: t('formulary.kind'), value: catalogPathTypeLabel('catalog.activeIngredient.type', item.type, t) },
-		{ label: t('formulary.originFilter'), value: catalogOriginLabel(item.origin) },
 		{ label: t('product.regions'), value: catalogRegionSummary(item.regions) }
 	]);
 	const sectionFields = $derived<Record<string, CatalogEntityDetailField[]>>({

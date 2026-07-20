@@ -15,7 +15,6 @@ import {
 	stringifyCatalogRegions,
 	stringifyCatalogType,
 	type CatalogEntityBase,
-	type CatalogEntityOrigin,
 	type CatalogTypeTuple
 } from '$lib/domain/catalog/catalog-entity.js';
 import { emptyCatalogClassification, normalizeCatalogClassification, type CatalogClassification } from '$lib/domain/catalog/classification.js';
@@ -174,7 +173,6 @@ export type ConditionTypeDetail<TMain extends ConditionTypeMain, TSubtype extend
 	ConditionTypeTree['condition'][TMain][TSubtype] extends readonly string[] ? ConditionTypeTree['condition'][TMain][TSubtype][number] : never;
 export type ConditionType = CatalogTypeTuple<ConditionTypeTree>;
 export type ConditionClassification = CatalogClassification;
-export type ConditionCatalogOrigin = CatalogEntityOrigin;
 
 export const CONDITION_TYPES = catalogTypesFromTree(CONDITION_TYPE_TREE);
 
@@ -263,12 +261,4 @@ export function parseConditionCatalogExtension(value: string | null | undefined)
 
 export function stringifyConditionCatalogExtension(value: unknown): string {
 	return JSON.stringify(normalizeConditionCatalogExtension(value));
-}
-
-export function canEditConditionCatalogItem(item: Pick<ConditionCatalogItem, 'origin'> | { origin: CatalogEntityOrigin }): boolean {
-	return item.origin === 'user';
-}
-
-export function canDeleteConditionCatalogItem(item: Pick<ConditionCatalogItem, 'origin'> | { origin: CatalogEntityOrigin }): boolean {
-	return canEditConditionCatalogItem(item);
 }

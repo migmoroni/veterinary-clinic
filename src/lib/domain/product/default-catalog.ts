@@ -13,7 +13,6 @@ export interface DefaultProductCatalogImage {
 export interface DefaultProductCatalogItem {
 	id: string;
 	type: DefaultProductType;
-	origin: 'system';
 	name: string;
 	species: DefaultProductSpecies[];
 	aliases: string[];

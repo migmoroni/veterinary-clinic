@@ -17,7 +17,6 @@ import {
 	stringifyCatalogRegions,
 	stringifyCatalogType,
 	type CatalogEntityBase,
-	type CatalogEntityOrigin,
 	type CatalogTypeTree,
 	type CatalogTypeTuple
 } from '$lib/domain/catalog/catalog-entity.js';
@@ -327,7 +326,7 @@ export type ProductTherapeuticAction = (typeof PRODUCT_CLASSIFICATION_AXES)[2]['
 export type ProductPharmaceuticalForm = (typeof PRODUCT_PHARMACEUTICAL_FORMS)[number];
 export type ProductAdministrationRoute = (typeof PRODUCT_ADMINISTRATION_ROUTES)[number];
 export type ProductSpecies = TreatmentSpecies;
-export type ProductCatalogOrigin = CatalogEntityOrigin;
+export type ProductCatalogSource = 'system' | 'user';
 
 export interface ProductCommercialTherapeuticClassification {
 	compositionOrigin: ProductCompositionOrigin | null;
@@ -485,7 +484,7 @@ export interface ProductCatalogMetadata {
 	manufacturerId: string | null;
 	manufacturerName: string | null;
 	activeIngredientIds: string[];
-	origin: ProductCatalogOrigin;
+	source: ProductCatalogSource;
 	regions: string[];
 	species: ProductSpecies[];
 	extension: ProductCatalogExtension;
@@ -497,13 +496,14 @@ export interface ProductCatalogItem extends CatalogEntityBase<ProductType, Produ
 	manufacturerName: string | null;
 	activeIngredientIds: string[];
 	activeIngredients: ActiveIngredientCatalogItem[];
+	source: ProductCatalogSource;
 }
 
-export function canEditProductCatalogItem(item: Pick<ProductCatalogMetadata, 'origin'>): boolean {
-	return item.origin === 'user';
+export function canEditProductCatalogItem(item: Pick<ProductCatalogMetadata, 'source'>): boolean {
+	return item.source === 'user';
 }
 
-export function canDeleteProductCatalogItem(item: Pick<ProductCatalogMetadata, 'origin'>): boolean {
+export function canDeleteProductCatalogItem(item: Pick<ProductCatalogMetadata, 'source'>): boolean {
 	return canEditProductCatalogItem(item);
 }
 

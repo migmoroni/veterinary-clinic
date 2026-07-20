@@ -1,7 +1,7 @@
 import type { ImageCollectionItem, ImageCollectionPolicy } from '$lib/domain/image-collection/image-collection.js';
 import { parseConditionAliases, parseConditionCatalogExtension, parseConditionRegions, parseConditionType, type ConditionCatalogItem } from '$lib/domain/condition/catalog.js';
 import { getImageCollection } from '$lib/persistence/repositories/image-collection.repository.js';
-import { selectMany } from '$lib/persistence/sqlite/client.js';
+import { selectSystemMany } from '$lib/persistence/sqlite/client.js';
 
 export const CONDITION_CATALOG_IMAGE_COLLECTION_TYPE = 'condition_catalog_item';
 export const CONDITION_CATALOG_IMAGE_POLICY: ImageCollectionPolicy = {
@@ -9,7 +9,7 @@ export const CONDITION_CATALOG_IMAGE_POLICY: ImageCollectionPolicy = {
 	maxItems: 9
 };
 
-const CONDITION_CATALOG_COLUMNS = 'id, type, name, normalized_name, aliases, origin, regions, extension, hidden_at, updated_at';
+const CONDITION_CATALOG_COLUMNS = 'id, type, name, normalized_name, aliases, regions, extension, hidden_at, updated_at';
 
 interface ConditionCatalogItemRow {
 	id: string;
@@ -17,7 +17,6 @@ interface ConditionCatalogItemRow {
 	name: string;
 	normalized_name: string;
 	aliases: string;
-	origin: 'system' | 'user';
 	regions: string;
 	extension: string;
 	hidden_at: string | null;
@@ -37,7 +36,6 @@ function mapConditionCatalogItem(row: ConditionCatalogItemRow, images: ImageColl
 		aliases: parseConditionAliases(row.aliases, row.normalized_name),
 		images,
 		primaryImage: primaryImage(images),
-		origin: row.origin,
 		regions: parseConditionRegions(row.regions),
 		extension: parseConditionCatalogExtension(row.extension),
 		hiddenAt: row.hidden_at,
@@ -46,7 +44,7 @@ function mapConditionCatalogItem(row: ConditionCatalogItemRow, images: ImageColl
 }
 
 async function loadConditionCatalogImages(id: string): Promise<ImageCollectionItem[]> {
-	const collection = await getImageCollection(CONDITION_CATALOG_IMAGE_COLLECTION_TYPE, id);
+	const collection = await getImageCollection(CONDITION_CATALOG_IMAGE_COLLECTION_TYPE, id, 'system');
 	return collection?.items ?? [];
 }
 
@@ -55,12 +53,14 @@ async function mapConditionCatalogItemWithImages(row: ConditionCatalogItemRow): 
 }
 
 export async function listConditionCatalogItems(includeHidden = false, includeImages = true): Promise<ConditionCatalogItem[]> {
-	const rows = await selectMany<ConditionCatalogItemRow>(
-		`SELECT ${CONDITION_CATALOG_COLUMNS}
-		 FROM condition_catalog_items
-		 WHERE ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}
-		 ORDER BY name COLLATE NOCASE`
-	);
+	const where = includeHidden ? '1 = 1' : 'hidden_at IS NULL';
+	const rows = (
+		await selectSystemMany<ConditionCatalogItemRow>(
+			`SELECT ${CONDITION_CATALOG_COLUMNS}
+			 FROM condition_catalog_items
+			 WHERE ${where}`
+		)
+	).sort((first, second) => first.name.localeCompare(second.name));
 
 	if (!includeImages) return rows.map((row) => mapConditionCatalogItem(row));
 
@@ -68,15 +68,20 @@ export async function listConditionCatalogItems(includeHidden = false, includeIm
 	return rows.map((row, index) => mapConditionCatalogItem(row, imagesByIndex[index] ?? []));
 }
 
-export async function getConditionCatalogItemById(id: string, includeHidden = false, includeImages = true): Promise<ConditionCatalogItem | null> {
-	const rows = await selectMany<ConditionCatalogItemRow>(
+async function selectConditionCatalogItemById(id: string, includeHidden = false): Promise<ConditionCatalogItemRow | null> {
+	const where = `id = $1 AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}`;
+	const referenceRows = await selectSystemMany<ConditionCatalogItemRow>(
 		`SELECT ${CONDITION_CATALOG_COLUMNS}
 		 FROM condition_catalog_items
-		 WHERE id = $1 AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}
+		 WHERE ${where}
 		 LIMIT 1`,
 		[id]
 	);
-	const row = rows[0];
+	return referenceRows[0] ?? null;
+}
+
+export async function getConditionCatalogItemById(id: string, includeHidden = false, includeImages = true): Promise<ConditionCatalogItem | null> {
+	const row = await selectConditionCatalogItemById(id, includeHidden);
 	if (!row) return null;
 	return includeImages ? mapConditionCatalogItemWithImages(row) : mapConditionCatalogItem(row);
 }

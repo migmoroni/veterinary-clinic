@@ -15,7 +15,7 @@ import {
 	stringifyProductSpecies,
 	stringifyProductType,
 	type ProductCatalogItem,
-	type ProductCatalogOrigin,
+	type ProductCatalogSource,
 	type ProductType,
 	type ProductTypeMain,
 	type ProductTypeTuple
@@ -25,10 +25,10 @@ import { FIELD_LIMITS, assertTextLimit, nullableLimitedText } from '$lib/domain/
 import { createUuidV4 } from '$lib/domain/shared/uuid.js';
 import type { TreatmentCatalogItem, TreatmentCatalogItemId, TreatmentCatalogItemInput, TreatmentKind } from '$lib/domain/treatment/treatment.js';
 import { normalizeTreatmentName } from '$lib/domain/treatment/treatment.js';
-import { ensureManufacturerCatalogItem } from '$lib/persistence/repositories/manufacturer-catalog.repository.js';
+import { ensureManufacturerCatalogItem, getManufacturerCatalogItemById } from '$lib/persistence/repositories/manufacturer-catalog.repository.js';
 import { listActiveIngredientCatalogItemsByProductId } from '$lib/persistence/repositories/active-ingredient-catalog.repository.js';
 import { deleteImageCollection, getImageCollection, replaceImageCollection } from '$lib/persistence/repositories/image-collection.repository.js';
-import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
+import { execute, selectMany, selectSystemMany } from '$lib/persistence/sqlite/client.js';
 
 interface ProductCatalogItemRow {
 	id: TreatmentCatalogItemId;
@@ -39,7 +39,7 @@ interface ProductCatalogItemRow {
 	aliases: string;
 	manufacturer_id: string | null;
 	manufacturer_name: string | null;
-	origin: ProductCatalogOrigin;
+	source: ProductCatalogSource;
 	regions: string;
 	extension: string;
 	hidden_at: string | null;
@@ -75,13 +75,17 @@ const PRODUCT_CATALOG_COLUMNS = `product.id AS id,
 	product.species AS species,
 	product.aliases AS aliases,
 	product.manufacturer_id AS manufacturer_id,
-	manufacturer.name AS manufacturer_name,
-	product.origin AS origin,
+	product.manufacturer_name AS manufacturer_name,
+	'user' AS source,
 	product.regions AS regions,
 	product.extension AS extension,
 	product.hidden_at AS hidden_at,
 	product.updated_at AS updated_at`;
-const PRODUCT_CATALOG_FROM = `product_catalog_items product
+const SYSTEM_PRODUCT_CATALOG_COLUMNS = PRODUCT_CATALOG_COLUMNS
+	.replace('product.manufacturer_name AS manufacturer_name', 'manufacturer.name AS manufacturer_name')
+	.replace("'user' AS source", "'system' AS source");
+const USER_PRODUCT_CATALOG_FROM = 'user_product_catalog_items product';
+const SYSTEM_PRODUCT_CATALOG_FROM = `product_catalog_items product
 	LEFT JOIN manufacturer_catalog_items manufacturer ON manufacturer.id = product.manufacturer_id`;
 const TREATMENT_KINDS = ['vaccine', 'antiparasitic'] as const satisfies readonly TreatmentKind[];
 
@@ -101,22 +105,25 @@ function primaryImage(images: ImageCollectionItem[]): ImageCollectionItem | null
 	return images.find((image) => image.isPrimary) ?? images[0] ?? null;
 }
 
-async function activeIngredientIdsForProduct(id: TreatmentCatalogItemId): Promise<string[]> {
-	const rows = await selectMany<{ active_ingredient_id: string }>(
-		`SELECT active_ingredient_id
-		 FROM product_active_ingredients
-		 WHERE product_id = $1
-		 ORDER BY sort_order, active_ingredient_id`,
-		[id]
-	);
+async function activeIngredientIdsForProduct(id: TreatmentCatalogItemId, source: ProductCatalogSource): Promise<string[]> {
+	if (source === 'user') return [];
+	const rows = (
+		await selectSystemMany<{ active_ingredient_id: string; sort_order: number }>(
+			`SELECT active_ingredient_id, sort_order
+			 FROM product_active_ingredients
+			 WHERE product_id = $1`,
+			[id]
+		)
+	).sort((first, second) => first.sort_order - second.sort_order || first.active_ingredient_id.localeCompare(second.active_ingredient_id));
 	return rows.map((row) => row.active_ingredient_id);
 }
 
 async function mapCatalogItem(row: ProductCatalogItemRow, images: ImageCollectionItem[] = [], includeActiveIngredients = true): Promise<ProductCatalogItem> {
 	const type = parseProductType(row.type);
 	const config = configFor(productTypeMain(type));
-	const activeIngredients = includeActiveIngredients ? await listActiveIngredientCatalogItemsByProductId(row.id, false) : [];
-	const activeIngredientIds = activeIngredients.length > 0 ? activeIngredients.map((ingredient) => ingredient.id) : await activeIngredientIdsForProduct(row.id);
+	const activeIngredients = includeActiveIngredients && row.source === 'system' ? await listActiveIngredientCatalogItemsByProductId(row.id, false) : [];
+	const activeIngredientIds = activeIngredients.length > 0 ? activeIngredients.map((ingredient) => ingredient.id) : await activeIngredientIdsForProduct(row.id, row.source);
+	const referencedManufacturer = !row.manufacturer_name && row.manufacturer_id ? await getManufacturerCatalogItemById(row.manufacturer_id, true, false) : null;
 	return {
 		id: row.id,
 		type,
@@ -125,12 +132,12 @@ async function mapCatalogItem(row: ProductCatalogItemRow, images: ImageCollectio
 		species: parseProductSpecies(row.species),
 		aliases: parseCatalogAliases(row.aliases, FIELD_LIMITS.catalogAlias, config.normalize, row.normalized_name),
 		manufacturerId: row.manufacturer_id,
-		manufacturerName: row.manufacturer_name,
+		manufacturerName: row.manufacturer_name ?? referencedManufacturer?.name ?? null,
 		activeIngredientIds,
 		activeIngredients,
 		images,
 		primaryImage: primaryImage(images),
-		origin: row.origin,
+		source: row.source,
 		regions: parseProductRegions(row.regions),
 		extension: parseProductCatalogExtension(row.extension),
 		hiddenAt: row.hidden_at,
@@ -150,17 +157,17 @@ async function mapTreatmentCatalogItem(row: ProductCatalogItemRow, images: Image
 	return { ...item, type: item.type as ProductTypeTuple<'medication'>, kind };
 }
 
-async function loadCatalogItemImages(id: TreatmentCatalogItemId): Promise<ImageCollectionItem[]> {
-	const collection = await getImageCollection(PRODUCT_CATALOG_IMAGE_COLLECTION_TYPE, id);
+async function loadCatalogItemImages(id: TreatmentCatalogItemId, source: 'system' | 'user' = 'user'): Promise<ImageCollectionItem[]> {
+	const collection = await getImageCollection(PRODUCT_CATALOG_IMAGE_COLLECTION_TYPE, id, source);
 	return collection?.items ?? [];
 }
 
 async function mapCatalogItemWithImages(row: ProductCatalogItemRow): Promise<ProductCatalogItem> {
-	return mapCatalogItem(row, await loadCatalogItemImages(row.id));
+	return mapCatalogItem(row, await loadCatalogItemImages(row.id, row.source));
 }
 
 async function mapTreatmentCatalogItemWithImages(row: ProductCatalogItemRow): Promise<TreatmentCatalogItem> {
-	return mapTreatmentCatalogItem(row, await loadCatalogItemImages(row.id));
+	return mapTreatmentCatalogItem(row, await loadCatalogItemImages(row.id, row.source));
 }
 
 function normalizeProductCatalogMetadata(
@@ -191,27 +198,76 @@ export function normalizeProductCatalogInput(_kind: TreatmentKind, value: string
 	return { name, normalizedName };
 }
 
-async function getProductCatalogItemByNormalizedName(normalizedName: string): Promise<ProductCatalogItem | null> {
-	const rows = await selectMany<ProductCatalogItemRow>(
+function sortProductRows(rows: ProductCatalogItemRow[]): ProductCatalogItemRow[] {
+	return rows.sort((first, second) => first.name.localeCompare(second.name));
+}
+
+async function selectProductCatalogRows(filters: string[], values: unknown[] = []): Promise<ProductCatalogItemRow[]> {
+	const where = filters.join(' AND ');
+	const [userRows, referenceRows] = await Promise.all([
+		selectMany<ProductCatalogItemRow>(
+			`SELECT ${PRODUCT_CATALOG_COLUMNS}
+			 FROM ${USER_PRODUCT_CATALOG_FROM}
+			 WHERE ${where}`,
+			values
+		),
+		selectSystemMany<ProductCatalogItemRow>(
+			`SELECT ${SYSTEM_PRODUCT_CATALOG_COLUMNS}
+			 FROM ${SYSTEM_PRODUCT_CATALOG_FROM}
+			 WHERE ${where}`,
+			values
+		)
+	]);
+	return sortProductRows([...referenceRows, ...userRows]);
+}
+
+async function selectProductCatalogItemRowById(id: TreatmentCatalogItemId, includeHidden = false): Promise<ProductCatalogItemRow | null> {
+	const filters = ['product.id = $1', includeHidden ? '1 = 1' : 'product.hidden_at IS NULL'];
+	const userRows = await selectMany<ProductCatalogItemRow>(
 		`SELECT ${PRODUCT_CATALOG_COLUMNS}
-		 FROM ${PRODUCT_CATALOG_FROM}
+		 FROM ${USER_PRODUCT_CATALOG_FROM}
+		 WHERE ${filters.join(' AND ')}
+		 LIMIT 1`,
+		[id]
+	);
+	if (userRows[0]) return userRows[0];
+	const referenceRows = await selectSystemMany<ProductCatalogItemRow>(
+		`SELECT ${SYSTEM_PRODUCT_CATALOG_COLUMNS}
+		 FROM ${SYSTEM_PRODUCT_CATALOG_FROM}
+		 WHERE ${filters.join(' AND ')}
+		 LIMIT 1`,
+		[id]
+	);
+	return referenceRows[0] ?? null;
+}
+
+async function selectProductCatalogItemRowByNormalizedName(normalizedName: string): Promise<ProductCatalogItemRow | null> {
+	const referenceRows = await selectSystemMany<ProductCatalogItemRow>(
+		`SELECT ${SYSTEM_PRODUCT_CATALOG_COLUMNS}
+		 FROM ${SYSTEM_PRODUCT_CATALOG_FROM}
 		 WHERE product.normalized_name = $1
 		 LIMIT 1`,
 		[normalizedName]
 	);
+	if (referenceRows[0]) return referenceRows[0];
+	const userRows = await selectMany<ProductCatalogItemRow>(
+		`SELECT ${PRODUCT_CATALOG_COLUMNS}
+		 FROM ${USER_PRODUCT_CATALOG_FROM}
+		 WHERE product.normalized_name = $1
+		 LIMIT 1`,
+		[normalizedName]
+	);
+	return userRows[0] ?? null;
+}
 
-	return rows[0] ? mapCatalogItemWithImages(rows[0]) : null;
+async function getProductCatalogItemByNormalizedName(normalizedName: string): Promise<ProductCatalogItem | null> {
+	const row = await selectProductCatalogItemRowByNormalizedName(normalizedName);
+	return row ? mapCatalogItemWithImages(row) : null;
 }
 
 async function assertProductCatalogItemEditable(id: TreatmentCatalogItemId): Promise<void> {
-	const rows = await selectMany<Pick<ProductCatalogItemRow, 'origin'>>(
-		`SELECT origin
-		 FROM product_catalog_items
-		 WHERE id = $1
-		 LIMIT 1`,
-		[id]
-	);
-	if (rows[0] && !canEditProductCatalogItem(rows[0])) throw new Error('product_catalog_system_item');
+	const row = await selectProductCatalogItemRowById(id, true);
+	if (row && !canEditProductCatalogItem(row)) throw new Error('product_catalog_system_item');
 }
 
 export async function ensureTreatmentProductCatalogItem(kind: TreatmentKind, name: string, normalizedName: string): Promise<TreatmentCatalogItem> {
@@ -226,10 +282,10 @@ export async function ensureTreatmentProductCatalogItem(kind: TreatmentKind, nam
 	const metadata = normalizeProductCatalogMetadata({}, normalizedName);
 	const id = createUuidV4();
 	await execute(
-		`INSERT INTO product_catalog_items (id, type, name, normalized_name, species, aliases, manufacturer_id, origin, regions, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, 'user', $8, CURRENT_TIMESTAMP)
+		`INSERT INTO user_product_catalog_items (id, type, name, normalized_name, species, aliases, manufacturer_id, manufacturer_name, regions, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)
 		 ON CONFLICT(normalized_name) DO NOTHING`,
-		[id, serializedType, name, normalizedName, metadata.species, metadata.aliases, null, metadata.regions]
+		[id, serializedType, name, normalizedName, metadata.species, metadata.aliases, null, metadata.manufacturerName, metadata.regions]
 	);
 
 	const item = await getProductCatalogItemByNormalizedName(normalizedName);
@@ -239,17 +295,11 @@ export async function ensureTreatmentProductCatalogItem(kind: TreatmentKind, nam
 
 export async function listProductCatalogItems(includeHidden = false, includeImages = true): Promise<ProductCatalogItem[]> {
 	const filters = [includeHidden ? '1 = 1' : 'product.hidden_at IS NULL'];
-
-	const rows = await selectMany<ProductCatalogItemRow>(
-		`SELECT ${PRODUCT_CATALOG_COLUMNS}
-		 FROM ${PRODUCT_CATALOG_FROM}
-		 WHERE ${filters.join(' AND ')}
-		 ORDER BY product.name COLLATE NOCASE`,
-	);
+	const rows = await selectProductCatalogRows(filters);
 
 	if (!includeImages) return Promise.all(rows.map((row) => mapCatalogItem(row, [], true)));
 
-	const imagesByIndex = await Promise.all(rows.map((row) => loadCatalogItemImages(row.id)));
+	const imagesByIndex = await Promise.all(rows.map((row) => loadCatalogItemImages(row.id, row.source)));
 	return Promise.all(rows.map((row, index) => mapCatalogItem(row, imagesByIndex[index] ?? [])));
 }
 
@@ -260,45 +310,22 @@ export async function listTreatmentProductCatalogItems(kind: TreatmentKind | nul
 	const placeholders = typeValues.map((_, index) => `$${values.length + index + 1}`).join(', ');
 	filters.push(`product.type IN (${placeholders})`);
 	values.push(...typeValues);
-
-	const rows = await selectMany<ProductCatalogItemRow>(
-		`SELECT ${PRODUCT_CATALOG_COLUMNS}
-		 FROM ${PRODUCT_CATALOG_FROM}
-		 WHERE ${filters.join(' AND ')}
-		 ORDER BY product.name COLLATE NOCASE`,
-		values
-	);
+	const rows = await selectProductCatalogRows(filters, values);
 
 	if (!includeImages) return Promise.all(rows.map((row) => mapTreatmentCatalogItem(row, [], true)));
 
-	const imagesByIndex = await Promise.all(rows.map((row) => loadCatalogItemImages(row.id)));
+	const imagesByIndex = await Promise.all(rows.map((row) => loadCatalogItemImages(row.id, row.source)));
 	return Promise.all(rows.map((row, index) => mapTreatmentCatalogItem(row, imagesByIndex[index] ?? [])));
 }
 
 export async function getProductCatalogItemById(id: TreatmentCatalogItemId, includeHidden = false, includeImages = true): Promise<ProductCatalogItem | null> {
-	const rows = await selectMany<ProductCatalogItemRow>(
-		`SELECT ${PRODUCT_CATALOG_COLUMNS}
-		 FROM ${PRODUCT_CATALOG_FROM}
-		 WHERE product.id = $1 AND ${includeHidden ? '1 = 1' : 'product.hidden_at IS NULL'}
-		 LIMIT 1`,
-		[id]
-	);
-
-	const row = rows[0];
+	const row = await selectProductCatalogItemRowById(id, includeHidden);
 	if (!row) return null;
 	return includeImages ? mapCatalogItemWithImages(row) : mapCatalogItem(row);
 }
 
 export async function getTreatmentProductCatalogItemById(id: TreatmentCatalogItemId, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem | null> {
-	const rows = await selectMany<ProductCatalogItemRow>(
-		`SELECT ${PRODUCT_CATALOG_COLUMNS}
-		 FROM ${PRODUCT_CATALOG_FROM}
-		 WHERE product.id = $1 AND ${includeHidden ? '1 = 1' : 'product.hidden_at IS NULL'}
-		 LIMIT 1`,
-		[id]
-	);
-
-	const row = rows[0];
+	const row = await selectProductCatalogItemRowById(id, includeHidden);
 	if (!row) return null;
 	return includeImages ? mapTreatmentCatalogItemWithImages(row) : mapTreatmentCatalogItem(row);
 }
@@ -308,6 +335,7 @@ export async function saveTreatmentProductCatalogItem(kind: TreatmentKind, input
 	const { name, normalizedName } = normalizeProductCatalogInput(kind, input.name);
 	const metadata = normalizeProductCatalogMetadata(input, normalizedName);
 	const manufacturer = await ensureManufacturerCatalogItem(metadata.manufacturerName);
+	const manufacturerName = manufacturer?.name ?? metadata.manufacturerName;
 
 	if (id) {
 		await assertProductCatalogItemEditable(id);
@@ -318,22 +346,23 @@ export async function saveTreatmentProductCatalogItem(kind: TreatmentKind, input
 		}
 
 		await execute(
-			`UPDATE product_catalog_items
+			`UPDATE user_product_catalog_items
 			 SET type = $2,
 				name = $3,
 				normalized_name = $4,
 				species = $5,
 				aliases = $6,
 				manufacturer_id = $7,
-				regions = $8,
+				manufacturer_name = $8,
+				regions = $9,
 				updated_at = CURRENT_TIMESTAMP
 			 WHERE id = $1`,
-			[id, serializedType, name, normalizedName, metadata.species, metadata.aliases, manufacturer?.id ?? null, metadata.regions]
+			[id, serializedType, name, normalizedName, metadata.species, metadata.aliases, manufacturer?.id ?? null, manufacturerName, metadata.regions]
 		);
 
 		const rows = await selectMany<ProductCatalogItemRow>(
 			`SELECT ${PRODUCT_CATALOG_COLUMNS}
-			 FROM ${PRODUCT_CATALOG_FROM}
+			 FROM ${USER_PRODUCT_CATALOG_FROM}
 			 WHERE product.id = $1
 			 LIMIT 1`,
 			[id]
@@ -346,17 +375,18 @@ export async function saveTreatmentProductCatalogItem(kind: TreatmentKind, input
 	if (existingItem && !canEditProductCatalogItem(existingItem)) throw new Error('product_catalog_system_item');
 	if (existingItem) {
 		await execute(
-			`UPDATE product_catalog_items
+			`UPDATE user_product_catalog_items
 			 SET type = $2,
 				name = $3,
 				species = $4,
 				aliases = $5,
 				manufacturer_id = $6,
-				regions = $7,
+				manufacturer_name = $7,
+				regions = $8,
 				hidden_at = NULL,
 				updated_at = CURRENT_TIMESTAMP
 			 WHERE id = $1`,
-			[existingItem.id, serializedType, name, metadata.species, metadata.aliases, manufacturer?.id ?? null, metadata.regions]
+			[existingItem.id, serializedType, name, metadata.species, metadata.aliases, manufacturer?.id ?? null, manufacturerName, metadata.regions]
 		);
 
 		const item = await getProductCatalogItemByNormalizedName(normalizedName);
@@ -366,9 +396,9 @@ export async function saveTreatmentProductCatalogItem(kind: TreatmentKind, input
 
 	const newId = createUuidV4();
 	await execute(
-		`INSERT INTO product_catalog_items (id, type, name, normalized_name, species, aliases, manufacturer_id, origin, regions, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, 'user', $8, CURRENT_TIMESTAMP)`,
-		[newId, serializedType, name, normalizedName, metadata.species, metadata.aliases, manufacturer?.id ?? null, metadata.regions]
+		`INSERT INTO user_product_catalog_items (id, type, name, normalized_name, species, aliases, manufacturer_id, manufacturer_name, regions, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)`,
+		[newId, serializedType, name, normalizedName, metadata.species, metadata.aliases, manufacturer?.id ?? null, manufacturerName, metadata.regions]
 	);
 
 	const item = await getProductCatalogItemByNormalizedName(normalizedName);
@@ -377,40 +407,28 @@ export async function saveTreatmentProductCatalogItem(kind: TreatmentKind, input
 }
 
 export async function setProductCatalogItemHidden(_kind: TreatmentKind, id: TreatmentCatalogItemId, hidden: boolean): Promise<TreatmentCatalogItem> {
+	await assertProductCatalogItemEditable(id);
 	await execute(
-		`UPDATE product_catalog_items
+		`UPDATE user_product_catalog_items
 		 SET hidden_at = ${hidden ? 'COALESCE(hidden_at, CURRENT_TIMESTAMP)' : 'NULL'},
 			updated_at = CURRENT_TIMESTAMP
 		 WHERE id = $1`,
 		[id]
 	);
 
-	const rows = await selectMany<ProductCatalogItemRow>(
-		`SELECT ${PRODUCT_CATALOG_COLUMNS}
-		 FROM ${PRODUCT_CATALOG_FROM}
-		 WHERE product.id = $1
-		 LIMIT 1`,
-		[id]
-	);
-	if (!rows[0]) throw new Error(configFor('medication').saveFailedError);
-	return mapTreatmentCatalogItemWithImages(rows[0]);
+	const row = await selectProductCatalogItemRowById(id, true);
+	if (!row) throw new Error(configFor('medication').saveFailedError);
+	return mapTreatmentCatalogItemWithImages(row);
 }
 
 export async function deleteProductCatalogItem(_kind: TreatmentKind, id: TreatmentCatalogItemId): Promise<void> {
 	await assertProductCatalogItemEditable(id);
 	await deleteImageCollection(PRODUCT_CATALOG_IMAGE_COLLECTION_TYPE, id);
-	await execute('DELETE FROM product_catalog_items WHERE id = $1', [id]);
+	await execute('DELETE FROM user_product_catalog_items WHERE id = $1', [id]);
 }
 
 export async function saveProductCatalogItemImages(_kind: TreatmentKind, id: TreatmentCatalogItemId, images: ImageCollectionItemInput[]): Promise<TreatmentCatalogItem> {
-	const rows = await selectMany<ProductCatalogItemRow>(
-		`SELECT ${PRODUCT_CATALOG_COLUMNS}
-		 FROM ${PRODUCT_CATALOG_FROM}
-		 WHERE product.id = $1
-		 LIMIT 1`,
-		[id]
-	);
-	const row = rows[0];
+	const row = await selectProductCatalogItemRowById(id, true);
 	if (!row) throw new Error(configFor('medication').saveFailedError);
 	if (!canEditProductCatalogItem(row)) throw new Error('product_catalog_system_item');
 

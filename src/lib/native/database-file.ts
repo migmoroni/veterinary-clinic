@@ -2,9 +2,12 @@ import { appConfigDir } from '@tauri-apps/api/path';
 import { BaseDirectory, copyFile, exists, mkdir, remove, rename } from '@tauri-apps/plugin-fs';
 import { isTauriRuntime } from './platform.js';
 
-export const DATABASE_FILE = 'veterinary_clinic.db';
+export const USER_DATABASE_FILE = 'veterinary_clinic_user.db';
+export const SYSTEM_DATABASE_FILE = 'veterinary_clinic_system.db';
+export const DATABASE_FILE = USER_DATABASE_FILE;
 
-export const DATABASE_URL = `sqlite:${DATABASE_FILE}`;
+export const DATABASE_URL = `sqlite:${USER_DATABASE_FILE}`;
+export const SYSTEM_DATABASE_URL = `sqlite:${SYSTEM_DATABASE_FILE}`;
 const APP_CONFIG_BACKUP_DIR = 'backups';
 
 function timestampForFile(): string {
@@ -17,6 +20,14 @@ export async function hasDatabaseFile(): Promise<boolean> {
 	}
 
 	return exists(DATABASE_FILE, { baseDir: BaseDirectory.AppConfig });
+}
+
+export async function hasSystemDatabaseFile(): Promise<boolean> {
+	if (!isTauriRuntime()) {
+		throw new Error('Tauri runtime required for the local SQLite database.');
+	}
+
+	return exists(SYSTEM_DATABASE_FILE, { baseDir: BaseDirectory.AppConfig });
 }
 
 export async function ensureDatabaseDirectory(): Promise<void> {

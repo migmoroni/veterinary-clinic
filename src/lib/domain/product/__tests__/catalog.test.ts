@@ -41,10 +41,10 @@ describe('product catalog metadata', () => {
 	});
 
 	it('only allows user-created catalog items to be edited or deleted', () => {
-		expect(canEditProductCatalogItem({ origin: 'user' })).toBe(true);
-		expect(canEditProductCatalogItem({ origin: 'system' })).toBe(false);
-		expect(canDeleteProductCatalogItem({ origin: 'user' })).toBe(true);
-		expect(canDeleteProductCatalogItem({ origin: 'system' })).toBe(false);
+		expect(canEditProductCatalogItem({ source: 'user' })).toBe(true);
+		expect(canEditProductCatalogItem({ source: 'system' })).toBe(false);
+		expect(canDeleteProductCatalogItem({ source: 'user' })).toBe(true);
+		expect(canDeleteProductCatalogItem({ source: 'system' })).toBe(false);
 	});
 
 	it('normalizes product extension clinical and regulatory classification fields', () => {
