@@ -2,15 +2,15 @@ import fs from 'fs';
 import path from 'path';
 import { parse } from 'csv-parse/sync';
 import Database from 'better-sqlite3';
-import { PRODUCT_TYPES, productTypeForTreatmentKind, stringifyProductCatalogExtension, stringifyProductType } from '../src/lib/domain/product/catalog.js';
-import { defaultProductCatalogItems } from '../src/lib/domain/product/default-catalog.js';
-import { MANUFACTURER_TYPES, stringifyManufacturerType } from '../src/lib/domain/manufacturer/catalog.js';
-import { defaultManufacturerCatalogItems } from '../src/lib/domain/manufacturer/default-catalog.js';
-import { ACTIVE_INGREDIENT_TYPES, stringifyActiveIngredientType } from '../src/lib/domain/active-ingredient/catalog.js';
-import { defaultActiveIngredientCatalogItems } from '../src/lib/domain/active-ingredient/default-catalog.js';
-import { CONDITION_TYPES, stringifyConditionCatalogExtension, stringifyConditionType } from '../src/lib/domain/condition/catalog.js';
-import { defaultConditionCatalogItems } from '../src/lib/domain/condition/default-catalog.js';
-import { defaultTreatmentProtocols } from '../src/lib/domain/treatment/default-protocol.js';
+import { PRODUCT_TYPES, productTypeForTreatmentKind, stringifyProductCatalogExtension, stringifyProductType } from '../../src/lib/domain/product/catalog.js';
+import { defaultProductCatalogItems } from '../../src/lib/domain/product/default-catalog.js';
+import { MANUFACTURER_TYPES, stringifyManufacturerType } from '../../src/lib/domain/manufacturer/catalog.js';
+import { defaultManufacturerCatalogItems } from '../../src/lib/domain/manufacturer/default-catalog.js';
+import { ACTIVE_INGREDIENT_TYPES, stringifyActiveIngredientType } from '../../src/lib/domain/active-ingredient/catalog.js';
+import { defaultActiveIngredientCatalogItems } from '../../src/lib/domain/active-ingredient/default-catalog.js';
+import { CONDITION_TYPES, stringifyConditionCatalogExtension, stringifyConditionType } from '../../src/lib/domain/condition/catalog.js';
+import { defaultConditionCatalogItems } from '../../src/lib/domain/condition/default-catalog.js';
+import { defaultTreatmentProtocols } from '../../src/lib/domain/treatment/default-protocol.js';
 
 const PRODUCT_TYPE_SQL_VALUES = PRODUCT_TYPES.map((type) => `'${stringifyProductType(type).replace(/'/g, "''")}'`).join(', ');
 const MANUFACTURER_TYPE_SQL_VALUES = MANUFACTURER_TYPES.map((type) => `'${stringifyManufacturerType(type).replace(/'/g, "''")}'`).join(', ');
@@ -830,7 +830,6 @@ for (const item of defaultManufacturerCatalogItems) {
     name: item.name,
     normalizedName: normalizeVaccineName(item.name),
     aliases: JSON.stringify(item.aliases),
-    origin: item.origin,
     regions: JSON.stringify(item.regions),
     extension: JSON.stringify(item.extension ?? {})
   });
@@ -843,7 +842,6 @@ for (const item of defaultActiveIngredientCatalogItems) {
     name: item.name,
     normalizedName: normalizeVaccineName(item.name),
     aliases: JSON.stringify(item.aliases),
-    origin: item.origin,
     regions: JSON.stringify(item.regions),
     extension: JSON.stringify(item.extension ?? {})
   });
@@ -856,7 +854,6 @@ for (const item of defaultConditionCatalogItems) {
     name: item.name,
     normalizedName: normalizeVaccineName(item.name),
     aliases: JSON.stringify(item.aliases),
-    origin: item.origin,
     regions: JSON.stringify(item.regions),
     extension: stringifyConditionCatalogExtension(item.extension)
   });
@@ -871,7 +868,6 @@ for (const item of defaultProductCatalogItems) {
     species: JSON.stringify(item.species),
     aliases: JSON.stringify(item.aliases),
     manufacturerId: item.manufacturerId,
-    origin: item.origin,
     regions: JSON.stringify(item.regions),
     extension: stringifyProductCatalogExtension(item.extension)
   });

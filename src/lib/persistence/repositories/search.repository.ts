@@ -1,19 +1,20 @@
 import { selectMany } from '$lib/persistence/sqlite/client.js';
-import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { normalizeSearchText, searchTermsForLocale } from '$lib/domain/shared/search-terms.js';
 import { CLINIC_SEARCH_RESULT_KINDS, isClinicSearchResultKind, type ClinicSearchResultKind, type SearchResult } from '$lib/domain/search/search.js';
 import { DEFAULT_LOCALE, type Locale } from '$lib/i18n/locales.js';
+import { loadMediaDataMap, mediaHashKey } from './media.repository.js';
 import { listOwnerAssociatedContactsByOwnerIds } from './owner.repository.js';
+import { normalizeMediaHash } from '$lib/persistence/sqlite/media.js';
 
 interface SearchResultRow {
 	kind: ClinicSearchResultKind;
 	id: number;
 	owner_id: number | null;
 	pet_id: number | null;
-	owner_avatar_blob: unknown | null;
+	owner_avatar_hash: unknown | null;
 	title: string;
 	subtitle: string;
-	pet_avatar_blob: unknown | null;
+	pet_avatar_hash: unknown | null;
 	search_primary: string;
 	search_support: string;
 }
@@ -29,7 +30,7 @@ const firstOwnerIdSql = `(SELECT owners.id
 	ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
 	LIMIT 1)`;
 
-const firstOwnerAvatarSql = `(SELECT owners.avatar_blob
+const firstOwnerAvatarSql = `(SELECT owners.avatar_hash
 	FROM pet_owners
 	JOIN owners ON owners.id = pet_owners.owner_id
 	WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
@@ -163,8 +164,8 @@ export async function searchClinic(query: string, kinds: readonly ClinicSearchRe
 			owners.id,
 			owners.id AS owner_id,
 			NULL AS pet_id,
-			owners.avatar_blob AS owner_avatar_blob,
-			NULL AS pet_avatar_blob,
+			owners.avatar_hash AS owner_avatar_hash,
+			NULL AS pet_avatar_hash,
 			owners.name AS title,
 			COALESCE((
 				SELECT CASE
@@ -195,8 +196,8 @@ export async function searchClinic(query: string, kinds: readonly ClinicSearchRe
 			pets.id,
 			${firstOwnerIdSql} AS owner_id,
 			pets.id AS pet_id,
-			${firstOwnerAvatarSql} AS owner_avatar_blob,
-			pets.avatar_blob AS pet_avatar_blob,
+			${firstOwnerAvatarSql} AS owner_avatar_hash,
+			pets.avatar_hash AS pet_avatar_hash,
 			pets.name AS title,
 			COALESCE(${ownerNamesSql}, '') AS subtitle,
 			pets.name AS search_primary,
@@ -219,7 +220,11 @@ export async function searchClinic(query: string, kinds: readonly ClinicSearchRe
 		.slice(0, 40);
 
 	const ownerIds = scoredRows.filter(({ row }) => row.kind === 'owner').map(({ row }) => row.id);
-	const contactsByOwnerId = await listOwnerAssociatedContactsByOwnerIds(ownerIds);
+	const [contactsByOwnerId, ownerAvatarBytesByHash, petAvatarBytesByHash] = await Promise.all([
+		listOwnerAssociatedContactsByOwnerIds(ownerIds),
+		loadMediaDataMap('user', scoredRows.map(({ row }) => normalizeMediaHash(row.owner_avatar_hash))),
+		loadMediaDataMap('user', scoredRows.map(({ row }) => normalizeMediaHash(row.pet_avatar_hash)))
+	]);
 
 	return scoredRows.map(({ row }) => ({
 		kind: row.kind,
@@ -229,8 +234,8 @@ export async function searchClinic(query: string, kinds: readonly ClinicSearchRe
 		href: resultHref(row),
 		title: row.title,
 		subtitle: row.subtitle,
-		ownerAvatarBytes: row.kind === 'owner' ? normalizeByteArray(row.owner_avatar_blob) : null,
-		petAvatarBytes: row.kind === 'pet' ? normalizeByteArray(row.pet_avatar_blob) : null,
+		ownerAvatarBytes: row.kind === 'owner' ? (ownerAvatarBytesByHash.get(mediaHashKey(row.owner_avatar_hash) ?? '') ?? null) : null,
+		petAvatarBytes: row.kind === 'pet' ? (petAvatarBytesByHash.get(mediaHashKey(row.pet_avatar_hash) ?? '') ?? null) : null,
 		ownerContacts: row.kind === 'owner' ? (contactsByOwnerId.get(row.id) ?? []) : []
 	}));
 }

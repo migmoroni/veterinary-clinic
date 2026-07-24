@@ -29,7 +29,7 @@
 	}
 
 	function policyIntervalLabel(minutes: number): string {
-		if (minutes <= 24 * 60) {
+		if (minutes < 24 * 60) {
 			const hours = minutes / 60;
 			const unitKey = hours === 1 ? 'backup.policyHour' : 'backup.policyHours';
 			return `${t('backup.policyEvery')} ${hours} ${t(unitKey)}`;

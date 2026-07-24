@@ -9,18 +9,19 @@ import type {
 	Workplace,
 	WorkplaceInput
 } from '$lib/domain/practice-profile/practice-profile.js';
-import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { formatEmailForInput } from '$lib/domain/shared/email.js';
 import { FIELD_LIMITS, assertTextLimit, nullableLimitedText, nullableMultilineText } from '$lib/domain/shared/field-limits.js';
 import { formatPhoneForStorage } from '$lib/domain/shared/phone.js';
 import { getImageCollection, replaceImageCollection } from '$lib/persistence/repositories/image-collection.repository.js';
+import { loadMediaData, saveMedia } from '$lib/persistence/repositories/media.repository.js';
 import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
+import { mediaHashToSqlLiteral, normalizeMediaHash } from '$lib/persistence/sqlite/media.js';
 
 interface VeterinarianProfileRow {
 	id: number;
 	name: string | null;
 	professional_registration: string | null;
-	avatar_blob: unknown | null;
+	avatar_hash: unknown | null;
 	created_at: string | null;
 	updated_at: string | null;
 }
@@ -59,10 +60,10 @@ function nullable(value: string | null | undefined): string | null {
 	return trimmed.length > 0 ? trimmed : null;
 }
 
-function avatarBytesToSqlLiteral(value: Uint8Array | null | undefined): string {
+async function avatarBytesToHashSqlLiteral(value: Uint8Array | null | undefined): Promise<string> {
 	if (!value || value.length === 0) return 'NULL';
-	const hex = Array.from(value, (byte) => byte.toString(16).padStart(2, '0')).join('');
-	return `X'${hex}'`;
+	const hash = await saveMedia('user', value);
+	return hash ? mediaHashToSqlLiteral(hash) : 'NULL';
 }
 
 function normalizeContactKind(value: string | null | undefined): OwnerContactKind {
@@ -172,7 +173,7 @@ function normalizeWorkplaceAddress(input: WorkplaceInput): { country: string; st
 export async function getPracticeProfiles(): Promise<PracticeProfiles> {
 	const [veterinarianRow, workplaceRow, veterinarianContacts, workplaceContacts, workplaceImages] = await Promise.all([
 		selectOne<VeterinarianProfileRow>(
-			`SELECT id, name, professional_registration, avatar_blob, created_at, updated_at
+			`SELECT id, name, professional_registration, avatar_hash, created_at, updated_at
 			 FROM veterinarian_profiles WHERE id = 1`
 		),
 		selectOne<WorkplaceRow>(
@@ -195,7 +196,7 @@ export async function getPracticeProfiles(): Promise<PracticeProfiles> {
 				id: veterinarianRow.id,
 				name: veterinarianRow.name,
 				professionalRegistration: veterinarianRow.professional_registration,
-				avatarBytes: normalizeByteArray(veterinarianRow.avatar_blob),
+				avatarBytes: await loadMediaData('user', normalizeMediaHash(veterinarianRow.avatar_hash)),
 				contacts: veterinarianContacts,
 				createdAt: veterinarianRow.created_at,
 				updatedAt: veterinarianRow.updated_at
@@ -238,14 +239,14 @@ export async function getPracticeIdentity(): Promise<PracticeIdentity> {
 }
 
 export async function saveVeterinarianProfile(input: VeterinarianProfileInput): Promise<VeterinarianProfile> {
-	const avatarSqlLiteral = avatarBytesToSqlLiteral(input.avatarBytes);
+	const avatarSqlLiteral = await avatarBytesToHashSqlLiteral(input.avatarBytes);
 	await execute(
-		`INSERT INTO veterinarian_profiles (id, name, professional_registration, avatar_blob, updated_at)
+		`INSERT INTO veterinarian_profiles (id, name, professional_registration, avatar_hash, updated_at)
 		 VALUES (1, $1, $2, ${avatarSqlLiteral}, CURRENT_TIMESTAMP)
 		 ON CONFLICT(id) DO UPDATE SET
 			name = excluded.name,
 			professional_registration = excluded.professional_registration,
-			avatar_blob = excluded.avatar_blob,
+			avatar_hash = excluded.avatar_hash,
 			updated_at = CURRENT_TIMESTAMP`,
 		[
 			nullableLimitedText(input.name, FIELD_LIMITS.veterinarianName),

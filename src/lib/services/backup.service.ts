@@ -1,17 +1,19 @@
+import { invoke } from '@tauri-apps/api/core';
 import { addBackupHistory, listBackupHistory } from '$lib/persistence/repositories/backup.repository.js';
-import { closeDatabase, getDatabase } from '$lib/persistence/sqlite/client.js';
+import { getDatabase } from '$lib/persistence/sqlite/client.js';
 import { getSetting, setSetting } from '$lib/persistence/repositories/settings.repository.js';
-import { copyDatabaseToAppConfigBackup } from '$lib/native/database-file.js';
 
 const BACKUP_POLICY_INTERVAL_SETTING_KEY = 'backup.policyIntervalMinutes';
 const LAST_AUTOMATIC_BACKUP_SETTING_KEY = 'backup.lastAutomaticBackupAt';
 
 export const DEFAULT_BACKUP_POLICY_INTERVAL_MINUTES = 7 * 24 * 60;
 export const AUTOMATIC_BACKUP_CHECK_INTERVAL_MS = 60 * 60 * 1000;
-export const BACKUP_POLICY_INTERVAL_MINUTES = [
-	...Array.from({ length: 24 }, (_, index) => (index + 1) * 60),
-	...Array.from({ length: 6 }, (_, index) => (index + 2) * 24 * 60)
-] as const;
+export const BACKUP_POLICY_INTERVAL_MINUTES = [24 * 60, 7 * 24 * 60] as const;
+
+interface PackageResponse {
+	path: string;
+	safetyBackupPath: string | null;
+}
 
 let automaticBackupPromise: Promise<string | null> | null = null;
 
@@ -48,12 +50,10 @@ export async function saveBackupPolicyIntervalMinutes(intervalMinutes: number): 
 }
 
 async function createAutomaticBackup(now: Date): Promise<string> {
-	await closeDatabase();
-	const path = await copyDatabaseToAppConfigBackup('automatic-backup-veterinary-clinic');
-	await getDatabase();
-	await addBackupHistory(path, 'automatic_backup');
+	const response = await invoke<PackageResponse>('create_user_auto_backup');
+	await addBackupHistory(response.path, 'automatic_backup');
 	await setSetting(LAST_AUTOMATIC_BACKUP_SETTING_KEY, now.toISOString());
-	return path;
+	return response.path;
 }
 
 export async function createAutomaticBackupIfDue(now = new Date()): Promise<string | null> {

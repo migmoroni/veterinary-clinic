@@ -6,9 +6,10 @@ import {
 	type ImageCollectionItemInput,
 	type ImageCollectionPolicy
 } from '$lib/domain/image-collection/image-collection.js';
-import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { FIELD_LIMITS, nullableMultilineText, requireLimitedText } from '$lib/domain/shared/field-limits.js';
+import { loadMediaDataMap, mediaHashKey, saveMedia } from '$lib/persistence/repositories/media.repository.js';
 import { execute, selectMany, selectOne, selectSystemMany, selectSystemOne } from '$lib/persistence/sqlite/client.js';
+import { mediaHashToSqlLiteral, normalizeMediaHash } from '$lib/persistence/sqlite/media.js';
 
 interface ImageCollectionRow {
 	id: number;
@@ -22,8 +23,8 @@ interface ImageCollectionRow {
 
 interface ImageCollectionItemRow {
 	id: number;
-	image_blob: unknown;
-	original_image_blob: unknown;
+	image_hash: unknown;
+	original_image_hash: unknown;
 	description: string | null;
 	is_primary: number;
 	sort_order: number;
@@ -31,15 +32,7 @@ interface ImageCollectionItemRow {
 	updated_at: string | null;
 }
 
-function bytesToSqlLiteral(value: Uint8Array): string {
-	if (value.length === 0) throw new Error('image_required');
-	const hex = Array.from(value, (byte) => byte.toString(16).padStart(2, '0')).join('');
-	return `X'${hex}'`;
-}
-
-function mapItem(row: ImageCollectionItemRow): ImageCollectionItem {
-	const imageBytes = normalizeByteArray(row.image_blob);
-	const originalImageBytes = normalizeByteArray(row.original_image_blob);
+function mapItem(row: ImageCollectionItemRow, imageBytes: Uint8Array | null, originalImageBytes: Uint8Array | null): ImageCollectionItem {
 	if (!imageBytes || !originalImageBytes) throw new Error('image_collection_invalid');
 	return {
 		id: row.id,
@@ -93,12 +86,14 @@ export async function getImageCollection(entityType: string, entityId: ImageColl
 	if (!collection) return null;
 
 	const items = await database.selectMany<ImageCollectionItemRow>(
-		`SELECT id, image_blob, original_image_blob, description, is_primary, sort_order, created_at, updated_at
+		`SELECT id, image_hash, original_image_hash, description, is_primary, sort_order, created_at, updated_at
 		 FROM image_collection_items
 		 WHERE collection_id = $1
 		 ORDER BY sort_order, id`,
 		[collection.id]
 	);
+	const imageMap = await loadMediaDataMap(source, items.map((item) => normalizeMediaHash(item.image_hash)));
+	const originalImageMap = await loadMediaDataMap(source, items.map((item) => normalizeMediaHash(item.original_image_hash)));
 
 	return {
 		id: collection.id,
@@ -106,7 +101,7 @@ export async function getImageCollection(entityType: string, entityId: ImageColl
 		entityId: collection.entity_id,
 		primaryRequired: collection.primary_required === 1,
 		maxItems: collection.max_items,
-		items: items.map(mapItem),
+		items: items.map((item) => mapItem(item, imageMap.get(mediaHashKey(item.image_hash) ?? '') ?? null, originalImageMap.get(mediaHashKey(item.original_image_hash) ?? '') ?? null)),
 		createdAt: collection.created_at,
 		updatedAt: collection.updated_at
 	};
@@ -144,11 +139,14 @@ export async function replaceImageCollection(
 
 	await execute('DELETE FROM image_collection_items WHERE collection_id = $1', [collection.id]);
 	for (const [index, item] of normalizedItems.entries()) {
+		const imageHash = await saveMedia('user', item.imageBytes);
+		const originalImageHash = await saveMedia('user', item.originalImageBytes);
+		if (!imageHash || !originalImageHash) throw new Error('image_collection_save_failed');
 		await execute(
 			`INSERT INTO image_collection_items (
-				collection_id, image_blob, original_image_blob, description, is_primary, sort_order, updated_at
+				collection_id, image_hash, original_image_hash, description, is_primary, sort_order, updated_at
 			)
-			 VALUES ($1, ${bytesToSqlLiteral(item.imageBytes)}, ${bytesToSqlLiteral(item.originalImageBytes)}, $2, $3, $4, CURRENT_TIMESTAMP)`,
+			 VALUES ($1, ${mediaHashToSqlLiteral(imageHash)}, ${mediaHashToSqlLiteral(originalImageHash)}, $2, $3, $4, CURRENT_TIMESTAMP)`,
 			[collection.id, item.description || null, item.isPrimary ? 1 : 0, index]
 		);
 	}

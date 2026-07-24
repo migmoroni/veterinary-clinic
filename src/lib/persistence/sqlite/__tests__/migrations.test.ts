@@ -3,9 +3,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import type Database from '@tauri-apps/plugin-sql';
 import { isUuidV4 } from '$lib/domain/shared/uuid.js';
+import type { SqliteDatabase as Database } from '../client.js';
 import { defaultTreatmentProtocols } from '$lib/domain/treatment/default-protocol.js';
+import { configureMediaDatabase } from '../media.js';
 import { CURRENT_SCHEMA_VERSION, runMigrations, runSystemMigrations } from '../migrations.js';
 
 interface UserVersionRow {
@@ -69,10 +70,12 @@ class CliSqliteDatabase {
 describeWithSqlite('SQLite schema migrations', () => {
 	let tempDir = '';
 	let database: CliSqliteDatabase;
+	let mediaDatabase: CliSqliteDatabase;
 
 	beforeEach(() => {
 		tempDir = mkdtempSync(join(tmpdir(), 'veterinary-clinic-migrations-'));
 		database = new CliSqliteDatabase(join(tempDir, 'fixture.db'));
+		mediaDatabase = new CliSqliteDatabase(join(tempDir, 'fixture-media.db'));
 	});
 
 	afterEach(() => {
@@ -108,7 +111,8 @@ describeWithSqlite('SQLite schema migrations', () => {
 	});
 
 	it('keeps default system treatment protocols in the system database', async () => {
-		await runSystemMigrations(database as unknown as Database);
+		await configureMediaDatabase(mediaDatabase as unknown as Database);
+		await runSystemMigrations(database as unknown as Database, { mediaDatabase: mediaDatabase as unknown as Database });
 
 		const protocols = await database.select<CountRow[]>("SELECT COUNT(*) AS total FROM treatment_protocols WHERE origin = 'system'");
 		const protocolIds = await database.select<IdRow[]>("SELECT id FROM treatment_protocols WHERE origin = 'system' ORDER BY id");

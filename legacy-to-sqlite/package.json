@@ -3,7 +3,7 @@
   "scripts": {
     "build:csv": "tsc -p tsconfig.csv.json",
     "csv": "node build/generated/legacy-to-sqlite/to-sqlite.js",
-    "adopt:version-0": "node adopt-version-0-db.mjs",
+    "adopt:version": "node adopt-version-db.mjs",
     "build:exported-db": "tsc exported-db-to-sqlite.ts --ignoreConfig",
     "exported-db": "npm run build:exported-db && node exported-db-to-sqlite.js"
   },

@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-  veterinary_clinic_lib::run();
+    veterinary_clinic_lib::run();
 }

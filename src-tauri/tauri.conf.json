@@ -66,10 +66,5 @@
         "desktopTemplate": "desktop/veterinary-clinic.desktop.hbs"
       }
     }
-  },
-  "plugins": {
-    "sql": {
-      "preload": ["sqlite:veterinary_clinic_user.db", "sqlite:veterinary_clinic_system.db"]
-    }
   }
 }

@@ -1,4 +1,4 @@
-import type Database from '@tauri-apps/plugin-sql';
+import type { SqliteDatabase as Database } from '../client.js';
 
 export interface SchemaMigration {
 	version: number;

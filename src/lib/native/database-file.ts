@@ -4,10 +4,14 @@ import { isTauriRuntime } from './platform.js';
 
 export const USER_DATABASE_FILE = 'veterinary_clinic_user.db';
 export const SYSTEM_DATABASE_FILE = 'veterinary_clinic_system.db';
+export const USER_MEDIA_DATABASE_FILE = 'veterinary_clinic_user_media.db';
+export const SYSTEM_MEDIA_DATABASE_FILE = 'veterinary_clinic_system_media.db';
 export const DATABASE_FILE = USER_DATABASE_FILE;
 
 export const DATABASE_URL = `sqlite:${USER_DATABASE_FILE}`;
 export const SYSTEM_DATABASE_URL = `sqlite:${SYSTEM_DATABASE_FILE}`;
+export const USER_MEDIA_DATABASE_URL = `sqlite:${USER_MEDIA_DATABASE_FILE}`;
+export const SYSTEM_MEDIA_DATABASE_URL = `sqlite:${SYSTEM_MEDIA_DATABASE_FILE}`;
 const APP_CONFIG_BACKUP_DIR = 'backups';
 
 function timestampForFile(): string {

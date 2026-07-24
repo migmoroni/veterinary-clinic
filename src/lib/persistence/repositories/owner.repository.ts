@@ -10,17 +10,18 @@ import {
 	type OwnerInput
 } from '$lib/domain/owner/owner.js';
 import { countryPhoneFormat, countryPhoneFormats, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '$lib/domain/geo/location.js';
-import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { formatEmailForInput } from '$lib/domain/shared/email.js';
 import { FIELD_LIMITS, assertTextLimit, nullableLimitedText, requireLimitedText } from '$lib/domain/shared/field-limits.js';
 import { formatPhoneForStorage } from '$lib/domain/shared/phone.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
+import { loadMediaDataMap, mediaHashKey, saveMedia } from '$lib/persistence/repositories/media.repository.js';
 import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
+import { mediaHashToSqlLiteral, normalizeMediaHash } from '$lib/persistence/sqlite/media.js';
 
 interface OwnerRow {
 	id: number;
 	name: string;
-	avatar_blob: unknown | null;
+	avatar_hash: unknown | null;
 	street: string | null;
 	street_number: string | null;
 	address_complement: string | null;
@@ -59,7 +60,7 @@ interface OwnerAdditionalResponsibleRow {
 	id: number;
 	owner_id: number;
 	name: string;
-	avatar_blob: unknown | null;
+	avatar_hash: unknown | null;
 	created_at: string | null;
 	updated_at: string | null;
 }
@@ -75,11 +76,14 @@ function nullable(value: string | null | undefined): string | null {
 	return trimmed.length > 0 ? trimmed : null;
 }
 
-function avatarBytesToSqlLiteral(value: Uint8Array | null | undefined): string {
+async function avatarBytesToHashSqlLiteral(value: Uint8Array | null | undefined): Promise<string> {
 	if (!value || value.length === 0) return 'NULL';
+	const hash = await saveMedia('user', value);
+	return hash ? mediaHashToSqlLiteral(hash) : 'NULL';
+}
 
-	const hex = Array.from(value, (byte) => byte.toString(16).padStart(2, '0')).join('');
-	return `X'${hex}'`;
+async function loadAvatarBytesByRows<T extends { avatar_hash: unknown | null }>(rows: readonly T[]): Promise<Map<string, Uint8Array>> {
+	return loadMediaDataMap('user', rows.map((row) => normalizeMediaHash(row.avatar_hash)));
 }
 
 function normalizeContactKind(value: string | null | undefined): OwnerContactKind {
@@ -181,22 +185,22 @@ function mapAssociatedContact(row: OwnerAssociatedContactRow): OwnerAssociatedCo
 	};
 }
 
-function mapAdditionalResponsible(row: OwnerAdditionalResponsibleRow, contacts: OwnerContact[] = []): OwnerAdditionalResponsible {
+function mapAdditionalResponsible(row: OwnerAdditionalResponsibleRow, contacts: OwnerContact[] = [], avatarBytes: Uint8Array | null = null): OwnerAdditionalResponsible {
 	return {
 		id: row.id,
 		name: row.name,
-		avatarBytes: normalizeByteArray(row.avatar_blob),
+		avatarBytes,
 		contacts,
 		createdAt: row.created_at,
 		updatedAt: row.updated_at
 	};
 }
 
-function mapOwner(row: OwnerRow, contacts: OwnerContact[] = [], additionalResponsibles: OwnerAdditionalResponsible[] = []): Owner {
+function mapOwner(row: OwnerRow, contacts: OwnerContact[] = [], additionalResponsibles: OwnerAdditionalResponsible[] = [], avatarBytes: Uint8Array | null = null): Owner {
 	return {
 		id: row.id,
 		name: row.name,
-		avatarBytes: normalizeByteArray(row.avatar_blob),
+		avatarBytes,
 		street: row.street,
 		streetNumber: row.street_number,
 		addressComplement: row.address_complement,
@@ -293,9 +297,19 @@ export async function listOwnerAssociatedContactsByOwnerIds(ownerIds: number[]):
 }
 
 async function mapOwnersWithContacts(rows: OwnerRow[]): Promise<Owner[]> {
-	const contactsByOwnerId = await listOwnerContactsByOwnerIds(rows.map((row) => row.id));
-	const additionalResponsiblesByOwnerId = await listOwnerAdditionalResponsiblesByOwnerIds(rows.map((row) => row.id));
-	return rows.map((row) => mapOwner(row, contactsByOwnerId.get(row.id) ?? [], additionalResponsiblesByOwnerId.get(row.id) ?? []));
+	const [contactsByOwnerId, additionalResponsiblesByOwnerId, avatarBytesByHash] = await Promise.all([
+		listOwnerContactsByOwnerIds(rows.map((row) => row.id)),
+		listOwnerAdditionalResponsiblesByOwnerIds(rows.map((row) => row.id)),
+		loadAvatarBytesByRows(rows)
+	]);
+	return rows.map((row) =>
+		mapOwner(
+			row,
+			contactsByOwnerId.get(row.id) ?? [],
+			additionalResponsiblesByOwnerId.get(row.id) ?? [],
+			avatarBytesByHash.get(mediaHashKey(row.avatar_hash) ?? '') ?? null
+		)
+	);
 }
 
 export async function listOwnerAdditionalResponsibleContactsByResponsibleIds(responsibleIds: number[]): Promise<Map<number, OwnerContact[]>> {
@@ -323,15 +337,18 @@ export async function listOwnerAdditionalResponsibleContactsByResponsibleIds(res
 
 export async function listOwnerAdditionalResponsibles(ownerId: number): Promise<OwnerAdditionalResponsible[]> {
 	const rows = await selectMany<OwnerAdditionalResponsibleRow>(
-		`SELECT id, owner_id, name, avatar_blob, created_at, updated_at
+		`SELECT id, owner_id, name, avatar_hash, created_at, updated_at
 		 FROM owner_additional_responsibles
 		 WHERE owner_id = $1
 		 ORDER BY sort_order, id`,
 		[ownerId]
 	);
 
-	const contactsByResponsibleId = await listOwnerAdditionalResponsibleContactsByResponsibleIds(rows.map((row) => row.id));
-	return rows.map((row) => mapAdditionalResponsible(row, contactsByResponsibleId.get(row.id) ?? []));
+	const [contactsByResponsibleId, avatarBytesByHash] = await Promise.all([
+		listOwnerAdditionalResponsibleContactsByResponsibleIds(rows.map((row) => row.id)),
+		loadAvatarBytesByRows(rows)
+	]);
+	return rows.map((row) => mapAdditionalResponsible(row, contactsByResponsibleId.get(row.id) ?? [], avatarBytesByHash.get(mediaHashKey(row.avatar_hash) ?? '') ?? null));
 }
 
 async function listOwnerAdditionalResponsiblesByOwnerIds(ownerIds: number[]): Promise<Map<number, OwnerAdditionalResponsible[]>> {
@@ -341,17 +358,20 @@ async function listOwnerAdditionalResponsiblesByOwnerIds(ownerIds: number[]): Pr
 
 	const placeholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
 	const rows = await selectMany<OwnerAdditionalResponsibleRow>(
-		`SELECT id, owner_id, name, avatar_blob, created_at, updated_at
+		`SELECT id, owner_id, name, avatar_hash, created_at, updated_at
 		 FROM owner_additional_responsibles
 		 WHERE owner_id IN (${placeholders})
 		 ORDER BY owner_id, sort_order, id`,
 		uniqueIds
 	);
 
-	const contactsByResponsibleId = await listOwnerAdditionalResponsibleContactsByResponsibleIds(rows.map((row) => row.id));
+	const [contactsByResponsibleId, avatarBytesByHash] = await Promise.all([
+		listOwnerAdditionalResponsibleContactsByResponsibleIds(rows.map((row) => row.id)),
+		loadAvatarBytesByRows(rows)
+	]);
 	for (const row of rows) {
 		const responsibles = responsiblesByOwnerId.get(row.owner_id) ?? [];
-		responsibles.push(mapAdditionalResponsible(row, contactsByResponsibleId.get(row.id) ?? []));
+		responsibles.push(mapAdditionalResponsible(row, contactsByResponsibleId.get(row.id) ?? [], avatarBytesByHash.get(mediaHashKey(row.avatar_hash) ?? '') ?? null));
 		responsiblesByOwnerId.set(row.owner_id, responsibles);
 	}
 
@@ -377,9 +397,9 @@ async function replaceOwnerAdditionalResponsibles(ownerId: number, responsibles:
 
 	const normalizedResponsibles = normalizeAdditionalResponsibles(responsibles, country);
 	for (const [responsibleIndex, responsible] of normalizedResponsibles.entries()) {
-		const avatarSqlLiteral = avatarBytesToSqlLiteral(responsible.avatarBytes);
+		const avatarSqlLiteral = await avatarBytesToHashSqlLiteral(responsible.avatarBytes);
 		const result = await execute(
-			`INSERT INTO owner_additional_responsibles (owner_id, name, avatar_blob, sort_order, updated_at)
+			`INSERT INTO owner_additional_responsibles (owner_id, name, avatar_hash, sort_order, updated_at)
 			 VALUES ($1, $2, ${avatarSqlLiteral}, $3, CURRENT_TIMESTAMP)`,
 			[ownerId, responsible.name, responsibleIndex]
 		);
@@ -453,7 +473,7 @@ export async function listOwners(query = ''): Promise<Owner[]> {
 			: '';
 
 	const rows = await selectMany<OwnerRow>(
-		`SELECT owners.id, owners.name, owners.avatar_blob, owner_address.street, owner_address.street_number, owner_address.address_complement, owner_address.neighborhood, owner_address.city, owner_address.country, owner_address.postal_code, owners.additional_information, owner_address.state,
+		`SELECT owners.id, owners.name, owners.avatar_hash, owner_address.street, owner_address.street_number, owner_address.address_complement, owner_address.neighborhood, owner_address.city, owner_address.country, owner_address.postal_code, owners.additional_information, owner_address.state,
 			owners.created_at, owners.updated_at, owners.deleted_at, owners.purge_after
 		 FROM owners
 		 LEFT JOIN addresses AS owner_address ON owner_address.owner_id = owners.id
@@ -468,7 +488,7 @@ export async function listOwners(query = ''): Promise<Owner[]> {
 
 export async function getOwner(id: number, includeDeleted = false): Promise<Owner | null> {
 	const rows = await selectMany<OwnerRow>(
-		`SELECT owners.id, owners.name, owners.avatar_blob, owner_address.street, owner_address.street_number, owner_address.address_complement, owner_address.neighborhood, owner_address.city, owner_address.country, owner_address.postal_code, owners.additional_information, owner_address.state,
+		`SELECT owners.id, owners.name, owners.avatar_hash, owner_address.street, owner_address.street_number, owner_address.address_complement, owner_address.neighborhood, owner_address.city, owner_address.country, owner_address.postal_code, owners.additional_information, owner_address.state,
 			owners.created_at, owners.updated_at, owners.deleted_at, owners.purge_after
 		 FROM owners
 		 LEFT JOIN addresses AS owner_address ON owner_address.owner_id = owners.id
@@ -478,17 +498,21 @@ export async function getOwner(id: number, includeDeleted = false): Promise<Owne
 	);
 
 	if (!rows[0]) return null;
-	const [contacts, additionalResponsibles] = await Promise.all([listOwnerContacts(rows[0].id), listOwnerAdditionalResponsibles(rows[0].id)]);
-	return mapOwner(rows[0], contacts, additionalResponsibles);
+	const [contacts, additionalResponsibles, avatarBytesByHash] = await Promise.all([
+		listOwnerContacts(rows[0].id),
+		listOwnerAdditionalResponsibles(rows[0].id),
+		loadAvatarBytesByRows([rows[0]])
+	]);
+	return mapOwner(rows[0], contacts, additionalResponsibles, avatarBytesByHash.get(mediaHashKey(rows[0].avatar_hash) ?? '') ?? null);
 }
 
 export async function createOwner(input: OwnerInput): Promise<Owner> {
-	const avatarSqlLiteral = avatarBytesToSqlLiteral(input.avatarBytes);
+	const avatarSqlLiteral = await avatarBytesToHashSqlLiteral(input.avatarBytes);
 	const address = normalizeOwnerAddress(input);
 	const result = await execute(
 		`INSERT INTO owners (
 			name,
-			avatar_blob,
+			avatar_hash,
 			additional_information,
 			updated_at
 		)
@@ -510,7 +534,7 @@ export async function createOwner(input: OwnerInput): Promise<Owner> {
 }
 
 export async function updateOwner(id: number, input: OwnerInput): Promise<Owner> {
-	const avatarSqlLiteral = avatarBytesToSqlLiteral(input.avatarBytes);
+	const avatarSqlLiteral = await avatarBytesToHashSqlLiteral(input.avatarBytes);
 	const address = normalizeOwnerAddress(input);
 	const existing = await selectOne<{ id: number }>('SELECT id FROM owners WHERE id = $1 AND deleted_at IS NULL', [id]);
 	if (!existing) throw new Error('owner_not_found');
@@ -518,7 +542,7 @@ export async function updateOwner(id: number, input: OwnerInput): Promise<Owner>
 	await execute(
 		`UPDATE owners
 		 SET name = $2,
-			avatar_blob = ${avatarSqlLiteral},
+			avatar_hash = ${avatarSqlLiteral},
 			additional_information = $3,
 			updated_at = CURRENT_TIMESTAMP
 		 WHERE id = $1 AND deleted_at IS NULL`,
@@ -543,19 +567,20 @@ export async function listOwnerAvatarBytesByIds(ownerIds: number[]): Promise<Map
 	if (uniqueIds.length === 0) return new Map<number, Uint8Array | null>();
 
 	const placeholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
-	const rows = await selectMany<{ id: number; avatar_blob: unknown | null }>(
-		`SELECT id, avatar_blob
+	const rows = await selectMany<{ id: number; avatar_hash: unknown | null }>(
+		`SELECT id, avatar_hash
 		 FROM owners
 		 WHERE id IN (${placeholders}) AND deleted_at IS NULL`,
 		uniqueIds
 	);
 
-	return new Map(rows.map((row) => [row.id, normalizeByteArray(row.avatar_blob)]));
+	const avatarBytesByHash = await loadAvatarBytesByRows(rows);
+	return new Map(rows.map((row) => [row.id, avatarBytesByHash.get(mediaHashKey(row.avatar_hash) ?? '') ?? null]));
 }
 
 export async function listOwnersByPet(petId: number, includeDeleted = false): Promise<Owner[]> {
 	const rows = await selectMany<OwnerRow>(
-		`SELECT owners.id, owners.name, owners.avatar_blob, owner_address.street, owner_address.street_number, owner_address.address_complement, owner_address.neighborhood, owner_address.city, owner_address.country, owner_address.postal_code, owners.additional_information, owner_address.state,
+		`SELECT owners.id, owners.name, owners.avatar_hash, owner_address.street, owner_address.street_number, owner_address.address_complement, owner_address.neighborhood, owner_address.city, owner_address.country, owner_address.postal_code, owners.additional_information, owner_address.state,
 			owners.created_at, owners.updated_at, owners.deleted_at, owners.purge_after
 		 FROM owners
 		 LEFT JOIN addresses AS owner_address ON owner_address.owner_id = owners.id

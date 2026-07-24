@@ -4,10 +4,11 @@ import type {
 	MedicalRecordDetails,
 	MedicalRecordInput
 } from '$lib/domain/medical-record/medical-record.js';
-import { normalizeByteArray } from '$lib/domain/shared/binary.js';
 import { FIELD_LIMITS, nullableLimitedText, nullableMultilineText } from '$lib/domain/shared/field-limits.js';
 import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
+import { loadMediaData } from '$lib/persistence/repositories/media.repository.js';
 import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
+import { normalizeMediaHash } from '$lib/persistence/sqlite/media.js';
 import { listOwnerAssociatedContactsByOwnerIds, listOwnersByPet } from './owner.repository.js';
 
 interface MedicalRecordRow {
@@ -24,10 +25,10 @@ interface MedicalRecordRow {
 
 interface MedicalRecordDetailsRow extends MedicalRecordRow {
 	pet_name: string;
-	pet_avatar_blob: unknown | null;
+	pet_avatar_hash: unknown | null;
 	owner_id: number | null;
 	owner_name: string | null;
-	owner_avatar_blob: unknown | null;
+	owner_avatar_hash: unknown | null;
 }
 
 interface CurrentRecordRow {
@@ -50,7 +51,7 @@ const firstOwnerIdSql = `(SELECT owners.id
 	ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
 	LIMIT 1)`;
 
-const firstOwnerAvatarSql = `(SELECT owners.avatar_blob
+const firstOwnerAvatarSql = `(SELECT owners.avatar_hash
 	FROM pet_owners
 	JOIN owners ON owners.id = pet_owners.owner_id
 	WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
@@ -159,10 +160,10 @@ export async function getMedicalRecordDetails(id: number, includeDeleted = false
 			medical_records.deleted_at,
 			medical_records.purge_after,
 			pets.name AS pet_name,
-			pets.avatar_blob AS pet_avatar_blob,
+			pets.avatar_hash AS pet_avatar_hash,
 			${firstOwnerIdSql} AS owner_id,
 			${ownerNamesSql} AS owner_name,
-			${firstOwnerAvatarSql} AS owner_avatar_blob
+			${firstOwnerAvatarSql} AS owner_avatar_hash
 		 FROM medical_records
 		 JOIN pets ON pets.id = medical_records.pet_id
 		 WHERE medical_records.id = $1
@@ -179,11 +180,11 @@ export async function getMedicalRecordDetails(id: number, includeDeleted = false
 	return {
 		record: mapMedicalRecord(row),
 		petName: row.pet_name,
-		petAvatarBytes: normalizeByteArray(row.pet_avatar_blob),
+		petAvatarBytes: await loadMediaData('user', normalizeMediaHash(row.pet_avatar_hash)),
 		owners,
 		ownerId: primaryOwner?.id ?? row.owner_id ?? 0,
 		ownerName: row.owner_name ?? primaryOwner?.name ?? '',
-		ownerAvatarBytes: primaryOwner?.avatarBytes ?? normalizeByteArray(row.owner_avatar_blob)
+		ownerAvatarBytes: primaryOwner?.avatarBytes ?? (await loadMediaData('user', normalizeMediaHash(row.owner_avatar_hash)))
 	};
 }
 

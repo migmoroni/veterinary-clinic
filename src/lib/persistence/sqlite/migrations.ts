@@ -1,4 +1,3 @@
-import type Database from '@tauri-apps/plugin-sql';
 import { defaultProductCatalogItems, type DefaultProductCatalogImage } from '$lib/domain/product/default-catalog.js';
 import { PRODUCT_TYPES, productTypeForTreatmentKind, productTypeMatchesTreatmentKind, stringifyProductCatalogExtension, stringifyProductType } from '$lib/domain/product/catalog.js';
 import { defaultManufacturerCatalogItems, type DefaultManufacturerCatalogImage } from '$lib/domain/manufacturer/default-catalog.js';
@@ -12,8 +11,10 @@ import { stringifyTreatmentSpecies } from '$lib/domain/treatment/species.js';
 import { defaultBreedReferenceItems, type DefaultBreedReferenceImage } from '$lib/domain/pet/default-breed-reference.js';
 import { stringifyBreedReferenceExtension, stringifyBreedSexRange } from '$lib/domain/pet/breed-reference.js';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
+import { insertMediaBlob, mediaHashToSqlLiteral } from './media.js';
 import { incrementalSchemaMigrations } from './schema-migrations/registry.js';
 import type { SchemaMigration } from './schema-migrations/types.js';
+import type { SqliteDatabase as Database } from './client.js';
 
 export const CURRENT_SCHEMA_VERSION = 1;
 export const BASELINE_APP_VERSION = '0.2.0';
@@ -109,6 +110,11 @@ interface RunMigrationsOptions {
 	syncDefaultBreedReferenceData?: boolean;
 }
 
+interface RunSystemMigrationsOptions {
+	createIndexes?: boolean;
+	mediaDatabase?: Database;
+}
+
 const PRODUCT_CATALOG_IMAGE_COLLECTION_TYPE = 'product_catalog_item';
 const PRODUCT_CATALOG_IMAGE_MAX_ITEMS = 9;
 const MANUFACTURER_CATALOG_IMAGE_COLLECTION_TYPE = 'manufacturer_catalog_item';
@@ -151,12 +157,6 @@ const PRODUCT_TYPE_SQL_VALUES = PRODUCT_TYPES.map((type) => quoteSqlString(strin
 const MANUFACTURER_TYPE_SQL_VALUES = MANUFACTURER_TYPES.map((type) => quoteSqlString(stringifyManufacturerType(type))).join(', ');
 const ACTIVE_INGREDIENT_TYPE_SQL_VALUES = ACTIVE_INGREDIENT_TYPES.map((type) => quoteSqlString(stringifyActiveIngredientType(type))).join(', ');
 const CONDITION_TYPE_SQL_VALUES = CONDITION_TYPES.map((type) => quoteSqlString(stringifyConditionType(type))).join(', ');
-
-function bytesToSqlLiteral(value: Uint8Array): string {
-	if (value.length === 0) throw new Error('image_required');
-	const hex = Array.from(value, (byte) => byte.toString(16).padStart(2, '0')).join('');
-	return `X'${hex}'`;
-}
 
 async function tableHasColumns(database: Database, table: string, columns: string[]): Promise<boolean> {
 	const rows = await database.select<TableColumnRow[]>(`PRAGMA table_info(${quoteIdentifier(table)})`);
@@ -233,7 +233,15 @@ async function catalogImageCollectionItemCount(database: Database, entityType: s
 	return Number(rows[0]?.total ?? 0);
 }
 
-async function ensureDefaultCatalogImages(database: Database, entityType: string, entityId: string, maxItems: number, images: readonly DefaultCatalogImage[] | null | undefined, errorPrefix: string): Promise<void> {
+async function ensureDefaultCatalogImages(
+	database: Database,
+	mediaDatabase: Database,
+	entityType: string,
+	entityId: string,
+	maxItems: number,
+	images: readonly DefaultCatalogImage[] | null | undefined,
+	errorPrefix: string
+): Promise<void> {
 	const normalizedImages = normalizedDefaultCatalogImages(images, maxItems, errorPrefix);
 	if (normalizedImages.length === 0) return;
 	if ((await catalogImageCollectionItemCount(database, entityType, entityId)) > 0) return;
@@ -263,30 +271,31 @@ async function ensureDefaultCatalogImages(database: Database, entityType: string
 		const description = image.description?.trim() ?? '';
 		if (description.length > FIELD_LIMITS.imageDescription) throw new Error('field_limit_exceeded');
 		const imageBytes = await loadDefaultProductImageBytes(image.source);
+		const imageHash = await insertMediaBlob(mediaDatabase, imageBytes, {}, 'system');
 		await database.execute(
 			`INSERT INTO image_collection_items (
-				collection_id, image_blob, original_image_blob, description, is_primary, sort_order, updated_at
+				collection_id, image_hash, original_image_hash, description, is_primary, sort_order, updated_at
 			)
-			 VALUES ($1, ${bytesToSqlLiteral(imageBytes)}, ${bytesToSqlLiteral(imageBytes)}, $2, $3, $4, CURRENT_TIMESTAMP)`,
+			 VALUES ($1, ${mediaHashToSqlLiteral(imageHash)}, ${mediaHashToSqlLiteral(imageHash)}, $2, $3, $4, CURRENT_TIMESTAMP)`,
 			[collectionId, description || null, index === primaryIndex ? 1 : 0, index]
 		);
 	}
 }
 
-async function ensureDefaultProductImages(database: Database, catalogItemId: string, images: readonly DefaultProductCatalogImage[] | null | undefined): Promise<void> {
-	await ensureDefaultCatalogImages(database, PRODUCT_CATALOG_IMAGE_COLLECTION_TYPE, catalogItemId, PRODUCT_CATALOG_IMAGE_MAX_ITEMS, images, 'default_product');
+async function ensureDefaultProductImages(database: Database, mediaDatabase: Database, catalogItemId: string, images: readonly DefaultProductCatalogImage[] | null | undefined): Promise<void> {
+	await ensureDefaultCatalogImages(database, mediaDatabase, PRODUCT_CATALOG_IMAGE_COLLECTION_TYPE, catalogItemId, PRODUCT_CATALOG_IMAGE_MAX_ITEMS, images, 'default_product');
 }
 
-async function ensureDefaultManufacturerImages(database: Database, manufacturerId: string, images: readonly DefaultManufacturerCatalogImage[] | null | undefined): Promise<void> {
-	await ensureDefaultCatalogImages(database, MANUFACTURER_CATALOG_IMAGE_COLLECTION_TYPE, manufacturerId, MANUFACTURER_CATALOG_IMAGE_MAX_ITEMS, images, 'default_manufacturer');
+async function ensureDefaultManufacturerImages(database: Database, mediaDatabase: Database, manufacturerId: string, images: readonly DefaultManufacturerCatalogImage[] | null | undefined): Promise<void> {
+	await ensureDefaultCatalogImages(database, mediaDatabase, MANUFACTURER_CATALOG_IMAGE_COLLECTION_TYPE, manufacturerId, MANUFACTURER_CATALOG_IMAGE_MAX_ITEMS, images, 'default_manufacturer');
 }
 
-async function ensureDefaultActiveIngredientImages(database: Database, activeIngredientId: string, images: readonly DefaultActiveIngredientCatalogImage[] | null | undefined): Promise<void> {
-	await ensureDefaultCatalogImages(database, ACTIVE_INGREDIENT_CATALOG_IMAGE_COLLECTION_TYPE, activeIngredientId, ACTIVE_INGREDIENT_CATALOG_IMAGE_MAX_ITEMS, images, 'default_active_ingredient');
+async function ensureDefaultActiveIngredientImages(database: Database, mediaDatabase: Database, activeIngredientId: string, images: readonly DefaultActiveIngredientCatalogImage[] | null | undefined): Promise<void> {
+	await ensureDefaultCatalogImages(database, mediaDatabase, ACTIVE_INGREDIENT_CATALOG_IMAGE_COLLECTION_TYPE, activeIngredientId, ACTIVE_INGREDIENT_CATALOG_IMAGE_MAX_ITEMS, images, 'default_active_ingredient');
 }
 
-async function ensureDefaultConditionImages(database: Database, conditionId: string, images: readonly DefaultConditionCatalogImage[] | null | undefined): Promise<void> {
-	await ensureDefaultCatalogImages(database, CONDITION_CATALOG_IMAGE_COLLECTION_TYPE, conditionId, CONDITION_CATALOG_IMAGE_MAX_ITEMS, images, 'default_condition');
+async function ensureDefaultConditionImages(database: Database, mediaDatabase: Database, conditionId: string, images: readonly DefaultConditionCatalogImage[] | null | undefined): Promise<void> {
+	await ensureDefaultCatalogImages(database, mediaDatabase, CONDITION_CATALOG_IMAGE_COLLECTION_TYPE, conditionId, CONDITION_CATALOG_IMAGE_MAX_ITEMS, images, 'default_condition');
 }
 
 function normalizedDefaultBreedReferenceImages(images: readonly DefaultBreedReferenceImage[] | null | undefined): DefaultBreedReferenceImage[] {
@@ -308,7 +317,7 @@ async function breedReferenceImageCollectionItemCount(database: Database, refere
 	return Number(rows[0]?.total ?? 0);
 }
 
-async function ensureDefaultBreedReferenceImages(database: Database, referenceItemId: number, images: readonly DefaultBreedReferenceImage[] | null | undefined): Promise<void> {
+async function ensureDefaultBreedReferenceImages(database: Database, mediaDatabase: Database, referenceItemId: number, images: readonly DefaultBreedReferenceImage[] | null | undefined): Promise<void> {
 	const normalizedImages = normalizedDefaultBreedReferenceImages(images);
 	if (normalizedImages.length === 0) return;
 	if ((await breedReferenceImageCollectionItemCount(database, referenceItemId)) > 0) return;
@@ -338,17 +347,18 @@ async function ensureDefaultBreedReferenceImages(database: Database, referenceIt
 		const description = image.description?.trim() ?? '';
 		if (description.length > FIELD_LIMITS.imageDescription) throw new Error('field_limit_exceeded');
 		const imageBytes = await loadDefaultProductImageBytes(image.source);
+		const imageHash = await insertMediaBlob(mediaDatabase, imageBytes, {}, 'system');
 		await database.execute(
 			`INSERT INTO image_collection_items (
-				collection_id, image_blob, original_image_blob, description, is_primary, sort_order, updated_at
+				collection_id, image_hash, original_image_hash, description, is_primary, sort_order, updated_at
 			)
-			 VALUES ($1, ${bytesToSqlLiteral(imageBytes)}, ${bytesToSqlLiteral(imageBytes)}, $2, $3, $4, CURRENT_TIMESTAMP)`,
+			 VALUES ($1, ${mediaHashToSqlLiteral(imageHash)}, ${mediaHashToSqlLiteral(imageHash)}, $2, $3, $4, CURRENT_TIMESTAMP)`,
 			[collectionId, description || null, index === primaryIndex ? 1 : 0, index]
 		);
 	}
 }
 
-async function syncDefaultManufacturerCatalog(database: Database): Promise<void> {
+async function syncDefaultManufacturerCatalog(database: Database, mediaDatabase: Database): Promise<void> {
 	for (const item of defaultManufacturerCatalogItems) {
 		const normalizedName = normalizeProductCatalogName(item.name);
 		const extension = stringifyManufacturerCatalogExtension(item.extension);
@@ -392,11 +402,11 @@ async function syncDefaultManufacturerCatalog(database: Database): Promise<void>
 			[normalizedName]
 		);
 		const manufacturer = rows[0];
-		if (manufacturer) await ensureDefaultManufacturerImages(database, manufacturer.id, item.images);
+		if (manufacturer) await ensureDefaultManufacturerImages(database, mediaDatabase, manufacturer.id, item.images);
 	}
 }
 
-async function syncDefaultActiveIngredientCatalog(database: Database): Promise<void> {
+async function syncDefaultActiveIngredientCatalog(database: Database, mediaDatabase: Database): Promise<void> {
 	for (const item of defaultActiveIngredientCatalogItems) {
 		const normalizedName = normalizeProductCatalogName(item.name);
 		const extension = stringifyActiveIngredientCatalogExtension(item.extension);
@@ -440,11 +450,11 @@ async function syncDefaultActiveIngredientCatalog(database: Database): Promise<v
 			[normalizedName]
 		);
 		const activeIngredient = rows[0];
-		if (activeIngredient) await ensureDefaultActiveIngredientImages(database, activeIngredient.id, item.images);
+		if (activeIngredient) await ensureDefaultActiveIngredientImages(database, mediaDatabase, activeIngredient.id, item.images);
 	}
 }
 
-async function syncDefaultConditionCatalog(database: Database): Promise<void> {
+async function syncDefaultConditionCatalog(database: Database, mediaDatabase: Database): Promise<void> {
 	for (const item of defaultConditionCatalogItems) {
 		const normalizedName = normalizeProductCatalogName(item.name);
 		const extension = stringifyConditionCatalogExtension(item.extension);
@@ -488,11 +498,11 @@ async function syncDefaultConditionCatalog(database: Database): Promise<void> {
 			[normalizedName]
 		);
 		const condition = rows[0];
-		if (condition) await ensureDefaultConditionImages(database, condition.id, item.images);
+		if (condition) await ensureDefaultConditionImages(database, mediaDatabase, condition.id, item.images);
 	}
 }
 
-async function syncDefaultProductCatalog(database: Database): Promise<void> {
+async function syncDefaultProductCatalog(database: Database, mediaDatabase: Database): Promise<void> {
 	for (const item of defaultProductCatalogItems) {
 		const normalizedName = normalizeProductCatalogName(item.name);
 		const extension = stringifyProductCatalogExtension(item.extension);
@@ -541,7 +551,7 @@ async function syncDefaultProductCatalog(database: Database): Promise<void> {
 		);
 		const catalogItem = rows[0];
 		if (catalogItem) {
-			await ensureDefaultProductImages(database, catalogItem.id, item.images);
+			await ensureDefaultProductImages(database, mediaDatabase, catalogItem.id, item.images);
 			await database.execute('DELETE FROM product_active_ingredients WHERE product_id = $1', [catalogItem.id]);
 			for (const [sortOrder, activeIngredientId] of (item.activeIngredientIds ?? []).entries()) {
 				const activeRows = await database.select<ActiveIngredientCatalogRow[]>(
@@ -562,7 +572,7 @@ async function syncDefaultProductCatalog(database: Database): Promise<void> {
 	}
 }
 
-async function syncDefaultBreedReferenceCatalog(database: Database): Promise<void> {
+async function syncDefaultBreedReferenceCatalog(database: Database, mediaDatabase: Database): Promise<void> {
 	for (const item of defaultBreedReferenceItems) {
 		const averageWeightKg = stringifyBreedSexRange(item.averageWeightKg);
 		const averageHeightCm = stringifyBreedSexRange(item.averageHeightCm);
@@ -620,7 +630,7 @@ async function syncDefaultBreedReferenceCatalog(database: Database): Promise<voi
 			[item.id]
 		);
 		const referenceItem = rows[0];
-		if (referenceItem) await ensureDefaultBreedReferenceImages(database, referenceItem.id, item.images);
+		if (referenceItem) await ensureDefaultBreedReferenceImages(database, mediaDatabase, referenceItem.id, item.images);
 	}
 }
 
@@ -750,7 +760,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 		CREATE TABLE IF NOT EXISTS owners (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.ownerName)}),
-			avatar_blob BLOB,
+			avatar_hash BLOB CHECK(avatar_hash IS NULL OR length(avatar_hash) = 32),
 			additional_information TEXT CHECK(${optionalTextCheck('additional_information', FIELD_LIMITS.ownerAdditionalInformation)}),
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
@@ -764,7 +774,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			id INTEGER PRIMARY KEY CHECK(id = 1),
 			name TEXT CHECK(${optionalTextCheck('name', FIELD_LIMITS.veterinarianName)}),
 			professional_registration TEXT CHECK(${optionalTextCheck('professional_registration', FIELD_LIMITS.veterinarianProfessionalRegistration)}),
-			avatar_blob BLOB,
+			avatar_hash BLOB CHECK(avatar_hash IS NULL OR length(avatar_hash) = 32),
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT
 		)
@@ -820,8 +830,8 @@ async function createCurrentSchema(database: Database): Promise<void> {
 		CREATE TABLE IF NOT EXISTS image_collection_items (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			collection_id INTEGER NOT NULL,
-			image_blob BLOB NOT NULL CHECK(length(image_blob) > 0),
-			original_image_blob BLOB NOT NULL CHECK(length(original_image_blob) > 0),
+			image_hash BLOB NOT NULL CHECK(length(image_hash) = 32),
+			original_image_hash BLOB NOT NULL CHECK(length(original_image_hash) = 32),
 			description TEXT CHECK(${optionalTextCheck('description', FIELD_LIMITS.imageDescription)}),
 			is_primary INTEGER NOT NULL DEFAULT 0 CHECK(is_primary IN (0, 1)),
 			sort_order INTEGER NOT NULL DEFAULT 0,
@@ -866,7 +876,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			owner_id INTEGER NOT NULL,
 			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.ownerAdditionalResponsibleName)}),
-			avatar_blob BLOB,
+			avatar_hash BLOB CHECK(avatar_hash IS NULL OR length(avatar_hash) = 32),
 			sort_order INTEGER NOT NULL DEFAULT 0,
 			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT,
@@ -882,7 +892,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			species TEXT CHECK(${optionalTextCheck('species', FIELD_LIMITS.petSpecies)}),
 			breed TEXT CHECK(${optionalTextCheck('breed', FIELD_LIMITS.petBreed)}),
 			sex TEXT CHECK(sex IS NULL OR (sex IN ('M', 'F') AND length(sex) = ${FIELD_LIMITS.petSex})),
-			avatar_blob BLOB,
+			avatar_hash BLOB CHECK(avatar_hash IS NULL OR length(avatar_hash) = 32),
 			updated_at TEXT,
 			deleted_at TEXT,
 			purge_after TEXT
@@ -1103,8 +1113,8 @@ async function createSystemSchema(database: Database): Promise<void> {
 		CREATE TABLE IF NOT EXISTS image_collection_items (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			collection_id INTEGER NOT NULL,
-			image_blob BLOB NOT NULL CHECK(length(image_blob) > 0),
-			original_image_blob BLOB NOT NULL CHECK(length(original_image_blob) > 0),
+			image_hash BLOB NOT NULL CHECK(length(image_hash) = 32),
+			original_image_hash BLOB NOT NULL CHECK(length(original_image_hash) = 32),
 			description TEXT CHECK(${optionalTextCheck('description', FIELD_LIMITS.imageDescription)}),
 			is_primary INTEGER NOT NULL DEFAULT 0 CHECK(is_primary IN (0, 1)),
 			sort_order INTEGER NOT NULL DEFAULT 0,
@@ -1303,7 +1313,7 @@ async function createSystemIndexes(database: Database): Promise<void> {
 async function assertSystemSchema(database: Database): Promise<void> {
 	const valid =
 		(await tableHasColumns(database, 'image_collections', ['id', 'entity_type', 'entity_id', 'primary_required', 'max_items'])) &&
-		(await tableHasColumns(database, 'image_collection_items', ['id', 'collection_id', 'image_blob', 'original_image_blob', 'description', 'is_primary', 'sort_order'])) &&
+		(await tableHasColumns(database, 'image_collection_items', ['id', 'collection_id', 'image_hash', 'original_image_hash', 'description', 'is_primary', 'sort_order'])) &&
 		(await tableHasColumns(database, 'breed_reference_items', ['id', 'breed_id', 'species', 'label_key', 'origin_id', 'origin_label_key', 'origin_country_code', 'origin_latitude', 'origin_longitude', 'size_category', 'average_weight_kg', 'average_height_cm', 'extension'])) &&
 		(await tableHasExactColumns(database, 'manufacturer_catalog_items', ['id', 'type', 'name', 'normalized_name', 'aliases', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'])) &&
 		(await tableHasExactColumns(database, 'active_ingredient_catalog_items', ['id', 'type', 'name', 'normalized_name', 'aliases', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'])) &&
@@ -1320,15 +1330,15 @@ async function assertSystemSchema(database: Database): Promise<void> {
 
 async function assertCurrentSchema(database: Database): Promise<void> {
 	const valid =
-		(await tableHasColumns(database, 'owners', ['id', 'name', 'additional_information', 'created_at', 'updated_at', 'deleted_at', 'purge_after'])) &&
+		(await tableHasColumns(database, 'owners', ['id', 'name', 'avatar_hash', 'additional_information', 'created_at', 'updated_at', 'deleted_at', 'purge_after'])) &&
 		(await tableHasColumns(database, 'addresses', ['id', 'owner_id', 'workplace_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code'])) &&
-		(await tableHasColumns(database, 'veterinarian_profiles', ['id', 'name', 'professional_registration', 'avatar_blob'])) &&
+		(await tableHasColumns(database, 'veterinarian_profiles', ['id', 'name', 'professional_registration', 'avatar_hash'])) &&
 		(await tableHasColumns(database, 'workplaces', ['id', 'name', 'services_description'])) &&
 		(await tableHasColumns(database, 'image_collections', ['id', 'entity_type', 'entity_id', 'primary_required', 'max_items'])) &&
-		(await tableHasColumns(database, 'image_collection_items', ['id', 'collection_id', 'image_blob', 'original_image_blob', 'description', 'is_primary', 'sort_order'])) &&
+		(await tableHasColumns(database, 'image_collection_items', ['id', 'collection_id', 'image_hash', 'original_image_hash', 'description', 'is_primary', 'sort_order'])) &&
 		(await tableHasColumns(database, 'contacts', ['id', 'owner_id', 'responsible_id', 'veterinarian_profile_id', 'workplace_id', 'kind', 'label', 'value'])) &&
-		(await tableHasColumns(database, 'owner_additional_responsibles', ['id', 'owner_id', 'name', 'avatar_blob', 'sort_order'])) &&
-		(await tableHasColumns(database, 'pets', ['id', 'name', 'species', 'breed', 'updated_at', 'deleted_at', 'purge_after'])) &&
+		(await tableHasColumns(database, 'owner_additional_responsibles', ['id', 'owner_id', 'name', 'avatar_hash', 'sort_order'])) &&
+		(await tableHasColumns(database, 'pets', ['id', 'name', 'species', 'breed', 'avatar_hash', 'updated_at', 'deleted_at', 'purge_after'])) &&
 		(await tableHasColumns(database, 'pet_owners', ['id', 'pet_id', 'owner_id', 'sort_order'])) &&
 		(await tableHasColumns(database, 'medical_records', ['id', 'pet_id', 'title', 'description', 'admitted_at', 'discharged_at', 'deleted_at', 'purge_after'])) &&
 			(await tableHasColumns(database, 'app_settings', ['key', 'value', 'updated_at'])) &&
@@ -1564,6 +1574,7 @@ async function removeSystemDataFromClientDatabase(database: Database): Promise<v
 }
 
 async function systemCatalogSchemaNeedsRefresh(database: Database): Promise<boolean> {
+	if ((await tableExists(database, 'image_collection_items')) && (await tableHasColumns(database, 'image_collection_items', ['image_blob', 'original_image_blob']))) return true;
 	const catalogTables = ['manufacturer_catalog_items', 'active_ingredient_catalog_items', 'condition_catalog_items', 'product_catalog_items'] as const;
 	for (const table of catalogTables) {
 		if ((await tableExists(database, table)) && (await tableHasColumns(database, table, ['origin']))) return true;
@@ -1583,19 +1594,20 @@ async function refreshOutdatedSystemCatalogSchema(database: Database): Promise<v
 	await database.execute('DROP TABLE IF EXISTS image_collections');
 }
 
-export async function runSystemMigrations(database: Database, options: Pick<RunMigrationsOptions, 'createIndexes'> = {}): Promise<void> {
-	const { createIndexes = true } = options;
+export async function runSystemMigrations(database: Database, options: RunSystemMigrationsOptions = {}): Promise<void> {
+	const { createIndexes = true, mediaDatabase } = options;
+	if (!mediaDatabase) throw new Error('system_media_database_required');
 
 	await database.execute('BEGIN IMMEDIATE');
 	try {
 		await refreshOutdatedSystemCatalogSchema(database);
 		await createSystemSchema(database);
 		await assertSystemSchema(database);
-		await syncDefaultManufacturerCatalog(database);
-		await syncDefaultActiveIngredientCatalog(database);
-		await syncDefaultConditionCatalog(database);
-		await syncDefaultProductCatalog(database);
-		await syncDefaultBreedReferenceCatalog(database);
+		await syncDefaultManufacturerCatalog(database, mediaDatabase);
+		await syncDefaultActiveIngredientCatalog(database, mediaDatabase);
+		await syncDefaultConditionCatalog(database, mediaDatabase);
+		await syncDefaultProductCatalog(database, mediaDatabase);
+		await syncDefaultBreedReferenceCatalog(database, mediaDatabase);
 		await syncDefaultTreatmentProtocols(database);
 		if (createIndexes) await createSystemIndexes(database);
 		await setUserVersion(database, CURRENT_SCHEMA_VERSION);
