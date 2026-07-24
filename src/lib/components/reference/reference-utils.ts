@@ -6,15 +6,6 @@ export interface ReferenceRangeRowsLabels {
 	unit: string;
 }
 
-export function normalizeReferenceSearch(value: string): string {
-	return value
-		.normalize('NFD')
-		.replace(/[\u0300-\u036f]/g, '')
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, ' ')
-		.trim();
-}
-
 export function referenceSpeciesLabel(species: ReferenceSpecies, canineLabel: string, felineLabel: string): string {
 	return species === 'canine' ? canineLabel : felineLabel;
 }

@@ -29,11 +29,11 @@
 		replaceReferenceRouteState,
 	} from "$lib/components/reference/reference-route-state.js";
 	import {
-		normalizeReferenceSearch,
 		referenceSpeciesLabel,
 		referenceSpeciesOptions,
 		resolveReferenceSelection,
 	} from "$lib/components/reference/reference-utils.js";
+	import { createSearchMatcher } from "$lib/domain/search/search-controller.js";
 	import {
 		ACTIVE_INGREDIENT_TYPES,
 		stringifyActiveIngredientType,
@@ -146,7 +146,7 @@
 		);
 	});
 	const filteredItems = $derived.by<CatalogItem[]>(() => {
-		const search = normalizeReferenceSearch(searchTerm);
+		const search = createSearchMatcher(searchTerm);
 
 		return currentItems.filter((item) => {
 			if (regionFilter && !item.regions.includes(regionFilter))
@@ -183,10 +183,7 @@
 					return false;
 			}
 
-			if (!search) return true;
-			return normalizeReferenceSearch(searchableText(item)).includes(
-				search,
-			);
+			return search.matches(searchableText(item));
 		});
 	});
 	const selectedItem = $derived(
@@ -842,7 +839,7 @@
 								imageBytes={asProduct(selectedItem).primaryImage
 									?.imageBytes ?? null}
 								alt={selectedItem.name}
-								className="h-[18vh] min-h-[90px] max-h-[170px] w-full rounded-b-none border-0 bg-muted/60"
+								className="h-[18vh] min-h-22.5 max-h-42.5 w-full rounded-b-none border-0 bg-muted/60"
 								imageClass="h-full w-full object-contain p-3"
 								iconClass="size-10 text-primary"
 								fallbackIcon={productFallbackIcon(
@@ -854,7 +851,7 @@
 								imageBytes={selectedItem.primaryImage
 									?.imageBytes ?? null}
 								alt={selectedItem.name}
-								className="h-[18vh] min-h-[90px] max-h-[170px] w-full rounded-b-none border-0 bg-muted/60"
+								className="h-[18vh] min-h-22.5 max-h-42.5 w-full rounded-b-none border-0 bg-muted/60"
 								imageClass="h-full w-full object-contain p-3"
 								iconClass="size-10 text-primary"
 								fallbackIcon={catalogFallbackIcon(selectedItem)}

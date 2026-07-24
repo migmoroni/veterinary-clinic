@@ -6,12 +6,14 @@
 	import ProductRegionsField from '$lib/components/product/ProductRegionsField.svelte';
 	import { productTypeHierarchicalFilterOptions, productTypeMatchesFilter, treatmentProductTypeLabel, type ProductTypeFilterValue } from '$lib/domain/product/type-labels.js';
 	import ImageCollectionOrganizer from '$lib/components/shared/ImageCollectionOrganizer.svelte';
+	import DebouncedSearchField from '$lib/components/ui/DebouncedSearchField.svelte';
 	import Select, { type SelectOption } from '$lib/components/ui/Select.svelte';
 	import type { ImageCollectionItem, ImageCollectionItemInput } from '$lib/domain/image-collection/image-collection.js';
-	import { canDeleteProductCatalogItem, canEditProductCatalogItem, PRODUCT_TYPES, productItemMatchesSearch, type ProductCatalogSource } from '$lib/domain/product/catalog.js';
+	import { canDeleteProductCatalogItem, canEditProductCatalogItem, PRODUCT_TYPES, type ProductCatalogSource } from '$lib/domain/product/catalog.js';
+	import { createSearchMatcher } from '$lib/domain/search/search-controller.js';
 	import { petSpeciesOptions, type KnownPetSpecies } from '$lib/domain/pet/taxonomy.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
-	import { TREATMENT_KINDS, normalizeTreatmentName, type TreatmentCatalogItem, type TreatmentCatalogItemId, type TreatmentKind } from '$lib/domain/treatment/treatment.js';
+	import { TREATMENT_KINDS, type TreatmentCatalogItem, type TreatmentCatalogItemId, type TreatmentKind } from '$lib/domain/treatment/treatment.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import { loadAllTreatmentCatalogItems, removeTreatmentCatalogName, saveTreatmentCatalogImages, saveTreatmentCatalogName, setTreatmentCatalogNameHidden } from '$lib/services/treatment.service.js';
 	import Eye from '@lucide/svelte/icons/eye';
@@ -19,7 +21,6 @@
 	import Images from '@lucide/svelte/icons/images';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Save from '@lucide/svelte/icons/save';
-	import Search from '@lucide/svelte/icons/search';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
 	type TypeFilter = ProductTypeFilterValue;
@@ -77,12 +78,13 @@
 			label: `${option.label} (${filterCount(option.value)})`
 		}))
 	]);
-	const filteredCatalogItems = $derived(
-		sourceCatalogItems.filter((item) => {
+	const filteredCatalogItems = $derived.by(() => {
+		const search = createSearchMatcher(searchQuery);
+		return sourceCatalogItems.filter((item) => {
 			if (!productTypeMatchesFilter(item.type, typeFilter)) return false;
-			return productItemMatchesSearch(item.name, item.aliases, searchQuery, normalizeTreatmentName) || normalizeTreatmentName(item.manufacturerName ?? '').includes(normalizeTreatmentName(searchQuery));
-		})
-	);
+			return search.matches([item.name, ...item.aliases, item.manufacturerName ?? ''].join(' '));
+		});
+	});
 	const newPrimaryImage = $derived(primaryDraftImage(newCatalogDraft.images));
 
 	function inputValue(event: Event): string {
@@ -506,13 +508,7 @@
 	{/if}
 
 	<div class="grid gap-3 rounded-md border border-border bg-card p-3 shadow-sm lg:grid-cols-[minmax(0,1fr)_16rem]">
-		<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-			<span>{t('formulary.searchLabel')}</span>
-			<span class="relative">
-				<Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-				<input class="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" value={searchQuery} maxlength={FIELD_LIMITS.searchQuery} placeholder={t('formulary.searchPlaceholder')} oninput={(event) => (searchQuery = inputValue(event))} />
-			</span>
-		</label>
+		<DebouncedSearchField label={t('formulary.searchLabel')} placeholder={t('formulary.searchPlaceholder')} bind:value={searchQuery} maxLength={FIELD_LIMITS.searchQuery} />
 		<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
 			<span>{t('product.kindFilter')}</span>
 			<Select id="product-type-filter" bind:value={typeFilter} options={productTypeFilterOptions} />

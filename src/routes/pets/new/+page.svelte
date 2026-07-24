@@ -6,6 +6,8 @@
 	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import PetTaxonomyPicker from '$lib/components/pet/PetTaxonomyPicker.svelte';
+	import DebouncedSearchField from '$lib/components/ui/DebouncedSearchField.svelte';
+	import { createLatestAsyncSearchController } from '$lib/domain/search/search-controller.js';
 	import type { Owner } from '$lib/domain/owner/owner.js';
 	import type { Pet, PetInput, PetSex } from '$lib/domain/pet/pet.js';
 	import { getPetBreedOption, getPetSpeciesOption } from '$lib/domain/pet/taxonomy.js';
@@ -15,7 +17,6 @@
 	import { loadOwnerProfile, searchOwners } from '$lib/services/owner.service.js';
 	import { saveNewPet } from '$lib/services/pet.service.js';
 	import Save from '@lucide/svelte/icons/save';
-	import Search from '@lucide/svelte/icons/search';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 
 	type PetForm = Omit<PetInput, 'sex'> & { sex: '' | Exclude<PetSex, null> };
@@ -38,19 +39,25 @@
 	const busy = $derived(saving || ownerPetsLoading);
 	const canContinue = $derived(selectedOwnerId !== null);
 
-	async function loadOwners() {
-		const query = ownerQuery;
-		ownersLoading = true;
-		error = null;
-
-		try {
-			const result = await searchOwners(query);
-			if (ownerQuery === query) owners = result;
-		} catch (exception) {
+	const ownerSearchController = createLatestAsyncSearchController<Owner[]>({
+		search: searchOwners,
+		onerror: (exception) => {
 			error = errorMessage(exception);
-		} finally {
-			if (ownerQuery === query) ownersLoading = false;
+		},
+		onsettled: () => {
+			ownersLoading = false;
+		},
+		onstart: () => {
+			ownersLoading = true;
+			error = null;
+		},
+		onsuccess: (result) => {
+			owners = result;
 		}
+	});
+
+	async function loadOwners(value = ownerQuery) {
+		await ownerSearchController.run(value);
 	}
 
 	async function selectOwner(owner: Owner) {
@@ -191,16 +198,7 @@
 
 				<div class="mt-4">
 					<div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-						<label class="flex min-w-0 flex-col gap-1 text-sm font-medium">
-							<span class="flex min-w-0 items-baseline justify-between gap-2">
-								<span>{t('pet.ownerSearch')}</span>
-								<CharacterLimitHint value={ownerQuery} max={FIELD_LIMITS.searchQuery} />
-							</span>
-							<span class="relative">
-								<Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-								<input class="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" placeholder={t('pet.ownerSearchPlaceholder')} bind:value={ownerQuery} maxlength={FIELD_LIMITS.searchQuery} disabled={busy} oninput={() => void loadOwners()} />
-							</span>
-						</label>
+						<DebouncedSearchField label={t('pet.ownerSearch')} placeholder={t('pet.ownerSearchPlaceholder')} bind:value={ownerQuery} maxLength={FIELD_LIMITS.searchQuery} showCharacterLimit disabled={busy} onsearch={(value) => void loadOwners(value)} />
 
 						<p class="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium text-muted-foreground shadow-sm">
 							{resultCountLabel(owners.length)}

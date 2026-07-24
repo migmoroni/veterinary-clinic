@@ -12,12 +12,12 @@
 		replaceReferenceRouteState,
 	} from "$lib/components/reference/reference-route-state.js";
 	import {
-		normalizeReferenceSearch,
 		referenceRangeRows,
 		referenceSpeciesLabel,
 		referenceSpeciesOptions,
 		resolveReferenceSelection,
 	} from "$lib/components/reference/reference-utils.js";
+	import { createSearchMatcher } from "$lib/domain/search/search-controller.js";
 	import {
 		getBreedOriginMapPosition,
 		type BreedReferenceOrigin,
@@ -99,7 +99,7 @@
 	};
 
 	const filteredProfiles = $derived.by(() => {
-		const search = normalizeReferenceSearch(searchTerm);
+		const search = createSearchMatcher(searchTerm);
 
 		return profiles.filter((profile) => {
 			if (speciesFilter !== "all" && profile.species !== speciesFilter)
@@ -107,16 +107,15 @@
 			if (sizeFilter && profile.sizeCategory !== sizeFilter) return false;
 			if (originFilter && profile.origin.id !== originFilter)
 				return false;
-			if (!search) return true;
 
-			return normalizeReferenceSearch(
+			return search.matches(
 				[
 					breedName(profile),
 					speciesLabel(profile),
 					originLabel(profile.origin),
 					sizeLabel(profile.sizeCategory),
 				].join(" "),
-			).includes(search);
+			);
 		});
 	});
 	const selectedProfile = $derived(
@@ -775,7 +774,7 @@
 							<BinaryImage
 								imageBytes={selectedProfile.primaryImage?.imageBytes ?? null}
 								alt={breedName(selectedProfile)}
-								className="h-[18vh] min-h-[90px] max-h-[170px] w-full rounded-b-none border-0 bg-muted/60"
+								className="h-[18vh] min-h-22.5 max-h-42.5 w-full rounded-b-none border-0 bg-muted/60"
 								imageClass="h-full w-full object-contain p-3"
 								iconClass="size-12 text-muted-foreground"
 								fallbackIcon={PawPrint}

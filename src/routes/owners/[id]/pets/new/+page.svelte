@@ -6,6 +6,8 @@
 	import DateField from '$lib/components/forms/DateField.svelte';
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import PetTaxonomyPicker from '$lib/components/pet/PetTaxonomyPicker.svelte';
+	import DebouncedSearchField from '$lib/components/ui/DebouncedSearchField.svelte';
+	import { createLatestAsyncSearchController } from '$lib/domain/search/search-controller.js';
 	import type { Pet, PetInput, PetSex } from '$lib/domain/pet/pet.js';
 	import { getPetBreedOption, getPetSpeciesOption } from '$lib/domain/pet/taxonomy.js';
 	import { normalizeDateInput } from '$lib/domain/shared/date-input.js';
@@ -15,7 +17,6 @@
 	import { addExistingPetToOwner, saveNewPet, searchExistingPetsForOwner } from '$lib/services/pet.service.js';
 	import Link from '@lucide/svelte/icons/link';
 	import Save from '@lucide/svelte/icons/save';
-	import Search from '@lucide/svelte/icons/search';
 
 	type PetForm = Omit<PetInput, 'sex'> & { sex: '' | Exclude<PetSex, null> };
 
@@ -73,23 +74,36 @@
 		}
 	}
 
-	async function searchExistingPets() {
-		const query = existingQuery;
-		if (query.trim().length < 2) {
+	const existingPetSearchController = createLatestAsyncSearchController<Pet[]>({
+		search: (value) => searchExistingPetsForOwner(ownerId, value),
+		onerror: (exception) => {
+			error = errorMessage(exception);
+		},
+		onsettled: () => {
+			searching = false;
+		},
+		onstart: () => {
+			searching = true;
+			error = null;
+		},
+		onsuccess: (pets) => {
+			existingPets = pets;
+		}
+	});
+
+	async function searchExistingPets(value = existingQuery) {
+		if (value.trim().length < 2) {
 			existingPets = [];
 			return;
 		}
 
-		searching = true;
-		error = null;
-		try {
-			const pets = await searchExistingPetsForOwner(ownerId, query);
-			if (existingQuery === query) existingPets = pets;
-		} catch (exception) {
-			error = errorMessage(exception);
-		} finally {
-			if (existingQuery === query) searching = false;
-		}
+		await existingPetSearchController.run(value);
+	}
+
+	function clearExistingPetSearch() {
+		existingPetSearchController.invalidate();
+		existingPets = [];
+		searching = false;
 	}
 
 	async function linkExistingPet(petId: number) {
@@ -127,16 +141,7 @@
 
 	<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
 		<h3 class="text-base font-semibold">{t('pet.existingSection')}</h3>
-		<label class="mt-4 flex flex-col gap-2 text-sm font-medium">
-			<span class="flex min-w-0 items-baseline justify-between gap-2">
-				<span>{t('pet.existingSearchLabel')}</span>
-				<CharacterLimitHint value={existingQuery} max={FIELD_LIMITS.searchQuery} />
-			</span>
-			<span class="relative">
-				<Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-				<input class="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" placeholder={t('pet.existingSearchPlaceholder')} bind:value={existingQuery} maxlength={FIELD_LIMITS.searchQuery} disabled={busy} oninput={() => void searchExistingPets()} />
-			</span>
-		</label>
+		<DebouncedSearchField class="mt-4 gap-2" label={t('pet.existingSearchLabel')} placeholder={t('pet.existingSearchPlaceholder')} bind:value={existingQuery} maxLength={FIELD_LIMITS.searchQuery} minLength={2} showCharacterLimit disabled={busy} onsearch={(value) => void searchExistingPets(value)} onclear={clearExistingPetSearch} />
 
 		<div class="mt-4 flex flex-col gap-2">
 			{#each existingPets as pet}

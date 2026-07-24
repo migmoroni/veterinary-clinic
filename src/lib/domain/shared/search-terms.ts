@@ -1,4 +1,7 @@
 import type { Locale } from '$lib/i18n/locales.js';
+import { normalizeSearchText, normalizeSearchToken } from '$lib/domain/search/search-controller.js';
+
+export { normalizeSearchText, normalizeSearchToken };
 
 const searchStopWordsByLocale = {
 	'pt-BR': ['a', 'as', 'o', 'os', 'e', 'em', 'de', 'da', 'das', 'do', 'dos', 'ao', 'aos', 'por', 'para', 'com', 'sem'],
@@ -12,19 +15,6 @@ const searchStopWordsByLocale = {
 const normalizedSearchStopWordsByLocale: Record<Locale, Set<string>> = Object.fromEntries(
 	Object.entries(searchStopWordsByLocale).map(([locale, words]) => [locale, new Set(words.map(normalizeSearchToken))])
 ) as Record<Locale, Set<string>>;
-
-export function normalizeSearchText(value: string): string {
-	return value
-		.normalize('NFD')
-		.replace(/[\u0300-\u036f]/g, '')
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, ' ')
-		.trim();
-}
-
-export function normalizeSearchToken(value: string): string {
-	return normalizeSearchText(value).replace(/\s+/g, '');
-}
 
 export function searchTermsForLocale(query: string, locale: Locale): string[] {
 	const normalized = normalizeSearchText(query);

@@ -551,13 +551,6 @@ export function productItemMatchesSpecies(species: readonly ProductSpecies[], pe
 	return species.includes(petSpecies);
 }
 
-export function productItemMatchesSearch(name: string, aliases: readonly string[], query: string, normalize: (value: string) => string): boolean {
-	const normalizedQuery = normalize(query);
-	if (!normalizedQuery) return true;
-	if (normalize(name).includes(normalizedQuery)) return true;
-	return aliases.some((alias) => normalize(alias).includes(normalizedQuery));
-}
-
 function normalizedLeafletSections(value: unknown): ProductLeafletSections {
 	return normalizedSectionTexts(value, productLeafletSectionIds);
 }

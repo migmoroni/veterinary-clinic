@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import CharacterLimitHint from '$lib/components/forms/CharacterLimitHint.svelte';
+	import DebouncedSearchField from '$lib/components/ui/DebouncedSearchField.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import { getPetBreedOption, getPetBreedOptions, getPetSpeciesOption, petSpeciesOptions, type PetBreed, type PetSpecies } from '$lib/domain/pet/taxonomy.js';
+	import { createSearchMatcher } from '$lib/domain/search/search-controller.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import { i18n, t } from '$lib/i18n/index.js';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import PawPrint from '@lucide/svelte/icons/paw-print';
-	import Search from '@lucide/svelte/icons/search';
 	import X from '@lucide/svelte/icons/x';
 
 	type PickerStep = 'species' | 'breed';
@@ -28,7 +29,7 @@
 	const breedDisplayName = $derived(breedOption ? t(breedOption.labelKey) : (breed?.trim() ?? ''));
 	const breedOptions = $derived.by(() => {
 		if (!species) return [];
-		const search = normalizeSearchText(breedSearch);
+		const search = createSearchMatcher(breedSearch);
 
 		const collator = new Intl.Collator(i18n.locale, {
 			usage: 'sort',
@@ -40,8 +41,7 @@
 			.slice()
 			.sort((left, right) => collator.compare(t(left.labelKey), t(right.labelKey)));
 
-		if (!search) return options;
-		return options.filter((option) => normalizeSearchText(t(option.labelKey)).includes(search));
+		return options.filter((option) => search.matches(t(option.labelKey)));
 	});
 	const optionGridClass = 'grid h-[min(26rem,calc(100vh-12rem))] auto-rows-min grid-cols-1 content-start gap-2 overflow-y-auto pr-1 landscape:max-md:grid-cols-2 md:grid-cols-2 lg:grid-cols-3';
 
@@ -51,15 +51,6 @@
 
 	function summaryClass(selected: boolean): string {
 		return `flex h-14 min-w-0 items-center gap-3 rounded-md border px-3 py-2 text-left transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50 ${selected ? 'border-border bg-background' : 'border-dashed border-border bg-muted/30 text-muted-foreground'}`;
-	}
-
-	function normalizeSearchText(value: string): string {
-		return value
-			.normalize('NFD')
-			.replace(/[\u0300-\u036f]/g, '')
-			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, ' ')
-			.trim();
 	}
 
 	function openDialog(step: PickerStep) {
@@ -278,13 +269,7 @@
 							</div>
 
 							{#if species}
-								<div class="mb-3 flex flex-col gap-1">
-									<label class="text-xs font-semibold uppercase text-muted-foreground" for="pet-breed-search">{t('pet.breedSearch')}</label>
-									<div class="relative">
-										<Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-										<input id="pet-breed-search" class="h-10 w-full rounded-md border border-input bg-background py-2 pl-9 pr-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" bind:value={breedSearch} placeholder={t('pet.breedSearchPlaceholder')} aria-label={t('pet.breedSearch')} />
-									</div>
-								</div>
+								<DebouncedSearchField id="pet-breed-search" class="mb-3" label={t('pet.breedSearch')} ariaLabel={t('pet.breedSearch')} placeholder={t('pet.breedSearchPlaceholder')} bind:value={breedSearch} inputClass="py-2" />
 
 								{#if manualBreedMode}
 									<div class="mb-3 rounded-md border border-border bg-muted/30 p-3">

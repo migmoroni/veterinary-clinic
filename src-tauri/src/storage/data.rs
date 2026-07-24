@@ -17,6 +17,7 @@ const SYSTEM_DATABASE_FILE: &str = "veterinary_clinic_system.db";
 const USER_MEDIA_DATABASE_FILE: &str = "veterinary_clinic_user_media.db";
 const SYSTEM_MEDIA_DATABASE_FILE: &str = "veterinary_clinic_system_media.db";
 
+#[derive(Clone)]
 pub struct StorageManager {
     pub user_db: Arc<Mutex<Connection>>,
     pub system_db: Arc<Mutex<Connection>>,

@@ -4,7 +4,9 @@
 	import OwnerAvatar from '$lib/components/owner/OwnerAvatar.svelte';
 	import PetAvatar from '$lib/components/pet/PetAvatar.svelte';
 	import BinaryImage from '$lib/components/shared/BinaryImage.svelte';
+	import DebouncedSearchField from '$lib/components/ui/DebouncedSearchField.svelte';
 	import type { OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
+	import { createLatestAsyncSearchController } from '$lib/domain/search/search-controller.js';
 	import { SEARCH_RESULT_KINDS, type SearchResult, type SearchResultKind } from '$lib/domain/search/search.js';
 	import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
 	import { t } from '$lib/i18n/index.js';
@@ -16,12 +18,12 @@
 	import PawPrint from '@lucide/svelte/icons/paw-print';
 	import Pill from '@lucide/svelte/icons/pill';
 	import Phone from '@lucide/svelte/icons/phone';
-	import Search from '@lucide/svelte/icons/search';
 
 	const recentSearchLimit = 50;
 	const searchFilterKinds = SEARCH_RESULT_KINDS;
 
 	let query = $state('');
+	let searchDraft = $state('');
 	let results = $state<SearchResult[]>([]);
 	let recentResults = $state<SearchResult[]>([]);
 	let selectedKind = $state<SearchResultKind | null>(null);
@@ -31,12 +33,11 @@
 	let contactDialogContacts = $state<OwnerAssociatedContact[]>([]);
 	let resultsListElement = $state<HTMLDivElement>();
 	let resultsListHasMoreBelow = $state(false);
-	let searchRequestId = 0;
 
 	const hasKindFilter = $derived(selectedKind !== null);
 	const filteredResults = $derived(hasKindFilter ? results.filter((result) => result.kind === selectedKind) : results);
 	const filteredRecentResults = $derived(hasKindFilter ? recentResults.filter((result) => result.kind === selectedKind) : recentResults);
-	const showRecentResults = $derived(query.trim().length === 0 && filteredRecentResults.length > 0);
+	const showRecentResults = $derived(searchDraft.trim().length === 0 && filteredRecentResults.length > 0);
 	const visibleResults = $derived(showRecentResults ? filteredRecentResults : filteredResults);
 
 	function kindLabel(kind: SearchResultKind): string {
@@ -102,23 +103,32 @@
 		updateResultsListScrollHint();
 	}
 
-	async function runSearch() {
-		const requestId = ++searchRequestId;
-		const kinds = selectedKind ? [selectedKind] : [];
-		try {
-			const nextResults = await searchEverywhere(query, kinds);
-			if (requestId !== searchRequestId) return;
+	const searchController = createLatestAsyncSearchController<SearchResult[]>({
+		search: (value) => searchEverywhere(value, selectedKind ? [selectedKind] : []),
+		onerror: (exception) => {
+			error = exception instanceof Error ? exception.message : String(exception);
+		},
+		onsuccess: (nextResults) => {
 			results = nextResults;
 			error = null;
-		} catch (exception) {
-			if (requestId !== searchRequestId) return;
-			error = exception instanceof Error ? exception.message : String(exception);
 		}
+	});
+
+	async function runSearch(value = searchDraft) {
+		query = value;
+		await searchController.run(value);
+	}
+
+	function clearSearch(value: string) {
+		query = value;
+		searchController.invalidate();
+		results = [];
+		error = null;
 	}
 
 	function toggleKindFilter(kind: SearchResultKind) {
 		selectedKind = selectedKind === kind ? null : kind;
-		void runSearch();
+		void runSearch(searchDraft);
 	}
 
 	function kindFilterClass(kind: SearchResultKind): string {
@@ -223,13 +233,7 @@
 	</header>
 
 	<div class="grid shrink-0 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-		<label class="flex min-w-0 flex-col gap-2 text-sm font-medium">
-			<span>{t('search.label')}</span>
-			<span class="relative">
-				<Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-				<input class="h-11 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30" placeholder={t('search.placeholder')} bind:value={query} maxlength={FIELD_LIMITS.searchQuery} oninput={() => void runSearch()} />
-			</span>
-		</label>
+		<DebouncedSearchField class="gap-2" inputClass="h-11" label={t('search.label')} placeholder={t('search.placeholder')} bind:value={query} bind:draftValue={searchDraft} maxLength={FIELD_LIMITS.searchQuery} minLength={1} onsearch={(value) => void runSearch(value)} onclear={clearSearch} />
 
 		<p class="inline-flex h-11 items-center justify-center rounded-md border border-border bg-card px-3 text-sm font-medium text-muted-foreground shadow-sm">
 			{resultCountLabel(visibleResults.length)}

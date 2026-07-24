@@ -11,9 +11,9 @@
 </script>
 
 <script lang="ts">
+	import DebouncedSearchField from '$lib/components/ui/DebouncedSearchField.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import Search from '@lucide/svelte/icons/search';
 	import type { Snippet } from 'svelte';
 
 	let {
@@ -34,10 +34,7 @@
 		{@render beforeSearch()}
 	{/if}
 
-	<label class="relative block w-full max-w-xs min-w-0 shrink">
-		<Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-		<input class="h-9 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30" bind:value={searchTerm} placeholder={searchPlaceholder} />
-	</label>
+	<DebouncedSearchField class="w-full max-w-xs shrink" inputClass="h-9 rounded-lg shadow-none" bind:value={searchTerm} placeholder={searchPlaceholder} />
 
 	{#each filters as filter (filter.id)}
 		<Select id={filter.id} class="shrink min-w-0" value={filter.value} options={filter.options} onchange={filter.onchange} ariaLabel={filter.label}>

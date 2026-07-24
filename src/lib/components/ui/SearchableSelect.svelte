@@ -13,7 +13,9 @@
 </script>
 
 <script lang="ts" generics="T extends string | number">
+	import { onDestroy } from 'svelte';
 	import BinaryImage from '$lib/components/shared/BinaryImage.svelte';
+	import { createCompactSearchMatcher, createDebouncedSearchController } from '$lib/domain/search/search-controller.js';
 	import Check from '@lucide/svelte/icons/check';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import { cn } from '$lib/utils.js';
@@ -47,27 +49,33 @@
 	let open = $state(false);
 	let editing = $state(false);
 	let query = $state('');
+	let debouncedQuery = $state('');
 	let wrapperElement: HTMLDivElement | undefined = $state();
+	const searchController = createDebouncedSearchController({
+		onsearch: (value) => (debouncedQuery = value)
+	});
 
 	const selectedOption = $derived(options.find((option) => option.value === value) ?? null);
 	const selectedLabel = $derived(selectedOption?.label ?? '');
 	const filteredOptions = $derived.by(() => {
-		const normalizedQuery = normalizeSearch(query);
-		if (!normalizedQuery) return options;
-		return options.filter((option) => normalizeSearch(`${option.label} ${option.description ?? ''} ${option.searchText ?? ''}`).includes(normalizedQuery));
+		const search = createCompactSearchMatcher(debouncedQuery);
+		return options.filter((option) => search.matches(`${option.label} ${option.description ?? ''} ${option.searchText ?? ''}`));
 	});
-
-	function normalizeSearch(text: string): string {
-		return text
-			.normalize('NFD')
-			.replace(/[\u0300-\u036f]/g, '')
-			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, '');
-	}
 
 	function setValue(nextValue: T) {
 		value = nextValue;
 		if (onchange) onchange(nextValue);
+	}
+
+	function syncQueryImmediately(nextQuery: string) {
+		searchController.cancel();
+		query = nextQuery;
+		debouncedQuery = nextQuery;
+	}
+
+	function scheduleFilteredQuery(nextQuery: string) {
+		query = nextQuery;
+		searchController.schedule(nextQuery);
 	}
 
 	function openList() {
@@ -79,12 +87,12 @@
 	function closeList() {
 		open = false;
 		editing = false;
-		query = selectedLabel;
+		syncQueryImmediately(selectedLabel);
 	}
 
 	function handleInput(event: Event) {
 		const nextQuery = (event.currentTarget as HTMLInputElement).value;
-		query = nextQuery;
+		scheduleFilteredQuery(nextQuery);
 		open = true;
 		editing = true;
 		if (nextQuery !== selectedLabel) setValue(emptyValue);
@@ -93,7 +101,7 @@
 	function selectOption(event: Event, option: SearchableSelectOption<T>) {
 		event.preventDefault();
 		event.stopPropagation();
-		query = option.label;
+		syncQueryImmediately(option.label);
 		open = false;
 		editing = false;
 		setValue(option.value);
@@ -123,8 +131,13 @@
 	}
 
 	$effect(() => {
-		if (!editing) query = selectedLabel;
+		if (!editing) {
+			query = selectedLabel;
+			debouncedQuery = selectedLabel;
+		}
 	});
+
+	onDestroy(searchController.cancel);
 </script>
 
 <svelte:window onclick={handleWindowClick} />
