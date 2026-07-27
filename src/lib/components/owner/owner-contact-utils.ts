@@ -8,7 +8,7 @@ export type OwnerContactLike = {
 	kind: OwnerContactKind;
 	label?: string | null;
 	value: string;
-	responsibleId?: number | null;
+	responsibleId?: string | null;
 	responsibleName?: string | null;
 };
 

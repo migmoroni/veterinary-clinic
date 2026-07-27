@@ -1,7 +1,7 @@
 use super::{
     bytes_to_hex, data::StorageManager, decode_hash_hex, detect_mime_type, path_to_string, sha256,
     GalleryItem, GalleryRequest, MediaHashRequest, SaveMediaRequest, SaveMediaResponse,
-    SyncStatusRequest,
+    StorageDomain, SyncStatusRequest,
 };
 use rusqlite::{params, OptionalExtension};
 use std::fs;
@@ -80,32 +80,41 @@ impl StorageManager {
             .lock()
             .map_err(|_| "database_connection_lock_failed".to_string())?;
         let mut items = Vec::with_capacity(hashes.len());
-        for hash in hashes {
-            let row = guard
-                .query_row(
-                    r#"
+        let select_sql = match request.source {
+            StorageDomain::User => {
+                r#"
                     SELECT hash, thumbnail, width, height, mime_type
                     FROM blobs
                     WHERE removed_at IS NULL AND hash = ?1
                     LIMIT 1
-                    "#,
-                    params![hash],
-                    |row| {
-                        let stored_hash: Vec<u8> = row.get(0)?;
-                        let thumbnail: Option<Vec<u8>> = row.get(1)?;
-                        let width: Option<i64> = row.get(2)?;
-                        let height: Option<i64> = row.get(3)?;
-                        let mime_type: String = row.get(4)?;
-                        Ok(GalleryItem {
-                            hash_hex: bytes_to_hex(&stored_hash),
-                            hash: stored_hash,
-                            thumbnail,
-                            width,
-                            height,
-                            mime_type,
-                        })
-                    },
-                )
+                    "#
+            }
+            StorageDomain::System => {
+                r#"
+                    SELECT hash, thumbnail, width, height, mime_type
+                    FROM blobs
+                    WHERE hash = ?1
+                    LIMIT 1
+                    "#
+            }
+        };
+        for hash in hashes {
+            let row = guard
+                .query_row(select_sql, params![hash], |row| {
+                    let stored_hash: Vec<u8> = row.get(0)?;
+                    let thumbnail: Option<Vec<u8>> = row.get(1)?;
+                    let width: Option<i64> = row.get(2)?;
+                    let height: Option<i64> = row.get(3)?;
+                    let mime_type: String = row.get(4)?;
+                    Ok(GalleryItem {
+                        hash_hex: bytes_to_hex(&stored_hash),
+                        hash: stored_hash,
+                        thumbnail,
+                        width,
+                        height,
+                        mime_type,
+                    })
+                })
                 .optional()
                 .map_err(|error| format!("media_gallery_select_failed:{error}"))?;
 
@@ -149,14 +158,28 @@ impl StorageManager {
         let guard = connection
             .lock()
             .map_err(|_| "database_connection_lock_failed".to_string())?;
-        guard
-            .execute(
+        let update_sql = match request.source {
+            StorageDomain::User => {
+                r#"
+                UPDATE blobs
+                SET sync_status = ?1,
+                    uploaded_at = ?2,
+                    updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+                WHERE hash = ?3
+                "#
+            }
+            StorageDomain::System => {
                 r#"
                 UPDATE blobs
                 SET sync_status = ?1,
                     uploaded_at = ?2
                 WHERE hash = ?3
-                "#,
+                "#
+            }
+        };
+        guard
+            .execute(
+                update_sql,
                 params![request.sync_status, request.uploaded_at, hash],
             )
             .map_err(|error| format!("media_sync_update_failed:{error}"))?;
@@ -164,6 +187,9 @@ impl StorageManager {
     }
 
     pub fn mark_as_removed(&self, request: MediaHashRequest) -> Result<(), String> {
+        if matches!(request.source, StorageDomain::System) {
+            return Err("system_media_is_read_only".to_string());
+        }
         let hash = decode_hash_hex(&request.hash)?;
         let connection = self
             .fixed_connection(request.source.media_database())
@@ -175,7 +201,8 @@ impl StorageManager {
             .execute(
                 r#"
                 UPDATE blobs
-                SET removed_at = CURRENT_TIMESTAMP
+                SET removed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+                    updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
                 WHERE hash = ?1 AND removed_at IS NULL
                 "#,
                 params![hash],
@@ -195,17 +222,26 @@ impl StorageManager {
         let guard = connection
             .lock()
             .map_err(|_| "database_connection_lock_failed".to_string())?;
-        let exists = guard
-            .query_row(
+        let select_sql = match source {
+            StorageDomain::User => {
                 r#"
                 SELECT 1
                 FROM blobs
                 WHERE hash = ?1 AND removed_at IS NULL
                 LIMIT 1
-                "#,
-                params![hash],
-                |_| Ok(()),
-            )
+                "#
+            }
+            StorageDomain::System => {
+                r#"
+                SELECT 1
+                FROM blobs
+                WHERE hash = ?1
+                LIMIT 1
+                "#
+            }
+        };
+        let exists = guard
+            .query_row(select_sql, params![hash], |_| Ok(()))
             .optional()
             .map_err(|error| format!("media_metadata_select_failed:{error}"))?
             .is_some();

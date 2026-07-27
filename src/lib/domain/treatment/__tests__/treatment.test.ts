@@ -3,8 +3,8 @@ import { computeTreatmentDueAt, getTreatmentDueStatus, normalizeTreatmentName, t
 
 function treatment(input: Partial<PetTreatment> = {}): PetTreatment {
 	return {
-		id: 1,
-		petId: 1,
+		id: '019f9689-0000-7000-8000-000000000001',
+		petId: '019f9689-0000-7000-8000-000000000002',
 		kind: 'vaccine',
 		appliedAt: '2026-05-08',
 		name: 'V 10',
@@ -14,9 +14,9 @@ function treatment(input: Partial<PetTreatment> = {}): PetTreatment {
 		validityUnit: 'days',
 		observation: null,
 		validityIgnoredAt: null,
+		createdAt: null,
 		updatedAt: null,
-		deletedAt: null,
-		purgeAfter: null,
+		removedAt: null,
 		...input
 	};
 }

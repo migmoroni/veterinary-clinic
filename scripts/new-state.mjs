@@ -10,7 +10,15 @@ const appIdentifier = tauriConfig.identifier ?? 'app.veterinary-clinic.local';
 const databaseFiles = (tauriConfig.plugins?.sql?.preload ?? [])
 	.filter((item) => typeof item === 'string' && item.startsWith('sqlite:'))
 	.map((item) => item.replace(/^sqlite:/, ''));
-if (databaseFiles.length === 0) databaseFiles.push('veterinary_clinic_user.db');
+if (databaseFiles.length === 0) {
+	databaseFiles.push('veterinary_clinic_user.db');
+	databaseFiles.push('veterinary_clinic_user_media.db');
+	
+	databaseFiles.push('veterinary_clinic_system.db');
+	databaseFiles.push('veterinary_clinic_system_media.db');
+
+	databaseFiles.push('veterinary_clinic_user_logs.db');
+}
 
 function appConfigRoot() {
 	if (platform() === 'win32') return process.env.APPDATA || join(homedir(), 'AppData', 'Roaming');

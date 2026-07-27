@@ -332,14 +332,14 @@
 		return pet.owners.some((owner) => petOwnerMatchesOwnerFilters(owner));
 	}
 
-	function petOwnerMatchesOwnerFilters(owner: { id: number; cityKey: string }): boolean {
+	function petOwnerMatchesOwnerFilters(owner: { id: string; cityKey: string }): boolean {
 		if (studyCity && owner.cityKey !== studyCity) return false;
 		if (!studyOwnerPetCount) return true;
 		const ownerItem = findStudyOwner(owner.id);
 		return ownerItem ? ownerPetCountBand(ownerItem.petCount) === studyOwnerPetCount : false;
 	}
 
-	function findStudyOwner(ownerId: number): DashboardOwnerStudyItem | undefined {
+	function findStudyOwner(ownerId: string): DashboardOwnerStudyItem | undefined {
 		return allStudyOwners.find((owner) => owner.id === ownerId);
 	}
 
@@ -389,25 +389,25 @@
 	}
 
 	function uniquePetsFromVaccines(vaccines: StudyVaccineSummary[]): DashboardPetStudyItem[] {
-		const pets = new Map<number, DashboardPetStudyItem>();
+		const pets = new Map<string, DashboardPetStudyItem>();
 		for (const vaccine of vaccines) pets.set(vaccine.pet.id, vaccine.pet);
 		return [...pets.values()].sort((first, second) => first.name.localeCompare(second.name));
 	}
 
 	function uniquePetsFromAntiparasitics(antiparasitics: StudyAntiparasiticSummary[]): DashboardPetStudyItem[] {
-		const pets = new Map<number, DashboardPetStudyItem>();
+		const pets = new Map<string, DashboardPetStudyItem>();
 		for (const antiparasitic of antiparasitics) pets.set(antiparasitic.pet.id, antiparasitic.pet);
 		return [...pets.values()].sort((first, second) => first.name.localeCompare(second.name));
 	}
 
 	function petsRelatedToOwners(owners: DashboardOwnerStudyItem[]): DashboardPetStudyItem[] {
-		const petIds = new Set<number>();
+		const petIds = new Set<string>();
 		for (const owner of owners) for (const pet of owner.pets) petIds.add(pet.id);
 		return allStudyPets.filter((pet) => petIds.has(pet.id)).sort((first, second) => first.name.localeCompare(second.name));
 	}
 
 	function ownersRelatedToPets(pets: DashboardPetStudyItem[]): DashboardOwnerStudyItem[] {
-		const ownerIds = new Set<number>();
+		const ownerIds = new Set<string>();
 		for (const pet of pets) for (const owner of pet.owners) ownerIds.add(owner.id);
 		return allStudyOwners.filter((owner) => ownerIds.has(owner.id) && ownerMatchesOwnerFilters(owner)).sort((first, second) => second.petCount - first.petCount || first.name.localeCompare(second.name));
 	}

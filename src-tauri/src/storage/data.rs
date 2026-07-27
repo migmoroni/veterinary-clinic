@@ -16,6 +16,7 @@ const USER_DATABASE_FILE: &str = "veterinary_clinic_user.db";
 const SYSTEM_DATABASE_FILE: &str = "veterinary_clinic_system.db";
 const USER_MEDIA_DATABASE_FILE: &str = "veterinary_clinic_user_media.db";
 const SYSTEM_MEDIA_DATABASE_FILE: &str = "veterinary_clinic_system_media.db";
+const USER_LOGS_DATABASE_FILE: &str = "veterinary_clinic_user_logs.db";
 
 #[derive(Clone)]
 pub struct StorageManager {
@@ -23,6 +24,7 @@ pub struct StorageManager {
     pub system_db: Arc<Mutex<Connection>>,
     pub user_media_db: Arc<Mutex<Connection>>,
     pub system_media_db: Arc<Mutex<Connection>>,
+    pub user_logs_db: Arc<Mutex<Connection>>,
     pub base_vault_path: PathBuf,
     database_dir: PathBuf,
     external_dbs: Arc<Mutex<HashMap<String, Arc<Mutex<Connection>>>>>,
@@ -60,7 +62,11 @@ impl StorageManager {
             )?)),
             system_media_db: Arc::new(Mutex::new(open_sqlite_db(
                 &database_dir.join(SYSTEM_MEDIA_DATABASE_FILE),
-                DbType::MediaIndex,
+                DbType::SystemMediaIndex,
+            )?)),
+            user_logs_db: Arc::new(Mutex::new(open_sqlite_db(
+                &database_dir.join(USER_LOGS_DATABASE_FILE),
+                DbType::Logs,
             )?)),
             base_vault_path,
             database_dir,
@@ -74,6 +80,10 @@ impl StorageManager {
 
     pub fn user_media_database_path(&self) -> PathBuf {
         self.database_dir.join(USER_MEDIA_DATABASE_FILE)
+    }
+
+    pub fn user_logs_database_path(&self) -> PathBuf {
+        self.database_dir.join(USER_LOGS_DATABASE_FILE)
     }
 
     pub fn user_vault_path(&self) -> PathBuf {
@@ -98,6 +108,11 @@ impl StorageManager {
             database: StorageDatabase::UserMedia,
             file_name: None,
             db_type: Some(DbType::MediaIndex),
+        })?;
+        self.close_connection(SqlConnectionRequest {
+            database: StorageDatabase::UserLogs,
+            file_name: None,
+            db_type: Some(DbType::Logs),
         })
     }
 
@@ -111,6 +126,11 @@ impl StorageManager {
             database: StorageDatabase::UserMedia,
             file_name: None,
             db_type: Some(DbType::MediaIndex),
+        })?;
+        self.reopen_connection(SqlConnectionRequest {
+            database: StorageDatabase::UserLogs,
+            file_name: None,
+            db_type: Some(DbType::Logs),
         })
     }
 
@@ -184,12 +204,7 @@ impl StorageManager {
             .fixed_connection(request.database)
             .ok_or_else(|| "database_target_invalid".to_string())?;
         let path = self.database_path(request.database, None)?;
-        let db_type = request.db_type.unwrap_or(match request.database {
-            StorageDatabase::UserMedia | StorageDatabase::SystemMedia => DbType::MediaIndex,
-            StorageDatabase::User | StorageDatabase::System | StorageDatabase::AppConfigFile => {
-                DbType::Operational
-            }
-        });
+        let db_type = fixed_database_type(request.database, request.db_type);
         let mut guard = connection
             .lock()
             .map_err(|_| "database_connection_lock_failed".to_string())?;
@@ -206,6 +221,7 @@ impl StorageManager {
             StorageDatabase::System => Some(Arc::clone(&self.system_db)),
             StorageDatabase::UserMedia => Some(Arc::clone(&self.user_media_db)),
             StorageDatabase::SystemMedia => Some(Arc::clone(&self.system_media_db)),
+            StorageDatabase::UserLogs => Some(Arc::clone(&self.user_logs_db)),
             StorageDatabase::AppConfigFile => None,
         }
     }
@@ -220,6 +236,7 @@ impl StorageManager {
             StorageDatabase::System => Ok(self.database_dir.join(SYSTEM_DATABASE_FILE)),
             StorageDatabase::UserMedia => Ok(self.database_dir.join(USER_MEDIA_DATABASE_FILE)),
             StorageDatabase::SystemMedia => Ok(self.database_dir.join(SYSTEM_MEDIA_DATABASE_FILE)),
+            StorageDatabase::UserLogs => Ok(self.database_dir.join(USER_LOGS_DATABASE_FILE)),
             StorageDatabase::AppConfigFile => {
                 Ok(self.database_dir.join(validate_app_config_file_name(
                     file_name.ok_or_else(|| "database_file_name_required".to_string())?,
@@ -251,13 +268,23 @@ impl StorageManager {
             return Ok(Arc::clone(connection));
         }
 
-        let db_type = request.db_type.unwrap_or(DbType::Operational);
+        let db_type = fixed_database_type(request.database, request.db_type);
         let connection = Arc::new(Mutex::new(open_sqlite_db(
             &self.database_dir.join(file_name),
             db_type,
         )?));
         external.insert(file_name.to_string(), Arc::clone(&connection));
         Ok(connection)
+    }
+}
+
+fn fixed_database_type(database: StorageDatabase, requested: Option<DbType>) -> DbType {
+    match database {
+        StorageDatabase::User | StorageDatabase::System => DbType::Operational,
+        StorageDatabase::UserMedia => DbType::MediaIndex,
+        StorageDatabase::SystemMedia => DbType::SystemMediaIndex,
+        StorageDatabase::UserLogs => DbType::Logs,
+        StorageDatabase::AppConfigFile => requested.unwrap_or(DbType::Operational),
     }
 }
 

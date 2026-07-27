@@ -22,7 +22,8 @@ import {
 } from '$lib/domain/product/catalog.js';
 import type { ImageCollectionItem, ImageCollectionItemInput, ImageCollectionPolicy } from '$lib/domain/image-collection/image-collection.js';
 import { FIELD_LIMITS, assertTextLimit, nullableLimitedText } from '$lib/domain/shared/field-limits.js';
-import { createUuidV4 } from '$lib/domain/shared/uuid.js';
+import { nowIso } from '$lib/domain/shared/time.js';
+import { createUuidV7 } from '$lib/domain/shared/uuid.js';
 import type { TreatmentCatalogItem, TreatmentCatalogItemId, TreatmentCatalogItemInput, TreatmentKind } from '$lib/domain/treatment/treatment.js';
 import { normalizeTreatmentName } from '$lib/domain/treatment/treatment.js';
 import { ensureManufacturerCatalogItem, getManufacturerCatalogItemById } from '$lib/persistence/repositories/manufacturer-catalog.repository.js';
@@ -43,7 +44,9 @@ interface ProductCatalogItemRow {
 	regions: string;
 	extension: string;
 	hidden_at: string | null;
+	created_at: string | null;
 	updated_at: string | null;
+	removed_at: string | null;
 }
 
 interface ProductCatalogConfig {
@@ -80,10 +83,15 @@ const PRODUCT_CATALOG_COLUMNS = `product.id AS id,
 	product.regions AS regions,
 	product.extension AS extension,
 	product.hidden_at AS hidden_at,
-	product.updated_at AS updated_at`;
+	product.created_at AS created_at,
+	product.updated_at AS updated_at,
+	product.removed_at AS removed_at`;
 const SYSTEM_PRODUCT_CATALOG_COLUMNS = PRODUCT_CATALOG_COLUMNS
 	.replace('product.manufacturer_name AS manufacturer_name', 'manufacturer.name AS manufacturer_name')
-	.replace("'user' AS source", "'system' AS source");
+	.replace("'user' AS source", "'system' AS source")
+	.replace('product.created_at AS created_at', 'NULL AS created_at')
+	.replace('product.updated_at AS updated_at', 'NULL AS updated_at')
+	.replace('product.removed_at AS removed_at', 'NULL AS removed_at');
 const USER_PRODUCT_CATALOG_FROM = 'user_product_catalog_items product';
 const SYSTEM_PRODUCT_CATALOG_FROM = `product_catalog_items product
 	LEFT JOIN manufacturer_catalog_items manufacturer ON manufacturer.id = product.manufacturer_id`;
@@ -204,6 +212,7 @@ function sortProductRows(rows: ProductCatalogItemRow[]): ProductCatalogItemRow[]
 
 async function selectProductCatalogRows(filters: string[], values: unknown[] = []): Promise<ProductCatalogItemRow[]> {
 	const where = filters.join(' AND ');
+	const systemWhere = filters.filter((filter) => filter !== 'product.removed_at IS NULL').join(' AND ');
 	const [userRows, referenceRows] = await Promise.all([
 		selectMany<ProductCatalogItemRow>(
 			`SELECT ${PRODUCT_CATALOG_COLUMNS}
@@ -214,7 +223,7 @@ async function selectProductCatalogRows(filters: string[], values: unknown[] = [
 		selectSystemMany<ProductCatalogItemRow>(
 			`SELECT ${SYSTEM_PRODUCT_CATALOG_COLUMNS}
 			 FROM ${SYSTEM_PRODUCT_CATALOG_FROM}
-			 WHERE ${where}`,
+			 WHERE ${systemWhere || '1 = 1'}`,
 			values
 		)
 	]);
@@ -222,7 +231,8 @@ async function selectProductCatalogRows(filters: string[], values: unknown[] = [
 }
 
 async function selectProductCatalogItemRowById(id: TreatmentCatalogItemId, includeHidden = false): Promise<ProductCatalogItemRow | null> {
-	const filters = ['product.id = $1', includeHidden ? '1 = 1' : 'product.hidden_at IS NULL'];
+	const filters = ['product.id = $1', 'product.removed_at IS NULL', includeHidden ? '1 = 1' : 'product.hidden_at IS NULL'];
+	const systemFilters = filters.filter((filter) => filter !== 'product.removed_at IS NULL');
 	const userRows = await selectMany<ProductCatalogItemRow>(
 		`SELECT ${PRODUCT_CATALOG_COLUMNS}
 		 FROM ${USER_PRODUCT_CATALOG_FROM}
@@ -234,7 +244,7 @@ async function selectProductCatalogItemRowById(id: TreatmentCatalogItemId, inclu
 	const referenceRows = await selectSystemMany<ProductCatalogItemRow>(
 		`SELECT ${SYSTEM_PRODUCT_CATALOG_COLUMNS}
 		 FROM ${SYSTEM_PRODUCT_CATALOG_FROM}
-		 WHERE ${filters.join(' AND ')}
+		 WHERE ${systemFilters.join(' AND ')}
 		 LIMIT 1`,
 		[id]
 	);
@@ -253,7 +263,7 @@ async function selectProductCatalogItemRowByNormalizedName(normalizedName: strin
 	const userRows = await selectMany<ProductCatalogItemRow>(
 		`SELECT ${PRODUCT_CATALOG_COLUMNS}
 		 FROM ${USER_PRODUCT_CATALOG_FROM}
-		 WHERE product.normalized_name = $1
+		 WHERE product.normalized_name = $1 AND product.removed_at IS NULL
 		 LIMIT 1`,
 		[normalizedName]
 	);
@@ -280,12 +290,13 @@ export async function ensureTreatmentProductCatalogItem(kind: TreatmentKind, nam
 	}
 
 	const metadata = normalizeProductCatalogMetadata({}, normalizedName);
-	const id = createUuidV4();
+	const id = createUuidV7();
+	const createdAt = nowIso();
 	await execute(
-		`INSERT INTO user_product_catalog_items (id, type, name, normalized_name, species, aliases, manufacturer_id, manufacturer_name, regions, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)
-		 ON CONFLICT(normalized_name) DO NOTHING`,
-		[id, serializedType, name, normalizedName, metadata.species, metadata.aliases, null, metadata.manufacturerName, metadata.regions]
+		`INSERT INTO user_product_catalog_items (id, type, name, normalized_name, species, aliases, manufacturer_id, manufacturer_name, regions, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $10)
+		 ON CONFLICT(normalized_name) DO UPDATE SET removed_at = NULL, updated_at = excluded.updated_at`,
+		[id, serializedType, name, normalizedName, metadata.species, metadata.aliases, null, metadata.manufacturerName, metadata.regions, createdAt]
 	);
 
 	const item = await getProductCatalogItemByNormalizedName(normalizedName);
@@ -294,7 +305,7 @@ export async function ensureTreatmentProductCatalogItem(kind: TreatmentKind, nam
 }
 
 export async function listProductCatalogItems(includeHidden = false, includeImages = true): Promise<ProductCatalogItem[]> {
-	const filters = [includeHidden ? '1 = 1' : 'product.hidden_at IS NULL'];
+	const filters = ['product.removed_at IS NULL', includeHidden ? '1 = 1' : 'product.hidden_at IS NULL'];
 	const rows = await selectProductCatalogRows(filters);
 
 	if (!includeImages) return Promise.all(rows.map((row) => mapCatalogItem(row, [], true)));
@@ -304,7 +315,7 @@ export async function listProductCatalogItems(includeHidden = false, includeImag
 }
 
 export async function listTreatmentProductCatalogItems(kind: TreatmentKind | null = null, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem[]> {
-	const filters = [includeHidden ? '1 = 1' : 'product.hidden_at IS NULL'];
+	const filters = ['product.removed_at IS NULL', includeHidden ? '1 = 1' : 'product.hidden_at IS NULL'];
 	const values: unknown[] = [];
 	const typeValues = kind ? treatmentProductTypeValues(kind) : TREATMENT_PRODUCT_TYPES;
 	const placeholders = typeValues.map((_, index) => `$${values.length + index + 1}`).join(', ');
@@ -355,15 +366,15 @@ export async function saveTreatmentProductCatalogItem(kind: TreatmentKind, input
 				manufacturer_id = $7,
 				manufacturer_name = $8,
 				regions = $9,
-				updated_at = CURRENT_TIMESTAMP
-			 WHERE id = $1`,
-			[id, serializedType, name, normalizedName, metadata.species, metadata.aliases, manufacturer?.id ?? null, manufacturerName, metadata.regions]
+				updated_at = $10
+			 WHERE id = $1 AND removed_at IS NULL`,
+			[id, serializedType, name, normalizedName, metadata.species, metadata.aliases, manufacturer?.id ?? null, manufacturerName, metadata.regions, nowIso()]
 		);
 
 		const rows = await selectMany<ProductCatalogItemRow>(
 			`SELECT ${PRODUCT_CATALOG_COLUMNS}
 			 FROM ${USER_PRODUCT_CATALOG_FROM}
-			 WHERE product.id = $1
+			 WHERE product.id = $1 AND product.removed_at IS NULL
 			 LIMIT 1`,
 			[id]
 		);
@@ -384,9 +395,10 @@ export async function saveTreatmentProductCatalogItem(kind: TreatmentKind, input
 				manufacturer_name = $7,
 				regions = $8,
 				hidden_at = NULL,
-				updated_at = CURRENT_TIMESTAMP
+				removed_at = NULL,
+				updated_at = $9
 			 WHERE id = $1`,
-			[existingItem.id, serializedType, name, metadata.species, metadata.aliases, manufacturer?.id ?? null, manufacturerName, metadata.regions]
+			[existingItem.id, serializedType, name, metadata.species, metadata.aliases, manufacturer?.id ?? null, manufacturerName, metadata.regions, nowIso()]
 		);
 
 		const item = await getProductCatalogItemByNormalizedName(normalizedName);
@@ -394,11 +406,12 @@ export async function saveTreatmentProductCatalogItem(kind: TreatmentKind, input
 		return { ...item, type: item.type as ProductTypeTuple<'medication'>, kind };
 	}
 
-	const newId = createUuidV4();
+	const newId = createUuidV7();
+	const createdAt = nowIso();
 	await execute(
-		`INSERT INTO user_product_catalog_items (id, type, name, normalized_name, species, aliases, manufacturer_id, manufacturer_name, regions, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)`,
-		[newId, serializedType, name, normalizedName, metadata.species, metadata.aliases, manufacturer?.id ?? null, manufacturerName, metadata.regions]
+		`INSERT INTO user_product_catalog_items (id, type, name, normalized_name, species, aliases, manufacturer_id, manufacturer_name, regions, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $10)`,
+		[newId, serializedType, name, normalizedName, metadata.species, metadata.aliases, manufacturer?.id ?? null, manufacturerName, metadata.regions, createdAt]
 	);
 
 	const item = await getProductCatalogItemByNormalizedName(normalizedName);
@@ -408,12 +421,13 @@ export async function saveTreatmentProductCatalogItem(kind: TreatmentKind, input
 
 export async function setProductCatalogItemHidden(_kind: TreatmentKind, id: TreatmentCatalogItemId, hidden: boolean): Promise<TreatmentCatalogItem> {
 	await assertProductCatalogItemEditable(id);
+	const updatedAt = nowIso();
 	await execute(
 		`UPDATE user_product_catalog_items
-		 SET hidden_at = ${hidden ? 'COALESCE(hidden_at, CURRENT_TIMESTAMP)' : 'NULL'},
-			updated_at = CURRENT_TIMESTAMP
-		 WHERE id = $1`,
-		[id]
+		 SET hidden_at = ${hidden ? 'COALESCE(hidden_at, $2)' : 'NULL'},
+			updated_at = $2
+		 WHERE id = $1 AND removed_at IS NULL`,
+		[id, updatedAt]
 	);
 
 	const row = await selectProductCatalogItemRowById(id, true);
@@ -424,7 +438,8 @@ export async function setProductCatalogItemHidden(_kind: TreatmentKind, id: Trea
 export async function deleteProductCatalogItem(_kind: TreatmentKind, id: TreatmentCatalogItemId): Promise<void> {
 	await assertProductCatalogItemEditable(id);
 	await deleteImageCollection(PRODUCT_CATALOG_IMAGE_COLLECTION_TYPE, id);
-	await execute('DELETE FROM user_product_catalog_items WHERE id = $1', [id]);
+	const removedAt = nowIso();
+	await execute('UPDATE user_product_catalog_items SET removed_at = $2, updated_at = $2 WHERE id = $1 AND removed_at IS NULL', [id, removedAt]);
 }
 
 export async function saveProductCatalogItemImages(_kind: TreatmentKind, id: TreatmentCatalogItemId, images: ImageCollectionItemInput[]): Promise<TreatmentCatalogItem> {

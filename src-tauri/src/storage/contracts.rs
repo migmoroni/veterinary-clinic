@@ -7,6 +7,8 @@ use serde_json::Value as JsonValue;
 pub enum DbType {
     Operational,
     MediaIndex,
+    SystemMediaIndex,
+    Logs,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -16,6 +18,7 @@ pub enum StorageDatabase {
     System,
     UserMedia,
     SystemMedia,
+    UserLogs,
     AppConfigFile,
 }
 
@@ -100,4 +103,30 @@ pub struct SyncStatusRequest {
     pub(crate) hash: String,
     pub(crate) sync_status: String,
     pub(crate) uploaded_at: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HardDeleteTrashRequest {
+    pub(crate) kind: String,
+    pub(crate) id: String,
+    pub(crate) deleted_by: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeletionAuditLogsRequest {
+    pub(crate) limit: Option<u32>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeletionAuditLog {
+    pub(crate) id: String,
+    pub(crate) domain: String,
+    pub(crate) target_table: String,
+    pub(crate) target_id: String,
+    pub(crate) deleted_by: Option<String>,
+    pub(crate) snapshot_json: Option<String>,
+    pub(crate) created_at: String,
 }

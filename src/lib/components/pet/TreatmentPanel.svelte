@@ -68,7 +68,7 @@
 		treatments = [],
 		catalogItems = [],
 		onChange
-	}: { kind: TreatmentKind; petId: number; petSpecies?: PetSpecies | null; treatments?: PetTreatment[]; catalogItems?: TreatmentCatalogItem[]; onChange?: (treatments: PetTreatment[]) => void } = $props();
+	}: { kind: TreatmentKind; petId: string; petSpecies?: PetSpecies | null; treatments?: PetTreatment[]; catalogItems?: TreatmentCatalogItem[]; onChange?: (treatments: PetTreatment[]) => void } = $props();
 
 	const today = new Date();
 	const todayInput = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -77,12 +77,12 @@
 	let currentTreatments = $state<PetTreatment[]>([]);
 	let currentCatalogItems = $state<TreatmentCatalogItem[]>([]);
 	let currentProtocols = $state<TreatmentProtocol[]>([]);
-	let loadedPetId = $state<number | null>(null);
+	let loadedPetId = $state<string | null>(null);
 	let loadedKind = $state<TreatmentKind | null>(null);
 	let appliedAt = $state(todayInput);
 	let treatmentName = $state('');
 	let protocolId = $state<TreatmentProtocolId | ''>('');
-	let protocolDoseId = $state(0);
+	let protocolDoseId = $state('');
 	let dose = $state('');
 	let validityValue = $state(0);
 	let validityUnit = $state<TreatmentValidityUnit>('months');
@@ -93,7 +93,7 @@
 	let statusKey = $state<TranslationKey | null>(null);
 	let errorKey = $state<TranslationKey | null>(null);
 
-	const sortedTreatments = $derived([...currentTreatments].sort((first, second) => second.appliedAt.localeCompare(first.appliedAt) || second.id - first.id));
+	const sortedTreatments = $derived([...currentTreatments].sort((first, second) => second.appliedAt.localeCompare(first.appliedAt) || second.id.localeCompare(first.id)));
 	const visibleCatalogItems = $derived(currentCatalogItems.filter((item) => !item.hiddenAt && productItemMatchesSpecies(item.species, petSpecies)));
 	const knownNames = $derived([...new Set(visibleCatalogItems.map((item) => item.name))].sort((first, second) => first.localeCompare(second)));
 	const selectedCatalogItem = $derived(visibleCatalogItems.find((item) => item.name === treatmentName) ?? null);
@@ -130,7 +130,7 @@
 	}
 
 	function protocolDoseOptions() {
-		return [{ value: 0, label: t('protocol.dosePlaceholder') }, ...visibleProtocolDoses.map((protocolDose) => ({ value: protocolDose.id, label: protocolDoseLabel(protocolDose) }))];
+		return [{ value: '', label: t('protocol.dosePlaceholder') }, ...visibleProtocolDoses.map((protocolDose) => ({ value: protocolDose.id, label: protocolDoseLabel(protocolDose) }))];
 	}
 
 	function validityLabel(value: number, unit: TreatmentValidityUnit): string {
@@ -154,7 +154,7 @@
 
 	function clearProtocolSelection() {
 		protocolId = '';
-		protocolDoseId = 0;
+		protocolDoseId = '';
 	}
 
 	function handleTreatmentChange(value: string) {
@@ -164,10 +164,10 @@
 
 	function handleProtocolChange(value: TreatmentProtocolId | '') {
 		protocolId = value;
-		protocolDoseId = 0;
+		protocolDoseId = '';
 	}
 
-	function handleProtocolDoseChange(value: number) {
+	function handleProtocolDoseChange(value: string) {
 		protocolDoseId = value;
 		const protocolDose = visibleProtocolDoses.find((item) => item.id === value);
 		if (!protocolDose) return;

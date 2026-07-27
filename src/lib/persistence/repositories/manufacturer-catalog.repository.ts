@@ -17,7 +17,7 @@ export const MANUFACTURER_CATALOG_IMAGE_POLICY: ImageCollectionPolicy = {
 	maxItems: 9
 };
 
-const MANUFACTURER_CATALOG_COLUMNS = 'id, type, name, normalized_name, aliases, regions, extension, hidden_at, updated_at';
+const MANUFACTURER_CATALOG_COLUMNS = 'id, type, name, normalized_name, aliases, regions, extension, hidden_at, NULL AS updated_at';
 
 interface ManufacturerCatalogItemRow {
 	id: string;

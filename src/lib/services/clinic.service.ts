@@ -118,9 +118,9 @@ export async function filterActiveSearchResults(results: SearchResult[]): Promis
 	return results.filter((result) => (isClinicSearchResult(result) ? activeClinicKeys.has(searchResultKey(result)) : activeReferenceKeys.has(searchResultKey(result))));
 }
 
-export async function loadOwnerAssociatedContactsByOwnerIds(ownerIds: number[]): Promise<Map<number, OwnerAssociatedContact[]>> {
-	const uniqueIds = [...new Set(ownerIds)].filter((id) => Number.isFinite(id));
-	if (uniqueIds.length === 0) return new Map<number, OwnerAssociatedContact[]>();
+export async function loadOwnerAssociatedContactsByOwnerIds(ownerIds: string[]): Promise<Map<string, OwnerAssociatedContact[]>> {
+	const uniqueIds = [...new Set(ownerIds)].filter((id) => id.trim().length > 0);
+	if (uniqueIds.length === 0) return new Map<string, OwnerAssociatedContact[]>();
 
 	return listOwnerAssociatedContactsByOwnerIds(uniqueIds);
 }

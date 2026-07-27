@@ -1,4 +1,12 @@
-import { hardDeleteTrashItem, listTrashItems, purgeExpiredTrash, restoreTrashItem, type TrashItemId, type TrashKind } from '$lib/persistence/repositories/trash.repository.js';
+import {
+	getDeletionAuditLogs,
+	hardDeleteTrashItem,
+	listTrashItems,
+	emptyTrash,
+	restoreTrashItem,
+	type TrashItemId,
+	type TrashKind
+} from '$lib/persistence/repositories/trash.repository.js';
 
 export async function loadTrash() {
 	return listTrashItems();
@@ -13,5 +21,9 @@ export async function deleteFromTrash(kind: TrashKind, id: TrashItemId): Promise
 }
 
 export async function purgeTrash(): Promise<void> {
-	await purgeExpiredTrash();
+	await emptyTrash();
+}
+
+export async function loadDeletionAuditLogs(limit?: number) {
+	return getDeletionAuditLogs(limit);
 }

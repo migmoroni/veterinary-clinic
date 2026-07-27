@@ -5,41 +5,42 @@ import type {
 	MedicalRecordInput
 } from '$lib/domain/medical-record/medical-record.js';
 import { FIELD_LIMITS, nullableLimitedText, nullableMultilineText } from '$lib/domain/shared/field-limits.js';
-import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
+import { nowIso } from '$lib/domain/shared/time.js';
+import { createUuidV7 } from '$lib/domain/shared/uuid.js';
 import { loadMediaData } from '$lib/persistence/repositories/media.repository.js';
 import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
 import { normalizeMediaHash } from '$lib/persistence/sqlite/media.js';
 import { listOwnerAssociatedContactsByOwnerIds, listOwnersByPet } from './owner.repository.js';
 
 interface MedicalRecordRow {
-	id: number;
-	pet_id: number;
+	id: string;
+	pet_id: string;
 	title: string | null;
 	description: string | null;
 	admitted_at: string | null;
 	discharged_at: string | null;
+	created_at: string | null;
 	updated_at: string | null;
-	deleted_at: string | null;
-	purge_after: string | null;
+	removed_at: string | null;
 }
 
 interface MedicalRecordDetailsRow extends MedicalRecordRow {
 	pet_name: string;
 	pet_avatar_hash: unknown | null;
-	owner_id: number | null;
+	owner_id: string | null;
 	owner_name: string | null;
 	owner_avatar_hash: unknown | null;
 }
 
 interface CurrentRecordRow {
-	id: number;
+	id: string;
 	title: string | null;
 	description: string | null;
 	admitted_at: string | null;
 	discharged_at: string | null;
-	pet_id: number;
+	pet_id: string;
 	pet_name: string;
-	owner_id: number | null;
+	owner_id: string | null;
 	owner_ids: string | null;
 	owner_name: string | null;
 }
@@ -47,14 +48,14 @@ interface CurrentRecordRow {
 const firstOwnerIdSql = `(SELECT owners.id
 	FROM pet_owners
 	JOIN owners ON owners.id = pet_owners.owner_id
-	WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+	WHERE pet_owners.pet_id = pets.id AND owners.removed_at IS NULL
 	ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
 	LIMIT 1)`;
 
 const firstOwnerAvatarSql = `(SELECT owners.avatar_hash
 	FROM pet_owners
 	JOIN owners ON owners.id = pet_owners.owner_id
-	WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+	WHERE pet_owners.pet_id = pets.id AND owners.removed_at IS NULL
 	ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
 	LIMIT 1)`;
 
@@ -63,7 +64,7 @@ const ownerNamesSql = `(SELECT group_concat(name, ' · ')
 		SELECT owners.name AS name
 		FROM pet_owners
 		JOIN owners ON owners.id = pet_owners.owner_id
-		WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+		WHERE pet_owners.pet_id = pets.id AND owners.removed_at IS NULL
 		ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
 	))`;
 
@@ -72,19 +73,19 @@ const ownerIdsSql = `(SELECT group_concat(owner_id, ',')
 		SELECT owners.id AS owner_id
 		FROM pet_owners
 		JOIN owners ON owners.id = pet_owners.owner_id
-		WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+		WHERE pet_owners.pet_id = pets.id AND owners.removed_at IS NULL
 		ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
 	))`;
 
-function fallbackTitle(id: number, title: string | null): string {
+function fallbackTitle(id: string, title: string | null): string {
 	return title ?? `Prontuario ${id}`;
 }
 
-function parseOwnerIds(value: string | null | undefined): number[] {
+function parseOwnerIds(value: string | null | undefined): string[] {
 	return (value ?? '')
 		.split(',')
-		.map((item) => Number(item))
-		.filter((id) => Number.isInteger(id) && id > 0);
+		.map((item) => item.trim())
+		.filter((id) => id.length > 0);
 }
 
 function assertValidPeriod(admittedAt: string | null, dischargedAt: string | null): void {
@@ -99,9 +100,9 @@ function mapMedicalRecord(row: MedicalRecordRow): MedicalRecord {
 		description: row.description,
 		admittedAt: row.admitted_at,
 		dischargedAt: row.discharged_at,
+		createdAt: row.created_at,
 		updatedAt: row.updated_at,
-		deletedAt: row.deleted_at,
-		purgeAfter: row.purge_after
+		removedAt: row.removed_at
 	};
 }
 
@@ -118,17 +119,17 @@ async function mapCurrentRecord(row: CurrentRecordRow): Promise<CurrentRecordSum
 		dischargedAt: row.discharged_at,
 		petId: row.pet_id,
 		petName: row.pet_name,
-		ownerId: row.owner_id ?? ownerIds[0] ?? 0,
+		ownerId: row.owner_id ?? ownerIds[0] ?? '',
 		ownerName: row.owner_name ?? '',
 		ownerContacts
 	};
 }
 
-export async function listRecordsByPet(petId: number, includeDeleted = false): Promise<MedicalRecord[]> {
+export async function listRecordsByPet(petId: string, includeRemoved = false): Promise<MedicalRecord[]> {
 	const rows = await selectMany<MedicalRecordRow>(
-		`SELECT id, pet_id, title, description, admitted_at, discharged_at, updated_at, deleted_at, purge_after
+		`SELECT id, pet_id, title, description, admitted_at, discharged_at, created_at, updated_at, removed_at
 		 FROM medical_records
-		 WHERE pet_id = $1 ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
+		 WHERE pet_id = $1 ${includeRemoved ? '' : 'AND removed_at IS NULL'}
 		 ORDER BY COALESCE(admitted_at, updated_at) DESC, id DESC`,
 		[petId]
 	);
@@ -136,11 +137,11 @@ export async function listRecordsByPet(petId: number, includeDeleted = false): P
 	return rows.map(mapMedicalRecord);
 }
 
-export async function getMedicalRecord(id: number, includeDeleted = false): Promise<MedicalRecord | null> {
+export async function getMedicalRecord(id: string, includeRemoved = false): Promise<MedicalRecord | null> {
 	const rows = await selectMany<MedicalRecordRow>(
-		`SELECT id, pet_id, title, description, admitted_at, discharged_at, updated_at, deleted_at, purge_after
+		`SELECT id, pet_id, title, description, admitted_at, discharged_at, created_at, updated_at, removed_at
 		 FROM medical_records
-		 WHERE id = $1 ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
+		 WHERE id = $1 ${includeRemoved ? '' : 'AND removed_at IS NULL'}
 		 LIMIT 1`,
 		[id]
 	);
@@ -148,7 +149,7 @@ export async function getMedicalRecord(id: number, includeDeleted = false): Prom
 	return rows[0] ? mapMedicalRecord(rows[0]) : null;
 }
 
-export async function getMedicalRecordDetails(id: number, includeDeleted = false): Promise<MedicalRecordDetails | null> {
+export async function getMedicalRecordDetails(id: string, includeRemoved = false): Promise<MedicalRecordDetails | null> {
 	const rows = await selectMany<MedicalRecordDetailsRow>(
 		`SELECT medical_records.id,
 			medical_records.pet_id,
@@ -156,9 +157,9 @@ export async function getMedicalRecordDetails(id: number, includeDeleted = false
 			medical_records.description,
 			medical_records.admitted_at,
 			medical_records.discharged_at,
+			medical_records.created_at,
 			medical_records.updated_at,
-			medical_records.deleted_at,
-			medical_records.purge_after,
+			medical_records.removed_at,
 			pets.name AS pet_name,
 			pets.avatar_hash AS pet_avatar_hash,
 			${firstOwnerIdSql} AS owner_id,
@@ -167,14 +168,14 @@ export async function getMedicalRecordDetails(id: number, includeDeleted = false
 		 FROM medical_records
 		 JOIN pets ON pets.id = medical_records.pet_id
 		 WHERE medical_records.id = $1
-			${includeDeleted ? '' : 'AND medical_records.deleted_at IS NULL AND pets.deleted_at IS NULL'}
+			${includeRemoved ? '' : 'AND medical_records.removed_at IS NULL AND pets.removed_at IS NULL'}
 		 LIMIT 1`,
 		[id]
 	);
 
 	const row = rows[0];
 	if (!row) return null;
-	const owners = await listOwnersByPet(row.pet_id, includeDeleted);
+	const owners = await listOwnersByPet(row.pet_id, includeRemoved);
 	const primaryOwner = owners[0];
 
 	return {
@@ -182,35 +183,32 @@ export async function getMedicalRecordDetails(id: number, includeDeleted = false
 		petName: row.pet_name,
 		petAvatarBytes: await loadMediaData('user', normalizeMediaHash(row.pet_avatar_hash)),
 		owners,
-		ownerId: primaryOwner?.id ?? row.owner_id ?? 0,
+		ownerId: primaryOwner?.id ?? row.owner_id ?? '',
 		ownerName: row.owner_name ?? primaryOwner?.name ?? '',
 		ownerAvatarBytes: primaryOwner?.avatarBytes ?? (await loadMediaData('user', normalizeMediaHash(row.owner_avatar_hash)))
 	};
 }
 
-export async function createMedicalRecord(petId: number, input: MedicalRecordInput): Promise<MedicalRecord> {
+export async function createMedicalRecord(petId: string, input: MedicalRecordInput): Promise<MedicalRecord> {
 	const title = nullableLimitedText(input.title, FIELD_LIMITS.medicalRecordTitle);
 	const admittedAt = nullableLimitedText(input.admittedAt, FIELD_LIMITS.isoDate);
 	const dischargedAt = nullableLimitedText(input.dischargedAt, FIELD_LIMITS.isoDate);
 	assertValidPeriod(admittedAt, dischargedAt);
 
-	const result = await execute(
-		`INSERT INTO medical_records (pet_id, title, description, admitted_at, discharged_at, updated_at)
-		 VALUES ($1, $2, $3, COALESCE($4, CURRENT_DATE), $5, CURRENT_TIMESTAMP)`,
-		[petId, title, nullableMultilineText(input.description, FIELD_LIMITS.medicalRecordDescription), admittedAt, dischargedAt]
+	const id = createUuidV7();
+	const createdAt = nowIso();
+	await execute(
+		`INSERT INTO medical_records (id, pet_id, title, description, admitted_at, discharged_at, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, COALESCE($5, CURRENT_DATE), $6, $7, $7)`,
+		[id, petId, title ?? fallbackTitle(id, null), nullableMultilineText(input.description, FIELD_LIMITS.medicalRecordDescription), admittedAt, dischargedAt, createdAt]
 	);
-
-	const id = Number(result.lastInsertId);
-	if (!title) {
-		await execute('UPDATE medical_records SET title = $2 WHERE id = $1', [id, fallbackTitle(id, null)]);
-	}
 
 	const record = await getMedicalRecord(id);
 	if (!record) throw new Error('record_create_failed');
 	return record;
 }
 
-export async function updateMedicalRecord(id: number, input: MedicalRecordInput): Promise<MedicalRecord> {
+export async function updateMedicalRecord(id: string, input: MedicalRecordInput): Promise<MedicalRecord> {
 	const admittedAt = nullableLimitedText(input.admittedAt, FIELD_LIMITS.isoDate);
 	const dischargedAt = nullableLimitedText(input.dischargedAt, FIELD_LIMITS.isoDate);
 	assertValidPeriod(admittedAt, dischargedAt);
@@ -221,9 +219,9 @@ export async function updateMedicalRecord(id: number, input: MedicalRecordInput)
 			description = $3,
 			admitted_at = COALESCE($4, admitted_at),
 			discharged_at = $5,
-			updated_at = CURRENT_TIMESTAMP
-		 WHERE id = $1 AND deleted_at IS NULL`,
-		[id, nullableLimitedText(input.title, FIELD_LIMITS.medicalRecordTitle) ?? fallbackTitle(id, null), nullableMultilineText(input.description, FIELD_LIMITS.medicalRecordDescription), admittedAt, dischargedAt]
+			updated_at = $6
+		 WHERE id = $1 AND removed_at IS NULL`,
+		[id, nullableLimitedText(input.title, FIELD_LIMITS.medicalRecordTitle) ?? fallbackTitle(id, null), nullableMultilineText(input.description, FIELD_LIMITS.medicalRecordDescription), admittedAt, dischargedAt, nowIso()]
 	);
 
 	const record = await getMedicalRecord(id);
@@ -231,27 +229,27 @@ export async function updateMedicalRecord(id: number, input: MedicalRecordInput)
 	return record;
 }
 
-export async function softDeleteMedicalRecord(id: number): Promise<void> {
-	const deletedAt = nowIso();
+export async function softDeleteMedicalRecord(id: string): Promise<void> {
+	const removedAt = nowIso();
 	await execute(
 		`UPDATE medical_records
-		 SET deleted_at = $2, purge_after = $3, updated_at = CURRENT_TIMESTAMP
-		 WHERE id = $1 AND deleted_at IS NULL`,
-		[id, deletedAt, computePurgeAfter(deletedAt)]
+		 SET removed_at = $2, updated_at = $2
+		 WHERE id = $1 AND removed_at IS NULL`,
+		[id, removedAt]
 	);
 }
 
-export async function restoreMedicalRecord(id: number): Promise<void> {
+export async function restoreMedicalRecord(id: string): Promise<void> {
 	await execute(
 		`UPDATE medical_records
-		 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
+		 SET removed_at = NULL, updated_at = $2
 		 WHERE id = $1`,
-		[id]
+		[id, nowIso()]
 	);
 }
 
-export async function hardDeleteMedicalRecord(id: number): Promise<void> {
-	await execute('DELETE FROM medical_records WHERE id = $1', [id]);
+export async function hardDeleteMedicalRecord(id: string): Promise<void> {
+	await softDeleteMedicalRecord(id);
 }
 
 export async function getLastEditedRecord(): Promise<CurrentRecordSummary | null> {
@@ -269,8 +267,8 @@ export async function getLastEditedRecord(): Promise<CurrentRecordSummary | null
 			${ownerNamesSql} AS owner_name
 		 FROM medical_records
 		 JOIN pets ON pets.id = medical_records.pet_id
-		 WHERE medical_records.deleted_at IS NULL
-			AND pets.deleted_at IS NULL
+		 WHERE medical_records.removed_at IS NULL
+			AND pets.removed_at IS NULL
 		 ORDER BY medical_records.updated_at DESC, medical_records.id DESC
 		 LIMIT 1`
 	);

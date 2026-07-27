@@ -2,7 +2,7 @@ use super::DbType;
 use rusqlite::Connection;
 use std::{fs, path::Path};
 
-const MEDIA_BLOBS_DDL: &str = r#"
+const USER_MEDIA_BLOBS_DDL: &str = r#"
 CREATE TABLE IF NOT EXISTS blobs (
   hash BLOB PRIMARY KEY CHECK(length(hash) = 32),
   thumbnail BLOB,
@@ -11,10 +11,45 @@ CREATE TABLE IF NOT EXISTS blobs (
   width INTEGER CHECK(width IS NULL OR width > 0),
   height INTEGER CHECK(height IS NULL OR height > 0),
   sync_status TEXT NOT NULL DEFAULT 'pending' CHECK(sync_status IN ('pending', 'synced', 'error')),
-  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_by TEXT,
   uploaded_at TEXT,
   removed_at TEXT
 ) WITHOUT ROWID
+"#;
+
+const SYSTEM_MEDIA_BLOBS_DDL: &str = r#"
+CREATE TABLE IF NOT EXISTS blobs (
+  hash BLOB PRIMARY KEY CHECK(length(hash) = 32),
+  thumbnail BLOB,
+  mime_type TEXT NOT NULL CHECK(length(trim(mime_type)) > 0),
+  size_bytes INTEGER NOT NULL CHECK(size_bytes > 0),
+  width INTEGER CHECK(width IS NULL OR width > 0),
+  height INTEGER CHECK(height IS NULL OR height > 0),
+  sync_status TEXT NOT NULL DEFAULT 'pending' CHECK(sync_status IN ('pending', 'synced', 'error')),
+  uploaded_at TEXT
+) WITHOUT ROWID
+"#;
+
+const USER_LOGS_DDL: &str = r#"
+CREATE TABLE IF NOT EXISTS permanent_deletion_logs (
+  id TEXT PRIMARY KEY,
+  domain TEXT NOT NULL CHECK(domain IN ('user_data', 'user_media')),
+  target_table TEXT NOT NULL,
+  target_id TEXT NOT NULL,
+  deleted_by TEXT,
+  snapshot_json TEXT,
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS system_audit_logs (
+  id TEXT PRIMARY KEY,
+  action_type TEXT NOT NULL,
+  description TEXT NOT NULL,
+  actor_id TEXT,
+  created_at TEXT NOT NULL
+);
 "#;
 
 pub fn open_sqlite_db(path: &Path, db_type: DbType) -> Result<Connection, String> {
@@ -26,10 +61,17 @@ pub fn open_sqlite_db(path: &Path, db_type: DbType) -> Result<Connection, String
     let connection =
         Connection::open(path).map_err(|error| format!("database_open_failed:{error}"))?;
     apply_sqlite_pragmas(&connection, db_type)?;
-    if matches!(db_type, DbType::MediaIndex) {
-        connection
-            .execute_batch(MEDIA_BLOBS_DDL)
-            .map_err(|error| format!("media_schema_failed:{error}"))?;
+    match db_type {
+        DbType::MediaIndex => connection
+            .execute_batch(USER_MEDIA_BLOBS_DDL)
+            .map_err(|error| format!("media_schema_failed:{error}"))?,
+        DbType::SystemMediaIndex => connection
+            .execute_batch(SYSTEM_MEDIA_BLOBS_DDL)
+            .map_err(|error| format!("system_media_schema_failed:{error}"))?,
+        DbType::Logs => connection
+            .execute_batch(USER_LOGS_DDL)
+            .map_err(|error| format!("logs_schema_failed:{error}"))?,
+        DbType::Operational => {}
     }
     Ok(connection)
 }
@@ -60,6 +102,17 @@ fn apply_sqlite_pragmas(connection: &Connection, db_type: DbType) -> Result<(), 
                 "#,
             )
             .map_err(|error| format!("database_media_pragma_failed:{error}"))?,
+        DbType::SystemMediaIndex => connection
+            .execute_batch(
+                r#"
+                PRAGMA cache_size = -4000;
+                PRAGMA mmap_size = 33554432;
+                "#,
+            )
+            .map_err(|error| format!("database_system_media_pragma_failed:{error}"))?,
+        DbType::Logs => connection
+            .execute_batch("PRAGMA cache_size = -2000;")
+            .map_err(|error| format!("database_logs_pragma_failed:{error}"))?,
     }
     Ok(())
 }

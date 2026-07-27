@@ -11,9 +11,9 @@ export type ReferenceSearchResultKind = (typeof REFERENCE_SEARCH_RESULT_KINDS)[n
 
 export interface SearchResult {
 	kind: SearchResultKind;
-	id: number | string;
-	ownerId: number | null;
-	petId: number | null;
+	id: string;
+	ownerId: string | null;
+	petId: string | null;
 	href: string;
 	title: string;
 	subtitle: string;

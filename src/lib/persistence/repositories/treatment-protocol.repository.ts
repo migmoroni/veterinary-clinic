@@ -3,8 +3,8 @@ import { parseTreatmentSpecies, stringifyTreatmentSpecies } from '$lib/domain/tr
 import { canEditTreatmentProtocol, normalizeTreatmentProtocolName } from '$lib/domain/treatment/protocol.js';
 import { PRODUCT_TYPES, productTypeForTreatmentKind, productTypeMatchesTreatmentKind, stringifyProductType } from '$lib/domain/product/catalog.js';
 import { FIELD_LIMITS, assertTextLimit, nullableMultilineText } from '$lib/domain/shared/field-limits.js';
-import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
-import { createUuidV4 } from '$lib/domain/shared/uuid.js';
+import { nowIso } from '$lib/domain/shared/time.js';
+import { createUuidV7 } from '$lib/domain/shared/uuid.js';
 import type { TreatmentCatalogItemId } from '$lib/domain/treatment/treatment.js';
 import { getTreatmentProductCatalogItemById } from '$lib/persistence/repositories/product-catalog.repository.js';
 import { execute, selectMany, selectSystemMany } from '$lib/persistence/sqlite/client.js';
@@ -19,8 +19,8 @@ interface TreatmentProtocolRow {
 	observation: string | null;
 	sort_order: number;
 	hidden_at: string | null;
-	deleted_at: string | null;
-	purge_after: string | null;
+	created_at: string | null;
+	removed_at: string | null;
 	updated_at: string | null;
 }
 
@@ -31,14 +31,18 @@ interface TreatmentProtocolItemRow {
 }
 
 interface TreatmentProtocolDoseRow {
-	id: number;
+	id: string;
 	protocol_id: TreatmentProtocolId;
 	dose: string;
 	validity_value: number;
 	validity_unit: TreatmentProtocolValidityUnit;
 	sort_order: number;
+	created_at: string | null;
 	updated_at: string | null;
 }
+
+const USER_PROTOCOL_COLUMNS = 'id, kind, origin, name, normalized_name, species, observation, sort_order, hidden_at, created_at, removed_at, updated_at';
+const SYSTEM_PROTOCOL_COLUMNS = 'id, kind, origin, name, normalized_name, species, observation, sort_order, hidden_at, NULL AS created_at, NULL AS removed_at, NULL AS updated_at';
 
 function normalizeKind(value: string): TreatmentProtocolKind {
 	if (value === 'vaccine' || value === 'antiparasitic') return value;
@@ -85,6 +89,7 @@ function mapDose(row: TreatmentProtocolDoseRow): TreatmentProtocolDose {
 		validityValue: row.validity_value,
 		validityUnit: row.validity_unit,
 		sortOrder: row.sort_order,
+		createdAt: row.created_at,
 		updatedAt: row.updated_at
 	};
 }
@@ -100,8 +105,8 @@ function mapProtocol(row: TreatmentProtocolRow, items: TreatmentProtocolCatalogI
 		observation: row.observation,
 		sortOrder: row.sort_order,
 		hiddenAt: row.hidden_at,
-		deletedAt: row.deleted_at,
-		purgeAfter: row.purge_after,
+		createdAt: row.created_at,
+		removedAt: row.removed_at,
 		updatedAt: row.updated_at,
 		items,
 		doses
@@ -113,12 +118,12 @@ function placeholders(values: unknown[]): string {
 }
 
 async function nextProtocolSortOrder(kind: TreatmentProtocolKind): Promise<number> {
-	const rows = await selectMany<{ next_order: number }>('SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_order FROM treatment_protocols WHERE kind = $1 AND deleted_at IS NULL', [kind]);
+	const rows = await selectMany<{ next_order: number }>('SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_order FROM treatment_protocols WHERE kind = $1 AND removed_at IS NULL', [kind]);
 	return rows[0]?.next_order ?? 0;
 }
 
 async function nextDoseSortOrder(protocolId: TreatmentProtocolId): Promise<number> {
-	const rows = await selectMany<{ next_order: number }>('SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_order FROM treatment_protocol_doses WHERE protocol_id = $1', [protocolId]);
+	const rows = await selectMany<{ next_order: number }>('SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_order FROM treatment_protocol_doses WHERE protocol_id = $1 AND removed_at IS NULL', [protocolId]);
 	return rows[0]?.next_order ?? 0;
 }
 
@@ -142,7 +147,7 @@ async function loadProtocolDetails(rows: TreatmentProtocolRow[]): Promise<Treatm
 		selectMany<TreatmentProtocolItemRow>(
 			`SELECT protocol_id, catalog_item_id, sort_order
 			 FROM treatment_protocol_items
-			 WHERE protocol_id IN (${idPlaceholders})`,
+			 WHERE protocol_id IN (${idPlaceholders}) AND removed_at IS NULL`,
 			ids
 		),
 		selectSystemMany<TreatmentProtocolItemRow>(
@@ -152,20 +157,20 @@ async function loadProtocolDetails(rows: TreatmentProtocolRow[]): Promise<Treatm
 			ids
 		),
 		selectMany<TreatmentProtocolDoseRow>(
-			`SELECT id, protocol_id, dose, validity_value, validity_unit, sort_order, updated_at
+			`SELECT id, protocol_id, dose, validity_value, validity_unit, sort_order, created_at, updated_at
 			 FROM treatment_protocol_doses
-			 WHERE protocol_id IN (${idPlaceholders})`,
+			 WHERE protocol_id IN (${idPlaceholders}) AND removed_at IS NULL`,
 			ids
 		),
 		selectSystemMany<TreatmentProtocolDoseRow>(
-			`SELECT id, protocol_id, dose, validity_value, validity_unit, sort_order, updated_at
+			`SELECT id, protocol_id, dose, validity_value, validity_unit, sort_order, NULL AS created_at, NULL AS updated_at
 			 FROM treatment_protocol_doses
 			 WHERE protocol_id IN (${idPlaceholders})`,
 			ids
 		)
 	]);
 	const itemRows = [...referenceItemRows, ...userItemRows].sort((first, second) => first.protocol_id.localeCompare(second.protocol_id) || first.sort_order - second.sort_order || first.catalog_item_id.localeCompare(second.catalog_item_id));
-	const doseRows = [...referenceDoseRows, ...userDoseRows].sort((first, second) => first.protocol_id.localeCompare(second.protocol_id) || first.sort_order - second.sort_order || first.id - second.id);
+	const doseRows = [...referenceDoseRows, ...userDoseRows].sort((first, second) => first.protocol_id.localeCompare(second.protocol_id) || first.sort_order - second.sort_order || first.id.localeCompare(second.id));
 
 	const itemsByProtocol = new Map<TreatmentProtocolId, TreatmentProtocolCatalogItem[]>();
 	for (const row of itemRows) {
@@ -193,17 +198,17 @@ async function loadProtocolDetails(rows: TreatmentProtocolRow[]): Promise<Treatm
 
 async function selectProtocolRowById(id: TreatmentProtocolId): Promise<TreatmentProtocolRow | null> {
 	const userRows = await selectMany<TreatmentProtocolRow>(
-		`SELECT id, kind, origin, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
+		`SELECT ${USER_PROTOCOL_COLUMNS}
 		 FROM treatment_protocols
-		 WHERE id = $1 AND deleted_at IS NULL
+		 WHERE id = $1 AND removed_at IS NULL
 		 LIMIT 1`,
 		[id]
 	);
 	if (userRows[0]) return userRows[0];
 	const referenceRows = await selectSystemMany<TreatmentProtocolRow>(
-		`SELECT id, kind, origin, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
+		`SELECT ${SYSTEM_PROTOCOL_COLUMNS}
 		 FROM treatment_protocols
-		 WHERE id = $1 AND deleted_at IS NULL
+		 WHERE id = $1
 		 LIMIT 1`,
 		[id]
 	);
@@ -237,30 +242,34 @@ async function resolveProtocolItemIds(kind: TreatmentProtocolKind, catalogItemId
 }
 
 async function saveProtocolItems(protocolId: TreatmentProtocolId, catalogItemIds: TreatmentCatalogItemId[]): Promise<void> {
-	await execute('DELETE FROM treatment_protocol_items WHERE protocol_id = $1', [protocolId]);
+	const removedAt = nowIso();
+	await execute('UPDATE treatment_protocol_items SET removed_at = $2, updated_at = $2 WHERE protocol_id = $1 AND removed_at IS NULL', [protocolId, removedAt]);
 	for (const [index, catalogItemId] of catalogItemIds.entries()) {
+		const createdAt = nowIso();
 		await execute(
-			`INSERT INTO treatment_protocol_items (protocol_id, catalog_item_id, sort_order, updated_at)
-			 VALUES ($1, $2, $3, CURRENT_TIMESTAMP)`,
-			[protocolId, catalogItemId, index]
+			`INSERT INTO treatment_protocol_items (id, protocol_id, catalog_item_id, sort_order, created_at, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, $5)
+			 ON CONFLICT(protocol_id, catalog_item_id) DO UPDATE SET sort_order = excluded.sort_order, removed_at = NULL, updated_at = excluded.updated_at`,
+			[createUuidV7(), protocolId, catalogItemId, index, createdAt]
 		);
 	}
 }
 
 export async function listTreatmentProtocols(kind?: TreatmentProtocolKind, includeHidden = false): Promise<TreatmentProtocol[]> {
-	const where = kind ? `kind = $1 AND deleted_at IS NULL AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}` : `deleted_at IS NULL AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}`;
+	const userWhere = kind ? `kind = $1 AND removed_at IS NULL AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}` : `removed_at IS NULL AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}`;
+	const systemWhere = kind ? `kind = $1 AND ${includeHidden ? '1 = 1' : 'hidden_at IS NULL'}` : includeHidden ? '1 = 1' : 'hidden_at IS NULL';
 	const values = kind ? [kind] : [];
 	const [userRows, referenceRows] = await Promise.all([
 		selectMany<TreatmentProtocolRow>(
-			`SELECT id, kind, origin, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
+			`SELECT ${USER_PROTOCOL_COLUMNS}
 			 FROM treatment_protocols
-			 WHERE ${where}`,
+			 WHERE ${userWhere}`,
 			values
 		),
 		selectSystemMany<TreatmentProtocolRow>(
-			`SELECT id, kind, origin, name, normalized_name, species, observation, sort_order, hidden_at, deleted_at, purge_after, updated_at
+			`SELECT ${SYSTEM_PROTOCOL_COLUMNS}
 			 FROM treatment_protocols
-			 WHERE ${where}`,
+			 WHERE ${systemWhere}`,
 			values
 		)
 	]);
@@ -289,16 +298,17 @@ export async function saveTreatmentProtocol(input: TreatmentProtocolInput, id?: 
 				normalized_name = $4,
 				species = $5,
 				observation = $6,
-				updated_at = CURRENT_TIMESTAMP
-			 WHERE id = $1 AND deleted_at IS NULL`,
-			[protocolId, kind, name, normalizedName, species, observation]
+				updated_at = $7
+			 WHERE id = $1 AND removed_at IS NULL`,
+			[protocolId, kind, name, normalizedName, species, observation, nowIso()]
 		);
 	} else {
-		protocolId = createUuidV4();
+		protocolId = createUuidV7();
+		const createdAt = nowIso();
 		await execute(
-			`INSERT INTO treatment_protocols (id, kind, origin, name, normalized_name, species, observation, sort_order, updated_at)
-			 VALUES ($1, $2, 'user', $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)`,
-			[protocolId, kind, name, normalizedName, species, observation, await nextProtocolSortOrder(kind)]
+			`INSERT INTO treatment_protocols (id, kind, origin, name, normalized_name, species, observation, sort_order, created_at, updated_at)
+			 VALUES ($1, $2, 'user', $3, $4, $5, $6, $7, $8, $8)`,
+			[protocolId, kind, name, normalizedName, species, observation, await nextProtocolSortOrder(kind), createdAt]
 		);
 	}
 
@@ -309,30 +319,30 @@ export async function saveTreatmentProtocol(input: TreatmentProtocolInput, id?: 
 
 export async function setTreatmentProtocolHidden(id: TreatmentProtocolId, hidden: boolean): Promise<TreatmentProtocol> {
 	await assertTreatmentProtocolEditable(id);
+	const updatedAt = nowIso();
 	await execute(
 		`UPDATE treatment_protocols
-		 SET hidden_at = ${hidden ? 'COALESCE(hidden_at, CURRENT_TIMESTAMP)' : 'NULL'},
-			updated_at = CURRENT_TIMESTAMP
-		 WHERE id = $1 AND deleted_at IS NULL`,
-		[id]
+		 SET hidden_at = ${hidden ? 'COALESCE(hidden_at, $2)' : 'NULL'},
+			updated_at = $2
+		 WHERE id = $1 AND removed_at IS NULL`,
+		[id, updatedAt]
 	);
 	return getProtocolById(id);
 }
 
 export async function deleteTreatmentProtocol(id: TreatmentProtocolId): Promise<void> {
 	await assertTreatmentProtocolEditable(id);
-	const deletedAt = nowIso();
+	const removedAt = nowIso();
 	await execute(
 		`UPDATE treatment_protocols
-		 SET deleted_at = COALESCE(deleted_at, $2),
-			purge_after = COALESCE(purge_after, $3),
-			updated_at = CURRENT_TIMESTAMP
+		 SET removed_at = COALESCE(removed_at, $2),
+			updated_at = $2
 		 WHERE id = $1`,
-		[id, deletedAt, computePurgeAfter(deletedAt)]
+		[id, removedAt]
 	);
 }
 
-export async function saveTreatmentProtocolDose(protocolId: TreatmentProtocolId, input: TreatmentProtocolDoseInput, id?: number): Promise<TreatmentProtocol> {
+export async function saveTreatmentProtocolDose(protocolId: TreatmentProtocolId, input: TreatmentProtocolDoseInput, id?: string): Promise<TreatmentProtocol> {
 	await protocolKind(protocolId);
 	await assertTreatmentProtocolEditable(protocolId);
 	const dose = requiredText(input.dose, 'protocol_dose_required', FIELD_LIMITS.treatmentDose);
@@ -345,23 +355,25 @@ export async function saveTreatmentProtocolDose(protocolId: TreatmentProtocolId,
 			 SET dose = $3,
 				validity_value = $4,
 				validity_unit = $5,
-				updated_at = CURRENT_TIMESTAMP
-			 WHERE id = $1 AND protocol_id = $2`,
-			[id, protocolId, dose, validityValue, validityUnit]
+				updated_at = $6
+			 WHERE id = $1 AND protocol_id = $2 AND removed_at IS NULL`,
+			[id, protocolId, dose, validityValue, validityUnit, nowIso()]
 		);
 	} else {
+		const createdAt = nowIso();
 		await execute(
-			`INSERT INTO treatment_protocol_doses (protocol_id, dose, validity_value, validity_unit, sort_order, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`,
-			[protocolId, dose, validityValue, validityUnit, await nextDoseSortOrder(protocolId)]
+			`INSERT INTO treatment_protocol_doses (id, protocol_id, dose, validity_value, validity_unit, sort_order, created_at, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $7)`,
+			[createUuidV7(), protocolId, dose, validityValue, validityUnit, await nextDoseSortOrder(protocolId), createdAt]
 		);
 	}
 
 	return getProtocolById(protocolId);
 }
 
-export async function deleteTreatmentProtocolDose(protocolId: TreatmentProtocolId, doseId: number): Promise<TreatmentProtocol> {
+export async function deleteTreatmentProtocolDose(protocolId: TreatmentProtocolId, doseId: string): Promise<TreatmentProtocol> {
 	await assertTreatmentProtocolEditable(protocolId);
-	await execute('DELETE FROM treatment_protocol_doses WHERE id = $1 AND protocol_id = $2', [doseId, protocolId]);
+	const removedAt = nowIso();
+	await execute('UPDATE treatment_protocol_doses SET removed_at = $3, updated_at = $3 WHERE id = $1 AND protocol_id = $2 AND removed_at IS NULL', [doseId, protocolId, removedAt]);
 	return getProtocolById(protocolId);
 }

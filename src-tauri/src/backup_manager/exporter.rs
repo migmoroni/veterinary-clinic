@@ -2,7 +2,7 @@ use super::{
     cas_mirror::{cas_mirror_user_path, sync_cas_incremental},
     contracts::{PackageExportType, PackageResponse},
     csv::export_csv_table,
-    csv_tables::{MEDIA_CSV_TABLE, USER_CSV_TABLES},
+    csv_tables::{LOG_CSV_TABLES, MEDIA_CSV_TABLE, USER_CSV_TABLES},
     db_snapshot::{current_schema_version, stage_db_snapshot},
     files::{copy_dir_recursive_if_exists, normalized_output_path, path_to_string, TempDirectory},
     manifest::{new_manifest, write_manifest},
@@ -84,6 +84,16 @@ pub(crate) fn export_csv_package_to_path(
             .lock()
             .map_err(|_| "database_connection_lock_failed".to_string())?;
         export_csv_table(&media_db, &MEDIA_CSV_TABLE, &staging.path)?;
+    }
+
+    {
+        let logs_db = storage
+            .user_logs_db
+            .lock()
+            .map_err(|_| "database_connection_lock_failed".to_string())?;
+        for table in LOG_CSV_TABLES {
+            export_csv_table(&logs_db, table, &staging.path)?;
+        }
     }
 
     sync_cas_incremental(storage)?;

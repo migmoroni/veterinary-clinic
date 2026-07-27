@@ -17,7 +17,7 @@
 	import Save from '@lucide/svelte/icons/save';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
-	const recordId = $derived(Number(page.params.id));
+	const recordId = $derived(page.params.id ?? '');
 	let details = $state<MedicalRecordDetails | null>(null);
 	let form = $state<MedicalRecordInput>({ title: '', description: '', admittedAt: '', dischargedAt: '' });
 	let loading = $state(true);

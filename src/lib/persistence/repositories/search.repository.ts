@@ -8,9 +8,9 @@ import { normalizeMediaHash } from '$lib/persistence/sqlite/media.js';
 
 interface SearchResultRow {
 	kind: ClinicSearchResultKind;
-	id: number;
-	owner_id: number | null;
-	pet_id: number | null;
+	id: string;
+	owner_id: string | null;
+	pet_id: string | null;
 	owner_avatar_hash: unknown | null;
 	title: string;
 	subtitle: string;
@@ -20,20 +20,20 @@ interface SearchResultRow {
 }
 
 interface ActiveSearchResultIdRow {
-	id: number;
+	id: string;
 }
 
 const firstOwnerIdSql = `(SELECT owners.id
 	FROM pet_owners
 	JOIN owners ON owners.id = pet_owners.owner_id
-	WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+	WHERE pet_owners.pet_id = pets.id AND owners.removed_at IS NULL
 	ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
 	LIMIT 1)`;
 
 const firstOwnerAvatarSql = `(SELECT owners.avatar_hash
 	FROM pet_owners
 	JOIN owners ON owners.id = pet_owners.owner_id
-	WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+	WHERE pet_owners.pet_id = pets.id AND owners.removed_at IS NULL
 	ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
 	LIMIT 1)`;
 
@@ -42,7 +42,7 @@ const ownerNamesSql = `(SELECT group_concat(name, ' · ')
 		SELECT owners.name AS name
 		FROM pet_owners
 		JOIN owners ON owners.id = pet_owners.owner_id
-		WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+		WHERE pet_owners.pet_id = pets.id AND owners.removed_at IS NULL
 		ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
 	))`;
 
@@ -71,7 +71,7 @@ const petOwnerSearchSupportSql = `(SELECT group_concat(value, ' ')
 		SELECT owners.name AS value
 		FROM pet_owners
 		JOIN owners ON owners.id = pet_owners.owner_id
-		WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+		WHERE pet_owners.pet_id = pets.id AND owners.removed_at IS NULL
 
 		UNION ALL
 
@@ -79,7 +79,7 @@ const petOwnerSearchSupportSql = `(SELECT group_concat(value, ' ')
 		FROM pet_owners
 		JOIN owners ON owners.id = pet_owners.owner_id
 		JOIN contacts ON contacts.owner_id = owners.id
-		WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+		WHERE pet_owners.pet_id = pets.id AND owners.removed_at IS NULL
 	))`;
 
 function resultHref(row: SearchResultRow): string {
@@ -87,16 +87,12 @@ function resultHref(row: SearchResultRow): string {
 	return `/pets/${row.id}`;
 }
 
-function searchResultId(result: SearchResult): number {
-	return Number(result.id);
-}
-
-function searchResultActiveKey(kind: ClinicSearchResultKind, id: number): string {
+function searchResultActiveKey(kind: ClinicSearchResultKind, id: string): string {
 	return `${kind}:${id}`;
 }
 
-function idsForKind(results: SearchResult[], kind: ClinicSearchResultKind): number[] {
-	const ids = results.map((result) => (result.kind === kind ? searchResultId(result) : 0)).filter((id) => Number.isInteger(id) && id > 0);
+function idsForKind(results: SearchResult[], kind: ClinicSearchResultKind): string[] {
+	const ids = results.map((result) => (result.kind === kind ? result.id : '')).filter((id) => id.trim().length > 0);
 	return [...new Set(ids)];
 }
 
@@ -104,8 +100,8 @@ function isClinicSearchResult(result: SearchResult): result is SearchResult & { 
 	return isClinicSearchResultKind(result.kind);
 }
 
-async function loadActiveIds(ids: number[], query: string): Promise<Set<number>> {
-	if (ids.length === 0) return new Set<number>();
+async function loadActiveIds(ids: string[], query: string): Promise<Set<string>> {
+	if (ids.length === 0) return new Set<string>();
 
 	const placeholders = ids.map((_, index) => `$${index + 1}`).join(', ');
 	const rows = await selectMany<ActiveSearchResultIdRow>(query.replace('__IDS__', placeholders), ids);
@@ -141,15 +137,15 @@ export async function filterActiveSearchResults(results: SearchResult[]): Promis
 
 	const [ownerIds, petIds] = [idsForKind(results, 'owner'), idsForKind(results, 'pet')];
 	const [activeOwnerIds, activePetIds] = await Promise.all([
-		loadActiveIds(ownerIds, 'SELECT id FROM owners WHERE id IN (__IDS__) AND deleted_at IS NULL'),
-		loadActiveIds(petIds, 'SELECT id FROM pets WHERE id IN (__IDS__) AND deleted_at IS NULL')
+		loadActiveIds(ownerIds, 'SELECT id FROM owners WHERE id IN (__IDS__) AND removed_at IS NULL'),
+		loadActiveIds(petIds, 'SELECT id FROM pets WHERE id IN (__IDS__) AND removed_at IS NULL')
 	]);
 	const activeKeys = new Set<string>();
 
 	for (const id of activeOwnerIds) activeKeys.add(searchResultActiveKey('owner', id));
 	for (const id of activePetIds) activeKeys.add(searchResultActiveKey('pet', id));
 
-	return results.filter((result) => !isClinicSearchResult(result) || activeKeys.has(searchResultActiveKey(result.kind, searchResultId(result))));
+	return results.filter((result) => !isClinicSearchResult(result) || activeKeys.has(searchResultActiveKey(result.kind, result.id)));
 }
 
 export async function searchClinic(query: string, kinds: readonly ClinicSearchResultKind[] = CLINIC_SEARCH_RESULT_KINDS, locale: Locale = DEFAULT_LOCALE): Promise<SearchResult[]> {
@@ -188,7 +184,7 @@ export async function searchClinic(query: string, kinds: readonly ClinicSearchRe
 			COALESCE(${ownerSearchSupportSql}, '') AS search_support
 		 FROM owners
 		 LEFT JOIN addresses AS owner_address ON owner_address.owner_id = owners.id
-		 WHERE owners.deleted_at IS NULL`);
+		 WHERE owners.removed_at IS NULL`);
 	}
 
 	if (activeKinds.has('pet')) {
@@ -203,7 +199,7 @@ export async function searchClinic(query: string, kinds: readonly ClinicSearchRe
 			pets.name AS search_primary,
 			COALESCE(pets.breed, '') || ' ' || COALESCE(${petOwnerSearchSupportSql}, '') AS search_support
 		 FROM pets
-		 WHERE pets.deleted_at IS NULL`);
+		 WHERE pets.removed_at IS NULL`);
 	}
 
 	if (selectStatements.length === 0) return [];

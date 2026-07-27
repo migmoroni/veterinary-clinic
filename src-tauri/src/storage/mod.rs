@@ -9,6 +9,7 @@ mod cas;
 mod commands;
 mod contracts;
 mod data;
+mod deletion;
 mod media;
 mod sql_bridge;
 mod sqlite;
@@ -16,7 +17,8 @@ mod sqlite;
 pub use cas::{bytes_to_hex, detect_mime_type, StorageDomain};
 pub use commands::*;
 pub use contracts::{
-    DbType, GalleryItem, GalleryRequest, MediaHashRequest, SaveMediaRequest, SaveMediaResponse,
+    DbType, DeletionAuditLog, DeletionAuditLogsRequest, GalleryItem, GalleryRequest,
+    HardDeleteTrashRequest, MediaHashRequest, SaveMediaRequest, SaveMediaResponse,
     SqlConnectionRequest, SqlExecuteResponse, SqlRequest, StorageDatabase, SyncStatusRequest,
 };
 pub use data::StorageManager;

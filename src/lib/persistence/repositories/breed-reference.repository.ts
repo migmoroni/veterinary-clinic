@@ -14,7 +14,7 @@ import { selectSystemMany } from '$lib/persistence/sqlite/client.js';
 export const BREED_REFERENCE_IMAGE_COLLECTION_TYPE = 'breed_reference_item';
 
 interface BreedReferenceRow {
-	id: number;
+	id: string;
 	breed_id: string;
 	species: BreedReferenceSpecies;
 	label_key: string;
@@ -44,14 +44,14 @@ const BREED_REFERENCE_COLUMNS = [
 	'average_weight_kg',
 	'average_height_cm',
 	'extension',
-	'updated_at'
+	'NULL AS updated_at'
 ].join(', ');
 
 function primaryImage(images: ImageCollectionItem[]): ImageCollectionItem | null {
 	return images.find((image) => image.isPrimary) ?? images[0] ?? null;
 }
 
-async function loadBreedReferenceImages(id: number): Promise<ImageCollectionItem[]> {
+async function loadBreedReferenceImages(id: string): Promise<ImageCollectionItem[]> {
 	const collection = await getImageCollection(BREED_REFERENCE_IMAGE_COLLECTION_TYPE, id, 'system');
 	return collection?.items ?? [];
 }

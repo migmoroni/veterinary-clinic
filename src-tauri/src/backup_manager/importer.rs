@@ -3,12 +3,13 @@ use super::{
     cas_mirror::merge_imported_cas,
     contracts::{PackageExportType, PackageResponse},
     csv::import_csv_tables,
-    csv_tables::{MEDIA_CSV_TABLE, USER_CSV_TABLES},
+    csv_tables::{LOG_CSV_TABLES, MEDIA_CSV_TABLE, USER_CSV_TABLES},
     files::{normalized_existing_file_path, path_to_string, replace_sqlite_file, TempDirectory},
     manifest::{read_manifest, validate_manifest},
     sqlite::{create_empty_schema_from, validate_sqlite_database},
     zip::extract_zip_file,
-    CURRENT_SCHEMA_VERSION, USER_DB_PACKAGE_PATH, USER_MEDIA_DB_PACKAGE_PATH,
+    CURRENT_SCHEMA_VERSION, USER_DB_PACKAGE_PATH, USER_LOGS_DB_PACKAGE_PATH,
+    USER_MEDIA_DB_PACKAGE_PATH,
 };
 use crate::storage::{open_sqlite_db, DbType, StorageManager};
 use rusqlite::Connection;
@@ -64,16 +65,26 @@ fn restore_native_from_staging(
 ) -> Result<(), String> {
     let user_db_snapshot = staging_path.join(USER_DB_PACKAGE_PATH);
     let user_media_db_snapshot = staging_path.join(USER_MEDIA_DB_PACKAGE_PATH);
+    let user_logs_db_snapshot = staging_path.join(USER_LOGS_DB_PACKAGE_PATH);
     if !user_db_snapshot.is_file() || !user_media_db_snapshot.is_file() {
         return Err("native_package_database_missing".to_string());
     }
 
     validate_sqlite_database(&user_db_snapshot, true)?;
     validate_sqlite_database(&user_media_db_snapshot, false)?;
+    let logs_source = if user_logs_db_snapshot.is_file() {
+        validate_sqlite_database(&user_logs_db_snapshot, false)?;
+        user_logs_db_snapshot
+    } else {
+        let temp_logs_db = staging_path.join("import-user-logs.db");
+        let _ = open_sqlite_db(&temp_logs_db, DbType::Logs)?;
+        temp_logs_db
+    };
     replace_user_storage_files(
         storage,
         &user_db_snapshot,
         &user_media_db_snapshot,
+        &logs_source,
         &staging_path.join("vault").join("user"),
     )
 }
@@ -85,6 +96,7 @@ fn restore_csv_from_staging(storage: &StorageManager, staging_path: &Path) -> Re
 
     let temp_user_db = staging_path.join("import-user.db");
     let temp_media_db = staging_path.join("import-user-media.db");
+    let temp_logs_db = staging_path.join("import-user-logs.db");
     {
         let source_schema = storage
             .user_db
@@ -107,12 +119,21 @@ fn restore_csv_from_staging(storage: &StorageManager, staging_path: &Path) -> Re
         import_csv_tables(&media, &[MEDIA_CSV_TABLE], staging_path)?;
     }
 
+    {
+        let logs = open_sqlite_db(&temp_logs_db, DbType::Logs)?;
+        if staging_path.join("logs_csv").is_dir() {
+            import_csv_tables(&logs, LOG_CSV_TABLES, staging_path)?;
+        }
+    }
+
     validate_sqlite_database(&temp_user_db, true)?;
     validate_sqlite_database(&temp_media_db, false)?;
+    validate_sqlite_database(&temp_logs_db, false)?;
     replace_user_storage_files(
         storage,
         &temp_user_db,
         &temp_media_db,
+        &temp_logs_db,
         &staging_path.join("vault").join("user"),
     )
 }
@@ -121,12 +142,14 @@ fn replace_user_storage_files(
     storage: &StorageManager,
     user_db_source: &Path,
     user_media_db_source: &Path,
+    user_logs_db_source: &Path,
     vault_user_source: &Path,
 ) -> Result<(), String> {
     storage.close_user_bundle_connections()?;
     let result = (|| {
         replace_sqlite_file(user_db_source, &storage.user_database_path())?;
         replace_sqlite_file(user_media_db_source, &storage.user_media_database_path())?;
+        replace_sqlite_file(user_logs_db_source, &storage.user_logs_database_path())?;
         merge_imported_cas(storage, vault_user_source)?;
         Ok(())
     })();

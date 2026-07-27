@@ -75,6 +75,8 @@ pub fn run() {
             storage::get_media_data,
             storage::update_media_sync_status,
             storage::mark_as_removed,
+            storage::hard_delete_trash_item,
+            storage::get_deletion_audit_logs,
             backup_manager::export_user_native_package,
             backup_manager::export_user_csv_package,
             backup_manager::import_user_native_package,

@@ -5,17 +5,17 @@ export type { PetBreed, PetSpecies } from './taxonomy.js';
 export type PetSex = 'M' | 'F' | null;
 
 export interface Pet {
-	id: number;
-	ownerIds: number[];
+	id: string;
+	ownerIds: string[];
 	name: string;
 	birthDate: string | null;
 	species: PetSpecies | null;
 	breed: PetBreed | null;
 	sex: PetSex;
 	avatarBytes: Uint8Array | null;
+	createdAt: string | null;
 	updatedAt: string | null;
-	deletedAt: string | null;
-	purgeAfter: string | null;
+	removedAt: string | null;
 }
 
 export interface PetInput {

@@ -33,7 +33,7 @@ export const emptyBreedReferenceExtension: BreedReferenceExtension = {
 };
 
 export interface BreedReferenceProfile {
-	id: number | null;
+	id: string | null;
 	breedId: string;
 	species: BreedReferenceSpecies;
 	labelKey: TranslationKey;

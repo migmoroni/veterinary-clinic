@@ -1,5 +1,6 @@
 use super::{
-    GalleryItem, GalleryRequest, MediaHashRequest, SaveMediaRequest, SaveMediaResponse,
+    DeletionAuditLog, DeletionAuditLogsRequest, GalleryItem, GalleryRequest,
+    HardDeleteTrashRequest, MediaHashRequest, SaveMediaRequest, SaveMediaResponse,
     SqlConnectionRequest, SqlExecuteResponse, SqlRequest, StorageManager, SyncStatusRequest,
 };
 use serde_json::Value as JsonValue;
@@ -103,4 +104,22 @@ pub async fn mark_as_removed(
 ) -> Result<(), String> {
     let storage = state.inner().clone();
     run_storage_blocking(move || storage.mark_as_removed(request)).await
+}
+
+#[tauri::command]
+pub async fn hard_delete_trash_item(
+    state: State<'_, StorageManager>,
+    request: HardDeleteTrashRequest,
+) -> Result<(), String> {
+    let storage = state.inner().clone();
+    run_storage_blocking(move || storage.hard_delete_trash_item(request)).await
+}
+
+#[tauri::command]
+pub async fn get_deletion_audit_logs(
+    state: State<'_, StorageManager>,
+    request: DeletionAuditLogsRequest,
+) -> Result<Vec<DeletionAuditLog>, String> {
+    let storage = state.inner().clone();
+    run_storage_blocking(move || storage.deletion_audit_logs(request)).await
 }

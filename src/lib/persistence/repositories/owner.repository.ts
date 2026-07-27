@@ -13,13 +13,14 @@ import { countryPhoneFormat, countryPhoneFormats, normalizeOwnerCity, normalizeO
 import { formatEmailForInput } from '$lib/domain/shared/email.js';
 import { FIELD_LIMITS, assertTextLimit, nullableLimitedText, requireLimitedText } from '$lib/domain/shared/field-limits.js';
 import { formatPhoneForStorage } from '$lib/domain/shared/phone.js';
-import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
+import { nowIso } from '$lib/domain/shared/time.js';
+import { createUuidV7 } from '$lib/domain/shared/uuid.js';
 import { loadMediaDataMap, mediaHashKey, saveMedia } from '$lib/persistence/repositories/media.repository.js';
 import { execute, selectMany, selectOne } from '$lib/persistence/sqlite/client.js';
 import { mediaHashToSqlLiteral, normalizeMediaHash } from '$lib/persistence/sqlite/media.js';
 
 interface OwnerRow {
-	id: number;
+	id: string;
 	name: string;
 	avatar_hash: unknown | null;
 	street: string | null;
@@ -33,12 +34,11 @@ interface OwnerRow {
 	state: string | null;
 	created_at: string | null;
 	updated_at: string | null;
-	deleted_at: string | null;
-	purge_after: string | null;
+	removed_at: string | null;
 }
 
 interface ContactRow {
-	id: number;
+	id: string;
 	kind: OwnerContactKind;
 	label: string;
 	value: string;
@@ -47,18 +47,18 @@ interface ContactRow {
 }
 
 interface OwnerContactRow extends ContactRow {
-	owner_id: number;
+	owner_id: string;
 }
 
 interface OwnerAssociatedContactRow extends ContactRow {
-	owner_id: number;
-	responsible_id: number | null;
+	owner_id: string;
+	responsible_id: string | null;
 	responsible_name: string | null;
 }
 
 interface OwnerAdditionalResponsibleRow {
-	id: number;
-	owner_id: number;
+	id: string;
+	owner_id: string;
 	name: string;
 	avatar_hash: unknown | null;
 	created_at: string | null;
@@ -66,7 +66,7 @@ interface OwnerAdditionalResponsibleRow {
 }
 
 interface OwnerAdditionalResponsibleContactRow extends ContactRow {
-	responsible_id: number;
+	responsible_id: string;
 }
 
 const phoneFormats = countryPhoneFormats();
@@ -214,16 +214,15 @@ function mapOwner(row: OwnerRow, contacts: OwnerContact[] = [], additionalRespon
 		state: row.state,
 		createdAt: row.created_at,
 		updatedAt: row.updated_at,
-		deletedAt: row.deleted_at,
-		purgeAfter: row.purge_after
+		removedAt: row.removed_at
 	};
 }
 
-export async function listOwnerContacts(ownerId: number): Promise<OwnerContact[]> {
+export async function listOwnerContacts(ownerId: string): Promise<OwnerContact[]> {
 	const rows = await selectMany<OwnerContactRow>(
 		`SELECT id, owner_id, kind, label, value, created_at, updated_at
 		 FROM contacts
-		 WHERE owner_id = $1 AND responsible_id IS NULL
+		 WHERE owner_id = $1 AND responsible_id IS NULL AND removed_at IS NULL
 		 ORDER BY sort_order, id`,
 		[ownerId]
 	);
@@ -231,16 +230,16 @@ export async function listOwnerContacts(ownerId: number): Promise<OwnerContact[]
 	return rows.map(mapContact);
 }
 
-export async function listOwnerContactsByOwnerIds(ownerIds: number[]): Promise<Map<number, OwnerContact[]>> {
-	const uniqueIds = [...new Set(ownerIds)].filter((id) => Number.isFinite(id));
-	const contactsByOwnerId = new Map<number, OwnerContact[]>();
+export async function listOwnerContactsByOwnerIds(ownerIds: string[]): Promise<Map<string, OwnerContact[]>> {
+	const uniqueIds = [...new Set(ownerIds)].filter((id) => id.trim().length > 0);
+	const contactsByOwnerId = new Map<string, OwnerContact[]>();
 	if (uniqueIds.length === 0) return contactsByOwnerId;
 
 	const placeholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
 	const rows = await selectMany<OwnerContactRow>(
 		`SELECT id, owner_id, kind, label, value, created_at, updated_at
 		 FROM contacts
-		 WHERE owner_id IN (${placeholders}) AND responsible_id IS NULL
+		 WHERE owner_id IN (${placeholders}) AND responsible_id IS NULL AND removed_at IS NULL
 		 ORDER BY owner_id, sort_order, id`,
 		uniqueIds
 	);
@@ -254,9 +253,9 @@ export async function listOwnerContactsByOwnerIds(ownerIds: number[]): Promise<M
 	return contactsByOwnerId;
 }
 
-export async function listOwnerAssociatedContactsByOwnerIds(ownerIds: number[]): Promise<Map<number, OwnerAssociatedContact[]>> {
-	const uniqueIds = [...new Set(ownerIds)].filter((id) => Number.isFinite(id));
-	const contactsByOwnerId = new Map<number, OwnerAssociatedContact[]>();
+export async function listOwnerAssociatedContactsByOwnerIds(ownerIds: string[]): Promise<Map<string, OwnerAssociatedContact[]>> {
+	const uniqueIds = [...new Set(ownerIds)].filter((id) => id.trim().length > 0);
+	const contactsByOwnerId = new Map<string, OwnerAssociatedContact[]>();
 	if (uniqueIds.length === 0) return contactsByOwnerId;
 
 	const ownerContactPlaceholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
@@ -264,7 +263,7 @@ export async function listOwnerAssociatedContactsByOwnerIds(ownerIds: number[]):
 	const rows = await selectMany<OwnerAssociatedContactRow>(
 		`SELECT id, owner_id, kind, label, value, created_at, updated_at, NULL AS responsible_id, NULL AS responsible_name, 0 AS source_order, sort_order AS owner_sort_order, sort_order AS contact_sort_order
 		 FROM contacts
-		 WHERE owner_id IN (${ownerContactPlaceholders}) AND responsible_id IS NULL
+		 WHERE owner_id IN (${ownerContactPlaceholders}) AND responsible_id IS NULL AND removed_at IS NULL
 
 		 UNION ALL
 
@@ -283,6 +282,8 @@ export async function listOwnerAssociatedContactsByOwnerIds(ownerIds: number[]):
 		 FROM owner_additional_responsibles
 		 JOIN contacts ON contacts.responsible_id = owner_additional_responsibles.id
 		 WHERE owner_additional_responsibles.owner_id IN (${responsibleContactPlaceholders})
+			AND owner_additional_responsibles.removed_at IS NULL
+			AND contacts.removed_at IS NULL
 		 ORDER BY owner_id, source_order, owner_sort_order, contact_sort_order, id`,
 		[...uniqueIds, ...uniqueIds]
 	);
@@ -312,16 +313,16 @@ async function mapOwnersWithContacts(rows: OwnerRow[]): Promise<Owner[]> {
 	);
 }
 
-export async function listOwnerAdditionalResponsibleContactsByResponsibleIds(responsibleIds: number[]): Promise<Map<number, OwnerContact[]>> {
-	const uniqueIds = [...new Set(responsibleIds)].filter((id) => Number.isFinite(id));
-	const contactsByResponsibleId = new Map<number, OwnerContact[]>();
+export async function listOwnerAdditionalResponsibleContactsByResponsibleIds(responsibleIds: string[]): Promise<Map<string, OwnerContact[]>> {
+	const uniqueIds = [...new Set(responsibleIds)].filter((id) => id.trim().length > 0);
+	const contactsByResponsibleId = new Map<string, OwnerContact[]>();
 	if (uniqueIds.length === 0) return contactsByResponsibleId;
 
 	const placeholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
 	const rows = await selectMany<OwnerAdditionalResponsibleContactRow>(
 		`SELECT id, responsible_id, kind, label, value, created_at, updated_at
 		 FROM contacts
-		 WHERE responsible_id IN (${placeholders}) AND owner_id IS NULL
+		 WHERE responsible_id IN (${placeholders}) AND owner_id IS NULL AND removed_at IS NULL
 		 ORDER BY responsible_id, sort_order, id`,
 		uniqueIds
 	);
@@ -335,11 +336,11 @@ export async function listOwnerAdditionalResponsibleContactsByResponsibleIds(res
 	return contactsByResponsibleId;
 }
 
-export async function listOwnerAdditionalResponsibles(ownerId: number): Promise<OwnerAdditionalResponsible[]> {
+export async function listOwnerAdditionalResponsibles(ownerId: string): Promise<OwnerAdditionalResponsible[]> {
 	const rows = await selectMany<OwnerAdditionalResponsibleRow>(
 		`SELECT id, owner_id, name, avatar_hash, created_at, updated_at
 		 FROM owner_additional_responsibles
-		 WHERE owner_id = $1
+		 WHERE owner_id = $1 AND removed_at IS NULL
 		 ORDER BY sort_order, id`,
 		[ownerId]
 	);
@@ -351,16 +352,16 @@ export async function listOwnerAdditionalResponsibles(ownerId: number): Promise<
 	return rows.map((row) => mapAdditionalResponsible(row, contactsByResponsibleId.get(row.id) ?? [], avatarBytesByHash.get(mediaHashKey(row.avatar_hash) ?? '') ?? null));
 }
 
-async function listOwnerAdditionalResponsiblesByOwnerIds(ownerIds: number[]): Promise<Map<number, OwnerAdditionalResponsible[]>> {
-	const uniqueIds = [...new Set(ownerIds)].filter((id) => Number.isFinite(id));
-	const responsiblesByOwnerId = new Map<number, OwnerAdditionalResponsible[]>();
+async function listOwnerAdditionalResponsiblesByOwnerIds(ownerIds: string[]): Promise<Map<string, OwnerAdditionalResponsible[]>> {
+	const uniqueIds = [...new Set(ownerIds)].filter((id) => id.trim().length > 0);
+	const responsiblesByOwnerId = new Map<string, OwnerAdditionalResponsible[]>();
 	if (uniqueIds.length === 0) return responsiblesByOwnerId;
 
 	const placeholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
 	const rows = await selectMany<OwnerAdditionalResponsibleRow>(
 		`SELECT id, owner_id, name, avatar_hash, created_at, updated_at
 		 FROM owner_additional_responsibles
-		 WHERE owner_id IN (${placeholders})
+		 WHERE owner_id IN (${placeholders}) AND removed_at IS NULL
 		 ORDER BY owner_id, sort_order, id`,
 		uniqueIds
 	);
@@ -378,46 +379,58 @@ async function listOwnerAdditionalResponsiblesByOwnerIds(ownerIds: number[]): Pr
 	return responsiblesByOwnerId;
 }
 
-async function replaceOwnerContacts(ownerId: number, contacts: OwnerContactInput[] = [], country: string = DEFAULT_OWNER_COUNTRY): Promise<void> {
-	await execute('DELETE FROM contacts WHERE owner_id = $1 AND responsible_id IS NULL', [ownerId]);
+async function replaceOwnerContacts(ownerId: string, contacts: OwnerContactInput[] = [], country: string = DEFAULT_OWNER_COUNTRY): Promise<void> {
+	const updatedAt = nowIso();
+	await execute('UPDATE contacts SET removed_at = $2, updated_at = $2 WHERE owner_id = $1 AND responsible_id IS NULL AND removed_at IS NULL', [ownerId, updatedAt]);
 
 	const normalizedContacts = normalizeContacts(contacts, country);
 	for (const [index, contact] of normalizedContacts.entries()) {
 		await execute(
-			`INSERT INTO contacts (owner_id, kind, label, value, sort_order, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`,
-			[ownerId, contact.kind, contact.label ?? '', contact.value, index]
+			`INSERT INTO contacts (id, owner_id, kind, label, value, sort_order, created_at, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $7)`,
+			[createUuidV7(), ownerId, contact.kind, contact.label ?? '', contact.value, index, nowIso()]
 		);
 	}
 }
 
-async function replaceOwnerAdditionalResponsibles(ownerId: number, responsibles: OwnerAdditionalResponsibleInput[] = [], country: string = DEFAULT_OWNER_COUNTRY): Promise<void> {
-	await execute('DELETE FROM contacts WHERE responsible_id IN (SELECT id FROM owner_additional_responsibles WHERE owner_id = $1) AND owner_id IS NULL', [ownerId]);
-	await execute('DELETE FROM owner_additional_responsibles WHERE owner_id = $1', [ownerId]);
+async function replaceOwnerAdditionalResponsibles(ownerId: string, responsibles: OwnerAdditionalResponsibleInput[] = [], country: string = DEFAULT_OWNER_COUNTRY): Promise<void> {
+	const removedAt = nowIso();
+	await execute(
+		`UPDATE contacts
+		 SET removed_at = $2, updated_at = $2
+		 WHERE responsible_id IN (SELECT id FROM owner_additional_responsibles WHERE owner_id = $1)
+			AND owner_id IS NULL
+			AND removed_at IS NULL`,
+		[ownerId, removedAt]
+	);
+	await execute('UPDATE owner_additional_responsibles SET removed_at = $2, updated_at = $2 WHERE owner_id = $1 AND removed_at IS NULL', [ownerId, removedAt]);
 
 	const normalizedResponsibles = normalizeAdditionalResponsibles(responsibles, country);
 	for (const [responsibleIndex, responsible] of normalizedResponsibles.entries()) {
 		const avatarSqlLiteral = await avatarBytesToHashSqlLiteral(responsible.avatarBytes);
-		const result = await execute(
-			`INSERT INTO owner_additional_responsibles (owner_id, name, avatar_hash, sort_order, updated_at)
-			 VALUES ($1, $2, ${avatarSqlLiteral}, $3, CURRENT_TIMESTAMP)`,
-			[ownerId, responsible.name, responsibleIndex]
+		const responsibleId = createUuidV7();
+		const createdAt = nowIso();
+		await execute(
+			`INSERT INTO owner_additional_responsibles (id, owner_id, name, avatar_hash, sort_order, created_at, updated_at)
+			 VALUES ($1, $2, $3, ${avatarSqlLiteral}, $4, $5, $5)`,
+			[responsibleId, ownerId, responsible.name, responsibleIndex, createdAt]
 		);
-		const responsibleId = Number(result.lastInsertId);
 
 		for (const [contactIndex, contact] of responsible.contacts.entries()) {
 			await execute(
-				`INSERT OR IGNORE INTO contacts (responsible_id, kind, label, value, sort_order, updated_at)
-				 VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`,
-				[responsibleId, contact.kind, contact.label ?? '', contact.value, contactIndex]
+				`INSERT OR IGNORE INTO contacts (id, responsible_id, kind, label, value, sort_order, created_at, updated_at)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7, $7)`,
+				[createUuidV7(), responsibleId, contact.kind, contact.label ?? '', contact.value, contactIndex, nowIso()]
 			);
 		}
 	}
 }
 
-async function upsertOwnerAddress(ownerId: number, input: OwnerInput, address: NormalizedOwnerAddress): Promise<void> {
+async function upsertOwnerAddress(ownerId: string, input: OwnerInput, address: NormalizedOwnerAddress): Promise<void> {
+	const updatedAt = nowIso();
 	await execute(
 		`INSERT INTO addresses (
+			id,
 			owner_id,
 			street,
 			street_number,
@@ -427,9 +440,10 @@ async function upsertOwnerAddress(ownerId: number, input: OwnerInput, address: N
 			state,
 			country,
 			postal_code,
+			created_at,
 			updated_at
 		)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11)
 		 ON CONFLICT(owner_id) DO UPDATE SET
 			street = excluded.street,
 			street_number = excluded.street_number,
@@ -439,8 +453,10 @@ async function upsertOwnerAddress(ownerId: number, input: OwnerInput, address: N
 			state = excluded.state,
 			country = excluded.country,
 			postal_code = excluded.postal_code,
-			updated_at = CURRENT_TIMESTAMP`,
+			updated_at = excluded.updated_at,
+			removed_at = NULL`,
 		[
+			createUuidV7(),
 			ownerId,
 			nullableLimitedText(input.street, FIELD_LIMITS.ownerStreet),
 			nullableLimitedText(input.streetNumber, FIELD_LIMITS.ownerStreetNumber),
@@ -449,7 +465,8 @@ async function upsertOwnerAddress(ownerId: number, input: OwnerInput, address: N
 			address.city,
 			address.state,
 			address.country,
-			nullableLimitedText(input.postalCode, FIELD_LIMITS.ownerPostalCode)
+			nullableLimitedText(input.postalCode, FIELD_LIMITS.ownerPostalCode),
+			updatedAt
 		]
 	);
 }
@@ -474,10 +491,10 @@ export async function listOwners(query = ''): Promise<Owner[]> {
 
 	const rows = await selectMany<OwnerRow>(
 		`SELECT owners.id, owners.name, owners.avatar_hash, owner_address.street, owner_address.street_number, owner_address.address_complement, owner_address.neighborhood, owner_address.city, owner_address.country, owner_address.postal_code, owners.additional_information, owner_address.state,
-			owners.created_at, owners.updated_at, owners.deleted_at, owners.purge_after
+			owners.created_at, owners.updated_at, owners.removed_at
 		 FROM owners
 		 LEFT JOIN addresses AS owner_address ON owner_address.owner_id = owners.id
-		 WHERE owners.deleted_at IS NULL ${filter}
+		 WHERE owners.removed_at IS NULL ${filter}
 		 ORDER BY owners.name COLLATE NOCASE
 		 LIMIT 100`,
 		values
@@ -486,13 +503,13 @@ export async function listOwners(query = ''): Promise<Owner[]> {
 	return mapOwnersWithContacts(rows);
 }
 
-export async function getOwner(id: number, includeDeleted = false): Promise<Owner | null> {
+export async function getOwner(id: string, includeRemoved = false): Promise<Owner | null> {
 	const rows = await selectMany<OwnerRow>(
 		`SELECT owners.id, owners.name, owners.avatar_hash, owner_address.street, owner_address.street_number, owner_address.address_complement, owner_address.neighborhood, owner_address.city, owner_address.country, owner_address.postal_code, owners.additional_information, owner_address.state,
-			owners.created_at, owners.updated_at, owners.deleted_at, owners.purge_after
+			owners.created_at, owners.updated_at, owners.removed_at
 		 FROM owners
 		 LEFT JOIN addresses AS owner_address ON owner_address.owner_id = owners.id
-		 WHERE owners.id = $1 ${includeDeleted ? '' : 'AND owners.deleted_at IS NULL'}
+		 WHERE owners.id = $1 ${includeRemoved ? '' : 'AND owners.removed_at IS NULL'}
 		 LIMIT 1`,
 		[id]
 	);
@@ -509,21 +526,26 @@ export async function getOwner(id: number, includeDeleted = false): Promise<Owne
 export async function createOwner(input: OwnerInput): Promise<Owner> {
 	const avatarSqlLiteral = await avatarBytesToHashSqlLiteral(input.avatarBytes);
 	const address = normalizeOwnerAddress(input);
-	const result = await execute(
+	const ownerId = createUuidV7();
+	const createdAt = nowIso();
+	await execute(
 		`INSERT INTO owners (
+			id,
 			name,
 			avatar_hash,
 			additional_information,
+			created_at,
 			updated_at
 		)
-		 VALUES ($1, ${avatarSqlLiteral}, $2, CURRENT_TIMESTAMP)`,
+		 VALUES ($1, $2, ${avatarSqlLiteral}, $3, $4, $4)`,
 		[
+			ownerId,
 			requireLimitedText(input.name, FIELD_LIMITS.ownerName),
-			nullableLimitedText(input.additionalInformation, FIELD_LIMITS.ownerAdditionalInformation)
+			nullableLimitedText(input.additionalInformation, FIELD_LIMITS.ownerAdditionalInformation),
+			createdAt
 		]
 	);
 
-	const ownerId = Number(result.lastInsertId);
 	await upsertOwnerAddress(ownerId, input, address);
 	await replaceOwnerContacts(ownerId, input.contacts, address.country);
 	await replaceOwnerAdditionalResponsibles(ownerId, input.additionalResponsibles ?? [], address.country);
@@ -533,10 +555,10 @@ export async function createOwner(input: OwnerInput): Promise<Owner> {
 	return owner;
 }
 
-export async function updateOwner(id: number, input: OwnerInput): Promise<Owner> {
+export async function updateOwner(id: string, input: OwnerInput): Promise<Owner> {
 	const avatarSqlLiteral = await avatarBytesToHashSqlLiteral(input.avatarBytes);
 	const address = normalizeOwnerAddress(input);
-	const existing = await selectOne<{ id: number }>('SELECT id FROM owners WHERE id = $1 AND deleted_at IS NULL', [id]);
+	const existing = await selectOne<{ id: string }>('SELECT id FROM owners WHERE id = $1 AND removed_at IS NULL', [id]);
 	if (!existing) throw new Error('owner_not_found');
 
 	await execute(
@@ -544,12 +566,13 @@ export async function updateOwner(id: number, input: OwnerInput): Promise<Owner>
 		 SET name = $2,
 			avatar_hash = ${avatarSqlLiteral},
 			additional_information = $3,
-			updated_at = CURRENT_TIMESTAMP
-		 WHERE id = $1 AND deleted_at IS NULL`,
+			updated_at = $4
+		 WHERE id = $1 AND removed_at IS NULL`,
 		[
 			id,
 			requireLimitedText(input.name, FIELD_LIMITS.ownerName),
-			nullableLimitedText(input.additionalInformation, FIELD_LIMITS.ownerAdditionalInformation)
+			nullableLimitedText(input.additionalInformation, FIELD_LIMITS.ownerAdditionalInformation),
+			nowIso()
 		]
 	);
 
@@ -562,15 +585,15 @@ export async function updateOwner(id: number, input: OwnerInput): Promise<Owner>
 	return owner;
 }
 
-export async function listOwnerAvatarBytesByIds(ownerIds: number[]): Promise<Map<number, Uint8Array | null>> {
-	const uniqueIds = [...new Set(ownerIds)].filter((id) => Number.isInteger(id) && id > 0);
-	if (uniqueIds.length === 0) return new Map<number, Uint8Array | null>();
+export async function listOwnerAvatarBytesByIds(ownerIds: string[]): Promise<Map<string, Uint8Array | null>> {
+	const uniqueIds = [...new Set(ownerIds)].filter((id) => id.trim().length > 0);
+	if (uniqueIds.length === 0) return new Map<string, Uint8Array | null>();
 
 	const placeholders = uniqueIds.map((_, index) => `$${index + 1}`).join(', ');
-	const rows = await selectMany<{ id: number; avatar_hash: unknown | null }>(
+	const rows = await selectMany<{ id: string; avatar_hash: unknown | null }>(
 		`SELECT id, avatar_hash
 		 FROM owners
-		 WHERE id IN (${placeholders}) AND deleted_at IS NULL`,
+		 WHERE id IN (${placeholders}) AND removed_at IS NULL`,
 		uniqueIds
 	);
 
@@ -578,14 +601,14 @@ export async function listOwnerAvatarBytesByIds(ownerIds: number[]): Promise<Map
 	return new Map(rows.map((row) => [row.id, avatarBytesByHash.get(mediaHashKey(row.avatar_hash) ?? '') ?? null]));
 }
 
-export async function listOwnersByPet(petId: number, includeDeleted = false): Promise<Owner[]> {
+export async function listOwnersByPet(petId: string, includeRemoved = false): Promise<Owner[]> {
 	const rows = await selectMany<OwnerRow>(
 		`SELECT owners.id, owners.name, owners.avatar_hash, owner_address.street, owner_address.street_number, owner_address.address_complement, owner_address.neighborhood, owner_address.city, owner_address.country, owner_address.postal_code, owners.additional_information, owner_address.state,
-			owners.created_at, owners.updated_at, owners.deleted_at, owners.purge_after
+			owners.created_at, owners.updated_at, owners.removed_at
 		 FROM owners
 		 LEFT JOIN addresses AS owner_address ON owner_address.owner_id = owners.id
 		 JOIN pet_owners ON pet_owners.owner_id = owners.id
-		 WHERE pet_owners.pet_id = $1 ${includeDeleted ? '' : 'AND owners.deleted_at IS NULL'}
+		 WHERE pet_owners.pet_id = $1 ${includeRemoved ? '' : 'AND owners.removed_at IS NULL'}
 		 ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id`,
 		[petId]
 	);
@@ -593,31 +616,25 @@ export async function listOwnersByPet(petId: number, includeDeleted = false): Pr
 	return mapOwnersWithContacts(rows);
 }
 
-export async function softDeleteOwner(id: number): Promise<void> {
-	const deletedAt = nowIso();
-	const purgeAfter = computePurgeAfter(deletedAt);
-
+export async function softDeleteOwner(id: string): Promise<void> {
+	const removedAt = nowIso();
 	await execute(
 		`UPDATE owners
-		 SET deleted_at = $2, purge_after = $3, updated_at = CURRENT_TIMESTAMP
-		 WHERE id = $1 AND deleted_at IS NULL`,
-		[id, deletedAt, purgeAfter]
+		 SET removed_at = $2, updated_at = $2
+		 WHERE id = $1 AND removed_at IS NULL`,
+		[id, removedAt]
 	);
 }
 
-export async function restoreOwner(id: number): Promise<void> {
+export async function restoreOwner(id: string): Promise<void> {
 	await execute(
 		`UPDATE owners
-		 SET deleted_at = NULL, purge_after = NULL, updated_at = CURRENT_TIMESTAMP
+		 SET removed_at = NULL, updated_at = $2
 		 WHERE id = $1`,
-		[id]
+		[id, nowIso()]
 	);
 }
 
-export async function hardDeleteOwner(id: number): Promise<void> {
-	await execute('DELETE FROM pet_owners WHERE owner_id = $1', [id]);
-	await execute('DELETE FROM contacts WHERE owner_id = $1 OR responsible_id IN (SELECT id FROM owner_additional_responsibles WHERE owner_id = $1)', [id]);
-	await execute('DELETE FROM owner_additional_responsibles WHERE owner_id = $1', [id]);
-	await execute('DELETE FROM addresses WHERE owner_id = $1', [id]);
-	await execute('DELETE FROM owners WHERE id = $1', [id]);
+export async function hardDeleteOwner(id: string): Promise<void> {
+	await softDeleteOwner(id);
 }

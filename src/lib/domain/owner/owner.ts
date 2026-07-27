@@ -3,7 +3,7 @@ export type OwnerContactKind = 'phone' | 'mobile' | 'email' | 'other';
 export const DEFAULT_OWNER_COUNTRY = 'BRA';
 
 export interface OwnerContact {
-	id: number;
+	id: string;
 	kind: OwnerContactKind;
 	label: string;
 	value: string;
@@ -12,7 +12,7 @@ export interface OwnerContact {
 }
 
 export interface OwnerAssociatedContact extends OwnerContact {
-	responsibleId: number | null;
+	responsibleId: string | null;
 	responsibleName: string | null;
 }
 
@@ -23,7 +23,7 @@ export interface OwnerContactInput {
 }
 
 export interface OwnerAdditionalResponsible {
-	id: number;
+	id: string;
 	name: string;
 	avatarBytes: Uint8Array | null;
 	contacts: OwnerContact[];
@@ -38,7 +38,7 @@ export interface OwnerAdditionalResponsibleInput {
 }
 
 export interface Owner {
-	id: number;
+	id: string;
 	name: string;
 	avatarBytes: Uint8Array | null;
 	street: string | null;
@@ -54,8 +54,7 @@ export interface Owner {
 	state: string | null;
 	createdAt: string | null;
 	updatedAt: string | null;
-	deletedAt: string | null;
-	purgeAfter: string | null;
+	removedAt: string | null;
 }
 
 export interface OwnerInput {

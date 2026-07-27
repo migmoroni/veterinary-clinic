@@ -19,8 +19,8 @@ export interface SqliteDatabase {
 	close?(): Promise<void>;
 }
 
-type StorageDatabaseKind = 'user' | 'system' | 'userMedia' | 'systemMedia' | 'appConfigFile';
-type StorageDbType = 'operational' | 'mediaIndex';
+type StorageDatabaseKind = 'user' | 'system' | 'userMedia' | 'systemMedia' | 'userLogs' | 'appConfigFile';
+type StorageDbType = 'operational' | 'mediaIndex' | 'systemMediaIndex' | 'logs';
 
 interface StorageDatabaseOptions {
 	database: StorageDatabaseKind;
@@ -189,11 +189,11 @@ export async function getSystemMediaDatabase(): Promise<SqliteDatabase> {
 	systemMediaPending = (async () => {
 		assertTauriDatabaseRuntime();
 		await ensureDatabaseDirectory();
-		await reopenStorageDatabase({ database: 'systemMedia', dbType: 'mediaIndex' });
+		await reopenStorageDatabase({ database: 'systemMedia', dbType: 'systemMediaIndex' });
 
-		const database = createDatabaseAdapter({ database: 'systemMedia', dbType: 'mediaIndex' });
+		const database = createDatabaseAdapter({ database: 'systemMedia', dbType: 'systemMediaIndex' });
 		try {
-			await configureMediaDatabase(database);
+			await configureMediaDatabase(database, 'system');
 			systemMediaCached = database;
 			return database;
 		} catch (error) {

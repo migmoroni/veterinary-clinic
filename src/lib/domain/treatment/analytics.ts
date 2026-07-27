@@ -18,10 +18,10 @@ export interface TreatmentStatusSummary {
 }
 
 export interface TreatmentStatusItem {
-	ownerId: number;
+	ownerId: string;
 	ownerName: string;
 	ownerContacts: OwnerAssociatedContact[];
-	petId: number;
+	petId: string;
 	petName: string;
 	petAvatarBytes: Uint8Array | null;
 	name: string;

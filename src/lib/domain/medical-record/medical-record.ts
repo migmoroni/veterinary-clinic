@@ -1,28 +1,28 @@
 import type { Owner, OwnerAssociatedContact } from '$lib/domain/owner/owner.js';
 
 export interface MedicalRecord {
-	id: number;
-	petId: number;
+	id: string;
+	petId: string;
 	title: string;
 	description: string | null;
 	admittedAt: string | null;
 	dischargedAt: string | null;
+	createdAt: string | null;
 	updatedAt: string | null;
-	deletedAt: string | null;
-	purgeAfter: string | null;
+	removedAt: string | null;
 }
 
 
 
 export interface CurrentRecordSummary {
-	id: number;
+	id: string;
 	title: string;
 	description: string | null;
 	admittedAt: string | null;
 	dischargedAt: string | null;
-	petId: number;
+	petId: string;
 	petName: string;
-	ownerId: number;
+	ownerId: string;
 	ownerName: string;
 	ownerContacts: OwnerAssociatedContact[];
 }
@@ -39,7 +39,7 @@ export interface MedicalRecordDetails {
 	petName: string;
 	petAvatarBytes: Uint8Array | null;
 	owners: Owner[];
-	ownerId: number;
+	ownerId: string;
 	ownerName: string;
 	ownerAvatarBytes: Uint8Array | null;
 }

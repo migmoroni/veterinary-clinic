@@ -81,8 +81,8 @@
 		return normalizedResult;
 	}
 
-	function numericResultId(result: SearchResult): number | null {
-		return typeof result.id === 'number' ? result.id : null;
+	function textResultId(result: SearchResult): string | null {
+		return result.id.trim().length > 0 ? result.id : null;
 	}
 
 	function resultCountLabel(count: number): string {
@@ -151,17 +151,17 @@
 
 	async function hydrateRecentResults(baseResults: SearchResult[]): Promise<SearchResult[]> {
 		const normalizedBaseResults = baseResults.map(normalizeReferenceResult);
-		const ownerIds = normalizedBaseResults.filter((result) => result.kind === 'owner').map(numericResultId).filter((id): id is number => id !== null);
-		const petIds = normalizedBaseResults.filter((result) => result.kind === 'pet').map(numericResultId).filter((id): id is number => id !== null);
+		const ownerIds = normalizedBaseResults.filter((result) => result.kind === 'owner').map(textResultId).filter((id): id is string => id !== null);
+		const petIds = normalizedBaseResults.filter((result) => result.kind === 'pet').map(textResultId).filter((id): id is string => id !== null);
 		if (ownerIds.length === 0 && petIds.length === 0) return normalizedBaseResults;
 
 		const [contactsResult, ownerAvatarsResult, petAvatarsResult] = await Promise.allSettled([loadOwnerAssociatedContactsByOwnerIds(ownerIds), loadOwnerAvatarsByOwnerIds(ownerIds), loadPetAvatarsByPetIds(petIds)]);
-		const contactsByOwnerId = contactsResult.status === 'fulfilled' ? contactsResult.value : new Map<number, OwnerAssociatedContact[]>();
-		const avatarBytesByOwnerId = ownerAvatarsResult.status === 'fulfilled' ? ownerAvatarsResult.value : new Map<number, Uint8Array | null>();
-		const avatarBytesByPetId = petAvatarsResult.status === 'fulfilled' ? petAvatarsResult.value : new Map<number, Uint8Array | null>();
+		const contactsByOwnerId = contactsResult.status === 'fulfilled' ? contactsResult.value : new Map<string, OwnerAssociatedContact[]>();
+		const avatarBytesByOwnerId = ownerAvatarsResult.status === 'fulfilled' ? ownerAvatarsResult.value : new Map<string, Uint8Array | null>();
+		const avatarBytesByPetId = petAvatarsResult.status === 'fulfilled' ? petAvatarsResult.value : new Map<string, Uint8Array | null>();
 
 		return normalizedBaseResults.map((result) => {
-			const id = numericResultId(result);
+			const id = textResultId(result);
 			if (result.kind === 'owner' && id !== null) return { ...result, ownerAvatarBytes: avatarBytesByOwnerId.get(id) ?? null, ownerContacts: contactsByOwnerId.get(id) ?? result.ownerContacts ?? [] };
 			if (result.kind === 'pet' && id !== null) return { ...result, petAvatarBytes: avatarBytesByPetId.get(id) ?? null };
 			return result;

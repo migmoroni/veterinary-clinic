@@ -20,7 +20,7 @@ export interface MediaGalleryRow {
 	mime_type: string;
 }
 
-export const MEDIA_BLOBS_DDL = `
+export const USER_MEDIA_BLOBS_DDL = `
 	CREATE TABLE IF NOT EXISTS blobs (
 		hash BLOB PRIMARY KEY CHECK(length(hash) = 32),
 		thumbnail BLOB,
@@ -29,11 +29,28 @@ export const MEDIA_BLOBS_DDL = `
 		width INTEGER CHECK(width IS NULL OR width > 0),
 		height INTEGER CHECK(height IS NULL OR height > 0),
 		sync_status TEXT NOT NULL DEFAULT 'pending' CHECK(sync_status IN ('pending', 'synced', 'error')),
-		created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+		updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+		updated_by TEXT,
 		uploaded_at TEXT,
 		removed_at TEXT
 	) WITHOUT ROWID
 `;
+
+export const SYSTEM_MEDIA_BLOBS_DDL = `
+	CREATE TABLE IF NOT EXISTS blobs (
+		hash BLOB PRIMARY KEY CHECK(length(hash) = 32),
+		thumbnail BLOB,
+		mime_type TEXT NOT NULL CHECK(length(trim(mime_type)) > 0),
+		size_bytes INTEGER NOT NULL CHECK(size_bytes > 0),
+		width INTEGER CHECK(width IS NULL OR width > 0),
+		height INTEGER CHECK(height IS NULL OR height > 0),
+		sync_status TEXT NOT NULL DEFAULT 'pending' CHECK(sync_status IN ('pending', 'synced', 'error')),
+		uploaded_at TEXT
+	) WITHOUT ROWID
+`;
+
+export const MEDIA_BLOBS_DDL = USER_MEDIA_BLOBS_DDL;
 
 export const MEDIA_INSERT_SQL = `INSERT OR IGNORE INTO blobs (
 	hash, thumbnail, mime_type, size_bytes, width, height
@@ -45,7 +62,21 @@ export const MEDIA_GALLERY_SELECT_SQL = `
 	WHERE removed_at IS NULL AND hash IN (__HASHES__)
 `;
 
+export const SYSTEM_MEDIA_GALLERY_SELECT_SQL = `
+	SELECT hash, thumbnail, width, height, mime_type
+	FROM blobs
+	WHERE hash IN (__HASHES__)
+`;
+
 export const MEDIA_SYNC_UPDATE_SQL = `
+	UPDATE blobs
+	SET sync_status = $1,
+		uploaded_at = $2,
+		updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+	WHERE hash = __HASH__
+`;
+
+export const SYSTEM_MEDIA_SYNC_UPDATE_SQL = `
 	UPDATE blobs
 	SET sync_status = $1,
 		uploaded_at = $2
@@ -54,7 +85,8 @@ export const MEDIA_SYNC_UPDATE_SQL = `
 
 export const MEDIA_SOFT_DELETE_SQL = `
 	UPDATE blobs
-	SET removed_at = CURRENT_TIMESTAMP
+	SET removed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+		updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
 	WHERE hash = __HASH__ AND removed_at IS NULL
 `;
 
@@ -114,12 +146,12 @@ export async function sha256Digest(bytes: Uint8Array): Promise<Uint8Array> {
 	return new Uint8Array(await globalThis.crypto.subtle.digest('SHA-256', bytesToArrayBuffer(bytes)));
 }
 
-export async function configureMediaDatabase(database: SqliteDatabase): Promise<void> {
+export async function configureMediaDatabase(database: SqliteDatabase, source: MediaStoreSource = 'user'): Promise<void> {
 	await database.execute('PRAGMA page_size = 4096');
 	await database.execute('PRAGMA journal_mode = WAL');
 	await database.execute('PRAGMA cache_size = -4000');
 	await database.execute('PRAGMA mmap_size = 33554432');
-	await ensureCurrentMediaSchema(database);
+	await ensureCurrentMediaSchema(database, source);
 }
 
 function inferMimeType(bytes: Uint8Array): string {
@@ -170,18 +202,52 @@ interface MediaColumnRow {
 	name: string;
 }
 
-async function ensureCurrentMediaSchema(database: SqliteDatabase): Promise<void> {
+async function ensureCurrentMediaSchema(database: SqliteDatabase, source: MediaStoreSource): Promise<void> {
 	const rows = await database.select<MediaColumnRow[]>('PRAGMA table_info(blobs)');
 	if (rows.length === 0) {
-		await database.execute(MEDIA_BLOBS_DDL);
+		await database.execute(source === 'system' ? SYSTEM_MEDIA_BLOBS_DDL : USER_MEDIA_BLOBS_DDL);
 		return;
 	}
-	if (!rows.some((row) => row.name === 'data')) return;
+	const hasLegacyData = rows.some((row) => row.name === 'data');
+	const hasUpdatedAt = rows.some((row) => row.name === 'updated_at');
+	const hasUpdatedBy = rows.some((row) => row.name === 'updated_by');
+	const hasRemovedAt = rows.some((row) => row.name === 'removed_at');
+	if (source === 'user' && !hasLegacyData && hasUpdatedAt && hasUpdatedBy && hasRemovedAt) return;
+	if (source === 'system' && !hasLegacyData && !hasUpdatedAt && !hasUpdatedBy && !hasRemovedAt) return;
 
 	await database.execute('BEGIN IMMEDIATE');
 	try {
-		await database.execute(`
-			CREATE TABLE blobs_new (
+		if (source === 'system') {
+			await database.execute(`
+				CREATE TABLE blobs_new (
+					hash BLOB PRIMARY KEY CHECK(length(hash) = 32),
+					thumbnail BLOB,
+					mime_type TEXT NOT NULL CHECK(length(trim(mime_type)) > 0),
+					size_bytes INTEGER NOT NULL CHECK(size_bytes > 0),
+					width INTEGER CHECK(width IS NULL OR width > 0),
+					height INTEGER CHECK(height IS NULL OR height > 0),
+					sync_status TEXT NOT NULL DEFAULT 'pending' CHECK(sync_status IN ('pending', 'synced', 'error')),
+					uploaded_at TEXT
+				) WITHOUT ROWID
+			`);
+			await database.execute(`
+				INSERT OR IGNORE INTO blobs_new (
+					hash, thumbnail, mime_type, size_bytes, width, height, sync_status, uploaded_at
+				)
+				SELECT
+					hash,
+					thumbnail,
+					mime_type,
+					size_bytes,
+					width,
+					height,
+					sync_status,
+					uploaded_at
+				FROM blobs
+			`);
+		} else {
+			await database.execute(`
+				CREATE TABLE blobs_new (
 				hash BLOB PRIMARY KEY CHECK(length(hash) = 32),
 				thumbnail BLOB,
 				mime_type TEXT NOT NULL CHECK(length(trim(mime_type)) > 0),
@@ -189,18 +255,37 @@ async function ensureCurrentMediaSchema(database: SqliteDatabase): Promise<void>
 				width INTEGER CHECK(width IS NULL OR width > 0),
 				height INTEGER CHECK(height IS NULL OR height > 0),
 				sync_status TEXT NOT NULL DEFAULT 'pending' CHECK(sync_status IN ('pending', 'synced', 'error')),
-				created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+				updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+				updated_by TEXT,
 				uploaded_at TEXT,
 				removed_at TEXT
 			) WITHOUT ROWID
-		`);
-		await database.execute(`
-			INSERT OR IGNORE INTO blobs_new (
-				hash, thumbnail, mime_type, size_bytes, width, height, sync_status, created_at, uploaded_at, removed_at
-			)
-			SELECT hash, thumbnail, mime_type, size_bytes, width, height, sync_status, created_at, uploaded_at, removed_at
-			FROM blobs
-		`);
+			`);
+			const createdAtExpression = rows.some((row) => row.name === 'created_at') ? 'created_at' : "strftime('%Y-%m-%dT%H:%M:%fZ', 'now')";
+			const updatedAtExpression = hasUpdatedAt ? 'updated_at' : createdAtExpression;
+			const updatedByExpression = hasUpdatedBy ? 'updated_by' : 'NULL';
+			const removedAtExpression = hasRemovedAt ? 'removed_at' : 'NULL';
+			await database.execute(`
+				INSERT OR IGNORE INTO blobs_new (
+					hash, thumbnail, mime_type, size_bytes, width, height, sync_status, created_at, updated_at, updated_by, uploaded_at, removed_at
+				)
+				SELECT
+					hash,
+					thumbnail,
+					mime_type,
+					size_bytes,
+					width,
+					height,
+					sync_status,
+					COALESCE(${createdAtExpression}, strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+					COALESCE(${updatedAtExpression}, ${createdAtExpression}, strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+					${updatedByExpression},
+					uploaded_at,
+					${removedAtExpression}
+				FROM blobs
+			`);
+		}
 		await database.execute('DROP TABLE blobs');
 		await database.execute('ALTER TABLE blobs_new RENAME TO blobs');
 		await database.execute('COMMIT');
@@ -303,8 +388,9 @@ export async function selectMediaGalleryRows(database: SqliteDatabase, hashes: r
 	}
 
 	const hashList = uniqueHashes.map(mediaHashToSqlLiteral).join(', ');
+	const gallerySql = source === 'system' ? SYSTEM_MEDIA_GALLERY_SELECT_SQL : MEDIA_GALLERY_SELECT_SQL;
 	const rows = await database.select<Array<Omit<MediaGalleryRow, 'hash' | 'thumbnail'> & { hash: unknown; thumbnail: unknown | null }>>(
-		MEDIA_GALLERY_SELECT_SQL.replace('__HASHES__', hashList)
+		gallerySql.replace('__HASHES__', hashList)
 	);
 	return rows
 		.map((row) => {
@@ -326,10 +412,12 @@ export async function updateMediaSyncStatus(database: SqliteDatabase, hash: Uint
 		await invoke('update_media_sync_status', { request: { source, hash: mediaHashToHex(hash), syncStatus, uploadedAt } });
 		return;
 	}
-	await database.execute(MEDIA_SYNC_UPDATE_SQL.replace('__HASH__', mediaHashToSqlLiteral(hash)), [syncStatus, uploadedAt]);
+	const syncSql = source === 'system' ? SYSTEM_MEDIA_SYNC_UPDATE_SQL : MEDIA_SYNC_UPDATE_SQL;
+	await database.execute(syncSql.replace('__HASH__', mediaHashToSqlLiteral(hash)), [syncStatus, uploadedAt]);
 }
 
 export async function softDeleteMediaBlob(database: SqliteDatabase, hash: Uint8Array, source: MediaStoreSource = 'user'): Promise<void> {
+	if (source === 'system') throw new Error('system_media_is_read_only');
 	if (isTauriRuntime()) {
 		await invoke('mark_as_removed', { request: { source, hash: mediaHashToHex(hash) } });
 		return;

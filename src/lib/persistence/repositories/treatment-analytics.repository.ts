@@ -27,10 +27,10 @@ import { selectMany } from '$lib/persistence/sqlite/client.js';
 import { listOwnerAssociatedContactsByOwnerIds } from './owner.repository.js';
 
 interface LatestTreatmentRow {
-	id: number;
-	pet_id: number;
+	id: string;
+	pet_id: string;
 	pet_name: string;
-	owner_id: number | null;
+	owner_id: string | null;
 	owner_ids: string | null;
 	owner_name: string | null;
 	owner_contacts: OwnerAssociatedContact[];
@@ -68,7 +68,7 @@ const statusOrder: Record<TreatmentStatusKey, number> = {
 const firstOwnerIdSql = `(SELECT owners.id
 	FROM pet_owners
 	JOIN owners ON owners.id = pet_owners.owner_id
-	WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+	WHERE pet_owners.pet_id = pets.id AND owners.removed_at IS NULL
 	ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
 	LIMIT 1)`;
 
@@ -77,7 +77,7 @@ const ownerNamesSql = `(SELECT group_concat(name, ' · ')
 		SELECT owners.name AS name
 		FROM pet_owners
 		JOIN owners ON owners.id = pet_owners.owner_id
-		WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+		WHERE pet_owners.pet_id = pets.id AND owners.removed_at IS NULL
 		ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
 	))`;
 
@@ -86,15 +86,15 @@ const ownerIdsSql = `(SELECT group_concat(owner_id, ',')
 		SELECT owners.id AS owner_id
 		FROM pet_owners
 		JOIN owners ON owners.id = pet_owners.owner_id
-		WHERE pet_owners.pet_id = pets.id AND owners.deleted_at IS NULL
+		WHERE pet_owners.pet_id = pets.id AND owners.removed_at IS NULL
 		ORDER BY pet_owners.sort_order, owners.name COLLATE NOCASE, owners.id
 	))`;
 
-function parseOwnerIds(value: string | null | undefined): number[] {
+function parseOwnerIds(value: string | null | undefined): string[] {
 	return (value ?? '')
 		.split(',')
-		.map((item) => Number(item))
-		.filter((id) => Number.isInteger(id) && id > 0);
+		.map((item) => item.trim())
+		.filter((id) => id.length > 0);
 }
 
 function normalizeStatus(value: string | null | undefined): TreatmentStatusKey {
@@ -171,9 +171,9 @@ async function listLatestTreatmentRows(kind: TreatmentKind): Promise<LatestTreat
 			 FROM pet_treatments
 			 JOIN pets ON pets.id = pet_treatments.pet_id
 			 WHERE pet_treatments.kind = $1
-				AND pet_treatments.deleted_at IS NULL
+				AND pet_treatments.removed_at IS NULL
 				AND pet_treatments.validity_ignored_at IS NULL
-				AND pets.deleted_at IS NULL
+				AND pets.removed_at IS NULL
 				AND date(pet_treatments.applied_at) IS NOT NULL
 				AND pet_treatments.applied_at <= date('now', 'localtime')
 		 )
@@ -183,8 +183,8 @@ async function listLatestTreatmentRows(kind: TreatmentKind): Promise<LatestTreat
 	);
 
 	const latestRows = rows.filter((row) => isPlausibleTreatmentAppliedAt(row.applied_at));
-	const ownerIdsByRow = new Map<LatestTreatmentRow, number[]>();
-	const allOwnerIds: number[] = [];
+	const ownerIdsByRow = new Map<LatestTreatmentRow, string[]>();
+	const allOwnerIds: string[] = [];
 	for (const row of latestRows) {
 		const ownerIds = parseOwnerIds(row.owner_ids);
 		ownerIdsByRow.set(row, ownerIds);
@@ -203,7 +203,7 @@ function mapStatusItem(row: LatestTreatmentRow, now = new Date()): TreatmentStat
 	if (!status) return null;
 
 	return {
-		ownerId: row.owner_id ?? parseOwnerIds(row.owner_ids)[0] ?? 0,
+		ownerId: row.owner_id ?? parseOwnerIds(row.owner_ids)[0] ?? '',
 		ownerName: row.owner_name ?? '',
 		ownerContacts: row.owner_contacts,
 		petId: row.pet_id,
@@ -256,8 +256,8 @@ export async function listTreatmentHistory(kind: TreatmentKind, filter: Partial<
 		 FROM pet_treatments
 		 JOIN pets ON pets.id = pet_treatments.pet_id
 		 WHERE pet_treatments.kind = $1
-			AND pet_treatments.deleted_at IS NULL
-			AND pets.deleted_at IS NULL
+			AND pet_treatments.removed_at IS NULL
+			AND pets.removed_at IS NULL
 			${normalizedName ? 'AND pet_treatments.normalized_name = $2' : ''}
 		 ORDER BY pet_treatments.applied_at ASC`,
 		values
@@ -281,7 +281,7 @@ export async function listAnalyticsTreatments(kind: TreatmentKind): Promise<Trea
 		 FROM (
 			SELECT name, normalized_name, applied_at, id
 			FROM pet_treatments
-			WHERE kind = $1 AND deleted_at IS NULL
+			WHERE kind = $1 AND removed_at IS NULL
 			ORDER BY normalized_name, applied_at DESC, id DESC
 		 )
 		 GROUP BY normalized_name

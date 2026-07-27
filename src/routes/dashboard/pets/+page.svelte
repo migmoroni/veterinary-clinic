@@ -26,7 +26,7 @@
 	let sortOrder = $state<PetSortOrder>('name');
 	let visiblePets = $state<DashboardPetStudyItem[]>([]);
 	let listLoading = $state(false);
-	let avatarBytesByPetId = $state(new Map<number, Uint8Array | null>());
+	let avatarBytesByPetId = $state(new Map<string, Uint8Array | null>());
 	let renderRequestId = 0;
 
 	const activeBuckets = $derived(sortBuckets(bucketsForAnalysis(activeAnalysis), activeAnalysis, bucketSortField, bucketSortDirection));

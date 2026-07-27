@@ -4,10 +4,10 @@ import { buildTreatmentStatus, getTreatmentStatus, historyBucket, isPlausibleTre
 
 function statusItem(daysUntilDue: number, dueAt = '2026-05-08'): TreatmentStatusItem {
 	return {
-		ownerId: 1,
+		ownerId: '019f9689-0000-7000-8000-000000000001',
 		ownerName: 'Owner',
 		ownerContacts: [],
-		petId: 1,
+		petId: '019f9689-0000-7000-8000-000000000002',
 		petName: 'Pet',
 		petAvatarBytes: null,
 		name: 'Treatment',

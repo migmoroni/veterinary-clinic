@@ -7,12 +7,14 @@ import {
 	type ImageCollectionPolicy
 } from '$lib/domain/image-collection/image-collection.js';
 import { FIELD_LIMITS, nullableMultilineText, requireLimitedText } from '$lib/domain/shared/field-limits.js';
+import { nowIso } from '$lib/domain/shared/time.js';
+import { createUuidV7 } from '$lib/domain/shared/uuid.js';
 import { loadMediaDataMap, mediaHashKey, saveMedia } from '$lib/persistence/repositories/media.repository.js';
 import { execute, selectMany, selectOne, selectSystemMany, selectSystemOne } from '$lib/persistence/sqlite/client.js';
 import { mediaHashToSqlLiteral, normalizeMediaHash } from '$lib/persistence/sqlite/media.js';
 
 interface ImageCollectionRow {
-	id: number;
+	id: string;
 	entity_type: string;
 	entity_id: ImageCollectionEntityId;
 	primary_required: number;
@@ -22,7 +24,7 @@ interface ImageCollectionRow {
 }
 
 interface ImageCollectionItemRow {
-	id: number;
+	id: string;
 	image_hash: unknown;
 	original_image_hash: unknown;
 	description: string | null;
@@ -55,6 +57,18 @@ function imageCollectionSelect(source: ImageCollectionSource): {
 	return source === 'system' ? { selectMany: selectSystemMany, selectOne: selectSystemOne } : { selectMany, selectOne };
 }
 
+function imageCollectionColumns(source: ImageCollectionSource): string {
+	return source === 'system'
+		? 'id, entity_type, entity_id, primary_required, max_items, NULL AS created_at, NULL AS updated_at'
+		: 'id, entity_type, entity_id, primary_required, max_items, created_at, updated_at';
+}
+
+function imageCollectionItemColumns(source: ImageCollectionSource): string {
+	return source === 'system'
+		? 'id, image_hash, original_image_hash, description, is_primary, sort_order, NULL AS created_at, NULL AS updated_at'
+		: 'id, image_hash, original_image_hash, description, is_primary, sort_order, created_at, updated_at';
+}
+
 /** Validates policy invariants and normalizes optional descriptions. */
 function normalizeItems(items: ImageCollectionItemInput[], policy: ImageCollectionPolicy): ImageCollectionItemInput[] {
 	validateImageCollectionItems(items, policy);
@@ -78,17 +92,17 @@ export async function getImageCollection(entityType: string, entityId: ImageColl
 	const normalizedEntityId = String(entityId);
 	const database = imageCollectionSelect(source);
 	const collection = await database.selectOne<ImageCollectionRow>(
-		`SELECT id, entity_type, entity_id, primary_required, max_items, created_at, updated_at
+		`SELECT ${imageCollectionColumns(source)}
 		 FROM image_collections
-		 WHERE entity_type = $1 AND entity_id = $2`,
+		 WHERE entity_type = $1 AND entity_id = $2 ${source === 'system' ? '' : 'AND removed_at IS NULL'}`,
 		[normalizedEntityType, normalizedEntityId]
 	);
 	if (!collection) return null;
 
 	const items = await database.selectMany<ImageCollectionItemRow>(
-		`SELECT id, image_hash, original_image_hash, description, is_primary, sort_order, created_at, updated_at
+		`SELECT ${imageCollectionItemColumns(source)}
 		 FROM image_collection_items
-		 WHERE collection_id = $1
+		 WHERE collection_id = $1 ${source === 'system' ? '' : 'AND removed_at IS NULL'}
 		 ORDER BY sort_order, id`,
 		[collection.id]
 	);
@@ -121,33 +135,37 @@ export async function replaceImageCollection(
 	const normalizedEntityId = String(entityId);
 	const normalizedItems = normalizeItems(items, policy);
 
+	const now = nowIso();
 	await execute(
-		`INSERT INTO image_collections (entity_type, entity_id, primary_required, max_items, updated_at)
-		 VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+		`INSERT INTO image_collections (id, entity_type, entity_id, primary_required, max_items, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $6)
 		 ON CONFLICT(entity_type, entity_id) DO UPDATE SET
 			primary_required = excluded.primary_required,
 			max_items = excluded.max_items,
-			updated_at = CURRENT_TIMESTAMP`,
-		[normalizedEntityType, normalizedEntityId, policy.primaryRequired ? 1 : 0, policy.maxItems]
+			updated_at = excluded.updated_at,
+			removed_at = NULL`,
+		[createUuidV7(), normalizedEntityType, normalizedEntityId, policy.primaryRequired ? 1 : 0, policy.maxItems, now]
 	);
 
-	const collection = await selectOne<{ id: number }>(
-		'SELECT id FROM image_collections WHERE entity_type = $1 AND entity_id = $2',
+	const collection = await selectOne<{ id: string }>(
+		'SELECT id FROM image_collections WHERE entity_type = $1 AND entity_id = $2 AND removed_at IS NULL',
 		[normalizedEntityType, normalizedEntityId]
 	);
 	if (!collection) throw new Error('image_collection_save_failed');
 
-	await execute('DELETE FROM image_collection_items WHERE collection_id = $1', [collection.id]);
+	const removedAt = nowIso();
+	await execute('UPDATE image_collection_items SET removed_at = $2, updated_at = $2 WHERE collection_id = $1 AND removed_at IS NULL', [collection.id, removedAt]);
 	for (const [index, item] of normalizedItems.entries()) {
 		const imageHash = await saveMedia('user', item.imageBytes);
 		const originalImageHash = await saveMedia('user', item.originalImageBytes);
 		if (!imageHash || !originalImageHash) throw new Error('image_collection_save_failed');
+		const createdAt = nowIso();
 		await execute(
 			`INSERT INTO image_collection_items (
-				collection_id, image_hash, original_image_hash, description, is_primary, sort_order, updated_at
+				id, collection_id, image_hash, original_image_hash, description, is_primary, sort_order, created_at, updated_at
 			)
-			 VALUES ($1, ${mediaHashToSqlLiteral(imageHash)}, ${mediaHashToSqlLiteral(originalImageHash)}, $2, $3, $4, CURRENT_TIMESTAMP)`,
-			[collection.id, item.description || null, item.isPrimary ? 1 : 0, index]
+			 VALUES ($1, $2, ${mediaHashToSqlLiteral(imageHash)}, ${mediaHashToSqlLiteral(originalImageHash)}, $3, $4, $5, $6, $6)`,
+			[createUuidV7(), collection.id, item.description || null, item.isPrimary ? 1 : 0, index, createdAt]
 		);
 	}
 
@@ -158,5 +176,10 @@ export async function replaceImageCollection(
 
 export async function deleteImageCollection(entityType: string, entityId: ImageCollectionEntityId): Promise<void> {
 	const normalizedEntityType = requireLimitedText(entityType, FIELD_LIMITS.imageCollectionEntityType);
-	await execute('DELETE FROM image_collections WHERE entity_type = $1 AND entity_id = $2', [normalizedEntityType, String(entityId)]);
+	const removedAt = nowIso();
+	await execute('UPDATE image_collections SET removed_at = $3, updated_at = $3 WHERE entity_type = $1 AND entity_id = $2 AND removed_at IS NULL', [
+		normalizedEntityType,
+		String(entityId),
+		removedAt
+	]);
 }

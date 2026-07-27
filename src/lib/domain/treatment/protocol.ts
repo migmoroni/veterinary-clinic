@@ -13,12 +13,13 @@ export interface TreatmentProtocolCatalogItem {
 }
 
 export interface TreatmentProtocolDose {
-	id: number;
+	id: string;
 	protocolId: TreatmentProtocolId;
 	dose: string;
 	validityValue: number;
 	validityUnit: TreatmentProtocolValidityUnit;
 	sortOrder: number;
+	createdAt: string | null;
 	updatedAt: string | null;
 }
 
@@ -32,8 +33,8 @@ export interface TreatmentProtocol {
 	observation: string | null;
 	sortOrder: number;
 	hiddenAt: string | null;
-	deletedAt: string | null;
-	purgeAfter: string | null;
+	createdAt: string | null;
+	removedAt: string | null;
 	updatedAt: string | null;
 	items: TreatmentProtocolCatalogItem[];
 	doses: TreatmentProtocolDose[];

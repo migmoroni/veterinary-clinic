@@ -11,6 +11,8 @@ import { stringifyTreatmentSpecies } from '$lib/domain/treatment/species.js';
 import { defaultBreedReferenceItems, type DefaultBreedReferenceImage } from '$lib/domain/pet/default-breed-reference.js';
 import { stringifyBreedReferenceExtension, stringifyBreedSexRange } from '$lib/domain/pet/breed-reference.js';
 import { FIELD_LIMITS } from '$lib/domain/shared/field-limits.js';
+import { nowIso } from '$lib/domain/shared/time.js';
+import { createUuidV7 } from '$lib/domain/shared/uuid.js';
 import { insertMediaBlob, mediaHashToSqlLiteral } from './media.js';
 import { incrementalSchemaMigrations } from './schema-migrations/registry.js';
 import type { SchemaMigration } from './schema-migrations/types.js';
@@ -27,6 +29,10 @@ interface TableColumnRow {
 
 interface TableNameRow {
 	name: string;
+}
+
+interface TableSqlRow {
+	sql: string | null;
 }
 
 interface UserVersionRow {
@@ -65,7 +71,7 @@ interface ConditionCatalogRow {
 }
 
 interface BreedReferenceRow {
-	id: number;
+	id: string;
 }
 
 interface TreatmentProtocolRow {
@@ -74,7 +80,7 @@ interface TreatmentProtocolRow {
 }
 
 interface ImageCollectionRow {
-	id: number;
+	id: string;
 }
 
 interface CountRow {
@@ -100,6 +106,10 @@ function requiredTextCheck(column: string, maxLength: number): string {
 
 function uuidV4TextCheck(column: string): string {
 	return `length(trim(${column})) = 36 AND substr(lower(trim(${column})), 15, 1) = '4' AND substr(lower(trim(${column})), 20, 1) IN ('8', '9', 'a', 'b')`;
+}
+
+function uuidTextCheck(column: string): string {
+	return `length(trim(${column})) = 36 AND substr(trim(${column}), 9, 1) = '-' AND substr(trim(${column}), 14, 1) = '-' AND substr(trim(${column}), 19, 1) = '-' AND substr(trim(${column}), 24, 1) = '-'`;
 }
 
 interface RunMigrationsOptions {
@@ -176,6 +186,11 @@ async function tableExists(database: Database, table: string): Promise<boolean> 
 	return rows.length > 0;
 }
 
+async function tableSql(database: Database, table: string): Promise<string> {
+	const rows = await database.select<TableSqlRow[]>("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = $1 LIMIT 1", [table]);
+	return rows[0]?.sql ?? '';
+}
+
 async function productCatalogHasCurrentTypes(database: Database, table = 'product_catalog_items'): Promise<boolean> {
 	const rows = await database.select<CountRow[]>(`SELECT COUNT(*) AS total FROM ${quoteIdentifier(table)} WHERE type NOT IN (${PRODUCT_TYPE_SQL_VALUES})`);
 	return (rows[0]?.total ?? 0) === 0;
@@ -247,13 +262,12 @@ async function ensureDefaultCatalogImages(
 	if ((await catalogImageCollectionItemCount(database, entityType, entityId)) > 0) return;
 
 	await database.execute(
-		`INSERT INTO image_collections (entity_type, entity_id, primary_required, max_items, updated_at)
-		 VALUES ($1, $2, 1, $3, CURRENT_TIMESTAMP)
+		`INSERT INTO image_collections (id, entity_type, entity_id, primary_required, max_items)
+		 VALUES ($1, $2, $3, 1, $4)
 		 ON CONFLICT(entity_type, entity_id) DO UPDATE SET
 			primary_required = excluded.primary_required,
-			max_items = excluded.max_items,
-			updated_at = CURRENT_TIMESTAMP`,
-		[entityType, entityId, maxItems]
+			max_items = excluded.max_items`,
+		[createUuidV7(), entityType, entityId, maxItems]
 	);
 
 	const collectionRows = await database.select<ImageCollectionRow[]>(
@@ -274,10 +288,10 @@ async function ensureDefaultCatalogImages(
 		const imageHash = await insertMediaBlob(mediaDatabase, imageBytes, {}, 'system');
 		await database.execute(
 			`INSERT INTO image_collection_items (
-				collection_id, image_hash, original_image_hash, description, is_primary, sort_order, updated_at
+				id, collection_id, image_hash, original_image_hash, description, is_primary, sort_order
 			)
-			 VALUES ($1, ${mediaHashToSqlLiteral(imageHash)}, ${mediaHashToSqlLiteral(imageHash)}, $2, $3, $4, CURRENT_TIMESTAMP)`,
-			[collectionId, description || null, index === primaryIndex ? 1 : 0, index]
+			 VALUES ($1, $2, ${mediaHashToSqlLiteral(imageHash)}, ${mediaHashToSqlLiteral(imageHash)}, $3, $4, $5)`,
+			[createUuidV7(), collectionId, description || null, index === primaryIndex ? 1 : 0, index]
 		);
 	}
 }
@@ -306,7 +320,7 @@ function normalizedDefaultBreedReferenceImages(images: readonly DefaultBreedRefe
 	return normalized;
 }
 
-async function breedReferenceImageCollectionItemCount(database: Database, referenceItemId: number): Promise<number> {
+async function breedReferenceImageCollectionItemCount(database: Database, referenceItemId: string): Promise<number> {
 	const rows = await database.select<CountRow[]>(
 		`SELECT COUNT(*) AS total
 		 FROM image_collection_items item
@@ -317,24 +331,24 @@ async function breedReferenceImageCollectionItemCount(database: Database, refere
 	return Number(rows[0]?.total ?? 0);
 }
 
-async function ensureDefaultBreedReferenceImages(database: Database, mediaDatabase: Database, referenceItemId: number, images: readonly DefaultBreedReferenceImage[] | null | undefined): Promise<void> {
+async function ensureDefaultBreedReferenceImages(database: Database, mediaDatabase: Database, referenceItemId: string, images: readonly DefaultBreedReferenceImage[] | null | undefined): Promise<void> {
 	const normalizedImages = normalizedDefaultBreedReferenceImages(images);
 	if (normalizedImages.length === 0) return;
 	if ((await breedReferenceImageCollectionItemCount(database, referenceItemId)) > 0) return;
 
+	const entityId = String(referenceItemId);
 	await database.execute(
-		`INSERT INTO image_collections (entity_type, entity_id, primary_required, max_items, updated_at)
-		 VALUES ($1, $2, 1, $3, CURRENT_TIMESTAMP)
+		`INSERT INTO image_collections (id, entity_type, entity_id, primary_required, max_items)
+		 VALUES ($1, $2, $3, 1, $4)
 		 ON CONFLICT(entity_type, entity_id) DO UPDATE SET
 			primary_required = excluded.primary_required,
-			max_items = excluded.max_items,
-			updated_at = CURRENT_TIMESTAMP`,
-		[BREED_REFERENCE_IMAGE_COLLECTION_TYPE, referenceItemId, BREED_REFERENCE_IMAGE_MAX_ITEMS]
+			max_items = excluded.max_items`,
+		[createUuidV7(), BREED_REFERENCE_IMAGE_COLLECTION_TYPE, entityId, BREED_REFERENCE_IMAGE_MAX_ITEMS]
 	);
 
 	const collectionRows = await database.select<ImageCollectionRow[]>(
 		'SELECT id FROM image_collections WHERE entity_type = $1 AND entity_id = $2 LIMIT 1',
-		[BREED_REFERENCE_IMAGE_COLLECTION_TYPE, referenceItemId]
+		[BREED_REFERENCE_IMAGE_COLLECTION_TYPE, entityId]
 	);
 	const collectionId = collectionRows[0]?.id;
 	if (!collectionId) throw new Error('default_breed_reference_image_collection_not_found');
@@ -350,10 +364,10 @@ async function ensureDefaultBreedReferenceImages(database: Database, mediaDataba
 		const imageHash = await insertMediaBlob(mediaDatabase, imageBytes, {}, 'system');
 		await database.execute(
 			`INSERT INTO image_collection_items (
-				collection_id, image_hash, original_image_hash, description, is_primary, sort_order, updated_at
+				id, collection_id, image_hash, original_image_hash, description, is_primary, sort_order
 			)
-			 VALUES ($1, ${mediaHashToSqlLiteral(imageHash)}, ${mediaHashToSqlLiteral(imageHash)}, $2, $3, $4, CURRENT_TIMESTAMP)`,
-			[collectionId, description || null, index === primaryIndex ? 1 : 0, index]
+			 VALUES ($1, $2, ${mediaHashToSqlLiteral(imageHash)}, ${mediaHashToSqlLiteral(imageHash)}, $3, $4, $5)`,
+			[createUuidV7(), collectionId, description || null, index === primaryIndex ? 1 : 0, index]
 		);
 	}
 }
@@ -377,22 +391,20 @@ async function syncDefaultManufacturerCatalog(database: Database, mediaDatabase:
 					normalized_name = $4,
 					aliases = $5,
 					regions = $6,
-					extension = $7,
-					updated_at = CURRENT_TIMESTAMP
+					extension = $7
 				 WHERE id = $1`,
 				values
 			);
 		} else if (!rowsById[0]) {
 			await database.execute(
-				`INSERT INTO manufacturer_catalog_items (id, type, name, normalized_name, aliases, regions, extension, updated_at)
-				 VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
+				`INSERT INTO manufacturer_catalog_items (id, type, name, normalized_name, aliases, regions, extension)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7)
 				 ON CONFLICT(normalized_name) DO UPDATE SET
 					name = excluded.name,
 					type = excluded.type,
 					aliases = excluded.aliases,
 					regions = excluded.regions,
-					extension = excluded.extension,
-					updated_at = CURRENT_TIMESTAMP`,
+					extension = excluded.extension`,
 				values
 			);
 		}
@@ -425,22 +437,20 @@ async function syncDefaultActiveIngredientCatalog(database: Database, mediaDatab
 					normalized_name = $4,
 					aliases = $5,
 					regions = $6,
-					extension = $7,
-					updated_at = CURRENT_TIMESTAMP
+					extension = $7
 				 WHERE id = $1`,
 				values
 			);
 		} else if (!rowsById[0]) {
 			await database.execute(
-				`INSERT INTO active_ingredient_catalog_items (id, type, name, normalized_name, aliases, regions, extension, updated_at)
-				 VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
+				`INSERT INTO active_ingredient_catalog_items (id, type, name, normalized_name, aliases, regions, extension)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7)
 				 ON CONFLICT(normalized_name) DO UPDATE SET
 					name = excluded.name,
 					type = excluded.type,
 					aliases = excluded.aliases,
 					regions = excluded.regions,
-					extension = excluded.extension,
-					updated_at = CURRENT_TIMESTAMP`,
+					extension = excluded.extension`,
 				values
 			);
 		}
@@ -473,22 +483,20 @@ async function syncDefaultConditionCatalog(database: Database, mediaDatabase: Da
 					normalized_name = $4,
 					aliases = $5,
 					regions = $6,
-					extension = $7,
-					updated_at = CURRENT_TIMESTAMP
+					extension = $7
 				 WHERE id = $1`,
 				values
 			);
 		} else if (!rowsById[0]) {
 			await database.execute(
-				`INSERT INTO condition_catalog_items (id, type, name, normalized_name, aliases, regions, extension, updated_at)
-				 VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
+				`INSERT INTO condition_catalog_items (id, type, name, normalized_name, aliases, regions, extension)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7)
 				 ON CONFLICT(normalized_name) DO UPDATE SET
 					name = excluded.name,
 					type = excluded.type,
 					aliases = excluded.aliases,
 					regions = excluded.regions,
-					extension = excluded.extension,
-					updated_at = CURRENT_TIMESTAMP`,
+					extension = excluded.extension`,
 				values
 			);
 		}
@@ -523,15 +531,14 @@ async function syncDefaultProductCatalog(database: Database, mediaDatabase: Data
 					aliases = $6,
 					manufacturer_id = $7,
 					regions = $8,
-					extension = $9,
-					updated_at = CURRENT_TIMESTAMP
+					extension = $9
 				 WHERE id = $1`,
 				values
 			);
 		} else if (!rowsById[0]) {
 			await database.execute(
-				`INSERT INTO product_catalog_items (id, type, name, normalized_name, species, aliases, manufacturer_id, regions, extension, updated_at)
-				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)
+				`INSERT INTO product_catalog_items (id, type, name, normalized_name, species, aliases, manufacturer_id, regions, extension)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 				 ON CONFLICT(normalized_name) DO UPDATE SET
 					name = excluded.name,
 					type = excluded.type,
@@ -539,8 +546,7 @@ async function syncDefaultProductCatalog(database: Database, mediaDatabase: Data
 					aliases = excluded.aliases,
 					manufacturer_id = excluded.manufacturer_id,
 					regions = excluded.regions,
-					extension = excluded.extension,
-					updated_at = CURRENT_TIMESTAMP`,
+					extension = excluded.extension`,
 				values
 			);
 		}
@@ -560,12 +566,9 @@ async function syncDefaultProductCatalog(database: Database, mediaDatabase: Data
 				);
 				if (!activeRows[0]) throw new Error(`default_product_active_ingredient_not_found:${activeIngredientId}`);
 				await database.execute(
-					`INSERT INTO product_active_ingredients (product_id, active_ingredient_id, sort_order, updated_at)
-					 VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
-					 ON CONFLICT(product_id, active_ingredient_id) DO UPDATE SET
-						sort_order = excluded.sort_order,
-						updated_at = CURRENT_TIMESTAMP`,
-					[catalogItem.id, activeIngredientId, sortOrder]
+					`INSERT INTO product_active_ingredients (id, product_id, active_ingredient_id, sort_order)
+					 VALUES ($1, $2, $3, $4)`,
+					[createUuidV7(), catalogItem.id, activeIngredientId, sortOrder]
 				);
 			}
 		}
@@ -581,49 +584,49 @@ async function syncDefaultBreedReferenceCatalog(database: Database, mediaDatabas
 
 		await database.execute(
 			`INSERT INTO breed_reference_items (
-				breed_id,
-				species,
-				label_key,
-				origin_id,
+					id,
+					breed_id,
+					species,
+					label_key,
+					origin_id,
 				origin_label_key,
 				origin_country_code,
 				origin_latitude,
 				origin_longitude,
 				size_category,
-				average_weight_kg,
-				average_height_cm,
-				extension,
-				updated_at
-			)
-			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP)
-			 ON CONFLICT(breed_id) DO UPDATE SET
-				species = excluded.species,
-				label_key = excluded.label_key,
+					average_weight_kg,
+					average_height_cm,
+					extension
+				)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+				 ON CONFLICT(breed_id) DO UPDATE SET
+					species = excluded.species,
+					label_key = excluded.label_key,
 				origin_id = excluded.origin_id,
 				origin_label_key = excluded.origin_label_key,
 				origin_country_code = excluded.origin_country_code,
 				origin_latitude = excluded.origin_latitude,
 				origin_longitude = excluded.origin_longitude,
-				size_category = excluded.size_category,
-				average_weight_kg = excluded.average_weight_kg,
-				average_height_cm = excluded.average_height_cm,
-				extension = excluded.extension,
-				updated_at = CURRENT_TIMESTAMP`,
-			[
-				item.id,
-				item.species,
-				item.labelKey,
-				item.origin.id,
+					size_category = excluded.size_category,
+					average_weight_kg = excluded.average_weight_kg,
+					average_height_cm = excluded.average_height_cm,
+					extension = excluded.extension`,
+				[
+					item.id,
+					item.id,
+					item.species,
+					item.labelKey,
+					item.origin.id,
 				item.origin.labelKey ?? null,
 				item.origin.countryCode ?? null,
 				item.origin.latitude,
 				item.origin.longitude,
-				item.sizeCategory,
-				averageWeightKg,
-				averageHeightCm,
-				extension
-			]
-		);
+					item.sizeCategory,
+					averageWeightKg,
+					averageHeightCm,
+					extension
+				]
+			);
 
 		const rows = await database.select<BreedReferenceRow[]>(
 			'SELECT id FROM breed_reference_items WHERE breed_id = $1 LIMIT 1',
@@ -644,9 +647,15 @@ async function syncDefaultTreatmentProtocols(database: Database): Promise<void> 
 		const normalizedName = normalizeProductCatalogName(protocol.name);
 		const species = stringifyTreatmentSpecies(protocol.species);
 		await database.execute(
-			`INSERT INTO treatment_protocols (id, kind, origin, name, normalized_name, species, observation, sort_order, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE((SELECT MAX(sort_order) + 1 FROM treatment_protocols WHERE kind = $2), 0), CURRENT_TIMESTAMP)
-			 ON CONFLICT(id) DO NOTHING`,
+			`INSERT INTO treatment_protocols (id, kind, origin, name, normalized_name, species, observation, sort_order)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE((SELECT MAX(sort_order) + 1 FROM treatment_protocols WHERE kind = $2), 0))
+			 ON CONFLICT(id) DO UPDATE SET
+				kind = excluded.kind,
+				origin = excluded.origin,
+				name = excluded.name,
+				normalized_name = excluded.normalized_name,
+				species = excluded.species,
+				observation = excluded.observation`,
 			[protocol.id, protocol.kind, protocol.origin, protocol.name, normalizedName, species, protocol.observation]
 		);
 
@@ -657,22 +666,6 @@ async function syncDefaultTreatmentProtocols(database: Database): Promise<void> 
 		const storedProtocol = protocolRows[0];
 		if (!storedProtocol) throw new Error(`default_protocol_not_found:${protocol.name}`);
 		if (storedProtocol.origin !== 'system') continue;
-
-		await database.execute(
-			`UPDATE treatment_protocols
-			 SET name = $2,
-				species = $3,
-				observation = $4,
-				updated_at = CURRENT_TIMESTAMP
-			 WHERE id = $1
-				AND origin = 'system'
-				AND (
-					name <> $2
-					OR species <> $3
-					OR COALESCE(observation, '') <> COALESCE($4, '')
-				)`,
-			[storedProtocol.id, protocol.name, species, protocol.observation]
-		);
 
 		await database.execute('DELETE FROM treatment_protocol_items WHERE protocol_id = $1', [storedProtocol.id]);
 
@@ -689,9 +682,9 @@ async function syncDefaultTreatmentProtocols(database: Database): Promise<void> 
 			if (!catalogRows[0]) throw new Error(`default_protocol_catalog_item_not_found:${catalogItemId}`);
 
 			await database.execute(
-				`INSERT INTO treatment_protocol_items (protocol_id, catalog_item_id, sort_order, updated_at)
-				 VALUES ($1, $2, $3, CURRENT_TIMESTAMP)`,
-				[storedProtocol.id, catalogItemId, sortOrder]
+				`INSERT INTO treatment_protocol_items (id, protocol_id, catalog_item_id, sort_order)
+				 VALUES ($1, $2, $3, $4)`,
+				[createUuidV7(), storedProtocol.id, catalogItemId, sortOrder]
 			);
 		}
 
@@ -699,9 +692,9 @@ async function syncDefaultTreatmentProtocols(database: Database): Promise<void> 
 
 		for (const [sortOrder, dose] of protocol.doses.entries()) {
 			await database.execute(
-				`INSERT INTO treatment_protocol_doses (protocol_id, dose, validity_value, validity_unit, sort_order, updated_at)
-				 VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`,
-				[storedProtocol.id, dose.dose, dose.validityValue, dose.validityUnit, sortOrder]
+				`INSERT INTO treatment_protocol_doses (id, protocol_id, dose, validity_value, validity_unit, sort_order)
+				 VALUES ($1, $2, $3, $4, $5, $6)`,
+				[createUuidV7(), storedProtocol.id, dose.dose, dose.validityValue, dose.validityUnit, sortOrder]
 			);
 		}
 	}
@@ -758,43 +751,47 @@ async function migrateUserProductsFromLegacyCatalogTable(database: Database): Pr
 async function createCurrentSchema(database: Database): Promise<void> {
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS owners (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
 			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.ownerName)}),
 			avatar_hash BLOB CHECK(avatar_hash IS NULL OR length(avatar_hash) = 32),
 			additional_information TEXT CHECK(${optionalTextCheck('additional_information', FIELD_LIMITS.ownerAdditionalInformation)}),
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
-			deleted_at TEXT,
-			purge_after TEXT
+			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_by TEXT,
+			removed_at TEXT
 		)
 	`);
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS veterinarian_profiles (
-			id INTEGER PRIMARY KEY CHECK(id = 1),
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
 			name TEXT CHECK(${optionalTextCheck('name', FIELD_LIMITS.veterinarianName)}),
 			professional_registration TEXT CHECK(${optionalTextCheck('professional_registration', FIELD_LIMITS.veterinarianProfessionalRegistration)}),
 			avatar_hash BLOB CHECK(avatar_hash IS NULL OR length(avatar_hash) = 32),
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT
+			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_by TEXT,
+			removed_at TEXT
 		)
 	`);
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS workplaces (
-			id INTEGER PRIMARY KEY CHECK(id = 1),
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
 			name TEXT CHECK(${optionalTextCheck('name', FIELD_LIMITS.workplaceName)}),
 			services_description TEXT CHECK(${optionalTextCheck('services_description', FIELD_LIMITS.workplaceServicesDescription)}),
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT
+			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_by TEXT,
+			removed_at TEXT
 		)
 	`);
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS addresses (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			owner_id INTEGER,
-			workplace_id INTEGER,
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
+			owner_id TEXT CHECK(owner_id IS NULL OR ${uuidTextCheck('owner_id')}),
+			workplace_id TEXT CHECK(workplace_id IS NULL OR ${uuidTextCheck('workplace_id')}),
 			street TEXT CHECK(${optionalTextCheck('street', FIELD_LIMITS.ownerStreet)}),
 			street_number TEXT CHECK(${optionalTextCheck('street_number', FIELD_LIMITS.ownerStreetNumber)}),
 			address_complement TEXT CHECK(${optionalTextCheck('address_complement', FIELD_LIMITS.ownerAddressComplement)}),
@@ -803,8 +800,10 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			state TEXT CHECK(${optionalTextCheck('state', FIELD_LIMITS.ownerState)}),
 			country TEXT NOT NULL DEFAULT 'BRA' CHECK(length(country) = ${FIELD_LIMITS.ownerCountry}),
 			postal_code TEXT CHECK(${optionalTextCheck('postal_code', FIELD_LIMITS.ownerPostalCode)}),
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
+			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_by TEXT,
+			removed_at TEXT,
 			FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE,
 			FOREIGN KEY (workplace_id) REFERENCES workplaces(id) ON DELETE CASCADE,
 			CHECK((owner_id IS NOT NULL) + (workplace_id IS NOT NULL) = 1),
@@ -815,45 +814,51 @@ async function createCurrentSchema(database: Database): Promise<void> {
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS image_collections (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
 			entity_type TEXT NOT NULL CHECK(${requiredTextCheck('entity_type', FIELD_LIMITS.imageCollectionEntityType)}),
 			entity_id TEXT NOT NULL CHECK(length(trim(entity_id)) > 0),
 			primary_required INTEGER NOT NULL DEFAULT 0 CHECK(primary_required IN (0, 1)),
 			max_items INTEGER CHECK(max_items IS NULL OR max_items > 0),
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
+			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_by TEXT,
+			removed_at TEXT,
 			UNIQUE(entity_type, entity_id)
 		)
 	`);
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS image_collection_items (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			collection_id INTEGER NOT NULL,
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
+			collection_id TEXT NOT NULL CHECK(${uuidTextCheck('collection_id')}),
 			image_hash BLOB NOT NULL CHECK(length(image_hash) = 32),
 			original_image_hash BLOB NOT NULL CHECK(length(original_image_hash) = 32),
 			description TEXT CHECK(${optionalTextCheck('description', FIELD_LIMITS.imageDescription)}),
 			is_primary INTEGER NOT NULL DEFAULT 0 CHECK(is_primary IN (0, 1)),
 			sort_order INTEGER NOT NULL DEFAULT 0,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
+			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_by TEXT,
+			removed_at TEXT,
 			FOREIGN KEY (collection_id) REFERENCES image_collections(id) ON DELETE CASCADE
 		)
 	`);
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS contacts (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			owner_id INTEGER,
-			responsible_id INTEGER,
-			veterinarian_profile_id INTEGER,
-			workplace_id INTEGER,
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
+			owner_id TEXT CHECK(owner_id IS NULL OR ${uuidTextCheck('owner_id')}),
+			responsible_id TEXT CHECK(responsible_id IS NULL OR ${uuidTextCheck('responsible_id')}),
+			veterinarian_profile_id TEXT CHECK(veterinarian_profile_id IS NULL OR ${uuidTextCheck('veterinarian_profile_id')}),
+			workplace_id TEXT CHECK(workplace_id IS NULL OR ${uuidTextCheck('workplace_id')}),
 			kind TEXT NOT NULL CHECK(kind IN ('phone', 'mobile', 'email', 'other')),
 			label TEXT NOT NULL DEFAULT '' CHECK(length(label) <= ${FIELD_LIMITS.ownerContactLabel} AND (kind = 'other' OR label = '')),
 			value TEXT NOT NULL CHECK(length(trim(value)) > 0 AND ((kind IN ('phone', 'mobile') AND length(value) <= ${FIELD_LIMITS.ownerContactPhoneValue}) OR (kind = 'email' AND length(value) <= ${FIELD_LIMITS.ownerContactEmailValue}) OR (kind = 'other' AND length(value) <= ${FIELD_LIMITS.ownerContactOtherValue}))),
 			sort_order INTEGER NOT NULL DEFAULT 0,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
+			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_by TEXT,
+			removed_at TEXT,
 			FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE,
 			FOREIGN KEY (responsible_id) REFERENCES owner_additional_responsibles(id) ON DELETE CASCADE,
 			FOREIGN KEY (veterinarian_profile_id) REFERENCES veterinarian_profiles(id) ON DELETE CASCADE,
@@ -863,50 +868,51 @@ async function createCurrentSchema(database: Database): Promise<void> {
 				(responsible_id IS NOT NULL) +
 				(veterinarian_profile_id IS NOT NULL) +
 				(workplace_id IS NOT NULL) = 1
-			),
-			UNIQUE(owner_id, kind, label, value),
-			UNIQUE(responsible_id, kind, label, value),
-			UNIQUE(veterinarian_profile_id, kind, label, value),
-			UNIQUE(workplace_id, kind, label, value)
+			)
 		)
 	`);
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS owner_additional_responsibles (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			owner_id INTEGER NOT NULL,
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
+			owner_id TEXT NOT NULL CHECK(${uuidTextCheck('owner_id')}),
 			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.ownerAdditionalResponsibleName)}),
 			avatar_hash BLOB CHECK(avatar_hash IS NULL OR length(avatar_hash) = 32),
 			sort_order INTEGER NOT NULL DEFAULT 0,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
+			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_by TEXT,
+			removed_at TEXT,
 			FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE
 		)
 	`);
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS pets (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
 			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.petName)}),
 			birth_date TEXT CHECK(${optionalTextCheck('birth_date', FIELD_LIMITS.petBirthDate)}),
 			species TEXT CHECK(${optionalTextCheck('species', FIELD_LIMITS.petSpecies)}),
 			breed TEXT CHECK(${optionalTextCheck('breed', FIELD_LIMITS.petBreed)}),
 			sex TEXT CHECK(sex IS NULL OR (sex IN ('M', 'F') AND length(sex) = ${FIELD_LIMITS.petSex})),
 			avatar_hash BLOB CHECK(avatar_hash IS NULL OR length(avatar_hash) = 32),
-			updated_at TEXT,
-			deleted_at TEXT,
-			purge_after TEXT
+			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_by TEXT,
+			removed_at TEXT
 		)
 	`);
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS pet_owners (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			pet_id INTEGER NOT NULL,
-			owner_id INTEGER NOT NULL,
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
+			pet_id TEXT NOT NULL CHECK(${uuidTextCheck('pet_id')}),
+			owner_id TEXT NOT NULL CHECK(${uuidTextCheck('owner_id')}),
 			sort_order INTEGER NOT NULL DEFAULT 0,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
+			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_by TEXT,
+			removed_at TEXT,
 			FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE,
 			FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE,
 			UNIQUE(pet_id, owner_id)
@@ -915,15 +921,16 @@ async function createCurrentSchema(database: Database): Promise<void> {
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS medical_records (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			pet_id INTEGER NOT NULL,
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
+			pet_id TEXT NOT NULL CHECK(${uuidTextCheck('pet_id')}),
 			title TEXT CHECK(${optionalTextCheck('title', FIELD_LIMITS.medicalRecordTitle)}),
 			description TEXT CHECK(${optionalTextCheck('description', FIELD_LIMITS.medicalRecordDescription)}),
 			admitted_at TEXT DEFAULT CURRENT_DATE CHECK(${optionalTextCheck('admitted_at', FIELD_LIMITS.isoDate)}),
 			discharged_at TEXT CHECK(${optionalTextCheck('discharged_at', FIELD_LIMITS.isoDate)}),
-			updated_at TEXT,
-			deleted_at TEXT,
-			purge_after TEXT,
+			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_by TEXT,
+			removed_at TEXT,
 			FOREIGN KEY (pet_id) REFERENCES pets(id),
 			CHECK(discharged_at IS NULL OR admitted_at IS NULL OR discharged_at >= admitted_at)
 		)
@@ -931,9 +938,14 @@ async function createCurrentSchema(database: Database): Promise<void> {
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS app_settings (
-			key TEXT PRIMARY KEY CHECK(${requiredTextCheck('key', FIELD_LIMITS.settingKey)}),
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
+			key TEXT NOT NULL CHECK(${requiredTextCheck('key', FIELD_LIMITS.settingKey)}),
 			value TEXT CHECK(${optionalTextCheck('value', FIELD_LIMITS.settingValue)}),
-			updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_by TEXT,
+			removed_at TEXT,
+			UNIQUE(key)
 		)
 	`);
 
@@ -948,16 +960,19 @@ async function createCurrentSchema(database: Database): Promise<void> {
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS backup_history (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
 			path TEXT NOT NULL CHECK(${requiredTextCheck('path', FIELD_LIMITS.backupPath)}),
 			kind TEXT NOT NULL CHECK(kind IN ('manual_backup', 'automatic_backup', 'export', 'import', 'pre_import_backup') AND length(kind) <= ${FIELD_LIMITS.backupKind}),
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_by TEXT,
+			removed_at TEXT
 		)
 	`);
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS user_product_catalog_items (
-			id TEXT PRIMARY KEY CHECK(${uuidV4TextCheck('id')}),
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
 			type TEXT NOT NULL CHECK(type IN (${PRODUCT_TYPE_SQL_VALUES})),
 			name TEXT NOT NULL,
 			normalized_name TEXT NOT NULL,
@@ -968,8 +983,10 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.productRegionsJson)}),
 			extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.productExtensionJson)}),
 			hidden_at TEXT,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
+			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_by TEXT,
+			removed_at TEXT,
 			UNIQUE(normalized_name),
 			CHECK(${requiredTextCheck('name', FIELD_LIMITS.productName)}),
 			CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.productNormalizedName)})
@@ -980,7 +997,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS treatment_protocols (
-			id TEXT PRIMARY KEY CHECK(${uuidV4TextCheck('id')}),
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
 			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
 			origin TEXT NOT NULL DEFAULT 'user' CHECK(origin = 'user'),
 			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.treatmentProtocolName)}),
@@ -989,21 +1006,23 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.treatmentObservation)}),
 			sort_order INTEGER NOT NULL DEFAULT 0,
 			hidden_at TEXT,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
-			deleted_at TEXT,
-			purge_after TEXT
+			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_by TEXT,
+			removed_at TEXT
 		)
 	`);
 
-		await database.execute(`
-			CREATE TABLE IF NOT EXISTS treatment_protocol_items (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				protocol_id TEXT NOT NULL CHECK(${uuidV4TextCheck('protocol_id')}),
-				catalog_item_id TEXT NOT NULL CHECK(${uuidV4TextCheck('catalog_item_id')}),
+	await database.execute(`
+		CREATE TABLE IF NOT EXISTS treatment_protocol_items (
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
+			protocol_id TEXT NOT NULL CHECK(${uuidTextCheck('protocol_id')}),
+			catalog_item_id TEXT NOT NULL CHECK(${uuidTextCheck('catalog_item_id')}),
 			sort_order INTEGER NOT NULL DEFAULT 0,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
+			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_by TEXT,
+			removed_at TEXT,
 			FOREIGN KEY (protocol_id) REFERENCES treatment_protocols(id) ON DELETE CASCADE,
 			UNIQUE(protocol_id, catalog_item_id)
 		)
@@ -1011,14 +1030,16 @@ async function createCurrentSchema(database: Database): Promise<void> {
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS treatment_protocol_doses (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			protocol_id TEXT NOT NULL CHECK(${uuidV4TextCheck('protocol_id')}),
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
+			protocol_id TEXT NOT NULL CHECK(${uuidTextCheck('protocol_id')}),
 			dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', FIELD_LIMITS.treatmentDose)}),
 			validity_value INTEGER NOT NULL CHECK(validity_value > 0),
 			validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months', 'years')),
 			sort_order INTEGER NOT NULL DEFAULT 0,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
+			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_by TEXT,
+			removed_at TEXT,
 			FOREIGN KEY (protocol_id) REFERENCES treatment_protocols(id) ON DELETE CASCADE,
 			CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.treatmentValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.treatmentValidityMonths}) OR (validity_unit = 'years' AND validity_value <= ${FIELD_LIMITS.treatmentValidityYears}))
 		)
@@ -1026,8 +1047,8 @@ async function createCurrentSchema(database: Database): Promise<void> {
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS pet_treatments (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			pet_id INTEGER NOT NULL,
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
+			pet_id TEXT NOT NULL CHECK(${uuidTextCheck('pet_id')}),
 			kind TEXT NOT NULL CHECK(kind IN ('vaccine', 'antiparasitic')),
 			applied_at TEXT NOT NULL DEFAULT CURRENT_DATE CHECK(length(applied_at) <= ${FIELD_LIMITS.isoDate}),
 			name TEXT NOT NULL CHECK(${requiredTextCheck('name', FIELD_LIMITS.treatmentName)}),
@@ -1036,11 +1057,11 @@ async function createCurrentSchema(database: Database): Promise<void> {
 			validity_value INTEGER NOT NULL CHECK(validity_value > 0),
 			validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months', 'years')),
 			observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.treatmentObservation)}),
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
 			validity_ignored_at TEXT,
-			updated_at TEXT,
-			deleted_at TEXT,
-			purge_after TEXT,
+			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+			updated_by TEXT,
+			removed_at TEXT,
 			FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE RESTRICT,
 			CHECK(
 				(validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.treatmentValidityDays})
@@ -1064,9 +1085,14 @@ export async function createCurrentIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_contacts_workplace_id ON contacts(workplace_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_contacts_label ON contacts(label)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_contacts_value ON contacts(value)');
+	await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_owner_unique_active ON contacts(owner_id, kind, label, value) WHERE owner_id IS NOT NULL AND removed_at IS NULL');
+	await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_responsible_unique_active ON contacts(responsible_id, kind, label, value) WHERE responsible_id IS NOT NULL AND removed_at IS NULL');
+	await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_veterinarian_unique_active ON contacts(veterinarian_profile_id, kind, label, value) WHERE veterinarian_profile_id IS NOT NULL AND removed_at IS NULL');
+	await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_workplace_unique_active ON contacts(workplace_id, kind, label, value) WHERE workplace_id IS NOT NULL AND removed_at IS NULL');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_image_collections_entity ON image_collections(entity_type, entity_id)');
+	await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_image_collections_entity_active ON image_collections(entity_type, entity_id) WHERE removed_at IS NULL');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_image_collection_items_collection_id ON image_collection_items(collection_id, sort_order, id)');
-	await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_image_collection_items_primary ON image_collection_items(collection_id) WHERE is_primary = 1');
+	await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_image_collection_items_primary ON image_collection_items(collection_id) WHERE is_primary = 1 AND removed_at IS NULL');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_additional_responsibles_owner_id ON owner_additional_responsibles(owner_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_additional_responsibles_name ON owner_additional_responsibles(name)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_owners_pet_id ON pet_owners(pet_id)');
@@ -1075,58 +1101,56 @@ export async function createCurrentIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pets_species ON pets(species)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pets_breed ON pets(breed)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_pet_id ON medical_records(pet_id)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_deleted_at ON medical_records(deleted_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_removed_at ON medical_records(removed_at)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_user_product_catalog_items_type_name ON user_product_catalog_items(type, name COLLATE NOCASE)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_user_product_catalog_items_type_normalized_name ON user_product_catalog_items(type, normalized_name)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_user_product_catalog_items_manufacturer_id ON user_product_catalog_items(manufacturer_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_user_product_catalog_items_hidden_at ON user_product_catalog_items(hidden_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_user_product_catalog_items_removed_at ON user_product_catalog_items(removed_at)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_name ON treatment_protocols(kind, name COLLATE NOCASE)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_normalized_name ON treatment_protocols(kind, normalized_name)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_hidden_at ON treatment_protocols(hidden_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_deleted_at ON treatment_protocols(deleted_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_removed_at ON treatment_protocols(removed_at)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocol_items_protocol_id ON treatment_protocol_items(protocol_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocol_items_catalog_item_id ON treatment_protocol_items(catalog_item_id)');
+	await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_treatment_protocol_items_unique_active ON treatment_protocol_items(protocol_id, catalog_item_id) WHERE removed_at IS NULL');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocol_doses_protocol_id ON treatment_protocol_doses(protocol_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_pet_id ON pet_treatments(pet_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_kind_applied_at ON pet_treatments(kind, applied_at)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_kind_normalized_name ON pet_treatments(kind, normalized_name)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_latest_active ON pet_treatments(kind, pet_id, normalized_name, applied_at DESC, id DESC) WHERE deleted_at IS NULL AND validity_ignored_at IS NULL');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_latest_active ON pet_treatments(kind, pet_id, normalized_name, applied_at DESC, id DESC) WHERE removed_at IS NULL AND validity_ignored_at IS NULL');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_validity_ignored_at ON pet_treatments(validity_ignored_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_deleted_at ON pet_treatments(deleted_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_removed_at ON pet_treatments(removed_at)');
 }
 
 async function createSystemSchema(database: Database): Promise<void> {
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS image_collections (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
 			entity_type TEXT NOT NULL CHECK(${requiredTextCheck('entity_type', FIELD_LIMITS.imageCollectionEntityType)}),
 			entity_id TEXT NOT NULL CHECK(length(trim(entity_id)) > 0),
 			primary_required INTEGER NOT NULL DEFAULT 0 CHECK(primary_required IN (0, 1)),
 			max_items INTEGER CHECK(max_items IS NULL OR max_items > 0),
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
 			UNIQUE(entity_type, entity_id)
 		)
 	`);
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS image_collection_items (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			collection_id INTEGER NOT NULL,
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
+			collection_id TEXT NOT NULL CHECK(${uuidTextCheck('collection_id')}),
 			image_hash BLOB NOT NULL CHECK(length(image_hash) = 32),
 			original_image_hash BLOB NOT NULL CHECK(length(original_image_hash) = 32),
 			description TEXT CHECK(${optionalTextCheck('description', FIELD_LIMITS.imageDescription)}),
 			is_primary INTEGER NOT NULL DEFAULT 0 CHECK(is_primary IN (0, 1)),
 			sort_order INTEGER NOT NULL DEFAULT 0,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
 			FOREIGN KEY (collection_id) REFERENCES image_collections(id) ON DELETE CASCADE
 		)
 	`);
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS breed_reference_items (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			id TEXT PRIMARY KEY CHECK(${requiredTextCheck('id', FIELD_LIMITS.breedReferenceId)}),
 			breed_id TEXT NOT NULL CHECK(${requiredTextCheck('breed_id', FIELD_LIMITS.breedReferenceId)}),
 			species TEXT NOT NULL CHECK(species IN ('canine', 'feline')),
 			label_key TEXT NOT NULL CHECK(${requiredTextCheck('label_key', FIELD_LIMITS.breedReferenceLabelKey)}),
@@ -1139,8 +1163,6 @@ async function createSystemSchema(database: Database): Promise<void> {
 			average_weight_kg TEXT NOT NULL CHECK(${requiredTextCheck('average_weight_kg', FIELD_LIMITS.breedReferenceRangeJson)}),
 			average_height_cm TEXT NOT NULL CHECK(${requiredTextCheck('average_height_cm', FIELD_LIMITS.breedReferenceRangeJson)}),
 			extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.breedReferenceExtensionJson)}),
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
 			UNIQUE(breed_id),
 			CHECK((origin_latitude IS NULL AND origin_longitude IS NULL) OR (origin_latitude BETWEEN -90 AND 90 AND origin_longitude BETWEEN -180 AND 180))
 		)
@@ -1156,8 +1178,6 @@ async function createSystemSchema(database: Database): Promise<void> {
 			regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.productRegionsJson)}),
 			extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.productExtensionJson)}),
 			hidden_at TEXT,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
 			UNIQUE(normalized_name),
 			CHECK(${requiredTextCheck('name', FIELD_LIMITS.productManufacturer)}),
 			CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.productNormalizedName)})
@@ -1174,8 +1194,6 @@ async function createSystemSchema(database: Database): Promise<void> {
 			regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.productRegionsJson)}),
 			extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.productExtensionJson)}),
 			hidden_at TEXT,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
 			UNIQUE(normalized_name),
 			CHECK(${requiredTextCheck('name', FIELD_LIMITS.productName)}),
 			CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.productNormalizedName)})
@@ -1192,8 +1210,6 @@ async function createSystemSchema(database: Database): Promise<void> {
 			regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.productRegionsJson)}),
 			extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.productExtensionJson)}),
 			hidden_at TEXT,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
 			UNIQUE(normalized_name),
 			CHECK(${requiredTextCheck('name', FIELD_LIMITS.productName)}),
 			CHECK(${requiredTextCheck('normalized_name', FIELD_LIMITS.productNormalizedName)})
@@ -1212,8 +1228,6 @@ async function createSystemSchema(database: Database): Promise<void> {
 			regions TEXT NOT NULL DEFAULT '[]' CHECK(${requiredTextCheck('regions', FIELD_LIMITS.productRegionsJson)}),
 			extension TEXT NOT NULL DEFAULT '{}' CHECK(${requiredTextCheck('extension', FIELD_LIMITS.productExtensionJson)}),
 			hidden_at TEXT,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
 			FOREIGN KEY (manufacturer_id) REFERENCES manufacturer_catalog_items(id) ON DELETE SET NULL,
 			UNIQUE(normalized_name),
 			CHECK(${requiredTextCheck('name', FIELD_LIMITS.productName)}),
@@ -1223,12 +1237,10 @@ async function createSystemSchema(database: Database): Promise<void> {
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS product_active_ingredients (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
 			product_id TEXT NOT NULL CHECK(${uuidV4TextCheck('product_id')}),
 			active_ingredient_id TEXT NOT NULL CHECK(${uuidV4TextCheck('active_ingredient_id')}),
 			sort_order INTEGER NOT NULL DEFAULT 0,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
 			FOREIGN KEY (product_id) REFERENCES product_catalog_items(id) ON DELETE CASCADE,
 			FOREIGN KEY (active_ingredient_id) REFERENCES active_ingredient_catalog_items(id) ON DELETE CASCADE,
 			UNIQUE(product_id, active_ingredient_id)
@@ -1245,22 +1257,16 @@ async function createSystemSchema(database: Database): Promise<void> {
 			species TEXT NOT NULL DEFAULT '["canine","feline"]' CHECK(${requiredTextCheck('species', FIELD_LIMITS.productSpeciesJson)}),
 			observation TEXT CHECK(${optionalTextCheck('observation', FIELD_LIMITS.treatmentObservation)}),
 			sort_order INTEGER NOT NULL DEFAULT 0,
-			hidden_at TEXT,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
-			deleted_at TEXT,
-			purge_after TEXT
+			hidden_at TEXT
 		)
 	`);
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS treatment_protocol_items (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
 			protocol_id TEXT NOT NULL CHECK(${uuidV4TextCheck('protocol_id')}),
 			catalog_item_id TEXT NOT NULL CHECK(${uuidV4TextCheck('catalog_item_id')}),
 			sort_order INTEGER NOT NULL DEFAULT 0,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
 			FOREIGN KEY (protocol_id) REFERENCES treatment_protocols(id) ON DELETE CASCADE,
 			FOREIGN KEY (catalog_item_id) REFERENCES product_catalog_items(id) ON DELETE CASCADE,
 			UNIQUE(protocol_id, catalog_item_id)
@@ -1269,14 +1275,12 @@ async function createSystemSchema(database: Database): Promise<void> {
 
 	await database.execute(`
 		CREATE TABLE IF NOT EXISTS treatment_protocol_doses (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
 			protocol_id TEXT NOT NULL CHECK(${uuidV4TextCheck('protocol_id')}),
 			dose TEXT NOT NULL CHECK(${requiredTextCheck('dose', FIELD_LIMITS.treatmentDose)}),
 			validity_value INTEGER NOT NULL CHECK(validity_value > 0),
 			validity_unit TEXT NOT NULL CHECK(validity_unit IN ('days', 'months', 'years')),
 			sort_order INTEGER NOT NULL DEFAULT 0,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TEXT,
 			FOREIGN KEY (protocol_id) REFERENCES treatment_protocols(id) ON DELETE CASCADE,
 			CHECK((validity_unit = 'days' AND validity_value <= ${FIELD_LIMITS.treatmentValidityDays}) OR (validity_unit = 'months' AND validity_value <= ${FIELD_LIMITS.treatmentValidityMonths}) OR (validity_unit = 'years' AND validity_value <= ${FIELD_LIMITS.treatmentValidityYears}))
 		)
@@ -1304,7 +1308,6 @@ async function createSystemIndexes(database: Database): Promise<void> {
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_name ON treatment_protocols(kind, name COLLATE NOCASE)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_normalized_name ON treatment_protocols(kind, normalized_name)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_hidden_at ON treatment_protocols(hidden_at)');
-	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_deleted_at ON treatment_protocols(deleted_at)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocol_items_protocol_id ON treatment_protocol_items(protocol_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocol_items_catalog_item_id ON treatment_protocol_items(catalog_item_id)');
 	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocol_doses_protocol_id ON treatment_protocol_doses(protocol_id)');
@@ -1312,44 +1315,44 @@ async function createSystemIndexes(database: Database): Promise<void> {
 
 async function assertSystemSchema(database: Database): Promise<void> {
 	const valid =
-		(await tableHasColumns(database, 'image_collections', ['id', 'entity_type', 'entity_id', 'primary_required', 'max_items'])) &&
-		(await tableHasColumns(database, 'image_collection_items', ['id', 'collection_id', 'image_hash', 'original_image_hash', 'description', 'is_primary', 'sort_order'])) &&
-		(await tableHasColumns(database, 'breed_reference_items', ['id', 'breed_id', 'species', 'label_key', 'origin_id', 'origin_label_key', 'origin_country_code', 'origin_latitude', 'origin_longitude', 'size_category', 'average_weight_kg', 'average_height_cm', 'extension'])) &&
-		(await tableHasExactColumns(database, 'manufacturer_catalog_items', ['id', 'type', 'name', 'normalized_name', 'aliases', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'])) &&
-		(await tableHasExactColumns(database, 'active_ingredient_catalog_items', ['id', 'type', 'name', 'normalized_name', 'aliases', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'])) &&
-		(await tableHasExactColumns(database, 'condition_catalog_items', ['id', 'type', 'name', 'normalized_name', 'aliases', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'])) &&
-		(await tableHasExactColumns(database, 'product_catalog_items', ['id', 'type', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer_id', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'])) &&
-		(await tableHasColumns(database, 'product_active_ingredients', ['id', 'product_id', 'active_ingredient_id', 'sort_order'])) &&
+		(await tableHasExactColumns(database, 'image_collections', ['id', 'entity_type', 'entity_id', 'primary_required', 'max_items'])) &&
+		(await tableHasExactColumns(database, 'image_collection_items', ['id', 'collection_id', 'image_hash', 'original_image_hash', 'description', 'is_primary', 'sort_order'])) &&
+		(await tableHasExactColumns(database, 'breed_reference_items', ['id', 'breed_id', 'species', 'label_key', 'origin_id', 'origin_label_key', 'origin_country_code', 'origin_latitude', 'origin_longitude', 'size_category', 'average_weight_kg', 'average_height_cm', 'extension'])) &&
+		(await tableHasExactColumns(database, 'manufacturer_catalog_items', ['id', 'type', 'name', 'normalized_name', 'aliases', 'regions', 'extension', 'hidden_at'])) &&
+		(await tableHasExactColumns(database, 'active_ingredient_catalog_items', ['id', 'type', 'name', 'normalized_name', 'aliases', 'regions', 'extension', 'hidden_at'])) &&
+		(await tableHasExactColumns(database, 'condition_catalog_items', ['id', 'type', 'name', 'normalized_name', 'aliases', 'regions', 'extension', 'hidden_at'])) &&
+		(await tableHasExactColumns(database, 'product_catalog_items', ['id', 'type', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer_id', 'regions', 'extension', 'hidden_at'])) &&
+		(await tableHasExactColumns(database, 'product_active_ingredients', ['id', 'product_id', 'active_ingredient_id', 'sort_order'])) &&
 		(await productCatalogHasCurrentTypes(database)) &&
-		(await tableHasColumns(database, 'treatment_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'deleted_at', 'purge_after'])) &&
-		(await tableHasColumns(database, 'treatment_protocol_items', ['id', 'protocol_id', 'catalog_item_id', 'sort_order'])) &&
-		(await tableHasColumns(database, 'treatment_protocol_doses', ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order']));
+		(await tableHasExactColumns(database, 'treatment_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at'])) &&
+		(await tableHasExactColumns(database, 'treatment_protocol_items', ['id', 'protocol_id', 'catalog_item_id', 'sort_order'])) &&
+		(await tableHasExactColumns(database, 'treatment_protocol_doses', ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order']));
 
 	if (!valid) throw new Error('system_database_schema_invalid');
 }
 
 async function assertCurrentSchema(database: Database): Promise<void> {
 	const valid =
-		(await tableHasColumns(database, 'owners', ['id', 'name', 'avatar_hash', 'additional_information', 'created_at', 'updated_at', 'deleted_at', 'purge_after'])) &&
-		(await tableHasColumns(database, 'addresses', ['id', 'owner_id', 'workplace_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code'])) &&
-		(await tableHasColumns(database, 'veterinarian_profiles', ['id', 'name', 'professional_registration', 'avatar_hash'])) &&
-		(await tableHasColumns(database, 'workplaces', ['id', 'name', 'services_description'])) &&
-		(await tableHasColumns(database, 'image_collections', ['id', 'entity_type', 'entity_id', 'primary_required', 'max_items'])) &&
-		(await tableHasColumns(database, 'image_collection_items', ['id', 'collection_id', 'image_hash', 'original_image_hash', 'description', 'is_primary', 'sort_order'])) &&
-		(await tableHasColumns(database, 'contacts', ['id', 'owner_id', 'responsible_id', 'veterinarian_profile_id', 'workplace_id', 'kind', 'label', 'value'])) &&
-		(await tableHasColumns(database, 'owner_additional_responsibles', ['id', 'owner_id', 'name', 'avatar_hash', 'sort_order'])) &&
-		(await tableHasColumns(database, 'pets', ['id', 'name', 'species', 'breed', 'avatar_hash', 'updated_at', 'deleted_at', 'purge_after'])) &&
-		(await tableHasColumns(database, 'pet_owners', ['id', 'pet_id', 'owner_id', 'sort_order'])) &&
-		(await tableHasColumns(database, 'medical_records', ['id', 'pet_id', 'title', 'description', 'admitted_at', 'discharged_at', 'deleted_at', 'purge_after'])) &&
-			(await tableHasColumns(database, 'app_settings', ['key', 'value', 'updated_at'])) &&
+		(await tableHasColumns(database, 'owners', ['id', 'name', 'avatar_hash', 'additional_information', 'created_at', 'updated_at', 'updated_by', 'removed_at'])) &&
+		(await tableHasColumns(database, 'addresses', ['id', 'owner_id', 'workplace_id', 'street', 'street_number', 'address_complement', 'neighborhood', 'city', 'state', 'country', 'postal_code', 'created_at', 'updated_at', 'updated_by', 'removed_at'])) &&
+		(await tableHasColumns(database, 'veterinarian_profiles', ['id', 'name', 'professional_registration', 'avatar_hash', 'created_at', 'updated_at', 'updated_by', 'removed_at'])) &&
+		(await tableHasColumns(database, 'workplaces', ['id', 'name', 'services_description', 'created_at', 'updated_at', 'updated_by', 'removed_at'])) &&
+		(await tableHasColumns(database, 'image_collections', ['id', 'entity_type', 'entity_id', 'primary_required', 'max_items', 'created_at', 'updated_at', 'updated_by', 'removed_at'])) &&
+		(await tableHasColumns(database, 'image_collection_items', ['id', 'collection_id', 'image_hash', 'original_image_hash', 'description', 'is_primary', 'sort_order', 'created_at', 'updated_at', 'updated_by', 'removed_at'])) &&
+		(await tableHasColumns(database, 'contacts', ['id', 'owner_id', 'responsible_id', 'veterinarian_profile_id', 'workplace_id', 'kind', 'label', 'value', 'created_at', 'updated_at', 'updated_by', 'removed_at'])) &&
+		(await tableHasColumns(database, 'owner_additional_responsibles', ['id', 'owner_id', 'name', 'avatar_hash', 'sort_order', 'created_at', 'updated_at', 'updated_by', 'removed_at'])) &&
+		(await tableHasColumns(database, 'pets', ['id', 'name', 'species', 'breed', 'avatar_hash', 'created_at', 'updated_at', 'updated_by', 'removed_at'])) &&
+		(await tableHasColumns(database, 'pet_owners', ['id', 'pet_id', 'owner_id', 'sort_order', 'created_at', 'updated_at', 'updated_by', 'removed_at'])) &&
+		(await tableHasColumns(database, 'medical_records', ['id', 'pet_id', 'title', 'description', 'admitted_at', 'discharged_at', 'created_at', 'updated_at', 'updated_by', 'removed_at'])) &&
+			(await tableHasColumns(database, 'app_settings', ['id', 'key', 'value', 'created_at', 'updated_at', 'updated_by', 'removed_at'])) &&
 			(await tableHasColumns(database, 'schema_migrations', ['version', 'name', 'app_version', 'applied_at'])) &&
-			(await tableHasColumns(database, 'backup_history', ['id', 'path', 'kind', 'created_at'])) &&
-			(await tableHasExactColumns(database, 'user_product_catalog_items', ['id', 'type', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer_id', 'manufacturer_name', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at'])) &&
+			(await tableHasColumns(database, 'backup_history', ['id', 'path', 'kind', 'created_at', 'updated_at', 'updated_by', 'removed_at'])) &&
+			(await tableHasExactColumns(database, 'user_product_catalog_items', ['id', 'type', 'name', 'normalized_name', 'species', 'aliases', 'manufacturer_id', 'manufacturer_name', 'regions', 'extension', 'hidden_at', 'created_at', 'updated_at', 'updated_by', 'removed_at'])) &&
 			(await productCatalogHasCurrentTypes(database, 'user_product_catalog_items')) &&
-		(await tableHasColumns(database, 'treatment_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'deleted_at', 'purge_after'])) &&
-		(await tableHasColumns(database, 'treatment_protocol_items', ['id', 'protocol_id', 'catalog_item_id', 'sort_order'])) &&
-		(await tableHasColumns(database, 'treatment_protocol_doses', ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order'])) &&
-		(await tableHasColumns(database, 'pet_treatments', ['id', 'pet_id', 'kind', 'applied_at', 'name', 'normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'validity_ignored_at']));
+		(await tableHasColumns(database, 'treatment_protocols', ['id', 'kind', 'origin', 'name', 'normalized_name', 'species', 'observation', 'sort_order', 'hidden_at', 'created_at', 'updated_at', 'updated_by', 'removed_at'])) &&
+		(await tableHasColumns(database, 'treatment_protocol_items', ['id', 'protocol_id', 'catalog_item_id', 'sort_order', 'created_at', 'updated_at', 'updated_by', 'removed_at'])) &&
+		(await tableHasColumns(database, 'treatment_protocol_doses', ['id', 'protocol_id', 'dose', 'validity_value', 'validity_unit', 'sort_order', 'created_at', 'updated_at', 'updated_by', 'removed_at'])) &&
+		(await tableHasColumns(database, 'pet_treatments', ['id', 'pet_id', 'kind', 'applied_at', 'name', 'normalized_name', 'dose', 'validity_value', 'validity_unit', 'observation', 'validity_ignored_at', 'created_at', 'updated_at', 'updated_by', 'removed_at']));
 
 	if (!valid) throw new Error('database_schema_current_invalid');
 }
@@ -1575,9 +1578,20 @@ async function removeSystemDataFromClientDatabase(database: Database): Promise<v
 
 async function systemCatalogSchemaNeedsRefresh(database: Database): Promise<boolean> {
 	if ((await tableExists(database, 'image_collection_items')) && (await tableHasColumns(database, 'image_collection_items', ['image_blob', 'original_image_blob']))) return true;
+	if ((await tableExists(database, 'breed_reference_items')) && /AUTOINCREMENT|INTEGER\s+PRIMARY\s+KEY/i.test(await tableSql(database, 'breed_reference_items'))) return true;
+	if ((await tableExists(database, 'image_collections')) && (await tableHasColumns(database, 'image_collections', ['created_at']))) return true;
+	if ((await tableExists(database, 'image_collection_items')) && (await tableHasColumns(database, 'image_collection_items', ['created_at']))) return true;
+	if ((await tableExists(database, 'breed_reference_items')) && (await tableHasColumns(database, 'breed_reference_items', ['created_at']))) return true;
+	if ((await tableExists(database, 'product_catalog_items')) && (await tableHasColumns(database, 'product_catalog_items', ['removed_at']))) return true;
+	if ((await tableExists(database, 'product_active_ingredients')) && (await tableHasColumns(database, 'product_active_ingredients', ['removed_at']))) return true;
+	if ((await tableExists(database, 'treatment_protocols')) && (await tableHasColumns(database, 'treatment_protocols', ['deleted_at', 'purge_after']))) return true;
+	if ((await tableExists(database, 'treatment_protocols')) && (await tableHasColumns(database, 'treatment_protocols', ['created_at', 'updated_by', 'removed_at']))) return true;
+	if ((await tableExists(database, 'treatment_protocol_items')) && (await tableHasColumns(database, 'treatment_protocol_items', ['created_at', 'updated_by', 'removed_at']))) return true;
+	if ((await tableExists(database, 'treatment_protocol_doses')) && (await tableHasColumns(database, 'treatment_protocol_doses', ['created_at', 'updated_by', 'removed_at']))) return true;
 	const catalogTables = ['manufacturer_catalog_items', 'active_ingredient_catalog_items', 'condition_catalog_items', 'product_catalog_items'] as const;
 	for (const table of catalogTables) {
 		if ((await tableExists(database, table)) && (await tableHasColumns(database, table, ['origin']))) return true;
+		if ((await tableExists(database, table)) && (await tableHasColumns(database, table, ['created_at', 'updated_at', 'removed_at']))) return true;
 	}
 	return false;
 }
@@ -1590,6 +1604,7 @@ async function refreshOutdatedSystemCatalogSchema(database: Database): Promise<v
 	await database.execute('DROP TABLE IF EXISTS manufacturer_catalog_items');
 	await database.execute('DROP TABLE IF EXISTS active_ingredient_catalog_items');
 	await database.execute('DROP TABLE IF EXISTS condition_catalog_items');
+	await database.execute('DROP TABLE IF EXISTS breed_reference_items');
 	await database.execute('DROP TABLE IF EXISTS image_collection_items');
 	await database.execute('DROP TABLE IF EXISTS image_collections');
 }

@@ -2,15 +2,15 @@ import type { ImageCollectionItemInput } from '$lib/domain/image-collection/imag
 import type { PetTreatment, PetTreatmentInput, TreatmentCatalogItem, TreatmentCatalogItemId, TreatmentCatalogItemInput, TreatmentKind } from '$lib/domain/treatment/treatment.js';
 import { createTreatments, deleteTreatmentCatalogItem, getTreatmentCatalogItem, listTreatmentCatalogItems, saveTreatmentCatalogItem, saveTreatmentCatalogItemImages, setTreatmentCatalogItemHidden, setTreatmentValidityIgnored, softDeleteTreatment } from '$lib/persistence/repositories/treatment.repository.js';
 
-export async function saveNewTreatments(kind: TreatmentKind, petId: number, inputs: PetTreatmentInput[]): Promise<PetTreatment[]> {
+export async function saveNewTreatments(kind: TreatmentKind, petId: string, inputs: PetTreatmentInput[]): Promise<PetTreatment[]> {
 	return createTreatments(kind, petId, inputs);
 }
 
-export async function removeTreatment(kind: TreatmentKind, id: number): Promise<void> {
+export async function removeTreatment(kind: TreatmentKind, id: string): Promise<void> {
 	await softDeleteTreatment(kind, id);
 }
 
-export async function setTreatmentValidity(kind: TreatmentKind, treatmentId: number, ignored: boolean): Promise<PetTreatment> {
+export async function setTreatmentValidity(kind: TreatmentKind, treatmentId: string, ignored: boolean): Promise<PetTreatment> {
 	return setTreatmentValidityIgnored(kind, treatmentId, ignored);
 }
 

@@ -83,7 +83,7 @@ export const ptBr = {
 	'actions.importDatabase': 'Importar banco',
 	'actions.importCsv': 'Importar CSV',
 	'actions.openInFileManager': 'Abrir no gerenciador de arquivos',
-	'actions.purgeExpired': 'Limpar vencidos',
+	'actions.purgeExpired': 'Esvaziar lixeira',
 	'actions.openOwner': 'Abrir proprietário',
 	'actions.openPet': 'Abrir pet',
 	'actions.openRecord': 'Abrir prontuário',
@@ -95,7 +95,8 @@ export const ptBr = {
 	'status.deleted': 'Item enviado para a lixeira.',
 	'status.restored': 'Item restaurado.',
 	'status.deletedForever': 'Item excluído definitivamente.',
-	'status.purged': 'Itens vencidos removidos.',
+	'status.removedForever': 'Item removido definitivamente.',
+	'status.purged': 'Lixeira esvaziada.',
 	'status.cepSearching': 'Buscando CEP...',
 	'status.cepFound': 'Endereço preenchido.',
 	'status.cepNotFound': 'CEP não encontrado.',
@@ -926,7 +927,7 @@ export const ptBr = {
 	'dialog.importTitle': 'Selecionar pacote nativo',
 	'dialog.importCsvTitle': 'Selecionar ZIP CSV',
 	'trash.title': 'Lixeira',
-	'trash.description': 'Itens removidos ficam aqui por 90 dias antes da exclusão definitiva.',
+	'trash.description': 'Itens removidos ficam aqui até serem restaurados ou excluídos definitivamente.',
 	'trash.empty': 'A lixeira está vazia.',
 	'trash.categoryEmpty': 'Nenhum item nesta aba.',
 	'trash.owners': 'Proprietários',
@@ -934,11 +935,18 @@ export const ptBr = {
 	'trash.treatments': 'Tratamentos',
 	'trash.protocols': 'Protocolos',
 	'trash.records': 'Prontuários',
+	'trash.media': 'Mídias',
+	'trash.mediaItem': 'Mídia',
+	'trash.auditTitle': 'Auditoria de exclusões',
+	'trash.auditDescription': 'Últimas exclusões definitivas registradas no banco de logs.',
+	'trash.auditEmpty': 'Nenhuma exclusão definitiva registrada.',
+	'trash.auditActor': 'Responsável',
 	'trash.deletedAt': 'Removido em',
+	'trash.removedAt': 'Removido em',
 	'trash.purgeAfter': 'Exclusão automática',
 	'trash.restoreConfirm': 'Restaurar este item?',
 	'trash.deleteConfirm': 'Excluir definitivamente este item? Esta ação não pode ser desfeita.',
-	'trash.purgeConfirm': 'Excluir definitivamente todos os itens com retenção vencida?'
+	'trash.purgeConfirm': 'Excluir definitivamente todos os itens da lixeira?'
 } as const;
 
 export type TranslationKey = keyof typeof ptBr;

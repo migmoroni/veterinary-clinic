@@ -5,7 +5,7 @@ interface CountRow {
 }
 
 async function countActive(table: 'owners' | 'pets' | 'medical_records'): Promise<number> {
-	const row = await selectOne<CountRow>(`SELECT COUNT(*) AS count FROM ${table} WHERE deleted_at IS NULL`);
+	const row = await selectOne<CountRow>(`SELECT COUNT(*) AS count FROM ${table} WHERE removed_at IS NULL`);
 	return row?.count ?? 0;
 }
 

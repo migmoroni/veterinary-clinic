@@ -59,7 +59,7 @@ export interface DashboardPetAnalytics {
 }
 
 export interface DashboardPetStudyOwner {
-	id: number;
+	id: string;
 	name: string;
 	cityKey: string;
 	cityLabel: string | null;
@@ -78,7 +78,7 @@ export interface DashboardPetStudyTreatment<StatusKey extends string> {
 }
 
 export interface DashboardOwnerStudyPet {
-	id: number;
+	id: string;
 	name: string;
 	avatarBytes: Uint8Array | null;
 	species: DashboardSpeciesKey;
@@ -102,7 +102,7 @@ export interface DashboardOwnerStudyItem extends DashboardPetStudyOwner {
 }
 
 export interface DashboardPetStudyItem {
-	id: number;
+	id: string;
 	name: string;
 	avatarBytes: Uint8Array | null;
 	species: DashboardSpeciesKey;

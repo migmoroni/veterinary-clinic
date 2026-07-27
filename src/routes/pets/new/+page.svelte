@@ -23,7 +23,7 @@
 
 	let owners = $state<Owner[]>([]);
 	let ownerQuery = $state('');
-	let selectedOwnerId = $state<number | null>(null);
+	let selectedOwnerId = $state<string | null>(null);
 	let selectedOwnerName = $state('');
 	let ownerPets = $state<Pet[]>([]);
 	let form = $state<PetForm>({ name: '', birthDate: '', species: null, breed: null, sex: '' });

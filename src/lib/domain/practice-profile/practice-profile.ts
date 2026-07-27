@@ -2,7 +2,7 @@ import type { OwnerContact, OwnerContactInput } from '$lib/domain/owner/owner.js
 import type { ImageCollectionItem, ImageCollectionItemInput } from '$lib/domain/image-collection/image-collection.js';
 
 export interface VeterinarianProfile {
-	id: number;
+	id: string;
 	name: string | null;
 	professionalRegistration: string | null;
 	avatarBytes: Uint8Array | null;
@@ -19,7 +19,7 @@ export interface VeterinarianProfileInput {
 }
 
 export interface Workplace {
-	id: number;
+	id: string;
 	name: string | null;
 	servicesDescription: string | null;
 	street: string | null;

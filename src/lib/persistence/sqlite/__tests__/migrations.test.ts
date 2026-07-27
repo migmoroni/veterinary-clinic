@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { isUuidV4 } from '$lib/domain/shared/uuid.js';
+import { createUuidV7, isUuidV4 } from '$lib/domain/shared/uuid.js';
 import type { SqliteDatabase as Database } from '../client.js';
 import { defaultTreatmentProtocols } from '$lib/domain/treatment/default-protocol.js';
 import { configureMediaDatabase } from '../media.js';
@@ -128,7 +128,7 @@ describeWithSqlite('SQLite schema migrations', () => {
 
 	it('adopts a current unversioned database without losing data', async () => {
 		await runMigrations(database as unknown as Database, { syncDefaultBreedReferenceData: false });
-		await database.execute("INSERT INTO owners (id, name, additional_information) VALUES (1, 'Ana', 'client data')");
+		await database.execute('INSERT INTO owners (id, name, additional_information) VALUES ($1, $2, $3)', [createUuidV7(), 'Ana', 'client data']);
 		await database.execute('DELETE FROM schema_migrations');
 		await database.execute('PRAGMA user_version = 0');
 

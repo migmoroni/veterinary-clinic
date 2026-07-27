@@ -3,7 +3,7 @@
  * `originalImageBytes` is the source retained for later editing.
  */
 export interface ImageCollectionItem {
-	id: number;
+	id: string;
 	imageBytes: Uint8Array;
 	originalImageBytes: Uint8Array;
 	description: string | null;
@@ -29,7 +29,7 @@ export type ImageCollectionEntityId = number | string;
 
 /** A generic image collection owned by an entity identified by type and id. */
 export interface ImageCollection {
-	id: number;
+	id: string;
 	entityType: string;
 	entityId: ImageCollectionEntityId;
 	primaryRequired: boolean;

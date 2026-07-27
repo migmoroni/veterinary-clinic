@@ -41,7 +41,7 @@
 	let sortOrder = $state<OwnerSortOrder>('name');
 	let visibleOwners = $state<DashboardOwnerStudyItem[]>([]);
 	let listLoading = $state(false);
-	let avatarBytesByPetId = $state(new Map<number, Uint8Array | null>());
+	let avatarBytesByPetId = $state(new Map<string, Uint8Array | null>());
 	let renderRequestId = 0;
 
 	const activeBuckets = $derived(sortBuckets(bucketsForAnalysis(activeAnalysis), activeAnalysis, bucketSortField, bucketSortDirection));

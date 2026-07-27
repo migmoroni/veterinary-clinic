@@ -45,7 +45,7 @@
 		icon: PanelIcon;
 	}
 
-	const petId = $derived(Number(page.params.petId));
+	const petId = $derived(page.params.petId ?? '');
 
 	function treatmentPanelConfig(kind: TreatmentKind): TreatmentPanelConfig {
 		if (kind === 'vaccine') {
@@ -179,7 +179,7 @@
 		const latestDate = latestAppliedDate(treatments);
 		if (!latestDate) return [];
 
-		return treatments.filter((treatment) => treatment.appliedAt === latestDate).sort((first, second) => first.name.localeCompare(second.name) || first.id - second.id);
+		return treatments.filter((treatment) => treatment.appliedAt === latestDate).sort((first, second) => first.name.localeCompare(second.name) || first.id.localeCompare(second.id));
 	}
 
 	function treatmentConfigForPanel(panel: PetPanel): TreatmentPanelConfig | null {
@@ -208,7 +208,7 @@
 	const activeTreatmentPanelConfig = $derived(treatmentConfigForPanel(activePanel));
 	const lastEditedRecord = $derived.by(() => {
 		if (!profile) return null;
-		return [...profile.records].sort((first, second) => recordEditedSortValue(second).localeCompare(recordEditedSortValue(first)) || second.id - first.id)[0] ?? null;
+		return [...profile.records].sort((first, second) => recordEditedSortValue(second).localeCompare(recordEditedSortValue(first)) || second.id.localeCompare(first.id))[0] ?? null;
 	});
 
 	const petAgeText = $derived.by(() => {

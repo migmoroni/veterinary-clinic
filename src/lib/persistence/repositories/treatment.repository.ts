@@ -1,13 +1,14 @@
 import { FIELD_LIMITS, assertTextLimit, nullableMultilineText } from '$lib/domain/shared/field-limits.js';
 import type { ImageCollectionItemInput } from '$lib/domain/image-collection/image-collection.js';
 import type { PetTreatment, PetTreatmentInput, TreatmentCatalogItem, TreatmentCatalogItemId, TreatmentCatalogItemInput, TreatmentKind, TreatmentValidityUnit } from '$lib/domain/treatment/treatment.js';
-import { computePurgeAfter, nowIso } from '$lib/domain/shared/time.js';
+import { nowIso } from '$lib/domain/shared/time.js';
+import { createUuidV7 } from '$lib/domain/shared/uuid.js';
 import { deleteProductCatalogItem, ensureTreatmentProductCatalogItem, getTreatmentProductCatalogItemById, listTreatmentProductCatalogItems, normalizeProductCatalogInput, saveProductCatalogItemImages, saveTreatmentProductCatalogItem, setProductCatalogItemHidden } from '$lib/persistence/repositories/product-catalog.repository.js';
 import { execute, selectMany } from '$lib/persistence/sqlite/client.js';
 
 interface PetTreatmentRow {
-	id: number;
-	pet_id: number;
+	id: string;
+	pet_id: string;
 	kind: TreatmentKind;
 	applied_at: string;
 	name: string;
@@ -17,9 +18,9 @@ interface PetTreatmentRow {
 	validity_unit: TreatmentValidityUnit;
 	observation: string | null;
 	validity_ignored_at: string | null;
+	created_at: string | null;
 	updated_at: string | null;
-	deleted_at: string | null;
-	purge_after: string | null;
+	removed_at: string | null;
 }
 
 interface TreatmentConfig {
@@ -80,15 +81,15 @@ function mapTreatment(row: PetTreatmentRow): PetTreatment {
 		validityUnit: row.validity_unit,
 		observation: row.observation,
 		validityIgnoredAt: row.validity_ignored_at,
+		createdAt: row.created_at,
 		updatedAt: row.updated_at,
-		deletedAt: row.deleted_at,
-		purgeAfter: row.purge_after
+		removedAt: row.removed_at
 	};
 }
 
-async function getTreatmentRow(kind: TreatmentKind, id: number): Promise<PetTreatmentRow | null> {
+async function getTreatmentRow(kind: TreatmentKind, id: string): Promise<PetTreatmentRow | null> {
 	const rows = await selectMany<PetTreatmentRow>(
-		`SELECT id, pet_id, kind, applied_at, name, normalized_name, dose, validity_value, validity_unit, observation, validity_ignored_at, updated_at, deleted_at, purge_after
+		`SELECT id, pet_id, kind, applied_at, name, normalized_name, dose, validity_value, validity_unit, observation, validity_ignored_at, created_at, updated_at, removed_at
 		 FROM pet_treatments
 		 WHERE id = $1 AND kind = $2
 		 LIMIT 1`,
@@ -98,14 +99,14 @@ async function getTreatmentRow(kind: TreatmentKind, id: number): Promise<PetTrea
 	return rows[0] ?? null;
 }
 
-async function markPreviousEquivalentTreatmentsIgnored(kind: TreatmentKind, petId: number, normalizedName: string): Promise<void> {
-	const rows = await selectMany<{ id: number; validity_ignored_at: string | null }>(
+async function markPreviousEquivalentTreatmentsIgnored(kind: TreatmentKind, petId: string, normalizedName: string): Promise<void> {
+	const rows = await selectMany<{ id: string; validity_ignored_at: string | null }>(
 		`SELECT id, validity_ignored_at
 		 FROM pet_treatments
 		 WHERE kind = $1
 			AND pet_id = $2
 			AND normalized_name = $3
-			AND deleted_at IS NULL
+			AND removed_at IS NULL
 		 ORDER BY applied_at DESC, id DESC`,
 		[kind, petId, normalizedName]
 	);
@@ -115,10 +116,10 @@ async function markPreviousEquivalentTreatmentsIgnored(kind: TreatmentKind, petI
 	for (const row of previousRows) {
 		await execute(
 			`UPDATE pet_treatments
-			 SET validity_ignored_at = CURRENT_TIMESTAMP,
-				updated_at = CURRENT_TIMESTAMP
+			 SET validity_ignored_at = $3,
+				updated_at = $3
 			 WHERE id = $1 AND kind = $2 AND validity_ignored_at IS NULL`,
-			[row.id, kind]
+			[row.id, kind, nowIso()]
 		);
 	}
 }
@@ -147,11 +148,11 @@ export async function deleteTreatmentCatalogItem(kind: TreatmentKind, id: Treatm
 	await deleteProductCatalogItem(kind, id);
 }
 
-export async function listTreatmentsByPet(kind: TreatmentKind, petId: number, includeDeleted = false): Promise<PetTreatment[]> {
+export async function listTreatmentsByPet(kind: TreatmentKind, petId: string, includeRemoved = false): Promise<PetTreatment[]> {
 	const rows = await selectMany<PetTreatmentRow>(
-		`SELECT id, pet_id, kind, applied_at, name, normalized_name, dose, validity_value, validity_unit, observation, validity_ignored_at, updated_at, deleted_at, purge_after
+		`SELECT id, pet_id, kind, applied_at, name, normalized_name, dose, validity_value, validity_unit, observation, validity_ignored_at, created_at, updated_at, removed_at
 		 FROM pet_treatments
-		 WHERE kind = $1 AND pet_id = $2 ${includeDeleted ? '' : 'AND deleted_at IS NULL'}
+		 WHERE kind = $1 AND pet_id = $2 ${includeRemoved ? '' : 'AND removed_at IS NULL'}
 		 ORDER BY applied_at DESC, id DESC`,
 		[kind, petId]
 	);
@@ -159,7 +160,7 @@ export async function listTreatmentsByPet(kind: TreatmentKind, petId: number, in
 	return rows.map(mapTreatment);
 }
 
-export async function createTreatments(kind: TreatmentKind, petId: number, inputs: PetTreatmentInput[]): Promise<PetTreatment[]> {
+export async function createTreatments(kind: TreatmentKind, petId: string, inputs: PetTreatmentInput[]): Promise<PetTreatment[]> {
 	const affectedTreatments = new Set<string>();
 
 	for (const input of inputs) {
@@ -171,10 +172,11 @@ export async function createTreatments(kind: TreatmentKind, petId: number, input
 		const observation = nullableMultilineText(input.observation, FIELD_LIMITS.treatmentObservation);
 
 		await ensureTreatmentProductCatalogItem(kind, name, normalizedName);
+		const createdAt = nowIso();
 		await execute(
-			`INSERT INTO pet_treatments (pet_id, kind, applied_at, name, normalized_name, dose, validity_value, validity_unit, observation, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)`,
-			[petId, kind, appliedAt, name, normalizedName, dose, validityValue, validityUnit, observation]
+			`INSERT INTO pet_treatments (id, pet_id, kind, applied_at, name, normalized_name, dose, validity_value, validity_unit, observation, created_at, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11)`,
+			[createUuidV7(), petId, kind, appliedAt, name, normalizedName, dose, validityValue, validityUnit, observation, createdAt]
 		);
 		affectedTreatments.add(normalizedName);
 	}
@@ -187,26 +189,27 @@ export async function createTreatments(kind: TreatmentKind, petId: number, input
 	return listTreatmentsByPet(kind, petId);
 }
 
-export async function softDeleteTreatment(kind: TreatmentKind, id: number): Promise<void> {
-	const deletedAt = nowIso();
+export async function softDeleteTreatment(kind: TreatmentKind, id: string): Promise<void> {
+	const removedAt = nowIso();
 	await execute(
 		`UPDATE pet_treatments
-		 SET deleted_at = $3, purge_after = $4, updated_at = CURRENT_TIMESTAMP
-		 WHERE id = $1 AND kind = $2 AND deleted_at IS NULL`,
-		[id, kind, deletedAt, computePurgeAfter(deletedAt)]
+		 SET removed_at = $3, updated_at = $3
+		 WHERE id = $1 AND kind = $2 AND removed_at IS NULL`,
+		[id, kind, removedAt]
 	);
 }
 
-export async function setTreatmentValidityIgnored(kind: TreatmentKind, id: number, ignored: boolean): Promise<PetTreatment> {
+export async function setTreatmentValidityIgnored(kind: TreatmentKind, id: string, ignored: boolean): Promise<PetTreatment> {
+	const updatedAt = nowIso();
 	await execute(
 		`UPDATE pet_treatments
-		 SET validity_ignored_at = ${ignored ? 'COALESCE(validity_ignored_at, CURRENT_TIMESTAMP)' : 'NULL'},
-			updated_at = CURRENT_TIMESTAMP
-		 WHERE id = $1 AND kind = $2 AND deleted_at IS NULL`,
-		[id, kind]
+		 SET validity_ignored_at = ${ignored ? 'COALESCE(validity_ignored_at, $3)' : 'NULL'},
+			updated_at = $3
+		 WHERE id = $1 AND kind = $2 AND removed_at IS NULL`,
+		[id, kind, updatedAt]
 	);
 
 	const row = await getTreatmentRow(kind, id);
-	if (!row || row.deleted_at) throw new Error('treatment_not_found');
+	if (!row || row.removed_at) throw new Error('treatment_not_found');
 	return mapTreatment(row);
 }

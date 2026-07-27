@@ -25,7 +25,7 @@ import type { TreatmentKind, TreatmentValidityUnit } from '$lib/domain/treatment
 import { selectMany } from '$lib/persistence/sqlite/client.js';
 
 interface PetAnalyticsRow {
-	id: number;
+	id: string;
 	name: string;
 	birth_date: string | null;
 	species: PetSpecies | null;
@@ -34,7 +34,7 @@ interface PetAnalyticsRow {
 }
 
 interface OwnerAnalyticsRow {
-	id: number;
+	id: string;
 	name: string;
 	city: string | null;
 	state: string | null;
@@ -43,12 +43,12 @@ interface OwnerAnalyticsRow {
 }
 
 interface PetOwnerAnalyticsRow {
-	pet_id: number;
-	owner_id: number;
+	pet_id: string;
+	owner_id: string;
 }
 
 interface LatestTreatmentAnalyticsRow {
-	pet_id: number;
+	pet_id: string;
 	name: string;
 	normalized_name: string;
 	dose: string;
@@ -123,7 +123,7 @@ async function listPetRows(): Promise<PetAnalyticsRow[]> {
 	return selectMany<PetAnalyticsRow>(
 		`SELECT id, name, birth_date, species, breed, sex
 		 FROM pets
-		 WHERE deleted_at IS NULL`
+		 WHERE removed_at IS NULL`
 	);
 }
 
@@ -133,8 +133,8 @@ async function listOwnerRows(): Promise<OwnerAnalyticsRow[]> {
 		 FROM owners
 		 LEFT JOIN addresses AS owner_address ON owner_address.owner_id = owners.id
 		 LEFT JOIN pet_owners ON pet_owners.owner_id = owners.id
-		 LEFT JOIN pets ON pets.id = pet_owners.pet_id AND pets.deleted_at IS NULL
-		 WHERE owners.deleted_at IS NULL
+		 LEFT JOIN pets ON pets.id = pet_owners.pet_id AND pets.removed_at IS NULL
+		 WHERE owners.removed_at IS NULL
 		 GROUP BY owners.id, owners.name, owner_address.city, owner_address.state, owner_address.country`
 	);
 }
@@ -145,7 +145,7 @@ async function listPetOwnerRows(): Promise<PetOwnerAnalyticsRow[]> {
 		 FROM pet_owners
 		 JOIN pets ON pets.id = pet_owners.pet_id
 		 JOIN owners ON owners.id = pet_owners.owner_id
-		 WHERE pets.deleted_at IS NULL AND owners.deleted_at IS NULL`
+		 WHERE pets.removed_at IS NULL AND owners.removed_at IS NULL`
 	);
 }
 
@@ -173,9 +173,9 @@ async function listLatestTreatmentRows(kind: TreatmentKind): Promise<LatestTreat
 			 FROM pet_treatments
 			 JOIN pets ON pets.id = pet_treatments.pet_id
 			 WHERE pet_treatments.kind = $1
-				AND pet_treatments.deleted_at IS NULL
+				AND pet_treatments.removed_at IS NULL
 				AND pet_treatments.validity_ignored_at IS NULL
-				AND pets.deleted_at IS NULL
+				AND pets.removed_at IS NULL
 				AND date(pet_treatments.applied_at) IS NOT NULL
 				AND pet_treatments.applied_at <= date('now', 'localtime')
 		 )
@@ -187,8 +187,8 @@ async function listLatestTreatmentRows(kind: TreatmentKind): Promise<LatestTreat
 	return rows.filter((row) => isPlausibleTreatmentAppliedAt(row.applied_at));
 }
 
-function buildPetVaccineStatusMap(rows: LatestTreatmentAnalyticsRow[]): Map<number, DashboardVaccineStatusKey> {
-	const statusByPetId = new Map<number, DashboardVaccineStatusKey>();
+function buildPetVaccineStatusMap(rows: LatestTreatmentAnalyticsRow[]): Map<string, DashboardVaccineStatusKey> {
+	const statusByPetId = new Map<string, DashboardVaccineStatusKey>();
 
 	for (const row of rows) {
 		const status = buildTreatmentStatus(row.applied_at, row.validity_value, row.validity_unit);
@@ -201,8 +201,8 @@ function buildPetVaccineStatusMap(rows: LatestTreatmentAnalyticsRow[]): Map<numb
 	return statusByPetId;
 }
 
-function buildPetAntiparasiticStatusMap(rows: LatestTreatmentAnalyticsRow[]): Map<number, DashboardAntiparasiticStatusKey> {
-	const statusByPetId = new Map<number, DashboardAntiparasiticStatusKey>();
+function buildPetAntiparasiticStatusMap(rows: LatestTreatmentAnalyticsRow[]): Map<string, DashboardAntiparasiticStatusKey> {
+	const statusByPetId = new Map<string, DashboardAntiparasiticStatusKey>();
 
 	for (const row of rows) {
 		const status = buildTreatmentStatus(row.applied_at, row.validity_value, row.validity_unit);
@@ -215,8 +215,8 @@ function buildPetAntiparasiticStatusMap(rows: LatestTreatmentAnalyticsRow[]): Ma
 	return statusByPetId;
 }
 
-function buildPetVaccinesMap(rows: LatestTreatmentAnalyticsRow[]): Map<number, DashboardPetStudyTreatment<DashboardVaccineStatusKey>[]> {
-	const vaccinesByPetId = new Map<number, DashboardPetStudyTreatment<DashboardVaccineStatusKey>[]>();
+function buildPetVaccinesMap(rows: LatestTreatmentAnalyticsRow[]): Map<string, DashboardPetStudyTreatment<DashboardVaccineStatusKey>[]> {
+	const vaccinesByPetId = new Map<string, DashboardPetStudyTreatment<DashboardVaccineStatusKey>[]>();
 
 	for (const row of rows) {
 		const status = buildTreatmentStatus(row.applied_at, row.validity_value, row.validity_unit);
@@ -238,8 +238,8 @@ function buildPetVaccinesMap(rows: LatestTreatmentAnalyticsRow[]): Map<number, D
 	return vaccinesByPetId;
 }
 
-function buildPetAntiparasiticsMap(rows: LatestTreatmentAnalyticsRow[]): Map<number, DashboardPetStudyTreatment<DashboardAntiparasiticStatusKey>[]> {
-	const antiparasiticsByPetId = new Map<number, DashboardPetStudyTreatment<DashboardAntiparasiticStatusKey>[]>();
+function buildPetAntiparasiticsMap(rows: LatestTreatmentAnalyticsRow[]): Map<string, DashboardPetStudyTreatment<DashboardAntiparasiticStatusKey>[]> {
+	const antiparasiticsByPetId = new Map<string, DashboardPetStudyTreatment<DashboardAntiparasiticStatusKey>[]>();
 
 	for (const row of rows) {
 		const status = buildTreatmentStatus(row.applied_at, row.validity_value, row.validity_unit);
@@ -261,7 +261,7 @@ function buildPetAntiparasiticsMap(rows: LatestTreatmentAnalyticsRow[]): Map<num
 	return antiparasiticsByPetId;
 }
 
-function buildPetAnalytics(pets: PetAnalyticsRow[], statusByPetId: Map<number, DashboardVaccineStatusKey>, antiparasiticStatusByPetId: Map<number, DashboardAntiparasiticStatusKey>) {
+function buildPetAnalytics(pets: PetAnalyticsRow[], statusByPetId: Map<string, DashboardVaccineStatusKey>, antiparasiticStatusByPetId: Map<string, DashboardAntiparasiticStatusKey>) {
 	const bySpecies = new Map<DashboardSpeciesKey, number>();
 	const byBreed = new Map<DashboardBreedKey, number>();
 	const bySex = new Map<DashboardSexKey, number>();
@@ -295,8 +295,8 @@ function buildPetAnalytics(pets: PetAnalyticsRow[], statusByPetId: Map<number, D
 	};
 }
 
-function buildOwnerPetMap(rows: PetOwnerAnalyticsRow[]): Map<number, number[]> {
-	const petIdsByOwnerId = new Map<number, number[]>();
+function buildOwnerPetMap(rows: PetOwnerAnalyticsRow[]): Map<string, string[]> {
+	const petIdsByOwnerId = new Map<string, string[]>();
 	for (const row of rows) {
 		const petIds = petIdsByOwnerId.get(row.owner_id) ?? [];
 		petIds.push(row.pet_id);
@@ -309,8 +309,8 @@ function buildOwnerPetMap(rows: PetOwnerAnalyticsRow[]): Map<number, number[]> {
 function buildOwnerAnalytics(
 	owners: OwnerAnalyticsRow[],
 	petOwnerRows: PetOwnerAnalyticsRow[],
-	statusByPetId: Map<number, DashboardVaccineStatusKey>,
-	antiparasiticStatusByPetId: Map<number, DashboardAntiparasiticStatusKey>
+	statusByPetId: Map<string, DashboardVaccineStatusKey>,
+	antiparasiticStatusByPetId: Map<string, DashboardAntiparasiticStatusKey>
 ) {
 	const byLocation = new Map<string, { label: string | null; count: number }>();
 	const byPetCount = new Map<DashboardPetCountBandKey, number>();
@@ -347,8 +347,8 @@ function buildOwnerAnalytics(
 	};
 }
 
-function buildPetOwnerMap(rows: PetOwnerAnalyticsRow[]): Map<number, number[]> {
-	const ownerIdsByPetId = new Map<number, number[]>();
+function buildPetOwnerMap(rows: PetOwnerAnalyticsRow[]): Map<string, string[]> {
+	const ownerIdsByPetId = new Map<string, string[]>();
 	for (const row of rows) {
 		const ownerIds = ownerIdsByPetId.get(row.pet_id) ?? [];
 		ownerIds.push(row.owner_id);
@@ -386,10 +386,10 @@ function buildStudyAnalytics(
 	pets: PetAnalyticsRow[],
 	owners: OwnerAnalyticsRow[],
 	petOwnerRows: PetOwnerAnalyticsRow[],
-	statusByPetId: Map<number, DashboardVaccineStatusKey>,
-	vaccinesByPetId: Map<number, DashboardPetStudyTreatment<DashboardVaccineStatusKey>[]>,
-	antiparasiticStatusByPetId: Map<number, DashboardAntiparasiticStatusKey>,
-	antiparasiticsByPetId: Map<number, DashboardPetStudyTreatment<DashboardAntiparasiticStatusKey>[]>
+	statusByPetId: Map<string, DashboardVaccineStatusKey>,
+	vaccinesByPetId: Map<string, DashboardPetStudyTreatment<DashboardVaccineStatusKey>[]>,
+	antiparasiticStatusByPetId: Map<string, DashboardAntiparasiticStatusKey>,
+	antiparasiticsByPetId: Map<string, DashboardPetStudyTreatment<DashboardAntiparasiticStatusKey>[]>
 ): DashboardStudyAnalytics {
 	const ownersById = new Map(owners.map((owner) => [owner.id, owner]));
 	const ownerIdsByPetId = buildPetOwnerMap(petOwnerRows);

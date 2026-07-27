@@ -78,7 +78,7 @@
 	let historyOrder = $state<SortOrder>('recent');
 	let items = $state<TreatmentStatusItem[]>([]);
 	let visibleItems = $state<TreatmentStatusItem[]>([]);
-	let avatarBytesByPetId = $state(new Map<number, Uint8Array | null>());
+	let avatarBytesByPetId = $state(new Map<string, Uint8Array | null>());
 	let statusSummary = $state<TreatmentStatusSummary>(emptyTreatmentStatusSummary());
 	let statusTotalTracked = $state(0);
 	let history = $state<HistoryPoint[]>([]);

@@ -2,14 +2,16 @@
 	import { onMount } from 'svelte';
 	import type { TreatmentKind } from '$lib/domain/treatment/treatment.js';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
-	import type { TrashItem, TrashKind } from '$lib/persistence/repositories/trash.repository.js';
-	import { deleteFromTrash, loadTrash, purgeTrash, restoreFromTrash } from '$lib/services/trash.service.js';
+	import type { DeletionAuditLog, TrashItem, TrashKind } from '$lib/persistence/repositories/trash.repository.js';
+	import { deleteFromTrash, loadDeletionAuditLogs, loadTrash, purgeTrash, restoreFromTrash } from '$lib/services/trash.service.js';
 	import RotateCw from '@lucide/svelte/icons/rotate-cw';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
 
 	let items = $state<TrashItem[]>([]);
+	let auditLogs = $state<DeletionAuditLog[]>([]);
 	let loading = $state(true);
+	let auditLoading = $state(false);
 	let actionPending = $state(false);
 	let activeKind = $state<TrashKind>('owner');
 	let statusKey = $state<TranslationKey | null>(null);
@@ -20,7 +22,8 @@
 		{ kind: 'pet', titleKey: 'trash.pets' },
 		{ kind: 'treatment', titleKey: 'trash.treatments' },
 		{ kind: 'protocol', titleKey: 'trash.protocols' },
-		{ kind: 'record', titleKey: 'trash.records' }
+		{ kind: 'record', titleKey: 'trash.records' },
+		{ kind: 'media', titleKey: 'trash.media' }
 	];
 	const activeGroup = $derived(groups.find((group) => group.kind === activeKind) ?? groups[0]);
 	const activeItems = $derived(groupItems(activeKind));
@@ -38,6 +41,10 @@
 		return kind === 'vaccine' ? 'vaccine.sectionTitle' : 'antiparasiticTreatment.sectionTitle';
 	}
 
+	function itemTitle(item: TrashItem): string {
+		return item.kind === 'media' ? `${t('trash.mediaItem')} ${item.id.slice(0, 8)}` : item.title;
+	}
+
 	function selectTab(kind: TrashKind) {
 		activeKind = kind;
 	}
@@ -52,10 +59,22 @@
 				activeKind = groups.find((group) => groupItems(group.kind).length > 0)?.kind ?? activeKind;
 				selectInitialTab = false;
 			}
+			await loadAudit();
 		} catch (exception) {
 			error = exception instanceof Error ? exception.message : String(exception);
 		} finally {
 			loading = false;
+		}
+	}
+
+	async function loadAudit() {
+		auditLoading = true;
+		try {
+			auditLogs = await loadDeletionAuditLogs(25);
+		} catch {
+			auditLogs = [];
+		} finally {
+			auditLoading = false;
 		}
 	}
 
@@ -84,7 +103,7 @@
 		error = null;
 		try {
 			await deleteFromTrash(item.kind, item.id);
-			statusKey = 'status.deletedForever';
+			statusKey = 'status.removedForever';
 			await load();
 		} catch (exception) {
 			error = exception instanceof Error ? exception.message : String(exception);
@@ -93,7 +112,7 @@
 		}
 	}
 
-	async function purgeExpired() {
+	async function emptyTrash() {
 		if (actionPending) return;
 		if (!window.confirm(t('trash.purgeConfirm'))) return;
 
@@ -130,7 +149,7 @@
 				<RotateCw class="size-4" />
 				{t('actions.refresh')}
 			</button>
-			<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-card px-4 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={loading || actionPending} onclick={() => void purgeExpired()}>
+			<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-destructive/40 bg-card px-4 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50" disabled={loading || actionPending} onclick={() => void emptyTrash()}>
 				<Trash2 class="size-4" />
 				{t('actions.purgeExpired')}
 			</button>
@@ -148,7 +167,7 @@
 	{#if loading}
 		<div class="h-64 animate-pulse rounded-md bg-muted"></div>
 	{:else}
-		<div class="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1 sm:grid-cols-3 xl:grid-cols-5" role="tablist" aria-label={t('trash.title')}>
+		<div class="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1 sm:grid-cols-3 xl:grid-cols-6" role="tablist" aria-label={t('trash.title')}>
 			{#each groups as group}
 				{@const count = itemCount(group.kind)}
 				<button class="inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-sm px-3 text-sm font-medium transition-colors {activeKind === group.kind ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}" type="button" role="tab" aria-selected={activeKind === group.kind} onclick={() => selectTab(group.kind)}>
@@ -167,13 +186,13 @@
 						<div class="flex flex-col gap-3 rounded-md border border-border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
 							<div class="min-w-0">
 								<div class="flex min-w-0 flex-wrap items-center gap-2">
-									<p class="min-w-0 truncate text-sm font-medium">{item.title}</p>
+									<p class="min-w-0 truncate text-sm font-medium">{itemTitle(item)}</p>
 									{#if item.treatmentKind}
 										<span class="inline-flex shrink-0 items-center rounded-sm border border-border bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{t(treatmentKindLabel(item.treatmentKind))}</span>
 									{/if}
 								</div>
 								<p class="truncate text-xs text-muted-foreground">{item.subtitle || t('common.notInformed')}</p>
-								<p class="mt-1 text-xs text-muted-foreground">{t('trash.deletedAt')}: {item.deletedAt ?? t('common.notInformed')} · {t('trash.purgeAfter')}: {item.purgeAfter ?? t('common.notInformed')}</p>
+								<p class="mt-1 text-xs text-muted-foreground">{t('trash.removedAt')}: {item.removedAt ?? t('common.notInformed')}</p>
 							</div>
 							<div class="flex flex-wrap gap-2">
 								<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-card px-3 text-xs font-medium hover:bg-accent disabled:opacity-50" disabled={actionPending} onclick={() => void restore(item)}>
@@ -185,6 +204,45 @@
 									{t('actions.deleteForever')}
 								</button>
 							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</div>
+
+		<div class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
+			<header class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+				<div>
+					<h3 class="text-base font-semibold">{t('trash.auditTitle')}</h3>
+					<p class="mt-1 text-sm text-muted-foreground">{t('trash.auditDescription')}</p>
+				</div>
+				<button type="button" class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-card px-3 text-xs font-medium hover:bg-accent disabled:opacity-50" disabled={auditLoading} onclick={() => void loadAudit()}>
+					<RotateCw class="size-4" />
+					{t('actions.refresh')}
+				</button>
+			</header>
+
+			{#if auditLoading}
+				<div class="mt-4 h-24 animate-pulse rounded-md bg-muted"></div>
+			{:else if auditLogs.length === 0}
+				<p class="mt-4 rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">{t('trash.auditEmpty')}</p>
+			{:else}
+				<div class="mt-4 grid gap-2">
+					{#each auditLogs as log (log.id)}
+						<div class="rounded-md border border-border bg-background p-3 text-sm">
+							<div class="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+								<div class="min-w-0">
+									<p class="truncate font-medium">{log.targetTable} · {log.targetId}</p>
+									<p class="text-xs text-muted-foreground">{log.domain} · {log.createdAt}</p>
+								</div>
+								<p class="text-xs text-muted-foreground">{t('trash.auditActor')}: {log.deletedBy ?? t('common.notInformed')}</p>
+							</div>
+							{#if log.snapshotJson}
+								<details class="mt-2">
+									<summary class="cursor-pointer text-xs font-medium text-muted-foreground">{t('common.details')}</summary>
+									<pre class="mt-2 max-h-40 overflow-auto rounded-md bg-muted p-3 text-xs whitespace-pre-wrap">{log.snapshotJson}</pre>
+								</details>
+							{/if}
 						</div>
 					{/each}
 				</div>

@@ -12,7 +12,7 @@ export async function searchOwners(query = ''): Promise<Owner[]> {
 	return listOwners(query);
 }
 
-export async function loadOwnerProfile(ownerId: number): Promise<OwnerProfile> {
+export async function loadOwnerProfile(ownerId: string): Promise<OwnerProfile> {
 	const [owner, pets] = await Promise.all([getOwner(ownerId), listPetsByOwner(ownerId)]);
 	if (!owner) throw new Error('owner_not_found');
 	return { owner, pets };
@@ -22,14 +22,14 @@ export async function saveNewOwner(input: OwnerInput): Promise<Owner> {
 	return createOwner(input);
 }
 
-export async function saveOwner(ownerId: number, input: OwnerInput): Promise<Owner> {
+export async function saveOwner(ownerId: string, input: OwnerInput): Promise<Owner> {
 	return updateOwner(ownerId, input);
 }
 
-export async function addPetToOwner(ownerId: number, petId: number): Promise<Pet> {
+export async function addPetToOwner(ownerId: string, petId: string): Promise<Pet> {
 	return linkPetToOwner(ownerId, petId);
 }
 
-export async function removeOwner(ownerId: number): Promise<void> {
+export async function removeOwner(ownerId: string): Promise<void> {
 	await softDeleteOwner(ownerId);
 }

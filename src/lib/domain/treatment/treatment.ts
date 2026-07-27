@@ -23,8 +23,8 @@ export interface TreatmentCatalogItemInput {
 }
 
 export interface PetTreatment {
-	id: number;
-	petId: number;
+	id: string;
+	petId: string;
 	kind: TreatmentKind;
 	appliedAt: string;
 	name: string;
@@ -34,9 +34,9 @@ export interface PetTreatment {
 	validityUnit: TreatmentValidityUnit;
 	observation: string | null;
 	validityIgnoredAt: string | null;
+	createdAt: string | null;
 	updatedAt: string | null;
-	deletedAt: string | null;
-	purgeAfter: string | null;
+	removedAt: string | null;
 }
 
 export interface PetTreatmentInput {

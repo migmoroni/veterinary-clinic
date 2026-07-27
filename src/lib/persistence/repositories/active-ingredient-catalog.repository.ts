@@ -24,7 +24,7 @@ function activeIngredientCatalogColumns(alias = 'active_ingredient_catalog_items
 		${alias}.regions AS regions,
 		${alias}.extension AS extension,
 		${alias}.hidden_at AS hidden_at,
-		${alias}.updated_at AS updated_at`;
+		NULL AS updated_at`;
 }
 
 interface ActiveIngredientCatalogItemRow {

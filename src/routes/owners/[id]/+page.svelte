@@ -150,7 +150,7 @@
 		return exception instanceof Error ? exception.message : String(exception);
 	}
 
-	const ownerId = $derived(Number(page.params.id));
+	const ownerId = $derived(page.params.id ?? '');
 	let profile = $state<OwnerProfile | null>(null);
 	let form = $state<OwnerForm>({
 		name: '',

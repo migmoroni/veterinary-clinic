@@ -20,13 +20,13 @@
 
 	type PetForm = Omit<PetInput, 'sex'> & { sex: '' | Exclude<PetSex, null> };
 
-	const ownerId = $derived(Number(page.params.id));
+	const ownerId = $derived(page.params.id ?? '');
 	let ownerName = $state('');
 	let form = $state<PetForm>({ name: '', birthDate: '', species: null, breed: null, sex: '' });
 	let existingQuery = $state('');
 	let existingPets = $state<Pet[]>([]);
 	let searching = $state(false);
-	let linkingPetId = $state<number | null>(null);
+	let linkingPetId = $state<string | null>(null);
 	let saving = $state(false);
 	let error = $state<string | null>(null);
 
@@ -106,7 +106,7 @@
 		searching = false;
 	}
 
-	async function linkExistingPet(petId: number) {
+	async function linkExistingPet(petId: string) {
 		linkingPetId = petId;
 		error = null;
 

@@ -17,10 +17,10 @@ export async function removeProtocol(id: TreatmentProtocolId): Promise<void> {
 	await deleteTreatmentProtocol(id);
 }
 
-export async function saveProtocolDose(protocolId: TreatmentProtocolId, input: TreatmentProtocolDoseInput, id?: number): Promise<TreatmentProtocol> {
+export async function saveProtocolDose(protocolId: TreatmentProtocolId, input: TreatmentProtocolDoseInput, id?: string): Promise<TreatmentProtocol> {
 	return saveTreatmentProtocolDose(protocolId, input, id);
 }
 
-export async function removeProtocolDose(protocolId: TreatmentProtocolId, doseId: number): Promise<TreatmentProtocol> {
+export async function removeProtocolDose(protocolId: TreatmentProtocolId, doseId: string): Promise<TreatmentProtocol> {
 	return deleteTreatmentProtocolDose(protocolId, doseId);
 }

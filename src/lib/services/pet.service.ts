@@ -19,7 +19,7 @@ export interface PetProfileTreatmentBundle {
 	catalogItems: TreatmentCatalogItem[];
 }
 
-export async function loadPetProfile(petId: number): Promise<PetProfile> {
+export async function loadPetProfile(petId: string): Promise<PetProfile> {
 	const pet = await getPet(petId);
 	if (!pet) throw new Error('pet_not_found');
 
@@ -37,22 +37,22 @@ export async function loadPetProfile(petId: number): Promise<PetProfile> {
 	return { pet, owners, records, treatments: Object.fromEntries(treatmentEntries) as Record<TreatmentKind, PetProfileTreatmentBundle> };
 }
 
-export async function saveNewPet(ownerId: number, input: PetInput): Promise<Pet> {
+export async function saveNewPet(ownerId: string, input: PetInput): Promise<Pet> {
 	return createPet(ownerId, input);
 }
 
-export async function searchExistingPetsForOwner(ownerId: number, query: string): Promise<Pet[]> {
+export async function searchExistingPetsForOwner(ownerId: string, query: string): Promise<Pet[]> {
 	return searchPetsForOwnerLink(ownerId, query);
 }
 
-export async function addExistingPetToOwner(ownerId: number, petId: number): Promise<Pet> {
+export async function addExistingPetToOwner(ownerId: string, petId: string): Promise<Pet> {
 	return linkPetToOwner(ownerId, petId);
 }
 
-export async function savePet(petId: number, input: PetInput): Promise<Pet> {
+export async function savePet(petId: string, input: PetInput): Promise<Pet> {
 	return updatePet(petId, input);
 }
 
-export async function removePet(petId: number): Promise<void> {
+export async function removePet(petId: string): Promise<void> {
 	await softDeletePet(petId);
 }

@@ -32,9 +32,9 @@
 	let protocolDraftSpecies = $state<Record<TreatmentProtocolId, KnownPetSpecies[]>>({});
 	let protocolDraftObservations = $state<Record<TreatmentProtocolId, string>>({});
 	let protocolDraftItemIds = $state<Record<TreatmentProtocolId, TreatmentCatalogItemId[]>>({});
-	let doseDraftDoses = $state<Record<number, string>>({});
-	let doseDraftValidityValues = $state<Record<number, number>>({});
-	let doseDraftValidityUnits = $state<Record<number, TreatmentProtocolValidityUnit>>({});
+	let doseDraftDoses = $state<Record<string, string>>({});
+	let doseDraftValidityValues = $state<Record<string, number>>({});
+	let doseDraftValidityUnits = $state<Record<string, TreatmentProtocolValidityUnit>>({});
 	let newDoseDoses = $state<Record<TreatmentProtocolId, string>>({});
 	let newDoseValidityValues = $state<Record<TreatmentProtocolId, number>>({});
 	let newDoseValidityUnits = $state<Record<TreatmentProtocolId, TreatmentProtocolValidityUnit>>({});
@@ -348,7 +348,7 @@
 		newDoseValidityUnits = { ...newDoseValidityUnits, [protocolId]: unit };
 	}
 
-	function setDoseValidity(doseId: number, value: number, unit: TreatmentProtocolValidityUnit) {
+	function setDoseValidity(doseId: string, value: number, unit: TreatmentProtocolValidityUnit) {
 		doseDraftValidityValues = { ...doseDraftValidityValues, [doseId]: value };
 		doseDraftValidityUnits = { ...doseDraftValidityUnits, [doseId]: unit };
 	}
