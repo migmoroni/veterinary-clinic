@@ -5,7 +5,7 @@ import { getDatabase } from '$lib/persistence/sqlite/client.js';
 
 interface PackageResponse {
 	path: string;
-	safetyBackupPath: string | null;
+	safetyExportPath: string | null;
 }
 
 function timestampForFile(): string {

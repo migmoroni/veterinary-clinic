@@ -7,14 +7,14 @@ import { setBackupTargetPath } from './replication-backup.service.js';
 
 interface CsvImportResult {
 	importedPath: string;
-	safetyBackupName: string;
-	backupTargetPath: string;
+	safetyExportPath: string;
+	replicationTargetPath: string;
 }
 
 interface PackageResponse {
 	path: string;
-	safetyBackupPath: string | null;
-	backupTargetPath: string | null;
+	safetyExportPath: string | null;
+	replicationTargetPath: string | null;
 }
 
 async function reopenUserStorageAfterImport(): Promise<void> {
@@ -37,12 +37,12 @@ export async function importDatabaseFromCsv(title: string): Promise<CsvImportRes
 	});
 	await reopenUserStorageAfterImport();
 	await addBackupHistory(response.path, 'import');
-	if (response.safetyBackupPath) await addBackupHistory(response.safetyBackupPath, 'pre_import_backup');
+	if (response.safetyExportPath) await addBackupHistory(response.safetyExportPath, 'pre_import_backup');
 	clearClientStateAfterDatabaseImport();
-	if (response.backupTargetPath) await setBackupTargetPath(response.backupTargetPath);
+	if (response.replicationTargetPath) await setBackupTargetPath(response.replicationTargetPath);
 	return {
 		importedPath: response.path,
-		safetyBackupName: response.safetyBackupPath ?? '',
-		backupTargetPath: response.backupTargetPath ?? ''
+		safetyExportPath: response.safetyExportPath ?? '',
+		replicationTargetPath: response.replicationTargetPath ?? ''
 	};
 }

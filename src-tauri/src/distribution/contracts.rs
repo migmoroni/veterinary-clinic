@@ -23,6 +23,6 @@ pub struct ImportPackageRequest {
 #[serde(rename_all = "camelCase")]
 pub struct PackageResponse {
     pub(crate) path: String,
-    pub(crate) safety_backup_path: Option<String>,
-    pub(crate) backup_target_path: Option<String>,
+    pub(crate) safety_export_path: Option<String>,
+    pub(crate) replication_target_path: Option<String>,
 }

@@ -1,16 +1,15 @@
 use super::{
-    contracts::PackageExportType, files::remove_file_if_exists, sqlite::vacuum_into,
-    USER_DB_PACKAGE_PATH, USER_LOGS_DB_PACKAGE_PATH, USER_MEDIA_DB_PACKAGE_PATH,
+    files::remove_file_if_exists, sqlite::vacuum_into, USER_DB_PACKAGE_PATH,
+    USER_LOGS_DB_PACKAGE_PATH, USER_MEDIA_DB_PACKAGE_PATH,
 };
 use crate::storage::StorageManager;
 use std::{fs, path::Path};
 
-// Native import/export packages carry compact, consistent database copies.
-// Continuous backup no longer uses this module; it works through replication patches.
+// Native packages carry compact, consistent database copies. The package is a
+// transfer artifact, not part of continuous backup; replication owns that flow.
 pub(crate) fn stage_user_databases(
     storage: &StorageManager,
     staging_root: &Path,
-    _export_type: PackageExportType,
 ) -> Result<(), String> {
     let user_db_destination = staging_root.join(USER_DB_PACKAGE_PATH);
     let user_media_db_destination = staging_root.join(USER_MEDIA_DB_PACKAGE_PATH);

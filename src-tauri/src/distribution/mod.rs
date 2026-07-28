@@ -1,3 +1,9 @@
+//! Full local package import/export.
+//!
+//! `distribution` owns explicit user-driven data movement: native ZIP export,
+//! CSV export, native import and CSV import. Continuous local/cloud backup is
+//! replication work and stays in `replication`.
+
 mod commands;
 mod contracts;
 mod csv;

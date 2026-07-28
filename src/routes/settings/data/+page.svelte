@@ -67,9 +67,9 @@
 				statusKey = 'status.operationCanceled';
 				return;
 			}
-			lastPath = result.safetyBackupName;
-			statusKey = result.backupTargetPath
-				? result.safetyBackupName
+			lastPath = result.safetyExportPath;
+			statusKey = result.replicationTargetPath
+				? result.safetyExportPath
 					? 'data.importedAndBackupTargetSavedWithSafety'
 					: 'data.importedAndBackupTargetSaved'
 				: 'status.imported';
@@ -92,8 +92,8 @@
 				statusKey = 'status.operationCanceled';
 				return;
 			}
-			lastPath = result.safetyBackupName;
-			statusKey = result.safetyBackupName
+			lastPath = result.safetyExportPath;
+			statusKey = result.safetyExportPath
 				? 'data.importedAndBackupTargetSavedWithSafety'
 				: 'data.importedAndBackupTargetSaved';
 		} catch (exception) {
@@ -115,9 +115,9 @@
 				statusKey = 'status.operationCanceled';
 				return;
 			}
-			lastPath = result.safetyBackupName;
-			statusKey = result.backupTargetPath
-				? result.safetyBackupName
+			lastPath = result.safetyExportPath;
+			statusKey = result.replicationTargetPath
+				? result.safetyExportPath
 					? 'data.importedAndBackupTargetSavedWithSafety'
 					: 'data.importedAndBackupTargetSaved'
 				: 'status.imported';

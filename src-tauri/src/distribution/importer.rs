@@ -27,16 +27,16 @@ struct NativeImportSource {
     user_media_db: PathBuf,
     user_logs_db: PathBuf,
     vault_user: PathBuf,
-    backup_target_path: Option<PathBuf>,
+    replication_target_path: Option<PathBuf>,
 }
 
 struct ImportRecovery {
-    backup_target_path: Option<PathBuf>,
-    safety_backup_path: Option<PathBuf>,
+    replication_target_path: Option<PathBuf>,
+    safety_export_path: Option<PathBuf>,
 }
 
-// Importer flow: validates a full package, creates a safety export, and replaces
-// the live user storage bundle from either native DB files or CSV files.
+// Importer flow: validates a complete package, creates a local safety export
+// when replication could not do a final sync, and replaces the live user bundle.
 pub(crate) fn import_native_package(
     storage: &StorageManager,
     source_path: &str,
@@ -71,12 +71,12 @@ fn import_package(
         replace_native_import_source(storage, &source)?;
         return Ok(PackageResponse {
             path: path_to_string(&source_path)?,
-            safety_backup_path: optional_path_to_string(&recovery.safety_backup_path)?,
-            backup_target_path: optional_path_to_string(
+            safety_export_path: optional_path_to_string(&recovery.safety_export_path)?,
+            replication_target_path: optional_path_to_string(
                 &source
-                    .backup_target_path
+                    .replication_target_path
                     .clone()
-                    .or(recovery.backup_target_path),
+                    .or(recovery.replication_target_path),
             )?,
         });
     }
@@ -93,8 +93,10 @@ fn import_package(
             replace_native_import_source(storage, &source)?;
             Ok(PackageResponse {
                 path: path_to_string(&source_path)?,
-                safety_backup_path: optional_path_to_string(&recovery.safety_backup_path)?,
-                backup_target_path: optional_path_to_string(&recovery.backup_target_path)?,
+                safety_export_path: optional_path_to_string(&recovery.safety_export_path)?,
+                replication_target_path: optional_path_to_string(
+                    &recovery.replication_target_path,
+                )?,
             })
         }
         PackageExportType::Csv => {
@@ -103,8 +105,10 @@ fn import_package(
             replace_native_import_source(storage, &source)?;
             Ok(PackageResponse {
                 path: path_to_string(&source_path)?,
-                safety_backup_path: optional_path_to_string(&recovery.safety_backup_path)?,
-                backup_target_path: optional_path_to_string(&recovery.backup_target_path)?,
+                safety_export_path: optional_path_to_string(&recovery.safety_export_path)?,
+                replication_target_path: optional_path_to_string(
+                    &recovery.replication_target_path,
+                )?,
             })
         }
     }
@@ -169,7 +173,7 @@ fn prepare_csv_import_source(
         user_media_db: temp_media_db,
         user_logs_db: temp_logs_db,
         vault_user: staging_path.join("vault").join("user"),
-        backup_target_path: None,
+        replication_target_path: None,
     })
 }
 
@@ -187,10 +191,10 @@ fn resolve_native_import_source(source_path: &Path) -> Result<NativeImportSource
 
     let mut candidates = Vec::new();
     for entry in fs::read_dir(source_path)
-        .map_err(|error| format!("native_backup_directory_read_failed:{error}"))?
+        .map_err(|error| format!("native_distribution_directory_read_failed:{error}"))?
     {
         let entry =
-            entry.map_err(|error| format!("native_backup_directory_entry_failed:{error}"))?;
+            entry.map_err(|error| format!("native_distribution_directory_entry_failed:{error}"))?;
         let path = entry.path();
         if !path.is_dir() {
             continue;
@@ -202,8 +206,8 @@ fn resolve_native_import_source(source_path: &Path) -> Result<NativeImportSource
 
     match candidates.len() {
         1 => Ok(candidates.remove(0)),
-        0 => Err("native_backup_directory_invalid".to_string()),
-        _ => Err("native_backup_directory_ambiguous".to_string()),
+        0 => Err("native_distribution_directory_invalid".to_string()),
+        _ => Err("native_distribution_directory_ambiguous".to_string()),
     }
 }
 
@@ -223,7 +227,7 @@ fn native_package_source(path: &Path) -> Option<NativeImportSource> {
         user_media_db,
         user_logs_db,
         vault_user: path.join("vault").join("user"),
-        backup_target_path: None,
+        replication_target_path: None,
     })
 }
 
@@ -239,7 +243,7 @@ fn local_mirror_source(path: &Path) -> Option<NativeImportSource> {
         user_media_db,
         user_logs_db,
         vault_user: path.join("userMedia").join("vault"),
-        backup_target_path: path.parent().map(Path::to_path_buf),
+        replication_target_path: path.parent().map(Path::to_path_buf),
     })
 }
 
@@ -278,21 +282,21 @@ fn replace_user_storage_files(
 
 fn prepare_current_bundle_for_import(storage: &StorageManager) -> Result<ImportRecovery, String> {
     let preparation = orchestrator::prepare_for_database_import(storage).ok();
-    let backup_target_path = preparation
+    let replication_target_path = preparation
         .as_ref()
         .and_then(|preparation| preparation.backup_target_path.clone());
     let final_sync_succeeded = preparation
         .as_ref()
         .map(|preparation| preparation.final_sync_succeeded)
         .unwrap_or(false);
-    let safety_backup_path = if final_sync_succeeded {
+    let safety_export_path = if final_sync_succeeded {
         None
     } else {
         Some(create_pre_import_safety_export(storage)?)
     };
     Ok(ImportRecovery {
-        backup_target_path,
-        safety_backup_path,
+        replication_target_path,
+        safety_export_path,
     })
 }
 
@@ -301,7 +305,7 @@ fn create_pre_import_safety_export(storage: &StorageManager) -> Result<std::path
     std::fs::create_dir_all(&folder)
         .map_err(|error| format!("import_safety_export_dir_create_failed:{error}"))?;
     let destination_path = folder.join(format!("pre_import_{}.zip", timestamp_for_file()));
-    export_native_package_to_path(storage, &destination_path, PackageExportType::Native)?;
+    export_native_package_to_path(storage, &destination_path)?;
     Ok(destination_path)
 }
 
@@ -328,7 +332,7 @@ mod tests {
         assert_eq!(source.user_db, root.join(BASE_USER_DB));
         assert_eq!(source.vault_user, root.join("userMedia").join("vault"));
         assert_eq!(
-            source.backup_target_path,
+            source.replication_target_path,
             root.parent().map(Path::to_path_buf)
         );
         let _ = fs::remove_dir_all(root);
@@ -344,12 +348,12 @@ mod tests {
         let source = resolve_native_import_source(&root).expect("resolve source");
 
         assert_eq!(source.user_logs_db, child.join(BASE_USER_LOGS_DB));
-        assert_eq!(source.backup_target_path, Some(root.clone()));
+        assert_eq!(source.replication_target_path, Some(root.clone()));
         let _ = fs::remove_dir_all(root);
     }
 
     #[test]
-    fn rejects_ambiguous_backup_parent_folder() {
+    fn rejects_ambiguous_distribution_parent_folder() {
         let root = test_root("ambiguous-local-mirror");
         seed_local_mirror_files(&root.join("Veterinary Clinic - one"));
         seed_local_mirror_files(&root.join("Veterinary Clinic - two"));
@@ -359,7 +363,7 @@ mod tests {
             Err(error) => error,
         };
 
-        assert_eq!(error, "native_backup_directory_ambiguous");
+        assert_eq!(error, "native_distribution_directory_ambiguous");
         let _ = fs::remove_dir_all(root);
     }
 

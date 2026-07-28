@@ -1,4 +1,4 @@
-mod backup_manager;
+mod distribution;
 mod replication;
 mod storage;
 
@@ -78,10 +78,10 @@ pub fn run() {
             storage::mark_as_removed,
             storage::hard_delete_trash_item,
             storage::get_deletion_audit_logs,
-            backup_manager::export_user_native_package,
-            backup_manager::export_user_csv_package,
-            backup_manager::import_user_native_package,
-            backup_manager::import_user_csv_package,
+            distribution::export_user_native_package,
+            distribution::export_user_csv_package,
+            distribution::import_user_native_package,
+            distribution::import_user_csv_package,
             replication::orchestrator::set_backup_target_path,
             replication::orchestrator::get_backup_status,
             replication::orchestrator::restore_from_backup,

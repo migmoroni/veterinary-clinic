@@ -172,7 +172,7 @@ mod tests {
 
     fn test_root(label: &str) -> PathBuf {
         std::env::temp_dir().join(format!(
-            "vclinic-backup-files-{label}-{}-{}",
+            "vclinic-distribution-files-{label}-{}-{}",
             std::process::id(),
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
