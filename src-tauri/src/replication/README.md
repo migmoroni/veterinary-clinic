@@ -110,6 +110,19 @@ usa `OMIT`.
 O local mirror é um target com acesso direto ao filesystem. Ele mantém bancos
 base no destino e uma baseline própria por domínio.
 
+O banco `base_veterinary_clinic_user_logs.db` carrega a tabela
+`database_manifest`. O campo `database_id` é um UUIDv7 criado uma única vez
+quando a base de dados nasce. Antes de fazer bootstrap ou aplicar patches, o
+local mirror compara esse identificador com o `database_id` do app ativo. Se a
+pasta escolhida pertence a outra base, a sincronização é recusada para evitar
+mistura acidental de clínicas/bases diferentes.
+
+A pasta definida na tela de Backups é uma raiz escolhida pelo usuário. Dentro
+dela o local mirror cria uma subpasta de trabalho com o rótulo
+`Veterinary Clinic - <database_id>`, mantendo os arquivos do backup separados de
+outros arquivos que já existam no destino. O rótulo não é fonte de verdade:
+sempre que há dúvida, o código lê e valida a tabela `database_manifest`.
+
 Quando recebe patch do app:
 
 1. grava anexos CAS recebidos;
@@ -128,6 +141,8 @@ Quando detecta alteração feita por outra máquina:
 
 Quando uma pasta local/NAS é selecionada:
 
+- a pasta efetiva do backup é resolvida como subpasta
+  `Veterinary Clinic - <database_id>` dentro da raiz escolhida;
 - se faltam bancos base, eles são criados por snapshot seguro do app;
 - CAS do usuário é copiado por hash, sem duplicar arquivos;
 - se já existe conteúdo no destino, app e mirror geram changesets de estado completo

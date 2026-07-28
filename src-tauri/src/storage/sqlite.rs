@@ -1,4 +1,4 @@
-use super::DbType;
+use super::{ensure_database_manifest, DbType};
 use rusqlite::Connection;
 use std::{fs, path::Path, time::Duration};
 
@@ -33,6 +33,22 @@ CREATE TABLE IF NOT EXISTS blobs (
 "#;
 
 const USER_LOGS_DDL: &str = r#"
+CREATE TABLE IF NOT EXISTS database_manifest (
+  scope TEXT PRIMARY KEY CHECK(scope = 'user'),
+  database_id TEXT NOT NULL UNIQUE CHECK(
+    length(database_id) = 36
+    AND substr(database_id, 9, 1) = '-'
+    AND substr(database_id, 14, 1) = '-'
+    AND substr(database_id, 15, 1) = '7'
+    AND substr(database_id, 19, 1) = '-'
+    AND substr(database_id, 24, 1) = '-'
+  ),
+  app_version TEXT NOT NULL CHECK(length(trim(app_version)) > 0),
+  schema_version INTEGER NOT NULL CHECK(schema_version > 0),
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS permanent_deletion_logs (
   id TEXT PRIMARY KEY,
   domain TEXT NOT NULL CHECK(domain IN ('user_data', 'user_media')),
@@ -72,9 +88,12 @@ pub fn open_sqlite_db(path: &Path, db_type: DbType) -> Result<Connection, String
         DbType::SystemMediaIndex => connection
             .execute_batch(SYSTEM_MEDIA_BLOBS_DDL)
             .map_err(|error| format!("system_media_schema_failed:{error}"))?,
-        DbType::Logs => connection
-            .execute_batch(USER_LOGS_DDL)
-            .map_err(|error| format!("logs_schema_failed:{error}"))?,
+        DbType::Logs => {
+            connection
+                .execute_batch(USER_LOGS_DDL)
+                .map_err(|error| format!("logs_schema_failed:{error}"))?;
+            ensure_database_manifest(&connection)?;
+        }
         DbType::Operational => {}
     }
     Ok(connection)

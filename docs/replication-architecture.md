@@ -111,6 +111,20 @@ Ele mantém:
 - CAS do usuário no destino;
 - uma baseline própria por domínio.
 
+Ele também valida identidade antes de sincronizar. A identidade vive na tabela
+`database_manifest` dentro de `veterinary_clinic_user_logs.db` e do
+`base_veterinary_clinic_user_logs.db` do mirror. O campo `database_id` é um
+UUIDv7 criado uma única vez para aquela base. Pasta vazia é inicializada com a
+identidade atual; pasta existente com outro `database_id` é rejeitada antes de
+qualquer merge.
+
+A pasta escolhida pelo usuário é tratada como raiz do destino. O mirror efetivo
+fica dentro de uma subpasta rotulada como `Veterinary Clinic - <database_id>`.
+Esse rótulo serve apenas para organização visual no disco; a validação nunca
+depende do nome da pasta, e sim da tabela `database_manifest`. Se o usuário
+selecionar diretamente uma pasta de mirror já existente, ela também é aceita,
+mas ainda passa pela mesma validação de identidade.
+
 Quando recebe patch do app:
 
 1. grava anexos CAS do envelope;
@@ -186,13 +200,14 @@ Como o hash é do conteúdo, o arquivo é imutável:
 
 Quando o usuário escolhe uma pasta:
 
-1. cria bancos base ausentes;
-2. copia CAS ausente por hash;
-3. se já houver dados dos dois lados, gera changesets de estado completo a partir de
+1. resolve a subpasta `Veterinary Clinic - <database_id>` dentro da pasta escolhida;
+2. cria bancos base ausentes;
+3. copia CAS ausente por hash;
+4. se já houver dados dos dois lados, gera changesets de estado completo a partir de
    baselines vazias;
-4. aplica app -> mirror e mirror -> app com o mesmo LWW;
-5. reseta baselines do app e do mirror;
-6. executa um ciclo normal ainda dentro do lock.
+5. aplica app -> mirror e mirror -> app com o mesmo LWW;
+6. reseta baselines do app e do mirror;
+7. executa um ciclo normal ainda dentro do lock.
 
 Esse processo evita uma reconciliação manual permanente. Depois do bootstrap,
 o mirror volta a operar por patches.

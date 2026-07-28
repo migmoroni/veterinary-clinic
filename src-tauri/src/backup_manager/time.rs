@@ -12,15 +12,6 @@ pub(crate) fn timestamp_for_file() -> String {
     format!("{year:04}-{month:02}-{day:02}_{hour:02}{minute:02}{second:02}")
 }
 
-pub(crate) fn now_iso() -> String {
-    system_time_to_iso(std::time::SystemTime::now())
-}
-
-pub(crate) fn system_time_to_iso(time: std::time::SystemTime) -> String {
-    let (year, month, day, hour, minute, second) = system_time_components(time);
-    format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}Z")
-}
-
 // Keeps backup timestamps independent from locale and external time crates.
 fn system_time_components(time: std::time::SystemTime) -> (i32, u32, u32, u32, u32, u32) {
     let duration = time

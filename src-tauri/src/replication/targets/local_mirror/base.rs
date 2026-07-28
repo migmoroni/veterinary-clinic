@@ -8,6 +8,16 @@ use crate::{replication::types::StorageDomain, storage::StorageManager};
 use rusqlite::Connection;
 use std::{fs, path::Path};
 
+pub(super) fn has_any_base_database(target_path: &Path) -> bool {
+    [
+        StorageDomain::UserData,
+        StorageDomain::UserMedia,
+        StorageDomain::UserLogs,
+    ]
+    .into_iter()
+    .any(|domain| target_path.join(domain.base_database_name()).is_file())
+}
+
 pub(super) fn ensure_all_base_databases(
     storage: &StorageManager,
     target_path: &Path,

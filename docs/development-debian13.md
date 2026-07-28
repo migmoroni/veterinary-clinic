@@ -126,7 +126,7 @@ Para remover o banco SQLite local de desenvolvimento, o armazenamento local do W
 npm run tauri:dev:new
 ```
 
-Esse comando executa `scripts/new-state.mjs`, aguarda 1 segundo e entao chama o fluxo normal de `npm run tauri:dev`. A limpeza remove o banco de dados, de "~/.config/app.veterinary-clinic.local/veterinary_clinic.db" e tambem remove `localStorage`, cujo diretorio é "~/.local/share/app.veterinary-clinic.local/localstorage", incluindo a lista recente da busca.
+Esse comando executa `scripts/new-state.mjs`, aguarda 1 segundo e entao chama o fluxo normal de `npm run tauri:dev`. A limpeza remove o estado local de desenvolvimento do app, incluindo bancos SQLite, WAL/SHM, CAS em `vault/`, fila e baselines de `replication/`, armazenamento do WebView e cache. Diretorios de saida do usuario, como `backups/`, `exports/`, `import_safety_exports/` e pastas de backup continuo rotuladas como `Veterinary Clinic - <database_id>`, sao preservados.
 
 Para testar apenas a camada web no navegador, sem shell Tauri e sem todos os recursos nativos:
 

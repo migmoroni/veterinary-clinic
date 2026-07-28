@@ -46,10 +46,15 @@ pub(super) fn sync_user_cas_bidirectional(
     let backup_vault = target_path
         .join(StorageDomain::UserMedia.as_str())
         .join("vault");
-    // Local/NAS can be inspected directly, so no API transfer protocol is
-    // needed here. Cloud must implement its own CAS API in `cloud_client`.
-    let pushed = copy_missing_files_recursive(&active_vault, &backup_vault)?;
-    let pulled = copy_missing_files_recursive(&backup_vault, &active_vault)?;
+
+    // CAS files are only meaningful when indexed by the media DB. Copying every
+    // physical file would let orphan bytes from an old/imported base leak into a
+    // new mirror, so both directions are constrained by each side's active
+    // `blobs.hash` rows.
+    let active_hashes = active_media_hashes(storage)?;
+    let target_hashes = target_media_hashes(target_path)?;
+    let pushed = copy_referenced_files(&active_vault, &backup_vault, &active_hashes)?;
+    let pulled = copy_referenced_files(&backup_vault, &active_vault, &target_hashes)?;
     Ok(pushed || pulled)
 }
 
@@ -91,31 +96,28 @@ pub(super) fn collect_new_target_payloads(
     Ok(payloads)
 }
 
-fn copy_missing_files_recursive(source: &Path, destination: &Path) -> Result<bool, String> {
-    if !source.exists() {
-        return Ok(false);
-    }
-    fs::create_dir_all(destination)
-        .map_err(|error| format!("replication_initial_vault_dir_failed:{error}"))?;
+fn copy_referenced_files(
+    source_root: &Path,
+    destination_root: &Path,
+    hash_hexes: &[String],
+) -> Result<bool, String> {
     let mut changed = false;
-    for entry in fs::read_dir(source)
-        .map_err(|error| format!("replication_initial_vault_read_failed:{error}"))?
-    {
-        let entry =
-            entry.map_err(|error| format!("replication_initial_vault_entry_failed:{error}"))?;
-        let source_path = entry.path();
-        let destination_path = destination.join(entry.file_name());
-        if source_path.is_dir() {
-            changed |= copy_missing_files_recursive(&source_path, &destination_path)?;
-        } else if source_path.is_file() && !destination_path.is_file() {
-            if let Some(parent) = destination_path.parent() {
-                fs::create_dir_all(parent)
-                    .map_err(|error| format!("replication_initial_vault_parent_failed:{error}"))?;
-            }
-            fs::copy(&source_path, &destination_path)
-                .map_err(|error| format!("replication_initial_vault_copy_failed:{error}"))?;
-            changed = true;
+    for hash_hex in hash_hexes {
+        let source_path = cas_path_from_root(source_root, hash_hex)?;
+        if !source_path.is_file() {
+            continue;
         }
+        let destination_path = cas_path_from_root(destination_root, hash_hex)?;
+        if destination_path.is_file() {
+            continue;
+        }
+        if let Some(parent) = destination_path.parent() {
+            fs::create_dir_all(parent)
+                .map_err(|error| format!("replication_initial_vault_parent_failed:{error}"))?;
+        }
+        fs::copy(&source_path, &destination_path)
+            .map_err(|error| format!("replication_initial_vault_copy_failed:{error}"))?;
+        changed = true;
     }
     Ok(changed)
 }
@@ -134,20 +136,42 @@ fn active_media_hashes(storage: &StorageManager) -> Result<Vec<String>, String> 
         .user_media_db
         .lock()
         .map_err(|_| "database_connection_lock_failed".to_string())?;
-    if !table_exists(&media_db, "blobs")? {
+    media_hashes(&media_db, "replication_initial_media")
+}
+
+fn target_media_hashes(target_path: &Path) -> Result<Vec<String>, String> {
+    let media_db_path = target_path.join(StorageDomain::UserMedia.base_database_name());
+    if !media_db_path.is_file() {
         return Ok(Vec::new());
     }
-    let mut statement = media_db
+    let connection = applier::open_domain_database(&media_db_path, StorageDomain::UserMedia)?;
+    media_hashes(&connection, "replication_target_media")
+}
+
+fn media_hashes(connection: &Connection, error_prefix: &str) -> Result<Vec<String>, String> {
+    if !table_exists(connection, "blobs")? {
+        return Ok(Vec::new());
+    }
+    let mut statement = connection
         .prepare_cached("SELECT hash FROM blobs WHERE removed_at IS NULL ORDER BY hash")
-        .map_err(|error| format!("replication_initial_media_hash_prepare_failed:{error}"))?;
+        .map_err(|error| format!("{error_prefix}_hash_prepare_failed:{error}"))?;
     let rows = statement
         .query_map([], |row| row.get::<_, Vec<u8>>(0))
-        .map_err(|error| format!("replication_initial_media_hash_select_failed:{error}"))?;
+        .map_err(|error| format!("{error_prefix}_hash_select_failed:{error}"))?;
     rows.map(|row| {
         row.map(|hash| bytes_to_hex(&hash))
-            .map_err(|error| format!("replication_initial_media_hash_row_failed:{error}"))
+            .map_err(|error| format!("{error_prefix}_hash_row_failed:{error}"))
     })
     .collect()
+}
+
+fn cas_path_from_root(root: &Path, hash_hex: &str) -> Result<std::path::PathBuf, String> {
+    let hash = decode_hash_hex(hash_hex)?;
+    let normalized = bytes_to_hex(&hash);
+    Ok(root
+        .join(&normalized[0..2])
+        .join(&normalized[2..4])
+        .join(format!("{normalized}.bin")))
 }
 
 fn target_cas_path(

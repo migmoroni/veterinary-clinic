@@ -232,6 +232,37 @@ pub(crate) fn pending_counts(connection: &Connection) -> Result<QueueCounts, Str
     })
 }
 
+pub(crate) fn has_pending_delivery_for_target(
+    connection: &Connection,
+    target_id: TargetId,
+) -> Result<bool, String> {
+    let mut statement = connection
+        .prepare_cached("SELECT origin_target, delivered_targets_json FROM outbound_queue")
+        .map_err(|error| format!("replication_outbox_target_pending_prepare_failed:{error}"))?;
+    let rows = statement
+        .query_map([], |row| {
+            Ok((row.get::<_, Option<String>>(0)?, row.get::<_, String>(1)?))
+        })
+        .map_err(|error| format!("replication_outbox_target_pending_select_failed:{error}"))?;
+
+    for row in rows {
+        let (origin_target_text, delivered_targets_json) =
+            row.map_err(|error| format!("replication_outbox_target_pending_row_failed:{error}"))?;
+        let origin_target = origin_target_text
+            .as_deref()
+            .map(TargetId::try_from)
+            .transpose()?;
+        if origin_target == Some(target_id) {
+            continue;
+        }
+        let delivered_targets = deserialize_targets(&delivered_targets_json)?;
+        if !delivered_targets.contains(&target_id) {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
 pub(crate) fn load_ready_envelopes(
     connection: &Connection,
     limit: usize,
@@ -600,6 +631,36 @@ mod tests {
         assert_eq!(
             vec![TargetId::Local, TargetId::Cloud],
             items[0].delivered_targets
+        );
+    }
+
+    #[test]
+    fn pending_delivery_for_target_ignores_already_delivered_or_origin_target() {
+        let connection = memory_queue();
+        enqueue_envelope(
+            &connection,
+            &sample_envelope(1),
+            EnvelopeStage::Micro,
+            None,
+            &[TargetId::Local],
+        )
+        .expect("enqueue delivered local");
+        enqueue_envelope(
+            &connection,
+            &sample_envelope(2),
+            EnvelopeStage::Micro,
+            Some(TargetId::Local),
+            &[],
+        )
+        .expect("enqueue local origin");
+
+        assert!(
+            !has_pending_delivery_for_target(&connection, TargetId::Local)
+                .expect("check local pending")
+        );
+        assert!(
+            has_pending_delivery_for_target(&connection, TargetId::Cloud)
+                .expect("check cloud pending")
         );
     }
 

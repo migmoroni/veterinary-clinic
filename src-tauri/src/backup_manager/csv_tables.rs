@@ -23,6 +23,20 @@ pub(crate) const MEDIA_CSV_TABLE: CsvTable = CsvTable {
 
 pub(crate) const LOG_CSV_TABLES: &[CsvTable] = &[
     CsvTable {
+        name: "database_manifest",
+        folder: "logs_csv",
+        columns: &[
+            "scope",
+            "database_id",
+            "app_version",
+            "schema_version",
+            "created_at",
+            "updated_at",
+        ],
+        order_by: "scope",
+        blob_columns: &[],
+    },
+    CsvTable {
         name: "permanent_deletion_logs",
         folder: "logs_csv",
         columns: &[

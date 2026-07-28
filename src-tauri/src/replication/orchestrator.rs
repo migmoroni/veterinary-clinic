@@ -18,6 +18,11 @@ use tauri::{AppHandle, Emitter, State};
 
 const PRODUCER_INTERVAL: Duration = Duration::from_secs(10);
 
+pub(crate) struct PreImportBackupState {
+    pub backup_target_path: Option<PathBuf>,
+    pub final_sync_succeeded: bool,
+}
+
 pub fn start_background(storage: StorageManager, app: AppHandle) {
     tauri::async_runtime::spawn_blocking(move || loop {
         // Only notify the UI when the engine pulled external data into the app.
@@ -30,6 +35,37 @@ pub fn start_background(storage: StorageManager, app: AppHandle) {
 
 pub(crate) fn run_once(storage: &StorageManager) -> Result<bool, String> {
     Ok(engine::run_once(storage)?.active_changed_from_targets)
+}
+
+pub(crate) fn prepare_for_database_import(
+    storage: &StorageManager,
+) -> Result<PreImportBackupState, String> {
+    let config = local_mirror::load_config(storage)?;
+    let backup_target_path = local_mirror::general_target_path_for_config(&config);
+    if backup_target_path.is_none() {
+        return Ok(PreImportBackupState {
+            backup_target_path,
+            final_sync_succeeded: false,
+        });
+    }
+
+    let final_sync_succeeded = run_once(storage)
+        .and_then(|_| {
+            let status = local_mirror::status(storage)?;
+            let queue_connection = queue::open_queue(storage)?;
+            Ok(status.enabled
+                && status.destination_available
+                && !status.using_fallback
+                && !queue::has_pending_delivery_for_target(
+                    &queue_connection,
+                    crate::replication::types::TargetId::Local,
+                )?)
+        })
+        .unwrap_or(false);
+    Ok(PreImportBackupState {
+        backup_target_path,
+        final_sync_succeeded,
+    })
 }
 
 #[tauri::command]

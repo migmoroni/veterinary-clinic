@@ -3,15 +3,18 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { addBackupHistory } from '$lib/persistence/repositories/backup.repository.js';
 import { closeDatabase, closeUserMediaDatabase, getDatabase } from '$lib/persistence/sqlite/client.js';
 import { clearClientStateAfterDatabaseImport } from './client-state.service.js';
+import { setBackupTargetPath } from './replication-backup.service.js';
 
 interface CsvImportResult {
 	importedPath: string;
 	safetyBackupName: string;
+	backupTargetPath: string;
 }
 
 interface PackageResponse {
 	path: string;
 	safetyBackupPath: string | null;
+	backupTargetPath: string | null;
 }
 
 async function reopenUserStorageAfterImport(): Promise<void> {
@@ -36,5 +39,10 @@ export async function importDatabaseFromCsv(title: string): Promise<CsvImportRes
 	await addBackupHistory(response.path, 'import');
 	if (response.safetyBackupPath) await addBackupHistory(response.safetyBackupPath, 'pre_import_backup');
 	clearClientStateAfterDatabaseImport();
-	return { importedPath: response.path, safetyBackupName: response.safetyBackupPath ?? '' };
+	if (response.backupTargetPath) await setBackupTargetPath(response.backupTargetPath);
+	return {
+		importedPath: response.path,
+		safetyBackupName: response.safetyBackupPath ?? '',
+		backupTargetPath: response.backupTargetPath ?? ''
+	};
 }

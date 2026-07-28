@@ -14,7 +14,6 @@ const packageStagingPath = resolve(outputDir, '.native-package-staging');
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, '..');
 const CURRENT_SCHEMA_VERSION = 1;
-const MANIFEST_FILE = 'manifest.json';
 
 const MEDIA_BLOBS_DDL = `
 CREATE TABLE IF NOT EXISTS blobs (
@@ -34,6 +33,22 @@ CREATE TABLE IF NOT EXISTS blobs (
 `;
 
 const USER_LOGS_DDL = `
+CREATE TABLE IF NOT EXISTS database_manifest (
+	scope TEXT PRIMARY KEY CHECK(scope = 'user'),
+	database_id TEXT NOT NULL UNIQUE CHECK(
+		length(database_id) = 36
+		AND substr(database_id, 9, 1) = '-'
+		AND substr(database_id, 14, 1) = '-'
+		AND substr(database_id, 15, 1) = '7'
+		AND substr(database_id, 19, 1) = '-'
+		AND substr(database_id, 24, 1) = '-'
+	),
+	app_version TEXT NOT NULL CHECK(length(trim(app_version)) > 0),
+	schema_version INTEGER NOT NULL CHECK(schema_version > 0),
+	created_at TEXT NOT NULL,
+	updated_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS permanent_deletion_logs (
 	id TEXT PRIMARY KEY,
 	domain TEXT NOT NULL CHECK(domain IN ('user_data', 'user_media')),
@@ -96,6 +111,7 @@ function createLogsDatabase(path) {
 		database.pragma('synchronous = NORMAL');
 		database.pragma('cache_size = -2000');
 		database.exec(USER_LOGS_DDL);
+		ensureDatabaseManifest(database);
 		database.pragma('wal_checkpoint(TRUNCATE)');
 	} finally {
 		database.close();
@@ -115,15 +131,25 @@ function nowIsoWithoutMilliseconds() {
 	return new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
 }
 
-function writeManifest(stagingPath) {
-	const manifest = {
-		app_version: readAppVersion(),
-		schema_version: CURRENT_SCHEMA_VERSION,
-		created_at: nowIsoWithoutMilliseconds(),
-		export_type: 'native',
-		domain: 'user'
-	};
-	writeFileSync(resolve(stagingPath, MANIFEST_FILE), `${JSON.stringify(manifest, null, 2)}\n`);
+function ensureDatabaseManifest(database) {
+	const createdAt = nowIsoWithoutMilliseconds();
+	database
+		.prepare(`
+			INSERT INTO database_manifest (
+				scope, database_id, app_version, schema_version, created_at, updated_at
+			)
+			SELECT
+				'user',
+				?,
+				?,
+				?,
+				?,
+				?
+			WHERE NOT EXISTS (
+				SELECT 1 FROM database_manifest WHERE scope = 'user'
+			)
+		`)
+		.run(createUuidV7(), readAppVersion(), CURRENT_SCHEMA_VERSION, createdAt, createdAt);
 }
 
 function snapshotDatabase(sourcePath, destinationPath) {
@@ -299,7 +325,6 @@ function createNativeImportPackage() {
 	snapshotDatabase(userDatabasePath, resolve(dataDir, 'veterinary_clinic_user.db'));
 	snapshotDatabase(userMediaDatabasePath, resolve(dataDir, 'veterinary_clinic_user_media.db'));
 	snapshotDatabase(userLogsDatabasePath, resolve(dataDir, 'veterinary_clinic_user_logs.db'));
-	writeManifest(packageStagingPath);
 	createStoredZipFromDirectory(packageStagingPath, outputPackagePath);
 	removeDirectoryIfExists(packageStagingPath);
 }

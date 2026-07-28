@@ -100,7 +100,7 @@ pub(crate) fn restore_from_backup(
         replace_file(&user_db_source, &storage.user_database_path())?;
         replace_file(&media_db_source, &storage.user_media_database_path())?;
         replace_file(&logs_db_source, &storage.user_logs_database_path())?;
-        copy_dir_recursive_if_exists(
+        replace_dir_recursive_if_exists(
             &source_root
                 .join(StorageDomain::UserMedia.as_str())
                 .join("vault"),
@@ -306,6 +306,16 @@ fn copy_dir_recursive_if_exists(source: &Path, destination: &Path) -> Result<(),
         }
     }
     Ok(())
+}
+
+fn replace_dir_recursive_if_exists(source: &Path, destination: &Path) -> Result<(), String> {
+    if destination.exists() {
+        fs::remove_dir_all(destination)
+            .map_err(|error| format!("replication_restore_vault_remove_failed:{error}"))?;
+    }
+    fs::create_dir_all(destination)
+        .map_err(|error| format!("replication_restore_vault_dir_failed:{error}"))?;
+    copy_dir_recursive_if_exists(source, destination)
 }
 
 #[cfg(test)]

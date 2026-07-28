@@ -291,6 +291,11 @@ export async function executeUserMedia(query: string, values: unknown[] = []) {
 	return database.execute(query, values);
 }
 
+export async function selectUserLogsMany<T>(query: string, values: unknown[] = []): Promise<T[]> {
+	assertTauriDatabaseRuntime();
+	return createDatabaseAdapter({ database: 'userLogs', dbType: 'logs' }).select<T[]>(query, values);
+}
+
 export async function selectSystemMediaMany<T>(query: string, values: unknown[] = []): Promise<T[]> {
 	const database = await getSystemMediaDatabase();
 	return database.select<T[]>(query, values);

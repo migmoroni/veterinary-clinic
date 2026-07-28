@@ -4,8 +4,9 @@
 	import { importDatabaseFromCsv } from '$lib/services/csv-import.service.js';
 	import { exportDatabaseAsCsv } from '$lib/services/csv-export.service.js';
 	import { exportDatabase } from '$lib/services/database-export.service.js';
-	import { importDatabase } from '$lib/services/database-import.service.js';
+	import { importDatabase, importDatabaseFromBackupFolder } from '$lib/services/database-import.service.js';
 	import Archive from '@lucide/svelte/icons/archive';
+	import FolderOpen from '@lucide/svelte/icons/folder-open';
 	import Table from '@lucide/svelte/icons/table';
 	import Upload from '@lucide/svelte/icons/upload';
 
@@ -67,7 +68,34 @@
 				return;
 			}
 			lastPath = result.safetyBackupName;
-			statusKey = 'status.imported';
+			statusKey = result.backupTargetPath
+				? result.safetyBackupName
+					? 'data.importedAndBackupTargetSavedWithSafety'
+					: 'data.importedAndBackupTargetSaved'
+				: 'status.imported';
+		} catch (exception) {
+			error = exception instanceof Error ? exception.message : String(exception);
+		} finally {
+			busy = false;
+		}
+	}
+
+	async function importBackupFolder() {
+		if (!window.confirm(t('data.importConfirm'))) return;
+		busy = true;
+		error = null;
+		statusKey = null;
+
+		try {
+			const result = await importDatabaseFromBackupFolder(t('dialog.importBackupFolderTitle'));
+			if (!result) {
+				statusKey = 'status.operationCanceled';
+				return;
+			}
+			lastPath = result.safetyBackupName;
+			statusKey = result.safetyBackupName
+				? 'data.importedAndBackupTargetSavedWithSafety'
+				: 'data.importedAndBackupTargetSaved';
 		} catch (exception) {
 			error = exception instanceof Error ? exception.message : String(exception);
 		} finally {
@@ -88,7 +116,11 @@
 				return;
 			}
 			lastPath = result.safetyBackupName;
-			statusKey = 'status.imported';
+			statusKey = result.backupTargetPath
+				? result.safetyBackupName
+					? 'data.importedAndBackupTargetSavedWithSafety'
+					: 'data.importedAndBackupTargetSaved'
+				: 'status.imported';
 		} catch (exception) {
 			error = exception instanceof Error ? exception.message : String(exception);
 		} finally {
@@ -166,6 +198,10 @@
 				<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={busy} onclick={() => void importCopy()}>
 					<Upload class="size-4" />
 					{t('actions.importDatabase')}
+				</button>
+				<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={busy} onclick={() => void importBackupFolder()}>
+					<FolderOpen class="size-4" />
+					{t('actions.importBackupFolder')}
 				</button>
 				<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={busy} onclick={() => void importCsv()}>
 					<Table class="size-4" />

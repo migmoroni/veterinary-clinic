@@ -49,6 +49,19 @@ pub(crate) fn copy_dir_recursive_if_exists(
     Ok(())
 }
 
+pub(crate) fn replace_dir_recursive_if_exists(
+    source: &Path,
+    destination: &Path,
+) -> Result<(), String> {
+    if destination.exists() {
+        fs::remove_dir_all(destination)
+            .map_err(|error| format!("directory_replace_remove_failed:{error}"))?;
+    }
+    fs::create_dir_all(destination)
+        .map_err(|error| format!("directory_replace_create_failed:{error}"))?;
+    copy_dir_recursive_if_exists(source, destination)
+}
+
 pub(crate) fn replace_sqlite_file(source: &Path, destination: &Path) -> Result<(), String> {
     if let Some(parent) = destination.parent() {
         fs::create_dir_all(parent)
@@ -96,6 +109,14 @@ pub(crate) fn normalized_existing_file_path(value: &str) -> Result<PathBuf, Stri
     Ok(path)
 }
 
+pub(crate) fn normalized_existing_path(value: &str) -> Result<PathBuf, String> {
+    let path = normalized_output_path(value)?;
+    if !path.exists() {
+        return Err("source_path_not_found".to_string());
+    }
+    Ok(path)
+}
+
 pub(crate) fn path_to_string(path: &Path) -> Result<String, String> {
     path.to_str()
         .map(str::to_string)
@@ -126,4 +147,37 @@ fn remove_sqlite_sidecars(path: &Path) -> Result<(), String> {
         remove_file_if_exists(&PathBuf::from(format!("{}{}", path.display(), suffix)))?;
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    #[test]
+    fn replace_dir_recursive_removes_destination_when_source_is_missing() {
+        let root = test_root("replace-missing-source");
+        let source = root.join("missing-source");
+        let destination = root.join("destination");
+        let stale_file = destination.join("aa").join("bb").join("stale.bin");
+        fs::create_dir_all(stale_file.parent().expect("stale parent")).expect("create stale dir");
+        fs::write(&stale_file, b"stale").expect("write stale");
+
+        replace_dir_recursive_if_exists(&source, &destination).expect("replace dir");
+
+        assert!(destination.is_dir());
+        assert!(!stale_file.exists());
+        let _ = fs::remove_dir_all(root);
+    }
+
+    fn test_root(label: &str) -> PathBuf {
+        std::env::temp_dir().join(format!(
+            "vclinic-backup-files-{label}-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("clock")
+                .as_nanos()
+        ))
+    }
 }

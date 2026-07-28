@@ -2,9 +2,8 @@ use super::{
     contracts::{PackageExportType, PackageResponse},
     csv::export_csv_table,
     csv_tables::{LOG_CSV_TABLES, MEDIA_CSV_TABLE, USER_CSV_TABLES},
-    database_package::{current_schema_version, stage_user_databases},
+    database_package::stage_user_databases,
     files::{copy_dir_recursive_if_exists, normalized_output_path, path_to_string, TempDirectory},
-    manifest::{new_manifest, write_manifest},
     zip::write_zip_from_directory,
 };
 use crate::storage::StorageManager;
@@ -21,6 +20,7 @@ pub(crate) fn export_native_package(
     Ok(PackageResponse {
         path: path_to_string(&destination_path)?,
         safety_backup_path: None,
+        backup_target_path: None,
     })
 }
 
@@ -33,6 +33,7 @@ pub(crate) fn export_csv_package(
     Ok(PackageResponse {
         path: path_to_string(&destination_path)?,
         safety_backup_path: None,
+        backup_target_path: None,
     })
 }
 
@@ -59,10 +60,6 @@ pub(crate) fn export_csv_package_to_path(
     let vault_user_dir = staging.path.join("vault").join("user");
     fs::create_dir_all(&vault_user_dir)
         .map_err(|error| format!("export_vault_dir_create_failed:{error}"))?;
-    write_manifest(
-        &staging.path,
-        new_manifest(PackageExportType::Csv, current_schema_version(storage)?),
-    )?;
 
     {
         let user_db = storage

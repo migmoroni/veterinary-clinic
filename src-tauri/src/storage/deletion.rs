@@ -1,15 +1,14 @@
 use super::{
-    bytes_to_hex, data::StorageManager, decode_hash_hex, sha256, DeletionAuditLog,
+    data::StorageManager, decode_hash_hex, uuid_v7_string, DeletionAuditLog,
     DeletionAuditLogsRequest, HardDeleteTrashRequest, StorageDomain,
 };
 use rusqlite::{params, Connection, OptionalExtension};
-use std::{
-    fs,
-    sync::atomic::{AtomicU64, Ordering},
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fs;
 
-static UUID_COUNTER: AtomicU64 = AtomicU64::new(0);
+const TOMBSTONE_TEXT: &str = "[deleted]";
+const TOMBSTONE_NORMALIZED_TEXT: &str = "deleted";
+const TOMBSTONE_DATE: &str = "1970-01-01";
+const TOMBSTONE_COUNTRY: &str = "BRA";
 
 enum TrashTarget {
     UserData {
@@ -201,25 +200,13 @@ fn hard_delete_user_data(
             }
             log_row(connection, "user_data", table, id_column, id, deleted_by)?;
 
+            let removed_at = sqlite_now(connection)?;
+            redact_related_rows(connection, table, id, &removed_at)?;
             for dependency in dependencies.iter().rev() {
-                let sql = format!(
-                    "DELETE FROM {} WHERE {} = ?1 AND removed_at IS NOT NULL",
-                    quote_identifier(dependency.table),
-                    quote_identifier(dependency.owner_column),
-                );
-                connection
-                    .execute(&sql, params![id])
-                    .map_err(|error| format!("dependent_hard_delete_failed:{error}"))?;
+                redact_dependency_rows(connection, dependency, id, &removed_at)?;
             }
 
-            let sql = format!(
-                "DELETE FROM {} WHERE {} = ?1 AND removed_at IS NOT NULL",
-                quote_identifier(table),
-                quote_identifier(id_column),
-            );
-            let affected = connection
-                .execute(&sql, params![id])
-                .map_err(|error| format!("hard_delete_failed:{error}"))?;
+            let affected = redact_target_row(connection, table, id_column, id, &removed_at)?;
             if affected == 0 {
                 return Err("trash_item_not_found".to_string());
             }
@@ -243,12 +230,26 @@ fn hard_delete_user_media(
             .map_err(|error| format!("delete_transaction_begin_failed:{error}"))?;
         let result = (|| {
             log_media_row(connection, target_id, hash, deleted_by)?;
+            let removed_at = sqlite_now(connection)?;
             let affected = connection
                 .execute(
-                    "DELETE FROM blobs WHERE hash = ?1 AND removed_at IS NOT NULL",
-                    params![hash],
+                    r#"
+                    UPDATE blobs
+                    SET thumbnail = NULL,
+                        mime_type = 'application/octet-stream',
+                        size_bytes = 1,
+                        width = NULL,
+                        height = NULL,
+                        sync_status = 'pending',
+                        uploaded_at = NULL,
+                        updated_at = ?2,
+                        updated_by = NULL,
+                        removed_at = ?2
+                    WHERE hash = ?1 AND removed_at IS NOT NULL
+                    "#,
+                    params![hash, removed_at],
                 )
-                .map_err(|error| format!("media_hard_delete_failed:{error}"))?;
+                .map_err(|error| format!("media_hard_delete_redact_failed:{error}"))?;
             if affected == 0 {
                 return Err("trash_item_not_found".to_string());
             }
@@ -257,6 +258,378 @@ fn hard_delete_user_media(
 
         finish_transaction(connection, result)
     })
+}
+
+fn sqlite_now(connection: &Connection) -> Result<String, String> {
+    connection
+        .query_row("SELECT strftime('%Y-%m-%dT%H:%M:%fZ', 'now')", [], |row| {
+            row.get(0)
+        })
+        .map_err(|error| format!("sqlite_now_failed:{error}"))
+}
+
+fn redact_related_rows(
+    connection: &Connection,
+    table: &str,
+    id: &str,
+    removed_at: &str,
+) -> Result<(), String> {
+    match table {
+        "owners" => redact_owner_related_rows(connection, id, removed_at),
+        "pets" => {
+            connection
+                .execute(
+                    r#"
+                    UPDATE pet_owners
+                    SET sort_order = 0,
+                        updated_at = ?2,
+                        updated_by = NULL,
+                        removed_at = ?2
+                    WHERE pet_id = ?1
+                    "#,
+                    params![id, removed_at],
+                )
+                .map_err(|error| format!("pet_owner_relation_redact_failed:{error}"))?;
+            Ok(())
+        }
+        _ => Ok(()),
+    }
+}
+
+fn redact_owner_related_rows(
+    connection: &Connection,
+    owner_id: &str,
+    removed_at: &str,
+) -> Result<(), String> {
+    if table_exists(connection, "contacts")? {
+        if table_exists(connection, "owner_additional_responsibles")? {
+            connection
+                .execute(
+                    r#"
+                    UPDATE contacts
+                    SET kind = 'other',
+                        label = '',
+                        value = ?2,
+                        sort_order = 0,
+                        updated_at = ?3,
+                        updated_by = NULL,
+                        removed_at = ?3
+                    WHERE owner_id = ?1
+                       OR responsible_id IN (
+                            SELECT id FROM owner_additional_responsibles WHERE owner_id = ?1
+                       )
+                    "#,
+                    params![owner_id, TOMBSTONE_TEXT, removed_at],
+                )
+                .map_err(|error| format!("owner_contacts_redact_failed:{error}"))?;
+        } else {
+            connection
+                .execute(
+                    r#"
+                    UPDATE contacts
+                    SET kind = 'other',
+                        label = '',
+                        value = ?2,
+                        sort_order = 0,
+                        updated_at = ?3,
+                        updated_by = NULL,
+                        removed_at = ?3
+                    WHERE owner_id = ?1
+                    "#,
+                    params![owner_id, TOMBSTONE_TEXT, removed_at],
+                )
+                .map_err(|error| format!("owner_contacts_redact_failed:{error}"))?;
+        }
+    }
+
+    if table_exists(connection, "owner_additional_responsibles")? {
+        connection
+            .execute(
+                r#"
+                UPDATE owner_additional_responsibles
+                SET name = ?2,
+                    avatar_hash = NULL,
+                    sort_order = 0,
+                    updated_at = ?3,
+                    updated_by = NULL,
+                    removed_at = ?3
+                WHERE owner_id = ?1
+                "#,
+                params![owner_id, TOMBSTONE_TEXT, removed_at],
+            )
+            .map_err(|error| format!("owner_responsibles_redact_failed:{error}"))?;
+    }
+
+    if table_exists(connection, "addresses")? {
+        connection
+            .execute(
+                r#"
+                UPDATE addresses
+                SET street = NULL,
+                    street_number = NULL,
+                    address_complement = NULL,
+                    neighborhood = NULL,
+                    city = NULL,
+                    state = NULL,
+                    country = ?2,
+                    postal_code = NULL,
+                    updated_at = ?3,
+                    updated_by = NULL,
+                    removed_at = ?3
+                WHERE owner_id = ?1
+                "#,
+                params![owner_id, TOMBSTONE_COUNTRY, removed_at],
+            )
+            .map_err(|error| format!("owner_addresses_redact_failed:{error}"))?;
+    }
+
+    if table_exists(connection, "pet_owners")? {
+        connection
+            .execute(
+                r#"
+                UPDATE pet_owners
+                SET sort_order = 0,
+                    updated_at = ?2,
+                    updated_by = NULL,
+                    removed_at = ?2
+                WHERE owner_id = ?1
+                "#,
+                params![owner_id, removed_at],
+            )
+            .map_err(|error| format!("owner_pet_relation_redact_failed:{error}"))?;
+    }
+
+    Ok(())
+}
+
+fn redact_dependency_rows(
+    connection: &Connection,
+    dependency: &DependencyTarget,
+    owner_id: &str,
+    removed_at: &str,
+) -> Result<(), String> {
+    match dependency.table {
+        "medical_records" => {
+            connection
+                .execute(
+                    &format!(
+                        r#"
+                        UPDATE {}
+                        SET title = NULL,
+                            description = NULL,
+                            admitted_at = NULL,
+                            discharged_at = NULL,
+                            updated_at = ?2,
+                            updated_by = NULL,
+                            removed_at = ?2
+                        WHERE {} = ?1 AND removed_at IS NOT NULL
+                        "#,
+                        quote_identifier(dependency.table),
+                        quote_identifier(dependency.owner_column),
+                    ),
+                    params![owner_id, removed_at],
+                )
+                .map_err(|error| format!("medical_records_redact_failed:{error}"))?;
+            Ok(())
+        }
+        "pet_treatments" => {
+            connection
+                .execute(
+                    &format!(
+                        r#"
+                        UPDATE {}
+                        SET applied_at = ?2,
+                            name = ?3,
+                            normalized_name = ?4,
+                            dose = ?3,
+                            validity_value = 1,
+                            validity_unit = 'days',
+                            observation = NULL,
+                            validity_ignored_at = NULL,
+                            updated_at = ?5,
+                            updated_by = NULL,
+                            removed_at = ?5
+                        WHERE {} = ?1 AND removed_at IS NOT NULL
+                        "#,
+                        quote_identifier(dependency.table),
+                        quote_identifier(dependency.owner_column),
+                    ),
+                    params![
+                        owner_id,
+                        TOMBSTONE_DATE,
+                        TOMBSTONE_TEXT,
+                        TOMBSTONE_NORMALIZED_TEXT,
+                        removed_at
+                    ],
+                )
+                .map_err(|error| format!("pet_treatments_redact_failed:{error}"))?;
+            Ok(())
+        }
+        "treatment_protocol_items" => {
+            connection
+                .execute(
+                    &format!(
+                        r#"
+                        UPDATE {}
+                        SET sort_order = 0,
+                            updated_at = ?2,
+                            updated_by = NULL,
+                            removed_at = ?2
+                        WHERE {} = ?1 AND removed_at IS NOT NULL
+                        "#,
+                        quote_identifier(dependency.table),
+                        quote_identifier(dependency.owner_column),
+                    ),
+                    params![owner_id, removed_at],
+                )
+                .map_err(|error| format!("protocol_items_redact_failed:{error}"))?;
+            Ok(())
+        }
+        "treatment_protocol_doses" => {
+            connection
+                .execute(
+                    &format!(
+                        r#"
+                        UPDATE {}
+                        SET dose = ?2,
+                            validity_value = 1,
+                            validity_unit = 'days',
+                            sort_order = 0,
+                            updated_at = ?3,
+                            updated_by = NULL,
+                            removed_at = ?3
+                        WHERE {} = ?1 AND removed_at IS NOT NULL
+                        "#,
+                        quote_identifier(dependency.table),
+                        quote_identifier(dependency.owner_column),
+                    ),
+                    params![owner_id, TOMBSTONE_TEXT, removed_at],
+                )
+                .map_err(|error| format!("protocol_doses_redact_failed:{error}"))?;
+            Ok(())
+        }
+        _ => Ok(()),
+    }
+}
+
+fn redact_target_row(
+    connection: &Connection,
+    table: &str,
+    id_column: &str,
+    id: &str,
+    removed_at: &str,
+) -> Result<usize, String> {
+    match table {
+        "owners" => connection
+            .execute(
+                r#"
+                UPDATE owners
+                SET name = ?2,
+                    avatar_hash = NULL,
+                    additional_information = NULL,
+                    updated_at = ?3,
+                    updated_by = NULL,
+                    removed_at = ?3
+                WHERE id = ?1 AND removed_at IS NOT NULL
+                "#,
+                params![id, TOMBSTONE_TEXT, removed_at],
+            )
+            .map_err(|error| format!("owner_redact_failed:{error}")),
+        "pets" => connection
+            .execute(
+                r#"
+                UPDATE pets
+                SET name = ?2,
+                    birth_date = NULL,
+                    species = NULL,
+                    breed = NULL,
+                    sex = NULL,
+                    avatar_hash = NULL,
+                    updated_at = ?3,
+                    updated_by = NULL,
+                    removed_at = ?3
+                WHERE id = ?1 AND removed_at IS NOT NULL
+                "#,
+                params![id, TOMBSTONE_TEXT, removed_at],
+            )
+            .map_err(|error| format!("pet_redact_failed:{error}")),
+        "medical_records" => connection
+            .execute(
+                r#"
+                UPDATE medical_records
+                SET title = NULL,
+                    description = NULL,
+                    admitted_at = NULL,
+                    discharged_at = NULL,
+                    updated_at = ?2,
+                    updated_by = NULL,
+                    removed_at = ?2
+                WHERE id = ?1 AND removed_at IS NOT NULL
+                "#,
+                params![id, removed_at],
+            )
+            .map_err(|error| format!("medical_record_redact_failed:{error}")),
+        "pet_treatments" => connection
+            .execute(
+                r#"
+                UPDATE pet_treatments
+                SET applied_at = ?2,
+                    name = ?3,
+                    normalized_name = ?4,
+                    dose = ?3,
+                    validity_value = 1,
+                    validity_unit = 'days',
+                    observation = NULL,
+                    validity_ignored_at = NULL,
+                    updated_at = ?5,
+                    updated_by = NULL,
+                    removed_at = ?5
+                WHERE id = ?1 AND removed_at IS NOT NULL
+                "#,
+                params![
+                    id,
+                    TOMBSTONE_DATE,
+                    TOMBSTONE_TEXT,
+                    TOMBSTONE_NORMALIZED_TEXT,
+                    removed_at
+                ],
+            )
+            .map_err(|error| format!("pet_treatment_redact_failed:{error}")),
+        "treatment_protocols" => connection
+            .execute(
+                r#"
+                UPDATE treatment_protocols
+                SET name = ?2,
+                    normalized_name = ?3,
+                    species = '[]',
+                    observation = NULL,
+                    sort_order = 0,
+                    hidden_at = NULL,
+                    updated_at = ?4,
+                    updated_by = NULL,
+                    removed_at = ?4
+                WHERE id = ?1 AND removed_at IS NOT NULL
+                "#,
+                params![id, TOMBSTONE_TEXT, TOMBSTONE_NORMALIZED_TEXT, removed_at],
+            )
+            .map_err(|error| format!("treatment_protocol_redact_failed:{error}")),
+        _ => {
+            let sql = format!(
+                r#"
+                UPDATE {}
+                SET updated_at = ?2,
+                    updated_by = NULL,
+                    removed_at = ?2
+                WHERE {} = ?1 AND removed_at IS NOT NULL
+                "#,
+                quote_identifier(table),
+                quote_identifier(id_column),
+            );
+            connection
+                .execute(&sql, params![id, removed_at])
+                .map_err(|error| format!("generic_tombstone_failed:{error}"))
+        }
+    }
 }
 
 fn with_attached_logs<F>(
@@ -468,44 +841,33 @@ fn table_columns(connection: &Connection, table: &str) -> Result<Vec<String>, St
     Ok(columns)
 }
 
-fn quote_identifier(identifier: &str) -> String {
-    format!("\"{}\"", identifier.replace('"', "\"\""))
+fn table_exists(connection: &Connection, table: &str) -> Result<bool, String> {
+    connection
+        .query_row(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?1 LIMIT 1",
+            params![table],
+            |_| Ok(()),
+        )
+        .optional()
+        .map(|value| value.is_some())
+        .map_err(|error| format!("table_exists_failed:{table}:{error}"))
 }
 
-fn uuid_v7_string() -> String {
-    let millis = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|duration| duration.as_millis() as u64)
-        .unwrap_or_default();
-    let counter = UUID_COUNTER.fetch_add(1, Ordering::Relaxed);
-    let seed = format!("{}:{}:{}", millis, std::process::id(), counter);
-    let entropy = sha256(seed.as_bytes());
-    let mut bytes = [0_u8; 16];
-    bytes[0] = ((millis >> 40) & 0xff) as u8;
-    bytes[1] = ((millis >> 32) & 0xff) as u8;
-    bytes[2] = ((millis >> 24) & 0xff) as u8;
-    bytes[3] = ((millis >> 16) & 0xff) as u8;
-    bytes[4] = ((millis >> 8) & 0xff) as u8;
-    bytes[5] = (millis & 0xff) as u8;
-    bytes[6..16].copy_from_slice(&entropy[0..10]);
-    bytes[6] = (bytes[6] & 0x0f) | 0x70;
-    bytes[8] = (bytes[8] & 0x3f) | 0x80;
-    let hex = bytes_to_hex(&bytes);
-    format!(
-        "{}-{}-{}-{}-{}",
-        &hex[0..8],
-        &hex[8..12],
-        &hex[12..16],
-        &hex[16..20],
-        &hex[20..32]
-    )
+fn quote_identifier(identifier: &str) -> String {
+    format!("\"{}\"", identifier.replace('"', "\"\""))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusqlite::{params, Connection, OptionalExtension};
-    use std::path::PathBuf;
+    use crate::storage::bytes_to_hex;
+    use rusqlite::{params, Connection};
+    use std::{
+        path::PathBuf,
+        sync::atomic::{AtomicU64, Ordering},
+    };
+
+    static TEST_COUNTER: AtomicU64 = AtomicU64::new(0);
 
     const TEST_LOGS_DDL: &str = r#"
 	CREATE TABLE permanent_deletion_logs (
@@ -528,7 +890,7 @@ mod tests {
 	"#;
 
     fn temp_logs_path(name: &str) -> PathBuf {
-        let nonce = UUID_COUNTER.fetch_add(1, Ordering::Relaxed);
+        let nonce = TEST_COUNTER.fetch_add(1, Ordering::Relaxed);
         std::env::temp_dir().join(format!(
             "veterinary-clinic-{name}-{}-{nonce}.db",
             std::process::id()
@@ -553,7 +915,7 @@ mod tests {
     }
 
     #[test]
-    fn hard_delete_user_data_deletes_row_and_writes_tombstone_log() {
+    fn hard_delete_user_data_redacts_row_and_writes_tombstone_log() {
         let logs_path = temp_logs_path("user-data-delete");
         create_logs_database(&logs_path);
         let connection = Connection::open_in_memory().expect("open user db");
@@ -563,10 +925,18 @@ mod tests {
 				CREATE TABLE owners (
 					id TEXT PRIMARY KEY,
 					name TEXT NOT NULL,
+					avatar_hash BLOB,
+					additional_information TEXT,
+					updated_at TEXT NOT NULL,
+					updated_by TEXT,
 					removed_at TEXT
 				);
-				INSERT INTO owners (id, name, removed_at)
-				VALUES ('owner-1', 'Ana', '2026-07-25T00:00:00Z');
+				INSERT INTO owners (
+					id, name, avatar_hash, additional_information, updated_at, updated_by, removed_at
+				)
+				VALUES (
+					'owner-1', 'Ana', x'0102', 'Sensitive note', '2026-07-25T00:00:00Z', 'actor-old', '2026-07-25T00:00:00Z'
+				);
 				"#,
             )
             .expect("create user table");
@@ -582,10 +952,30 @@ mod tests {
         )
         .expect("hard delete");
 
-        let remaining: i64 = connection
-            .query_row("SELECT COUNT(*) FROM owners", [], |row| row.get(0))
-            .expect("count owners");
-        assert_eq!(remaining, 0);
+        let row = connection
+            .query_row(
+                r#"
+                SELECT name, avatar_hash, additional_information, updated_by, removed_at
+                FROM owners
+                WHERE id = 'owner-1'
+                "#,
+                [],
+                |row| {
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, Option<Vec<u8>>>(1)?,
+                        row.get::<_, Option<String>>(2)?,
+                        row.get::<_, Option<String>>(3)?,
+                        row.get::<_, Option<String>>(4)?,
+                    ))
+                },
+            )
+            .expect("select redacted owner");
+        assert_eq!(row.0, TOMBSTONE_TEXT);
+        assert!(row.1.is_none());
+        assert!(row.2.is_none());
+        assert!(row.3.is_none());
+        assert!(row.4.is_some());
 
         let logs = Connection::open(&logs_path).expect("open logs database");
         let snapshot: String = logs
@@ -611,10 +1001,14 @@ mod tests {
 				CREATE TABLE owners (
 					id TEXT PRIMARY KEY,
 					name TEXT NOT NULL,
+					avatar_hash BLOB,
+					additional_information TEXT,
+					updated_at TEXT NOT NULL,
+					updated_by TEXT,
 					removed_at TEXT
 				);
-				INSERT INTO owners (id, name, removed_at)
-				VALUES ('owner-1', 'Ana', NULL);
+				INSERT INTO owners (id, name, updated_at, removed_at)
+				VALUES ('owner-1', 'Ana', '2026-07-25T00:00:00Z', NULL);
 				"#,
             )
             .expect("create user table");
@@ -639,7 +1033,7 @@ mod tests {
     }
 
     #[test]
-    fn hard_delete_user_media_deletes_blob_metadata_and_writes_tombstone_log() {
+    fn hard_delete_user_media_redacts_blob_metadata_and_writes_tombstone_log() {
         let logs_path = temp_logs_path("user-media-delete");
         create_logs_database(&logs_path);
         let connection = Connection::open_in_memory().expect("open media db");
@@ -656,6 +1050,7 @@ mod tests {
 					sync_status TEXT NOT NULL,
 					created_at TEXT NOT NULL,
 					updated_at TEXT NOT NULL,
+					updated_by TEXT,
 					uploaded_at TEXT,
 					removed_at TEXT
 				) WITHOUT ROWID;
@@ -683,16 +1078,34 @@ mod tests {
         )
         .expect("hard delete media");
 
-        let deleted = connection
+        let row = connection
             .query_row(
-                "SELECT 1 FROM blobs WHERE hash = ?1",
+                r#"
+                SELECT thumbnail, mime_type, size_bytes, width, height, uploaded_at, removed_at
+                FROM blobs
+                WHERE hash = ?1
+                "#,
                 params![hash.as_slice()],
-                |_| Ok(()),
+                |row| {
+                    Ok((
+                        row.get::<_, Option<Vec<u8>>>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, i64>(2)?,
+                        row.get::<_, Option<i64>>(3)?,
+                        row.get::<_, Option<i64>>(4)?,
+                        row.get::<_, Option<String>>(5)?,
+                        row.get::<_, Option<String>>(6)?,
+                    ))
+                },
             )
-            .optional()
-            .expect("select deleted media")
-            .is_none();
-        assert!(deleted);
+            .expect("select redacted media");
+        assert!(row.0.is_none());
+        assert_eq!(row.1, "application/octet-stream");
+        assert_eq!(row.2, 1);
+        assert!(row.3.is_none());
+        assert!(row.4.is_none());
+        assert!(row.5.is_none());
+        assert!(row.6.is_some());
 
         let logs = Connection::open(&logs_path).expect("open logs database");
         let domain: String = logs

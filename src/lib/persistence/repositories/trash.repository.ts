@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import type { TreatmentKind } from '$lib/domain/treatment/treatment.js';
 import { nowIso } from '$lib/domain/shared/time.js';
-import { execute, executeUserMedia, selectMany, selectUserMediaMany } from '$lib/persistence/sqlite/client.js';
+import { execute, executeUserMedia, selectMany, selectUserLogsMany, selectUserMediaMany } from '$lib/persistence/sqlite/client.js';
 import { hexToMediaHash, mediaHashToSqlLiteral } from '$lib/persistence/sqlite/media.js';
 
 export type TrashKind = 'owner' | 'pet' | 'record' | 'treatment' | 'protocol' | 'media';
@@ -44,6 +44,12 @@ interface MediaTrashRow {
 	removed_at: string | null;
 }
 
+interface PermanentDeletionLogRow {
+	domain: 'user_data' | 'user_media';
+	target_table: string;
+	target_id: string;
+}
+
 const ownerNamesForPetSql = `(SELECT group_concat(name, ' · ')
 	FROM (
 		SELECT owners.name AS name
@@ -62,6 +68,27 @@ function mapTrashItem(row: TrashRow): TrashItem {
 		subtitle: row.subtitle ?? '',
 		removedAt: row.removed_at
 	};
+}
+
+function permanentDeletionKey(domain: PermanentDeletionLogRow['domain'], targetTable: string, targetId: string): string {
+	return `${domain}:${targetTable}:${targetId}`;
+}
+
+function trashPermanentDeletionKey(item: TrashItem): string {
+	if (item.kind === 'owner') return permanentDeletionKey('user_data', 'owners', item.id);
+	if (item.kind === 'pet') return permanentDeletionKey('user_data', 'pets', item.id);
+	if (item.kind === 'treatment') return permanentDeletionKey('user_data', 'pet_treatments', item.id);
+	if (item.kind === 'protocol') return permanentDeletionKey('user_data', 'treatment_protocols', item.id);
+	if (item.kind === 'record') return permanentDeletionKey('user_data', 'medical_records', item.id);
+	return permanentDeletionKey('user_media', 'blobs', item.id);
+}
+
+async function permanentDeletionKeys(): Promise<Set<string>> {
+	const rows = await selectUserLogsMany<PermanentDeletionLogRow>(
+		`SELECT domain, target_table, target_id
+		 FROM permanent_deletion_logs`
+	);
+	return new Set(rows.map((row) => permanentDeletionKey(row.domain, row.target_table, row.target_id)));
 }
 
 export async function listTrashItems(): Promise<TrashItem[]> {
@@ -151,9 +178,11 @@ export async function listTrashItems(): Promise<TrashItem[]> {
 		 ORDER BY removed_at DESC`
 	);
 
+	const deletedForever = await permanentDeletionKeys();
 	return [...rows, ...mediaRows]
 		.sort((left, right) => String(right.removed_at ?? '').localeCompare(String(left.removed_at ?? '')))
-		.map(mapTrashItem);
+		.map(mapTrashItem)
+		.filter((item) => !deletedForever.has(trashPermanentDeletionKey(item)));
 }
 
 export async function restoreTrashItem(kind: TrashKind, id: TrashItemId): Promise<void> {
