@@ -10,6 +10,7 @@ mod commands;
 mod contracts;
 mod data;
 mod deletion;
+mod dirty;
 mod media;
 mod sql_bridge;
 mod sqlite;
@@ -25,4 +26,5 @@ pub use data::StorageManager;
 pub use sqlite::open_sqlite_db;
 
 pub(crate) use cas::{decode_hash_hex, path_to_string, sha256};
+pub(crate) use dirty::UserBundleDirtyFlags;
 pub(crate) use sql_bridge::{execute_statement, select_rows};

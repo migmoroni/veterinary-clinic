@@ -1,6 +1,6 @@
 use super::{
     execute_statement, open_sqlite_db, select_rows, DbType, SqlConnectionRequest,
-    SqlExecuteResponse, SqlRequest, StorageDatabase, StorageDomain,
+    SqlExecuteResponse, SqlRequest, StorageDatabase, StorageDomain, UserBundleDirtyFlags,
 };
 use rusqlite::Connection;
 use serde_json::Value as JsonValue;
@@ -28,6 +28,7 @@ pub struct StorageManager {
     pub base_vault_path: PathBuf,
     database_dir: PathBuf,
     external_dbs: Arc<Mutex<HashMap<String, Arc<Mutex<Connection>>>>>,
+    user_bundle_dirty: Arc<UserBundleDirtyFlags>,
 }
 
 impl StorageManager {
@@ -46,31 +47,87 @@ impl StorageManager {
             .map_err(|error| format!("database_dir_create_failed:{error}"))?;
         fs::create_dir_all(&base_vault_path)
             .map_err(|error| format!("vault_dir_create_failed:{error}"))?;
+        let user_bundle_dirty = Arc::new(UserBundleDirtyFlags::default());
 
+        user_bundle_dirty.mark_user_bundle();
         Ok(Self {
-            user_db: Arc::new(Mutex::new(open_sqlite_db(
+            user_db: Arc::new(Mutex::new(open_tracked_user_database(
                 &database_dir.join(USER_DATABASE_FILE),
                 DbType::Operational,
+                StorageDatabase::User,
+                &user_bundle_dirty,
             )?)),
             system_db: Arc::new(Mutex::new(open_sqlite_db(
                 &database_dir.join(SYSTEM_DATABASE_FILE),
                 DbType::Operational,
             )?)),
-            user_media_db: Arc::new(Mutex::new(open_sqlite_db(
+            user_media_db: Arc::new(Mutex::new(open_tracked_user_database(
                 &database_dir.join(USER_MEDIA_DATABASE_FILE),
                 DbType::MediaIndex,
+                StorageDatabase::UserMedia,
+                &user_bundle_dirty,
             )?)),
             system_media_db: Arc::new(Mutex::new(open_sqlite_db(
                 &database_dir.join(SYSTEM_MEDIA_DATABASE_FILE),
                 DbType::SystemMediaIndex,
             )?)),
-            user_logs_db: Arc::new(Mutex::new(open_sqlite_db(
+            user_logs_db: Arc::new(Mutex::new(open_tracked_user_database(
                 &database_dir.join(USER_LOGS_DATABASE_FILE),
                 DbType::Logs,
+                StorageDatabase::UserLogs,
+                &user_bundle_dirty,
             )?)),
             base_vault_path,
             database_dir,
             external_dbs: Arc::new(Mutex::new(HashMap::new())),
+            user_bundle_dirty,
+        })
+    }
+
+    #[cfg(test)]
+    pub(crate) fn new_for_tests(
+        database_dir: PathBuf,
+        app_data_dir: PathBuf,
+    ) -> Result<Self, String> {
+        let base_vault_path = app_data_dir.join("vault");
+        fs::create_dir_all(&database_dir)
+            .map_err(|error| format!("database_dir_create_failed:{error}"))?;
+        fs::create_dir_all(&base_vault_path)
+            .map_err(|error| format!("vault_dir_create_failed:{error}"))?;
+        let user_bundle_dirty = Arc::new(UserBundleDirtyFlags::default());
+
+        user_bundle_dirty.mark_user_bundle();
+        Ok(Self {
+            user_db: Arc::new(Mutex::new(open_tracked_user_database(
+                &database_dir.join(USER_DATABASE_FILE),
+                DbType::Operational,
+                StorageDatabase::User,
+                &user_bundle_dirty,
+            )?)),
+            system_db: Arc::new(Mutex::new(open_sqlite_db(
+                &database_dir.join(SYSTEM_DATABASE_FILE),
+                DbType::Operational,
+            )?)),
+            user_media_db: Arc::new(Mutex::new(open_tracked_user_database(
+                &database_dir.join(USER_MEDIA_DATABASE_FILE),
+                DbType::MediaIndex,
+                StorageDatabase::UserMedia,
+                &user_bundle_dirty,
+            )?)),
+            system_media_db: Arc::new(Mutex::new(open_sqlite_db(
+                &database_dir.join(SYSTEM_MEDIA_DATABASE_FILE),
+                DbType::SystemMediaIndex,
+            )?)),
+            user_logs_db: Arc::new(Mutex::new(open_tracked_user_database(
+                &database_dir.join(USER_LOGS_DATABASE_FILE),
+                DbType::Logs,
+                StorageDatabase::UserLogs,
+                &user_bundle_dirty,
+            )?)),
+            base_vault_path,
+            database_dir,
+            external_dbs: Arc::new(Mutex::new(HashMap::new())),
+            user_bundle_dirty,
         })
     }
 
@@ -89,6 +146,18 @@ impl StorageManager {
     pub fn user_vault_path(&self) -> PathBuf {
         self.base_vault_path
             .join(StorageDomain::User.vault_segment())
+    }
+
+    pub(crate) fn take_user_bundle_dirty(&self, database: StorageDatabase) -> bool {
+        self.user_bundle_dirty.take_database(database)
+    }
+
+    pub(crate) fn clear_user_bundle_dirty(&self, database: StorageDatabase) {
+        self.user_bundle_dirty.clear_database(database);
+    }
+
+    pub(crate) fn mark_user_bundle_dirty(&self, database: StorageDatabase) {
+        self.user_bundle_dirty.mark_database(database);
     }
 
     pub fn app_data_dir(&self) -> Result<PathBuf, String> {
@@ -147,6 +216,7 @@ impl StorageManager {
     }
 
     pub(crate) fn execute(&self, request: SqlRequest) -> Result<SqlExecuteResponse, String> {
+        let database = request.database;
         let connection = self.connection_for(&SqlConnectionRequest {
             database: request.database,
             file_name: request.file_name,
@@ -155,7 +225,11 @@ impl StorageManager {
         let guard = connection
             .lock()
             .map_err(|_| "database_connection_lock_failed".to_string())?;
-        execute_statement(&guard, &request.query, request.values)
+        let response = execute_statement(&guard, &request.query, request.values)?;
+        if response.rows_affected > 0 {
+            self.user_bundle_dirty.mark_database(database);
+        }
+        Ok(response)
     }
 
     pub(crate) fn close_connection(&self, request: SqlConnectionRequest) -> Result<(), String> {
@@ -208,7 +282,19 @@ impl StorageManager {
         let mut guard = connection
             .lock()
             .map_err(|_| "database_connection_lock_failed".to_string())?;
-        *guard = open_sqlite_db(&path, db_type)?;
+        *guard = match request.database {
+            StorageDatabase::User | StorageDatabase::UserMedia | StorageDatabase::UserLogs => {
+                open_tracked_user_database(
+                    &path,
+                    db_type,
+                    request.database,
+                    &self.user_bundle_dirty,
+                )?
+            }
+            StorageDatabase::System
+            | StorageDatabase::SystemMedia
+            | StorageDatabase::AppConfigFile => open_sqlite_db(&path, db_type)?,
+        };
         Ok(())
     }
 
@@ -276,6 +362,30 @@ impl StorageManager {
         external.insert(file_name.to_string(), Arc::clone(&connection));
         Ok(connection)
     }
+}
+
+fn open_tracked_user_database(
+    path: &Path,
+    db_type: DbType,
+    database: StorageDatabase,
+    dirty: &Arc<UserBundleDirtyFlags>,
+) -> Result<Connection, String> {
+    let connection = open_sqlite_db(path, db_type)?;
+    install_user_bundle_dirty_hook(&connection, database, dirty);
+    Ok(connection)
+}
+
+fn install_user_bundle_dirty_hook(
+    connection: &Connection,
+    database: StorageDatabase,
+    dirty: &Arc<UserBundleDirtyFlags>,
+) {
+    let dirty = Arc::clone(dirty);
+    connection.update_hook(Some(move |_, database_name: &str, table_name: &str, _| {
+        if database_name == "main" && !table_name.starts_with("sqlite_") {
+            dirty.mark_database(database);
+        }
+    }));
 }
 
 fn fixed_database_type(database: StorageDatabase, requested: Option<DbType>) -> DbType {

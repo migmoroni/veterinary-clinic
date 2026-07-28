@@ -76,7 +76,10 @@ impl StorageManager {
                     dependencies,
                     &request.id,
                     request.deleted_by.as_deref(),
-                )
+                )?;
+                self.mark_user_bundle_dirty(super::StorageDatabase::User);
+                self.mark_user_bundle_dirty(super::StorageDatabase::UserLogs);
+                Ok(())
             }
             TrashTarget::UserMedia => {
                 let hash = decode_hash_hex(&request.id)?;
@@ -95,6 +98,8 @@ impl StorageManager {
                     &hash,
                     request.deleted_by.as_deref(),
                 )?;
+                self.mark_user_bundle_dirty(super::StorageDatabase::UserMedia);
+                self.mark_user_bundle_dirty(super::StorageDatabase::UserLogs);
                 let path = self.resolve_cas_path(StorageDomain::User, &hash)?;
                 if path.is_file() {
                     fs::remove_file(path)

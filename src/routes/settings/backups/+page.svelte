@@ -1,69 +1,35 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { open } from '@tauri-apps/plugin-dialog';
 	import { t, type TranslationKey } from '$lib/i18n/index.js';
 	import { openInFileManager } from '$lib/native/file-manager.js';
 	import type { BackupHistoryItem, BackupKind } from '$lib/persistence/repositories/backup.repository.js';
-	import Select from '$lib/components/ui/Select.svelte';
-	import { BACKUP_POLICY_INTERVAL_MINUTES, DEFAULT_BACKUP_POLICY_INTERVAL_MINUTES, getBackupHistory, loadBackupPolicyIntervalMinutes, saveBackupPolicyIntervalMinutes } from '$lib/services/backup.service.js';
+	import { getBackupHistory } from '$lib/services/backup.service.js';
 	import { exportDatabase } from '$lib/services/database-export.service.js';
+	import { getBackupReplicationStatus, setBackupTargetPath, type BackupReplicationStatus } from '$lib/services/replication-backup.service.js';
 	import DatabaseBackup from '@lucide/svelte/icons/database-backup';
+	import FolderOpen from '@lucide/svelte/icons/folder-open';
 	import RotateCw from '@lucide/svelte/icons/rotate-cw';
 
 	let history = $state<BackupHistoryItem[]>([]);
+	let replicationStatus = $state<BackupReplicationStatus | null>(null);
 	let busy = $state(false);
-	let savingPolicy = $state(false);
-	let policyIntervalMinutes = $state<number>(DEFAULT_BACKUP_POLICY_INTERVAL_MINUTES);
+	let savingTarget = $state(false);
 	let statusKey = $state<TranslationKey | null>(null);
 	let lastPath = $state('');
 	let error = $state<string | null>(null);
-
-	let policyOptions = $derived(
-		BACKUP_POLICY_INTERVAL_MINUTES.map((minutes) => ({
-			value: minutes,
-			label: policyIntervalLabel(minutes)
-		}))
-	);
 
 	function kindLabel(kind: BackupKind): string {
 		return t(`backup.kind.${kind}` as TranslationKey);
 	}
 
-	function policyIntervalLabel(minutes: number): string {
-		if (minutes < 24 * 60) {
-			const hours = minutes / 60;
-			const unitKey = hours === 1 ? 'backup.policyHour' : 'backup.policyHours';
-			return `${t('backup.policyEvery')} ${hours} ${t(unitKey)}`;
-		}
-
-		const days = minutes / (24 * 60);
-		const unitKey = days === 1 ? 'backup.policyDay' : 'backup.policyDays';
-		return `${t('backup.policyEvery')} ${days} ${t(unitKey)}`;
-	}
-
 	async function load() {
 		try {
-			const [loadedHistory, loadedPolicyIntervalMinutes] = await Promise.all([getBackupHistory(), loadBackupPolicyIntervalMinutes()]);
+			const [loadedHistory, loadedReplicationStatus] = await Promise.all([getBackupHistory(), getBackupReplicationStatus()]);
 			history = loadedHistory;
-			policyIntervalMinutes = loadedPolicyIntervalMinutes;
+			replicationStatus = loadedReplicationStatus;
 		} catch (exception) {
 			error = exception instanceof Error ? exception.message : String(exception);
-		}
-	}
-
-	async function changeBackupPolicy(intervalMinutes: number) {
-		savingPolicy = true;
-		error = null;
-		statusKey = null;
-		lastPath = '';
-		policyIntervalMinutes = intervalMinutes;
-
-		try {
-			policyIntervalMinutes = await saveBackupPolicyIntervalMinutes(intervalMinutes);
-			statusKey = 'status.preferencesSaved';
-		} catch (exception) {
-			error = exception instanceof Error ? exception.message : String(exception);
-		} finally {
-			savingPolicy = false;
 		}
 	}
 
@@ -96,6 +62,43 @@
 			await openInFileManager(path);
 		} catch (exception) {
 			error = exception instanceof Error ? exception.message : String(exception);
+		}
+	}
+
+	async function defineBackupTargetPath() {
+		savingTarget = true;
+		error = null;
+		statusKey = null;
+
+		try {
+			const selected = await open({
+				directory: true,
+				multiple: false,
+				title: t('backup.replicationTargetDialogTitle')
+			});
+			const path = Array.isArray(selected) ? selected[0] : selected;
+			if (typeof path !== 'string' || !path) return;
+			replicationStatus = await setBackupTargetPath(path);
+			statusKey = 'backup.replicationTargetSaved';
+		} catch (exception) {
+			error = exception instanceof Error ? exception.message : String(exception);
+		} finally {
+			savingTarget = false;
+		}
+	}
+
+	async function disableBackupTargetPath() {
+		savingTarget = true;
+		error = null;
+		statusKey = null;
+
+		try {
+			replicationStatus = await setBackupTargetPath('');
+			statusKey = 'backup.replicationTargetDisabled';
+		} catch (exception) {
+			error = exception instanceof Error ? exception.message : String(exception);
+		} finally {
+			savingTarget = false;
 		}
 	}
 
@@ -145,11 +148,54 @@
 	{/if}
 
 	<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
-		<h3 class="text-base font-semibold">{t('backup.policyTitle')}</h3>
-		<div class="mt-4 flex max-w-sm flex-col gap-2 text-sm font-medium">
-			<p>{t('backup.policySelectLabel')}</p>
-			<Select id="backup-policy-interval" bind:value={policyIntervalMinutes} options={policyOptions} disabled={savingPolicy || busy} ariaLabel={t('backup.policySelectLabel')} onchange={(value) => void changeBackupPolicy(value)} />
+		<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+			<div>
+				<h3 class="text-base font-semibold">{t('backup.replicationTitle')}</h3>
+				<p class="mt-1 text-sm text-muted-foreground">{t('backup.replicationDescription')}</p>
+			</div>
+			<div class="flex flex-wrap gap-2">
+				<button type="button" class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={savingTarget || busy} onclick={() => void defineBackupTargetPath()}>
+					<FolderOpen class="size-4" />
+					{t('backup.chooseReplicationTarget')}
+				</button>
+				<button type="button" class="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50" disabled={savingTarget || busy || !replicationStatus?.enabled} onclick={() => void disableBackupTargetPath()}>
+					{t('backup.disableReplicationTarget')}
+				</button>
+			</div>
 		</div>
+
+		<div class="mt-4 grid gap-3 md:grid-cols-3">
+			<div class="rounded-md border border-border bg-background p-3">
+				<p class="text-xs font-semibold uppercase text-muted-foreground">{t('backup.replicationStatus')}</p>
+				<p class="mt-1 text-sm font-medium">
+					{#if replicationStatus?.enabled}
+						{replicationStatus.destinationAvailable ? t('backup.replicationStatusActive') : t('backup.replicationStatusFallback')}
+					{:else}
+						{t('backup.replicationStatusDisabled')}
+					{/if}
+				</p>
+			</div>
+			<div class="rounded-md border border-border bg-background p-3">
+				<p class="text-xs font-semibold uppercase text-muted-foreground">{t('backup.replicationPending')}</p>
+				<p class="mt-1 text-sm font-medium">{replicationStatus?.pendingTotal ?? 0}</p>
+				<p class="mt-1 text-xs text-muted-foreground">C1 {replicationStatus?.pendingC1 ?? 0} · C2 {replicationStatus?.pendingC2 ?? 0} · C3 {replicationStatus?.pendingC3 ?? 0}</p>
+			</div>
+			<div class="rounded-md border border-border bg-background p-3">
+				<p class="text-xs font-semibold uppercase text-muted-foreground">{t('backup.replicationEffectivePath')}</p>
+				{#if replicationStatus?.effectivePath}
+					<button type="button" class="mt-1 break-all text-left text-sm font-medium text-primary underline underline-offset-4" onclick={() => void openBackupPath(replicationStatus?.effectivePath ?? '')}>
+						{replicationStatus.effectivePath}
+					</button>
+				{:else}
+					<p class="mt-1 text-sm text-muted-foreground">{t('backup.notConfigured')}</p>
+				{/if}
+			</div>
+		</div>
+
+		{#if replicationStatus?.lastError}
+			<p class="mt-3 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm">{replicationStatus.lastError}</p>
+		{/if}
+
 	</section>
 
 	<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">

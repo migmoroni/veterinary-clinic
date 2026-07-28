@@ -1,9 +1,8 @@
 use super::{
-    cas_mirror::{cas_mirror_user_path, sync_cas_incremental},
     contracts::{PackageExportType, PackageResponse},
     csv::export_csv_table,
     csv_tables::{LOG_CSV_TABLES, MEDIA_CSV_TABLE, USER_CSV_TABLES},
-    db_snapshot::{current_schema_version, stage_db_snapshot},
+    database_package::{current_schema_version, stage_user_databases},
     files::{copy_dir_recursive_if_exists, normalized_output_path, path_to_string, TempDirectory},
     manifest::{new_manifest, write_manifest},
     zip::write_zip_from_directory,
@@ -11,8 +10,8 @@ use super::{
 use crate::storage::StorageManager;
 use std::{fs, path::Path};
 
-// Exporter flow: turns the current user storage bundle into a portable package.
-// Backup code may call this, but export rules stay here for both DB and CSV.
+// Exporter flow: turns the current user storage bundle into a full portable package.
+// Continuous backups are patch-based and live in replication, not here.
 pub(crate) fn export_native_package(
     storage: &StorageManager,
     destination_path: &str,
@@ -47,11 +46,8 @@ pub(crate) fn export_native_package_to_path(
     fs::create_dir_all(&vault_user_dir)
         .map_err(|error| format!("export_vault_dir_create_failed:{error}"))?;
 
-    // Manual native packages are complete transfer packages: compact DB
-    // snapshots plus the already-deduplicated CAS mirror.
-    sync_cas_incremental(storage)?;
-    stage_db_snapshot(storage, &staging.path, export_type)?;
-    copy_dir_recursive_if_exists(&cas_mirror_user_path(storage)?, &vault_user_dir)?;
+    stage_user_databases(storage, &staging.path, export_type)?;
+    copy_dir_recursive_if_exists(&storage.user_vault_path(), &vault_user_dir)?;
     write_zip_from_directory(&staging.path, destination_path)
 }
 
@@ -96,7 +92,6 @@ pub(crate) fn export_csv_package_to_path(
         }
     }
 
-    sync_cas_incremental(storage)?;
-    copy_dir_recursive_if_exists(&cas_mirror_user_path(storage)?, &vault_user_dir)?;
+    copy_dir_recursive_if_exists(&storage.user_vault_path(), &vault_user_dir)?;
     write_zip_from_directory(&staging.path, destination_path)
 }

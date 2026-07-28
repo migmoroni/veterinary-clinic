@@ -1,10 +1,8 @@
-mod backup;
-mod cas_mirror;
 mod commands;
 mod contracts;
 mod csv;
 mod csv_tables;
-mod db_snapshot;
+mod database_package;
 mod exporter;
 mod files;
 mod importer;
@@ -21,5 +19,4 @@ const MANIFEST_FILE: &str = "manifest.json";
 const USER_DB_PACKAGE_PATH: &str = "data/veterinary_clinic_user.db";
 const USER_MEDIA_DB_PACKAGE_PATH: &str = "data/veterinary_clinic_user_media.db";
 const USER_LOGS_DB_PACKAGE_PATH: &str = "data/veterinary_clinic_user_logs.db";
-const DB_SNAPSHOT_KEEP_COUNT: usize = 6;
 const SQLITE_SIDECARS: [&str; 2] = ["-wal", "-shm"];

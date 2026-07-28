@@ -1,4 +1,5 @@
 mod backup_manager;
+mod replication;
 mod storage;
 
 use storage::StorageManager;
@@ -81,12 +82,15 @@ pub fn run() {
             backup_manager::export_user_csv_package,
             backup_manager::import_user_native_package,
             backup_manager::import_user_csv_package,
-            backup_manager::create_user_auto_backup,
-            backup_manager::list_user_backup_files
+            replication::orchestrator::set_backup_target_path,
+            replication::orchestrator::get_backup_status,
+            replication::orchestrator::restore_from_backup,
+            replication::orchestrator::apply_inbound_patch
         ])
         .setup(|app| {
             let storage = StorageManager::new(app.handle().clone())
                 .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))?;
+            replication::start_background(storage.clone(), app.handle().clone());
             app.manage(storage);
 
             #[cfg(target_os = "linux")]

@@ -6,10 +6,6 @@
 	import { t } from "$lib/i18n/index.js";
 	import { hasDatabaseFile } from "$lib/native/database-file.js";
 	import {
-		AUTOMATIC_BACKUP_CHECK_INTERVAL_MS,
-		createAutomaticBackupIfDue,
-	} from "$lib/services/backup.service.js";
-	import {
 		adjustTypographyZoom,
 		loadLocalePreference,
 		loadTypographyPreference,
@@ -37,7 +33,6 @@
 
 	const showBackButton = $derived(page.url.pathname !== "/");
 	let adjustingTypographyShortcut = false;
-	let automaticBackupTimer: number | undefined;
 	let brandName = $state("");
 
 	function isActive(href: string) {
@@ -67,7 +62,6 @@
 			if (await hasDatabaseFile()) {
 				await loadLocalePreference();
 				await loadTypographyPreference();
-				await createAutomaticBackupIfDue();
 			}
 		} catch {
 			// The setup screen can render before the local database exists.
@@ -85,14 +79,6 @@
 				identity.workplaceName ?? identity.veterinarianName ?? "";
 		} catch {
 			brandName = "";
-		}
-	}
-
-	async function checkAutomaticBackupPolicy() {
-		try {
-			if (await hasDatabaseFile()) await createAutomaticBackupIfDue();
-		} catch {
-			// Automatic backups should not interrupt the active workflow.
 		}
 	}
 
@@ -155,16 +141,10 @@
 	onMount(() => {
 		void loadDatabasePreferences();
 		void loadBrandName();
-		automaticBackupTimer = window.setInterval(
-			() => void checkAutomaticBackupPolicy(),
-			AUTOMATIC_BACKUP_CHECK_INTERVAL_MS,
-		);
 		window.addEventListener("keydown", handleTypographyShortcut);
 		window.addEventListener(PRACTICE_IDENTITY_CHANGED_EVENT, loadBrandName);
 
 		return () => {
-			if (automaticBackupTimer)
-				window.clearInterval(automaticBackupTimer);
 			window.removeEventListener("keydown", handleTypographyShortcut);
 			window.removeEventListener(
 				PRACTICE_IDENTITY_CHANGED_EVENT,

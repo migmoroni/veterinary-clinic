@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 pub(crate) enum PackageExportType {
     Native,
     Csv,
-    AutoSnapshot,
 }
 
 #[derive(Debug, Deserialize)]
@@ -25,13 +24,4 @@ pub struct ImportPackageRequest {
 pub struct PackageResponse {
     pub(crate) path: String,
     pub(crate) safety_backup_path: Option<String>,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct BackupFileInfo {
-    pub(crate) file_name: String,
-    pub(crate) path: String,
-    pub(crate) size_bytes: u64,
-    pub(crate) modified_at: Option<String>,
 }

@@ -51,6 +51,9 @@ impl StorageManager {
                 ],
             )
             .map_err(|error| format!("media_metadata_insert_failed:{error}"))?;
+        if matches!(request.source, StorageDomain::User) {
+            self.mark_user_bundle_dirty(super::StorageDatabase::UserMedia);
+        }
 
         Ok(SaveMediaResponse {
             hash: hash.to_vec(),
@@ -98,9 +101,12 @@ impl StorageManager {
                     "#
             }
         };
+        let mut statement = guard
+            .prepare_cached(select_sql)
+            .map_err(|error| format!("media_gallery_prepare_failed:{error}"))?;
         for hash in hashes {
-            let row = guard
-                .query_row(select_sql, params![hash], |row| {
+            let row = statement
+                .query_row(params![hash], |row| {
                     let stored_hash: Vec<u8> = row.get(0)?;
                     let thumbnail: Option<Vec<u8>> = row.get(1)?;
                     let width: Option<i64> = row.get(2)?;
@@ -183,6 +189,9 @@ impl StorageManager {
                 params![request.sync_status, request.uploaded_at, hash],
             )
             .map_err(|error| format!("media_sync_update_failed:{error}"))?;
+        if matches!(request.source, StorageDomain::User) {
+            self.mark_user_bundle_dirty(super::StorageDatabase::UserMedia);
+        }
         Ok(())
     }
 
@@ -208,6 +217,7 @@ impl StorageManager {
                 params![hash],
             )
             .map_err(|error| format!("media_soft_delete_failed:{error}"))?;
+        self.mark_user_bundle_dirty(super::StorageDatabase::UserMedia);
         Ok(())
     }
 
@@ -240,8 +250,11 @@ impl StorageManager {
                 "#
             }
         };
-        let exists = guard
-            .query_row(select_sql, params![hash], |_| Ok(()))
+        let mut statement = guard
+            .prepare_cached(select_sql)
+            .map_err(|error| format!("media_metadata_prepare_failed:{error}"))?;
+        let exists = statement
+            .query_row(params![hash], |_| Ok(()))
             .optional()
             .map_err(|error| format!("media_metadata_select_failed:{error}"))?
             .is_some();

@@ -12,11 +12,6 @@ pub(crate) fn timestamp_for_file() -> String {
     format!("{year:04}-{month:02}-{day:02}_{hour:02}{minute:02}{second:02}")
 }
 
-pub(crate) fn date_for_file() -> String {
-    let (year, month, day, _, _, _) = system_time_components(std::time::SystemTime::now());
-    format!("{year:04}-{month:02}-{day:02}")
-}
-
 pub(crate) fn now_iso() -> String {
     system_time_to_iso(std::time::SystemTime::now())
 }

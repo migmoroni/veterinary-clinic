@@ -1,6 +1,6 @@
 use super::DbType;
 use rusqlite::Connection;
-use std::{fs, path::Path};
+use std::{fs, path::Path, time::Duration};
 
 const USER_MEDIA_BLOBS_DDL: &str = r#"
 CREATE TABLE IF NOT EXISTS blobs (
@@ -60,6 +60,10 @@ pub fn open_sqlite_db(path: &Path, db_type: DbType) -> Result<Connection, String
 
     let connection =
         Connection::open(path).map_err(|error| format!("database_open_failed:{error}"))?;
+    connection
+        .busy_timeout(Duration::from_secs(5))
+        .map_err(|error| format!("database_busy_timeout_failed:{error}"))?;
+    connection.set_prepared_statement_cache_capacity(prepared_statement_cache_capacity(db_type));
     apply_sqlite_pragmas(&connection, db_type)?;
     match db_type {
         DbType::MediaIndex => connection
@@ -74,6 +78,14 @@ pub fn open_sqlite_db(path: &Path, db_type: DbType) -> Result<Connection, String
         DbType::Operational => {}
     }
     Ok(connection)
+}
+
+fn prepared_statement_cache_capacity(db_type: DbType) -> usize {
+    match db_type {
+        DbType::Operational => 128,
+        DbType::MediaIndex | DbType::SystemMediaIndex => 64,
+        DbType::Logs => 32,
+    }
 }
 
 fn apply_sqlite_pragmas(connection: &Connection, db_type: DbType) -> Result<(), String> {

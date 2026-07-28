@@ -1,18 +1,17 @@
 use super::{
     contracts::PackageExportType,
-    files::{remove_file_if_exists, TempDirectory},
+    files::remove_file_if_exists,
     manifest::{new_manifest, write_manifest},
     sqlite::{user_version, vacuum_into},
-    zip::write_zip_from_directory,
     CURRENT_SCHEMA_VERSION, USER_DB_PACKAGE_PATH, USER_LOGS_DB_PACKAGE_PATH,
     USER_MEDIA_DB_PACKAGE_PATH,
 };
 use crate::storage::StorageManager;
 use std::{fs, path::Path};
 
-// DB snapshots are intentionally lightweight. They never carry CAS files; the
-// automatic backup flow pairs them with the persistent incremental CAS mirror.
-pub(crate) fn stage_db_snapshot(
+// Native import/export packages carry compact, consistent database copies.
+// Continuous backup no longer uses this module; it works through replication patches.
+pub(crate) fn stage_user_databases(
     storage: &StorageManager,
     staging_root: &Path,
     export_type: PackageExportType,
@@ -22,7 +21,7 @@ pub(crate) fn stage_db_snapshot(
     let user_logs_db_destination = staging_root.join(USER_LOGS_DB_PACKAGE_PATH);
     if let Some(parent) = user_db_destination.parent() {
         fs::create_dir_all(parent)
-            .map_err(|error| format!("db_snapshot_data_dir_create_failed:{error}"))?;
+            .map_err(|error| format!("package_database_dir_create_failed:{error}"))?;
     }
 
     vacuum_user_databases_into(
@@ -35,27 +34,6 @@ pub(crate) fn stage_db_snapshot(
         staging_root,
         new_manifest(export_type, current_schema_version(storage)?),
     )
-}
-
-pub(crate) fn create_db_snapshot(
-    storage: &StorageManager,
-    destination_path: &Path,
-) -> Result<(), String> {
-    let staging = TempDirectory::new("veterinary-clinic-db-snapshot")?;
-    vacuum_user_databases_into(
-        storage,
-        &staging.path.join("veterinary_clinic_user.db"),
-        &staging.path.join("veterinary_clinic_user_media.db"),
-        &staging.path.join("veterinary_clinic_user_logs.db"),
-    )?;
-    write_manifest(
-        &staging.path,
-        new_manifest(
-            PackageExportType::AutoSnapshot,
-            current_schema_version(storage)?,
-        ),
-    )?;
-    write_zip_from_directory(&staging.path, destination_path)
 }
 
 fn vacuum_user_databases_into(

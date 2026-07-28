@@ -1,12 +1,15 @@
 use super::{
-    backup::create_pre_import_backup,
-    cas_mirror::merge_imported_cas,
     contracts::{PackageExportType, PackageResponse},
     csv::import_csv_tables,
     csv_tables::{LOG_CSV_TABLES, MEDIA_CSV_TABLE, USER_CSV_TABLES},
-    files::{normalized_existing_file_path, path_to_string, replace_sqlite_file, TempDirectory},
+    exporter::export_native_package_to_path,
+    files::{
+        copy_dir_recursive_if_exists, normalized_existing_file_path, path_to_string,
+        replace_sqlite_file, TempDirectory,
+    },
     manifest::{read_manifest, validate_manifest},
     sqlite::{create_empty_schema_from, validate_sqlite_database},
+    time::timestamp_for_file,
     zip::extract_zip_file,
     CURRENT_SCHEMA_VERSION, USER_DB_PACKAGE_PATH, USER_LOGS_DB_PACKAGE_PATH,
     USER_MEDIA_DB_PACKAGE_PATH,
@@ -15,8 +18,8 @@ use crate::storage::{open_sqlite_db, DbType, StorageManager};
 use rusqlite::Connection;
 use std::path::Path;
 
-// Importer flow: validates a package, creates a safety backup, and replaces
-// the live user storage bundle from either native DB snapshots or CSV files.
+// Importer flow: validates a full package, creates a safety export, and replaces
+// the live user storage bundle from either native DB files or CSV files.
 pub(crate) fn import_native_package(
     storage: &StorageManager,
     source_path: &str,
@@ -43,14 +46,13 @@ fn import_package(
     let manifest = read_manifest(&staging.path)?;
     validate_manifest(&manifest, expected_type)?;
 
-    // Imports are destructive by nature. Keep a native snapshot of the previous
-    // user bundle before replacing files with the package contents.
-    let safety_backup_path = create_pre_import_backup(storage)?;
+    // Imports are destructive by nature. Keep a full native export of the
+    // previous user bundle before replacing files with the package contents.
+    let safety_backup_path = create_pre_import_safety_export(storage)?;
 
     match expected_type {
         PackageExportType::Native => restore_native_from_staging(storage, &staging.path)?,
         PackageExportType::Csv => restore_csv_from_staging(storage, &staging.path)?,
-        PackageExportType::AutoSnapshot => return Err("snapshot_import_not_supported".to_string()),
     }
 
     Ok(PackageResponse {
@@ -63,18 +65,18 @@ fn restore_native_from_staging(
     storage: &StorageManager,
     staging_path: &Path,
 ) -> Result<(), String> {
-    let user_db_snapshot = staging_path.join(USER_DB_PACKAGE_PATH);
-    let user_media_db_snapshot = staging_path.join(USER_MEDIA_DB_PACKAGE_PATH);
-    let user_logs_db_snapshot = staging_path.join(USER_LOGS_DB_PACKAGE_PATH);
-    if !user_db_snapshot.is_file() || !user_media_db_snapshot.is_file() {
+    let user_db_package = staging_path.join(USER_DB_PACKAGE_PATH);
+    let user_media_db_package = staging_path.join(USER_MEDIA_DB_PACKAGE_PATH);
+    let user_logs_db_package = staging_path.join(USER_LOGS_DB_PACKAGE_PATH);
+    if !user_db_package.is_file() || !user_media_db_package.is_file() {
         return Err("native_package_database_missing".to_string());
     }
 
-    validate_sqlite_database(&user_db_snapshot, true)?;
-    validate_sqlite_database(&user_media_db_snapshot, false)?;
-    let logs_source = if user_logs_db_snapshot.is_file() {
-        validate_sqlite_database(&user_logs_db_snapshot, false)?;
-        user_logs_db_snapshot
+    validate_sqlite_database(&user_db_package, true)?;
+    validate_sqlite_database(&user_media_db_package, false)?;
+    let logs_source = if user_logs_db_package.is_file() {
+        validate_sqlite_database(&user_logs_db_package, false)?;
+        user_logs_db_package
     } else {
         let temp_logs_db = staging_path.join("import-user-logs.db");
         let _ = open_sqlite_db(&temp_logs_db, DbType::Logs)?;
@@ -82,8 +84,8 @@ fn restore_native_from_staging(
     };
     replace_user_storage_files(
         storage,
-        &user_db_snapshot,
-        &user_media_db_snapshot,
+        &user_db_package,
+        &user_media_db_package,
         &logs_source,
         &staging_path.join("vault").join("user"),
     )
@@ -150,10 +152,19 @@ fn replace_user_storage_files(
         replace_sqlite_file(user_db_source, &storage.user_database_path())?;
         replace_sqlite_file(user_media_db_source, &storage.user_media_database_path())?;
         replace_sqlite_file(user_logs_db_source, &storage.user_logs_database_path())?;
-        merge_imported_cas(storage, vault_user_source)?;
+        copy_dir_recursive_if_exists(vault_user_source, &storage.user_vault_path())?;
         Ok(())
     })();
 
     let reopen_result = storage.reopen_user_bundle_connections();
     result.and(reopen_result)
+}
+
+fn create_pre_import_safety_export(storage: &StorageManager) -> Result<std::path::PathBuf, String> {
+    let folder = storage.app_data_dir()?.join("import_safety_exports");
+    std::fs::create_dir_all(&folder)
+        .map_err(|error| format!("import_safety_export_dir_create_failed:{error}"))?;
+    let destination_path = folder.join(format!("pre_import_{}.zip", timestamp_for_file()));
+    export_native_package_to_path(storage, &destination_path, PackageExportType::Native)?;
+    Ok(destination_path)
 }

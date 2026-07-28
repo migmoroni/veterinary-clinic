@@ -962,7 +962,7 @@ async function createCurrentSchema(database: Database): Promise<void> {
 		CREATE TABLE IF NOT EXISTS backup_history (
 			id TEXT PRIMARY KEY CHECK(${uuidTextCheck('id')}),
 			path TEXT NOT NULL CHECK(${requiredTextCheck('path', FIELD_LIMITS.backupPath)}),
-			kind TEXT NOT NULL CHECK(kind IN ('manual_backup', 'automatic_backup', 'export', 'import', 'pre_import_backup') AND length(kind) <= ${FIELD_LIMITS.backupKind}),
+			kind TEXT NOT NULL CHECK(kind IN ('manual_backup', 'export', 'import', 'pre_import_backup') AND length(kind) <= ${FIELD_LIMITS.backupKind}),
 			created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
 			updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
 			updated_by TEXT,
