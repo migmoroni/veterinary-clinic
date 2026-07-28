@@ -1,17 +1,18 @@
-# Build Targets
+# Alvos De Construção
 
-Current app version: `0.2.0`.
+Versão atual do app: `0.2.0`.
 
-Schema migration and release rules are documented in [Database Versioning And Release Ritual](database-versioning.md).
+Regras de migração de estrutura e lançamento estão em
+[Versionamento De Banco E Ritual De Lançamento](database-versioning.md).
 
-## Development
+## Desenvolvimento
 
 ```sh
 npm run dev
 npm run tauri:dev
 ```
 
-## Checks
+## Verificações
 
 ```sh
 npm run check
@@ -19,29 +20,36 @@ npm run test:run
 npm run build
 ```
 
-When changing the canonical SQLite schema or import rules, also rebuild the legacy converter:
+Quando alterar a estrutura SQLite canônica ou regras de importação, valide também
+as ferramentas externas de adoção/importação:
 
 ```sh
 cd legacy-to-sqlite
-npm run build:csv
+npm run adopt:version
 ```
 
-The generated `to-sqlite.js` is the script used to create a compatible `veterinary_clinic.db` from the legacy clinic export.
+O script de adoção gera o conjunto atual do usuário e um ZIP nativo importável
+pelo módulo `distribution`.
 
-When changing the runtime SQLite schema, add a new app migration, increment `CURRENT_SCHEMA_VERSION`, and bump the public app version:
+Quando alterar a estrutura SQLite de execução, adicione uma nova migração,
+incremente `CURRENT_SCHEMA_VERSION` e atualize a versão pública do app:
 
 ```sh
-npm run version:bump -- minor "Add runtime schema migration for vaccine protocols"
+npm run version:bump -- minor "Adicionar migracao de estrutura para protocolos vacinais"
 npm run check
 npm run test:run
 npm run build
 ```
 
-The version bump script calculates the next `major`, `minor`, or `patch` version. It also prepends a release entry to `CHANGELOG.md` and to the AppStream metainfo used by Linux package viewers. Use repeated `--change` flags for multiple release notes.
+O script de versionamento calcula a próxima versão `major`, `minor` ou `patch`.
+Ele também adiciona uma entrada no topo de `CHANGELOG.md` e no metainfo
+AppStream usado por visualizadores de pacotes Linux. Use `--change` repetido
+para várias notas de lançamento.
 
-Before release, also test migration from the previous production database and run the target Tauri bundle for the client platform.
+Antes de lançar, teste também migração a partir do banco de produção anterior e
+rode o pacote Tauri da plataforma alvo do cliente.
 
-## Desktop bundles
+## Pacotes Desktop
 
 ```sh
 npm run tauri:appimage
@@ -50,19 +58,22 @@ npm run tauri:flatpak
 npm run tauri:msi
 ```
 
-Flatpak support is implemented with `flatpak-builder`, not a native Tauri bundle target. See `flatpak/README.md` for required runtimes and local install commands.
+O suporte Flatpak usa `flatpak-builder`, não um alvo nativo do Tauri. Veja
+`flatpak/README.md` para runtimes necessários e comandos de instalação local.
 
-The MSI bundle should be produced on Windows or a compatible CI runner.
+O pacote MSI deve ser produzido no Windows ou em um executor CI compatível.
 
-Linux bundles include a desktop entry, AppStream metainfo, license files, and the root changelog as package metadata.
+Bundles Linux incluem desktop entry, metainfo AppStream, arquivos de licença e
+o changelog raiz como metadados de pacote.
 
 ## Android
 
-Android is planned through Tauri Android:
+Android está planejado via Tauri Android:
 
 ```sh
 npm run tauri:android:dev
 npm run tauri:android:build
 ```
 
-Run `tauri android init` after the desktop build is healthy and the Android SDK is configured.
+Rode `tauri android init` depois que o build desktop estiver saudável e o SDK
+Android estiver configurado.

@@ -1,3 +1,8 @@
+//! Filesystem helpers for package staging and replacement.
+//!
+//! Import replacement is intentionally centralized here so SQLite sidecars are
+//! removed consistently before a restored database file is moved into place.
+
 use super::{time::timestamp_for_file, SQLITE_SIDECARS};
 use std::{
     fs,

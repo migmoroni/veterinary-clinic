@@ -90,10 +90,17 @@ Boundary dos destinos e fontes de sincronização.
 O servidor cloud terá seu próprio router/fila. O cliente cloud apenas faz
 `push` e `pull` de envelopes.
 
-`applier.rs`
+`applier/`
 
-Aplica changesets inbound nos bancos ativos com `apply_strm`. O handler LWW
-compara timestamps por tabela, nesta prioridade:
+Aplica changesets inbound nos bancos ativos com `apply_strm`.
+
+- `mod.rs`: coordena aplicação de envelope e patch.
+- `lww.rs`: decide conflitos por Last-Write-Wins.
+- `media.rs`: grava anexos CAS de patches de mídia.
+- `restore.rs`: restauração completa do bundle do usuário.
+- `sqlite.rs`: abertura de banco por domínio e transação inbound.
+
+O handler LWW compara timestamps por tabela, nesta prioridade:
 
 1. `updated_at`
 2. `removed_at`

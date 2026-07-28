@@ -1,3 +1,8 @@
+//! Export flow for complete local packages.
+//!
+//! Native packages are the lossless transfer format. CSV packages are readable
+//! and importable, but still keep CAS files as package files instead of in CSV.
+
 use super::{
     contracts::PackageResponse,
     csv::export_csv_table,

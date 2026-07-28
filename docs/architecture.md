@@ -1,41 +1,121 @@
-# Architecture
+# Arquitetura Geral
 
-Veterinary Clinic is a local-first SvelteKit + Tauri 2 application. It uses a static SPA shell, Tailwind CSS, shadcn-style local UI components, and SQLite through `tauri-plugin-sql`.
+Este é o documento raiz de arquitetura do Veterinary Clinic.
+Ele serve como mapa para entender as grandes fronteiras do app e apontar para
+os documentos específicos de cada parte.
 
-The app does not depend on `rusqlite` directly. Data access flows through TypeScript services and repositories:
+Este arquivo não deve virar documentação profunda de implementação. Quando uma
+área precisar de detalhe próprio, crie ou atualize um documento específico e
+adicione o link aqui.
 
-```text
-UI -> stores -> services -> repositories -> tauri-plugin-sql -> SQLite
+## Modelo Mental
+
+```mermaid
+flowchart LR
+    UI[UI Svelte]
+    TS[Serviços TypeScript]
+    IPC[Comandos Tauri]
+    RUST[Camada Rust]
+    DATA[(SQLite + CAS)]
+
+    UI --> TS --> IPC --> RUST --> DATA
 ```
 
-The runtime database is `sqlite:veterinary_clinic.db` in the Tauri app config directory. On first launch, the app detects that the file is missing and shows a setup screen with two choices: import an existing SQLite file or create a new local database. Creating a new database uses the current TypeScript schema setup through `tauri-plugin-sql`.
+A aplicação é local-first: os dados principais vivem no dispositivo do usuário.
+A UI é SvelteKit/Tauri, e a persistência fica centralizada no Rust com
+`rusqlite` e arquivos CAS.
 
-The app has a formal SQLite schema migration contract. `PRAGMA user_version` stores the authoritative integer schema version, and `schema_migrations` records the applied migration names, app versions, and timestamps. The current baseline is schema `v1`, representing the first formally versioned version of the current app schema. Runtime migrations are for databases that already belong to the current app schema lineage; one-off external data conversions should stay outside the app runtime.
+## Núcleo De Persistência
 
-For the full migration and release ritual, see [Database Versioning And Release Ritual](database-versioning.md).
+```mermaid
+flowchart TD
+    STORAGE[storage]
+    DISTRIBUTION[distribution]
+    REPLICATION[replication]
+    USER[(Conjunto do usuário)]
+    SYSTEM[(Conjunto do sistema)]
 
-Implemented workflows:
+    STORAGE --> USER
+    STORAGE --> SYSTEM
+    DISTRIBUTION --> STORAGE
+    REPLICATION --> STORAGE
+    DISTRIBUTION -. preparo de importação .-> REPLICATION
+```
 
-- Owner, pet, and medical record CRUD with profile/detail routes. Medical records store an attendance period with `admitted_at` and optional `discharged_at` instead of a single appointment date.
-- Owners store one or more phone contacts in `contacts`; each contact is typed as `phone` or `mobile` instead of using fixed phone columns on `owners`.
-- ViaCEP lookup in owner forms to fill street, neighborhood, city, state, and postal code. Owner countries are selected from an offline ISO country catalog in `src/lib/domain/geo/country-data` and stored as three-letter country codes. The catalog is organized as one file per country code, with labels keyed by locale for Portuguese, Guarani, English, Spanish variants, French variants, Italian variants, and German variants when available. Brazil is currently the only country with a full offline state/city catalog for structured state and city selection; countries without an offline subdivision/city catalog keep state and city as free text. Addresses are stored as `street`, `street_number`, and `address_complement`.
-- Pet taxonomy stores species and breed as text fields. Canine/feline species and curated breed lists are canonical suggestions for UI, analytics labels, and validation, but the pet form also allows manual species and breed values for real-world cases not covered by the lists.
-- Preventive records use editable name catalogs in `preventive_catalog_items` with separate `kind` values for vaccines and antiparasitics. Default catalog names are commercial products; `manufacturer` identifies the responsible laboratory, `regions` stores applicable markets as ISO 3166-1 alpha-3 country codes, and searchable `aliases` describe clinical classifications, covered diseases, or active-ingredient compositions. The same alias may belong to several products, such as `V10` or a localized form of "polyvalent", because aliases broaden filtering and do not identify a unique product. Importers keep source-specific spellings, ambiguous generic descriptions, and classification rules separate from the default catalog. Vaccine and antiparasitic applications store free-text `dose` plus `validity_value` and `validity_unit` (`days`, `months`, or `years`). Optional presets live in `preventive_protocols`, `preventive_protocol_items`, and `preventive_protocol_doses`; protocols also store target `species`, and the application UI filters catalog/protocol choices by the current pet species while keeping application rows as historical snapshots. Vaccine due-date equivalence remains rooted in `vaccine_normalized_name`: when a new application of the same vaccine name is saved for a pet, older active applications are marked with `validity_ignored_at` so only the latest contributes to alerts and analytics.
-- Local professional identity is stored as singleton rows in `veterinarian_profiles` and `workplaces`. Owner and workplace addresses share the `addresses` table; each row belongs to exactly one owner or workplace, enforced by a database check constraint and parent-specific uniqueness. The `contacts` table is the shared contact store for owners, additional responsibles, the veterinarian profile, and the workplace. A database check constraint requires exactly one parent per contact, and parent-specific unique constraints prevent duplicate contact rows. The app header displays the workplace name first, then the veterinarian name, then the built-in app name.
-- Multiple images use the reusable `image_collections` and `image_collection_items` tables. Collections identify their owning domain entity through `entity_type` plus `entity_id` and store policy metadata separately from the image rows. Each item stores an editable source (`original_image_blob`) and its display image (`image_blob`), plus its optional description, display order, and primary flag. The shared capture dialog formalizes three image policies: account/profile images use crop controls and keep only the aggressively compressed crop; demonstration images such as workplace photos use `editMode="rotate"` to keep the complete captured orientation, allow only right-angle rotation, and store one moderately compressed full-resolution result in both image columns; clinical exams use `preserveOriginalUnprocessed`, which disables editing and stores the exact acquired file or camera photo in both image columns without recompression, byte limit, or dimension limit. A partial unique index permits at most one primary item per collection. Domain repositories decide whether a primary image or item limit is required. The workplace collection requires one primary whenever it has images and allows at most nine, while future medical-record or exam collections can use no limit and no required primary without changing the tables or capture dialog.
-- Soft delete for owners, pets, medical records, preventive applications, and preventive protocols with a 90-day purge window.
-- Trash restore, permanent delete, and expired-item purge actions.
-- First-run database import/new database setup.
-- Versioned SQLite migrations with `PRAGMA user_version`, `schema_migrations`, pre-migration local backups, and integrity validation.
-- Manual database backup/export/import using Tauri dialog/fs plugins and `tauri-plugin-sql` validation.
+As três fronteiras principais são:
 
-Main folders:
+- `storage`: mantém bancos ativos, conexões SQLite e arquivos CAS.
+- `distribution`: importa/exporta pacotes completos nativos ou CSV.
+- `replication`: mantém backup/sincronização contínua por patches.
 
-- `src/lib/domain` — TypeScript domain types and pure helpers.
-- `src/lib/persistence/sqlite` — SQLite connection, current schema setup, and versioned runtime migrations.
-- `src/lib/persistence/repositories` — typed SQL repositories.
-- `src/lib/services` — workflow services consumed by stores.
-- `src/lib/stores` — Svelte 5 rune stores.
-- `src/lib/native` — small wrappers around Tauri plugins.
-- `src/lib/components/ui` — local shadcn-style primitives.
-- `legacy-to-sqlite` — external database conversion tools. `to-sqlite.ts` converts the original legacy CSV; `exported-db-to-sqlite.ts` rebuilds an exported app SQLite database for import into the current app version.
+Essa separação é a regra mais importante da persistência atual. Se uma lógica
+começa a misturar pacote completo, conexão ativa e sincronização contínua no
+mesmo lugar, ela provavelmente está no módulo errado.
+
+## Conjuntos De Dados
+
+Conjunto do usuário:
+
+```text
+veterinary_clinic_user.db
+veterinary_clinic_user_media.db
+veterinary_clinic_user_logs.db
+vault/user/xx/yy/<hash_sha256>.bin
+```
+
+Conjunto do sistema:
+
+```text
+veterinary_clinic_system.db
+veterinary_clinic_system_media.db
+vault/system/xx/yy/<hash_sha256>.bin
+```
+
+O conjunto do usuário é importado, exportado e replicado.
+O conjunto do sistema é reconstruído pelo app a partir dos defaults incluídos
+no programa.
+
+## Princípios
+
+- Dados do usuário e dados de sistema ficam separados.
+- Bytes originais de mídia ficam no CAS, não dentro do SQLite operacional.
+- A identidade da base vive em `database_manifest`, dentro do banco de logs do
+  usuário.
+- Backup contínuo é replicação por patches, não exportação repetida de ZIP.
+- Importação/exportação completa pertence a `distribution`.
+- Conexões ativas e caminhos de arquivos pertencem a `storage`.
+- Conversões externas e adoções de base ficam fora do app em execução, em
+  `legacy-to-sqlite`.
+
+## Documentos Específicos
+
+- [Arquitetura De Armazenamento](storage-architecture.md): bancos ativos,
+  conexões SQLite, CAS, mídia, manifesto e exclusão definitiva.
+- [Arquitetura De Distribuição](distribution-architecture.md): importação e
+  exportação completa em ZIP nativo ou CSV.
+- [Arquitetura De Replicação Local-First](replication-architecture.md):
+  backup/sincronização contínua por patches, outbox e destinos.
+- [Política De Backup](backup-policy.md): visão de produto sobre backup
+  contínuo, exportação e importação.
+- [Versionamento De Banco E Ritual De Lançamento](database-versioning.md):
+  regras de versão de estrutura, migração e lançamento.
+- [Alvos De Construção](build-targets.md): comandos de desenvolvimento,
+  verificações e empacotamento.
+- [Desenvolvimento No Debian 13](development-debian13.md): ambiente local,
+  dependências e comandos úteis.
+
+## Como Adicionar Novos Docs De Arquitetura
+
+Ao criar uma nova área arquitetural:
+
+1. crie `docs/<area>-architecture.md`;
+2. explique fronteira, responsabilidades, relação com outros módulos e riscos;
+3. mantenha exemplos concretos de fluxo e caminhos quando ajudarem;
+4. adicione o link em "Documentos Específicos";
+5. evite duplicar detalhes já documentados em outro arquivo.
+
+## Resumo Em Uma Frase
+
+A arquitetura do app separa **armazenamento ativo**, **distribuição completa** e
+**replicação contínua**, mantendo este documento como mapa geral e deixando os
+detalhes em arquivos específicos.

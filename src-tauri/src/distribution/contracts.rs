@@ -1,3 +1,8 @@
+//! Request/response contracts for distribution commands.
+//!
+//! These structs are serialized over Tauri IPC. Keep field names explicit and
+//! business-neutral: package import/export is not continuous backup.
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]

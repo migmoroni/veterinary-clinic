@@ -1,3 +1,8 @@
+//! Main storage manager and SQLite connection ownership.
+//!
+//! This module owns the fixed user/system database connections, lazily opens
+//! app-config database files, and exposes the generic SQL bridge used by the UI.
+
 use super::{
     execute_statement, open_sqlite_db, select_rows, DbType, SqlConnectionRequest,
     SqlExecuteResponse, SqlRequest, StorageDatabase, StorageDomain, UserBundleDirtyFlags,

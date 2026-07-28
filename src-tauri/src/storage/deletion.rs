@@ -1,3 +1,8 @@
+//! Permanent deletion and tombstone redaction for trash items.
+//!
+//! Hard delete keeps row identity and sync metadata, redacts sensitive content,
+//! and writes an immutable audit snapshot to the user logs database.
+
 use super::{
     data::StorageManager, decode_hash_hex, uuid_v7_string, DeletionAuditLog,
     DeletionAuditLogsRequest, HardDeleteTrashRequest, StorageDomain,

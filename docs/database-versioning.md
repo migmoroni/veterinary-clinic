@@ -1,37 +1,54 @@
-# Database Versioning And Release Ritual
+# Versionamento De Banco E Ritual De Lançamento
 
-The app separates two versions:
+O app separa duas versões:
 
-- App version: public SemVer shown to users and stored in `package.json`, Tauri, and Cargo.
-- SQLite schema version: integer stored in `PRAGMA user_version`.
+- Versão do app: SemVer público mostrado ao usuário e armazenado em
+  `package.json`, Tauri e Cargo.
+- Versão da estrutura SQLite: inteiro armazenado em `PRAGMA user_version`.
 
-The current unversioned app database is adopted as schema `v1`. Future schema versions must be `v2`, `v3`, and so on.
+O banco atual não versionado é adotado como estrutura `v1`. Futuras versões de
+estrutura devem ser `v2`, `v3` e assim por diante.
 
-## Runtime Contract
+## Contrato Em Execução
 
-The runtime database is `veterinary_clinic.db` in the Tauri app config directory. The app owns migrations for databases that already belong to the current application schema lineage.
+O conjunto do usuário em execução fica na área de dados/configuração do Tauri como:
 
-The migrator lives in `src/lib/persistence/sqlite/migrations.ts` and defines:
+- `veterinary_clinic_user.db`
+- `veterinary_clinic_user_media.db`
+- `veterinary_clinic_user_logs.db`
+- `vault/user/**`
 
-- `CURRENT_SCHEMA_VERSION`
-- the migration runner
-- support/status detection
-- transaction, metadata, and integrity handling
+O app possui migrações para bancos que já pertencem à linhagem de estrutura atual.
+Bancos de sistema/referência são gerados separadamente pelo app e não fazem
+parte de importação/exportação de usuário.
 
-Incremental migration files live under `src/lib/persistence/sqlite/schema-migrations`:
+O migrator vive em `src/lib/persistence/sqlite/migrations.ts` e define:
 
-- `types.ts` defines the `SchemaMigration` contract.
-- `registry.ts` imports and orders schema `v2+` migrations.
-- `versions/` stores one file per schema version after the baseline.
+- `CURRENT_SCHEMA_VERSION`;
+- runner de migração;
+- detecção de suporte/status;
+- transação, metadados e validação de integridade.
 
-`migrations.ts` owns the baseline `v1` because it creates the current schema from scratch. Future migrations should not be implemented inside `migrations.ts`; put their body in `schema-migrations/versions`.
+Migrações incrementais ficam em `src/lib/persistence/sqlite/schema-migrations`:
 
-The migration system also defines:
+- `types.ts` define o contrato `SchemaMigration`;
+- `registry.ts` importa e ordena migrações `v2+`;
+- `versions/` armazena um arquivo por versão depois da linha-base.
 
-- `schema_migrations`
-- integrity validation
+`migrations.ts` possui a linha-base `v1` porque cria a estrutura atual do zero.
+Futuras migrações não devem ser implementadas dentro de `migrations.ts`; coloque
+o corpo em `schema-migrations/versions`.
 
-`PRAGMA user_version` is the authoritative schema version. The `schema_migrations` table is the audit trail:
+A conexão SQLite não é mais aberta pelo plugin SQL antigo. Repositórios da UI
+chamam comandos Tauri de storage, e o Rust executa SQL via `rusqlite`.
+
+O sistema de migração também define:
+
+- `schema_migrations`;
+- validação de integridade.
+
+`PRAGMA user_version` é a versão autoritativa da estrutura. A tabela
+`schema_migrations` é a trilha de auditoria:
 
 ```sql
 CREATE TABLE schema_migrations (
@@ -42,71 +59,89 @@ CREATE TABLE schema_migrations (
 );
 ```
 
-## Startup Flow
+## Fluxo De Inicialização
 
-`src/lib/persistence/sqlite/client.ts` opens the database as follows:
+`src/lib/persistence/sqlite/client.ts` abre o banco por comandos Rust de storage:
 
-1. Load the database with `tauri-plugin-sql`.
-2. Enable foreign keys.
-3. Detect schema status.
-4. If a migration or adoption is needed, checkpoint WAL, close the connection, and create a backup in `AppConfig/backups/pre-migration-veterinary-clinic-<timestamp>.db`.
-5. Reopen the database.
-6. Run migrations in a `BEGIN IMMEDIATE` transaction.
-7. Validate `PRAGMA integrity_check` and `PRAGMA foreign_key_check`.
-8. Commit only if every step succeeds.
+1. pede ao `StorageManager` para abrir/reabrir `veterinary_clinic_user.db`;
+2. ativa foreign keys;
+3. detecta status da estrutura pelos utilitários de migração;
+4. se migração ou adoção for necessária, faz checkpoint WAL, fecha a conexão
+   Rust e cria uma cópia local pré-migração;
+5. reabre a conexão Rust;
+6. roda migrações em transação `BEGIN IMMEDIATE` por comandos de storage;
+7. valida `PRAGMA integrity_check` e `PRAGMA foreign_key_check`;
+8. faz commit apenas se todas as etapas tiverem sucesso;
+9. abre/configura `veterinary_clinic_user_media.db`,
+   `veterinary_clinic_system.db` e `veterinary_clinic_system_media.db`.
 
-If a migration fails, the transaction is rolled back and the pre-migration backup remains available.
+Se uma migração falhar, a transação é revertida e a cópia pré-migração continua
+disponível.
 
-## Supported Database States
+## Estados Suportados
 
-- Empty database: creates the current schema and records schema `v1`.
-- Current unversioned database: adopted as `v1` without rebuilding data.
-- Versioned old database: migrations are applied sequentially until `CURRENT_SCHEMA_VERSION`.
-- Future database: refused with an app-outdated error.
-- Unknown unversioned database: refused. Do not add one-off legacy translators to the runtime migrator.
+- Banco vazio: cria a estrutura atual e registra `v1`.
+- Banco atual não versionado: adotado como `v1` sem reconstruir dados.
+- Banco versionado antigo: migrações são aplicadas sequencialmente até
+  `CURRENT_SCHEMA_VERSION`.
+- Banco futuro: recusado com erro de app desatualizado.
+- Banco não versionado desconhecido: recusado. Não adicionar tradutores legacy
+  pontuais ao migrador de execução.
 
-## Imports And Exports
+## Importações, Exportações E Replicação
 
-SQLite import validates whether the selected database is supported by the runtime migrator. After replacing the local database, normal startup opens it and applies required migrations.
+Importação/exportação completa vive em `src-tauri/src/distribution`. Pacotes
+nativos carregam os três bancos do usuário e arquivos CAS. Pacotes CSV carregam
+`data_csv/`, `media_csv/`, `logs_csv/` e arquivos CAS do usuário.
 
-CSV export includes `_metadata/schema.json` with the current schema version. CSV import restores `PRAGMA user_version` after rebuilding the local database and refuses metadata from a future schema.
+A identidade da base e o manifesto do pacote vivem em
+`veterinary_clinic_user_logs.db`, tabela `database_manifest`; não há
+`manifest.json` solto.
 
-## When A New Schema Version Is Required
+Backup/sincronização contínua vive em `src-tauri/src/replication` e usa SQLite
+Session changesets em vez de instantâneos completos.
 
-Create a new schema migration whenever a change affects persistent database structure or existing persisted data semantics, including:
+## Quando Uma Nova Versão De Estrutura É Necessária
 
-- adding, renaming, or removing tables or columns
-- adding or changing indexes required by behavior
-- changing `CHECK`, `UNIQUE`, or foreign-key constraints
-- moving data between tables
-- transforming existing row values
-- changing saved meaning of an existing column
-- changing default catalog/protocol data in a way that must update existing rows
+Crie uma nova migração sempre que uma mudança afetar estrutura persistente ou
+semântica de dados já salvos, incluindo:
 
-Do not create a schema migration for:
+- adicionar, renomear ou remover tabelas ou colunas;
+- adicionar ou alterar índices necessários ao comportamento;
+- alterar `CHECK`, `UNIQUE` ou foreign keys;
+- mover dados entre tabelas;
+- transformar valores existentes;
+- alterar significado salvo de uma coluna existente;
+- alterar dados default de catálogo/protocolo de forma que precise atualizar
+  linhas já existentes.
 
-- UI-only changes
-- pure TypeScript/domain helper changes
-- idempotent seed routines that only insert missing defaults without changing existing rows
-- external one-off conversion scripts
+Não crie migração de estrutura para:
 
-## How To Add A Migration
+- mudanças apenas de UI;
+- utilitários puros de TypeScript/domínio;
+- rotinas idempotentes de seed que só inserem defaults ausentes sem mudar linhas
+  existentes;
+- scripts externos pontuais de conversão.
 
-Never edit a migration that has already shipped to a client. Add a new one.
+## Como Adicionar Uma Migração
 
-1. Decide the next integer schema version.
-2. Create a file in `src/lib/persistence/sqlite/schema-migrations/versions`, such as `0002_add_field_to_table.ts`.
-3. Export a `SchemaMigration` object from that file.
-4. Import it in `src/lib/persistence/sqlite/schema-migrations/registry.ts`.
-5. Add it to `incrementalSchemaMigrations`.
-6. Increment `CURRENT_SCHEMA_VERSION` in `src/lib/persistence/sqlite/migrations.ts`.
-7. Set `introducedInAppVersion` to the app version that first ships the migration.
-8. Implement `up(database)`.
-9. Add `verify(database)` when the migration has important invariants.
-10. Add tests for upgrading from the previous version.
-11. Run the full release checks.
+Nunca edite uma migração que já foi enviada a um cliente. Adicione uma nova.
 
-Migration names should follow:
+1. Decida a próxima versão inteira de estrutura.
+2. Crie um arquivo em `src/lib/persistence/sqlite/schema-migrations/versions`,
+   como `0002_add_field_to_table.ts`.
+3. Exporte um objeto `SchemaMigration`.
+4. Importe-o em `src/lib/persistence/sqlite/schema-migrations/registry.ts`.
+5. Adicione-o a `incrementalSchemaMigrations`.
+6. Incremente `CURRENT_SCHEMA_VERSION` em
+   `src/lib/persistence/sqlite/migrations.ts`.
+7. Defina `introducedInAppVersion` com a versão do app que leva a migração.
+8. Implemente `up(database)`.
+9. Adicione `verify(database)` quando houver invariantes importantes.
+10. Adicione testes de upgrade a partir da versão anterior.
+11. Rode as verificações completas de lançamento.
+
+Nomes de migração devem seguir:
 
 ```text
 0001_baseline_current_schema
@@ -114,7 +149,7 @@ Migration names should follow:
 0003_migrate_old_field_to_new_table
 ```
 
-Migration file exports should follow this shape:
+Formato de exportação do arquivo:
 
 ```ts
 import type { SchemaMigration } from '../types.js';
@@ -127,53 +162,56 @@ export const migration0002AddXToY = {
     await database.execute('ALTER TABLE example ADD COLUMN x TEXT');
   },
   async verify(database) {
-    // Optional checks.
+    // Verificações opcionais.
   }
 } satisfies SchemaMigration;
 ```
 
-The registry validates duplicate versions, gaps, and migrations above `CURRENT_SCHEMA_VERSION`.
+O registry valida versões duplicadas, lacunas e migrações acima de
+`CURRENT_SCHEMA_VERSION`.
 
-For complex SQLite table changes, prefer the safe rebuild pattern:
+Para alterações complexas de tabela SQLite, prefira o padrão seguro de rebuild:
 
-1. Create a new table with the desired schema.
-2. Copy data from the old table.
-3. Validate counts and relationships.
-4. Drop the old table.
-5. Rename the new table.
-6. Recreate indexes and triggers.
-7. Run migration-specific verification.
+1. criar uma nova tabela com a estrutura desejada;
+2. copiar dados da tabela antiga;
+3. validar contagens e relacionamentos;
+4. remover a tabela antiga;
+5. renomear a nova tabela;
+6. recriar índices e triggers;
+7. rodar verificações específicas da migração.
 
-## Version Bump Ritual
+## Ritual De Versionamento
 
-Use one command to change the public app version:
-
-```sh
-npm run version:bump -- minor "Add runtime schema migration for vaccine protocols"
-```
-
-Choose `major`, `minor`, or `patch` according to the release impact. The release note can be provided as a positional string or with repeated `--change` flags:
+Use um comando para alterar a versão pública do app:
 
 ```sh
-npm run version:bump -- patch --change "Fix backup import validation" --change "Improve Linux package metadata"
+npm run version:bump -- minor "Adicionar migracao de estrutura para protocolos vacinais"
 ```
 
-The script updates:
+Escolha `major`, `minor` ou `patch` conforme o impacto do lançamento. A nota pode
+ser passada como string posicional ou com `--change` repetido:
 
-- `package.json`
-- `package-lock.json`
-- `src-tauri/tauri.conf.json`
-- `src-tauri/Cargo.toml`
-- the app package entry in `src-tauri/Cargo.lock`
-- `src/lib/generated/app-version.ts`
-- `CHANGELOG.md`
-- `src-tauri/metainfo/io.github.migmoroni.VeterinaryClinic.metainfo.xml`
+```sh
+npm run version:bump -- patch --change "Corrigir validacao de importacao de backup" --change "Melhorar metadados do pacote Linux"
+```
 
-The UI shows the app version in Settings. In Tauri, it reads the runtime version; in dev/web, it uses the generated fallback.
+O script atualiza:
 
-## Required Checks Before Release
+- `package.json`;
+- `package-lock.json`;
+- `src-tauri/tauri.conf.json`;
+- `src-tauri/Cargo.toml`;
+- entrada do pacote no `src-tauri/Cargo.lock`;
+- `src/lib/generated/app-version.ts`;
+- `CHANGELOG.md`;
+- `src-tauri/metainfo/io.github.migmoroni.VeterinaryClinic.metainfo.xml`.
 
-Before shipping a build with database changes:
+A UI mostra a versão em Ajustes. No Tauri, lê a versão de execução; em dev/web,
+usa o fallback gerado.
+
+## Verificações Obrigatórias Antes De Lançamento
+
+Antes de enviar um pacote com mudança de banco:
 
 ```sh
 npm run check
@@ -181,17 +219,19 @@ npm run test:run
 npm run build
 ```
 
-Also test:
+Também testar:
 
-- creating a fresh empty database
-- opening the previous production database and migrating it
-- preserving owners, pets, medical records, vaccines, antiparasitic treatments, and settings
-- pre-migration backup creation
-- refusal of a future schema version
-- SQLite import of every supported schema version
-- CSV export/import schema metadata
-- target Tauri build for the client platform
+- criação de banco vazio novo;
+- abertura e migração do banco de produção anterior;
+- preservação de tutores, pets, prontuários, vacinas, tratamentos
+  antiparasitários e ajustes;
+- criação da cópia pré-migração;
+- recusa de versão futura de estrutura;
+- importação SQLite de toda versão suportada;
+- exportação/importação CSV com logs e manifesto;
+- pacote Tauri da plataforma alvo do cliente.
 
-## Current Baseline
+## Linha-Base Atual
 
-Schema `v1` is the first formal schema version. It represents the current SQLite structure at app version `0.2.0`, before future incremental migrations begin.
+Estrutura `v1` é a primeira versão formal de estrutura. Ela representa a estrutura
+SQLite atual na versão `0.2.0` do app, antes de futuras migrações incrementais.

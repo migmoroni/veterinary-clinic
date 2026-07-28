@@ -1,3 +1,8 @@
+//! Minimal ZIP writer/reader for uncompressed local packages.
+//!
+//! Distribution packages are internal transfer artifacts. Supporting stored ZIP
+//! entries keeps the implementation dependency-light and easy to audit.
+
 use super::{
     files::{remove_file_if_exists, validate_zip_relative_path},
     time::dos_date_time,

@@ -1,3 +1,8 @@
+//! Database identity helpers for the user data bundle.
+//!
+//! The manifest lives in the user logs database so imports, exports, and
+//! replication mirrors can validate that they belong to the same logical base.
+
 use super::uuid_v7_string;
 use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};

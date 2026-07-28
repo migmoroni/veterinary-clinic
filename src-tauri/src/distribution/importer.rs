@@ -1,3 +1,8 @@
+//! Import flow for native, CSV and local mirror package sources.
+//!
+//! The importer validates package structure, asks replication for a final sync,
+//! creates a safety export if needed, then atomically replaces the user bundle.
+
 use super::{
     contracts::{PackageExportType, PackageResponse},
     csv::import_csv_tables,

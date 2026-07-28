@@ -1,3 +1,8 @@
+//! Tauri command boundary for storage operations.
+//!
+//! rusqlite is synchronous, so every command clones the `StorageManager` and
+//! runs the blocking work on Tauri's background pool.
+
 use super::{
     DeletionAuditLog, DeletionAuditLogsRequest, GalleryItem, GalleryRequest,
     HardDeleteTrashRequest, MediaHashRequest, SaveMediaRequest, SaveMediaResponse,

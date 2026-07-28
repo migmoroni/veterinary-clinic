@@ -1,3 +1,8 @@
+//! SQLite opening, PRAGMA tuning, and small storage-owned schemas.
+//!
+//! Operational schemas are created by the TypeScript migrator; media indexes
+//! and user logs are created here because they are Rust storage primitives.
+
 use super::{ensure_database_manifest, DbType};
 use rusqlite::Connection;
 use std::{fs, path::Path, time::Duration};

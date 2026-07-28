@@ -1,5 +1,8 @@
-// Declarative list of user-owned tables exported to CSV. Keeping it apart from
-// the parser/importer makes schema updates less noisy and easier to review.
+//! Declarative list of user-owned tables exported to CSV.
+//!
+//! Keeping this apart from the parser/importer makes schema updates less noisy
+//! and easier to review. System catalog/reference tables do not belong here.
+
 pub(crate) const MEDIA_CSV_TABLE: CsvTable = CsvTable {
     name: "blobs",
     folder: "media_csv",

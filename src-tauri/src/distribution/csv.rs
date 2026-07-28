@@ -1,3 +1,9 @@
+//! CSV package reader/writer.
+//!
+//! CSV export is meant for inspection and manual portability. It preserves
+//! SQLite BLOB references as lowercase hex strings while package CAS files keep
+//! the original media bytes on disk.
+
 use super::{csv_tables::CsvTable, files::path_to_string, sqlite::quote_identifier};
 use crate::storage::bytes_to_hex;
 use rusqlite::{

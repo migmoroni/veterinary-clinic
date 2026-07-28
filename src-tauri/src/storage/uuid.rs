@@ -1,3 +1,8 @@
+//! Minimal UUIDv7 string generator for storage-owned rows.
+//!
+//! It avoids pulling another dependency into the Rust side while preserving
+//! time-ordered identifiers for database manifests and audit records.
+
 use super::bytes_to_hex;
 use sha2::{Digest, Sha256};
 use std::{

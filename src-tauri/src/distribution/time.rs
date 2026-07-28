@@ -1,3 +1,7 @@
+//! Small UTC-ish timestamp helpers for ZIP metadata and package filenames.
+//!
+//! This avoids pulling a time crate into distribution for filename-safe labels.
+
 pub(crate) fn dos_date_time(time: std::time::SystemTime) -> (u16, u16) {
     let (year, month, day, hour, minute, second) = system_time_components(time);
     let dos_year = year.max(1980) - 1980;

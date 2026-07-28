@@ -1,3 +1,8 @@
+//! Native SQLite package staging.
+//!
+//! This module creates consistent snapshots of the user DB bundle with
+//! `VACUUM INTO`; it never copies live WAL-backed database files directly.
+
 use super::{
     files::remove_file_if_exists, sqlite::vacuum_into, USER_DB_PACKAGE_PATH,
     USER_LOGS_DB_PACKAGE_PATH, USER_MEDIA_DB_PACKAGE_PATH,

@@ -1,3 +1,8 @@
+//! Generic JSON-to-rusqlite bridge for UI-driven SQL.
+//!
+//! The bridge keeps the frontend free from SQLite plugin dependencies while
+//! preserving typed parameter binding and JSON-shaped result rows.
+
 use super::SqlExecuteResponse;
 use rusqlite::{
     params_from_iter,

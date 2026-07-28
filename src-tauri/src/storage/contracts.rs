@@ -1,3 +1,8 @@
+//! IPC contracts shared by Tauri commands and the Svelte/TypeScript layer.
+//!
+//! These DTOs intentionally stay storage-oriented and avoid business-domain
+//! knowledge such as owners, pets, products, or medical records.
+
 use super::StorageDomain;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;

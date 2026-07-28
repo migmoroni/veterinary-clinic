@@ -1,3 +1,8 @@
+//! Content-addressable storage helpers for original media files.
+//!
+//! SQLite stores media metadata only; this module resolves SHA-256 hashes to
+//! vault paths and writes immutable bytes to disk with a temp-file commit.
+
 use super::{data::StorageManager, StorageDatabase};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};

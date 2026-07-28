@@ -1,3 +1,8 @@
+//! Dirty flags used by replication capture.
+//!
+//! User databases mark these flags when writes occur, allowing the replication
+//! engine to skip expensive diff work when a domain has not changed.
+
 use super::StorageDatabase;
 use std::sync::atomic::{AtomicBool, Ordering};
 

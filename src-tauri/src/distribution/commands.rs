@@ -1,3 +1,8 @@
+//! Tauri IPC boundary for local distribution packages.
+//!
+//! The command names stay stable for the Svelte side. Implementation details
+//! remain inside exporter/importer so this file stays as a thin adapter.
+
 use super::{
     contracts::{CreatePackageRequest, ImportPackageRequest, PackageResponse},
     exporter, importer,

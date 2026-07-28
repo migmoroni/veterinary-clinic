@@ -1,3 +1,8 @@
+//! Media metadata operations over the SQLite media indexes.
+//!
+//! Original bytes are saved in CAS; this module stores and reads thumbnails,
+//! dimensions, MIME type, sync status, and soft-delete metadata.
+
 use super::{
     bytes_to_hex, data::StorageManager, decode_hash_hex, detect_mime_type, path_to_string, sha256,
     GalleryItem, GalleryRequest, MediaHashRequest, SaveMediaRequest, SaveMediaResponse,

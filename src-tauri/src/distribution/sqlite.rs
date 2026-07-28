@@ -1,3 +1,8 @@
+//! SQLite helpers used by local distribution packages.
+//!
+//! These helpers validate imported DBs, clone empty schemas for CSV import and
+//! produce safe snapshots with `VACUUM INTO`.
+
 use super::{files::remove_file_if_exists, CURRENT_SCHEMA_VERSION};
 use rusqlite::{params, Connection};
 use std::path::Path;

@@ -43,7 +43,10 @@ sudo apt install -y \
   patchelf \
   dpkg-dev \
   fakeroot \
-  mesa-utils
+  mesa-utils \
+  libclang-dev \
+  clang
+
 ```
 
 Notas:
@@ -52,6 +55,8 @@ Notas:
 - `patchelf` e necessario para gerar `.appimage` com `bundleMediaFramework: true`; sem ele o plugin GStreamer do linuxdeploy falha no empacotamento.
 - `mesa-utils` fornece `glxinfo`, util para confirmar aceleracao grafica.
 - `dpkg-dev` e `fakeroot` ajudam na geracao de pacote `.deb`.
+- `libclang-dev` e `clang` são necessários para compilar bundle de rusqlite.
+
 
 Ferramentas opcionais, recomendadas para diagnosticar camera e pipeline de video:
 
@@ -118,7 +123,7 @@ Para executar o aplicativo desktop com Tauri:
 npm run tauri:dev
 ```
 
-Esse comando ja executa o frontend configurado em `src-tauri/tauri.conf.json` por meio de `beforeDevCommand: npm run dev`. Em geral, nao precisa iniciar `npm run dev` em outro terminal antes.
+Esse comando ja executa a UI configurada em `src-tauri/tauri.conf.json` por meio de `beforeDevCommand: npm run dev`. Em geral, nao precisa iniciar `npm run dev` em outro terminal antes.
 
 Para remover o banco SQLite local de desenvolvimento, o armazenamento local do WebView e iniciar o Tauri em seguida:
 
@@ -134,7 +139,7 @@ Para testar apenas a camada web no navegador, sem shell Tauri e sem todos os rec
 npm run dev
 ```
 
-Para visualizar o build web estatico:
+Para visualizar a construcao web estatica:
 
 ```sh
 npm run build
@@ -143,20 +148,26 @@ npm run preview
 
 ## Banco SQLite local
 
-O banco de runtime se chama `veterinary_clinic.db` e e aberto via `tauri-plugin-sql`; o app nao usa `rusqlite` diretamente.
+O app usa `StorageManager` em Rust com `rusqlite`. A UI acessa dados por
+comandos Tauri.
+
+O conjunto de usuario em execucao e composto por:
 
 No Debian atual, o arquivo local aparece em:
 
 ```sh
-~/.config/app.veterinary-clinic.local/veterinary_clinic.db
+~/.config/app.veterinary-clinic.local/veterinary_clinic_user.db
+~/.config/app.veterinary-clinic.local/veterinary_clinic_user_media.db
+~/.config/app.veterinary-clinic.local/veterinary_clinic_user_logs.db
+~/.config/app.veterinary-clinic.local/vault/user/
 ```
 
 Na primeira execucao, o app pergunta se deve importar uma base SQLite compativel ou criar uma base vazia. Para reiniciar o estado local durante desenvolvimento, feche o app e remova ou renomeie esse arquivo.
-O atalho `npm run tauri:dev:new` faz essa limpeza automaticamente antes de iniciar o app em modo dev, incluindo armazenamento web como o historico recente da busca.
+O atalho `npm run tauri:dev:new` faz essa limpeza automaticamente antes de iniciar o app em modo dev, incluindo bancos do usuario, indices de midia, CAS local, fila de replicacao e armazenamento web como o historico recente da busca.
 
 ## Camera e video no Linux
 
-O fluxo de avatar usa `navigator.mediaDevices.getUserMedia()` dentro do WebKitGTK. No backend Tauri Linux, `src-tauri/src/lib.rs` habilita explicitamente:
+O fluxo de avatar usa `navigator.mediaDevices.getUserMedia()` dentro do WebKitGTK. Na camada Rust do Tauri Linux, `src-tauri/src/lib.rs` habilita explicitamente:
 
 - `enable-media`
 - `enable-webrtc`
@@ -209,9 +220,9 @@ glxinfo -B
 
 Se aparecer renderizacao por software, a camera e o webview podem ficar menos fluidos mesmo com o app configurado corretamente.
 
-## Checks de desenvolvimento
+## Verificações de desenvolvimento
 
-Use estes comandos antes de abrir PR ou gerar bundle:
+Use estes comandos antes de abrir PR ou gerar pacote:
 
 ```sh
 npm run check
@@ -220,7 +231,7 @@ npm run build
 cargo check --manifest-path src-tauri/Cargo.toml
 ```
 
-## Bundles desktop no Debian
+## Pacotes desktop no Debian
 
 AppImage:
 
@@ -248,7 +259,7 @@ Flatpak:
 npm run tauri:flatpak
 ```
 
-O Tauri nao possui `flatpak` como target nativo de `tauri build --bundles`; neste projeto o Flatpak e gerado por `scripts/build-flatpak.mjs`. O script primeiro executa `npm run tauri -- build --no-bundle`, copia o binario Tauri e os metadados Linux para `flatpak/staging`, valida AppStream e desktop file, executa `flatpak-builder` e entao exporta o bundle unico:
+O Tauri nao possui `flatpak` como alvo nativo de `tauri build --bundles`; neste projeto o Flatpak e gerado por `scripts/build-flatpak.mjs`. O script primeiro executa `npm run tauri -- build --no-bundle`, copia o binario Tauri e os metadados Linux para `flatpak/staging`, valida AppStream e desktop file, executa `flatpak-builder` e entao exporta o pacote unico:
 
 ```text
 flatpak/io.github.migmoroni.VeterinaryClinic.flatpak
@@ -267,7 +278,7 @@ O manifesto atual usa `org.gnome.Platform//50` e `org.gnome.Sdk//50`. Se o Flath
 - `runtime-version` em `flatpak/io.github.migmoroni.VeterinaryClinic.json`
 - os comandos documentados em `flatpak/README.md` e neste arquivo
 
-Para instalar e executar o bundle localmente:
+Para instalar e executar o pacote localmente:
 
 ```sh
 flatpak install --user flatpak/io.github.migmoroni.VeterinaryClinic.flatpak
@@ -285,9 +296,19 @@ flatpak info org.gnome.Sdk//50
 
 ## Conversor legado
 
-O conversor legado fica em `legacy-to-sqlite/`. Ele le `dist/old-clinic.csv` dentro desse diretorio e grava `build/veterinary_clinic.db`.
+O conversor legado fica em `legacy-to-sqlite/`. O script atual de adocao le
+`dist/veterinary_clinic-version-1.user.db` e gera em `build/` o conjunto de
+usuario atual:
 
-O banco gerado segue sempre o schema canonico atual, incluindo os perfis locais vazios de veterinario e local de trabalho, o endereco da clinica e os vinculos compartilhados de contato em `contacts`.
+```sh
+legacy-to-sqlite/build/veterinary_clinic_user.db
+legacy-to-sqlite/build/veterinary_clinic_user_media.db
+legacy-to-sqlite/build/veterinary_clinic_user_logs.db
+legacy-to-sqlite/build/veterinary_clinic_user_import.zip
+```
+
+O pacote ZIP gerado segue o formato nativo de `distribution` e pode ser
+importado pelo app.
 
 Preparacao e execucao:
 
@@ -295,34 +316,28 @@ Preparacao e execucao:
 cd legacy-to-sqlite
 npm ci
 mkdir -p dist build
-# coloque o CSV legado em dist/old-clinic.csv
-npm run build:csv
-npm run csv
+# coloque o banco base em dist/veterinary_clinic-version-1.user.db
+npm run adopt:version
 ```
 
 O arquivo gerado pode ser importado pelo app na primeira execucao ou pelo fluxo de importacao de dados.
 
 ## Rebuild de banco exportado
 
-A partir da versao `0.2.0`, o app pode entrar em teste de producao com um unico cliente. Como ainda nao existe contrato de migracao multi-cliente no runtime, atualizacoes de bancos exportados devem passar por um processo externo em `legacy-to-sqlite/`.
+Os scripts antigos de rebuild foram preservados em `legacy-to-sqlite/old_scripts`
+apenas como referencia historica. O fluxo atual para preparar um pacote
+importavel e `npm run adopt:version`.
 
-O rebuild de banco exportado le um arquivo `.db`, `.sqlite` ou `.sqlite3` em `legacy-to-sqlite/dist` e grava `legacy-to-sqlite/build/veterinary_clinic.db`:
+Se for necessario reconstruir uma base antiga durante desenvolvimento, trate o
+arquivo gerado como entrada para o script de adocao atual, nao como banco final
+do app.
+
+Comando principal:
 
 ```sh
 cd legacy-to-sqlite
-npm run build:exported-db
-npm run exported-db
+npm run adopt:version
 ```
-
-Se houver mais de um banco em `dist`, informe a origem explicitamente:
-
-```sh
-npm run exported-db -- --source dist/export-veterinary-clinic.db
-```
-
-Ao usar `npm run`, os argumentos do script precisam vir depois de `--`. O conversor tambem aceita `node exported-db-to-sqlite.js --source dist/export-veterinary-clinic.db` e resolve nomes simples como `--source export-veterinary-clinic.db` dentro de `dist` quando o arquivo existir.
-
-Na `0.2.0`, esse processo nao aplica transformacoes estruturais. Ele valida as tabelas e colunas esperadas, executa `PRAGMA integrity_check` e `PRAGMA foreign_key_check`, e cria uma copia limpa para importacao/teste. Futuras transformacoes entre versoes devem ser implementadas nesse conversor externo, nao em `src/lib/persistence/sqlite/migrations.ts`.
 
 ## Scripts npm principais
 
@@ -332,19 +347,18 @@ Na `0.2.0`, esse processo nao aplica transformacoes estruturais. Ele valida as t
 | `npm run tauri:dev` | App desktop Tauri em desenvolvimento |
 | `npm run check` | `svelte-check` com `tsconfig.json` |
 | `npm run test:run` | Vitest em modo nao interativo |
-| `npm run build` | Build web estatico via SvelteKit |
-| `npm run tauri:appimage` | Bundle AppImage |
-| `npm run tauri:deb` | Bundle `.deb` |
-| `npm run tauri:flatpak` | Bundle `.flatpak` via `flatpak-builder` |
+| `npm run build` | Construcao web estatica via SvelteKit |
+| `npm run tauri:appimage` | Pacote AppImage |
+| `npm run tauri:deb` | Pacote `.deb` |
+| `npm run tauri:flatpak` | Pacote `.flatpak` via `flatpak-builder` |
 
 Scripts principais dentro de `legacy-to-sqlite/`:
 
 | Script | Uso |
 | --- | --- |
-| `npm run build:csv` | Compila o conversor do CSV legado |
-| `npm run csv` | Gera `build/veterinary_clinic.db` a partir de `dist/old-clinic.csv` |
-| `npm run build:exported-db` | Compila o rebuild de banco exportado da app |
-| `npm run exported-db` | Rebuilda um SQLite exportado de `dist` para `build/veterinary_clinic.db` |
+| `npm run adopt:version` | Gera o conjunto atual de usuario e ZIP nativo a partir de `dist/veterinary_clinic-version-1.user.db` |
+| `npm run build:csv` | Compila o conversor CSV legado antigo, quando usado manualmente |
+| `npm run csv` | Executa o conversor CSV legado antigo |
 
 ## Diagnostico rapido
 
