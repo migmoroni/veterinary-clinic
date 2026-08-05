@@ -1,0 +1,17 @@
+<script lang="ts">
+	import FormularyDetailPage from '@vet/modules/knowledge/components/catalog/FormularyDetailPage.svelte';
+	import ProductFormularyDetail from '@vet/modules/knowledge/components/catalog/ProductFormularyDetail.svelte';
+	import { loadCatalogProduct } from '@vet/modules/knowledge/services/catalog.service.js';
+</script>
+
+<FormularyDetailPage
+	fallbackTitleKey="formulary.title"
+	notFoundKey="formulary.detailNotFound"
+	load={(id) => loadCatalogProduct(id, true, true)}
+	kickerKey="formulary.kicker"
+	descriptionKey="formulary.description"
+>
+	{#snippet children(item)}
+		<ProductFormularyDetail {item} />
+	{/snippet}
+</FormularyDetailPage>

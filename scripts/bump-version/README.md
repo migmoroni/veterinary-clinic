@@ -50,13 +50,16 @@ npm run version:bump -- patch
 The script updates these project files:
 
 - `package.json`
+- `apps/vet-app/package.json`
 - `package-lock.json`
-- `src-tauri/tauri.conf.json`
-- `src-tauri/Cargo.toml`
-- `src-tauri/Cargo.lock`
-- `src/lib/generated/app-version.ts`
+- `packages/*/package.json`
+- `apps/vet-app/src-tauri/tauri.conf.json`
+- `apps/vet-app/src-tauri/Cargo.toml`
+- `packages/core-rust/Cargo.toml`
+- `Cargo.lock`
+- `packages/core-local/src/generated/app-version.ts`
 - `CHANGELOG.md`
-- `src-tauri/metainfo/io.github.migmoroni.VeterinaryClinic.metainfo.xml`
+- `apps/vet-app/src-tauri/metainfo/io.github.migmoroni.VeterinaryClinic.metainfo.xml`
 
 ## Module Layout
 

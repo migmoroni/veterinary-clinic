@@ -90,6 +90,24 @@ compilar no novo caminho.
 
 ## Packages
 
+Use escopo npm `@vet/*` para todos os packages TypeScript:
+
+| Pasta | Nome do package |
+| --- | --- |
+| `packages/types` | `@vet/types` |
+| `packages/ui` | `@vet/ui` |
+| `packages/core-local` | `@vet/core-local` |
+| `packages/modules` | `@vet/modules` |
+
+Imports entre packages e app devem usar esses nomes, não caminhos relativos
+longos entre diretórios.
+
+Para Rust, use nome de crate padronizado:
+
+| Pasta | Package Cargo | Crate Rust |
+| --- | --- | --- |
+| `packages/core-rust` | `vet-core-rust` | `vet_core_rust` |
+
 ### `packages/types`
 
 Contratos puros compartilhados:
@@ -148,7 +166,7 @@ Tauri e chama funções do crate compartilhado.
 
 Módulos de negócio do app atual.
 
-Extraia primeiro estes módulos:
+Extraia primeiro estes módulos top-level:
 
 ```text
 packages/modules/src/
@@ -156,6 +174,10 @@ packages/modules/src/
   registry/
   medical_records/
 ```
+
+O código atual de `treatment`, `treatment_protocol`, `vaccines`,
+`antiparasitics` e `treatment_analytics` pertence ao módulo
+`medical_records`.
 
 ## Módulos Atuais
 
@@ -204,13 +226,14 @@ Código atual relacionado ao histórico clínico do pet:
 - rotas de `antiparasitics`;
 - dashboards de `vaccines` e `antiparasitics`.
 
-Dentro de `medical_records`, organize subpastas conforme o código atual pedir,
-por exemplo:
+Dentro de `medical_records`, organize o código atual nesta direção:
 
 ```text
 medical_records/
   records/
   treatments/
+    vaccines/
+    antiparasitics/
   treatment_protocols/
   treatment_analytics/
 ```
@@ -343,17 +366,113 @@ de imports.
 
 Ações:
 
-- crie `package.json` em `packages/types`;
-- crie `package.json` em `packages/ui`;
-- crie `package.json` em `packages/core-local`;
-- crie `package.json` em `packages/modules`;
-- crie `Cargo.toml` em `packages/core-rust`;
+- crie `package.json` em `packages/types` com o nome `@vet/types`;
+- crie `package.json` em `packages/ui` com o nome `@vet/ui`;
+- crie `package.json` em `packages/core-local` com o nome `@vet/core-local`;
+- crie `package.json` em `packages/modules` com o nome `@vet/modules`;
+- crie `Cargo.toml` em `packages/core-rust` com package `vet-core-rust` e lib
+  `vet_core_rust`;
 - crie `src/index.ts` nos packages TypeScript;
 - crie `src/lib.rs` em `packages/core-rust`;
 - crie `tsconfig.json` nos packages TypeScript;
+- configure `exports` nos packages TypeScript;
+- configure `exports` em `packages/modules/package.json` para permitir imports
+  por subpath de módulo;
 - configure aliases internos;
 - ajuste `tsconfig` para resolver os packages;
-- mantenha exports vazios ou mínimos até mover código real.
+- crie `index.ts` vazios ou mínimos para subpaths públicos antes de mover código
+  real.
+
+Exports mínimos esperados nos packages TypeScript:
+
+```json
+{
+  "name": "@vet/types",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
+```
+
+```json
+{
+  "name": "@vet/ui",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
+```
+
+```json
+{
+  "name": "@vet/core-local",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
+```
+
+Exports esperados em `packages/modules/package.json`:
+
+```json
+{
+  "name": "@vet/modules",
+  "exports": {
+    ".": "./src/index.ts",
+    "./knowledge": "./src/knowledge/index.ts",
+    "./knowledge/breeds": "./src/knowledge/breeds/index.ts",
+    "./knowledge/products": "./src/knowledge/products/index.ts",
+    "./knowledge/active_ingredients": "./src/knowledge/active_ingredients/index.ts",
+    "./knowledge/conditions": "./src/knowledge/conditions/index.ts",
+    "./knowledge/manufacturers": "./src/knowledge/manufacturers/index.ts",
+    "./registry": "./src/registry/index.ts",
+    "./registry/owners": "./src/registry/owners/index.ts",
+    "./registry/pets": "./src/registry/pets/index.ts",
+    "./medical_records": "./src/medical_records/index.ts",
+    "./medical_records/records": "./src/medical_records/records/index.ts",
+    "./medical_records/treatments": "./src/medical_records/treatments/index.ts",
+    "./medical_records/treatment_protocols": "./src/medical_records/treatment_protocols/index.ts",
+    "./medical_records/treatment_analytics": "./src/medical_records/treatment_analytics/index.ts"
+  }
+}
+```
+
+Subpaths esperados para imports:
+
+```text
+@vet/types
+@vet/ui
+@vet/core-local
+@vet/modules/knowledge
+@vet/modules/knowledge/breeds
+@vet/modules/registry
+@vet/modules/registry/owners
+@vet/modules/medical_records
+@vet/modules/medical_records/treatments
+@vet/modules/medical_records/treatment_protocols
+```
+
+Use subpath export para subdomínios públicos consumidos por `apps/vet-app`.
+Subpastas internas que não forem API pública devem ser reexportadas apenas pelo
+`index.ts` do módulo correspondente.
+
+### Migração De Imports
+
+Durante a movimentação, substitua imports antigos conforme a nova fronteira:
+
+| Import antigo | Import novo |
+| --- | --- |
+| `$lib/components/ui` | `@vet/ui` |
+| `$lib/components/forms` | `@vet/ui` |
+| `$lib/native` | `@vet/core-local` |
+| `$lib/persistence/sqlite/client` | `@vet/core-local` |
+| `$lib/domain/...` com contrato puro | `@vet/types` |
+| `$lib/domain/...` com regra de negócio | `@vet/modules/<modulo>` ou subpath público |
+| `$lib/services/...` reutilizável | `@vet/modules/<modulo>` ou `@vet/core-local`, conforme responsabilidade |
+
+Dentro de um mesmo package, use imports relativos locais. Entre packages e a
+partir de `apps/vet-app`, use `@vet/*`. O alias `$lib` deve ficar apenas para
+código que permanecer local em `apps/vet-app/src/lib`.
 
 Checks:
 
@@ -558,9 +677,9 @@ Objetivo: limpar imports, conferir responsabilidades e validar o workspace.
 Ações:
 
 - remova imports quebrados ou atalhos temporários sem uso;
-- confirme que `packages/types` não importa packages locais;
-- confirme que `packages/ui` não importa app;
-- confirme que `packages/modules` não depende de rotas;
+- confirme que `@vet/types` não importa packages locais;
+- confirme que `@vet/ui` não importa app;
+- confirme que `@vet/modules` não depende de rotas;
 - confirme que `apps/vet-app` faz a composição das telas;
 - confira que `docs`, `scripts`, `flatpak` e `legacy-to-sqlite` ficaram no lugar
   atual.
@@ -583,15 +702,20 @@ Saída esperada:
 
 ## Regras De Dependência
 
-- `packages/types` não importa packages locais.
-- `packages/ui` pode importar `types`, mas não importa apps.
-- `packages/core-rust` não conhece apps.
-- `packages/core-local` pode importar `types` e chamar comandos Tauri.
-- `packages/modules` pode importar `types`, `ui` e `core-local`.
+- `@vet/types` não importa packages locais.
+- `@vet/ui` pode importar `@vet/types`, mas não importa apps.
+- crate `vet_core_rust` não conhece apps.
+- `@vet/core-local` pode importar `@vet/types` e chamar comandos Tauri.
+- `@vet/modules` pode importar `@vet/types`, `@vet/ui` e `@vet/core-local`.
 - `apps/vet-app` pode importar todos os packages.
 
 Evite imports internos diretos entre módulos de negócio. Quando dois módulos
-precisarem se comunicar, use contratos públicos ou composição em `apps/vet-app`.
+precisarem se comunicar, use contratos públicos em `@vet/types` ou composição
+em `apps/vet-app`.
+
+Contratos públicos compartilhados entre módulos devem ficar em `@vet/types`.
+A API pública de cada módulo deve sair pelo `index.ts` desse módulo em
+`@vet/modules`.
 
 ## Persistência
 

@@ -5,7 +5,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const projectRoot = fileURLToPath(new URL('..', import.meta.url));
-const tauriConfig = JSON.parse(await readFile(join(projectRoot, 'src-tauri', 'tauri.conf.json'), 'utf8'));
+const appRoot = join(projectRoot, 'apps', 'vet-app');
+const tauriConfig = JSON.parse(await readFile(join(appRoot, 'src-tauri', 'tauri.conf.json'), 'utf8'));
 const appIdentifier = tauriConfig.identifier ?? 'app.veterinary-clinic.local';
 const appName = tauriConfig.productName ?? 'Veterinary Clinic';
 

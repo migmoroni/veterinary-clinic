@@ -1,0 +1,23 @@
+{
+	"name": "@vet/core-local",
+	"private": true,
+	"version": "0.2.0",
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./src/index.ts",
+			"default": "./src/index.ts"
+		},
+		"./*.js": "./src/*.ts",
+		"./*": "./src/*"
+	},
+	"dependencies": {
+		"@vet/types": "file:../types"
+	},
+	"peerDependencies": {
+		"@tauri-apps/api": "^2.11.0",
+		"@tauri-apps/plugin-dialog": "^2.7.1",
+		"@tauri-apps/plugin-fs": "^2.5.1",
+		"@tauri-apps/plugin-shell": "^2.3.5"
+	}
+}

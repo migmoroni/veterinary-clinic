@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const APP_ROOT = resolve(ROOT, 'apps/vet-app');
+const TAURI_ROOT = resolve(APP_ROOT, 'src-tauri');
 const APP_ID = 'io.github.migmoroni.VeterinaryClinic';
 const COMMAND = 'veterinary_clinic';
 const FLATPAK_REMOTE = 'flathub';
@@ -25,7 +27,7 @@ try {
   await requireFlatpakRef(`${FLATPAK_RUNTIME}//${FLATPAK_RUNTIME_VERSION}`);
   await requireFlatpakRef(`${FLATPAK_SDK}//${FLATPAK_RUNTIME_VERSION}`);
 
-  await run('npm', ['run', 'tauri', '--', 'build', '--no-bundle']);
+  await run('npm', ['--workspace', 'apps/vet-app', 'run', 'tauri', '--', 'build', '--no-bundle']);
   await prepareStaging();
   await run('appstreamcli', ['validate', resolve(STAGING_DIR, `share/metainfo/${APP_ID}.metainfo.xml`)]);
   await run('desktop-file-validate', [resolve(STAGING_DIR, `share/applications/${APP_ID}.desktop`)]);
@@ -52,14 +54,14 @@ async function prepareStaging() {
 }
 
 async function copyExecutable() {
-  const source = resolve(ROOT, 'src-tauri/target/release/veterinary_clinic');
+  const source = resolve(ROOT, 'target/release/veterinary_clinic');
   const target = resolve(STAGING_DIR, `bin/${COMMAND}`);
   await mkdir(dirname(target), { recursive: true });
   await copyFile(source, target);
 }
 
 async function writeDesktopFile() {
-  const source = await readProjectFile('src-tauri/desktop/veterinary-clinic.appimage.desktop');
+  const source = await readTauriFile('desktop/veterinary-clinic.appimage.desktop');
   const contents = source
     .replace(/^Icon=.*$/m, `Icon=${APP_ID}`)
     .replace(/^StartupWMClass=.*$/m, `StartupWMClass=${COMMAND}`);
@@ -67,7 +69,7 @@ async function writeDesktopFile() {
 }
 
 async function writeMetainfoFile() {
-  const source = await readProjectFile('src-tauri/metainfo/io.github.migmoroni.VeterinaryClinic.metainfo.xml');
+  const source = await readTauriFile('metainfo/io.github.migmoroni.VeterinaryClinic.metainfo.xml');
   const contents = source.replace(
     /<launchable type="desktop-id">[^<]+<\/launchable>/,
     `<launchable type="desktop-id">${APP_ID}.desktop</launchable>`
@@ -76,9 +78,9 @@ async function writeMetainfoFile() {
 }
 
 async function copyIcons() {
-  await copyProjectFile('src-tauri/icons/32x32.png', `share/icons/hicolor/32x32/apps/${APP_ID}.png`);
-  await copyProjectFile('src-tauri/icons/128x128.png', `share/icons/hicolor/128x128/apps/${APP_ID}.png`);
-  await copyProjectFile('src-tauri/icons/128x128@2x.png', `share/icons/hicolor/256x256/apps/${APP_ID}.png`);
+  await copyTauriFile('icons/32x32.png', `share/icons/hicolor/32x32/apps/${APP_ID}.png`);
+  await copyTauriFile('icons/128x128.png', `share/icons/hicolor/128x128/apps/${APP_ID}.png`);
+  await copyTauriFile('icons/128x128@2x.png', `share/icons/hicolor/256x256/apps/${APP_ID}.png`);
 }
 
 async function copyDocs() {
@@ -92,9 +94,15 @@ async function copyProjectFile(sourceRelativePath, targetRelativePath) {
   await copyFile(resolve(ROOT, sourceRelativePath), target);
 }
 
-async function readProjectFile(relativePath) {
+async function copyTauriFile(sourceRelativePath, targetRelativePath) {
+  const target = resolve(STAGING_DIR, targetRelativePath);
+  await mkdir(dirname(target), { recursive: true });
+  await copyFile(resolve(TAURI_ROOT, sourceRelativePath), target);
+}
+
+async function readTauriFile(relativePath) {
   const { readFile } = await import('node:fs/promises');
-  return readFile(resolve(ROOT, relativePath), 'utf8');
+  return readFile(resolve(TAURI_ROOT, relativePath), 'utf8');
 }
 
 async function writeStagedFile(relativePath, contents) {
