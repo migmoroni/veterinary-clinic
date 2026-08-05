@@ -95,6 +95,9 @@ no programa.
   exportação completa em ZIP nativo ou CSV.
 - [Arquitetura De Replicação Local-First](replication-architecture.md):
   backup/sincronização contínua por patches, outbox e destinos.
+- [Mapa Para Extrair O App Atual Para Workspace Modular](plans/modular-monolith-refactor-map.md):
+  estado atual, destino `veterinary-apps` e extração gradual para `apps/` e
+  `packages/`.
 - [Política De Backup](backup-policy.md): visão de produto sobre backup
   contínuo, exportação e importação.
 - [Versionamento De Banco E Ritual De Lançamento](database-versioning.md):
