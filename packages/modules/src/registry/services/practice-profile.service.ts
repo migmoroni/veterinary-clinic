@@ -11,7 +11,7 @@ import {
 	getPracticeProfiles,
 	saveVeterinarianProfile,
 	saveWorkplace
-} from '@vet/modules/registry/repositories/practice-profile.repository.js';
+} from '../repositories/practice-profile.repository.js';
 
 export const PRACTICE_IDENTITY_CHANGED_EVENT = 'practice-identity-changed';
 

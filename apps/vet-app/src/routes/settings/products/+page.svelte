@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import CharacterLimitHint from '@vet/ui/components/forms/CharacterLimitHint.svelte';
-	import ProductImage from '@vet/modules/knowledge/components/product/ProductImage.svelte';
-	import ProductImageCaptureDialog from '@vet/modules/knowledge/components/product/ProductImageCaptureDialog.svelte';
-	import ProductRegionsField from '@vet/modules/knowledge/components/product/ProductRegionsField.svelte';
+	import { ProductImage } from '@vet/modules/knowledge/products';
+	import { ProductImageCaptureDialog } from '@vet/modules/knowledge/products';
+	import { ProductRegionsField } from '@vet/modules/knowledge/products';
 	import { productTypeHierarchicalFilterOptions, productTypeMatchesFilter, treatmentProductTypeLabel, type ProductTypeFilterValue } from '@vet/types/domain/product/type-labels.js';
 	import ImageCollectionOrganizer from '@vet/ui/components/shared/ImageCollectionOrganizer.svelte';
 	import DebouncedSearchField from '@vet/ui/components/ui/DebouncedSearchField.svelte';
@@ -15,7 +15,7 @@
 	import { FIELD_LIMITS } from '@vet/types/domain/shared/field-limits.js';
 	import { TREATMENT_KINDS, type TreatmentCatalogItem, type TreatmentCatalogItemId, type TreatmentKind } from '@vet/types/domain/treatment/treatment.js';
 	import { t, type TranslationKey } from '@vet/core-local/i18n/index.js';
-	import { loadAllTreatmentCatalogItems, removeTreatmentCatalogName, saveTreatmentCatalogImages, saveTreatmentCatalogName, setTreatmentCatalogNameHidden } from '@vet/modules/medical_records/services/treatment.service.js';
+	import { loadAllTreatmentCatalogItems, removeTreatmentCatalogName, saveTreatmentCatalogImages, saveTreatmentCatalogName, setTreatmentCatalogNameHidden } from '@vet/modules/knowledge/products';
 	import Eye from '@lucide/svelte/icons/eye';
 	import EyeOff from '@lucide/svelte/icons/eye-off';
 	import Images from '@lucide/svelte/icons/images';

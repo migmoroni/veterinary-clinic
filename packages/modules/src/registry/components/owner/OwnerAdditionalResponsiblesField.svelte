@@ -1,9 +1,9 @@
 <script lang="ts">
 	import CharacterLimitHint from '@vet/ui/components/forms/CharacterLimitHint.svelte';
-	import OwnerContactEditorList from '@vet/modules/registry/components/owner/OwnerContactEditorList.svelte';
-	import OwnerAvatar from '@vet/modules/registry/components/owner/OwnerAvatar.svelte';
-	import OwnerAvatarEditorDialog from '@vet/modules/registry/components/owner/OwnerAvatarEditorDialog.svelte';
-	import { createEmptyOwnerContact } from '@vet/modules/registry/components/owner/owner-contact-utils.js';
+	import OwnerContactEditorList from './OwnerContactEditorList.svelte';
+	import OwnerAvatar from './OwnerAvatar.svelte';
+	import OwnerAvatarEditorDialog from './OwnerAvatarEditorDialog.svelte';
+	import { createEmptyOwnerContact } from './owner-contact-utils.js';
 	import type { OwnerAdditionalResponsibleInput, OwnerContactInput } from '@vet/types/domain/owner/owner.js';
 	import { FIELD_LIMITS } from '@vet/types/domain/shared/field-limits.js';
 	import { t } from '@vet/core-local/i18n/index.js';

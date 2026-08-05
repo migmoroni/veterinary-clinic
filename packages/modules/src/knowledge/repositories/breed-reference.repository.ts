@@ -8,7 +8,7 @@ import {
 	type BreedSizeCategory
 } from '@vet/types/domain/pet/breed-reference.js';
 import type { TranslationKey } from '@vet/core-local/i18n/index.js';
-import { getImageCollection } from '@vet/modules/core_repositories/image-collection.repository.js';
+import { getImageCollection } from '@vet/core-local/repositories/image-collection.repository.js';
 import { selectSystemMany } from '@vet/core-local/sqlite/client.js';
 
 export const BREED_REFERENCE_IMAGE_COLLECTION_TYPE = 'breed_reference_item';

@@ -1,6 +1,5 @@
-import type { ImageCollectionItemInput } from '@vet/types/domain/image-collection/image-collection.js';
-import type { PetTreatment, PetTreatmentInput, TreatmentCatalogItem, TreatmentCatalogItemId, TreatmentCatalogItemInput, TreatmentKind } from '@vet/types/domain/treatment/treatment.js';
-import { createTreatments, deleteTreatmentCatalogItem, getTreatmentCatalogItem, listTreatmentCatalogItems, saveTreatmentCatalogItem, saveTreatmentCatalogItemImages, setTreatmentCatalogItemHidden, setTreatmentValidityIgnored, softDeleteTreatment } from '@vet/modules/medical_records/repositories/treatment.repository.js';
+import type { PetTreatment, PetTreatmentInput, TreatmentKind } from '@vet/types/domain/treatment/treatment.js';
+import { createTreatments, setTreatmentValidityIgnored, softDeleteTreatment } from '../repositories/treatment.repository.js';
 
 export async function saveNewTreatments(kind: TreatmentKind, petId: string, inputs: PetTreatmentInput[]): Promise<PetTreatment[]> {
 	return createTreatments(kind, petId, inputs);
@@ -12,32 +11,4 @@ export async function removeTreatment(kind: TreatmentKind, id: string): Promise<
 
 export async function setTreatmentValidity(kind: TreatmentKind, treatmentId: string, ignored: boolean): Promise<PetTreatment> {
 	return setTreatmentValidityIgnored(kind, treatmentId, ignored);
-}
-
-export async function loadTreatmentCatalogItems(kind: TreatmentKind | null = null, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem[]> {
-	return listTreatmentCatalogItems(kind, includeHidden, includeImages);
-}
-
-export async function loadTreatmentCatalogItem(id: TreatmentCatalogItemId, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem | null> {
-	return getTreatmentCatalogItem(id, includeHidden, includeImages);
-}
-
-export async function loadAllTreatmentCatalogItems(includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem[]> {
-	return listTreatmentCatalogItems(null, includeHidden, includeImages);
-}
-
-export async function saveTreatmentCatalogName(kind: TreatmentKind, input: TreatmentCatalogItemInput, id?: TreatmentCatalogItemId): Promise<TreatmentCatalogItem> {
-	return saveTreatmentCatalogItem(kind, input, id);
-}
-
-export async function setTreatmentCatalogNameHidden(kind: TreatmentKind, id: TreatmentCatalogItemId, hidden: boolean): Promise<TreatmentCatalogItem> {
-	return setTreatmentCatalogItemHidden(kind, id, hidden);
-}
-
-export async function saveTreatmentCatalogImages(kind: TreatmentKind, id: TreatmentCatalogItemId, images: ImageCollectionItemInput[]): Promise<TreatmentCatalogItem> {
-	return saveTreatmentCatalogItemImages(kind, id, images);
-}
-
-export async function removeTreatmentCatalogName(kind: TreatmentKind, id: TreatmentCatalogItemId): Promise<void> {
-	await deleteTreatmentCatalogItem(kind, id);
 }

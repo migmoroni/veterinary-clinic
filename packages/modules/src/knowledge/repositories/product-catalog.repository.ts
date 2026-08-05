@@ -26,9 +26,9 @@ import { nowIso } from '@vet/types/domain/shared/time.js';
 import { createUuidV7 } from '@vet/types/domain/shared/uuid.js';
 import type { TreatmentCatalogItem, TreatmentCatalogItemId, TreatmentCatalogItemInput, TreatmentKind } from '@vet/types/domain/treatment/treatment.js';
 import { normalizeTreatmentName } from '@vet/types/domain/treatment/treatment.js';
-import { ensureManufacturerCatalogItem, getManufacturerCatalogItemById } from '@vet/modules/knowledge/repositories/manufacturer-catalog.repository.js';
-import { listActiveIngredientCatalogItemsByProductId } from '@vet/modules/knowledge/repositories/active-ingredient-catalog.repository.js';
-import { deleteImageCollection, getImageCollection, replaceImageCollection } from '@vet/modules/core_repositories/image-collection.repository.js';
+import { ensureManufacturerCatalogItem, getManufacturerCatalogItemById } from './manufacturer-catalog.repository.js';
+import { listActiveIngredientCatalogItemsByProductId } from './active-ingredient-catalog.repository.js';
+import { deleteImageCollection, getImageCollection, replaceImageCollection } from '@vet/core-local/repositories/image-collection.repository.js';
 import { execute, selectMany, selectSystemMany } from '@vet/core-local/sqlite/client.js';
 
 interface ProductCatalogItemRow {

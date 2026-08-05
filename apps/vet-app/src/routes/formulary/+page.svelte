@@ -1,18 +1,19 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import BinaryImage from "@vet/ui/components/shared/BinaryImage.svelte";
-	import ReferenceExplorer from "@vet/modules/knowledge/components/reference/ReferenceExplorer.svelte";
-	import { type ReferenceFilterBarSelect } from "@vet/modules/knowledge/components/reference/ReferenceFilterBar.svelte";
-	import { type ReferenceGridCard } from "@vet/modules/knowledge/components/reference/ReferenceCardGrid.svelte";
-	import ReferenceSummarySidebar, {
+	import { ReferenceExplorer } from '@vet/modules/knowledge';
+	import { type ReferenceFilterBarSelect } from "@vet/modules/knowledge";
+	import { type ReferenceGridCard } from "@vet/modules/knowledge";
+	import {
+		ReferenceSummarySidebar,
 		type ReferenceSummaryField,
-	} from "@vet/modules/knowledge/components/reference/ReferenceSummarySidebar.svelte";
-	import { activeIngredientSummaryClassificationGroups } from "@vet/modules/knowledge/components/catalog/active-ingredient-detail-utils.js";
+	} from "@vet/modules/knowledge";
+	import { activeIngredientSummaryClassificationGroups } from "@vet/modules/knowledge/active_ingredients";
 	import { productClassificationLabel, productClassificationSearchText, productSummaryClassificationGroups } from "@vet/types/domain/product/classification.js";
 	import {
 		catalogRegionLabel,
 		catalogRegionSummary,
-	} from "@vet/modules/knowledge/components/catalog/catalog-detail-utils.js";
+	} from "@vet/modules/knowledge";
 	import {
 		conditionClassificationLabel,
 		conditionClassificationGroups,
@@ -27,12 +28,12 @@
 	import {
 		readReferenceRouteState,
 		replaceReferenceRouteState,
-	} from "@vet/modules/knowledge/components/reference/reference-route-state.js";
+	} from "@vet/modules/knowledge";
 	import {
 		referenceSpeciesLabel,
 		referenceSpeciesOptions,
 		resolveReferenceSelection,
-	} from "@vet/modules/knowledge/components/reference/reference-utils.js";
+	} from "@vet/modules/knowledge";
 	import { createSearchMatcher } from "@vet/types/domain/search/search-controller.js";
 	import {
 		ACTIVE_INGREDIENT_TYPES,
@@ -67,7 +68,7 @@
 		loadCatalogManufacturers,
 		loadCatalogProducts,
 		type CatalogEntityKind,
-	} from "@vet/modules/knowledge/services/catalog.service.js";
+	} from "@vet/modules/knowledge";
 	import Activity from "@lucide/svelte/icons/activity";
 	import Building2 from "@lucide/svelte/icons/building-2";
 	import FlaskConical from "@lucide/svelte/icons/flask-conical";

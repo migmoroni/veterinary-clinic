@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { t, type TranslationKey } from '@vet/core-local/i18n/index.js';
-	import { openEmailForEmail, openPhoneCallForPhone, openWhatsAppForPhone } from '@vet/modules/registry/services/contact.service.js';
+	import { openEmailForEmail, openPhoneCallForPhone, openWhatsAppForPhone } from '../../services/contact.service.js';
 	import Mail from '@lucide/svelte/icons/mail';
 	import MessageCircle from '@lucide/svelte/icons/message-circle';
 	import PhoneCall from '@lucide/svelte/icons/phone-call';

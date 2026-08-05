@@ -3,9 +3,9 @@
 	import { onMount, tick } from 'svelte';
 	import CharacterLimitHint from '@vet/ui/components/forms/CharacterLimitHint.svelte';
 	import DateField from '@vet/ui/components/forms/DateField.svelte';
-	import OwnerAvatar from '@vet/modules/registry/components/owner/OwnerAvatar.svelte';
-	import PetAvatar from '@vet/modules/registry/components/pet/PetAvatar.svelte';
-	import PetTaxonomyPicker from '@vet/modules/registry/components/pet/PetTaxonomyPicker.svelte';
+	import { OwnerAvatar } from '@vet/modules/registry/owners';
+	import { PetAvatar } from '@vet/modules/registry/pets';
+	import { PetTaxonomyPicker } from '@vet/modules/registry/pets';
 	import DebouncedSearchField from '@vet/ui/components/ui/DebouncedSearchField.svelte';
 	import { createLatestAsyncSearchController } from '@vet/types/domain/search/search-controller.js';
 	import type { Owner } from '@vet/types/domain/owner/owner.js';
@@ -14,8 +14,8 @@
 	import { normalizeDateInput } from '@vet/types/domain/shared/date-input.js';
 	import { FIELD_LIMITS } from '@vet/types/domain/shared/field-limits.js';
 	import { t } from '@vet/core-local/i18n/index.js';
-	import { loadOwnerProfile, searchOwners } from '@vet/modules/registry/services/owner.service.js';
-	import { saveNewPet } from '@vet/modules/registry/services/pet.service.js';
+	import { loadOwnerProfile, searchOwners } from '@vet/modules/registry/owners';
+	import { saveNewPet } from '@vet/modules/registry/pets';
 	import Save from '@lucide/svelte/icons/save';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 

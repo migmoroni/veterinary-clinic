@@ -1,7 +1,7 @@
 <script lang="ts">
-	import ConditionFormularyDetail from '@vet/modules/knowledge/components/catalog/ConditionFormularyDetail.svelte';
-	import FormularyDetailPage from '@vet/modules/knowledge/components/catalog/FormularyDetailPage.svelte';
-	import { loadCatalogCondition } from '@vet/modules/knowledge/services/catalog.service.js';
+	import { ConditionFormularyDetail } from '@vet/modules/knowledge/conditions';
+	import { FormularyDetailPage } from '@vet/modules/knowledge';
+	import { loadCatalogCondition } from '@vet/modules/knowledge';
 </script>
 
 <FormularyDetailPage

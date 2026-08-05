@@ -6,7 +6,7 @@ import {
 	parseActiveIngredientType,
 	type ActiveIngredientCatalogItem
 } from '@vet/types/domain/active-ingredient/catalog.js';
-import { getImageCollection } from '@vet/modules/core_repositories/image-collection.repository.js';
+import { getImageCollection } from '@vet/core-local/repositories/image-collection.repository.js';
 import { selectSystemMany } from '@vet/core-local/sqlite/client.js';
 
 export const ACTIVE_INGREDIENT_CATALOG_IMAGE_COLLECTION_TYPE = 'active_ingredient_catalog_item';

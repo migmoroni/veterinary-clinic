@@ -1,6 +1,6 @@
 <script lang="ts">
-	import CatalogEntityDetail, { type CatalogEntityDetailField, type CatalogEntityDetailSection } from '@vet/modules/knowledge/components/catalog/CatalogEntityDetail.svelte';
-	import { catalogRegionSummary, catalogSectionTexts } from '@vet/modules/knowledge/components/catalog/catalog-detail-utils.js';
+	import CatalogEntityDetail, { type CatalogEntityDetailField, type CatalogEntityDetailSection } from './CatalogEntityDetail.svelte';
+	import { catalogRegionSummary, catalogSectionTexts } from './catalog-detail-utils.js';
 	import { productClassificationGroups } from '@vet/types/domain/product/classification.js';
 	import { productLeafletSectionIds, productTreatmentKind, productTypeMain, type ProductCatalogItem, type ProductLeafletSectionId, type ProductSpecies } from '@vet/types/domain/product/catalog.js';
 	import { productTypeLabel } from '@vet/types/domain/product/type-labels.js';

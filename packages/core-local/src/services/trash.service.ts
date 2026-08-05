@@ -6,7 +6,7 @@ import {
 	restoreTrashItem,
 	type TrashItemId,
 	type TrashKind
-} from '@vet/modules/core_repositories/trash.repository.js';
+} from '@vet/core-local/repositories/trash.repository.js';
 
 export async function loadTrash() {
 	return listTrashItems();

@@ -112,7 +112,7 @@ Depois valide que o ambiente esta saudavel:
 npm run check
 npm run test:run
 npm run build
-cargo check --manifest-path src-tauri/Cargo.toml
+cargo check --workspace
 ```
 
 ## Executar em desenvolvimento
@@ -123,7 +123,7 @@ Para executar o aplicativo desktop com Tauri:
 npm run tauri:dev
 ```
 
-Esse comando ja executa a UI configurada em `src-tauri/tauri.conf.json` por meio de `beforeDevCommand: npm run dev`. Em geral, nao precisa iniciar `npm run dev` em outro terminal antes.
+Esse comando ja executa a UI configurada em `apps/vet-app/src-tauri/tauri.conf.json` por meio de `beforeDevCommand: npm run dev`. Em geral, nao precisa iniciar `npm run dev` em outro terminal antes.
 
 Para remover o banco SQLite local de desenvolvimento, o armazenamento local do WebView e iniciar o Tauri em seguida:
 
@@ -167,7 +167,7 @@ O atalho `npm run tauri:dev:new` faz essa limpeza automaticamente antes de inici
 
 ## Camera e video no Linux
 
-O fluxo de avatar usa `navigator.mediaDevices.getUserMedia()` dentro do WebKitGTK. Na camada Rust do Tauri Linux, `src-tauri/src/lib.rs` habilita explicitamente:
+O fluxo de avatar usa `navigator.mediaDevices.getUserMedia()` dentro do WebKitGTK. Na camada Rust do Tauri Linux, `apps/vet-app/src-tauri/src/lib.rs` habilita explicitamente:
 
 - `enable-media`
 - `enable-webrtc`
@@ -228,7 +228,7 @@ Use estes comandos antes de abrir PR ou gerar pacote:
 npm run check
 npm run test:run
 npm run build
-cargo check --manifest-path src-tauri/Cargo.toml
+cargo check --workspace
 ```
 
 ## Pacotes desktop no Debian
@@ -239,7 +239,7 @@ AppImage:
 npm run tauri:appimage
 ```
 
-O AppImage inclui suporte de midia por causa de `bundle.linux.appimage.bundleMediaFramework = true` em `src-tauri/tauri.conf.json`; isso requer `patchelf` no PATH.
+O AppImage inclui suporte de midia por causa de `bundle.linux.appimage.bundleMediaFramework = true` em `apps/vet-app/src-tauri/tauri.conf.json`; isso requer `patchelf` no PATH.
 
 Deb:
 

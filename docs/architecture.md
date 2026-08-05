@@ -12,18 +12,36 @@ adicione o link aqui.
 
 ```mermaid
 flowchart LR
-    UI[UI Svelte]
-    TS[Serviços TypeScript]
+    UI[apps/vet-app]
+    MODULES[@vet/modules]
+    CORE_LOCAL[@vet/core-local]
+    TYPES[@vet/types]
     IPC[Comandos Tauri]
-    RUST[Camada Rust]
+    RUST[@vet/core-rust]
     DATA[(SQLite + CAS)]
 
-    UI --> TS --> IPC --> RUST --> DATA
+    UI --> MODULES
+    UI --> CORE_LOCAL
+    MODULES --> CORE_LOCAL
+    MODULES --> TYPES
+    CORE_LOCAL --> TYPES
+    CORE_LOCAL --> IPC --> RUST --> DATA
 ```
 
 A aplicação é local-first: os dados principais vivem no dispositivo do usuário.
-A UI é SvelteKit/Tauri, e a persistência fica centralizada no Rust com
-`rusqlite` e arquivos CAS.
+A UI é SvelteKit/Tauri em `apps/vet-app`; contratos puros ficam em
+`packages/types`; infraestrutura local TypeScript fica em
+`packages/core-local`; módulos de negócio ficam em `packages/modules`; e a
+persistência nativa compartilhada fica em `packages/core-rust`.
+
+O grafo de dependências TypeScript deve seguir:
+
+```text
+@vet/types -> @vet/core-local -> @vet/ui -> @vet/modules -> apps/vet-app
+```
+
+Na prática, cada pacote só pode importar pacotes à esquerda dele nessa linha, e
+`apps/vet-app` faz as composições entre módulos irmãos por subpaths públicos.
 
 ## Núcleo De Persistência
 
@@ -42,7 +60,7 @@ flowchart TD
     DISTRIBUTION -. preparo de importação .-> REPLICATION
 ```
 
-As três fronteiras principais são:
+As três fronteiras Rust principais, em `packages/core-rust`, são:
 
 - `storage`: mantém bancos ativos, conexões SQLite e arquivos CAS.
 - `distribution`: importa/exporta pacotes completos nativos ou CSV.

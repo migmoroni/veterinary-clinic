@@ -5,5 +5,7 @@ export * from './native/external-link.js';
 export * from './native/file-manager.js';
 export * from './native/platform.js';
 export * from './native/system-fonts.js';
+export * from './repositories/index.js';
+export * from './services/index.js';
 export * from './sqlite/client.js';
 export * from './sqlite/media.js';

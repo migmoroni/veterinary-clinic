@@ -9,7 +9,7 @@ import {
 import { FIELD_LIMITS, nullableMultilineText, requireLimitedText } from '@vet/types/domain/shared/field-limits.js';
 import { nowIso } from '@vet/types/domain/shared/time.js';
 import { createUuidV7 } from '@vet/types/domain/shared/uuid.js';
-import { loadMediaDataMap, mediaHashKey, saveMedia } from '@vet/modules/core_repositories/media.repository.js';
+import { loadMediaDataMap, mediaHashKey, saveMedia } from './media.repository.js';
 import { execute, selectMany, selectOne, selectSystemMany, selectSystemOne } from '@vet/core-local/sqlite/client.js';
 import { mediaHashToSqlLiteral, normalizeMediaHash } from '@vet/core-local/sqlite/media.js';
 

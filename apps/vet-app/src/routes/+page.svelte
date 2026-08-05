@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import OwnerContactDialog from '@vet/modules/registry/components/owner/OwnerContactDialog.svelte';
+	import { OwnerContactDialog } from '@vet/modules/registry/owners';
 	import type { DashboardStudyTarget } from '@vet/types/domain/dashboard/analytics.js';
 	import { defaultProductCatalogItems } from '@vet/types/domain/product/default-catalog.js';
 	import type { OwnerAssociatedContact } from '@vet/types/domain/owner/owner.js';

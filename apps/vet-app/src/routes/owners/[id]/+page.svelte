@@ -3,19 +3,19 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import CharacterLimitHint from '@vet/ui/components/forms/CharacterLimitHint.svelte';
-	import OwnerAdditionalResponsiblesField from '@vet/modules/registry/components/owner/OwnerAdditionalResponsiblesField.svelte';
-	import OwnerAvatar from '@vet/modules/registry/components/owner/OwnerAvatar.svelte';
-	import OwnerAvatarEditorDialog from '@vet/modules/registry/components/owner/OwnerAvatarEditorDialog.svelte';
-	import OwnerContactsField from '@vet/modules/registry/components/owner/OwnerContactsField.svelte';
+	import { OwnerAdditionalResponsiblesField } from '@vet/modules/registry/owners';
+	import { OwnerAvatar } from '@vet/modules/registry/owners';
+	import { OwnerAvatarEditorDialog } from '@vet/modules/registry/owners';
+	import { OwnerContactsField } from '@vet/modules/registry/owners';
 	import {
 		canCallOwnerContact as canCallContact,
 		canOpenOwnerContactWhatsApp as canOpenWhatsApp,
 		isEmailOwnerContact as isEmailContact,
 		ownerContactIsVisible,
 		ownerContactSubtitle
-	} from '@vet/modules/registry/components/owner/owner-contact-utils.js';
-	import PetAvatar from '@vet/modules/registry/components/pet/PetAvatar.svelte';
-	import UnsavedChangesDialog from '@vet/modules/medical_records/components/records/UnsavedChangesDialog.svelte';
+	} from '@vet/modules/registry/owners';
+	import { PetAvatar } from '@vet/modules/registry/pets';
+	import { UnsavedChangesDialog } from '@vet/modules/medical_records/records';
 	import TrashRemovalDialog from '@vet/ui/components/shared/TrashRemovalDialog.svelte';
 	import Select from '@vet/ui/components/ui/Select.svelte';
 	import { brazilCityOptions, brazilStateOptions, countryHasStructuredLocations, countryOptions, normalizeOwnerCity, normalizeOwnerCountry, normalizeOwnerState } from '@vet/types/domain/geo/location.js';
@@ -24,10 +24,10 @@
 	import { getPetBreedOption, getPetSpeciesOption } from '@vet/types/domain/pet/taxonomy.js';
 	import { FIELD_LIMITS } from '@vet/types/domain/shared/field-limits.js';
 	import { i18n, t, type TranslationKey } from '@vet/core-local/i18n/index.js';
-	import { isCountrySupportedForCepLookup, lookupCep } from '@vet/modules/registry/services/cep.service.js';
-	import { openEmailForEmail, openPhoneCallForPhone, openWhatsAppForPhone } from '@vet/modules/registry/services/contact.service.js';
-	import type { OwnerProfile } from '@vet/modules/registry/services/owner.service.js';
-	import { loadOwnerProfile, removeOwner, saveOwner } from '@vet/modules/registry/services/owner.service.js';
+	import { isCountrySupportedForCepLookup, lookupCep } from '@vet/modules/registry/owners';
+	import { openEmailForEmail, openPhoneCallForPhone, openWhatsAppForPhone } from '@vet/modules/registry/owners';
+	import type { OwnerProfile } from '@vet/modules/registry/owners';
+	import { loadOwnerProfile, removeOwner, saveOwner } from '@vet/modules/registry/owners';
 	import Mail from '@lucide/svelte/icons/mail';
 	import MessageCircle from '@lucide/svelte/icons/message-circle';
 	import PawPrint from '@lucide/svelte/icons/paw-print';

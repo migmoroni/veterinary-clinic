@@ -2,8 +2,8 @@
 	import { onMount } from 'svelte';
 	import type { TreatmentKind } from '@vet/types/domain/treatment/treatment.js';
 	import { t, type TranslationKey } from '@vet/core-local/i18n/index.js';
-	import type { DeletionAuditLog, TrashItem, TrashKind } from '@vet/modules/core_repositories/trash.repository.js';
-	import { deleteFromTrash, loadDeletionAuditLogs, loadTrash, purgeTrash, restoreFromTrash } from '@vet/modules/core_services/trash.service.js';
+	import type { DeletionAuditLog, TrashItem, TrashKind } from '@vet/core-local/repositories/trash.repository.js';
+	import { deleteFromTrash, loadDeletionAuditLogs, loadTrash, purgeTrash, restoreFromTrash } from '@vet/core-local/services/trash.service.js';
 	import RotateCw from '@lucide/svelte/icons/rotate-cw';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Undo2 from '@lucide/svelte/icons/undo-2';

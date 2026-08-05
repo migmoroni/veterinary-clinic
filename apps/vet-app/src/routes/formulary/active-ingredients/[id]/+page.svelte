@@ -1,7 +1,7 @@
 <script lang="ts">
-	import ActiveIngredientFormularyDetail from '@vet/modules/knowledge/components/catalog/ActiveIngredientFormularyDetail.svelte';
-	import FormularyDetailPage from '@vet/modules/knowledge/components/catalog/FormularyDetailPage.svelte';
-	import { loadCatalogActiveIngredient } from '@vet/modules/knowledge/services/catalog.service.js';
+	import { ActiveIngredientFormularyDetail } from '@vet/modules/knowledge/active_ingredients';
+	import { FormularyDetailPage } from '@vet/modules/knowledge';
+	import { loadCatalogActiveIngredient } from '@vet/modules/knowledge';
 </script>
 
 <FormularyDetailPage

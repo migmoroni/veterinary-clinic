@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
-	import BreedReferenceDetail from '@vet/modules/registry/components/pet/BreedReferenceDetail.svelte';
+	import { BreedReferenceDetail } from '@vet/modules/knowledge/breeds';
 	import type { BreedReferenceProfile } from '@vet/types/domain/pet/breed-reference.js';
 	import { t } from '@vet/core-local/i18n/index.js';
-	import { loadBreedReferenceProfile } from '@vet/modules/knowledge/services/breed-reference.service.js';
+	import { loadBreedReferenceProfile } from '@vet/modules/knowledge/breeds';
 
 	let profile = $state<BreedReferenceProfile | null>(null);
 	let loading = $state(true);

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
-	import OwnerContactDialog from '@vet/modules/registry/components/owner/OwnerContactDialog.svelte';
-	import OwnerAvatar from '@vet/modules/registry/components/owner/OwnerAvatar.svelte';
-	import PetAvatar from '@vet/modules/registry/components/pet/PetAvatar.svelte';
+	import { OwnerContactDialog } from '@vet/modules/registry/owners';
+	import { OwnerAvatar } from '@vet/modules/registry/owners';
+	import { PetAvatar } from '@vet/modules/registry/pets';
 	import BinaryImage from '@vet/ui/components/shared/BinaryImage.svelte';
 	import DebouncedSearchField from '@vet/ui/components/ui/DebouncedSearchField.svelte';
 	import type { OwnerAssociatedContact } from '@vet/types/domain/owner/owner.js';
@@ -10,7 +10,7 @@
 	import { SEARCH_RESULT_KINDS, type SearchResult, type SearchResultKind } from '@vet/types/domain/search/search.js';
 	import { FIELD_LIMITS } from '@vet/types/domain/shared/field-limits.js';
 	import { t } from '@vet/core-local/i18n/index.js';
-	import { RECENT_SEARCH_STORAGE_KEY } from '@vet/modules/core_services/client-state.service.js';
+	import { RECENT_SEARCH_STORAGE_KEY } from '@vet/core-local/services/client-state.service.js';
 	import { filterActiveSearchResults, loadOwnerAssociatedContactsByOwnerIds, loadOwnerAvatarsByOwnerIds, loadPetAvatarsByPetIds, searchEverywhere } from '$lib/services/clinic.service.js';
 	import Activity from '@lucide/svelte/icons/activity';
 	import Building2 from '@lucide/svelte/icons/building-2';

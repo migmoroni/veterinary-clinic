@@ -10,11 +10,11 @@
 		loadLocalePreference,
 		loadTypographyPreference,
 		resetTypographyZoom,
-	} from "@vet/modules/core_services/preferences.service.js";
+	} from "@vet/core-local/services/preferences.service.js";
 	import {
 		loadPracticeIdentity,
 		PRACTICE_IDENTITY_CHANGED_EVENT,
-	} from "@vet/modules/registry/services/practice-profile.service.js";
+	} from "@vet/modules/registry";
 	import ArrowLeft from "@lucide/svelte/icons/arrow-left";
 	import BriefcaseMedical from "@lucide/svelte/icons/briefcase-medical";
 	import LayoutDashboard from "@lucide/svelte/icons/layout-dashboard";

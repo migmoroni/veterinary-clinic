@@ -4,16 +4,17 @@
 	import { onMount } from 'svelte';
 	import CharacterLimitHint from '@vet/ui/components/forms/CharacterLimitHint.svelte';
 	import DateField from '@vet/ui/components/forms/DateField.svelte';
-	import OwnerAvatar from '@vet/modules/registry/components/owner/OwnerAvatar.svelte';
-	import UnsavedChangesDialog from '@vet/modules/medical_records/components/records/UnsavedChangesDialog.svelte';
-	import PetAvatar from '@vet/modules/registry/components/pet/PetAvatar.svelte';
+	import { OwnerAvatar } from '@vet/modules/registry/owners';
+	import { UnsavedChangesDialog } from '@vet/modules/medical_records/records';
+	import { PetAvatar } from '@vet/modules/registry/pets';
 	import TrashRemovalDialog from '@vet/ui/components/shared/TrashRemovalDialog.svelte';
 	import type { MedicalRecordDetails, MedicalRecordInput } from '@vet/types/domain/medical-record/medical-record.js';
 	import { formatDateForInput, normalizeDateInput } from '@vet/types/domain/shared/date-input.js';
 	import { FIELD_LIMITS } from '@vet/types/domain/shared/field-limits.js';
 	import { t, type TranslationKey } from '@vet/core-local/i18n/index.js';
-	import { loadRecordAutoSavePreference, saveRecordAutoSavePreference } from '@vet/modules/core_services/preferences.service.js';
-	import { loadRecordDetails, removeRecord, saveRecord } from '@vet/modules/medical_records/services/record.service.js';
+	import { loadRecordAutoSavePreference, saveRecordAutoSavePreference } from '@vet/core-local/services/preferences.service.js';
+	import { removeRecord, saveRecord } from '@vet/modules/medical_records/records';
+	import { loadRecordDetails } from '$lib/services/record-aggregate.service.js';
 	import Save from '@lucide/svelte/icons/save';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 

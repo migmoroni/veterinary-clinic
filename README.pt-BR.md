@@ -27,16 +27,19 @@ O app trabalha com:
 ## Modelo Mental
 
 ```text
-UI Svelte -> Serviços TypeScript -> Comandos Tauri -> Rust -> SQLite + CAS
+apps/vet-app -> @vet/modules -> @vet/core-local -> Comandos Tauri -> @vet/core-rust -> SQLite + CAS
 ```
 
-O ponto central é separar claramente três responsabilidades:
+O ponto central é separar claramente as fronteiras do workspace:
 
 | Fronteira | Papel |
 | --- | --- |
-| `storage` | Mantém bancos ativos, conexões SQLite, manifesto da base e arquivos CAS. |
-| `distribution` | Cria e importa pacotes completos nativos ou CSV. |
-| `replication` | Mantém backup e sincronização contínua por patches. |
+| `apps/vet-app` | Shell SvelteKit/Tauri, rotas e composição entre módulos. |
+| `packages/types` | Contratos e regras puras de domínio. |
+| `packages/core-local` | Runtime local TypeScript: SQLite, i18n, preferências, import/export e mídia. |
+| `packages/ui` | Primitivos Svelte reutilizáveis. |
+| `packages/modules` | Módulos de negócio: `knowledge`, `registry` e `medical_records`. |
+| `packages/core-rust` | Rust compartilhado: `storage`, `distribution` e `replication`. |
 
 Essa separação evita misturar backup vivo, exportação completa e conexão ativa
 de banco no mesmo lugar.
@@ -79,10 +82,13 @@ O conjunto do sistema é reconstruído pelo app a partir dos defaults do program
 
 | Caminho | Conteúdo |
 | --- | --- |
-| `src/` | UI Svelte, serviços TypeScript, stores, componentes e domínio de frontend. |
-| `src-tauri/src/storage/` | Armazenamento ativo, SQLite, CAS, mídia, manifesto e comandos Tauri. |
-| `src-tauri/src/distribution/` | Importação/exportação completa em ZIP nativo ou CSV. |
-| `src-tauri/src/replication/` | Captura, outbox, targets e aplicação de patches de sincronização. |
+| `apps/vet-app/` | App SvelteKit/Tauri, rotas, stores e composição entre pacotes. |
+| `apps/vet-app/src-tauri/` | Casca Tauri do app veterinário e metadados de empacotamento. |
+| `packages/types/` | Tipos e contratos puros. |
+| `packages/core-local/` | Infra local TypeScript compartilhável. |
+| `packages/ui/` | Componentes e primitivas visuais reutilizáveis. |
+| `packages/modules/` | Módulos de negócio por feature. |
+| `packages/core-rust/` | Storage, distribuição e replicação em Rust. |
 | `legacy-to-sqlite/` | Scripts externos para adoção/conversão de bases. |
 | `docs/` | Documentação técnica em português. |
 | `flatpak/` | Manifesto e apoio para empacotamento Flatpak. |
@@ -118,7 +124,7 @@ e `import_safety_exports/`, são preservadas.
 npm run check
 npm run test:run
 npm run build
-cargo check --manifest-path src-tauri/Cargo.toml
+cargo check --workspace
 ```
 
 ## Pacotes
@@ -175,9 +181,9 @@ READMEs internos:
 
 | Módulo | README |
 | --- | --- |
-| `storage` | [src-tauri/src/storage/README.md](src-tauri/src/storage/README.md) |
-| `distribution` | [src-tauri/src/distribution/README.md](src-tauri/src/distribution/README.md) |
-| `replication` | [src-tauri/src/replication/README.md](src-tauri/src/replication/README.md) |
+| `storage` | [packages/core-rust/src/storage/README.md](packages/core-rust/src/storage/README.md) |
+| `distribution` | [packages/core-rust/src/distribution/README.md](packages/core-rust/src/distribution/README.md) |
+| `replication` | [packages/core-rust/src/replication/README.md](packages/core-rust/src/replication/README.md) |
 
 ## Versionamento
 

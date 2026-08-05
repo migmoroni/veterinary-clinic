@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import Select from '@vet/ui/components/ui/Select.svelte';
-	import OwnerContactDialog from '@vet/modules/registry/components/owner/OwnerContactDialog.svelte';
 	import DateField from '@vet/ui/components/forms/DateField.svelte';
-	import PetAvatar from '@vet/modules/registry/components/pet/PetAvatar.svelte';
 	import type { OwnerAssociatedContact } from '@vet/types/domain/owner/owner.js';
 	import { formatDateForDisplay, formatDateForInput } from '@vet/types/domain/shared/date-input.js';
 	import type { TreatmentKind } from '@vet/types/domain/treatment/treatment.js';
@@ -11,8 +9,10 @@
 	import { emptyTreatmentStatusSummary, shiftIsoDate, todayIsoDate, treatmentHistoryPeriods, treatmentStatusKeys } from '@vet/types/domain/treatment/analytics.js';
 	import type { TranslationKey } from '@vet/core-local/i18n/index.js';
 	import { i18n, t } from '@vet/core-local/i18n/index.js';
-	import { loadAnalyticsTreatments, loadTreatmentAnalyticsOverview, loadTreatmentHistory, loadTreatmentStatusItems } from '@vet/modules/medical_records/services/treatment-analytics.service.js';
-	import { loadPetAvatarsByPetIds } from '@vet/modules/registry/services/avatar.service.js';
+	import { loadAnalyticsTreatments, loadTreatmentAnalyticsOverview, loadTreatmentHistory, loadTreatmentStatusItems } from '@vet/modules/medical_records/treatment_analytics';
+	import { OwnerContactDialog } from '@vet/modules/registry/owners';
+	import { PetAvatar, loadPetAvatarsByPetIds } from '@vet/modules/registry/pets';
+	import { listOwnerAssociatedContactsByOwnerIds } from '@vet/modules/registry/owners';
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import Phone from '@lucide/svelte/icons/phone';
 	import Pill from '@lucide/svelte/icons/pill';
@@ -266,6 +266,13 @@
 		}
 	}
 
+	async function withOwnerContacts(source: TreatmentStatusItem[]): Promise<TreatmentStatusItem[]> {
+		const ownerIds = [...new Set(source.map((item) => item.ownerId).filter((id) => id.trim().length > 0))];
+		if (ownerIds.length === 0) return source;
+		const contactsByOwnerId = await listOwnerAssociatedContactsByOwnerIds(ownerIds);
+		return source.map((item) => ({ ...item, ownerContacts: contactsByOwnerId.get(item.ownerId) ?? item.ownerContacts }));
+	}
+
 	function cancelStatusListRender() {
 		statusRenderRequestId += 1;
 		statusListLoading = false;
@@ -285,7 +292,7 @@
 		statusError = '';
 		try {
 			const [loadedItems, loadedOverview] = await Promise.all([
-				loadTreatmentStatusItems(requestedKind, { mode: requestedFilterMode, status: requestedStatus, startDate: requestedStartDate, endDate: requestedEndDate }),
+				loadTreatmentStatusItems(requestedKind, { mode: requestedFilterMode, status: requestedStatus, startDate: requestedStartDate, endDate: requestedEndDate }).then(withOwnerContacts),
 				loadTreatmentAnalyticsOverview(requestedKind)
 			]);
 			if (requestId !== statusRequestId || requestedKind !== kind || requestedFilterMode !== dueFilterMode || requestedStatus !== status || requestedStartDate !== periodStartDate || requestedEndDate !== periodEndDate) return;

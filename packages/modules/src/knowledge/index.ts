@@ -1,3 +1,17 @@
+export { default as FormularyDetailPage } from './components/catalog/FormularyDetailPage.svelte';
+export { default as ReferenceExplorer } from './components/reference/ReferenceExplorer.svelte';
+export { default as ReferenceSummarySidebar } from './components/reference/ReferenceSummarySidebar.svelte';
+export type { ReferenceGridCard } from './components/reference/ReferenceCardGrid.svelte';
+export type { ReferenceFilterBarSelect } from './components/reference/ReferenceFilterBar.svelte';
+export type { ReferenceSummaryField } from './components/reference/ReferenceSummarySidebar.svelte';
+export * from './components/catalog/catalog-detail-utils.js';
+export * from './components/reference/reference-route-state.js';
+export * from './components/reference/reference-utils.js';
+export * from './active_ingredients/index.js';
+export * from './breeds/index.js';
+export * from './conditions/index.js';
+export * from './manufacturers/index.js';
+export * from './products/index.js';
 export * from './services/breed-reference.service.js';
 export * from './services/catalog.service.js';
 export * from './repositories/active-ingredient-catalog.repository.js';

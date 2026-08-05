@@ -10,8 +10,8 @@
 	import { FIELD_LIMITS } from '@vet/types/domain/shared/field-limits.js';
 	import { TREATMENT_KINDS, type TreatmentCatalogItem, type TreatmentCatalogItemId, type TreatmentKind } from '@vet/types/domain/treatment/treatment.js';
 	import { t, type TranslationKey } from '@vet/core-local/i18n/index.js';
-	import { loadTreatmentProtocols, removeProtocol, removeProtocolDose, saveProtocol, saveProtocolDose, setProtocolHidden } from '@vet/modules/medical_records/services/treatment-protocol.service.js';
-	import { loadTreatmentCatalogItems } from '@vet/modules/medical_records/services/treatment.service.js';
+	import { loadTreatmentProtocols, removeProtocol, removeProtocolDose, saveProtocol, saveProtocolDose, setProtocolHidden } from '@vet/modules/medical_records/treatment_protocols';
+	import { loadTreatmentCatalogItems } from '@vet/modules/knowledge/products';
 	import Eye from '@lucide/svelte/icons/eye';
 	import EyeOff from '@lucide/svelte/icons/eye-off';
 	import Plus from '@lucide/svelte/icons/plus';

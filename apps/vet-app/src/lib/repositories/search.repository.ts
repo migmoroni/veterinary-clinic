@@ -2,8 +2,8 @@ import { selectMany } from '@vet/core-local/sqlite/client.js';
 import { normalizeSearchText, searchTermsForLocale } from '@vet/types/domain/shared/search-terms.js';
 import { CLINIC_SEARCH_RESULT_KINDS, isClinicSearchResultKind, type ClinicSearchResultKind, type SearchResult } from '@vet/types/domain/search/search.js';
 import { DEFAULT_LOCALE, type Locale } from '@vet/core-local/i18n/locales.js';
-import { loadMediaDataMap, mediaHashKey } from './media.repository.js';
-import { listOwnerAssociatedContactsByOwnerIds } from '@vet/modules/registry/repositories/owner.repository.js';
+import { loadMediaDataMap, mediaHashKey } from '@vet/core-local/repositories/media.repository.js';
+import { listOwnerAssociatedContactsByOwnerIds } from '@vet/modules/registry/owners';
 import { normalizeMediaHash } from '@vet/core-local/sqlite/media.js';
 
 interface SearchResultRow {

@@ -1,9 +1,8 @@
 import { FIELD_LIMITS, assertTextLimit, nullableMultilineText } from '@vet/types/domain/shared/field-limits.js';
-import type { ImageCollectionItemInput } from '@vet/types/domain/image-collection/image-collection.js';
-import type { PetTreatment, PetTreatmentInput, TreatmentCatalogItem, TreatmentCatalogItemId, TreatmentCatalogItemInput, TreatmentKind, TreatmentValidityUnit } from '@vet/types/domain/treatment/treatment.js';
+import type { PetTreatment, PetTreatmentInput, TreatmentKind, TreatmentValidityUnit } from '@vet/types/domain/treatment/treatment.js';
+import { normalizeTreatmentName } from '@vet/types/domain/treatment/treatment.js';
 import { nowIso } from '@vet/types/domain/shared/time.js';
 import { createUuidV7 } from '@vet/types/domain/shared/uuid.js';
-import { deleteProductCatalogItem, ensureTreatmentProductCatalogItem, getTreatmentProductCatalogItemById, listTreatmentProductCatalogItems, normalizeProductCatalogInput, saveProductCatalogItemImages, saveTreatmentProductCatalogItem, setProductCatalogItemHidden } from '@vet/modules/knowledge/repositories/product-catalog.repository.js';
 import { execute, selectMany } from '@vet/core-local/sqlite/client.js';
 
 interface PetTreatmentRow {
@@ -68,6 +67,14 @@ function normalizeDose(value: string): string {
 	return requiredText(value, 'treatment_dose_required', FIELD_LIMITS.treatmentDose);
 }
 
+function normalizeTreatmentInputName(value: string): { name: string; normalizedName: string } {
+	const name = requiredText(value, 'treatment_name_required', FIELD_LIMITS.treatmentName);
+	const normalizedName = normalizeTreatmentName(name);
+	if (!normalizedName) throw new Error('treatment_name_required');
+	assertTextLimit(normalizedName, FIELD_LIMITS.treatmentNormalizedName);
+	return { name, normalizedName };
+}
+
 function mapTreatment(row: PetTreatmentRow): PetTreatment {
 	return {
 		id: row.id,
@@ -124,30 +131,6 @@ async function markPreviousEquivalentTreatmentsIgnored(kind: TreatmentKind, petI
 	}
 }
 
-export async function listTreatmentCatalogItems(kind: TreatmentKind | null = null, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem[]> {
-	return listTreatmentProductCatalogItems(kind, includeHidden, includeImages);
-}
-
-export async function getTreatmentCatalogItem(id: TreatmentCatalogItemId, includeHidden = false, includeImages = true): Promise<TreatmentCatalogItem | null> {
-	return getTreatmentProductCatalogItemById(id, includeHidden, includeImages);
-}
-
-export async function saveTreatmentCatalogItem(kind: TreatmentKind, input: TreatmentCatalogItemInput, id?: TreatmentCatalogItemId): Promise<TreatmentCatalogItem> {
-	return saveTreatmentProductCatalogItem(kind, input, id);
-}
-
-export async function setTreatmentCatalogItemHidden(kind: TreatmentKind, id: TreatmentCatalogItemId, hidden: boolean): Promise<TreatmentCatalogItem> {
-	return setProductCatalogItemHidden(kind, id, hidden);
-}
-
-export async function saveTreatmentCatalogItemImages(kind: TreatmentKind, id: TreatmentCatalogItemId, images: ImageCollectionItemInput[]): Promise<TreatmentCatalogItem> {
-	return saveProductCatalogItemImages(kind, id, images);
-}
-
-export async function deleteTreatmentCatalogItem(kind: TreatmentKind, id: TreatmentCatalogItemId): Promise<void> {
-	await deleteProductCatalogItem(kind, id);
-}
-
 export async function listTreatmentsByPet(kind: TreatmentKind, petId: string, includeRemoved = false): Promise<PetTreatment[]> {
 	const rows = await selectMany<PetTreatmentRow>(
 		`SELECT id, pet_id, kind, applied_at, name, normalized_name, dose, validity_value, validity_unit, observation, validity_ignored_at, created_at, updated_at, removed_at
@@ -165,13 +148,12 @@ export async function createTreatments(kind: TreatmentKind, petId: string, input
 
 	for (const input of inputs) {
 		const appliedAt = requiredIsoDate(input.appliedAt);
-		const { name, normalizedName } = normalizeProductCatalogInput(kind, input.name);
+		const { name, normalizedName } = normalizeTreatmentInputName(input.name);
 		const dose = normalizeDose(input.dose);
 		const validityUnit = normalizeValidityUnit(input.validityUnit);
 		const validityValue = normalizeValidityValue(Number(input.validityValue), validityUnit);
 		const observation = nullableMultilineText(input.observation, FIELD_LIMITS.treatmentObservation);
 
-		await ensureTreatmentProductCatalogItem(kind, name, normalizedName);
 		const createdAt = nowIso();
 		await execute(
 			`INSERT INTO pet_treatments (id, pet_id, kind, applied_at, name, normalized_name, dose, validity_value, validity_unit, observation, created_at, updated_at)

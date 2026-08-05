@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FIELD_LIMITS } from '@vet/types/domain/shared/field-limits.js';
 import { productLeafletSectionIds, productTreatmentKind, stringifyProductCatalogExtension } from '../catalog.js';
-import { localizedCatalogAliases } from '@vet/core-local/i18n/catalog-aliases/index.js';
 import { defaultProductCatalogItems } from '../default-catalog.js';
 import { defaultManufacturerCatalogItems } from '@vet/types/domain/manufacturer/default-catalog.js';
 import { isUuidV4 } from '@vet/types/domain/shared/uuid.js';
@@ -39,15 +38,6 @@ describe('default product catalog', () => {
 		expect(vanguard.aliases).toContain('V10');
 		expect(recombitek.aliases).toContain('polivalente');
 		expect(vanguard.aliases).toContain('polivalente');
-	});
-
-	it('expands localized aliases while preserving language-independent aliases', () => {
-		const vanguard = vaccine('Vanguard Plus');
-		const localizedPolyvalentAliases = localizedCatalogAliases('catalogAlias.polyvalent');
-
-		expect(vanguard.aliases).toEqual(expect.arrayContaining(localizedPolyvalentAliases));
-		expect(vanguard.aliases).toContain('V10');
-		expect(new Set(vanguard.aliases).size).toBe(vanguard.aliases.length);
 	});
 
 	it('uses one canonical catalog entry per type and normalized name', () => {

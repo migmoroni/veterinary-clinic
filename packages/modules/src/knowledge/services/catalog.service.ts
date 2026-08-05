@@ -2,10 +2,10 @@ import type { ActiveIngredientCatalogItem } from '@vet/types/domain/active-ingre
 import type { ConditionCatalogItem } from '@vet/types/domain/condition/catalog.js';
 import type { ManufacturerCatalogItem } from '@vet/types/domain/manufacturer/catalog.js';
 import type { ProductCatalogItem } from '@vet/types/domain/product/catalog.js';
-import { getActiveIngredientCatalogItemById, listActiveIngredientCatalogItems } from '@vet/modules/knowledge/repositories/active-ingredient-catalog.repository.js';
-import { getConditionCatalogItemById, listConditionCatalogItems } from '@vet/modules/knowledge/repositories/condition-catalog.repository.js';
-import { getManufacturerCatalogItemById, listManufacturerCatalogItems } from '@vet/modules/knowledge/repositories/manufacturer-catalog.repository.js';
-import { getProductCatalogItemById, listProductCatalogItems } from '@vet/modules/knowledge/repositories/product-catalog.repository.js';
+import { getActiveIngredientCatalogItemById, listActiveIngredientCatalogItems } from '../repositories/active-ingredient-catalog.repository.js';
+import { getConditionCatalogItemById, listConditionCatalogItems } from '../repositories/condition-catalog.repository.js';
+import { getManufacturerCatalogItemById, listManufacturerCatalogItems } from '../repositories/manufacturer-catalog.repository.js';
+import { getProductCatalogItemById, listProductCatalogItems } from '../repositories/product-catalog.repository.js';
 
 export type CatalogProductItem = ProductCatalogItem;
 export type CatalogManufacturerItem = ManufacturerCatalogItem;

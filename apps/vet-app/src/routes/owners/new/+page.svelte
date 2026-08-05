@@ -4,7 +4,7 @@
 	import { DEFAULT_OWNER_COUNTRY, type OwnerInput } from '@vet/types/domain/owner/owner.js';
 	import { FIELD_LIMITS } from '@vet/types/domain/shared/field-limits.js';
 	import { t } from '@vet/core-local/i18n/index.js';
-	import { saveNewOwner } from '@vet/modules/registry/services/owner.service.js';
+	import { saveNewOwner } from '@vet/modules/registry/owners';
 	import Save from '@lucide/svelte/icons/save';
 
 	let name = $state('');

@@ -8,7 +8,7 @@ import {
 } from '@vet/types/domain/manufacturer/catalog.js';
 import { FIELD_LIMITS, assertTextLimit, nullableLimitedText, requireLimitedText } from '@vet/types/domain/shared/field-limits.js';
 import { normalizeTreatmentName } from '@vet/types/domain/treatment/treatment.js';
-import { getImageCollection } from '@vet/modules/core_repositories/image-collection.repository.js';
+import { getImageCollection } from '@vet/core-local/repositories/image-collection.repository.js';
 import { selectSystemMany } from '@vet/core-local/sqlite/client.js';
 
 export const MANUFACTURER_CATALOG_IMAGE_COLLECTION_TYPE = 'manufacturer_catalog_item';

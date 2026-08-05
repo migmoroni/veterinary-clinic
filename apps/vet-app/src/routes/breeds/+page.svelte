@@ -1,22 +1,23 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import BinaryImage from "@vet/ui/components/shared/BinaryImage.svelte";
-	import { type ReferenceGridCard } from "@vet/modules/knowledge/components/reference/ReferenceCardGrid.svelte";
-	import ReferenceExplorer from "@vet/modules/knowledge/components/reference/ReferenceExplorer.svelte";
-	import { type ReferenceFilterBarSelect } from "@vet/modules/knowledge/components/reference/ReferenceFilterBar.svelte";
-	import ReferenceSummarySidebar, {
+	import { type ReferenceGridCard } from "@vet/modules/knowledge";
+	import { ReferenceExplorer } from '@vet/modules/knowledge';
+	import { type ReferenceFilterBarSelect } from "@vet/modules/knowledge";
+	import {
+		ReferenceSummarySidebar,
 		type ReferenceSummaryField,
-	} from "@vet/modules/knowledge/components/reference/ReferenceSummarySidebar.svelte";
+	} from "@vet/modules/knowledge";
 	import {
 		readReferenceRouteState,
 		replaceReferenceRouteState,
-	} from "@vet/modules/knowledge/components/reference/reference-route-state.js";
+	} from "@vet/modules/knowledge";
 	import {
 		referenceRangeRows,
 		referenceSpeciesLabel,
 		referenceSpeciesOptions,
 		resolveReferenceSelection,
-	} from "@vet/modules/knowledge/components/reference/reference-utils.js";
+	} from "@vet/modules/knowledge";
 	import { createSearchMatcher } from "@vet/types/domain/search/search-controller.js";
 	import {
 		getBreedOriginMapPosition,
@@ -25,7 +26,7 @@
 		type BreedSizeCategory,
 	} from "@vet/types/domain/pet/breed-reference.js";
 	import { i18n, t, type TranslationKey } from "@vet/core-local/i18n/index.js";
-	import { loadBreedReferenceProfiles } from "@vet/modules/knowledge/services/breed-reference.service.js";
+	import { loadBreedReferenceProfiles } from "@vet/modules/knowledge/breeds";
 	import MapPin from "@lucide/svelte/icons/map-pin";
 	import PawPrint from "@lucide/svelte/icons/paw-print";
 	import Ruler from "@lucide/svelte/icons/ruler";

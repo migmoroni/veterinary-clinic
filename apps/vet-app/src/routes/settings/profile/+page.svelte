@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import CharacterLimitHint from '@vet/ui/components/forms/CharacterLimitHint.svelte';
-	import OwnerAvatar from '@vet/modules/registry/components/owner/OwnerAvatar.svelte';
-	import OwnerAvatarEditorDialog from '@vet/modules/registry/components/owner/OwnerAvatarEditorDialog.svelte';
-	import OwnerContactEditorList from '@vet/modules/registry/components/owner/OwnerContactEditorList.svelte';
-	import WorkplaceImageCaptureDialog from '@vet/modules/registry/components/practice/WorkplaceImageCaptureDialog.svelte';
-	import WorkplaceAddressFields from '@vet/modules/registry/components/practice/WorkplaceAddressFields.svelte';
+	import { OwnerAvatar } from '@vet/modules/registry/owners';
+	import { OwnerAvatarEditorDialog } from '@vet/modules/registry/owners';
+	import { OwnerContactEditorList } from '@vet/modules/registry/owners';
+	import { WorkplaceImageCaptureDialog } from '@vet/modules/registry';
+	import { WorkplaceAddressFields } from '@vet/modules/registry';
 	import ImageCollectionOrganizer from '@vet/ui/components/shared/ImageCollectionOrganizer.svelte';
 	import ImageCollectionSummary from '@vet/ui/components/shared/ImageCollectionSummary.svelte';
 	import type { ImageCollectionItem, ImageCollectionItemInput } from '@vet/types/domain/image-collection/image-collection.js';
@@ -13,7 +13,7 @@
 	import type { VeterinarianProfileInput, WorkplaceInput } from '@vet/types/domain/practice-profile/practice-profile.js';
 	import { FIELD_LIMITS } from '@vet/types/domain/shared/field-limits.js';
 	import { t, type TranslationKey } from '@vet/core-local/i18n/index.js';
-	import { loadPracticeProfiles, saveVeterinarianSettings, saveWorkplaceSettings } from '@vet/modules/registry/services/practice-profile.service.js';
+	import { loadPracticeProfiles, saveVeterinarianSettings, saveWorkplaceSettings } from '@vet/modules/registry';
 	import Building2 from '@lucide/svelte/icons/building-2';
 	import Save from '@lucide/svelte/icons/save';
 	import UserRound from '@lucide/svelte/icons/user-round';

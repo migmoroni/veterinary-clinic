@@ -24,7 +24,6 @@ import {
 import type { OwnerAssociatedContact } from '@vet/types/domain/owner/owner.js';
 import type { TreatmentKind, TreatmentValidityUnit } from '@vet/types/domain/treatment/treatment.js';
 import { selectMany } from '@vet/core-local/sqlite/client.js';
-import { listOwnerAssociatedContactsByOwnerIds } from '@vet/modules/registry/repositories/owner.repository.js';
 
 interface LatestTreatmentRow {
 	id: string;
@@ -183,18 +182,9 @@ async function listLatestTreatmentRows(kind: TreatmentKind): Promise<LatestTreat
 	);
 
 	const latestRows = rows.filter((row) => isPlausibleTreatmentAppliedAt(row.applied_at));
-	const ownerIdsByRow = new Map<LatestTreatmentRow, string[]>();
-	const allOwnerIds: string[] = [];
-	for (const row of latestRows) {
-		const ownerIds = parseOwnerIds(row.owner_ids);
-		ownerIdsByRow.set(row, ownerIds);
-		allOwnerIds.push(...ownerIds);
-	}
-
-	const contactsByOwnerId = await listOwnerAssociatedContactsByOwnerIds(allOwnerIds);
 	return latestRows.map((row) => ({
 		...row,
-		owner_contacts: (ownerIdsByRow.get(row) ?? []).flatMap((ownerId) => contactsByOwnerId.get(ownerId) ?? [])
+		owner_contacts: []
 	}));
 }
 

@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { save } from '@tauri-apps/plugin-dialog';
-import { addBackupHistory, type BackupKind } from '@vet/modules/core_repositories/backup.repository.js';
+import { addBackupHistory, type BackupKind } from '@vet/core-local/repositories/backup.repository.js';
 import { getDatabase } from '@vet/core-local/sqlite/client.js';
 
 interface PackageResponse {

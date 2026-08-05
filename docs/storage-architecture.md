@@ -1,6 +1,6 @@
 # Arquitetura De Armazenamento
 
-Este documento explica a arquitetura de `src-tauri/src/storage`.
+Este documento explica a arquitetura de `packages/core-rust/src/storage`.
 Ele é a camada Rust que mantém os bancos ativos e o CAS físico do app.
 
 `storage` é propositalmente menor do que a lógica de importação/exportação e de

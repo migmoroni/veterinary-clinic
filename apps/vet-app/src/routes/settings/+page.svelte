@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { t } from '@vet/core-local/i18n/index.js';
-	import { loadAppVersion } from '@vet/modules/core_services/app-version.service.js';
+	import { loadAppVersion } from '@vet/core-local/services/app-version.service.js';
 
 	let appVersion = $state('');
 

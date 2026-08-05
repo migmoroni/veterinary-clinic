@@ -6,7 +6,7 @@
 	import type { WorkplaceInput } from '@vet/types/domain/practice-profile/practice-profile.js';
 	import { FIELD_LIMITS } from '@vet/types/domain/shared/field-limits.js';
 	import { i18n, t, type TranslationKey } from '@vet/core-local/i18n/index.js';
-	import { isCountrySupportedForCepLookup, lookupCep } from '@vet/modules/registry/services/cep.service.js';
+	import { isCountrySupportedForCepLookup, lookupCep } from '../../services/cep.service.js';
 	import Search from '@lucide/svelte/icons/search';
 
 	let { form = $bindable<WorkplaceInput>(), disabled = false }: { form: WorkplaceInput; disabled?: boolean } = $props();

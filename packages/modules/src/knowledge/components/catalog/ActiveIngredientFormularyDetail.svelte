@@ -1,7 +1,7 @@
 <script lang="ts">
-	import CatalogEntityDetail, { type CatalogEntityDetailField, type CatalogEntityDetailSection } from '@vet/modules/knowledge/components/catalog/CatalogEntityDetail.svelte';
-	import { activeIngredientClassificationGroups } from '@vet/modules/knowledge/components/catalog/active-ingredient-detail-utils.js';
-	import { catalogRegionSummary, catalogSectionTexts } from '@vet/modules/knowledge/components/catalog/catalog-detail-utils.js';
+	import CatalogEntityDetail, { type CatalogEntityDetailField, type CatalogEntityDetailSection } from './CatalogEntityDetail.svelte';
+	import { activeIngredientClassificationGroups } from './active-ingredient-detail-utils.js';
+	import { catalogRegionSummary, catalogSectionTexts } from './catalog-detail-utils.js';
 	import { activeIngredientProfileSectionIds, type ActiveIngredientCatalogItem, type ActiveIngredientProfileSectionId } from '@vet/types/domain/active-ingredient/catalog.js';
 	import { catalogPathTypeLabel } from '@vet/types/domain/catalog/type-labels.js';
 	import { i18n, t } from '@vet/core-local/i18n/index.js';

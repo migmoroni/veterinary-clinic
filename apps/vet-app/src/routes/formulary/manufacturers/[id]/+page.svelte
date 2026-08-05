@@ -1,7 +1,7 @@
 <script lang="ts">
-	import FormularyDetailPage from '@vet/modules/knowledge/components/catalog/FormularyDetailPage.svelte';
-	import ManufacturerFormularyDetail from '@vet/modules/knowledge/components/catalog/ManufacturerFormularyDetail.svelte';
-	import { loadCatalogManufacturer } from '@vet/modules/knowledge/services/catalog.service.js';
+	import { FormularyDetailPage } from '@vet/modules/knowledge';
+	import { ManufacturerFormularyDetail } from '@vet/modules/knowledge/manufacturers';
+	import { loadCatalogManufacturer } from '@vet/modules/knowledge';
 </script>
 
 <FormularyDetailPage

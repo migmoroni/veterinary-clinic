@@ -1,12 +1,12 @@
 <script lang="ts">
-	import CatalogEntityDetail, { type CatalogEntityDetailField, type CatalogEntityDetailFieldTable, type CatalogEntityDetailSection } from '@vet/modules/knowledge/components/catalog/CatalogEntityDetail.svelte';
-	import { catalogRegionSummary, catalogSectionTexts } from '@vet/modules/knowledge/components/catalog/catalog-detail-utils.js';
+	import CatalogEntityDetail, { type CatalogEntityDetailField, type CatalogEntityDetailFieldTable, type CatalogEntityDetailSection } from './CatalogEntityDetail.svelte';
+	import { catalogRegionSummary, catalogSectionTexts } from './catalog-detail-utils.js';
 	import { manufacturerClassificationGroups } from '@vet/types/domain/catalog/classification-labels.js';
 	import { MANUFACTURER_CLASSIFICATION_AXES, manufacturerProfileSectionIds, type ManufacturerCatalogItem, type ManufacturerProfileSectionId } from '@vet/types/domain/manufacturer/catalog.js';
 	import { productTypeLabel, productTypeSubtypeLabel, productTypeMainLabel } from '@vet/types/domain/product/type-labels.js';
 	import { productTypeMain, type ProductCatalogItem, type ProductSpecies, type ProductType } from '@vet/types/domain/product/catalog.js';
 	import { t, type TranslationKey } from '@vet/core-local/i18n/index.js';
-	import { loadCatalogProducts } from '@vet/modules/knowledge/services/catalog.service.js';
+	import { loadCatalogProducts } from '../../services/catalog.service.js';
 	import BookOpenText from '@lucide/svelte/icons/book-open-text';
 	import BriefcaseBusiness from '@lucide/svelte/icons/briefcase-business';
 	import Building2 from '@lucide/svelte/icons/building-2';

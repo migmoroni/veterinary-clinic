@@ -8,7 +8,7 @@ compartilham a mesma implementação:
 
 ## Backup Contínuo
 
-Backup contínuo é implementado em `src-tauri/src/replication`.
+Backup contínuo é implementado em `packages/core-rust/src/replication`.
 
 A UI pode chamar isso de "backup", mas internamente é replicação local-first
 (primeiro local):
@@ -43,7 +43,7 @@ Replicação recusa misturar dados quando o espelho selecionado possui
 
 ## Exportação E Importação Completa
 
-Pacotes locais completos são implementados em `src-tauri/src/distribution`.
+Pacotes locais completos são implementados em `packages/core-rust/src/distribution`.
 
 Pacote ZIP nativo:
 

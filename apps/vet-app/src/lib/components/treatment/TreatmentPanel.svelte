@@ -3,7 +3,6 @@
 	import CharacterLimitHint from '@vet/ui/components/forms/CharacterLimitHint.svelte';
 	import DateField from '@vet/ui/components/forms/DateField.svelte';
 	import PeriodField from '@vet/ui/components/forms/PeriodField.svelte';
-	import TreatmentDueBadge from '@vet/modules/medical_records/components/pet/TreatmentDueBadge.svelte';
 	import TrashRemovalDialog from '@vet/ui/components/shared/TrashRemovalDialog.svelte';
 	import SearchableSelect from '@vet/ui/components/ui/SearchableSelect.svelte';
 	import Select from '@vet/ui/components/ui/Select.svelte';
@@ -16,8 +15,9 @@
 	import type { PetTreatment, PetTreatmentInput, TreatmentCatalogItem, TreatmentKind, TreatmentValidityUnit } from '@vet/types/domain/treatment/treatment.js';
 	import { getTreatmentDueStatus } from '@vet/types/domain/treatment/treatment.js';
 	import { i18n, t, type TranslationKey } from '@vet/core-local/i18n/index.js';
-	import { loadTreatmentProtocols } from '@vet/modules/medical_records/services/treatment-protocol.service.js';
-	import { loadTreatmentCatalogItems, removeTreatment, saveNewTreatments, setTreatmentValidity } from '@vet/modules/medical_records/services/treatment.service.js';
+	import { ensureTreatmentCatalogName, loadTreatmentCatalogItems } from '@vet/modules/knowledge/products';
+	import { TreatmentDueBadge, removeTreatment, saveNewTreatments, setTreatmentValidity } from '@vet/modules/medical_records/treatments';
+	import { loadTreatmentProtocols } from '@vet/modules/medical_records/treatment_protocols';
 	import Bell from '@lucide/svelte/icons/bell';
 	import BellOff from '@lucide/svelte/icons/bell-off';
 	import Pill from '@lucide/svelte/icons/pill';
@@ -275,6 +275,7 @@
 				applications = [input];
 			}
 
+			await Promise.all(applications.map((application) => ensureTreatmentCatalogName(kind, application.name)));
 			const updated = await saveNewTreatments(kind, petId, applications);
 			setCurrentTreatments(updated);
 			pendingApplications = [];

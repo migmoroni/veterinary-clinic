@@ -1,5 +1,5 @@
 import type { TreatmentProtocol, TreatmentProtocolDoseInput, TreatmentProtocolId, TreatmentProtocolInput, TreatmentProtocolKind } from '@vet/types/domain/treatment/protocol.js';
-import { deleteTreatmentProtocol, deleteTreatmentProtocolDose, listTreatmentProtocols, saveTreatmentProtocol, saveTreatmentProtocolDose, setTreatmentProtocolHidden } from '@vet/modules/medical_records/repositories/treatment-protocol.repository.js';
+import { deleteTreatmentProtocol, deleteTreatmentProtocolDose, listTreatmentProtocols, saveTreatmentProtocol, saveTreatmentProtocolDose, setTreatmentProtocolHidden } from '../repositories/treatment-protocol.repository.js';
 
 export async function loadTreatmentProtocols(kind?: TreatmentProtocolKind, includeHidden = false): Promise<TreatmentProtocol[]> {
 	return listTreatmentProtocols(kind, includeHidden);

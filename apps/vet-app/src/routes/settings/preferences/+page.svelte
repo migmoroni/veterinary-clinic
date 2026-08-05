@@ -28,7 +28,7 @@
 		saveLocalePreference,
 		saveTypographyPreference,
 		TYPOGRAPHY_PREFERENCE_CHANGED_EVENT
-	} from '@vet/modules/core_services/preferences.service.js';
+	} from '@vet/core-local/services/preferences.service.js';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
 	import FolderPlus from '@lucide/svelte/icons/folder-plus';

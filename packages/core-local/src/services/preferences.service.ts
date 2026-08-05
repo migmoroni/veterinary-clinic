@@ -10,7 +10,7 @@ import {
 	stepUiZoom,
 	type TypographyPreferences
 } from '@vet/types/domain/preferences/typography.js';
-import { getSetting, setSetting } from '@vet/modules/core_repositories/settings.repository.js';
+import { getSetting, setSetting } from '@vet/core-local/repositories/settings.repository.js';
 
 const LOCALE_SETTING_KEY = 'app.locale';
 const TYPOGRAPHY_SETTING_KEY = 'app.typography';

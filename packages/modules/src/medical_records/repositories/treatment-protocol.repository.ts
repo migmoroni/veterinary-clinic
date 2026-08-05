@@ -6,7 +6,6 @@ import { FIELD_LIMITS, assertTextLimit, nullableMultilineText } from '@vet/types
 import { nowIso } from '@vet/types/domain/shared/time.js';
 import { createUuidV7 } from '@vet/types/domain/shared/uuid.js';
 import type { TreatmentCatalogItemId } from '@vet/types/domain/treatment/treatment.js';
-import { getTreatmentProductCatalogItemById } from '@vet/modules/knowledge/repositories/product-catalog.repository.js';
 import { execute, selectMany, selectSystemMany } from '@vet/core-local/sqlite/client.js';
 
 interface TreatmentProtocolRow {
@@ -28,6 +27,13 @@ interface TreatmentProtocolItemRow {
 	protocol_id: TreatmentProtocolId;
 	catalog_item_id: TreatmentCatalogItemId;
 	sort_order: number;
+}
+
+interface TreatmentProtocolCatalogItemRow {
+	id: TreatmentCatalogItemId;
+	name: string;
+	normalized_name: string;
+	species: string;
 }
 
 interface TreatmentProtocolDoseRow {
@@ -174,15 +180,10 @@ async function loadProtocolDetails(rows: TreatmentProtocolRow[]): Promise<Treatm
 
 	const itemsByProtocol = new Map<TreatmentProtocolId, TreatmentProtocolCatalogItem[]>();
 	for (const row of itemRows) {
-		const catalogItem = await getTreatmentProductCatalogItemById(row.catalog_item_id, true, false);
+		const catalogItem = await getTreatmentProtocolCatalogItemById(row.catalog_item_id);
 		if (!catalogItem) continue;
 		const items = itemsByProtocol.get(row.protocol_id) ?? [];
-		items.push({
-			id: catalogItem.id,
-			name: catalogItem.name,
-			normalizedName: catalogItem.normalizedName,
-			species: catalogItem.species
-		});
+		items.push(catalogItem);
 		itemsByProtocol.set(row.protocol_id, items);
 	}
 
@@ -215,6 +216,30 @@ async function selectProtocolRowById(id: TreatmentProtocolId): Promise<Treatment
 	return referenceRows[0] ?? null;
 }
 
+async function getTreatmentProtocolCatalogItemById(id: TreatmentCatalogItemId, allowedTypeValues: string[] | null = null): Promise<TreatmentProtocolCatalogItem | null> {
+	const typeFilter = allowedTypeValues && allowedTypeValues.length > 0 ? `AND type IN (${allowedTypeValues.map((_, index) => `$${index + 2}`).join(', ')})` : '';
+	const values = allowedTypeValues && allowedTypeValues.length > 0 ? [id, ...allowedTypeValues] : [id];
+	const [userRows, referenceRows] = await Promise.all([
+		selectMany<TreatmentProtocolCatalogItemRow>(
+			`SELECT id, name, normalized_name, species
+			 FROM user_product_catalog_items
+			 WHERE id = $1 AND removed_at IS NULL ${typeFilter}
+			 LIMIT 1`,
+			values
+		),
+		selectSystemMany<TreatmentProtocolCatalogItemRow>(
+			`SELECT id, name, normalized_name, species
+			 FROM product_catalog_items
+			 WHERE id = $1 ${typeFilter}
+			 LIMIT 1`,
+			values
+		)
+	]);
+	const row = userRows[0] ?? referenceRows[0] ?? null;
+	if (!row) return null;
+	return { id: row.id, name: row.name, normalizedName: row.normalized_name, species: parseTreatmentSpecies(row.species) };
+}
+
 async function getProtocolById(id: TreatmentProtocolId): Promise<TreatmentProtocol> {
 	const row = await selectProtocolRowById(id);
 	const protocols = await loadProtocolDetails(row ? [row] : []);
@@ -232,8 +257,8 @@ async function resolveProtocolItemIds(kind: TreatmentProtocolKind, catalogItemId
 	].filter((value, index, values) => values.indexOf(value) === index);
 	const allowedIds = new Set<TreatmentCatalogItemId>();
 	for (const id of uniqueIds) {
-		const item = await getTreatmentProductCatalogItemById(id, true, false);
-		if (item && allowedTypeValues.includes(stringifyProductType(item.type))) allowedIds.add(id);
+		const item = await getTreatmentProtocolCatalogItemById(id, allowedTypeValues);
+		if (item) allowedIds.add(id);
 	}
 	const filteredIds = uniqueIds.filter((id) => allowedIds.has(id));
 	if (filteredIds.length === 0) throw new Error('protocol_item_required');

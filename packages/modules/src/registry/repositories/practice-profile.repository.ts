@@ -14,8 +14,8 @@ import { FIELD_LIMITS, assertTextLimit, nullableLimitedText, nullableMultilineTe
 import { formatPhoneForStorage } from '@vet/types/domain/shared/phone.js';
 import { nowIso } from '@vet/types/domain/shared/time.js';
 import { createUuidV7 } from '@vet/types/domain/shared/uuid.js';
-import { getImageCollection, replaceImageCollection } from '@vet/modules/core_repositories/image-collection.repository.js';
-import { loadMediaData, saveMedia } from '@vet/modules/core_repositories/media.repository.js';
+import { getImageCollection, replaceImageCollection } from '@vet/core-local/repositories/image-collection.repository.js';
+import { loadMediaData, saveMedia } from '@vet/core-local/repositories/media.repository.js';
 import { execute, selectMany, selectOne } from '@vet/core-local/sqlite/client.js';
 import { mediaHashToSqlLiteral, normalizeMediaHash } from '@vet/core-local/sqlite/media.js';
 

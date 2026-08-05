@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { t, type TranslationKey } from '@vet/core-local/i18n/index.js';
 	import { openInFileManager } from '@vet/core-local/native/file-manager.js';
-	import { importDatabaseFromCsv } from '@vet/modules/core_services/csv-import.service.js';
-	import { exportDatabaseAsCsv } from '@vet/modules/core_services/csv-export.service.js';
-	import { exportDatabase } from '@vet/modules/core_services/database-export.service.js';
-	import { importDatabase, importDatabaseFromBackupFolder } from '@vet/modules/core_services/database-import.service.js';
+	import { importDatabaseFromCsv } from '@vet/core-local/services/csv-import.service.js';
+	import { exportDatabaseAsCsv } from '@vet/core-local/services/csv-export.service.js';
+	import { exportDatabase } from '@vet/core-local/services/database-export.service.js';
+	import { importDatabase, importDatabaseFromBackupFolder } from '@vet/core-local/services/database-import.service.js';
 	import Archive from '@lucide/svelte/icons/archive';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';

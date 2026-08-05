@@ -1,6 +1,6 @@
 import type { ImageCollectionItem, ImageCollectionPolicy } from '@vet/types/domain/image-collection/image-collection.js';
 import { parseConditionAliases, parseConditionCatalogExtension, parseConditionRegions, parseConditionType, type ConditionCatalogItem } from '@vet/types/domain/condition/catalog.js';
-import { getImageCollection } from '@vet/modules/core_repositories/image-collection.repository.js';
+import { getImageCollection } from '@vet/core-local/repositories/image-collection.repository.js';
 import { selectSystemMany } from '@vet/core-local/sqlite/client.js';
 
 export const CONDITION_CATALOG_IMAGE_COLLECTION_TYPE = 'condition_catalog_item';

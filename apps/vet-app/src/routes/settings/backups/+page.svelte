@@ -3,10 +3,10 @@
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { t, type TranslationKey } from '@vet/core-local/i18n/index.js';
 	import { openInFileManager } from '@vet/core-local/native/file-manager.js';
-	import type { BackupHistoryItem, BackupKind } from '@vet/modules/core_repositories/backup.repository.js';
-	import { getBackupHistory } from '@vet/modules/core_services/backup.service.js';
-	import { exportDatabase } from '@vet/modules/core_services/database-export.service.js';
-	import { getBackupReplicationStatus, setBackupTargetPath, type BackupReplicationStatus } from '@vet/modules/core_services/replication-backup.service.js';
+	import type { BackupHistoryItem, BackupKind } from '@vet/core-local/repositories/backup.repository.js';
+	import { getBackupHistory } from '@vet/core-local/services/backup.service.js';
+	import { exportDatabase } from '@vet/core-local/services/database-export.service.js';
+	import { getBackupReplicationStatus, setBackupTargetPath, type BackupReplicationStatus } from '@vet/core-local/services/replication-backup.service.js';
 	import DatabaseBackup from '@lucide/svelte/icons/database-backup';
 	import FolderOpen from '@lucide/svelte/icons/folder-open';
 	import RotateCw from '@lucide/svelte/icons/rotate-cw';

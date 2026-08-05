@@ -25,16 +25,19 @@ remote service:
 ## Architecture Snapshot
 
 ```text
-Svelte UI -> TypeScript services -> Tauri commands -> Rust -> SQLite + CAS
+apps/vet-app -> @vet/modules -> @vet/core-local -> Tauri commands -> @vet/core-rust -> SQLite + CAS
 ```
 
-The persistence boundary is intentionally split into three Rust modules:
+The workspace is intentionally split by runtime boundary:
 
-| Module | Responsibility |
+| Package | Responsibility |
 | --- | --- |
-| `storage` | Active SQLite connections, database paths, CAS files and low-level primitives. |
-| `distribution` | Complete native/CSV import and export packages. |
-| `replication` | Continuous local-first backup and synchronization through patches. |
+| `apps/vet-app` | SvelteKit/Tauri shell, routes and cross-module composition. |
+| `packages/types` | Pure domain contracts and data rules. |
+| `packages/core-local` | Local TypeScript runtime, SQLite bridge, i18n, preferences, import/export clients and media repositories. |
+| `packages/ui` | Reusable Svelte UI primitives. |
+| `packages/modules` | Business modules: `knowledge`, `registry` and `medical_records`. |
+| `packages/core-rust` | Shared Rust storage, distribution and replication implementation. |
 
 ## Stack
 
@@ -67,7 +70,7 @@ npm run tauri:dev:new
 npm run check
 npm run test:run
 npm run build
-cargo check --manifest-path src-tauri/Cargo.toml
+cargo check --workspace
 ```
 
 Desktop bundles:

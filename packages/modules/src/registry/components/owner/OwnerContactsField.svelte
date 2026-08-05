@@ -1,5 +1,5 @@
 <script lang="ts">
-	import OwnerContactEditorList from '@vet/modules/registry/components/owner/OwnerContactEditorList.svelte';
+	import OwnerContactEditorList from './OwnerContactEditorList.svelte';
 	import type { OwnerContactInput } from '@vet/types/domain/owner/owner.js';
 
 	let { contacts = $bindable<OwnerContactInput[]>([]), country = 'BRA' }: { contacts?: OwnerContactInput[]; country?: string | null } = $props();

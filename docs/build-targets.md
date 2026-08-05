@@ -18,6 +18,7 @@ npm run tauri:dev
 npm run check
 npm run test:run
 npm run build
+cargo check --workspace
 ```
 
 Quando alterar a estrutura SQLite canônica ou regras de importação, valide também
@@ -39,6 +40,7 @@ npm run version:bump -- minor "Adicionar migracao de estrutura para protocolos v
 npm run check
 npm run test:run
 npm run build
+cargo check --workspace
 ```
 
 O script de versionamento calcula a próxima versão `major`, `minor` ou `patch`.

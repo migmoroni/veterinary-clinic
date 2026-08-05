@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import Select from '@vet/ui/components/ui/Select.svelte';
-	import PetAvatar from '@vet/modules/registry/components/pet/PetAvatar.svelte';
+	import { PetAvatar } from '@vet/modules/registry/pets';
 	import { dashboardAgeBandSortValue, dashboardAgeBandYear } from '@vet/types/domain/dashboard/age-bands.js';
 	import { dashboardPetAnalysisKinds, dashboardTreatmentStatusWeight, type DashboardBucket, type DashboardBucketSortField, type DashboardPetAnalysisKind, type DashboardPetStudyItem, type DashboardSortDirection, type DashboardVaccineStatusKey } from '@vet/types/domain/dashboard/analytics.js';
 	import { getPetBreedOption, getPetSpeciesOption, isPetBreed, isPetSpecies } from '@vet/types/domain/pet/taxonomy.js';
-	import { loadPetAvatarsByPetIds } from '@vet/modules/registry/services/avatar.service.js';
+	import { loadPetAvatarsByPetIds } from '@vet/modules/registry';
 	import { clinic } from '$lib/stores/clinic.svelte.js';
 	import { i18n, t, type TranslationKey } from '@vet/core-local/i18n/index.js';
 	import ChartColumn from '@lucide/svelte/icons/chart-column';

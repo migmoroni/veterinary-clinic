@@ -1,6 +1,6 @@
 <script lang="ts">
-	import ReferenceCardGrid, { type ReferenceGridCard } from '@vet/modules/knowledge/components/reference/ReferenceCardGrid.svelte';
-	import ReferenceFilterBar, { type ReferenceFilterBarSelect } from '@vet/modules/knowledge/components/reference/ReferenceFilterBar.svelte';
+	import ReferenceCardGrid, { type ReferenceGridCard } from './ReferenceCardGrid.svelte';
+	import ReferenceFilterBar, { type ReferenceFilterBarSelect } from './ReferenceFilterBar.svelte';
 	import type { Snippet } from 'svelte';
 
 	let {

@@ -15,24 +15,24 @@ import { CLINIC_SEARCH_RESULT_KINDS, isClinicSearchResultKind, isReferenceSearch
 import { normalizeSearchText, searchTermsForLocale } from '@vet/types/domain/shared/search-terms.js';
 import { hasDatabaseFile } from '@vet/core-local/native/database-file.js';
 import { createEmptyDatabase, getDatabase } from '@vet/core-local/sqlite/client.js';
-import { getLastEditedRecord } from '@vet/modules/medical_records/repositories/medical-record.repository.js';
-import { listOwnerAssociatedContactsByOwnerIds } from '@vet/modules/registry/repositories/owner.repository.js';
-import { filterActiveSearchResults as filterActiveSearchResultsRepository, searchClinic } from '@vet/modules/core_repositories/search.repository.js';
-import { getClinicCounts } from '@vet/modules/core_repositories/stats.repository.js';
+import { getLastEditedRecord } from './record-aggregate.service.js';
+import { listOwnerAssociatedContactsByOwnerIds } from '@vet/modules/registry/owners';
+import { filterActiveSearchResults as filterActiveSearchResultsRepository, searchClinic } from '../repositories/search.repository.js';
+import { getClinicCounts } from '../repositories/stats.repository.js';
 import { countryOptions } from '@vet/types/domain/geo/location.js';
 import type { TreatmentHistoryPoint } from '@vet/types/domain/treatment/analytics.js';
-import type { TreatmentAnalyticsOverview } from '@vet/modules/medical_records/repositories/treatment-analytics.repository.js';
+import type { TreatmentAnalyticsOverview } from '@vet/modules/medical_records/treatment_analytics';
 import { i18n, t, type TranslationKey } from '@vet/core-local/i18n/index.js';
-import { loadBreedReferenceProfiles } from '@vet/modules/knowledge/services/breed-reference.service.js';
-import { loadCatalogActiveIngredients, loadCatalogConditions, loadCatalogManufacturers, loadCatalogProducts } from '@vet/modules/knowledge/services/catalog.service.js';
-import { loadDashboardAnalytics } from '@vet/modules/medical_records/services/dashboard-analytics.service.js';
-import { loadTreatmentAnalyticsOverview, loadTreatmentHistory } from '@vet/modules/medical_records/services/treatment-analytics.service.js';
-import { shouldResetOverviewLastRecordOnce } from '@vet/modules/core_services/client-state.service.js';
-import { importDatabase } from '@vet/modules/core_services/database-import.service.js';
-import { loadLocalePreference } from '@vet/modules/core_services/preferences.service.js';
-import { requestPracticeIdentityRefresh } from '@vet/modules/registry/services/practice-profile.service.js';
+import { loadBreedReferenceProfiles } from '@vet/modules/knowledge/breeds';
+import { loadCatalogActiveIngredients, loadCatalogConditions, loadCatalogManufacturers, loadCatalogProducts } from '@vet/modules/knowledge';
+import { loadDashboardAnalytics } from '@vet/modules/medical_records';
+import { loadTreatmentAnalyticsOverview, loadTreatmentHistory } from '@vet/modules/medical_records/treatment_analytics';
+import { shouldResetOverviewLastRecordOnce } from '@vet/core-local/services/client-state.service.js';
+import { importDatabase } from '@vet/core-local/services/database-import.service.js';
+import { loadLocalePreference } from '@vet/core-local/services/preferences.service.js';
+import { requestPracticeIdentityRefresh } from '@vet/modules/registry';
 
-export { loadOwnerAvatarsByOwnerIds, loadPetAvatarsByPetIds } from '@vet/modules/registry/services/avatar.service.js';
+export { loadOwnerAvatarsByOwnerIds, loadPetAvatarsByPetIds } from '@vet/modules/registry';
 
 export interface ClinicTreatmentDashboard extends TreatmentAnalyticsOverview {
 	history: TreatmentHistoryPoint[];
