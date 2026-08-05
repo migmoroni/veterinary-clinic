@@ -39,8 +39,8 @@ Migrações incrementais ficam em `src/lib/persistence/sqlite/schema-migrations`
 Futuras migrações não devem ser implementadas dentro de `migrations.ts`; coloque
 o corpo em `schema-migrations/versions`.
 
-A conexão SQLite não é mais aberta pelo plugin SQL antigo. Repositórios da UI
-chamam comandos Tauri de storage, e o Rust executa SQL via `rusqlite`.
+A conexão SQLite em runtime passa pela ponte Tauri de `storage`. Repositórios
+da UI chamam comandos Tauri de storage, e o Rust executa SQL via `rusqlite`.
 
 O sistema de migração também define:
 
@@ -85,8 +85,8 @@ disponível.
 - Banco versionado antigo: migrações são aplicadas sequencialmente até
   `CURRENT_SCHEMA_VERSION`.
 - Banco futuro: recusado com erro de app desatualizado.
-- Banco não versionado desconhecido: recusado. Não adicionar tradutores legacy
-  pontuais ao migrador de execução.
+- Banco não versionado desconhecido: recusado. Não adicionar tradutores de
+  formatos anteriores ao migrador de execução.
 
 ## Importações, Exportações E Replicação
 

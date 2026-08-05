@@ -151,7 +151,8 @@ A ponte:
 - converte BLOBs para arrays de bytes;
 - devolve cada linha como objeto JSON.
 
-Essa ponte substitui o plugin SQL antigo. A UI não abre banco diretamente.
+A UI não abre banco diretamente. A ponte Tauri de `storage` é o contrato atual
+entre TypeScript e `rusqlite`.
 
 ## CAS De Mídias
 
