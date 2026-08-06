@@ -47,6 +47,7 @@
 		"vitest": "^4.1.10"
 	},
 	"dependencies": {
+		"@vet/app-services": "file:../../packages/app-services",
 		"@vet/core-local": "file:../../packages/core-local",
 		"@vet/modules": "file:../../packages/modules",
 		"@vet/types": "file:../../packages/types",

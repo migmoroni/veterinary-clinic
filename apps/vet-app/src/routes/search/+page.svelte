@@ -11,7 +11,9 @@
 	import { FIELD_LIMITS } from '@vet/types/domain/shared/field-limits.js';
 	import { t } from '@vet/core-local/i18n/index.js';
 	import { RECENT_SEARCH_STORAGE_KEY } from '@vet/core-local/services/client-state.service.js';
-	import { filterActiveSearchResults, loadOwnerAssociatedContactsByOwnerIds, loadOwnerAvatarsByOwnerIds, loadPetAvatarsByPetIds, searchEverywhere } from '$lib/services/clinic.service.js';
+	import { filterActiveSearchResults, searchEverywhere } from '@vet/app-services/search';
+	import { loadOwnerAvatarsByOwnerIds, loadPetAvatarsByPetIds } from '@vet/modules/registry';
+	import { listOwnerAssociatedContactsByOwnerIds } from '@vet/modules/registry/owners';
 	import Activity from '@lucide/svelte/icons/activity';
 	import Building2 from '@lucide/svelte/icons/building-2';
 	import FlaskConical from '@lucide/svelte/icons/flask-conical';
@@ -155,7 +157,7 @@
 		const petIds = normalizedBaseResults.filter((result) => result.kind === 'pet').map(textResultId).filter((id): id is string => id !== null);
 		if (ownerIds.length === 0 && petIds.length === 0) return normalizedBaseResults;
 
-		const [contactsResult, ownerAvatarsResult, petAvatarsResult] = await Promise.allSettled([loadOwnerAssociatedContactsByOwnerIds(ownerIds), loadOwnerAvatarsByOwnerIds(ownerIds), loadPetAvatarsByPetIds(petIds)]);
+		const [contactsResult, ownerAvatarsResult, petAvatarsResult] = await Promise.allSettled([listOwnerAssociatedContactsByOwnerIds(ownerIds), loadOwnerAvatarsByOwnerIds(ownerIds), loadPetAvatarsByPetIds(petIds)]);
 		const contactsByOwnerId = contactsResult.status === 'fulfilled' ? contactsResult.value : new Map<string, OwnerAssociatedContact[]>();
 		const avatarBytesByOwnerId = ownerAvatarsResult.status === 'fulfilled' ? ownerAvatarsResult.value : new Map<string, Uint8Array | null>();
 		const avatarBytesByPetId = petAvatarsResult.status === 'fulfilled' ? petAvatarsResult.value : new Map<string, Uint8Array | null>();

@@ -22,8 +22,7 @@
 		"./medical_records": "./src/medical_records/index.ts",
 		"./medical_records/records": "./src/medical_records/records/index.ts",
 		"./medical_records/treatments": "./src/medical_records/treatments/index.ts",
-		"./medical_records/treatment_protocols": "./src/medical_records/treatment_protocols/index.ts",
-		"./medical_records/treatment_analytics": "./src/medical_records/treatment_analytics/index.ts"
+		"./medical_records/treatment_protocols": "./src/medical_records/treatment_protocols/index.ts"
 	},
 	"dependencies": {
 		"@vet/core-local": "file:../core-local",

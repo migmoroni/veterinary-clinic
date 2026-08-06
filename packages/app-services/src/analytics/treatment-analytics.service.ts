@@ -1,6 +1,6 @@
 import type { TreatmentDueFilter, TreatmentHistoryFilter } from '@vet/types/domain/treatment/analytics.js';
 import type { TreatmentKind } from '@vet/types/domain/treatment/treatment.js';
-import { getTreatmentAnalyticsOverview, listAnalyticsTreatments, listTreatmentHistory, listTreatmentStatusItems } from '../repositories/treatment-analytics.repository.js';
+import { getTreatmentAnalyticsOverview, listAnalyticsTreatments, listTreatmentHistory, listTreatmentStatusItems } from './treatment-analytics.read-model.js';
 
 export async function loadTreatmentAnalyticsOverview(kind: TreatmentKind) {
 	return getTreatmentAnalyticsOverview(kind);

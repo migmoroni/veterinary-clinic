@@ -1,0 +1,19 @@
+{
+	"name": "@vet/app-services",
+	"private": true,
+	"version": "0.2.0",
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./src/index.ts",
+			"default": "./src/index.ts"
+		},
+		"./analytics": "./src/analytics/index.ts",
+		"./search": "./src/search/index.ts"
+	},
+	"dependencies": {
+		"@vet/core-local": "file:../core-local",
+		"@vet/modules": "file:../modules",
+		"@vet/types": "file:../types"
+	}
+}

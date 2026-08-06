@@ -9,7 +9,7 @@
 	import { emptyTreatmentStatusSummary, shiftIsoDate, todayIsoDate, treatmentHistoryPeriods, treatmentStatusKeys } from '@vet/types/domain/treatment/analytics.js';
 	import type { TranslationKey } from '@vet/core-local/i18n/index.js';
 	import { i18n, t } from '@vet/core-local/i18n/index.js';
-	import { loadAnalyticsTreatments, loadTreatmentAnalyticsOverview, loadTreatmentHistory, loadTreatmentStatusItems } from '@vet/modules/medical_records/treatment_analytics';
+	import { loadAnalyticsTreatments, loadTreatmentAnalyticsOverview, loadTreatmentHistory, loadTreatmentStatusItems } from '@vet/app-services/analytics';
 	import { OwnerContactDialog } from '@vet/modules/registry/owners';
 	import { PetAvatar, loadPetAvatarsByPetIds } from '@vet/modules/registry/pets';
 	import { listOwnerAssociatedContactsByOwnerIds } from '@vet/modules/registry/owners';

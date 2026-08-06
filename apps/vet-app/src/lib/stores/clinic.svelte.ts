@@ -1,12 +1,12 @@
 import type { ClinicDashboard } from '$lib/services/clinic.service.js';
 import type { SearchResult } from '@vet/types/domain/search/search.js';
+import { searchEverywhere } from '@vet/app-services/search';
 import {
 	createNewClinicDatabase,
 	hasClinicDatabase,
 	importClinicDatabase,
 	initializeClinic,
-	loadDashboard,
-	searchEverywhere
+	loadDashboard
 } from '$lib/services/clinic.service.js';
 
 class ClinicStore {
