@@ -3,8 +3,3 @@ export * from './services/record.service.js';
 export * from './services/treatment-analytics.service.js';
 export * from './services/treatment-protocol.service.js';
 export * from './services/treatment.service.js';
-export * from './repositories/dashboard-analytics.repository.js';
-export * from './repositories/medical-record.repository.js';
-export * from './repositories/treatment-analytics.repository.js';
-export * from './repositories/treatment-protocol.repository.js';
-export * from './repositories/treatment.repository.js';

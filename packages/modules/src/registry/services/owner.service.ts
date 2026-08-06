@@ -1,6 +1,14 @@
-import type { Owner, OwnerInput } from '@vet/types/domain/owner/owner.js';
+import type { Owner, OwnerAssociatedContact, OwnerInput } from '@vet/types/domain/owner/owner.js';
 import type { Pet } from '@vet/types/domain/pet/pet.js';
-import { createOwner, getOwner, listOwners, softDeleteOwner, updateOwner } from '../repositories/owner.repository.js';
+import {
+	createOwner,
+	getOwner,
+	listOwnerAssociatedContactsByOwnerIds as listOwnerAssociatedContactsByOwnerIdsRepository,
+	listOwners,
+	listOwnersByPet as listOwnersByPetRepository,
+	softDeleteOwner,
+	updateOwner
+} from '../repositories/owner.repository.js';
 import { linkPetToOwner, listPetsByOwner } from '../repositories/pet.repository.js';
 
 export interface OwnerProfile {
@@ -10,6 +18,14 @@ export interface OwnerProfile {
 
 export async function searchOwners(query = ''): Promise<Owner[]> {
 	return listOwners(query);
+}
+
+export async function listOwnersByPet(petId: string, includeRemoved = false): Promise<Owner[]> {
+	return listOwnersByPetRepository(petId, includeRemoved);
+}
+
+export async function listOwnerAssociatedContactsByOwnerIds(ownerIds: string[]): Promise<Map<string, OwnerAssociatedContact[]>> {
+	return listOwnerAssociatedContactsByOwnerIdsRepository(ownerIds);
 }
 
 export async function loadOwnerProfile(ownerId: string): Promise<OwnerProfile> {

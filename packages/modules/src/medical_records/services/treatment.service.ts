@@ -1,5 +1,9 @@
 import type { PetTreatment, PetTreatmentInput, TreatmentKind } from '@vet/types/domain/treatment/treatment.js';
-import { createTreatments, setTreatmentValidityIgnored, softDeleteTreatment } from '../repositories/treatment.repository.js';
+import { createTreatments, listTreatmentsByPet as listTreatmentsByPetRepository, setTreatmentValidityIgnored, softDeleteTreatment } from '../repositories/treatment.repository.js';
+
+export async function listTreatmentsByPet(kind: TreatmentKind, petId: string, includeRemoved = false): Promise<PetTreatment[]> {
+	return listTreatmentsByPetRepository(kind, petId, includeRemoved);
+}
 
 export async function saveNewTreatments(kind: TreatmentKind, petId: string, inputs: PetTreatmentInput[]): Promise<PetTreatment[]> {
 	return createTreatments(kind, petId, inputs);

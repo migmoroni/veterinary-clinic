@@ -3,4 +3,3 @@ export { default as PetAvatarEditorDialog } from '../components/pet/PetAvatarEdi
 export { default as PetTaxonomyPicker } from '../components/pet/PetTaxonomyPicker.svelte';
 export * from '../services/avatar.service.js';
 export * from '../services/pet.service.js';
-export * from '../repositories/pet.repository.js';

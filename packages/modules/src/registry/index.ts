@@ -8,6 +8,3 @@ export * from './services/contact.service.js';
 export * from './services/owner.service.js';
 export * from './services/pet.service.js';
 export * from './services/practice-profile.service.js';
-export * from './repositories/owner.repository.js';
-export * from './repositories/pet.repository.js';
-export * from './repositories/practice-profile.repository.js';

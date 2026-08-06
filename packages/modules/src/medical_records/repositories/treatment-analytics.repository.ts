@@ -1,4 +1,5 @@
 import type {
+	TreatmentAnalyticsOverview,
 	TreatmentAnalyticsCatalogItem,
 	TreatmentDueFilter,
 	TreatmentDueFilterMode,
@@ -49,11 +50,6 @@ interface AnalyticsTreatmentRow {
 	name: string;
 	normalized_name: string;
 	count: number;
-}
-
-export interface TreatmentAnalyticsOverview {
-	totalTracked: number;
-	summary: TreatmentStatusSummary;
 }
 
 const statusOrder: Record<TreatmentStatusKey, number> = {

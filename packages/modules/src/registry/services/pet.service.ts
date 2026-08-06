@@ -1,6 +1,9 @@
 import type { Pet, PetInput } from '@vet/types/domain/pet/pet.js';
-import { listOwnersByPet } from '../repositories/owner.repository.js';
 import { createPet, getPet, linkPetToOwner, searchPetsForOwnerLink, softDeletePet, updatePet } from '../repositories/pet.repository.js';
+
+export async function loadPetById(petId: string, includeRemoved = false): Promise<Pet | null> {
+	return getPet(petId, includeRemoved);
+}
 
 export async function saveNewPet(ownerId: string, input: PetInput): Promise<Pet> {
 	return createPet(ownerId, input);

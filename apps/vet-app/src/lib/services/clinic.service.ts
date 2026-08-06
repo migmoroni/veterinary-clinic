@@ -15,13 +15,12 @@ import { CLINIC_SEARCH_RESULT_KINDS, isClinicSearchResultKind, isReferenceSearch
 import { normalizeSearchText, searchTermsForLocale } from '@vet/types/domain/shared/search-terms.js';
 import { hasDatabaseFile } from '@vet/core-local/native/database-file.js';
 import { createEmptyDatabase, getDatabase } from '@vet/core-local/sqlite/client.js';
-import { getLastEditedRecord } from './record-aggregate.service.js';
+import { getLastEditedRecord } from '../read-models/current-record.read-model.js';
 import { listOwnerAssociatedContactsByOwnerIds } from '@vet/modules/registry/owners';
-import { filterActiveSearchResults as filterActiveSearchResultsRepository, searchClinic } from '../repositories/search.repository.js';
-import { getClinicCounts } from '../repositories/stats.repository.js';
+import { filterActiveSearchResults as filterActiveSearchResultsReadModel, searchClinic } from '../read-models/search.read-model.js';
+import { getClinicCounts } from '../read-models/dashboard.read-model.js';
 import { countryOptions } from '@vet/types/domain/geo/location.js';
-import type { TreatmentHistoryPoint } from '@vet/types/domain/treatment/analytics.js';
-import type { TreatmentAnalyticsOverview } from '@vet/modules/medical_records/treatment_analytics';
+import type { TreatmentAnalyticsOverview, TreatmentHistoryPoint } from '@vet/types/domain/treatment/analytics.js';
 import { i18n, t, type TranslationKey } from '@vet/core-local/i18n/index.js';
 import { loadBreedReferenceProfiles } from '@vet/modules/knowledge/breeds';
 import { loadCatalogActiveIngredients, loadCatalogConditions, loadCatalogManufacturers, loadCatalogProducts } from '@vet/modules/knowledge';
@@ -112,7 +111,7 @@ export async function searchEverywhere(query: string, kinds: readonly SearchResu
 }
 
 export async function filterActiveSearchResults(results: SearchResult[]): Promise<SearchResult[]> {
-	const [clinicResults, activeReferenceKeys] = await Promise.all([filterActiveSearchResultsRepository(results.filter(isClinicSearchResult)), activeReferenceResultKeys(results)]);
+	const [clinicResults, activeReferenceKeys] = await Promise.all([filterActiveSearchResultsReadModel(results.filter(isClinicSearchResult)), activeReferenceResultKeys(results)]);
 	const activeClinicKeys = new Set(clinicResults.map(searchResultKey));
 
 	return results.filter((result) => (isClinicSearchResult(result) ? activeClinicKeys.has(searchResultKey(result)) : activeReferenceKeys.has(searchResultKey(result))));

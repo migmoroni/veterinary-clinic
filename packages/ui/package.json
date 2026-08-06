@@ -15,6 +15,7 @@
 		"./*": "./src/*"
 	},
 	"dependencies": {
+		"@vet/core-local": "file:../core-local",
 		"@vet/types": "file:../types"
 	},
 	"peerDependencies": {

@@ -2,7 +2,7 @@ import type { MedicalRecord } from '@vet/types/domain/medical-record/medical-rec
 import type { Owner } from '@vet/types/domain/owner/owner.js';
 import type { Pet } from '@vet/types/domain/pet/pet.js';
 import { TREATMENT_KINDS, type PetTreatment, type TreatmentCatalogItem, type TreatmentKind } from '@vet/types/domain/treatment/treatment.js';
-import { getPet } from '@vet/modules/registry/pets';
+import { loadPetById } from '@vet/modules/registry/pets';
 import { listOwnersByPet } from '@vet/modules/registry/owners';
 import { listRecordsByPet } from '@vet/modules/medical_records/records';
 import { listTreatmentsByPet } from '@vet/modules/medical_records/treatments';
@@ -21,7 +21,7 @@ export interface PetProfileTreatmentBundle {
 }
 
 export async function loadPetProfile(petId: string): Promise<PetProfile> {
-	const pet = await getPet(petId);
+	const pet = await loadPetById(petId);
 	if (!pet) throw new Error('pet_not_found');
 
 	const [owners, records, treatmentEntries] = await Promise.all([

@@ -9,4 +9,3 @@ export { loadOwnerAvatarsByOwnerIds } from '../services/avatar.service.js';
 export * from '../services/contact.service.js';
 export * from '../services/cep.service.js';
 export * from '../services/owner.service.js';
-export * from '../repositories/owner.repository.js';

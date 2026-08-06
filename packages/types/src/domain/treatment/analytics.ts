@@ -17,6 +17,11 @@ export interface TreatmentStatusSummary {
 	overdue: number;
 }
 
+export interface TreatmentAnalyticsOverview {
+	totalTracked: number;
+	summary: TreatmentStatusSummary;
+}
+
 export interface TreatmentStatusItem {
 	ownerId: string;
 	ownerName: string;
