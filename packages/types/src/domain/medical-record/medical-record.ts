@@ -1,4 +1,4 @@
-import type { Owner, OwnerAssociatedContact } from '@vet/types/domain/owner/owner.js';
+import type { Owner } from '@vet/types/domain/owner/owner.js';
 
 export interface MedicalRecord {
 	id: string;
@@ -10,21 +10,6 @@ export interface MedicalRecord {
 	createdAt: string | null;
 	updatedAt: string | null;
 	removedAt: string | null;
-}
-
-
-
-export interface CurrentRecordSummary {
-	id: string;
-	title: string;
-	description: string | null;
-	admittedAt: string | null;
-	dischargedAt: string | null;
-	petId: string;
-	petName: string;
-	ownerId: string;
-	ownerName: string;
-	ownerContacts: OwnerAssociatedContact[];
 }
 
 export interface MedicalRecordInput {

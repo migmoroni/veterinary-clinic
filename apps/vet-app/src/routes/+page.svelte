@@ -1,15 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { OwnerContactDialog } from '@vet/modules/registry/owners';
 	import type { DashboardStudyTarget } from '@vet/types/domain/dashboard/analytics.js';
 	import { defaultProductCatalogItems } from '@vet/types/domain/product/default-catalog.js';
-	import type { OwnerAssociatedContact } from '@vet/types/domain/owner/owner.js';
 	import { breedReferenceProfiles } from '@vet/types/domain/pet/breed-reference.js';
 	import { clinic } from '$lib/stores/clinic.svelte.js';
 	import { i18n, t, type TranslationKey } from '@vet/core-local/i18n/index.js';
-	import Phone from '@lucide/svelte/icons/phone';
 	import BookOpen from '@lucide/svelte/icons/book-open';
-	import ClipboardPenLine from '@lucide/svelte/icons/clipboard-pen-line';
 	import Database from '@lucide/svelte/icons/database';
 	import RotateCw from '@lucide/svelte/icons/rotate-cw';
 	import Upload from '@lucide/svelte/icons/upload';
@@ -27,9 +23,6 @@
 	];
 
 	let setupStatusKey = $state<TranslationKey | null>(null);
-	let contactDialogOpen = $state(false);
-	let contactDialogOwnerName = $state('');
-	let contactDialogContacts = $state<OwnerAssociatedContact[]>([]);
 
 	async function startNewDatabase() {
 		setupStatusKey = null;
@@ -65,21 +58,6 @@
 
 	function productReferenceCount(): number {
 		return defaultProductCatalogItems.length;
-	}
-
-	function openCurrentRecordContact() {
-		const record = clinic.dashboard?.record;
-		if (!record) return;
-
-		contactDialogOwnerName = record.ownerName || t('owner.unassigned');
-		contactDialogContacts = record.ownerContacts;
-		contactDialogOpen = true;
-	}
-
-	function currentRecordContextLabel(): string {
-		const record = clinic.dashboard?.record;
-		if (!record) return '';
-		return record.ownerName ? `${record.petName} · ${record.ownerName}` : record.petName;
 	}
 </script>
 
@@ -158,57 +136,6 @@
 			<p class="mt-1 text-muted-foreground">{clinic.error}</p>
 		</div>
 	{/if}
-
-	<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
-			<div class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-				<ClipboardPenLine class="size-4" />
-				{t('home.currentRecord')}
-			</div>
-
-			{#if clinic.loading}
-				<div class="mt-6 h-64 animate-pulse rounded-md bg-muted"></div>
-			{:else if clinic.dashboard?.record}
-				<div class="mt-4 flex flex-col gap-4">
-					<div class="flex flex-col gap-1">
-						<h3 class="text-xl font-semibold">{clinic.dashboard.record.title}</h3>
-						<p class="text-sm text-muted-foreground">
-							{currentRecordContextLabel()}
-						</p>
-					</div>
-
-					<textarea
-						class="min-h-80 w-full resize-y rounded-md border border-input bg-background p-3 text-sm leading-6 shadow-inner focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
-						aria-label={t('record.descriptionLabel')}
-						readonly
-						value={clinic.dashboard.record.description ?? ''}
-					></textarea>
-
-					<div class="flex flex-wrap gap-2">
-						<a
-							href={`/records/${clinic.dashboard.record.id}`}
-							class="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-95"
-						>
-							{t('actions.openRecord')}
-						</a>
-						{#if clinic.dashboard.record.ownerContacts.length > 0}
-							<button
-								type="button"
-								class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-medium text-foreground hover:bg-accent"
-								onclick={openCurrentRecordContact}
-							>
-								<Phone class="size-4" />
-								{t('owner.contact')}
-							</button>
-						{/if}
-					</div>
-				</div>
-			{:else}
-				<div class="mt-6 rounded-md border border-dashed border-border p-8 text-center">
-					<p class="font-medium">{t('home.emptyTitle')}</p>
-					<p class="mt-2 text-sm text-muted-foreground">{t('home.emptyDescription')}</p>
-				</div>
-			{/if}
-	</section>
 
 	<section class="rounded-md border border-border bg-card p-4 shadow-sm sm:p-5">
 		<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -301,5 +228,3 @@
 	</div>
 </section>
 {/if}
-
-<OwnerContactDialog bind:open={contactDialogOpen} ownerName={contactDialogOwnerName} contacts={contactDialogContacts} />

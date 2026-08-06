@@ -1,4 +1,3 @@
-import type { CurrentRecordSummary } from '@vet/types/domain/medical-record/medical-record.js';
 import type { OwnerAssociatedContact } from '@vet/types/domain/owner/owner.js';
 import type { DashboardAnalytics } from '@vet/types/domain/dashboard/analytics.js';
 import type { ActiveIngredientCatalogItem } from '@vet/types/domain/active-ingredient/catalog.js';
@@ -15,7 +14,6 @@ import { CLINIC_SEARCH_RESULT_KINDS, isClinicSearchResultKind, isReferenceSearch
 import { normalizeSearchText, searchTermsForLocale } from '@vet/types/domain/shared/search-terms.js';
 import { hasDatabaseFile } from '@vet/core-local/native/database-file.js';
 import { createEmptyDatabase, getDatabase } from '@vet/core-local/sqlite/client.js';
-import { getLastEditedRecord } from '../read-models/current-record.read-model.js';
 import { listOwnerAssociatedContactsByOwnerIds } from '@vet/modules/registry/owners';
 import { filterActiveSearchResults as filterActiveSearchResultsReadModel, searchClinic } from '../read-models/search.read-model.js';
 import { getClinicCounts } from '../read-models/dashboard.read-model.js';
@@ -26,7 +24,6 @@ import { loadBreedReferenceProfiles } from '@vet/modules/knowledge/breeds';
 import { loadCatalogActiveIngredients, loadCatalogConditions, loadCatalogManufacturers, loadCatalogProducts } from '@vet/modules/knowledge';
 import { loadDashboardAnalytics } from '@vet/modules/medical_records';
 import { loadTreatmentAnalyticsOverview, loadTreatmentHistory } from '@vet/modules/medical_records/treatment_analytics';
-import { shouldResetOverviewLastRecordOnce } from '@vet/core-local/services/client-state.service.js';
 import { importDatabase } from '@vet/core-local/services/database-import.service.js';
 import { loadLocalePreference } from '@vet/core-local/services/preferences.service.js';
 import { requestPracticeIdentityRefresh } from '@vet/modules/registry';
@@ -38,7 +35,6 @@ export interface ClinicTreatmentDashboard extends TreatmentAnalyticsOverview {
 }
 
 export interface ClinicDashboard {
-	record: CurrentRecordSummary | null;
 	counts: {
 		owners: number;
 		pets: number;
@@ -77,8 +73,7 @@ export async function importClinicDatabase(title: string): Promise<boolean> {
 }
 
 export async function loadDashboard(): Promise<ClinicDashboard> {
-	const [record, counts, vaccineOverview, vaccineHistory, antiparasiticOverview, antiparasiticHistory, analytics] = await Promise.all([
-		getLastEditedRecord(),
+	const [counts, vaccineOverview, vaccineHistory, antiparasiticOverview, antiparasiticHistory, analytics] = await Promise.all([
 		getClinicCounts(),
 		loadTreatmentAnalyticsOverview('vaccine'),
 		loadTreatmentHistory('vaccine', { period: 'month', normalizedName: null }),
@@ -87,7 +82,6 @@ export async function loadDashboard(): Promise<ClinicDashboard> {
 		loadDashboardAnalytics()
 	]);
 	return {
-		record: shouldResetOverviewLastRecordOnce() ? null : record,
 		counts,
 		vaccines: { ...vaccineOverview, history: vaccineHistory },
 		antiparasitics: { ...antiparasiticOverview, history: antiparasiticHistory },
