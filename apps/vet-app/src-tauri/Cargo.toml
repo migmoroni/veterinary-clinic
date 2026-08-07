@@ -23,7 +23,7 @@ serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 tauri = { version = "2.11.1", features = [] }
-vet-core-rust = { path = "../../../packages/core-rust" }
+vet-engine = { path = "../../../packages/engine" }
 sha2 = "0.10.9"
 rusqlite = { version = "0.32", features = ["bundled", "modern_sqlite", "session"] }
 tauri-plugin-log = "2"

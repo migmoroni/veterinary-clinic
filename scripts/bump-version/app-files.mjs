@@ -10,6 +10,7 @@ export const TAURI_CONFIG = 'apps/vet-app/src-tauri/tauri.conf.json';
 const PACKAGE_JSON_FILES = [
 	'package.json',
 	APP_PACKAGE_JSON,
+	'packages/app-services/package.json',
 	'packages/core-local/package.json',
 	'packages/modules/package.json',
 	'packages/types/package.json',
@@ -18,12 +19,12 @@ const PACKAGE_JSON_FILES = [
 
 const CARGO_TOML_FILES = [
 	TAURI_CARGO_TOML,
-	'packages/core-rust/Cargo.toml'
+	'packages/engine/Cargo.toml'
 ];
 
 const CARGO_LOCK_PACKAGES = [
 	'veterinary_clinic',
-	'vet-core-rust'
+	'vet-engine'
 ];
 
 export async function readCurrentVersion() {

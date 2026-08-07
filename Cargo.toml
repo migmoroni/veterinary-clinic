@@ -2,5 +2,5 @@
 resolver = "2"
 members = [
 	"apps/vet-app/src-tauri",
-	"packages/core-rust"
+	"packages/engine"
 ]

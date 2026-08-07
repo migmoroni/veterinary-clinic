@@ -1,11 +1,11 @@
 [package]
-name = "vet-core-rust"
+name = "vet-engine"
 version = "0.2.0"
 edition = "2021"
 rust-version = "1.77.2"
 
 [lib]
-name = "vet_core_rust"
+name = "vet_engine"
 path = "src/lib.rs"
 
 [dependencies]

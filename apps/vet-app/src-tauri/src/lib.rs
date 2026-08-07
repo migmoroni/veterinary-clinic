@@ -1,9 +1,6 @@
-mod file_manager;
-mod system_fonts;
-
 use tauri::Manager;
-use vet_core_rust::{distribution, replication, storage};
-use vet_core_rust::storage::StorageManager;
+use vet_engine::storage::StorageManager;
+use vet_engine::{distribution, platform, replication, storage};
 #[cfg(target_os = "linux")]
 use webkit2gtk::glib::object::Cast;
 #[cfg(target_os = "linux")]
@@ -64,8 +61,8 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
-            system_fonts::list_system_fonts,
-            file_manager::open_file_manager,
+            platform::system_fonts::list_system_fonts,
+            platform::file_manager::open_file_manager,
             storage::storage_select,
             storage::storage_execute,
             storage::storage_close,
