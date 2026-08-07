@@ -2,8 +2,9 @@
 	import { tick } from 'svelte';
 	import Select from '@vet/ui/components/ui/Select.svelte';
 	import { PetAvatar } from '@vet/modules/registry/pets';
-	import { clinicAnalyticsAgeBandSortValue, clinicAnalyticsAgeBandYear } from '@vet/types/clinic-analytics.js';
-	import { clinicAnalyticsPetDimensions, clinicAnalyticsTreatmentStatusWeight, type AnalyticsBucket, type AnalyticsBucketSortField, type ClinicAnalyticsPetDimension, type ClinicAnalyticsPetStudyItem, type AnalyticsSortDirection, type ClinicAnalyticsVaccineStatusKey } from '@vet/types/clinic-analytics.js';
+	import { clinicAnalyticsAgeBandYear } from '@vet/types/clinic-analytics.js';
+	import { clinicAnalyticsPetDimensions, type AnalyticsBucket, type AnalyticsBucketSortField, type ClinicAnalyticsPetDimension, type ClinicAnalyticsPetStudyItem, type AnalyticsSortDirection, type ClinicAnalyticsVaccineStatusKey } from '@vet/types/clinic-analytics.js';
+	import { filterClinicAnalyticsPetsByBucket, selectClinicPetAnalyticsBuckets, sortClinicAnalyticsPets, sortClinicPetAnalyticsBuckets, type ClinicAnalyticsPetSortOrder } from '@vet/app-services/analytics';
 	import { getPetBreedOption, getPetSpeciesOption, isPetBreed, isPetSpecies } from '@vet/types/domain/pet/taxonomy.js';
 	import { loadPetAvatarsByPetIds } from '@vet/modules/registry';
 	import { clinic } from '$lib/stores/clinic.svelte.js';
@@ -13,8 +14,6 @@
 	import PawPrint from '@lucide/svelte/icons/paw-print';
 	import Syringe from '@lucide/svelte/icons/syringe';
 
-	type PetSortOrder = 'name' | 'age' | 'vaccineStatus' | 'owner';
-
 	const dashboard = $derived(clinic.dashboard);
 	const allPets = $derived(dashboard?.analytics.study.pets ?? []);
 	const analysisKinds = clinicAnalyticsPetDimensions;
@@ -23,15 +22,24 @@
 	let selectedBucketKey = $state('');
 	let bucketSortField = $state<AnalyticsBucketSortField>('count');
 	let bucketSortDirection = $state<AnalyticsSortDirection>('asc');
-	let sortOrder = $state<PetSortOrder>('name');
+	let sortOrder = $state<ClinicAnalyticsPetSortOrder>('name');
 	let visiblePets = $state<ClinicAnalyticsPetStudyItem[]>([]);
 	let listLoading = $state(false);
 	let avatarBytesByPetId = $state(new Map<string, Uint8Array | null>());
 	let renderRequestId = 0;
 
-	const activeBuckets = $derived(sortBuckets(bucketsForAnalysis(activeAnalysis), activeAnalysis, bucketSortField, bucketSortDirection));
+	const activeBuckets = $derived(
+		sortClinicPetAnalyticsBuckets({
+			buckets: petAnalyticsBuckets(activeAnalysis),
+			dimension: activeAnalysis,
+			field: bucketSortField,
+			direction: bucketSortDirection,
+			labelForKey: bucketLabel,
+			locale: i18n.locale
+		})
+	);
 	const selectedBucket = $derived(activeBuckets.find((bucket) => bucket.key === selectedBucketKey) ?? null);
-	const listedPets = $derived(sortPets(filterPetsByBucket(allPets, activeAnalysis, selectedBucketKey), sortOrder));
+	const listedPets = $derived(sortClinicAnalyticsPets(filterClinicAnalyticsPetsByBucket(allPets, activeAnalysis, selectedBucketKey), sortOrder));
 	const selectedPercent = $derived(allPets.length > 0 ? Math.round((listedPets.length / allPets.length) * 1000) / 10 : 0);
 
 	function metricFormatter(value: number): string {
@@ -54,17 +62,13 @@
 		return t(analysisLabelKey(kind));
 	}
 
-	function bucketsForAnalysis(kind: ClinicAnalyticsPetDimension): AnalyticsBucket[] {
+	function petAnalyticsBuckets(kind: ClinicAnalyticsPetDimension): AnalyticsBucket[] {
 		if (!dashboard) return [];
-		if (kind === 'species') return dashboard.analytics.pets.bySpecies;
-		if (kind === 'breed') return dashboard.analytics.pets.byBreed;
-		if (kind === 'sex') return dashboard.analytics.pets.bySex;
-		if (kind === 'age') return dashboard.analytics.pets.byAge;
-		return dashboard.analytics.pets.byVaccineStatus;
+		return selectClinicPetAnalyticsBuckets(dashboard.analytics, kind);
 	}
 
 	function bucketTotal(kind: ClinicAnalyticsPetDimension): number {
-		return bucketsForAnalysis(kind).reduce((total, bucket) => total + bucket.count, 0);
+		return petAnalyticsBuckets(kind).reduce((total, bucket) => total + bucket.count, 0);
 	}
 
 	function bucketPercent(bucket: AnalyticsBucket, buckets = activeBuckets): number {
@@ -79,7 +83,7 @@
 	}
 
 	function topBucket(kind: ClinicAnalyticsPetDimension): AnalyticsBucket | null {
-		return bucketsForAnalysis(kind)[0] ?? null;
+		return petAnalyticsBuckets(kind)[0] ?? null;
 	}
 
 	function topBucketText(kind: ClinicAnalyticsPetDimension): string {
@@ -146,39 +150,6 @@
 		];
 	}
 
-	function bucketUnknownCompare(first: AnalyticsBucket, second: AnalyticsBucket): number {
-		if (first.key === 'unknown' && second.key !== 'unknown') return 1;
-		if (first.key !== 'unknown' && second.key === 'unknown') return -1;
-		return 0;
-	}
-
-	function bucketAnalysisBaseCompare(kind: ClinicAnalyticsPetDimension, first: AnalyticsBucket, second: AnalyticsBucket): number {
-		if (kind === 'age') return clinicAnalyticsAgeBandSortValue(first.key) - clinicAnalyticsAgeBandSortValue(second.key);
-		if (kind === 'vaccineStatus') return clinicAnalyticsTreatmentStatusWeight[first.key as ClinicAnalyticsVaccineStatusKey] - clinicAnalyticsTreatmentStatusWeight[second.key as ClinicAnalyticsVaccineStatusKey];
-		return bucketLabel(kind, first.key).localeCompare(bucketLabel(kind, second.key), i18n.locale);
-	}
-
-	function bucketAnalysisCompare(kind: ClinicAnalyticsPetDimension, first: AnalyticsBucket, second: AnalyticsBucket, direction: AnalyticsSortDirection): number {
-		const unknownCompare = bucketUnknownCompare(first, second);
-		if (unknownCompare !== 0) return unknownCompare;
-
-		const analysisCompare = bucketAnalysisBaseCompare(kind, first, second);
-		return direction === 'asc' ? analysisCompare : -analysisCompare;
-	}
-
-	function sortBuckets(buckets: AnalyticsBucket[], kind: ClinicAnalyticsPetDimension, field: AnalyticsBucketSortField, direction: AnalyticsSortDirection): AnalyticsBucket[] {
-		return [...buckets].sort((first, second) => {
-			if (field === 'count') {
-				const countCompare = first.count - second.count;
-				const orderedCountCompare = direction === 'asc' ? countCompare : -countCompare;
-				if (orderedCountCompare !== 0) return orderedCountCompare;
-				return bucketAnalysisCompare(kind, first, second, 'asc');
-			}
-
-			return bucketAnalysisCompare(kind, first, second, direction);
-		});
-	}
-
 	function selectAnalysis(kind: ClinicAnalyticsPetDimension): void {
 		activeAnalysis = kind;
 		selectedBucketKey = '';
@@ -186,40 +157,6 @@
 
 	function clearSelectedBucket(): void {
 		selectedBucketKey = '';
-	}
-
-	function petMatchesBucket(pet: ClinicAnalyticsPetStudyItem, kind: ClinicAnalyticsPetDimension, key: string): boolean {
-		if (!key) return true;
-		if (kind === 'species') return pet.species === key;
-		if (kind === 'breed') return pet.breed === key;
-		if (kind === 'sex') return pet.sex === key;
-		if (kind === 'age') return pet.age === key;
-		return pet.vaccineStatus === key;
-	}
-
-	function filterPetsByBucket(pets: ClinicAnalyticsPetStudyItem[], kind: ClinicAnalyticsPetDimension, key: string): ClinicAnalyticsPetStudyItem[] {
-		return pets.filter((pet) => petMatchesBucket(pet, kind, key));
-	}
-
-	function sortPets(pets: ClinicAnalyticsPetStudyItem[], order: PetSortOrder): ClinicAnalyticsPetStudyItem[] {
-		return [...pets].sort((first, second) => {
-			if (order === 'age') {
-				const ageCompare = clinicAnalyticsAgeBandSortValue(first.age) - clinicAnalyticsAgeBandSortValue(second.age);
-				if (ageCompare !== 0) return ageCompare;
-			}
-
-			if (order === 'vaccineStatus') {
-				const statusCompare = clinicAnalyticsTreatmentStatusWeight[second.vaccineStatus] - clinicAnalyticsTreatmentStatusWeight[first.vaccineStatus];
-				if (statusCompare !== 0) return statusCompare;
-			}
-
-			if (order === 'owner') {
-				const ownerCompare = ownerText(first).localeCompare(ownerText(second));
-				if (ownerCompare !== 0) return ownerCompare;
-			}
-
-			return first.name.localeCompare(second.name);
-		});
 	}
 
 	function selectedBucketLabel(): string {
@@ -323,11 +260,11 @@
 						</span>
 						<span class="shrink-0 text-right">
 							<span class="block text-2xl font-semibold text-foreground">{metricFormatter(bucketTotal(kind))}</span>
-							<span class="mt-1 block text-xs text-muted-foreground">{top ? percentFormatter(bucketPercent(top, bucketsForAnalysis(kind))) : '0%'}</span>
+							<span class="mt-1 block text-xs text-muted-foreground">{top ? percentFormatter(bucketPercent(top, petAnalyticsBuckets(kind))) : '0%'}</span>
 						</span>
 					</span>
 					<span class="mt-auto block h-2 rounded-full bg-muted">
-						<span class="block h-2 rounded-full bg-primary" style={`width: ${top ? bucketWidth(top, bucketsForAnalysis(kind)) : 0}%`}></span>
+						<span class="block h-2 rounded-full bg-primary" style={`width: ${top ? bucketWidth(top, petAnalyticsBuckets(kind)) : 0}%`}></span>
 					</span>
 				</button>
 			{/each}
@@ -412,7 +349,7 @@
 									{ value: 'vaccineStatus', label: t('analysis.pet.vaccineStatus') },
 									{ value: 'owner', label: t('owner.name') }
 								]}
-								onchange={(value) => (sortOrder = value as PetSortOrder)}
+								onchange={(value) => (sortOrder = value as ClinicAnalyticsPetSortOrder)}
 							/>
 							<span class="rounded-md bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">{metricFormatter(listedPets.length)}</span>
 						</div>

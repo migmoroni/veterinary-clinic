@@ -3,13 +3,27 @@
 	import Select from '@vet/ui/components/ui/Select.svelte';
 	import DateField from '@vet/ui/components/forms/DateField.svelte';
 	import type { OwnerAssociatedContact } from '@vet/types/domain/owner/owner.js';
-	import { formatDateForDisplay, formatDateForInput } from '@vet/types/domain/shared/date-input.js';
+	import { formatDateForDisplay } from '@vet/types/domain/shared/date-input.js';
 	import type { TreatmentKind } from '@vet/types/domain/treatment/treatment.js';
-	import type { TreatmentAnalyticsCatalogItem, TreatmentDueFilterMode, TreatmentHistoryPeriod, TreatmentStatusItem, TreatmentStatusKey, TreatmentStatusSummary } from '@vet/types/domain/treatment/analytics.js';
-	import { emptyTreatmentStatusSummary, shiftIsoDate, todayIsoDate, treatmentHistoryPeriods, treatmentStatusKeys } from '@vet/types/domain/treatment/analytics.js';
+	import type { TreatmentAnalyticsCatalogItem, TreatmentDueFilterMode, TreatmentHistoryPeriod, TreatmentHistoryPoint, TreatmentStatusItem, TreatmentStatusKey, TreatmentStatusSummary } from '@vet/types/domain/treatment/analytics.js';
+	import { emptyTreatmentStatusSummary, shiftIsoDate, todayIsoDate, treatmentHistoryPeriods } from '@vet/types/domain/treatment/analytics.js';
 	import type { TranslationKey } from '@vet/core-local/i18n/index.js';
 	import { i18n, t } from '@vet/core-local/i18n/index.js';
-	import { loadAnalyticsTreatments, loadTreatmentAnalyticsOverview, loadTreatmentHistory, loadTreatmentStatusItems } from '@vet/app-services/analytics';
+	import {
+		loadAnalyticsTreatments,
+		loadTreatmentAnalyticsOverview,
+		loadTreatmentHistory,
+		loadTreatmentStatusItems,
+		normalizeTreatmentAnalyticsDueFilterMode,
+		normalizeTreatmentAnalyticsPeriod,
+		normalizeTreatmentAnalyticsPeriodEndDate,
+		normalizeTreatmentAnalyticsPeriodStartDate,
+		normalizeTreatmentAnalyticsSortOrder,
+		normalizeTreatmentAnalyticsStatus,
+		sortTreatmentAnalyticsHistoryPoints,
+		sortTreatmentAnalyticsStatusItems,
+		type TreatmentAnalyticsSortOrder
+	} from '@vet/app-services/analytics';
 	import { OwnerContactDialog } from '@vet/modules/registry/owners';
 	import { PetAvatar, loadPetAvatarsByPetIds } from '@vet/modules/registry/pets';
 	import { listOwnerAssociatedContactsByOwnerIds } from '@vet/modules/registry/owners';
@@ -20,8 +34,6 @@
 	import Syringe from '@lucide/svelte/icons/syringe';
 
 	type ActiveTab = 'status' | 'history';
-	type SortOrder = 'recent' | 'old';
-	type HistoryPoint = { key: string; label: string; count: number };
 
 	interface TreatmentAnalyticsConfig {
 		defaultBasePath: string;
@@ -74,14 +86,14 @@
 	let period = $state<TreatmentHistoryPeriod>('month');
 	let selectedNormalizedName = $state('');
 	let activeTab = $state<ActiveTab>('status');
-	let statusOrder = $state<SortOrder>('recent');
-	let historyOrder = $state<SortOrder>('recent');
+	let statusOrder = $state<TreatmentAnalyticsSortOrder>('recent');
+	let historyOrder = $state<TreatmentAnalyticsSortOrder>('recent');
 	let items = $state<TreatmentStatusItem[]>([]);
 	let visibleItems = $state<TreatmentStatusItem[]>([]);
 	let avatarBytesByPetId = $state(new Map<string, Uint8Array | null>());
 	let statusSummary = $state<TreatmentStatusSummary>(emptyTreatmentStatusSummary());
 	let statusTotalTracked = $state(0);
-	let history = $state<HistoryPoint[]>([]);
+	let history = $state<TreatmentHistoryPoint[]>([]);
 	let analyticsTreatments = $state<TreatmentAnalyticsCatalogItem[]>([]);
 	let statusLoading = $state(false);
 	let statusListLoading = $state(false);
@@ -100,7 +112,7 @@
 	let historyRequestId = 0;
 	let catalogRequestId = 0;
 
-	const sortedHistory = $derived(sortHistoryPoints(history, historyOrder));
+	const sortedHistory = $derived(sortTreatmentAnalyticsHistoryPoints(history, historyOrder));
 	const maxHistoryCount = $derived(history.reduce((max, point) => Math.max(max, point.count), 0));
 
 	function treatmentKey(path: string): TranslationKey {
@@ -114,32 +126,6 @@
 	function kindAnalyticsKey(path: string): TranslationKey {
 		const root = kind === 'vaccine' ? 'vaccine.analytics' : 'antiparasiticTreatment.analytics';
 		return `${root}.${path}` as TranslationKey;
-	}
-
-	function normalizeStatus(value: string | null): TreatmentStatusKey {
-		return treatmentStatusKeys.includes(value as TreatmentStatusKey) ? (value as TreatmentStatusKey) : 'expired';
-	}
-
-	function normalizeDueFilterMode(value: string | null): TreatmentDueFilterMode {
-		return value === 'period' || value === 'status' ? value : 'status';
-	}
-
-	function normalizePeriodStartDate(value: string | null): string {
-		const normalized = formatDateForInput(value);
-		return normalized && normalized <= todayDate ? normalized : defaultPeriodStartDate;
-	}
-
-	function normalizePeriodEndDate(value: string | null): string {
-		const normalized = formatDateForInput(value);
-		return normalized && normalized >= todayDate ? normalized : defaultPeriodEndDate;
-	}
-
-	function normalizePeriod(value: string | null): TreatmentHistoryPeriod {
-		return treatmentHistoryPeriods.includes(value as TreatmentHistoryPeriod) ? (value as TreatmentHistoryPeriod) : 'month';
-	}
-
-	function normalizeOrder(value: string | null): SortOrder {
-		return value === 'recent' || value === 'old' ? value : 'recent';
 	}
 
 	function periodLabelKey(value: TreatmentHistoryPeriod): TranslationKey {
@@ -179,19 +165,6 @@
 		return formatter.format(Math.round(rawPercent * 10) / 10);
 	}
 
-	function sortStatusItems(source: TreatmentStatusItem[], order: SortOrder): TreatmentStatusItem[] {
-		const direction = order === 'recent' ? -1 : 1;
-		return [...source].sort((first, second) => {
-			const dueCompare = first.dueAt.localeCompare(second.dueAt);
-			if (dueCompare !== 0) return dueCompare * direction;
-
-			const appliedCompare = first.appliedAt.localeCompare(second.appliedAt);
-			if (appliedCompare !== 0) return appliedCompare * direction;
-
-			return ownerDisplayName(first).localeCompare(ownerDisplayName(second)) || first.petName.localeCompare(second.petName) || first.name.localeCompare(second.name);
-		});
-	}
-
 	function ownerDisplayName(item: TreatmentStatusItem): string {
 		return item.ownerName || t('owner.unassigned');
 	}
@@ -202,10 +175,6 @@
 
 	function petAvatarBytes(item: TreatmentStatusItem): Uint8Array | null {
 		return avatarBytesByPetId.get(item.petId) ?? item.petAvatarBytes;
-	}
-
-	function sortHistoryPoints(source: HistoryPoint[], order: SortOrder): HistoryPoint[] {
-		return [...source].sort((first, second) => (order === 'recent' ? second.key.localeCompare(first.key) : first.key.localeCompare(second.key)));
 	}
 
 	function updateUrl() {
@@ -237,7 +206,7 @@
 
 	async function renderStatusItemsInChunks(source: TreatmentStatusItem[], order = statusOrder) {
 		const requestId = ++statusRenderRequestId;
-		const sortedSource = sortStatusItems(source, order);
+		const sortedSource = sortTreatmentAnalyticsStatusItems(source, order);
 		statusListLoading = true;
 		visibleItems = [];
 		await waitForNextPaint();
@@ -405,14 +374,14 @@
 	function selectStatus(value: string) {
 		activeTab = 'status';
 		dueFilterMode = 'status';
-		status = normalizeStatus(value);
+		status = normalizeTreatmentAnalyticsStatus(value);
 		updateUrl();
 		queueStatusLoad();
 	}
 
 	function selectDueFilterMode(value: string) {
 		activeTab = 'status';
-		dueFilterMode = normalizeDueFilterMode(value);
+		dueFilterMode = normalizeTreatmentAnalyticsDueFilterMode(value);
 		updateUrl();
 		queueStatusLoad();
 	}
@@ -420,7 +389,7 @@
 	function selectPeriodStartDate(value: string) {
 		activeTab = 'status';
 		dueFilterMode = 'period';
-		periodStartDate = normalizePeriodStartDate(value);
+		periodStartDate = normalizeTreatmentAnalyticsPeriodStartDate(value);
 		updateUrl();
 		queueStatusLoad();
 	}
@@ -428,14 +397,14 @@
 	function selectPeriodEndDate(value: string) {
 		activeTab = 'status';
 		dueFilterMode = 'period';
-		periodEndDate = normalizePeriodEndDate(value);
+		periodEndDate = normalizeTreatmentAnalyticsPeriodEndDate(value);
 		updateUrl();
 		queueStatusLoad();
 	}
 
 	function selectStatusOrder(value: string) {
 		activeTab = 'status';
-		statusOrder = normalizeOrder(value);
+		statusOrder = normalizeTreatmentAnalyticsSortOrder(value);
 		updateUrl();
 
 		if (statusLoaded && !statusLoading) void renderStatusItemsInChunks(items, statusOrder);
@@ -450,7 +419,7 @@
 
 	function selectHistoryOrder(value: string) {
 		activeTab = 'history';
-		historyOrder = normalizeOrder(value);
+		historyOrder = normalizeTreatmentAnalyticsSortOrder(value);
 		updateUrl();
 	}
 
@@ -461,7 +430,7 @@
 		queueHistoryLoad();
 	}
 
-	function historyWidth(point: HistoryPoint): number {
+	function historyWidth(point: TreatmentHistoryPoint): number {
 		return maxHistoryCount > 0 ? Math.max(4, Math.round((point.count / maxHistoryCount) * 100)) : 0;
 	}
 
@@ -493,13 +462,13 @@
 	onMount(() => {
 		if (typeof window !== 'undefined') {
 			const params = new URLSearchParams(window.location.search);
-			dueFilterMode = params.has('startDate') || params.has('endDate') ? 'period' : normalizeDueFilterMode(params.get('filterMode'));
-			status = normalizeStatus(params.get('status'));
-			periodStartDate = normalizePeriodStartDate(params.get('startDate'));
-			periodEndDate = normalizePeriodEndDate(params.get('endDate'));
-			statusOrder = normalizeOrder(params.get('statusOrder'));
-			period = normalizePeriod(params.get('period'));
-			historyOrder = normalizeOrder(params.get('historyOrder'));
+			dueFilterMode = params.has('startDate') || params.has('endDate') ? 'period' : normalizeTreatmentAnalyticsDueFilterMode(params.get('filterMode'));
+			status = normalizeTreatmentAnalyticsStatus(params.get('status'));
+			periodStartDate = normalizeTreatmentAnalyticsPeriodStartDate(params.get('startDate'));
+			periodEndDate = normalizeTreatmentAnalyticsPeriodEndDate(params.get('endDate'));
+			statusOrder = normalizeTreatmentAnalyticsSortOrder(params.get('statusOrder'));
+			period = normalizeTreatmentAnalyticsPeriod(params.get('period'));
+			historyOrder = normalizeTreatmentAnalyticsSortOrder(params.get('historyOrder'));
 			selectedNormalizedName = params.get(config.historyParam) ?? '';
 			activeTab = initialActiveTab(params);
 		}
