@@ -10,7 +10,7 @@
 	import Select, { type SelectOption } from '@vet/ui/components/ui/Select.svelte';
 	import type { ImageCollectionItem, ImageCollectionItemInput } from '@vet/types/domain/image-collection/image-collection.js';
 	import { canDeleteProductCatalogItem, canEditProductCatalogItem, PRODUCT_TYPES, type ProductCatalogSource } from '@vet/types/domain/product/catalog.js';
-	import { createSearchMatcher } from '@vet/types/domain/search/search-controller.js';
+	import { filterTreatmentCatalogItems } from '@vet/app-services/search';
 	import { petSpeciesOptions, type KnownPetSpecies } from '@vet/types/domain/pet/taxonomy.js';
 	import { FIELD_LIMITS } from '@vet/types/domain/shared/field-limits.js';
 	import { TREATMENT_KINDS, type TreatmentCatalogItem, type TreatmentCatalogItemId, type TreatmentKind } from '@vet/types/domain/treatment/treatment.js';
@@ -79,10 +79,13 @@
 		}))
 	]);
 	const filteredCatalogItems = $derived.by(() => {
-		const search = createSearchMatcher(searchQuery);
-		return sourceCatalogItems.filter((item) => {
-			if (!productTypeMatchesFilter(item.type, typeFilter)) return false;
-			return search.matches([item.name, ...item.aliases, item.manufacturerName ?? ''].join(' '));
+		return filterTreatmentCatalogItems({
+			query: searchQuery,
+			items: sourceCatalogItems,
+			filters: {
+				type: typeFilter,
+				includeHidden: true
+			}
 		});
 	});
 	const newPrimaryImage = $derived(primaryDraftImage(newCatalogDraft.images));

@@ -18,10 +18,10 @@ export function referenceSpeciesOptions(allLabel: string, canineLabel: string, f
 	];
 }
 
-export function resolveReferenceSelection<T>(items: readonly T[], selectedId: string | null, itemId: (item: T) => string): string | null {
-	if (items.length === 0) return null;
+export function resolveReferenceSelection<T>(items: readonly T[], selectedId: string | null, itemId: (item: T) => string, options: { fallbackToFirst?: boolean } = {}): string | null {
 	if (selectedId && items.some((item) => itemId(item) === selectedId)) return selectedId;
-	return itemId(items[0]);
+	if (options.fallbackToFirst && items[0]) return itemId(items[0]);
+	return null;
 }
 
 export function referenceRangeRows(

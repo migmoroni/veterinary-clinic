@@ -1,6 +1,6 @@
 import type { ClinicDashboard } from '$lib/services/clinic.service.js';
 import type { SearchResult } from '@vet/types/domain/search/search.js';
-import { searchEverywhere } from '@vet/app-services/search';
+import { querySearch } from '@vet/app-services/search';
 import {
 	createNewClinicDatabase,
 	hasClinicDatabase,
@@ -86,7 +86,7 @@ class ClinicStore {
 
 	async search() {
 		try {
-			this.results = await searchEverywhere(this.query);
+			this.results = await querySearch({ target: 'global', query: this.query });
 		} catch (error) {
 			this.error = error instanceof Error ? error.message : String(error);
 		}

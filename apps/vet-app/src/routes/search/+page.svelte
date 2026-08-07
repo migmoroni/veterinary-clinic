@@ -11,9 +11,7 @@
 	import { FIELD_LIMITS } from '@vet/types/domain/shared/field-limits.js';
 	import { t } from '@vet/core-local/i18n/index.js';
 	import { RECENT_SEARCH_STORAGE_KEY } from '@vet/core-local/services/client-state.service.js';
-	import { filterActiveSearchResults, searchEverywhere } from '@vet/app-services/search';
-	import { loadOwnerAvatarsByOwnerIds, loadPetAvatarsByPetIds } from '@vet/modules/registry';
-	import { listOwnerAssociatedContactsByOwnerIds } from '@vet/modules/registry/owners';
+	import { DEFAULT_RECENT_SEARCH_LIMIT, filterActiveSearchResults, hydrateSearchResults, ownerContactsForSearchResult, persistableSearchResult, querySearch, rememberSearchResult, searchResultKey } from '@vet/app-services/search';
 	import Activity from '@lucide/svelte/icons/activity';
 	import Building2 from '@lucide/svelte/icons/building-2';
 	import FlaskConical from '@lucide/svelte/icons/flask-conical';
@@ -23,7 +21,7 @@
 
 	type RoutedSearchResult = SearchResult & { href: string };
 
-	const recentSearchLimit = 50;
+	const recentSearchLimit = DEFAULT_RECENT_SEARCH_LIMIT;
 	const searchFilterKinds = SEARCH_RESULT_KINDS;
 
 	let query = $state('');
@@ -56,10 +54,6 @@
 		return t('search.kind.condition');
 	}
 
-	function resultKey(result: SearchResult): string {
-		return `${result.kind}:${result.id}`;
-	}
-
 	function resultSubtitle(result: SearchResult): string {
 		if (result.kind === 'pet' && result.subtitle.trim().length === 0) return t('owner.unassigned');
 		return result.subtitle;
@@ -77,25 +71,6 @@
 
 	function routeSearchResult(result: SearchResult): RoutedSearchResult {
 		return { ...result, href: searchResultHref(result) };
-	}
-
-	function normalizeSearchResult(result: SearchResult): SearchResult {
-		return {
-			kind: result.kind,
-			id: result.id,
-			ownerId: result.ownerId,
-			petId: result.petId,
-			title: result.title,
-			subtitle: result.subtitle,
-			referenceImageBytes: result.referenceImageBytes,
-			ownerAvatarBytes: result.ownerAvatarBytes,
-			petAvatarBytes: result.petAvatarBytes,
-			ownerContacts: result.ownerContacts
-		};
-	}
-
-	function textResultId(result: SearchResult): string | null {
-		return result.id.trim().length > 0 ? result.id : null;
 	}
 
 	function resultCountLabel(count: number): string {
@@ -117,7 +92,7 @@
 	}
 
 	const searchController = createLatestAsyncSearchController<SearchResult[]>({
-		search: (value) => searchEverywhere(value, selectedKind ? [selectedKind] : []),
+		search: (value) => querySearch({ target: 'global', query: value, include: selectedKind ? [selectedKind] : [] }),
 		onerror: (exception) => {
 			error = exception instanceof Error ? exception.message : String(exception);
 		},
@@ -149,37 +124,6 @@
 		return selectedKind === kind ? `${baseClass} border-primary bg-primary text-primary-foreground` : `${baseClass} border-border bg-card text-foreground hover:bg-accent`;
 	}
 
-	function persistableSearchResult(result: SearchResult): SearchResult {
-		return {
-			kind: result.kind,
-			id: result.id,
-			ownerId: result.ownerId,
-			petId: result.petId,
-			title: result.title,
-			subtitle: result.subtitle,
-			ownerContacts: result.ownerContacts
-		};
-	}
-
-	async function hydrateRecentResults(baseResults: SearchResult[]): Promise<SearchResult[]> {
-		const normalizedBaseResults = baseResults.map(normalizeSearchResult);
-		const ownerIds = normalizedBaseResults.filter((result) => result.kind === 'owner').map(textResultId).filter((id): id is string => id !== null);
-		const petIds = normalizedBaseResults.filter((result) => result.kind === 'pet').map(textResultId).filter((id): id is string => id !== null);
-		if (ownerIds.length === 0 && petIds.length === 0) return normalizedBaseResults;
-
-		const [contactsResult, ownerAvatarsResult, petAvatarsResult] = await Promise.allSettled([listOwnerAssociatedContactsByOwnerIds(ownerIds), loadOwnerAvatarsByOwnerIds(ownerIds), loadPetAvatarsByPetIds(petIds)]);
-		const contactsByOwnerId = contactsResult.status === 'fulfilled' ? contactsResult.value : new Map<string, OwnerAssociatedContact[]>();
-		const avatarBytesByOwnerId = ownerAvatarsResult.status === 'fulfilled' ? ownerAvatarsResult.value : new Map<string, Uint8Array | null>();
-		const avatarBytesByPetId = petAvatarsResult.status === 'fulfilled' ? petAvatarsResult.value : new Map<string, Uint8Array | null>();
-
-		return normalizedBaseResults.map((result) => {
-			const id = textResultId(result);
-			if (result.kind === 'owner' && id !== null) return { ...result, ownerAvatarBytes: avatarBytesByOwnerId.get(id) ?? null, ownerContacts: contactsByOwnerId.get(id) ?? result.ownerContacts ?? [] };
-			if (result.kind === 'pet' && id !== null) return { ...result, petAvatarBytes: avatarBytesByPetId.get(id) ?? null };
-			return result;
-		});
-	}
-
 	async function loadRecentResults() {
 		if (typeof localStorage === 'undefined') return;
 
@@ -187,7 +131,7 @@
 			const parsed = JSON.parse(localStorage.getItem(RECENT_SEARCH_STORAGE_KEY) ?? '[]');
 			const baseResults: SearchResult[] = Array.isArray(parsed) ? parsed.slice(0, recentSearchLimit) : [];
 			const activeResults = await filterActiveSearchResults(baseResults);
-			recentResults = await hydrateRecentResults(activeResults);
+			recentResults = await hydrateSearchResults(activeResults);
 			if (activeResults.length !== baseResults.length) saveRecentResults(activeResults);
 		} catch {
 			recentResults = [];
@@ -200,16 +144,13 @@
 	}
 
 	function rememberResult(result: SearchResult) {
-		const storedResult = persistableSearchResult(result);
-		const key = resultKey(storedResult);
-		const nextResults = [storedResult, ...recentResults.filter((item) => resultKey(item) !== key)].slice(0, recentSearchLimit);
+		const nextResults = rememberSearchResult(recentResults, result, recentSearchLimit);
 		recentResults = nextResults;
 		saveRecentResults(nextResults);
 	}
 
 	function ownerContactsFor(result: SearchResult): OwnerAssociatedContact[] {
-		if (result.kind !== 'owner') return [];
-		return (result.ownerContacts ?? []).filter((contact) => contact.value.trim().length > 0);
+		return ownerContactsForSearchResult(result);
 	}
 
 	function openOwnerContact(result: SearchResult) {
@@ -278,7 +219,7 @@
 
 	<div class="relative min-h-0 flex-1">
 		<div bind:this={resultsListElement} class="grid h-full content-start gap-2 overflow-y-auto overscroll-contain pr-3 scrollbar-gutter-stable" onscroll={updateResultsListScrollHint}>
-			{#each visibleResults as result (resultKey(result))}
+			{#each visibleResults as result (searchResultKey(result))}
 				{#if result.kind === 'owner'}
 					<article class="flex items-start gap-2 rounded-md border border-border bg-card p-3 shadow-sm hover:bg-accent">
 						<a href={result.href} class="flex min-w-0 flex-1 items-start gap-3" onclick={() => rememberResult(result)}>

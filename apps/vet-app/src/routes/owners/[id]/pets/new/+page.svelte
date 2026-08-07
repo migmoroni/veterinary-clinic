@@ -13,8 +13,9 @@
 	import { normalizeDateInput } from '@vet/types/domain/shared/date-input.js';
 	import { FIELD_LIMITS } from '@vet/types/domain/shared/field-limits.js';
 	import { t } from '@vet/core-local/i18n/index.js';
+	import { querySearch } from '@vet/app-services/search';
 	import { loadOwnerProfile } from '@vet/modules/registry/owners';
-	import { addExistingPetToOwner, saveNewPet, searchExistingPetsForOwner } from '@vet/modules/registry/pets';
+	import { addExistingPetToOwner, saveNewPet } from '@vet/modules/registry/pets';
 	import Link from '@lucide/svelte/icons/link';
 	import Save from '@lucide/svelte/icons/save';
 
@@ -75,7 +76,7 @@
 	}
 
 	const existingPetSearchController = createLatestAsyncSearchController<Pet[]>({
-		search: (value) => searchExistingPetsForOwner(ownerId, value),
+		search: (value) => querySearch({ target: 'pets_for_owner_link', ownerId, query: value }),
 		onerror: (exception) => {
 			error = errorMessage(exception);
 		},

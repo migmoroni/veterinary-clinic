@@ -67,7 +67,6 @@
 	}
 
 	$effect(() => {
-		cards.map((card) => card.id).join('\0');
 		void scrollSelectedCardIntoView(selectedId);
 	});
 </script>

@@ -1,10 +1,10 @@
 import { selectMany } from '@vet/core-local/sqlite/client.js';
-import { normalizeSearchText, searchTermsForLocale } from '@vet/types/domain/shared/search-terms.js';
 import { CLINIC_SEARCH_RESULT_KINDS, isClinicSearchResultKind, type ClinicSearchResultKind, type SearchResult } from '@vet/types/domain/search/search.js';
 import { DEFAULT_LOCALE, type Locale } from '@vet/core-local/i18n/locales.js';
 import { loadMediaDataMap, mediaHashKey } from '@vet/core-local/repositories/media.repository.js';
 import { listOwnerAssociatedContactsByOwnerIds } from '@vet/modules/registry';
 import { normalizeMediaHash } from '@vet/core-local/sqlite/media.js';
+import { queryCollectionSearch } from './search-query.js';
 
 interface SearchResultRow {
 	kind: ClinicSearchResultKind;
@@ -103,30 +103,6 @@ async function loadActiveIds(ids: string[], query: string): Promise<Set<string>>
 	return new Set(rows.map((row) => row.id));
 }
 
-function scoreNormalizedField(value: string, term: string, exactScore: number, prefixScore: number, containsScore: number): number {
-	const normalized = normalizeSearchText(value);
-	if (!normalized) return 0;
-
-	const words = normalized.split(/\s+/);
-	if (words.includes(term)) return exactScore;
-	if (words.some((word) => word.startsWith(term))) return prefixScore;
-	if (normalized.includes(term)) return containsScore;
-
-	return 0;
-}
-
-function scoreSearchRow(row: SearchResultRow, terms: readonly string[]): number {
-	let score = 0;
-
-	for (const term of terms) {
-		const termScore = Math.max(scoreNormalizedField(row.search_primary, term, 100, 90, 75), scoreNormalizedField(row.search_support, term, 60, 50, 35));
-		if (termScore === 0) return 0;
-		score += termScore;
-	}
-
-	return score;
-}
-
 export async function filterActiveSearchResults(results: SearchResult[]): Promise<SearchResult[]> {
 	if (results.length === 0) return [];
 
@@ -144,9 +120,6 @@ export async function filterActiveSearchResults(results: SearchResult[]): Promis
 }
 
 export async function searchClinic(query: string, kinds: readonly ClinicSearchResultKind[] = CLINIC_SEARCH_RESULT_KINDS, locale: Locale = DEFAULT_LOCALE): Promise<SearchResult[]> {
-	const terms = searchTermsForLocale(query, locale);
-	if (terms.length === 0) return [];
-
 	const activeKinds = new Set(kinds);
 	const selectStatements: string[] = [];
 
@@ -204,11 +177,16 @@ export async function searchClinic(query: string, kinds: readonly ClinicSearchRe
 		[]
 	);
 
-	const scoredRows = rows
-		.map((row) => ({ row, score: scoreSearchRow(row, terms) }))
-		.filter(({ score }) => score > 0)
-		.sort((first, second) => second.score - first.score || first.row.kind.localeCompare(second.row.kind) || first.row.title.localeCompare(second.row.title))
-		.slice(0, 40);
+	const scoredRows = queryCollectionSearch({
+		query,
+		items: rows,
+		fields: (row) => ({ primary: [row.search_primary], support: [row.search_support] }),
+		locale,
+		termMode: 'locale',
+		requireQueryMatch: true,
+		limit: 40,
+		compare: (first, second) => first.kind.localeCompare(second.kind) || first.title.localeCompare(second.title)
+	}).items.map((row) => ({ row }));
 
 	const ownerIds = scoredRows.filter(({ row }) => row.kind === 'owner').map(({ row }) => row.id);
 	const [contactsByOwnerId, ownerAvatarBytesByHash, petAvatarBytesByHash] = await Promise.all([
