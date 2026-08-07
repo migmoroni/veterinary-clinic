@@ -1,4 +1,4 @@
-import type { DashboardAnalytics } from '@vet/types/domain/dashboard/analytics.js';
+import type { DashboardAnalytics } from '@vet/types/clinic-analytics.js';
 import type { TreatmentAnalyticsOverview, TreatmentHistoryPoint } from '@vet/types/domain/treatment/analytics.js';
 import { getDashboardAnalytics } from './clinic-analytics.read-model.js';
 import { getClinicCounts } from './clinic-counts.read-model.js';

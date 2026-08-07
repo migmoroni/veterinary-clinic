@@ -21,6 +21,8 @@
 	import Pill from '@lucide/svelte/icons/pill';
 	import Phone from '@lucide/svelte/icons/phone';
 
+	type RoutedSearchResult = SearchResult & { href: string };
+
 	const recentSearchLimit = 50;
 	const searchFilterKinds = SEARCH_RESULT_KINDS;
 
@@ -39,8 +41,10 @@
 	const hasKindFilter = $derived(selectedKind !== null);
 	const filteredResults = $derived(hasKindFilter ? results.filter((result) => result.kind === selectedKind) : results);
 	const filteredRecentResults = $derived(hasKindFilter ? recentResults.filter((result) => result.kind === selectedKind) : recentResults);
-	const showRecentResults = $derived(searchDraft.trim().length === 0 && filteredRecentResults.length > 0);
-	const visibleResults = $derived(showRecentResults ? filteredRecentResults : filteredResults);
+	const routedResults = $derived(filteredResults.map(routeSearchResult));
+	const routedRecentResults = $derived(filteredRecentResults.map(routeSearchResult));
+	const showRecentResults = $derived(searchDraft.trim().length === 0 && routedRecentResults.length > 0);
+	const visibleResults = $derived(showRecentResults ? routedRecentResults : routedResults);
 
 	function kindLabel(kind: SearchResultKind): string {
 		if (kind === 'owner') return t('search.kind.owner');
@@ -53,7 +57,7 @@
 	}
 
 	function resultKey(result: SearchResult): string {
-		return `${result.kind}:${result.id}:${result.href}`;
+		return `${result.kind}:${result.id}`;
 	}
 
 	function resultSubtitle(result: SearchResult): string {
@@ -61,13 +65,26 @@
 		return result.subtitle;
 	}
 
-	function normalizeReferenceResult(result: SearchResult): SearchResult {
-		const normalizedResult: SearchResult = {
+	function searchResultHref(result: SearchResult): string {
+		if (result.kind === 'owner') return `/owners/${result.id}`;
+		if (result.kind === 'pet') return `/pets/${result.id}`;
+		if (result.kind === 'breed') return `/breeds/${result.id}`;
+		if (result.kind === 'product') return `/formulary/products/${result.id}`;
+		if (result.kind === 'manufacturer') return `/formulary/manufacturers/${result.id}`;
+		if (result.kind === 'activeIngredient') return `/formulary/active-ingredients/${result.id}`;
+		return `/formulary/conditions/${result.id}`;
+	}
+
+	function routeSearchResult(result: SearchResult): RoutedSearchResult {
+		return { ...result, href: searchResultHref(result) };
+	}
+
+	function normalizeSearchResult(result: SearchResult): SearchResult {
+		return {
 			kind: result.kind,
 			id: result.id,
 			ownerId: result.ownerId,
 			petId: result.petId,
-			href: result.href,
 			title: result.title,
 			subtitle: result.subtitle,
 			referenceImageBytes: result.referenceImageBytes,
@@ -75,12 +92,6 @@
 			petAvatarBytes: result.petAvatarBytes,
 			ownerContacts: result.ownerContacts
 		};
-		if (normalizedResult.kind === 'breed') return { ...normalizedResult, href: `/breeds/${normalizedResult.id}` };
-		if (normalizedResult.kind === 'product') return { ...normalizedResult, href: `/formulary/products/${normalizedResult.id}` };
-		if (normalizedResult.kind === 'manufacturer') return { ...normalizedResult, href: `/formulary/manufacturers/${normalizedResult.id}` };
-		if (normalizedResult.kind === 'activeIngredient') return { ...normalizedResult, href: `/formulary/active-ingredients/${normalizedResult.id}` };
-		if (normalizedResult.kind === 'condition') return { ...normalizedResult, href: `/formulary/conditions/${normalizedResult.id}` };
-		return normalizedResult;
 	}
 
 	function textResultId(result: SearchResult): string | null {
@@ -144,7 +155,6 @@
 			id: result.id,
 			ownerId: result.ownerId,
 			petId: result.petId,
-			href: result.href,
 			title: result.title,
 			subtitle: result.subtitle,
 			ownerContacts: result.ownerContacts
@@ -152,7 +162,7 @@
 	}
 
 	async function hydrateRecentResults(baseResults: SearchResult[]): Promise<SearchResult[]> {
-		const normalizedBaseResults = baseResults.map(normalizeReferenceResult);
+		const normalizedBaseResults = baseResults.map(normalizeSearchResult);
 		const ownerIds = normalizedBaseResults.filter((result) => result.kind === 'owner').map(textResultId).filter((id): id is string => id !== null);
 		const petIds = normalizedBaseResults.filter((result) => result.kind === 'pet').map(textResultId).filter((id): id is string => id !== null);
 		if (ownerIds.length === 0 && petIds.length === 0) return normalizedBaseResults;
@@ -190,8 +200,9 @@
 	}
 
 	function rememberResult(result: SearchResult) {
-		const key = resultKey(result);
-		const nextResults = [result, ...recentResults.filter((item) => resultKey(item) !== key)].slice(0, recentSearchLimit);
+		const storedResult = persistableSearchResult(result);
+		const key = resultKey(storedResult);
+		const nextResults = [storedResult, ...recentResults.filter((item) => resultKey(item) !== key)].slice(0, recentSearchLimit);
 		recentResults = nextResults;
 		saveRecentResults(nextResults);
 	}

@@ -1,23 +1,25 @@
-import { dashboardTreatmentStatusWeight } from '@vet/types/domain/dashboard/analytics.js';
-import type {
-	DashboardAgeBandKey,
-	DashboardAnalytics,
-	DashboardAntiparasiticStatusKey,
-	DashboardBreedKey,
-	DashboardBucket,
-	DashboardNamedBucket,
-	DashboardOwnerStudyItem,
-	DashboardOwnerStudyPet,
-	DashboardPetStudyOwner,
-	DashboardPetStudyItem,
-	DashboardPetStudyTreatment,
-	DashboardPetCountBandKey,
-	DashboardSexKey,
-	DashboardSpeciesKey,
-	DashboardStudyAnalytics,
-	DashboardVaccineStatusKey
-} from '@vet/types/domain/dashboard/analytics.js';
-import { dashboardAgeBand, dashboardAgeBandYear, dashboardAgeMonthBandKeys } from '@vet/types/domain/dashboard/age-bands.js';
+import {
+	dashboardAgeBand,
+	dashboardAgeBandYear,
+	dashboardAgeMonthBandKeys,
+	dashboardTreatmentStatusWeight,
+	type DashboardAgeBandKey,
+	type DashboardAnalytics,
+	type DashboardAntiparasiticStatusKey,
+	type DashboardBreedKey,
+	type DashboardBucket,
+	type DashboardNamedBucket,
+	type DashboardOwnerStudyItem,
+	type DashboardOwnerStudyPet,
+	type DashboardPetStudyOwner,
+	type DashboardPetStudyItem,
+	type DashboardPetStudyTreatment,
+	type DashboardPetCountBandKey,
+	type DashboardSexKey,
+	type DashboardSpeciesKey,
+	type DashboardStudyAnalytics,
+	type DashboardVaccineStatusKey
+} from '@vet/types/clinic-analytics.js';
 import type { PetBreed, PetSex, PetSpecies } from '@vet/types/domain/pet/pet.js';
 import type { TreatmentStatusKey } from '@vet/types/domain/treatment/analytics.js';
 import { buildTreatmentStatus, isPlausibleTreatmentAppliedAt } from '@vet/types/domain/treatment/analytics.js';

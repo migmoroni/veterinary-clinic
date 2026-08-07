@@ -14,7 +14,6 @@ export interface SearchResult {
 	id: string;
 	ownerId: string | null;
 	petId: string | null;
-	href: string;
 	title: string;
 	subtitle: string;
 	referenceImageBytes?: Uint8Array | null;

@@ -3,7 +3,7 @@ import { normalizeSearchText, searchTermsForLocale } from '@vet/types/domain/sha
 import { CLINIC_SEARCH_RESULT_KINDS, isClinicSearchResultKind, type ClinicSearchResultKind, type SearchResult } from '@vet/types/domain/search/search.js';
 import { DEFAULT_LOCALE, type Locale } from '@vet/core-local/i18n/locales.js';
 import { loadMediaDataMap, mediaHashKey } from '@vet/core-local/repositories/media.repository.js';
-import { listOwnerAssociatedContactsByOwnerIds } from '@vet/modules/registry/owners';
+import { listOwnerAssociatedContactsByOwnerIds } from '@vet/modules/registry';
 import { normalizeMediaHash } from '@vet/core-local/sqlite/media.js';
 
 interface SearchResultRow {
@@ -81,11 +81,6 @@ const petOwnerSearchSupportSql = `(SELECT group_concat(value, ' ')
 		JOIN contacts ON contacts.owner_id = owners.id
 		WHERE pet_owners.pet_id = pets.id AND owners.removed_at IS NULL
 	))`;
-
-function resultHref(row: SearchResultRow): string {
-	if (row.kind === 'owner') return `/owners/${row.id}`;
-	return `/pets/${row.id}`;
-}
 
 function searchResultActiveKey(kind: ClinicSearchResultKind, id: string): string {
 	return `${kind}:${id}`;
@@ -227,7 +222,6 @@ export async function searchClinic(query: string, kinds: readonly ClinicSearchRe
 		id: row.id,
 		ownerId: row.owner_id,
 		petId: row.pet_id,
-		href: resultHref(row),
 		title: row.title,
 		subtitle: row.subtitle,
 		ownerAvatarBytes: row.kind === 'owner' ? (ownerAvatarBytesByHash.get(mediaHashKey(row.owner_avatar_hash) ?? '') ?? null) : null,

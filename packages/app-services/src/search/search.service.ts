@@ -13,8 +13,7 @@ import { normalizeSearchText, searchTermsForLocale } from '@vet/types/domain/sha
 import { filterActiveSearchResults as filterActiveClinicSearchResults, searchClinic } from './search.read-model.js';
 import { countryOptions } from '@vet/types/domain/geo/location.js';
 import { i18n, t, type TranslationKey } from '@vet/core-local/i18n/index.js';
-import { loadBreedReferenceProfiles } from '@vet/modules/knowledge/breeds';
-import { loadCatalogActiveIngredients, loadCatalogConditions, loadCatalogManufacturers, loadCatalogProducts } from '@vet/modules/knowledge';
+import { loadBreedReferenceProfiles, loadCatalogActiveIngredients, loadCatalogConditions, loadCatalogManufacturers, loadCatalogProducts } from '@vet/modules/knowledge';
 
 interface SearchScoreFields {
 	primary: readonly string[];
@@ -91,7 +90,7 @@ function acceptsReferenceScore(score: number, terms: readonly string[]): boolean
 }
 
 function searchResultKey(result: SearchResult): string {
-	return `${result.kind}:${result.id}:${result.href}`;
+	return `${result.kind}:${result.id}`;
 }
 
 function isClinicSearchResult(result: SearchResult): result is SearchResult & { kind: ClinicSearchResultKind } {
@@ -243,7 +242,6 @@ async function searchBreedReferences(query: string): Promise<SearchResult[]> {
 			id: profile.breedId,
 			ownerId: null,
 			petId: null,
-			href: `/breeds/${profile.breedId}`,
 			title: t(profile.labelKey),
 			subtitle: `${speciesLabel(profile.species)} · ${breedSizeLabel(profile.sizeCategory)}`,
 			referenceImageBytes: null
@@ -262,7 +260,6 @@ async function searchProducts(query: string): Promise<SearchResult[]> {
 			id: item.id,
 			ownerId: null,
 			petId: null,
-			href: `/formulary/products/${item.id}`,
 			title: item.name,
 			subtitle: [productCatalogTypeLabel(item), item.manufacturerName].filter(Boolean).join(' · '),
 			referenceImageBytes: null
@@ -281,7 +278,6 @@ async function searchManufacturers(query: string): Promise<SearchResult[]> {
 			id: item.id,
 			ownerId: null,
 			petId: null,
-			href: `/formulary/manufacturers/${item.id}`,
 			title: item.name,
 			subtitle: t('catalog.manufacturer'),
 			referenceImageBytes: null
@@ -300,7 +296,6 @@ async function searchActiveIngredients(query: string): Promise<SearchResult[]> {
 			id: item.id,
 			ownerId: null,
 			petId: null,
-			href: `/formulary/active-ingredients/${item.id}`,
 			title: item.name,
 			subtitle: [t('catalog.activeIngredient'), activeIngredientTypeLabel(item)].join(' · '),
 			referenceImageBytes: null
@@ -319,7 +314,6 @@ async function searchConditions(query: string): Promise<SearchResult[]> {
 			id: item.id,
 			ownerId: null,
 			petId: null,
-			href: `/formulary/conditions/${item.id}`,
 			title: item.name,
 			subtitle: [t('catalog.condition'), conditionTypeLabel(item)].join(' · '),
 			referenceImageBytes: null
