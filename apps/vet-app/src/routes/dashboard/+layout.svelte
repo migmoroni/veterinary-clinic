@@ -3,7 +3,6 @@
 	import { onMount } from 'svelte';
 	import { clinic } from '$lib/stores/clinic.svelte.js';
 	import { t } from '@vet/core-local/i18n/index.js';
-	import { dashboardAnalysisViews, type DashboardAnalysisView } from '@vet/types/domain/dashboard/analytics.js';
 	import ChartColumn from '@lucide/svelte/icons/chart-column';
 	import PawPrint from '@lucide/svelte/icons/paw-print';
 	import Pill from '@lucide/svelte/icons/pill';
@@ -14,7 +13,11 @@
 
 	const { children } = $props<{ children: Snippet }>();
 
-	const viewOptions: { view: DashboardAnalysisView; labelKey: Parameters<typeof t>[0]; icon: Component }[] = [
+	type DashboardView = 'general' | 'vaccines' | 'antiparasitics' | 'pets' | 'owners';
+
+	const dashboardViews = ['general', 'vaccines', 'antiparasitics', 'pets', 'owners'] as const satisfies readonly DashboardView[];
+
+	const viewOptions: { view: DashboardView; labelKey: Parameters<typeof t>[0]; icon: Component }[] = [
 		{ view: 'general', labelKey: 'analysis.view.general', icon: ChartColumn },
 		{ view: 'vaccines', labelKey: 'analysis.view.vaccines', icon: Syringe },
 		{ view: 'antiparasitics', labelKey: 'analysis.view.antiparasitics', icon: Pill },
@@ -24,13 +27,13 @@
 
 	const activeView = $derived(resolveActiveView(page.url.pathname));
 
-	function resolveActiveView(pathname: string): DashboardAnalysisView {
+	function resolveActiveView(pathname: string): DashboardView {
 		const segment = pathname.split('/').filter(Boolean)[1];
-		if (dashboardAnalysisViews.includes(segment as DashboardAnalysisView)) return segment as DashboardAnalysisView;
+		if (dashboardViews.includes(segment as DashboardView)) return segment as DashboardView;
 		return 'general';
 	}
 
-	function viewHref(view: DashboardAnalysisView): string {
+	function viewHref(view: DashboardView): string {
 		return `/dashboard/${view}`;
 	}
 

@@ -3,7 +3,7 @@ export * from './domain/active-ingredient/classification.js';
 export * from './domain/catalog/catalog-entity.js';
 export * from './domain/catalog/classification.js';
 export * from './domain/condition/catalog.js';
-export * from './domain/dashboard/analytics.js';
+export * from './domain/clinic-analytics/analytics.js';
 export * from './domain/image-collection/image-collection.js';
 export * from './domain/manufacturer/catalog.js';
 export * from './domain/medical-record/medical-record.js';

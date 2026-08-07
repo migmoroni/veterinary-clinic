@@ -1,6 +1,6 @@
-import type { DashboardAnalytics } from '@vet/types/clinic-analytics.js';
+import type { ClinicAnalytics } from '@vet/types/clinic-analytics.js';
 import type { TreatmentAnalyticsOverview, TreatmentHistoryPoint } from '@vet/types/domain/treatment/analytics.js';
-import { getDashboardAnalytics } from './clinic-analytics.read-model.js';
+import { getClinicAnalytics } from './clinic-analytics.read-model.js';
 import { getClinicCounts } from './clinic-counts.read-model.js';
 import { loadTreatmentAnalyticsOverview, loadTreatmentHistory } from './treatment-analytics.service.js';
 
@@ -16,7 +16,7 @@ export interface ClinicAnalyticsOverview {
 	};
 	vaccines: ClinicTreatmentAnalytics;
 	antiparasitics: ClinicTreatmentAnalytics;
-	analytics: DashboardAnalytics;
+	analytics: ClinicAnalytics;
 }
 
 export async function loadClinicAnalyticsOverview(): Promise<ClinicAnalyticsOverview> {
@@ -26,7 +26,7 @@ export async function loadClinicAnalyticsOverview(): Promise<ClinicAnalyticsOver
 		loadTreatmentHistory('vaccine', { period: 'month', normalizedName: null }),
 		loadTreatmentAnalyticsOverview('antiparasitic'),
 		loadTreatmentHistory('antiparasitic', { period: 'month', normalizedName: null }),
-		getDashboardAnalytics()
+		getClinicAnalytics()
 	]);
 
 	return {

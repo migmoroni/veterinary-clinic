@@ -2,21 +2,21 @@
 	import { tick } from 'svelte';
 	import Select from '@vet/ui/components/ui/Select.svelte';
 	import { PetAvatar } from '@vet/modules/registry/pets';
-	import { dashboardAgeBandSortValue, dashboardAgeBandYear } from '@vet/types/domain/dashboard/age-bands.js';
+	import { clinicAnalyticsAgeBandSortValue, clinicAnalyticsAgeBandYear } from '@vet/types/clinic-analytics.js';
 	import {
-		dashboardOwnerAnalysisKinds,
-		dashboardPetCountBandWeight,
-		dashboardTreatmentStatusWeight,
-		type DashboardBucket,
-		type DashboardBucketSortField,
-		type DashboardOwnerAnalysisKind,
-		type DashboardOwnerStudyItem,
-		type DashboardOwnerStudyPet,
-		type DashboardPetCountBandKey,
-		type DashboardSortDirection,
-		type DashboardSpeciesKey,
-		type DashboardVaccineStatusKey
-	} from '@vet/types/domain/dashboard/analytics.js';
+		clinicAnalyticsOwnerDimensions,
+		clinicAnalyticsPetCountBandWeight,
+		clinicAnalyticsTreatmentStatusWeight,
+		type AnalyticsBucket,
+		type AnalyticsBucketSortField,
+		type ClinicAnalyticsOwnerDimension,
+		type ClinicAnalyticsOwnerStudyItem,
+		type ClinicAnalyticsOwnerPetSnapshot,
+		type ClinicAnalyticsPetCountBandKey,
+		type AnalyticsSortDirection,
+		type ClinicAnalyticsSpeciesKey,
+		type ClinicAnalyticsVaccineStatusKey
+	} from '@vet/types/clinic-analytics.js';
 	import { getPetSpeciesOption, isPetSpecies } from '@vet/types/domain/pet/taxonomy.js';
 	import { loadPetAvatarsByPetIds } from '@vet/modules/registry';
 	import { clinic } from '$lib/stores/clinic.svelte.js';
@@ -28,18 +28,18 @@
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 
 	type OwnerSortOrder = 'name' | 'location' | 'petCount' | 'vaccineStatus';
-	type OwnerBucket = DashboardBucket & { label?: string | null };
+	type OwnerBucket = AnalyticsBucket & { label?: string | null };
 
 	const dashboard = $derived(clinic.dashboard);
 	const allOwners = $derived(dashboard?.analytics.study.owners ?? []);
-	const analysisKinds = dashboardOwnerAnalysisKinds;
+	const analysisKinds = clinicAnalyticsOwnerDimensions;
 
-	let activeAnalysis = $state<DashboardOwnerAnalysisKind>('petVaccineStatus');
+	let activeAnalysis = $state<ClinicAnalyticsOwnerDimension>('petVaccineStatus');
 	let selectedBucketKey = $state('');
-	let bucketSortField = $state<DashboardBucketSortField>('count');
-	let bucketSortDirection = $state<DashboardSortDirection>('asc');
+	let bucketSortField = $state<AnalyticsBucketSortField>('count');
+	let bucketSortDirection = $state<AnalyticsSortDirection>('asc');
 	let sortOrder = $state<OwnerSortOrder>('name');
-	let visibleOwners = $state<DashboardOwnerStudyItem[]>([]);
+	let visibleOwners = $state<ClinicAnalyticsOwnerStudyItem[]>([]);
 	let listLoading = $state(false);
 	let avatarBytesByPetId = $state(new Map<string, Uint8Array | null>());
 	let renderRequestId = 0;
@@ -57,7 +57,7 @@
 		return `${metricFormatter(value)}%`;
 	}
 
-	function analysisLabelKey(kind: DashboardOwnerAnalysisKind): TranslationKey {
+	function analysisLabelKey(kind: ClinicAnalyticsOwnerDimension): TranslationKey {
 		if (kind === 'location') return 'analysis.owner.location';
 		if (kind === 'petCount') return 'analysis.owner.petCount';
 		if (kind === 'petSpecies') return 'analysis.owner.petSpecies';
@@ -65,7 +65,7 @@
 		return 'analysis.owner.vaccineStatus';
 	}
 
-	function analysisLabel(kind: DashboardOwnerAnalysisKind): string {
+	function analysisLabel(kind: ClinicAnalyticsOwnerDimension): string {
 		return t(analysisLabelKey(kind));
 	}
 
@@ -88,26 +88,26 @@
 		if (!values.includes(value)) values.push(value);
 	}
 
-	function ownerPetCountBand(value: number): DashboardPetCountBandKey {
+	function ownerPetCountBand(value: number): ClinicAnalyticsPetCountBandKey {
 		if (value <= 0) return 'none';
 		if (value === 1) return 'one';
 		if (value === 2) return 'two';
 		return 'threePlus';
 	}
 
-	function ownerVaccineStatus(owner: DashboardOwnerStudyItem): DashboardVaccineStatusKey {
-		let status: DashboardVaccineStatusKey = 'untracked';
-		for (const pet of owner.pets) if (dashboardTreatmentStatusWeight[pet.vaccineStatus] > dashboardTreatmentStatusWeight[status]) status = pet.vaccineStatus;
+	function ownerVaccineStatus(owner: ClinicAnalyticsOwnerStudyItem): ClinicAnalyticsVaccineStatusKey {
+		let status: ClinicAnalyticsVaccineStatusKey = 'untracked';
+		for (const pet of owner.pets) if (clinicAnalyticsTreatmentStatusWeight[pet.vaccineStatus] > clinicAnalyticsTreatmentStatusWeight[status]) status = pet.vaccineStatus;
 		return status;
 	}
 
-	function ownerPetSpeciesKeys(owner: DashboardOwnerStudyItem): DashboardSpeciesKey[] {
+	function ownerPetSpeciesKeys(owner: ClinicAnalyticsOwnerStudyItem): ClinicAnalyticsSpeciesKey[] {
 		const keys: string[] = [];
 		for (const pet of owner.pets) addUnique(keys, pet.species);
-		return (keys.length > 0 ? keys : ['unknown']) as DashboardSpeciesKey[];
+		return (keys.length > 0 ? keys : ['unknown']) as ClinicAnalyticsSpeciesKey[];
 	}
 
-	function ownerPetAgeKeys(owner: DashboardOwnerStudyItem): string[] {
+	function ownerPetAgeKeys(owner: ClinicAnalyticsOwnerStudyItem): string[] {
 		const keys: string[] = [];
 		for (const pet of owner.pets) addUnique(keys, pet.age);
 		return keys.length > 0 ? keys : ['unknown'];
@@ -138,7 +138,7 @@
 		return toBuckets(buckets);
 	}
 
-	function bucketsForAnalysis(kind: DashboardOwnerAnalysisKind): OwnerBucket[] {
+	function bucketsForAnalysis(kind: ClinicAnalyticsOwnerDimension): OwnerBucket[] {
 		if (!dashboard) return [];
 		if (kind === 'location') return locationBuckets();
 		if (kind === 'petCount') return petCountBuckets();
@@ -162,11 +162,11 @@
 		return max > 0 ? Math.max(4, Math.round((bucket.count / max) * 100)) : 0;
 	}
 
-	function topBucket(kind: DashboardOwnerAnalysisKind): OwnerBucket | null {
+	function topBucket(kind: ClinicAnalyticsOwnerDimension): OwnerBucket | null {
 		return bucketsForAnalysis(kind)[0] ?? null;
 	}
 
-	function topBucketText(kind: DashboardOwnerAnalysisKind): string {
+	function topBucketText(kind: ClinicAnalyticsOwnerDimension): string {
 		const bucket = topBucket(kind);
 		if (!bucket) return t('analysis.empty');
 		return `${bucketLabel(kind, bucket)} - ${metricFormatter(bucket.count)}`;
@@ -184,7 +184,7 @@
 		if (key === 'months6To12') return `6-12 ${t('pet.ageMonthPlural')}`;
 		if (key === 'unknown') return t('analysis.age.unknown');
 
-		const year = dashboardAgeBandYear(key);
+		const year = clinicAnalyticsAgeBandYear(key);
 		if (year !== null) return `${metricFormatter(year)} ${t(year === 1 ? 'pet.ageYearSingular' : 'pet.ageYearPlural')}`;
 
 		return t('common.notInformed');
@@ -194,7 +194,7 @@
 		return t(`analysis.petCount.${key}` as TranslationKey);
 	}
 
-	function vaccineStatusLabel(key: DashboardVaccineStatusKey): string {
+	function vaccineStatusLabel(key: ClinicAnalyticsVaccineStatusKey): string {
 		if (key === 'untracked') return t('analysis.vaccineStatus.untracked');
 		return t(`treatment.status.${key}` as TranslationKey);
 	}
@@ -203,15 +203,15 @@
 		return bucket.label?.trim() || bucket.key;
 	}
 
-	function bucketLabel(kind: DashboardOwnerAnalysisKind, bucket: OwnerBucket): string {
+	function bucketLabel(kind: ClinicAnalyticsOwnerDimension, bucket: OwnerBucket): string {
 		if (kind === 'location') return bucket.label?.trim() || t('common.notInformed');
 		if (kind === 'petCount') return petCountLabel(bucket.key);
 		if (kind === 'petSpecies') return speciesLabel(bucket.key);
 		if (kind === 'petAge') return ageBandLabel(bucket.key);
-		return vaccineStatusLabel(bucket.key as DashboardVaccineStatusKey);
+		return vaccineStatusLabel(bucket.key as ClinicAnalyticsVaccineStatusKey);
 	}
 
-	function bucketSortDimensionLabel(kind: DashboardOwnerAnalysisKind): string {
+	function bucketSortDimensionLabel(kind: ClinicAnalyticsOwnerDimension): string {
 		if (kind === 'location') return t('analysis.study.city');
 		if (kind === 'petCount') return t('analysis.study.ownerPetCount');
 		if (kind === 'petSpecies') return t('analysis.study.species');
@@ -219,7 +219,7 @@
 		return t('analysis.study.vaccineStatus');
 	}
 
-	function bucketSortOptions(): { value: DashboardBucketSortField; label: string }[] {
+	function bucketSortOptions(): { value: AnalyticsBucketSortField; label: string }[] {
 		return [
 			{ value: 'analysis', label: bucketSortDimensionLabel(activeAnalysis) },
 			{ value: 'count', label: t('analysis.sortBy.count') }
@@ -232,14 +232,14 @@
 		return 0;
 	}
 
-	function bucketAnalysisBaseCompare(kind: DashboardOwnerAnalysisKind, first: OwnerBucket, second: OwnerBucket): number {
-		if (kind === 'petCount') return dashboardPetCountBandWeight[first.key as DashboardPetCountBandKey] - dashboardPetCountBandWeight[second.key as DashboardPetCountBandKey];
-		if (kind === 'petAge') return dashboardAgeBandSortValue(first.key) - dashboardAgeBandSortValue(second.key);
-		if (kind === 'petVaccineStatus') return dashboardTreatmentStatusWeight[first.key as DashboardVaccineStatusKey] - dashboardTreatmentStatusWeight[second.key as DashboardVaccineStatusKey];
+	function bucketAnalysisBaseCompare(kind: ClinicAnalyticsOwnerDimension, first: OwnerBucket, second: OwnerBucket): number {
+		if (kind === 'petCount') return clinicAnalyticsPetCountBandWeight[first.key as ClinicAnalyticsPetCountBandKey] - clinicAnalyticsPetCountBandWeight[second.key as ClinicAnalyticsPetCountBandKey];
+		if (kind === 'petAge') return clinicAnalyticsAgeBandSortValue(first.key) - clinicAnalyticsAgeBandSortValue(second.key);
+		if (kind === 'petVaccineStatus') return clinicAnalyticsTreatmentStatusWeight[first.key as ClinicAnalyticsVaccineStatusKey] - clinicAnalyticsTreatmentStatusWeight[second.key as ClinicAnalyticsVaccineStatusKey];
 		return bucketLabel(kind, first).localeCompare(bucketLabel(kind, second), i18n.locale);
 	}
 
-	function bucketAnalysisCompare(kind: DashboardOwnerAnalysisKind, first: OwnerBucket, second: OwnerBucket, direction: DashboardSortDirection): number {
+	function bucketAnalysisCompare(kind: ClinicAnalyticsOwnerDimension, first: OwnerBucket, second: OwnerBucket, direction: AnalyticsSortDirection): number {
 		const unknownCompare = bucketUnknownCompare(first, second);
 		if (unknownCompare !== 0) return unknownCompare;
 
@@ -247,7 +247,7 @@
 		return direction === 'asc' ? analysisCompare : -analysisCompare;
 	}
 
-	function sortBuckets(buckets: OwnerBucket[], kind: DashboardOwnerAnalysisKind, field: DashboardBucketSortField, direction: DashboardSortDirection): OwnerBucket[] {
+	function sortBuckets(buckets: OwnerBucket[], kind: ClinicAnalyticsOwnerDimension, field: AnalyticsBucketSortField, direction: AnalyticsSortDirection): OwnerBucket[] {
 		return [...buckets].sort((first, second) => {
 			if (field === 'count') {
 				const countCompare = first.count - second.count;
@@ -260,7 +260,7 @@
 		});
 	}
 
-	function selectAnalysis(kind: DashboardOwnerAnalysisKind): void {
+	function selectAnalysis(kind: ClinicAnalyticsOwnerDimension): void {
 		activeAnalysis = kind;
 		selectedBucketKey = '';
 	}
@@ -269,20 +269,20 @@
 		selectedBucketKey = '';
 	}
 
-	function ownerMatchesBucket(owner: DashboardOwnerStudyItem, kind: DashboardOwnerAnalysisKind, key: string): boolean {
+	function ownerMatchesBucket(owner: ClinicAnalyticsOwnerStudyItem, kind: ClinicAnalyticsOwnerDimension, key: string): boolean {
 		if (!key) return true;
 		if (kind === 'location') return owner.locationKey === key;
 		if (kind === 'petCount') return ownerPetCountBand(owner.petCount) === key;
-		if (kind === 'petSpecies') return ownerPetSpeciesKeys(owner).includes(key as DashboardSpeciesKey);
+		if (kind === 'petSpecies') return ownerPetSpeciesKeys(owner).includes(key as ClinicAnalyticsSpeciesKey);
 		if (kind === 'petAge') return ownerPetAgeKeys(owner).includes(key);
 		return ownerVaccineStatus(owner) === key;
 	}
 
-	function filterOwnersByBucket(owners: DashboardOwnerStudyItem[], kind: DashboardOwnerAnalysisKind, key: string): DashboardOwnerStudyItem[] {
+	function filterOwnersByBucket(owners: ClinicAnalyticsOwnerStudyItem[], kind: ClinicAnalyticsOwnerDimension, key: string): ClinicAnalyticsOwnerStudyItem[] {
 		return owners.filter((owner) => ownerMatchesBucket(owner, kind, key));
 	}
 
-	function sortOwners(owners: DashboardOwnerStudyItem[], order: OwnerSortOrder): DashboardOwnerStudyItem[] {
+	function sortOwners(owners: ClinicAnalyticsOwnerStudyItem[], order: OwnerSortOrder): ClinicAnalyticsOwnerStudyItem[] {
 		return [...owners].sort((first, second) => {
 			if (order === 'location') {
 				const locationCompare = ownerLocationText(first).localeCompare(ownerLocationText(second), i18n.locale);
@@ -295,7 +295,7 @@
 			}
 
 			if (order === 'vaccineStatus') {
-				const statusCompare = dashboardTreatmentStatusWeight[ownerVaccineStatus(second)] - dashboardTreatmentStatusWeight[ownerVaccineStatus(first)];
+				const statusCompare = clinicAnalyticsTreatmentStatusWeight[ownerVaccineStatus(second)] - clinicAnalyticsTreatmentStatusWeight[ownerVaccineStatus(first)];
 				if (statusCompare !== 0) return statusCompare;
 			}
 
@@ -308,11 +308,11 @@
 		return selectedBucket ? bucketLabel(activeAnalysis, selectedBucket) : t('common.notInformed');
 	}
 
-	function ownerLocationText(owner: DashboardOwnerStudyItem): string {
+	function ownerLocationText(owner: ClinicAnalyticsOwnerStudyItem): string {
 		return owner.locationLabel ?? owner.cityLabel ?? t('common.notInformed');
 	}
 
-	function ownerPetNamesText(owner: DashboardOwnerStudyItem): string {
+	function ownerPetNamesText(owner: ClinicAnalyticsOwnerStudyItem): string {
 		return summaryText(owner.petNames);
 	}
 
@@ -325,27 +325,27 @@
 		return `${shown} +${metricFormatter(unique.length - limit)}`;
 	}
 
-	function ownerPetSpeciesText(owner: DashboardOwnerStudyItem): string {
+	function ownerPetSpeciesText(owner: ClinicAnalyticsOwnerStudyItem): string {
 		return summaryText(ownerPetSpeciesKeys(owner).map(speciesLabel), 3);
 	}
 
-	function ownerPetAgeText(owner: DashboardOwnerStudyItem): string {
+	function ownerPetAgeText(owner: ClinicAnalyticsOwnerStudyItem): string {
 		return summaryText(ownerPetAgeKeys(owner).map(ageBandLabel), 3);
 	}
 
-	function ownerPetVaccinesText(owner: DashboardOwnerStudyItem): string {
+	function ownerPetVaccinesText(owner: ClinicAnalyticsOwnerStudyItem): string {
 		return summaryText(owner.pets.flatMap((pet) => pet.vaccineNames), 3);
 	}
 
-	function ownerProfileHref(owner: DashboardOwnerStudyItem): string {
+	function ownerProfileHref(owner: ClinicAnalyticsOwnerStudyItem): string {
 		return `/owners/${owner.id}`;
 	}
 
-	function visibleOwnerPets(owner: DashboardOwnerStudyItem): DashboardOwnerStudyPet[] {
+	function visibleOwnerPets(owner: ClinicAnalyticsOwnerStudyItem): ClinicAnalyticsOwnerPetSnapshot[] {
 		return owner.pets.slice(0, 3);
 	}
 
-	function petAvatarBytes(pet: DashboardOwnerStudyPet): Uint8Array | null {
+	function petAvatarBytes(pet: ClinicAnalyticsOwnerPetSnapshot): Uint8Array | null {
 		return avatarBytesByPetId.get(pet.id) ?? pet.avatarBytes;
 	}
 
@@ -355,7 +355,7 @@
 		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 	}
 
-	async function renderOwnersInChunks(source: DashboardOwnerStudyItem[]): Promise<void> {
+	async function renderOwnersInChunks(source: ClinicAnalyticsOwnerStudyItem[]): Promise<void> {
 		const requestId = ++renderRequestId;
 		visibleOwners = [];
 		listLoading = source.length > 0;
@@ -371,7 +371,7 @@
 		if (requestId === renderRequestId) listLoading = false;
 	}
 
-	async function loadVisibleOwnerPetAvatars(owners: DashboardOwnerStudyItem[]): Promise<void> {
+	async function loadVisibleOwnerPetAvatars(owners: ClinicAnalyticsOwnerStudyItem[]): Promise<void> {
 		const petIds = owners.flatMap((owner) => visibleOwnerPets(owner).map((pet) => pet.id));
 		const missingIds = [...new Set(petIds)].filter((id) => !avatarBytesByPetId.has(id));
 		if (missingIds.length === 0) return;
@@ -447,7 +447,7 @@
 				<div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
 					<div>
 						<label class="text-sm font-medium" for="owner-bucket-sort-field">{t('analysis.sortBy')}</label>
-						<Select id="owner-bucket-sort-field" class="mt-1 h-9 w-full" value={bucketSortField} options={bucketSortOptions()} onchange={(value) => (bucketSortField = value as DashboardBucketSortField)} />
+						<Select id="owner-bucket-sort-field" class="mt-1 h-9 w-full" value={bucketSortField} options={bucketSortOptions()} onchange={(value) => (bucketSortField = value as AnalyticsBucketSortField)} />
 					</div>
 					<div>
 						<label class="text-sm font-medium" for="owner-bucket-sort-direction">{t('analysis.sortDirection')}</label>
@@ -459,7 +459,7 @@
 								{ value: 'asc', label: t('analysis.sortDirection.asc') },
 								{ value: 'desc', label: t('analysis.sortDirection.desc') }
 							]}
-							onchange={(value) => (bucketSortDirection = value as DashboardSortDirection)}
+							onchange={(value) => (bucketSortDirection = value as AnalyticsSortDirection)}
 						/>
 					</div>
 				</div>

@@ -1,9 +1,9 @@
-import type { DashboardAgeBandKey } from '@vet/types/domain/dashboard/analytics.js';
+import type { ClinicAnalyticsAgeBandKey } from './analytics.js';
 import { computeAgeFromBirthDate } from '@vet/types/domain/shared/time.js';
 
-export const dashboardAgeMonthBandKeys = ['months0To3', 'months3To6', 'months6To12'] as const satisfies DashboardAgeBandKey[];
+export const clinicAnalyticsAgeMonthBandKeys = ['months0To3', 'months3To6', 'months6To12'] as const satisfies ClinicAnalyticsAgeBandKey[];
 
-export function dashboardAgeBand(value: string | null | undefined, now = new Date()): DashboardAgeBandKey {
+export function clinicAnalyticsAgeBand(value: string | null | undefined, now = new Date()): ClinicAnalyticsAgeBandKey {
 	if (!value) return 'unknown';
 
 	const age = computeAgeFromBirthDate(value, now);
@@ -16,7 +16,7 @@ export function dashboardAgeBand(value: string | null | undefined, now = new Dat
 	return `year:${age.years}`;
 }
 
-export function dashboardAgeBandYear(key: string): number | null {
+export function clinicAnalyticsAgeBandYear(key: string): number | null {
 	const match = key.match(/^year:(\d+)$/);
 	if (!match) return null;
 
@@ -24,11 +24,11 @@ export function dashboardAgeBandYear(key: string): number | null {
 	return Number.isSafeInteger(year) && year >= 0 ? year : null;
 }
 
-export function dashboardAgeBandSortValue(key: string): number {
+export function clinicAnalyticsAgeBandSortValue(key: string): number {
 	if (key === 'months0To3') return 0;
 	if (key === 'months3To6') return 3;
 	if (key === 'months6To12') return 6;
 
-	const year = dashboardAgeBandYear(key);
+	const year = clinicAnalyticsAgeBandYear(key);
 	return year === null ? Number.MAX_SAFE_INTEGER : year * 12;
 }

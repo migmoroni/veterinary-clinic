@@ -1,2 +1,2 @@
-export * from './domain/dashboard/age-bands.js';
-export * from './domain/dashboard/analytics.js';
+export * from './domain/clinic-analytics/age-bands.js';
+export * from './domain/clinic-analytics/analytics.js';

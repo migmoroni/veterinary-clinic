@@ -1,24 +1,24 @@
 import {
-	dashboardAgeBand,
-	dashboardAgeBandYear,
-	dashboardAgeMonthBandKeys,
-	dashboardTreatmentStatusWeight,
-	type DashboardAgeBandKey,
-	type DashboardAnalytics,
-	type DashboardAntiparasiticStatusKey,
-	type DashboardBreedKey,
-	type DashboardBucket,
-	type DashboardNamedBucket,
-	type DashboardOwnerStudyItem,
-	type DashboardOwnerStudyPet,
-	type DashboardPetStudyOwner,
-	type DashboardPetStudyItem,
-	type DashboardPetStudyTreatment,
-	type DashboardPetCountBandKey,
-	type DashboardSexKey,
-	type DashboardSpeciesKey,
-	type DashboardStudyAnalytics,
-	type DashboardVaccineStatusKey
+	clinicAnalyticsAgeBand,
+	clinicAnalyticsAgeBandYear,
+	clinicAnalyticsAgeMonthBandKeys,
+	clinicAnalyticsTreatmentStatusWeight,
+	type ClinicAnalyticsAgeBandKey,
+	type ClinicAnalytics,
+	type ClinicAnalyticsAntiparasiticStatusKey,
+	type ClinicAnalyticsBreedKey,
+	type AnalyticsBucket,
+	type AnalyticsNamedBucket,
+	type ClinicAnalyticsOwnerStudyItem,
+	type ClinicAnalyticsOwnerPetSnapshot,
+	type ClinicAnalyticsPetOwnerSnapshot,
+	type ClinicAnalyticsPetStudyItem,
+	type ClinicAnalyticsPetTreatmentSnapshot,
+	type ClinicAnalyticsPetCountBandKey,
+	type ClinicAnalyticsSexKey,
+	type ClinicAnalyticsSpeciesKey,
+	type ClinicAnalyticsStudy,
+	type ClinicAnalyticsVaccineStatusKey
 } from '@vet/types/clinic-analytics.js';
 import type { PetBreed, PetSex, PetSpecies } from '@vet/types/domain/pet/pet.js';
 import type { TreatmentStatusKey } from '@vet/types/domain/treatment/analytics.js';
@@ -63,13 +63,13 @@ function incrementBucket<Key extends string>(buckets: Map<Key, number>, key: Key
 	buckets.set(key, (buckets.get(key) ?? 0) + amount);
 }
 
-function toBuckets<Key extends string>(buckets: Map<Key, number>): DashboardBucket<Key>[] {
+function toBuckets<Key extends string>(buckets: Map<Key, number>): AnalyticsBucket<Key>[] {
 	return [...buckets.entries()]
 		.map(([key, count]) => ({ key, count }))
 		.sort((first, second) => second.count - first.count || first.key.localeCompare(second.key));
 }
 
-function toNamedBuckets(buckets: Map<string, { label: string | null; count: number }>): DashboardNamedBucket[] {
+function toNamedBuckets(buckets: Map<string, { label: string | null; count: number }>): AnalyticsNamedBucket[] {
 	return [...buckets.entries()]
 		.map(([key, value]) => ({ key, label: value.label, count: value.count }))
 		.sort((first, second) => second.count - first.count || (first.label ?? '').localeCompare(second.label ?? ''));
@@ -81,31 +81,31 @@ function incrementNamedBucket(buckets: Map<string, { label: string | null; count
 	buckets.set(key, current);
 }
 
-function petCountBand(value: number): DashboardPetCountBandKey {
+function petCountBand(value: number): ClinicAnalyticsPetCountBandKey {
 	if (value <= 0) return 'none';
 	if (value === 1) return 'one';
 	if (value === 2) return 'two';
 	return 'threePlus';
 }
 
-function completeAgeBuckets(buckets: Map<DashboardAgeBandKey, number>, maxYear: number | null): void {
-	if (maxYear === null && !dashboardAgeMonthBandKeys.some((key) => buckets.has(key))) return;
+function completeAgeBuckets(buckets: Map<ClinicAnalyticsAgeBandKey, number>, maxYear: number | null): void {
+	if (maxYear === null && !clinicAnalyticsAgeMonthBandKeys.some((key) => buckets.has(key))) return;
 
-	for (const key of dashboardAgeMonthBandKeys) buckets.set(key, buckets.get(key) ?? 0);
+	for (const key of clinicAnalyticsAgeMonthBandKeys) buckets.set(key, buckets.get(key) ?? 0);
 	if (maxYear === null) return;
 
 	for (let year = 1; year <= maxYear; year += 1) {
-		const key = `year:${year}` as DashboardAgeBandKey;
+		const key = `year:${year}` as ClinicAnalyticsAgeBandKey;
 		buckets.set(key, buckets.get(key) ?? 0);
 	}
 }
 
-function worstVaccineStatus(first: DashboardVaccineStatusKey, second: DashboardVaccineStatusKey): DashboardVaccineStatusKey {
-	return dashboardTreatmentStatusWeight[second] > dashboardTreatmentStatusWeight[first] ? second : first;
+function worstVaccineStatus(first: ClinicAnalyticsVaccineStatusKey, second: ClinicAnalyticsVaccineStatusKey): ClinicAnalyticsVaccineStatusKey {
+	return clinicAnalyticsTreatmentStatusWeight[second] > clinicAnalyticsTreatmentStatusWeight[first] ? second : first;
 }
 
-function worstAntiparasiticStatus(first: DashboardAntiparasiticStatusKey, second: DashboardAntiparasiticStatusKey): DashboardAntiparasiticStatusKey {
-	return dashboardTreatmentStatusWeight[second] > dashboardTreatmentStatusWeight[first] ? second : first;
+function worstAntiparasiticStatus(first: ClinicAnalyticsAntiparasiticStatusKey, second: ClinicAnalyticsAntiparasiticStatusKey): ClinicAnalyticsAntiparasiticStatusKey {
+	return clinicAnalyticsTreatmentStatusWeight[second] > clinicAnalyticsTreatmentStatusWeight[first] ? second : first;
 }
 
 function locationLabel(owner: OwnerAnalyticsRow): string | null {
@@ -189,8 +189,8 @@ async function listLatestTreatmentRows(kind: TreatmentKind): Promise<LatestTreat
 	return rows.filter((row) => isPlausibleTreatmentAppliedAt(row.applied_at));
 }
 
-function buildPetVaccineStatusMap(rows: LatestTreatmentAnalyticsRow[]): Map<string, DashboardVaccineStatusKey> {
-	const statusByPetId = new Map<string, DashboardVaccineStatusKey>();
+function buildPetVaccineStatusMap(rows: LatestTreatmentAnalyticsRow[]): Map<string, ClinicAnalyticsVaccineStatusKey> {
+	const statusByPetId = new Map<string, ClinicAnalyticsVaccineStatusKey>();
 
 	for (const row of rows) {
 		const status = buildTreatmentStatus(row.applied_at, row.validity_value, row.validity_unit);
@@ -203,8 +203,8 @@ function buildPetVaccineStatusMap(rows: LatestTreatmentAnalyticsRow[]): Map<stri
 	return statusByPetId;
 }
 
-function buildPetAntiparasiticStatusMap(rows: LatestTreatmentAnalyticsRow[]): Map<string, DashboardAntiparasiticStatusKey> {
-	const statusByPetId = new Map<string, DashboardAntiparasiticStatusKey>();
+function buildPetAntiparasiticStatusMap(rows: LatestTreatmentAnalyticsRow[]): Map<string, ClinicAnalyticsAntiparasiticStatusKey> {
+	const statusByPetId = new Map<string, ClinicAnalyticsAntiparasiticStatusKey>();
 
 	for (const row of rows) {
 		const status = buildTreatmentStatus(row.applied_at, row.validity_value, row.validity_unit);
@@ -217,8 +217,8 @@ function buildPetAntiparasiticStatusMap(rows: LatestTreatmentAnalyticsRow[]): Ma
 	return statusByPetId;
 }
 
-function buildPetVaccinesMap(rows: LatestTreatmentAnalyticsRow[]): Map<string, DashboardPetStudyTreatment<DashboardVaccineStatusKey>[]> {
-	const vaccinesByPetId = new Map<string, DashboardPetStudyTreatment<DashboardVaccineStatusKey>[]>();
+function buildPetVaccinesMap(rows: LatestTreatmentAnalyticsRow[]): Map<string, ClinicAnalyticsPetTreatmentSnapshot<ClinicAnalyticsVaccineStatusKey>[]> {
+	const vaccinesByPetId = new Map<string, ClinicAnalyticsPetTreatmentSnapshot<ClinicAnalyticsVaccineStatusKey>[]>();
 
 	for (const row of rows) {
 		const status = buildTreatmentStatus(row.applied_at, row.validity_value, row.validity_unit);
@@ -240,8 +240,8 @@ function buildPetVaccinesMap(rows: LatestTreatmentAnalyticsRow[]): Map<string, D
 	return vaccinesByPetId;
 }
 
-function buildPetAntiparasiticsMap(rows: LatestTreatmentAnalyticsRow[]): Map<string, DashboardPetStudyTreatment<DashboardAntiparasiticStatusKey>[]> {
-	const antiparasiticsByPetId = new Map<string, DashboardPetStudyTreatment<DashboardAntiparasiticStatusKey>[]>();
+function buildPetAntiparasiticsMap(rows: LatestTreatmentAnalyticsRow[]): Map<string, ClinicAnalyticsPetTreatmentSnapshot<ClinicAnalyticsAntiparasiticStatusKey>[]> {
+	const antiparasiticsByPetId = new Map<string, ClinicAnalyticsPetTreatmentSnapshot<ClinicAnalyticsAntiparasiticStatusKey>[]>();
 
 	for (const row of rows) {
 		const status = buildTreatmentStatus(row.applied_at, row.validity_value, row.validity_unit);
@@ -263,18 +263,18 @@ function buildPetAntiparasiticsMap(rows: LatestTreatmentAnalyticsRow[]): Map<str
 	return antiparasiticsByPetId;
 }
 
-function buildPetAnalytics(pets: PetAnalyticsRow[], statusByPetId: Map<string, DashboardVaccineStatusKey>, antiparasiticStatusByPetId: Map<string, DashboardAntiparasiticStatusKey>) {
-	const bySpecies = new Map<DashboardSpeciesKey, number>();
-	const byBreed = new Map<DashboardBreedKey, number>();
-	const bySex = new Map<DashboardSexKey, number>();
-	const byAge = new Map<DashboardAgeBandKey, number>();
-	const byVaccineStatus = new Map<DashboardVaccineStatusKey, number>();
-	const byAntiparasiticStatus = new Map<DashboardAntiparasiticStatusKey, number>();
+function buildPetAnalytics(pets: PetAnalyticsRow[], statusByPetId: Map<string, ClinicAnalyticsVaccineStatusKey>, antiparasiticStatusByPetId: Map<string, ClinicAnalyticsAntiparasiticStatusKey>) {
+	const bySpecies = new Map<ClinicAnalyticsSpeciesKey, number>();
+	const byBreed = new Map<ClinicAnalyticsBreedKey, number>();
+	const bySex = new Map<ClinicAnalyticsSexKey, number>();
+	const byAge = new Map<ClinicAnalyticsAgeBandKey, number>();
+	const byVaccineStatus = new Map<ClinicAnalyticsVaccineStatusKey, number>();
+	const byAntiparasiticStatus = new Map<ClinicAnalyticsAntiparasiticStatusKey, number>();
 	let maxYear: number | null = null;
 
 	for (const pet of pets) {
-		const age = dashboardAgeBand(pet.birth_date);
-		const ageYear = dashboardAgeBandYear(age);
+		const age = clinicAnalyticsAgeBand(pet.birth_date);
+		const ageYear = clinicAnalyticsAgeBandYear(age);
 		if (ageYear !== null) maxYear = Math.max(maxYear ?? ageYear, ageYear);
 
 		incrementBucket(bySpecies, pet.species ?? 'unknown');
@@ -311,13 +311,13 @@ function buildOwnerPetMap(rows: PetOwnerAnalyticsRow[]): Map<string, string[]> {
 function buildOwnerAnalytics(
 	owners: OwnerAnalyticsRow[],
 	petOwnerRows: PetOwnerAnalyticsRow[],
-	statusByPetId: Map<string, DashboardVaccineStatusKey>,
-	antiparasiticStatusByPetId: Map<string, DashboardAntiparasiticStatusKey>
+	statusByPetId: Map<string, ClinicAnalyticsVaccineStatusKey>,
+	antiparasiticStatusByPetId: Map<string, ClinicAnalyticsAntiparasiticStatusKey>
 ) {
 	const byLocation = new Map<string, { label: string | null; count: number }>();
-	const byPetCount = new Map<DashboardPetCountBandKey, number>();
-	const byPetVaccineStatus = new Map<DashboardVaccineStatusKey, number>();
-	const byPetAntiparasiticStatus = new Map<DashboardAntiparasiticStatusKey, number>();
+	const byPetCount = new Map<ClinicAnalyticsPetCountBandKey, number>();
+	const byPetVaccineStatus = new Map<ClinicAnalyticsVaccineStatusKey, number>();
+	const byPetAntiparasiticStatus = new Map<ClinicAnalyticsAntiparasiticStatusKey, number>();
 	const petIdsByOwnerId = buildOwnerPetMap(petOwnerRows);
 	const totalPetsLinked = owners.reduce((total, owner) => total + owner.pet_count, 0);
 
@@ -326,8 +326,8 @@ function buildOwnerAnalytics(
 		incrementNamedBucket(byLocation, label?.toLocaleLowerCase() ?? 'unknown', label);
 		incrementBucket(byPetCount, petCountBand(owner.pet_count));
 
-		let ownerStatus: DashboardVaccineStatusKey = 'untracked';
-		let ownerAntiparasiticStatus: DashboardAntiparasiticStatusKey = 'untracked';
+		let ownerStatus: ClinicAnalyticsVaccineStatusKey = 'untracked';
+		let ownerAntiparasiticStatus: ClinicAnalyticsAntiparasiticStatusKey = 'untracked';
 		for (const petId of petIdsByOwnerId.get(owner.id) ?? []) {
 			const petStatus = statusByPetId.get(petId) ?? 'untracked';
 			ownerStatus = worstVaccineStatus(ownerStatus, petStatus);
@@ -360,7 +360,7 @@ function buildPetOwnerMap(rows: PetOwnerAnalyticsRow[]): Map<string, string[]> {
 	return ownerIdsByPetId;
 }
 
-function toOwnerStudyPet(pet: DashboardPetStudyItem): DashboardOwnerStudyPet {
+function toOwnerStudyPet(pet: ClinicAnalyticsPetStudyItem): ClinicAnalyticsOwnerPetSnapshot {
 	return {
 		id: pet.id,
 		name: pet.name,
@@ -388,11 +388,11 @@ function buildStudyAnalytics(
 	pets: PetAnalyticsRow[],
 	owners: OwnerAnalyticsRow[],
 	petOwnerRows: PetOwnerAnalyticsRow[],
-	statusByPetId: Map<string, DashboardVaccineStatusKey>,
-	vaccinesByPetId: Map<string, DashboardPetStudyTreatment<DashboardVaccineStatusKey>[]>,
-	antiparasiticStatusByPetId: Map<string, DashboardAntiparasiticStatusKey>,
-	antiparasiticsByPetId: Map<string, DashboardPetStudyTreatment<DashboardAntiparasiticStatusKey>[]>
-): DashboardStudyAnalytics {
+	statusByPetId: Map<string, ClinicAnalyticsVaccineStatusKey>,
+	vaccinesByPetId: Map<string, ClinicAnalyticsPetTreatmentSnapshot<ClinicAnalyticsVaccineStatusKey>[]>,
+	antiparasiticStatusByPetId: Map<string, ClinicAnalyticsAntiparasiticStatusKey>,
+	antiparasiticsByPetId: Map<string, ClinicAnalyticsPetTreatmentSnapshot<ClinicAnalyticsAntiparasiticStatusKey>[]>
+): ClinicAnalyticsStudy {
 	const ownersById = new Map(owners.map((owner) => [owner.id, owner]));
 	const ownerIdsByPetId = buildPetOwnerMap(petOwnerRows);
 	const petIdsByOwnerId = buildOwnerPetMap(petOwnerRows);
@@ -400,8 +400,8 @@ function buildStudyAnalytics(
 	const antiparasiticsBucket = new Map<string, { label: string | null; count: number }>();
 	const ownerCities = new Map<string, { label: string | null; count: number }>();
 	const ownerLocations = new Map<string, { label: string | null; count: number }>();
-	const studyPets: DashboardPetStudyItem[] = [];
-	const studyOwners: DashboardOwnerStudyItem[] = [];
+	const studyPets: ClinicAnalyticsPetStudyItem[] = [];
+	const studyOwners: ClinicAnalyticsOwnerStudyItem[] = [];
 
 	for (const owner of owners) {
 		const city = cityLabel(owner);
@@ -411,7 +411,7 @@ function buildStudyAnalytics(
 	}
 
 	for (const pet of pets) {
-		const owners: DashboardPetStudyOwner[] = [];
+		const owners: ClinicAnalyticsPetOwnerSnapshot[] = [];
 		const ownerCityKeys: string[] = [];
 		const ownerCityLabels: string[] = [];
 		const ownerLocationKeys: string[] = [];
@@ -469,7 +469,7 @@ function buildStudyAnalytics(
 			species: pet.species ?? 'unknown',
 			breed: pet.breed ?? 'unknown',
 			sex: pet.sex ?? 'unknown',
-			age: dashboardAgeBand(pet.birth_date),
+			age: clinicAnalyticsAgeBand(pet.birth_date),
 			vaccineStatus: statusByPetId.get(pet.id) ?? 'untracked',
 			antiparasiticStatus: antiparasiticStatusByPetId.get(pet.id) ?? 'untracked',
 			vaccineNormalizedNames,
@@ -492,7 +492,7 @@ function buildStudyAnalytics(
 		const location = locationLabel(owner);
 		const pets = (petIdsByOwnerId.get(owner.id) ?? [])
 			.map((petId) => studyPetsById.get(petId))
-			.filter((pet): pet is DashboardPetStudyItem => !!pet)
+			.filter((pet): pet is ClinicAnalyticsPetStudyItem => !!pet)
 			.map(toOwnerStudyPet);
 
 		studyOwners.push({
@@ -518,7 +518,7 @@ function buildStudyAnalytics(
 	};
 }
 
-export async function getDashboardAnalytics(): Promise<DashboardAnalytics> {
+export async function getClinicAnalytics(): Promise<ClinicAnalytics> {
 	const [pets, owners, petOwnerRows, latestVaccinationRows, latestAntiparasiticRows] = await Promise.all([listPetRows(), listOwnerRows(), listPetOwnerRows(), listLatestTreatmentRows('vaccine'), listLatestTreatmentRows('antiparasitic')]);
 	const statusByPetId = buildPetVaccineStatusMap(latestVaccinationRows);
 	const vaccinesByPetId = buildPetVaccinesMap(latestVaccinationRows);

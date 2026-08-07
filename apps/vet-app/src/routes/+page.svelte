@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import type { DashboardStudyTarget } from '@vet/types/domain/dashboard/analytics.js';
+	import type { ClinicAnalyticsStudyTarget } from '@vet/types/clinic-analytics.js';
 	import { defaultProductCatalogItems } from '@vet/types/domain/product/default-catalog.js';
 	import { breedReferenceProfiles } from '@vet/types/domain/pet/breed-reference.js';
 	import { clinic } from '$lib/stores/clinic.svelte.js';
@@ -15,7 +15,7 @@
 	import PawPrint from '@lucide/svelte/icons/paw-print';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 
-	const analysisCards: { view: DashboardStudyTarget; titleKey: TranslationKey; descriptionKey: TranslationKey; metricKey: TranslationKey; icon: typeof Syringe }[] = [
+	const analysisCards: { view: ClinicAnalyticsStudyTarget; titleKey: TranslationKey; descriptionKey: TranslationKey; metricKey: TranslationKey; icon: typeof Syringe }[] = [
 		{ view: 'vaccines', titleKey: 'analysis.card.vaccines.title', descriptionKey: 'analysis.card.vaccines.description', metricKey: 'analysis.trackedVaccineItems', icon: Syringe },
 		{ view: 'antiparasitics', titleKey: 'analysis.card.antiparasitics.title', descriptionKey: 'analysis.card.antiparasitics.description', metricKey: 'analysis.trackedAntiparasiticItems', icon: Pill },
 		{ view: 'pets', titleKey: 'analysis.card.pets.title', descriptionKey: 'analysis.card.pets.description', metricKey: 'stats.pets', icon: PawPrint },
@@ -45,7 +45,7 @@
 		return Number.isInteger(value) ? new Intl.NumberFormat(i18n.locale).format(value) : formatter.format(value);
 	}
 
-	function analysisCount(view: DashboardStudyTarget): number {
+	function analysisCount(view: ClinicAnalyticsStudyTarget): number {
 		if (view === 'vaccines') return clinic.dashboard?.vaccines.totalTracked ?? 0;
 		if (view === 'antiparasitics') return clinic.dashboard?.antiparasitics.totalTracked ?? 0;
 		if (view === 'pets') return clinic.dashboard?.counts.pets ?? 0;
