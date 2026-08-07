@@ -7,69 +7,32 @@ import {
 	type ClinicAnalyticsStudyTarget,
 	type ClinicAnalyticsVaccineStatusKey
 } from '@vet/types/clinic-analytics.js';
+import { clinicAnalyticsQueryDimensions, listClinicAnalyticsQueryRows } from './analytics-dimensions.js';
+import { queryAnalytics } from './analytics-query.js';
 import { clinicAnalyticsOwnerAntiparasiticStatus, clinicAnalyticsOwnerPetCountBand, clinicAnalyticsOwnerVaccineStatus } from './clinic-owner-analytics.selectors.js';
+import type {
+	ClinicAnalyticsStudyBucket,
+	ClinicAnalyticsStudyBucketSelection,
+	ClinicAnalyticsStudyDimension,
+	ClinicAnalyticsStudyFilterFactor,
+	ClinicAnalyticsStudyFilters,
+	ClinicAnalyticsStudyResolvedTarget,
+	ClinicAnalyticsStudyTreatmentSummary
+} from './clinic-study-analytics.types.js';
 
-export type ClinicAnalyticsStudyDimension =
-	| 'vaccine'
-	| 'vaccineStatus'
-	| 'antiparasitic'
-	| 'antiparasiticStatus'
-	| 'petSpecies'
-	| 'petBreed'
-	| 'petSex'
-	| 'petAge'
-	| 'petVaccineStatus'
-	| 'petAntiparasiticStatus'
-	| 'ownerCity'
-	| 'ownerPetCount'
-	| 'ownerPetVaccineStatus'
-	| 'ownerPetAntiparasiticStatus'
-	| 'ownerPetSpecies';
-
-export type ClinicAnalyticsStudyFilterFactor = 'vaccine' | 'vaccineStatus' | 'antiparasitic' | 'antiparasiticStatus' | 'species' | 'breed' | 'sex' | 'age' | 'city' | 'ownerPetCount';
-
-export interface ClinicAnalyticsStudyFilters {
-	species: string;
-	breed: string;
-	sex: string;
-	age: string;
-	vaccineStatus: string;
-	vaccineNormalizedName: string;
-	antiparasiticStatus: string;
-	antiparasiticNormalizedName: string;
-	city: string;
-	ownerPetCount: string;
-}
-
-export interface ClinicAnalyticsStudyTreatmentSummary<StatusKey extends string> {
-	id: string;
-	pet: ClinicAnalyticsPetStudyItem;
-	normalizedName: string;
-	name: string;
-	dose: string;
-	appliedAt: string;
-	dueAt: string;
-	daysUntilDue: number;
-	status: StatusKey;
-}
-
-export interface ClinicAnalyticsStudyBucket {
-	primaryKey: string;
-	secondaryKey: string;
-	count: number;
-}
-
-export interface ClinicAnalyticsStudyBucketSelection extends ClinicAnalyticsStudyBucket {
-	primaryDimension: ClinicAnalyticsStudyDimension;
-	secondaryDimension: ClinicAnalyticsStudyDimension;
-}
-
-export interface ClinicAnalyticsStudyResolvedTarget {
-	pets: ClinicAnalyticsPetStudyItem[];
-	owners: ClinicAnalyticsOwnerStudyItem[];
-	vaccines: ClinicAnalyticsStudyTreatmentSummary<ClinicAnalyticsVaccineStatusKey>[];
-	antiparasitics: ClinicAnalyticsStudyTreatmentSummary<ClinicAnalyticsAntiparasiticStatusKey>[];
-}
+export type {
+	ClinicAnalyticsQueryDimension,
+	ClinicAnalyticsQueryFilter,
+	ClinicAnalyticsQueryRow,
+	ClinicAnalyticsQueryTarget,
+	ClinicAnalyticsStudyBucket,
+	ClinicAnalyticsStudyBucketSelection,
+	ClinicAnalyticsStudyDimension,
+	ClinicAnalyticsStudyFilterFactor,
+	ClinicAnalyticsStudyFilters,
+	ClinicAnalyticsStudyResolvedTarget,
+	ClinicAnalyticsStudyTreatmentSummary
+} from './clinic-study-analytics.types.js';
 
 type StudyPetSnapshot = ClinicAnalyticsPetStudyItem | ClinicAnalyticsOwnerPetSnapshot;
 type StudyVaccineSummary = ClinicAnalyticsStudyTreatmentSummary<ClinicAnalyticsVaccineStatusKey>;
@@ -136,14 +99,21 @@ export function buildClinicAnalyticsStudyBuckets(input: {
 	antiparasitics: StudyAntiparasiticSummary[];
 }): ClinicAnalyticsStudyBucket[] {
 	const { target, primaryDimension, secondaryDimension, pets, owners, vaccines, antiparasitics } = input;
-	const buckets = new Map<string, ClinicAnalyticsStudyBucket>();
+	const rows = listClinicAnalyticsQueryRows({ target, pets, owners, vaccines, antiparasitics });
+	const result = queryAnalytics({
+		target,
+		rows,
+		dimensions: clinicAnalyticsQueryDimensions,
+		groupBy: [primaryDimension, secondaryDimension],
+		measure: 'count',
+		sort: { by: 'count', direction: 'desc' }
+	});
 
-	if (target === 'vaccines') for (const vaccine of vaccines) addStudyBucket(buckets, primaryDimension, secondaryDimension, clinicAnalyticsStudyVaccineDimensionKeys(vaccine, primaryDimension, owners), clinicAnalyticsStudyVaccineDimensionKeys(vaccine, secondaryDimension, owners));
-	else if (target === 'antiparasitics') for (const antiparasitic of antiparasitics) addStudyBucket(buckets, primaryDimension, secondaryDimension, clinicAnalyticsStudyAntiparasiticDimensionKeys(antiparasitic, primaryDimension, owners), clinicAnalyticsStudyAntiparasiticDimensionKeys(antiparasitic, secondaryDimension, owners));
-	else if (target === 'owners') for (const owner of owners) addStudyBucket(buckets, primaryDimension, secondaryDimension, clinicAnalyticsStudyOwnerDimensionKeys(owner, primaryDimension), clinicAnalyticsStudyOwnerDimensionKeys(owner, secondaryDimension));
-	else for (const pet of pets) addStudyBucket(buckets, primaryDimension, secondaryDimension, clinicAnalyticsStudyPetDimensionKeys(pet, primaryDimension, owners), clinicAnalyticsStudyPetDimensionKeys(pet, secondaryDimension, owners));
-
-	return [...buckets.values()].sort((first, second) => second.count - first.count || first.primaryKey.localeCompare(second.primaryKey) || first.secondaryKey.localeCompare(second.secondaryKey));
+	return result.buckets.map((bucket) => ({
+		primaryKey: bucket.keys[0] ?? unknownKey,
+		secondaryKey: bucket.keys[1] ?? bucket.keys[0] ?? unknownKey,
+		count: bucket.count
+	}));
 }
 
 export function filterClinicAnalyticsStudyTargetByBucket(input: ClinicAnalyticsStudyResolvedTarget & { selection: ClinicAnalyticsStudyBucketSelection | null }): ClinicAnalyticsStudyResolvedTarget {
@@ -190,6 +160,7 @@ export function clinicAnalyticsStudyPetDimensionKeys(pet: ClinicAnalyticsPetStud
 	if (dimension === 'petVaccineStatus') return [pet.vaccineStatus];
 	if (dimension === 'petAntiparasiticStatus') return [pet.antiparasiticStatus];
 	if (dimension === 'ownerCity') return uniqueKeys(pet.ownerCityKeys, unknownKey);
+	if (dimension === 'ownerLocation') return uniqueKeys(pet.ownerLocationKeys, unknownKey);
 	if (dimension === 'ownerPetCount') {
 		return uniqueKeys(
 			pet.owners.map((owner) => findStudyOwner(owners, owner.id)).map((owner) => (owner ? clinicAnalyticsOwnerPetCountBand(owner.petCount) : unknownKey)),
@@ -201,6 +172,7 @@ export function clinicAnalyticsStudyPetDimensionKeys(pet: ClinicAnalyticsPetStud
 
 export function clinicAnalyticsStudyOwnerDimensionKeys(owner: ClinicAnalyticsOwnerStudyItem, dimension: ClinicAnalyticsStudyDimension): string[] {
 	if (dimension === 'ownerCity') return [owner.cityKey || unknownKey];
+	if (dimension === 'ownerLocation') return [owner.locationKey || unknownKey];
 	if (dimension === 'ownerPetCount') return [clinicAnalyticsOwnerPetCountBand(owner.petCount)];
 	if (dimension === 'ownerPetVaccineStatus') return [clinicAnalyticsOwnerVaccineStatus(owner)];
 	if (dimension === 'ownerPetAntiparasiticStatus') return [clinicAnalyticsOwnerAntiparasiticStatus(owner)];
@@ -379,28 +351,6 @@ function ownerMatchesFactor(owner: ClinicAnalyticsOwnerStudyItem, factor: Clinic
 		if (factor === 'sex') return pet.sex === filters.sex;
 		return pet.age === filters.age;
 	});
-}
-
-function addStudyBucket(
-	buckets: Map<string, ClinicAnalyticsStudyBucket>,
-	primaryDimension: ClinicAnalyticsStudyDimension,
-	secondaryDimension: ClinicAnalyticsStudyDimension,
-	primaryKeys: string[],
-	secondaryKeys: string[]
-): void {
-	if (primaryDimension === secondaryDimension) {
-		for (const primaryKey of primaryKeys) incrementStudyBucket(buckets, primaryKey, primaryKey);
-		return;
-	}
-
-	for (const primaryKey of primaryKeys) for (const secondaryKey of secondaryKeys) incrementStudyBucket(buckets, primaryKey, secondaryKey);
-}
-
-function incrementStudyBucket(buckets: Map<string, ClinicAnalyticsStudyBucket>, primaryKey: string, secondaryKey: string): void {
-	const mapKey = `${primaryKey}\u0000${secondaryKey}`;
-	const bucket = buckets.get(mapKey) ?? { primaryKey, secondaryKey, count: 0 };
-	bucket.count += 1;
-	buckets.set(mapKey, bucket);
 }
 
 function studyKeysMatchSelection(primaryKeys: string[], secondaryKeys: string[], selection: ClinicAnalyticsStudyBucketSelection): boolean {

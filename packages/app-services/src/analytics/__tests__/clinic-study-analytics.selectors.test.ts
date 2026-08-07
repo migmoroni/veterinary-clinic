@@ -185,6 +185,63 @@ describe('clinic study analytics selectors', () => {
 		]);
 	});
 
+	it('builds treatment target buckets from the current treatment row', () => {
+		const nina = pet({
+			id: 'p4',
+			name: 'Nina',
+			species: 'canine',
+			breed: 'mixed-breed',
+			sex: 'F',
+			age: 'year:3',
+			vaccineStatus: 'overdue',
+			antiparasiticStatus: 'overdue',
+			vaccineNormalizedNames: ['v10', 'raiva'],
+			vaccineNames: ['V10', 'Raiva'],
+			vaccines: [
+				{ normalizedName: 'v10', name: 'V10', dose: '1', appliedAt: '2026-01-01', dueAt: '2026-02-01', daysUntilDue: -10, status: 'overdue' },
+				{ normalizedName: 'raiva', name: 'Raiva', dose: '1', appliedAt: '2026-02-01', dueAt: '2027-02-01', daysUntilDue: 200, status: 'current' }
+			],
+			antiparasiticNormalizedNames: ['nexgard', 'simparic'],
+			antiparasiticNames: ['NexGard', 'Simparic'],
+			antiparasitics: [
+				{ normalizedName: 'nexgard', name: 'NexGard', dose: '1', appliedAt: '2026-01-01', dueAt: '2026-03-01', daysUntilDue: 10, status: 'current' },
+				{ normalizedName: 'simparic', name: 'Simparic', dose: '1', appliedAt: '2025-12-01', dueAt: '2026-01-01', daysUntilDue: -30, status: 'overdue' }
+			]
+		});
+		const localPets = [nina];
+		const localVaccines = listClinicAnalyticsStudyVaccines(localPets);
+		const localAntiparasitics = listClinicAnalyticsStudyAntiparasitics(localPets);
+
+		expect(
+			buildClinicAnalyticsStudyBuckets({
+				target: 'vaccines',
+				primaryDimension: 'vaccineStatus',
+				secondaryDimension: 'vaccine',
+				pets: localPets,
+				owners: [],
+				vaccines: localVaccines,
+				antiparasitics: localAntiparasitics
+			})
+		).toEqual([
+			{ primaryKey: 'current', secondaryKey: 'raiva', count: 1 },
+			{ primaryKey: 'overdue', secondaryKey: 'v10', count: 1 }
+		]);
+		expect(
+			buildClinicAnalyticsStudyBuckets({
+				target: 'antiparasitics',
+				primaryDimension: 'antiparasiticStatus',
+				secondaryDimension: 'antiparasitic',
+				pets: localPets,
+				owners: [],
+				vaccines: localVaccines,
+				antiparasitics: localAntiparasitics
+			})
+		).toEqual([
+			{ primaryKey: 'current', secondaryKey: 'nexgard', count: 1 },
+			{ primaryKey: 'overdue', secondaryKey: 'simparic', count: 1 }
+		]);
+	});
+
 	it('filters resolved target lists by a selected bucket', () => {
 		const selection: ClinicAnalyticsStudyBucketSelection = {
 			primaryDimension: 'petSpecies',
