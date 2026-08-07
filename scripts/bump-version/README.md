@@ -55,7 +55,7 @@ The script updates these project files:
 - `packages/*/package.json`
 - `apps/vet-app/src-tauri/tauri.conf.json`
 - `apps/vet-app/src-tauri/Cargo.toml`
-- `packages/core-rust/Cargo.toml`
+- `packages/engine/Cargo.toml`
 - `Cargo.lock`
 - `packages/core-local/src/generated/app-version.ts`
 - `CHANGELOG.md`

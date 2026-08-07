@@ -3,8 +3,8 @@
 [Portuguese README](README.pt-BR.md) | English
 
 Veterinary Clinic is a local-first desktop application for veterinary clinic
-workflows. It is built with SvelteKit, Tauri 2, Rust and SQLite, with the data
-model moving toward durable offline ownership, explicit import/export, and
+workflows. It is built with SvelteKit, Tauri 2, Rust and SQLite, with a data
+model designed for durable offline ownership, explicit import/export, and
 continuous replication through small SQLite changesets.
 
 The project is developer-facing and under active development. The current public
@@ -17,6 +17,7 @@ remote service:
 
 - owners, pets and medical records live in local SQLite databases;
 - reference catalogs are separated from user-owned operational data;
+- analytics and search live as reusable headless application services;
 - original media files are stored through content-addressable storage instead of
   operational SQLite BLOB columns;
 - full import/export is handled as a distribution concern;
@@ -25,7 +26,7 @@ remote service:
 ## Architecture Snapshot
 
 ```text
-apps/vet-app -> @vet/modules -> @vet/core-local -> Tauri commands -> @vet/core-rust -> SQLite + CAS
+apps/vet-app -> (@vet/app-services, @vet/modules, @vet/ui) -> @vet/core-local -> Tauri commands -> vet-engine -> SQLite + CAS
 ```
 
 The workspace is intentionally split by runtime boundary:
@@ -37,7 +38,17 @@ The workspace is intentionally split by runtime boundary:
 | `packages/core-local` | Local TypeScript runtime, SQLite bridge, i18n, preferences, import/export clients and media repositories. |
 | `packages/ui` | Reusable Svelte UI primitives. |
 | `packages/modules` | Business modules: `knowledge`, `registry` and `medical_records`. |
-| `packages/core-rust` | Shared Rust storage, distribution and replication implementation. |
+| `packages/app-services` | Headless application services: `analytics` and `search`. |
+| `packages/engine` | Native product engine for storage, distribution, replication and platform integrations. |
+
+The TypeScript dependency DAG is:
+
+```text
+@vet/types <- @vet/core-local <- @vet/ui <- @vet/modules <- @vet/app-services <- apps/vet-app
+```
+
+Each item imports only packages to its left. `@vet/app-services` stays headless:
+no UI, routes, Svelte stores or app-local `$lib` imports.
 
 ## Stack
 
@@ -85,7 +96,8 @@ npm run tauri:msi
 ## Documentation
 
 Detailed architecture documentation is currently maintained in Portuguese only.
-Start with [README.pt-BR.md](README.pt-BR.md).
+Start with [README.pt-BR.md](README.pt-BR.md) and
+[docs/modular-architecture.md](docs/modular-architecture.md).
 
 English documentation for the full architecture map is still to do.
 

@@ -17,8 +17,9 @@ de arquitetura, organização de código, persistência local e comandos de trab
 
 O app trabalha com:
 
-- tutores, pets, prontuários, lixeira e busca global;
+- owners, pets, prontuários, lixeira e busca global;
 - catálogo de produtos, fabricantes, princípios ativos, condições e raças;
+- analytics e search como serviços de aplicação reutilizáveis;
 - banco de dados local-first em SQLite;
 - mídia original em CAS no disco, com índices e miniaturas em SQLite;
 - importação/exportação completa em pacotes nativos ou CSV;
@@ -27,7 +28,7 @@ O app trabalha com:
 ## Modelo Mental
 
 ```text
-apps/vet-app -> @vet/modules -> @vet/core-local -> Comandos Tauri -> @vet/core-rust -> SQLite + CAS
+apps/vet-app -> (@vet/app-services, @vet/modules, @vet/ui) -> @vet/core-local -> Comandos Tauri -> vet-engine -> SQLite + CAS
 ```
 
 O ponto central é separar claramente as fronteiras do workspace:
@@ -39,10 +40,20 @@ O ponto central é separar claramente as fronteiras do workspace:
 | `packages/core-local` | Runtime local TypeScript: SQLite, i18n, preferências, import/export e mídia. |
 | `packages/ui` | Primitivos Svelte reutilizáveis. |
 | `packages/modules` | Módulos de negócio: `knowledge`, `registry` e `medical_records`. |
-| `packages/core-rust` | Rust compartilhado: `storage`, `distribution` e `replication`. |
+| `packages/app-services` | Serviços de aplicação headless: `analytics` e `search`. |
+| `packages/engine` | Motor nativo do produto: `storage`, `distribution`, `replication` e `platform`. |
 
 Essa separação evita misturar backup vivo, exportação completa e conexão ativa
 de banco no mesmo lugar.
+
+O DAG TypeScript segue:
+
+```text
+@vet/types <- @vet/core-local <- @vet/ui <- @vet/modules <- @vet/app-services <- apps/vet-app
+```
+
+Cada item importa apenas pacotes à esquerda. `@vet/app-services` permanece sem
+UI, sem rotas e sem `$lib`.
 
 ## Conjuntos De Dados
 
@@ -88,7 +99,8 @@ O conjunto do sistema é reconstruído pelo app a partir dos defaults do program
 | `packages/core-local/` | Infra local TypeScript compartilhável. |
 | `packages/ui/` | Componentes e primitivas visuais reutilizáveis. |
 | `packages/modules/` | Módulos de negócio por feature. |
-| `packages/core-rust/` | Storage, distribuição e replicação em Rust. |
+| `packages/app-services/` | Analytics, search e serviços de aplicação reutilizáveis. |
+| `packages/engine/` | Motor nativo para storage, distribuição, replicação e integrações de sistema. |
 | `legacy-to-sqlite/` | Scripts externos para adoção/conversão de bases. |
 | `docs/` | Documentação técnica em português. |
 | `flatpak/` | Manifesto e apoio para empacotamento Flatpak. |
@@ -156,7 +168,7 @@ npm run adopt:version
 O script de adoção usa a base de entrada definida em `legacy-to-sqlite/dist/` e
 gera o conjunto atual esperado pelo app, incluindo pacote nativo importável.
 
-Conversor CSV legado antigo, quando usado manualmente:
+Conversor CSV, quando usado manualmente:
 
 ```sh
 cd legacy-to-sqlite
@@ -169,6 +181,7 @@ npm run csv
 | Documento | Assunto |
 | --- | --- |
 | [Arquitetura Geral](docs/architecture.md) | Mapa raiz das fronteiras do app. |
+| [Arquitetura Modular](docs/modular-architecture.md) | Packages, DAG, subpath exports e regras de manutenção modular. |
 | [Arquitetura De Armazenamento](docs/storage-architecture.md) | `storage`, bancos ativos, CAS, manifesto e comandos. |
 | [Arquitetura De Distribuição](docs/distribution-architecture.md) | Import/export nativo e CSV. |
 | [Arquitetura De Replicação](docs/replication-architecture.md) | Capture, outbox, targets, applier e sincronização. |
@@ -181,9 +194,10 @@ READMEs internos:
 
 | Módulo | README |
 | --- | --- |
-| `storage` | [packages/core-rust/src/storage/README.md](packages/core-rust/src/storage/README.md) |
-| `distribution` | [packages/core-rust/src/distribution/README.md](packages/core-rust/src/distribution/README.md) |
-| `replication` | [packages/core-rust/src/replication/README.md](packages/core-rust/src/replication/README.md) |
+| `storage` | [packages/engine/src/storage/README.md](packages/engine/src/storage/README.md) |
+| `distribution` | [packages/engine/src/distribution/README.md](packages/engine/src/distribution/README.md) |
+| `replication` | [packages/engine/src/replication/README.md](packages/engine/src/replication/README.md) |
+| `platform` | [packages/engine/src/platform/README.md](packages/engine/src/platform/README.md) |
 
 ## Versionamento
 

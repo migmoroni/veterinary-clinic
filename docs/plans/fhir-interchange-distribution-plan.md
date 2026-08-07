@@ -26,7 +26,7 @@ src-tauri/src/distribution/
 No workspace modular futuro:
 
 ```text
-packages/core-rust/src/distribution/fhir/
+packages/engine/src/distribution/fhir/
 ```
 
 Os modulos de negocio continuam donos das regras e tabelas canonicas. A camada

@@ -22,7 +22,7 @@ packages/types/
 packages/core-local/
 packages/ui/
 packages/modules/
-packages/core-rust/
+packages/engine/
 ```
 
 Crie:

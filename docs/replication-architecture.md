@@ -1,6 +1,6 @@
 # Arquitetura De Replicação Local-First
 
-Este documento explica a arquitetura de `packages/core-rust/src/replication`.
+Este documento explica a arquitetura de `packages/engine/src/replication`.
 Ele existe para deixar claro onde cada peça atua, qual ordem o ciclo segue e
 quais proteções reduzem risco de condição de corrida, colisão de patches ou
 inconsistência entre app, backup local e cloud.

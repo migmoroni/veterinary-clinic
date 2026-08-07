@@ -17,7 +17,7 @@ apps/vet-app/
 packages/types/
 packages/ui/
 packages/core-local/
-packages/core-rust/
+packages/engine/
 packages/modules/
 ```
 
@@ -54,7 +54,7 @@ packages/
   types/
   ui/
   core-local/
-  core-rust/
+  engine/
   modules/
 ```
 
@@ -106,7 +106,7 @@ Para Rust, use nome de crate padronizado:
 
 | Pasta | Package Cargo | Crate Rust |
 | --- | --- | --- |
-| `packages/core-rust` | `vet-core-rust` | `vet_core_rust` |
+| `packages/engine` | `vet-engine` | `vet_engine` |
 
 ### `packages/types`
 
@@ -150,7 +150,7 @@ Código TypeScript local reutilizável:
 
 Mantenha o schema principal e as migrations no `vet-app` nesta etapa.
 
-### `packages/core-rust`
+### `packages/engine`
 
 Código Rust reutilizável:
 
@@ -282,11 +282,11 @@ Ações:
 - crie `packages/types`;
 - crie `packages/ui`;
 - crie `packages/core-local`;
-- crie `packages/core-rust`;
+- crie `packages/engine`;
 - crie `packages/modules`;
 - crie `Cargo.toml` de workspace na raiz;
 - configure o `Cargo.toml` da raiz com os members
-  `apps/vet-app/src-tauri` e `packages/core-rust`;
+  `apps/vet-app/src-tauri` e `packages/engine`;
 - transforme o `package.json` da raiz em manifest de workspace npm;
 - configure workspaces npm no `package.json` da raiz com `apps/*` e
   `packages/*`;
@@ -370,10 +370,10 @@ Ações:
 - crie `package.json` em `packages/ui` com o nome `@vet/ui`;
 - crie `package.json` em `packages/core-local` com o nome `@vet/core-local`;
 - crie `package.json` em `packages/modules` com o nome `@vet/modules`;
-- crie `Cargo.toml` em `packages/core-rust` com package `vet-core-rust` e lib
-  `vet_core_rust`;
+- crie `Cargo.toml` em `packages/engine` com package `vet-engine` e lib
+  `vet_engine`;
 - crie `src/index.ts` nos packages TypeScript;
-- crie `src/lib.rs` em `packages/core-rust`;
+- crie `src/lib.rs` em `packages/engine`;
 - crie `tsconfig.json` nos packages TypeScript;
 - configure `exports` nos packages TypeScript;
 - configure `exports` em `packages/modules/package.json` para permitir imports
@@ -565,7 +565,7 @@ Saída esperada:
 - migrations e schema continuam preservados;
 - fluxo local-first continua funcionando.
 
-### Atividade 7: Extrair `packages/core-rust`
+### Atividade 7: Extrair `packages/engine`
 
 Objetivo: mover o motor Rust reutilizável.
 
@@ -704,7 +704,7 @@ Saída esperada:
 
 - `@vet/types` não importa packages locais.
 - `@vet/ui` pode importar `@vet/types`, mas não importa apps.
-- crate `vet_core_rust` não conhece apps.
+- crate `vet_engine` não conhece apps.
 - `@vet/core-local` pode importar `@vet/types` e chamar comandos Tauri.
 - `@vet/modules` pode importar `@vet/types`, `@vet/ui` e `@vet/core-local`.
 - `apps/vet-app` pode importar todos os packages.

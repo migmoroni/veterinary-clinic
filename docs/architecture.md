@@ -13,17 +13,27 @@ adicione o link aqui.
 ```mermaid
 flowchart LR
     UI[apps/vet-app]
+    APP_SERVICES[@vet/app-services]
     MODULES[@vet/modules]
+    VET_UI[@vet/ui]
     CORE_LOCAL[@vet/core-local]
     TYPES[@vet/types]
     IPC[Comandos Tauri]
-    RUST[@vet/core-rust]
+    RUST[vet-engine]
     DATA[(SQLite + CAS)]
 
+    UI --> APP_SERVICES
     UI --> MODULES
+    UI --> VET_UI
     UI --> CORE_LOCAL
+    APP_SERVICES --> MODULES
+    APP_SERVICES --> CORE_LOCAL
+    APP_SERVICES --> TYPES
     MODULES --> CORE_LOCAL
+    MODULES --> VET_UI
     MODULES --> TYPES
+    VET_UI --> CORE_LOCAL
+    VET_UI --> TYPES
     CORE_LOCAL --> TYPES
     CORE_LOCAL --> IPC --> RUST --> DATA
 ```
@@ -31,17 +41,21 @@ flowchart LR
 A aplicação é local-first: os dados principais vivem no dispositivo do usuário.
 A UI é SvelteKit/Tauri em `apps/vet-app`; contratos puros ficam em
 `packages/types`; infraestrutura local TypeScript fica em
-`packages/core-local`; módulos de negócio ficam em `packages/modules`; e a
-persistência nativa compartilhada fica em `packages/core-rust`.
+`packages/core-local`; primitivas visuais ficam em `packages/ui`; módulos de
+negócio ficam em `packages/modules`; serviços de aplicação ficam em
+`packages/app-services`; e o motor nativo de persistência, distribuição,
+replicação e integrações de sistema fica em `packages/engine`.
 
 O grafo de dependências TypeScript deve seguir:
 
 ```text
-@vet/types -> @vet/core-local -> @vet/ui -> @vet/modules -> apps/vet-app
+@vet/types <- @vet/core-local <- @vet/ui <- @vet/modules <- @vet/app-services <- apps/vet-app
 ```
 
-Na prática, cada pacote só pode importar pacotes à esquerda dele nessa linha, e
-`apps/vet-app` faz as composições entre módulos irmãos por subpaths públicos.
+Na prática, cada item pode importar apenas pacotes à esquerda dele nessa linha.
+`@vet/app-services` permanece headless e não importa `@vet/ui`, Svelte, `$lib`
+ou rotas do app. `apps/vet-app` faz a composição final entre packages por APIs
+públicas.
 
 ## Núcleo De Persistência
 
@@ -60,11 +74,13 @@ flowchart TD
     DISTRIBUTION -. preparo de importação .-> REPLICATION
 ```
 
-As três fronteiras Rust principais, em `packages/core-rust`, são:
+As fronteiras nativas principais, em `packages/engine`, são:
 
 - `storage`: mantém bancos ativos, conexões SQLite e arquivos CAS.
 - `distribution`: importa/exporta pacotes completos nativos ou CSV.
 - `replication`: mantém backup/sincronização contínua por patches.
+- `platform`: concentra comandos nativos reutilizáveis do sistema operacional,
+  como gerenciador de arquivos e fontes do sistema.
 
 Essa separação é a regra mais importante da persistência atual. Se uma lógica
 começa a misturar pacote completo, conexão ativa e sincronização contínua no
@@ -99,6 +115,12 @@ no programa.
 - Bytes originais de mídia ficam no CAS, não dentro do SQLite operacional.
 - A identidade da base vive em `database_manifest`, dentro do banco de logs do
   usuário.
+- Packages TypeScript respeitam o DAG de dependências.
+- APIs consumidas entre packages passam por exports públicos.
+- Regras reutilizáveis de negócio ficam em `@vet/modules` ou
+  `@vet/app-services`, não nas rotas do app.
+- `@vet/app-services` concentra serviços headless de aplicação, como analytics e
+  search.
 - Backup contínuo é replicação por patches, não exportação repetida de ZIP.
 - Importação/exportação completa pertence a `distribution`.
 - Conexões ativas e caminhos de arquivos pertencem a `storage`.
@@ -107,15 +129,14 @@ no programa.
 
 ## Documentos Específicos
 
+- [Arquitetura Modular Do Workspace](modular-architecture.md): packages, DAG,
+  subpath exports e regras para manutenção modular.
 - [Arquitetura De Armazenamento](storage-architecture.md): bancos ativos,
   conexões SQLite, CAS, mídia, manifesto e exclusão definitiva.
 - [Arquitetura De Distribuição](distribution-architecture.md): importação e
   exportação completa em ZIP nativo ou CSV.
 - [Arquitetura De Replicação Local-First](replication-architecture.md):
   backup/sincronização contínua por patches, outbox e destinos.
-- [Mapa Para Extrair O App Atual Para Workspace Modular](plans/modular-monolith-refactor-map.md):
-  estado atual, destino `veterinary-apps` e extração gradual para `apps/` e
-  `packages/`.
 - [Política De Backup](backup-policy.md): visão de produto sobre backup
   contínuo, exportação e importação.
 - [Versionamento De Banco E Ritual De Lançamento](database-versioning.md):

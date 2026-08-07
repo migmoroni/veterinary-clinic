@@ -90,7 +90,7 @@ disponível.
 
 ## Importações, Exportações E Replicação
 
-Importação/exportação completa vive em `packages/core-rust/src/distribution`. Pacotes
+Importação/exportação completa vive em `packages/engine/src/distribution`. Pacotes
 nativos carregam os três bancos do usuário e arquivos CAS. Pacotes CSV carregam
 `data_csv/`, `media_csv/`, `logs_csv/` e arquivos CAS do usuário.
 
@@ -98,7 +98,7 @@ A identidade da base e o manifesto do pacote vivem em
 `veterinary_clinic_user_logs.db`, tabela `database_manifest`; não há
 `manifest.json` solto.
 
-Backup/sincronização contínua vive em `packages/core-rust/src/replication` e usa SQLite
+Backup/sincronização contínua vive em `packages/engine/src/replication` e usa SQLite
 Session changesets em vez de instantâneos completos.
 
 ## Quando Uma Nova Versão De Estrutura É Necessária

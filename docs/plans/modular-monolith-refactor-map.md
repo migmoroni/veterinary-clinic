@@ -17,7 +17,7 @@ e extrair, aos poucos, o que for reutilizavel para:
 ```text
 packages/types
 packages/ui
-packages/core-rust
+packages/engine
 packages/core-local
 packages/modules
 ```
@@ -56,7 +56,7 @@ veterinary-apps/
   packages/
     types/
     ui/
-    core-rust/
+    engine/
     core-local/
     modules/
 ```
@@ -152,7 +152,7 @@ src-tauri/src/replication  backup/sync continuo por patches
 | `vite.config.ts` | `apps/vet-app/vite.config.ts` | Ajustar paths/aliases. |
 | `svelte.config.js` | `apps/vet-app/svelte.config.js` | Ajustar paths/aliases. |
 | `tsconfig.json` | root base + `apps/vet-app/tsconfig.json` | Criar config compartilhada depois. |
-| `src-tauri/Cargo.toml` | `apps/vet-app/src-tauri/Cargo.toml` | Depois depender de `packages/core-rust`. |
+| `src-tauri/Cargo.toml` | `apps/vet-app/src-tauri/Cargo.toml` | Depois depender de `packages/engine`. |
 | `legacy-to-sqlite/` | `packages/core-local/tools/legacy-to-sqlite` ou `tools/legacy-to-sqlite` | Ferramenta externa; nao entra no runtime. |
 | `docs/` | `docs/` | Continuar na raiz do workspace. |
 | `flatpak/` | `apps/vet-app/flatpak/` ou `packaging/vet-app/flatpak` | Empacotamento do app veterinario. |
@@ -241,7 +241,7 @@ Entram aqui primeiro:
 Componentes que conhecem tutor, pet, produto, prontuario ou tratamento nao devem
 ir para `ui`; eles pertencem a `packages/modules`.
 
-### `packages/core-rust`
+### `packages/engine`
 
 Crate Rust compartilhado para motor local.
 
@@ -249,11 +249,11 @@ Candidatos do Rust atual:
 
 | Atual | Alvo |
 | --- | --- |
-| `src-tauri/src/storage/*` | `packages/core-rust/src/storage/*` |
-| `src-tauri/src/distribution/*` | `packages/core-rust/src/distribution/*` |
-| `src-tauri/src/replication/*` | `packages/core-rust/src/replication/*` |
-| `src-tauri/src/file_manager.rs` | app-specific ou `core-rust/src/platform/file_manager.rs`, conforme uso por outros apps. |
-| `src-tauri/src/system_fonts.rs` | app-specific ou `core-rust/src/platform/system_fonts.rs`. |
+| `src-tauri/src/storage/*` | `packages/engine/src/storage/*` |
+| `src-tauri/src/distribution/*` | `packages/engine/src/distribution/*` |
+| `src-tauri/src/replication/*` | `packages/engine/src/replication/*` |
+| `src-tauri/src/file_manager.rs` | `packages/engine/src/platform/file_manager.rs` |
+| `src-tauri/src/system_fonts.rs` | `packages/engine/src/platform/system_fonts.rs` |
 
 `apps/vet-app/src-tauri` deve ficar como casca Tauri:
 
@@ -261,10 +261,10 @@ Candidatos do Rust atual:
 apps/vet-app/src-tauri/src/lib.rs
   registra comandos
   configura plugins
-  inicializa StorageManager vindo de core-rust
+  inicializa StorageManager vindo de engine
 ```
 
-Regra: `core-rust` nao deve conhecer `vet-app`, `lab-app` ou rotas Svelte.
+Regra: `engine` nao deve conhecer `vet-app`, `lab-app` ou rotas Svelte.
 
 ### `packages/core-local`
 
@@ -658,7 +658,7 @@ Alvo:
 
 - UI fica em `apps/vet-app/src/routes/settings/...`;
 - TS comum vai para `packages/core-local`;
-- Rust comum vai para `packages/core-rust`.
+- Rust comum vai para `packages/engine`.
 
 ## Rotas Atuais Do `vet-app`
 
@@ -678,13 +678,13 @@ Alvo:
 | `/vaccines` | analytics de vacinas | `apps/vet-app`, consumindo `modules/medical_records/treatments` e read models de timeline |
 | `/antiparasitics` | analytics de antiparasitarios | `apps/vet-app`, consumindo `modules/medical_records/treatments` e read models de timeline |
 | `/dashboard/**` | estudos/analytics cruzados | inicialmente `apps/vet-app` |
-| `/settings/data` | import/export | `apps/vet-app` + `core-local/core-rust` |
-| `/settings/backups` | backup continuo | `apps/vet-app` + `core-local/core-rust` |
+| `/settings/data` | import/export | `apps/vet-app` + `core-local/engine` |
+| `/settings/backups` | backup continuo | `apps/vet-app` + `core-local/engine` |
 | `/settings/preferences` | idioma/tipografia/autosave | `apps/vet-app` + `core-local` |
 | `/settings/profile` | perfil do veterinario/local | `apps/vet-app` + `core-local` ou modulo futuro `practice` |
 | `/settings/products` | administracao de produtos | `apps/vet-app` + `modules/knowledge` |
 | `/settings/protocols` | protocolos clinicos | `apps/vet-app` + `modules/medical_records/treatments/protocols` |
-| `/settings/trash` | lixeira e auditoria | `apps/vet-app` + `core-local/core-rust` |
+| `/settings/trash` | lixeira e auditoria | `apps/vet-app` + `core-local/engine` |
 
 ## Schema E Persistencia
 
@@ -781,7 +781,7 @@ pnpm-workspace.yaml
 apps/vet-app/
 packages/types/
 packages/ui/
-packages/core-rust/
+packages/engine/
 packages/core-local/
 packages/modules/
 server-open/
@@ -833,7 +833,7 @@ Manter `migrations.ts` e `schema-migrations/` no app. A separacao profunda
 entre criacao de banco, migracao de banco e arquivos por banco/modulo acontece
 em fase propria, depois de `medical_records` e do plano FHIR.
 
-### Fase 5: Extrair `packages/core-rust`
+### Fase 5: Extrair `packages/engine`
 
 Mover o motor Rust:
 
@@ -931,7 +931,7 @@ nao puxar codigo interno de `apps/vet-app`.
 
 - `packages/types` nao importa nenhum outro package local.
 - `packages/ui` pode importar `types`, mas nao deve importar app especifico.
-- `packages/core-rust` nao conhece apps.
+- `packages/engine` nao conhece apps.
 - `packages/core-local` pode importar `types` e chamar comandos Tauri, mas nao
   conhece rotas de app.
 - `packages/modules` pode importar `types`, `ui` e `core-local`.

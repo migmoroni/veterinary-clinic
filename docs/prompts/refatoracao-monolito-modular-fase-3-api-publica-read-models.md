@@ -9,7 +9,7 @@ apps/vet-app/
 packages/types/
 packages/ui/
 packages/core-local/
-packages/core-rust/
+packages/engine/
 packages/modules/
 ```
 
@@ -44,7 +44,7 @@ itens abaixo.
 Para Rust:
 
 ```text
-packages/core-rust
+packages/engine
   ↓
 apps/vet-app/src-tauri
 ```

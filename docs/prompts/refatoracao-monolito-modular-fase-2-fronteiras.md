@@ -10,7 +10,7 @@ apps/vet-app/
 packages/types/
 packages/ui/
 packages/core-local/
-packages/core-rust/
+packages/engine/
 packages/modules/
 ```
 
@@ -42,12 +42,12 @@ importar itens acima dele. Um item acima não pode importar itens abaixo dele.
 Para Rust:
 
 ```text
-packages/core-rust
+packages/engine
   ↓
 apps/vet-app/src-tauri
 ```
 
-`packages/core-rust` não conhece apps. `apps/vet-app/src-tauri` registra comandos
+`packages/engine` não conhece apps. `apps/vet-app/src-tauri` registra comandos
 Tauri e chama o crate compartilhado.
 
 ## Regras De Dependência
