@@ -9,7 +9,7 @@
 		type ReferenceSummaryField,
 	} from "@vet/modules/knowledge";
 	import { activeIngredientSummaryClassificationGroups } from "@vet/modules/knowledge/active_ingredients";
-	import { productClassificationLabel, productClassificationSearchText, productSummaryClassificationGroups } from "@vet/types/domain/product/classification.js";
+	import { productClassificationLabel, productSummaryClassificationGroups } from "@vet/types/domain/product/classification.js";
 	import {
 		catalogRegionLabel,
 		catalogRegionSummary,
@@ -21,10 +21,7 @@
 		manufacturerClassificationGroups,
 	} from "@vet/types/domain/catalog/classification-labels.js";
 	import { catalogPathTypeLabel } from "@vet/types/domain/catalog/type-labels.js";
-	import {
-		activeIngredientClassificationLabel,
-		activeIngredientClassificationSearchText,
-	} from "@vet/types/domain/active-ingredient/classification.js";
+	import { activeIngredientClassificationLabel } from "@vet/types/domain/active-ingredient/classification.js";
 	import {
 		readReferenceRouteState,
 		replaceReferenceRouteState,
@@ -34,7 +31,7 @@
 		referenceSpeciesOptions,
 		resolveReferenceSelection,
 	} from "@vet/modules/knowledge";
-	import { createSearchMatcher } from "@vet/types/domain/search/search-controller.js";
+	import { filterCatalogSearchItems, type CatalogSearchItem } from "@vet/app-services/search";
 	import {
 		ACTIVE_INGREDIENT_TYPES,
 		stringifyActiveIngredientType,
@@ -49,7 +46,6 @@
 	import { type ManufacturerCatalogItem } from "@vet/types/domain/manufacturer/catalog.js";
 	import {
 		PRODUCT_TYPES,
-		productLeafletSectionIds,
 		productTreatmentKind,
 		productTypeMain,
 		type ProductCatalogItem,
@@ -58,7 +54,6 @@
 	import {
 		productTypeHierarchicalFilterOptions,
 		productTypeLabel,
-		productTypeMatchesFilter,
 	} from "@vet/types/domain/product/type-labels.js";
 	import { MANUFACTURER_CLASSIFICATION_AXES } from "@vet/types/domain/manufacturer/catalog.js";
 	import { i18n, t, type TranslationKey } from "@vet/core-local/i18n/index.js";
@@ -78,11 +73,7 @@
 
 	type TypeFilter = "all" | string;
 	type SpeciesFilter = "all" | ProductSpecies;
-	type CatalogItem =
-		| (ProductCatalogItem & { kind: "product" })
-		| (ManufacturerCatalogItem & { kind: "manufacturer" })
-		| (ActiveIngredientCatalogItem & { kind: "activeIngredient" })
-		| (ConditionCatalogItem & { kind: "condition" });
+	type CatalogItem = CatalogSearchItem;
 
 	let products = $state<(ProductCatalogItem & { kind: "product" })[]>([]);
 	let manufacturers = $state<
@@ -105,6 +96,7 @@
 	let regionFilter = $state("");
 	let selectedItemKey = $state<string | null>(null);
 	let routeStateReady = $state(false);
+	let initialSelectionResolved = $state(false);
 
 	const routeStateKeys = [
 		"q",
@@ -147,50 +139,20 @@
 		);
 	});
 	const filteredItems = $derived.by<CatalogItem[]>(() => {
-		const search = createSearchMatcher(searchTerm);
-
-		return currentItems.filter((item) => {
-			if (regionFilter && !item.regions.includes(regionFilter))
-				return false;
-
-			if (item.kind === "product") {
-				const product = item as ProductCatalogItem;
-				if (
-					typeFilter !== "all" &&
-					!productTypeMatchesFilter(product.type, typeFilter)
-				)
-					return false;
-				if (
-					speciesFilter !== "all" &&
-					!product.species.includes(speciesFilter)
-				)
-					return false;
-				if (
-					manufacturerFilter &&
-					product.manufacturerName !== manufacturerFilter
-				)
-					return false;
-			}
-
-			if (item.kind === "activeIngredient" && typeFilter !== "all") {
-				const activeIngredient = item as ActiveIngredientCatalogItem;
-				if (!catalogTypeMatchesFilter(activeIngredient.type, typeFilter))
-					return false;
-			}
-
-			if (item.kind === "condition" && typeFilter !== "all") {
-				const condition = item as ConditionCatalogItem;
-				if (!catalogTypeMatchesFilter(condition.type, typeFilter))
-					return false;
-			}
-
-			return search.matches(searchableText(item));
+		return filterCatalogSearchItems({
+			query: searchTerm,
+			items: currentItems,
+			filters: {
+				type: catalogKind === "product" || catalogKind === "activeIngredient" || catalogKind === "condition" ? typeFilter : "all",
+				species: catalogKind === "product" ? speciesFilter : "all",
+				manufacturer: catalogKind === "product" ? manufacturerFilter : "",
+				region: regionFilter,
+			},
+			locale: i18n.locale,
 		});
 	});
 	const selectedItem = $derived(
-		filteredItems.find((item) => item.id === selectedItemKey) ??
-			filteredItems[0] ??
-			null,
+		filteredItems.find((item) => item.id === selectedItemKey) ?? null,
 	);
 	const cards = $derived<ReferenceGridCard[]>(filteredItems.map(cardForItem));
 	const selectedSummaryFields = $derived<ReferenceSummaryField[]>(
@@ -487,60 +449,6 @@
 		return `/formulary/products/${item.id}`;
 	}
 
-	function searchableText(item: CatalogItem): string {
-		if (item.kind === "product") {
-			const product = item as ProductCatalogItem;
-			return [
-				product.name,
-				product.manufacturerName,
-				activeIngredientSummary(product),
-				productTypeLabel(product.type, t),
-				speciesSummary(product.species),
-				catalogRegionSummary(product.regions),
-				product.aliases.join(" "),
-				productClassificationSummary(product),
-				productClassificationSearchText(product, t),
-				product.extension.commercialLine,
-				...productLeafletSectionIds.map(
-					(sectionId) =>
-						product.extension.sections[sectionId]?.trim() ?? "",
-				),
-			]
-				.filter(Boolean)
-				.join(" ");
-		}
-
-		return [
-			item.name,
-			item.aliases.join(" "),
-			item.kind === "condition"
-				? conditionTypeLabel((item as ConditionCatalogItem).type)
-				: "",
-			item.kind === "condition"
-				? conditionClassificationSummary(item as ConditionCatalogItem)
-				: "",
-			item.kind === "activeIngredient"
-				? activeIngredientClassificationSummary(
-						item as ActiveIngredientCatalogItem,
-					)
-				: "",
-			item.kind === "activeIngredient"
-				? activeIngredientClassificationSearchText(
-						(item as ActiveIngredientCatalogItem).extension.classification,
-						t,
-						i18n.locale,
-					)
-				: "",
-			item.kind === "manufacturer"
-				? manufacturerClassificationSummary(item as ManufacturerCatalogItem)
-				: "",
-			catalogRegionSummary(item.regions),
-			...Object.values(item.extension.sections ?? {}),
-		]
-			.filter(Boolean)
-			.join(" ");
-	}
-
 	function productClassificationSummary(product: ProductCatalogItem): string {
 		return productClassificationLabel(product, t) ?? t("common.notInformed");
 	}
@@ -589,21 +497,6 @@
 
 	function conditionTypeLabel(type: ConditionCatalogItem["type"]): string {
 		return catalogPathTypeLabel("catalog.condition.type", type, t);
-	}
-
-	function catalogTypeMatchesFilter(
-		type: readonly (string | null)[],
-		filter: string,
-	): boolean {
-		try {
-			const parsed = JSON.parse(filter);
-			if (!Array.isArray(parsed)) return false;
-			return parsed.every(
-				(segment, index) => segment === null || type[index] === segment,
-			);
-		} catch {
-			return false;
-		}
 	}
 
 	function speciesLabel(species: ProductSpecies): string {
@@ -760,7 +653,9 @@
 			filteredItems,
 			selectedItemKey,
 			(item) => item.id,
+			{ fallbackToFirst: !initialSelectionResolved },
 		);
+		initialSelectionResolved = true;
 	});
 
 	$effect(() => {

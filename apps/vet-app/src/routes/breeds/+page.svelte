@@ -18,7 +18,7 @@
 		referenceSpeciesOptions,
 		resolveReferenceSelection,
 	} from "@vet/modules/knowledge";
-	import { createSearchMatcher } from "@vet/types/domain/search/search-controller.js";
+	import { filterBreedReferenceProfiles } from "@vet/app-services/search";
 	import {
 		getBreedOriginMapPosition,
 		type BreedReferenceOrigin,
@@ -75,6 +75,7 @@
 	let activeTab = $state<"list" | "map">("list");
 	let routeStateReady = $state(false);
 	let restoredMapFocusFromRoute = $state(false);
+	let initialSelectionResolved = $state(false);
 
 	const routeStateKeys = [
 		"q",
@@ -100,31 +101,21 @@
 	};
 
 	const filteredProfiles = $derived.by(() => {
-		const search = createSearchMatcher(searchTerm);
-
-		return profiles.filter((profile) => {
-			if (speciesFilter !== "all" && profile.species !== speciesFilter)
-				return false;
-			if (sizeFilter && profile.sizeCategory !== sizeFilter) return false;
-			if (originFilter && profile.origin.id !== originFilter)
-				return false;
-
-			return search.matches(
-				[
-					breedName(profile),
-					speciesLabel(profile),
-					originLabel(profile.origin),
-					sizeLabel(profile.sizeCategory),
-				].join(" "),
-			);
+		return filterBreedReferenceProfiles({
+			query: searchTerm,
+			profiles,
+			filters: {
+				species: speciesFilter,
+				size: validSizeFilter(sizeFilter),
+				origin: originFilter,
+			},
+			locale: i18n.locale,
 		});
 	});
 	const selectedProfile = $derived(
 		filteredProfiles.find(
 			(profile) => profile.breedId === selectedBreedId,
-		) ??
-			filteredProfiles[0] ??
-			null,
+		) ?? null,
 	);
 	const breedCards = $derived<ReferenceGridCard[]>(
 		filteredProfiles.map((profile) => ({
@@ -399,7 +390,7 @@
 		return value === "canine" || value === "feline" ? value : "all";
 	}
 
-	function validSizeFilter(value: string | undefined): string {
+	function validSizeFilter(value: string | undefined): "" | BreedSizeCategory {
 		return value === "small" ||
 			value === "medium" ||
 			value === "large" ||
@@ -603,7 +594,9 @@
 			filteredProfiles,
 			selectedBreedId,
 			(profile) => profile.breedId,
+			{ fallbackToFirst: !initialSelectionResolved },
 		);
+		initialSelectionResolved = true;
 	});
 
 	$effect(() => {
