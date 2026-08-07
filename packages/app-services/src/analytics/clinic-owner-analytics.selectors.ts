@@ -51,7 +51,7 @@ export function listClinicAnalyticsOwnerPetAgeKeys(owner: ClinicAnalyticsOwnerSt
 
 export function selectClinicOwnerAnalyticsBuckets(input: {
 	analytics: ClinicAnalytics;
-	owners: ClinicAnalyticsOwnerStudyItem[];
+	owners: readonly ClinicAnalyticsOwnerStudyItem[];
 	dimension: ClinicAnalyticsOwnerDimension;
 }): ClinicAnalyticsOwnerBucket[] {
 	const { analytics, owners, dimension } = input;
@@ -105,13 +105,13 @@ export function sortClinicAnalyticsOwners(owners: ClinicAnalyticsOwnerStudyItem[
 	});
 }
 
-function clinicAnalyticsOwnerPetSpeciesBuckets(owners: ClinicAnalyticsOwnerStudyItem[]): ClinicAnalyticsOwnerBucket[] {
+function clinicAnalyticsOwnerPetSpeciesBuckets(owners: readonly ClinicAnalyticsOwnerStudyItem[]): ClinicAnalyticsOwnerBucket[] {
 	const buckets = new Map<string, ClinicAnalyticsOwnerBucket>();
 	for (const owner of owners) for (const key of listClinicAnalyticsOwnerPetSpeciesKeys(owner)) incrementBucket(buckets, key);
 	return toOwnerBuckets(buckets);
 }
 
-function clinicAnalyticsOwnerPetAgeBuckets(analytics: ClinicAnalytics, owners: ClinicAnalyticsOwnerStudyItem[]): ClinicAnalyticsOwnerBucket[] {
+function clinicAnalyticsOwnerPetAgeBuckets(analytics: ClinicAnalytics, owners: readonly ClinicAnalyticsOwnerStudyItem[]): ClinicAnalyticsOwnerBucket[] {
 	const buckets = new Map<string, ClinicAnalyticsOwnerBucket>();
 	for (const owner of owners) for (const key of listClinicAnalyticsOwnerPetAgeKeys(owner)) incrementBucket(buckets, key);
 	for (const bucket of analytics.pets.byAge) if (bucket.key !== 'unknown') ensureBucket(buckets, bucket.key);

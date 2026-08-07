@@ -10,6 +10,7 @@
 	import type { TranslationKey } from '@vet/core-local/i18n/index.js';
 	import { i18n, t } from '@vet/core-local/i18n/index.js';
 	import {
+		analyticsPercent,
 		loadAnalyticsTreatments,
 		loadTreatmentAnalyticsOverview,
 		loadTreatmentHistory,
@@ -150,8 +151,7 @@
 		const count = statusCount(value);
 		if (count <= 0) return 0;
 
-		const percent = (count / statusTotalTracked) * 100;
-		const rounded = Math.round(percent * 10) / 10;
+		const rounded = analyticsPercent({ value: count, total: statusTotalTracked });
 		return rounded >= 0.1 ? rounded : 0.1;
 	}
 
@@ -159,10 +159,10 @@
 		const count = statusCount(value);
 		if (statusTotalTracked <= 0 || count <= 0) return '0';
 
-		const rawPercent = (count / statusTotalTracked) * 100;
+		const rawPercent = analyticsPercent({ value: count, total: statusTotalTracked });
 		const formatter = new Intl.NumberFormat(i18n.locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 		if (rawPercent < 0.1) return `< ${formatter.format(0.1)}`;
-		return formatter.format(Math.round(rawPercent * 10) / 10);
+		return formatter.format(rawPercent);
 	}
 
 	function ownerDisplayName(item: TreatmentStatusItem): string {

@@ -2,7 +2,6 @@
 	import Select from '@vet/ui/components/ui/Select.svelte';
 	import {
 		type ClinicAnalyticsAntiparasiticStatusKey,
-		type AnalyticsBucket,
 		type AnalyticsNamedBucket,
 		type ClinicAnalyticsOwnerStudyItem,
 		type ClinicAnalyticsPetStudyItem,
@@ -11,15 +10,9 @@
 	} from '@vet/types/clinic-analytics.js';
 	import { clinicAnalyticsAgeBandYear } from '@vet/types/clinic-analytics.js';
 	import {
-		buildClinicAnalyticsStudyBuckets,
-		clinicAnalyticsOwnerPetCountBand,
-		countClinicAnalyticsStudyTargetForFilter,
-		filterClinicAnalyticsStudyTargetByBucket,
-		hasClinicAnalyticsStudyFilters,
-		listClinicAnalyticsStudyAntiparasitics,
-		listClinicAnalyticsStudyVaccines,
-		resolveClinicAnalyticsStudyTarget,
-		toAnalyticsBuckets,
+		buildClinicAnalyticsStudyViewModel,
+		defaultClinicAnalyticsPrimaryDimension,
+		defaultClinicAnalyticsSecondaryDimension,
 		type ClinicAnalyticsStudyBucket,
 		type ClinicAnalyticsStudyBucketSelection,
 		type ClinicAnalyticsStudyDimension,
@@ -50,7 +43,6 @@
 	type StudyCrossSelection = ClinicAnalyticsStudyBucketSelection;
 	type StudyDimensionOption = { dimension: StudyDimension; labelKey: TranslationKey };
 	type StudyFactor = { label: string; value: string; count: number };
-	type StudyFactorKind = ClinicAnalyticsStudyFilterFactor;
 
 	const studyTargetOptions = [
 		{ target: 'vaccines', labelKey: 'analysis.study.axis.vaccines', descriptionKey: 'analysis.study.axis.vaccinesDescription', icon: Syringe },
@@ -58,6 +50,24 @@
 		{ target: 'pets', labelKey: 'analysis.study.axis.pets', descriptionKey: 'analysis.study.axis.petsDescription', icon: PawPrint },
 		{ target: 'owners', labelKey: 'analysis.study.axis.owners', descriptionKey: 'analysis.study.axis.ownersDescription', icon: UserPlus }
 	] as const;
+	const studyDimensionLabelOptions = [
+		{ dimension: 'vaccineStatus', labelKey: 'analysis.study.dimension.vaccineStatus' },
+		{ dimension: 'vaccine', labelKey: 'analysis.study.dimension.vaccine' },
+		{ dimension: 'antiparasitic', labelKey: 'antiparasiticTreatment.name' },
+		{ dimension: 'antiparasiticStatus', labelKey: 'treatment.analytics.filterMode.status' },
+		{ dimension: 'petAntiparasiticStatus', labelKey: 'analysis.study.dimension.petAntiparasiticStatus' },
+		{ dimension: 'petSpecies', labelKey: 'analysis.study.dimension.petSpecies' },
+		{ dimension: 'petBreed', labelKey: 'analysis.study.dimension.petBreed' },
+		{ dimension: 'petAge', labelKey: 'analysis.study.dimension.petAge' },
+		{ dimension: 'petVaccineStatus', labelKey: 'analysis.study.dimension.petVaccineStatus' },
+		{ dimension: 'petSex', labelKey: 'analysis.study.dimension.petSex' },
+		{ dimension: 'ownerCity', labelKey: 'analysis.study.dimension.ownerCity' },
+		{ dimension: 'ownerLocation', labelKey: 'analysis.study.dimension.ownerCity' },
+		{ dimension: 'ownerPetCount', labelKey: 'analysis.study.dimension.ownerPetCount' },
+		{ dimension: 'ownerPetVaccineStatus', labelKey: 'analysis.study.dimension.ownerPetVaccineStatus' },
+		{ dimension: 'ownerPetAntiparasiticStatus', labelKey: 'analysis.study.dimension.ownerPetAntiparasiticStatus' },
+		{ dimension: 'ownerPetSpecies', labelKey: 'analysis.study.dimension.ownerPetSpecies' }
+	] as const satisfies readonly StudyDimensionOption[];
 
 	let studyTarget = $state<StudyTarget>('pets');
 	let studyPrimaryDimension = $state<StudyDimension>('petBreed');
@@ -78,8 +88,6 @@
 
 	const allStudyPets = $derived(clinic.dashboard?.analytics.study.pets ?? []);
 	const allStudyOwners = $derived(clinic.dashboard?.analytics.study.owners ?? []);
-	const allStudyVaccines = $derived(listClinicAnalyticsStudyVaccines(allStudyPets));
-	const allStudyAntiparasitics = $derived(listClinicAnalyticsStudyAntiparasitics(allStudyPets));
 	const studyFilters = $derived({
 		species: studySpecies,
 		breed: studyBreed,
@@ -92,37 +100,40 @@
 		city: studyCity,
 		ownerPetCount: studyOwnerPetCount
 	} satisfies ClinicAnalyticsStudyFilters);
-	const resolvedStudyTarget = $derived(
-		resolveClinicAnalyticsStudyTarget({
+	const studyAnalyticsView = $derived(
+		buildClinicAnalyticsStudyViewModel({
 			target: studyTarget,
 			pets: allStudyPets,
 			owners: allStudyOwners,
-			vaccines: allStudyVaccines,
-			antiparasitics: allStudyAntiparasitics,
-			filters: studyFilters
-		})
-	);
-	const studyTargetPets = $derived(resolvedStudyTarget.pets);
-	const studyTargetOwners = $derived(resolvedStudyTarget.owners);
-	const studyTargetVaccines = $derived(resolvedStudyTarget.vaccines);
-	const studyTargetAntiparasitics = $derived(resolvedStudyTarget.antiparasitics);
-	const selectedStudyBuckets = $derived(
-		buildClinicAnalyticsStudyBuckets({
-			target: studyTarget,
 			primaryDimension: studyPrimaryDimension,
 			secondaryDimension: studySecondaryDimension,
-			pets: studyTargetPets,
-			owners: studyTargetOwners,
-			vaccines: studyTargetVaccines,
-			antiparasitics: studyTargetAntiparasitics
+			selectedBucket: selectedStudyBucket,
+			filters: studyFilters,
+			bucketLimit: 16,
+			listLimit: 40
 		})
 	);
-	const selectedStudyFactors = $derived(studyFactorSummaries());
-	const listedStudyTarget = $derived(filterClinicAnalyticsStudyTargetByBucket({ selection: selectedStudyBucket, pets: studyTargetPets, owners: studyTargetOwners, vaccines: studyTargetVaccines, antiparasitics: studyTargetAntiparasitics }));
-	const listedStudyVaccines = $derived(listedStudyTarget.vaccines);
-	const listedStudyAntiparasitics = $derived(listedStudyTarget.antiparasitics);
-	const listedStudyOwners = $derived(listedStudyTarget.owners);
-	const listedStudyPets = $derived(listedStudyTarget.pets);
+	const limitedStudyBuckets = $derived(studyAnalyticsView.limitedBuckets);
+	const selectedStudyFactors = $derived(studyAnalyticsView.activeFactors.map((factor) => renderStudyFactor(factor)));
+	const listedStudyVaccines = $derived(studyAnalyticsView.listedVaccines);
+	const listedStudyAntiparasitics = $derived(studyAnalyticsView.listedAntiparasitics);
+	const listedStudyOwners = $derived(studyAnalyticsView.listedOwners);
+	const listedStudyPets = $derived(studyAnalyticsView.listedPets);
+	const limitedListedStudyVaccines = $derived(studyAnalyticsView.limitedListedVaccines);
+	const limitedListedStudyAntiparasitics = $derived(studyAnalyticsView.limitedListedAntiparasitics);
+	const limitedListedStudyOwners = $derived(studyAnalyticsView.limitedListedOwners);
+	const limitedListedStudyPets = $derived(studyAnalyticsView.limitedListedPets);
+	const studyDimensionSelectOptions = $derived(studyAnalyticsView.availableDimensions.map((dimension) => ({ value: dimension, label: studyDimensionLabel(dimension) })));
+	const studySpeciesSelectOptions = $derived([{ value: '', label: studyAllOptionLabel() }, ...studyAnalyticsView.filterOptions.species.map((bucket) => ({ value: bucket.key, label: studyOptionLabel(speciesLabel(bucket.key), bucket.count) }))]);
+	const studyBreedSelectOptions = $derived([{ value: '', label: studyAllOptionLabel() }, ...studyAnalyticsView.filterOptions.breeds.map((bucket) => ({ value: bucket.key, label: studyOptionLabel(breedLabel(bucket.key), bucket.count) }))]);
+	const studySexSelectOptions = $derived([{ value: '', label: studyAllOptionLabel() }, ...studyAnalyticsView.filterOptions.sexes.map((bucket) => ({ value: bucket.key, label: studyOptionLabel(sexLabel(bucket.key), bucket.count) }))]);
+	const studyAgeSelectOptions = $derived([{ value: '', label: studyAllOptionLabel() }, ...studyAnalyticsView.filterOptions.ages.map((bucket) => ({ value: bucket.key, label: studyOptionLabel(ageBandLabel(bucket.key), bucket.count) }))]);
+	const studyVaccineSelectOptions = $derived([{ value: '', label: studyAllOptionLabel() }, ...studyAnalyticsView.filterOptions.vaccines.map((bucket) => ({ value: bucket.key, label: studyOptionLabel(renderBucketLabel(bucket), bucket.count) }))]);
+	const studyAntiparasiticSelectOptions = $derived([{ value: '', label: studyAllOptionLabel() }, ...studyAnalyticsView.filterOptions.antiparasitics.map((bucket) => ({ value: bucket.key, label: studyOptionLabel(renderBucketLabel(bucket), bucket.count) }))]);
+	const studyVaccineStatusSelectOptions = $derived([{ value: '', label: studyAllOptionLabel() }, ...studyAnalyticsView.filterOptions.vaccineStatuses.map((bucket) => ({ value: bucket.key, label: studyOptionLabel(vaccineStatusLabel(bucket.key), bucket.count) }))]);
+	const studyAntiparasiticStatusSelectOptions = $derived([{ value: '', label: studyAllOptionLabel() }, ...studyAnalyticsView.filterOptions.antiparasiticStatuses.map((bucket) => ({ value: bucket.key, label: studyOptionLabel(antiparasiticStatusLabel(bucket.key), bucket.count) }))]);
+	const studyCitySelectOptions = $derived([{ value: '', label: studyAllOptionLabel() }, ...studyAnalyticsView.filterOptions.cities.map((bucket) => ({ value: bucket.key, label: studyOptionLabel(renderBucketLabel(bucket), bucket.count) }))]);
+	const studyOwnerPetCountSelectOptions = $derived([{ value: '', label: studyAllOptionLabel() }, ...studyAnalyticsView.filterOptions.ownerPetCounts.map((bucket) => ({ value: bucket.key, label: studyOptionLabel(t(petCountLabelKey(bucket.key)), bucket.count) }))]);
 
 	function metricFormatter(value: number): string {
 		return new Intl.NumberFormat(i18n.locale, { maximumFractionDigits: 1 }).format(value);
@@ -138,8 +149,8 @@
 
 	function selectStudyTarget(target: StudyTarget): void {
 		studyTarget = target;
-		studyPrimaryDimension = defaultStudyPrimaryDimension(target);
-		studySecondaryDimension = defaultStudySecondaryDimension(target);
+		studyPrimaryDimension = defaultClinicAnalyticsPrimaryDimension(target);
+		studySecondaryDimension = defaultClinicAnalyticsSecondaryDimension(target);
 		selectedStudyBucket = null;
 	}
 
@@ -151,181 +162,9 @@
 		return t(studyTargetOptions.find((option) => option.target === studyTarget)?.descriptionKey ?? 'analysis.study.axis.petsDescription');
 	}
 
-	function defaultStudyPrimaryDimension(target: StudyTarget): StudyDimension {
-		if (target === 'vaccines') return 'vaccineStatus';
-		if (target === 'antiparasitics') return 'antiparasiticStatus';
-		if (target === 'owners') return 'ownerCity';
-		return 'petBreed';
-	}
-
-	function defaultStudySecondaryDimension(target: StudyTarget): StudyDimension {
-		if (target === 'vaccines') return 'petSpecies';
-		if (target === 'antiparasitics') return 'petSpecies';
-		if (target === 'owners') return 'ownerPetVaccineStatus';
-		return 'petVaccineStatus';
-	}
-
-	function availableStudyDimensions(): StudyDimensionOption[] {
-		if (studyTarget === 'vaccines') {
-			return [
-				{ dimension: 'vaccineStatus', labelKey: 'analysis.study.dimension.vaccineStatus' },
-				{ dimension: 'vaccine', labelKey: 'analysis.study.dimension.vaccine' },
-				{ dimension: 'antiparasitic', labelKey: 'antiparasiticTreatment.name' },
-				{ dimension: 'petAntiparasiticStatus', labelKey: 'analysis.study.dimension.petAntiparasiticStatus' },
-				{ dimension: 'petSpecies', labelKey: 'analysis.study.dimension.petSpecies' },
-				{ dimension: 'petBreed', labelKey: 'analysis.study.dimension.petBreed' },
-				{ dimension: 'petAge', labelKey: 'analysis.study.dimension.petAge' },
-				{ dimension: 'ownerCity', labelKey: 'analysis.study.dimension.ownerCity' },
-				{ dimension: 'ownerPetCount', labelKey: 'analysis.study.dimension.ownerPetCount' }
-			];
-		}
-
-		if (studyTarget === 'antiparasitics') {
-			return [
-				{ dimension: 'antiparasiticStatus', labelKey: 'treatment.analytics.filterMode.status' },
-				{ dimension: 'antiparasitic', labelKey: 'antiparasiticTreatment.name' },
-				{ dimension: 'petSpecies', labelKey: 'analysis.study.dimension.petSpecies' },
-				{ dimension: 'petBreed', labelKey: 'analysis.study.dimension.petBreed' },
-				{ dimension: 'petAge', labelKey: 'analysis.study.dimension.petAge' },
-				{ dimension: 'ownerCity', labelKey: 'analysis.study.dimension.ownerCity' },
-				{ dimension: 'ownerPetCount', labelKey: 'analysis.study.dimension.ownerPetCount' }
-			];
-		}
-
-		if (studyTarget === 'owners') {
-			return [
-				{ dimension: 'ownerCity', labelKey: 'analysis.study.dimension.ownerCity' },
-				{ dimension: 'ownerPetCount', labelKey: 'analysis.study.dimension.ownerPetCount' },
-				{ dimension: 'ownerPetVaccineStatus', labelKey: 'analysis.study.dimension.ownerPetVaccineStatus' },
-				{ dimension: 'ownerPetAntiparasiticStatus', labelKey: 'analysis.study.dimension.ownerPetAntiparasiticStatus' },
-				{ dimension: 'ownerPetSpecies', labelKey: 'analysis.study.dimension.ownerPetSpecies' },
-				{ dimension: 'vaccine', labelKey: 'analysis.study.dimension.vaccine' },
-				{ dimension: 'antiparasitic', labelKey: 'antiparasiticTreatment.name' },
-				{ dimension: 'petBreed', labelKey: 'analysis.study.dimension.petBreed' },
-				{ dimension: 'petAge', labelKey: 'analysis.study.dimension.petAge' }
-			];
-		}
-
-		return [
-			{ dimension: 'petBreed', labelKey: 'analysis.study.dimension.petBreed' },
-			{ dimension: 'petSpecies', labelKey: 'analysis.study.dimension.petSpecies' },
-			{ dimension: 'petVaccineStatus', labelKey: 'analysis.study.dimension.petVaccineStatus' },
-			{ dimension: 'petAntiparasiticStatus', labelKey: 'analysis.study.dimension.petAntiparasiticStatus' },
-			{ dimension: 'vaccine', labelKey: 'analysis.study.dimension.vaccine' },
-			{ dimension: 'antiparasitic', labelKey: 'antiparasiticTreatment.name' },
-			{ dimension: 'petSex', labelKey: 'analysis.study.dimension.petSex' },
-			{ dimension: 'petAge', labelKey: 'analysis.study.dimension.petAge' },
-			{ dimension: 'ownerCity', labelKey: 'analysis.study.dimension.ownerCity' },
-			{ dimension: 'ownerPetCount', labelKey: 'analysis.study.dimension.ownerPetCount' }
-		];
-	}
-
-	function studyDimensionOptions() {
-		return availableStudyDimensions().map((option) => ({ value: option.dimension, label: t(option.labelKey) }));
-	}
-
 	function studyDimensionLabel(dimension: StudyDimension): string {
-		return t(availableStudyDimensions().find((option) => option.dimension === dimension)?.labelKey ?? 'common.notInformed');
-	}
-
-	function studySpeciesOptions() {
-		return [{ value: '', label: studyAllOptionLabel() }, ...studyBuckets(allStudyPets, (pet) => pet.species).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(speciesLabel(bucket.key), bucket.count) }))];
-	}
-
-	function studyBreedOptions() {
-		const source = studySpecies ? allStudyPets.filter((pet) => pet.species === studySpecies) : allStudyPets;
-		return [{ value: '', label: studyAllOptionLabel() }, ...studyBuckets(source, (pet) => pet.breed).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(breedLabel(bucket.key), bucket.count) }))];
-	}
-
-	function studySexOptions() {
-		return [{ value: '', label: studyAllOptionLabel() }, ...studyBuckets(allStudyPets, (pet) => pet.sex).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(sexLabel(bucket.key), bucket.count) }))];
-	}
-
-	function studyAgeOptions() {
-		return [{ value: '', label: studyAllOptionLabel() }, ...studyBuckets(allStudyPets, (pet) => pet.age).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(ageBandLabel(bucket.key), bucket.count) }))];
-	}
-
-	function studyVaccineOptions() {
-		return [
-			{ value: '', label: studyAllOptionLabel() },
-			...(clinic.dashboard?.analytics.study.vaccines ?? []).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(renderBucketLabel(bucket), bucket.count) }))
-		];
-	}
-
-	function studyAntiparasiticOptions() {
-		return [
-			{ value: '', label: studyAllOptionLabel() },
-			...(clinic.dashboard?.analytics.study.antiparasitics ?? []).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(renderBucketLabel(bucket), bucket.count) }))
-		];
-	}
-
-	function studyVaccineStatusOptions() {
-		if (studyVaccineNormalizedName) {
-			const buckets = new Map<ClinicAnalyticsVaccineStatusKey, number>();
-			for (const vaccine of allStudyVaccines) {
-				if (vaccine.normalizedName !== studyVaccineNormalizedName) continue;
-				buckets.set(vaccine.status, (buckets.get(vaccine.status) ?? 0) + 1);
-			}
-			return [{ value: '', label: studyAllOptionLabel() }, ...toAnalyticsBuckets(buckets).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(vaccineStatusLabel(bucket.key), bucket.count) }))];
-		}
-
-		if (studyTarget === 'vaccines') {
-			return [{ value: '', label: studyAllOptionLabel() }, ...studyBuckets(allStudyVaccines, (vaccine) => vaccine.status).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(vaccineStatusLabel(bucket.key), bucket.count) }))];
-		}
-
-		return [{ value: '', label: studyAllOptionLabel() }, ...studyBuckets(allStudyPets, (pet) => pet.vaccineStatus).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(vaccineStatusLabel(bucket.key), bucket.count) }))];
-	}
-
-	function studyAntiparasiticStatusOptions() {
-		if (studyAntiparasiticNormalizedName) {
-			const buckets = new Map<ClinicAnalyticsAntiparasiticStatusKey, number>();
-			for (const antiparasitic of allStudyAntiparasitics) {
-				if (antiparasitic.normalizedName !== studyAntiparasiticNormalizedName) continue;
-				buckets.set(antiparasitic.status, (buckets.get(antiparasitic.status) ?? 0) + 1);
-			}
-			return [{ value: '', label: studyAllOptionLabel() }, ...toAnalyticsBuckets(buckets).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(antiparasiticStatusLabel(bucket.key), bucket.count) }))];
-		}
-
-		if (studyTarget === 'antiparasitics') {
-			return [{ value: '', label: studyAllOptionLabel() }, ...studyBuckets(allStudyAntiparasitics, (antiparasitic) => antiparasitic.status).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(antiparasiticStatusLabel(bucket.key), bucket.count) }))];
-		}
-
-		return [{ value: '', label: studyAllOptionLabel() }, ...studyBuckets(allStudyPets, (pet) => pet.antiparasiticStatus).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(antiparasiticStatusLabel(bucket.key), bucket.count) }))];
-	}
-
-	function studyCityOptions() {
-		return namedOwnerOptions(allStudyOwners, (owner) => owner.cityKey, (owner) => owner.cityLabel);
-	}
-
-	function studyOwnerPetCountOptions() {
-		return [{ value: '', label: studyAllOptionLabel() }, ...studyBuckets(allStudyOwners, (owner) => clinicAnalyticsOwnerPetCountBand(owner.petCount)).map((bucket) => ({ value: bucket.key, label: studyOptionLabel(t(petCountLabelKey(bucket.key)), bucket.count) }))];
-	}
-
-	function namedOwnerOptions(owners: ClinicAnalyticsOwnerStudyItem[], getKey: (owner: ClinicAnalyticsOwnerStudyItem) => string, getLabel: (owner: ClinicAnalyticsOwnerStudyItem) => string | null) {
-		const counts = new Map<string, number>();
-		const labels = new Map<string, string>();
-		for (const owner of owners) {
-			const key = getKey(owner);
-			counts.set(key, (counts.get(key) ?? 0) + 1);
-			labels.set(key, getLabel(owner) ?? t('common.notInformed'));
-		}
-
-		const options = [...counts.entries()]
-			.map(([key, count]) => ({ value: key, label: studyOptionLabel(labels.get(key) ?? t('common.notInformed'), count), count }))
-			.sort((first, second) => second.count - first.count || first.label.localeCompare(second.label))
-			.map(({ value, label }) => ({ value, label }));
-
-		return [{ value: '', label: studyAllOptionLabel() }, ...options];
-	}
-
-	function studyBuckets<Item, Key extends string>(items: Item[], getKey: (item: Item) => Key): AnalyticsBucket<Key>[] {
-		const buckets = new Map<Key, number>();
-		for (const item of items) buckets.set(getKey(item), (buckets.get(getKey(item)) ?? 0) + 1);
-		return toAnalyticsBuckets(buckets);
-	}
-
-	function hasStudyFilters(): boolean {
-		return hasClinicAnalyticsStudyFilters(studyFilters);
+		const option = studyDimensionLabelOptions.find((item) => item.dimension === dimension);
+		return t(option?.labelKey ?? 'common.notInformed');
 	}
 
 	function clearStudyFilters(): void {
@@ -341,53 +180,30 @@
 		studyOwnerPetCount = '';
 	}
 
-	function studyFactorSummaries(): StudyFactor[] {
-		const factors: StudyFactor[] = [];
-		if (studyVaccineNormalizedName) factors.push({ label: t('analysis.study.vaccine'), value: selectedStudyVaccineLabel(), count: studyFactorCount('vaccine') });
-		if (studyVaccineStatus) factors.push({ label: t('analysis.study.vaccineStatus'), value: vaccineStatusLabel(studyVaccineStatus as ClinicAnalyticsVaccineStatusKey), count: studyFactorCount('vaccineStatus') });
-		if (studyAntiparasiticNormalizedName) factors.push({ label: t('antiparasiticTreatment.name'), value: selectedStudyAntiparasiticLabel(), count: studyFactorCount('antiparasitic') });
-		if (studyAntiparasiticStatus) factors.push({ label: t('treatment.analytics.filterMode.status'), value: antiparasiticStatusLabel(studyAntiparasiticStatus as ClinicAnalyticsAntiparasiticStatusKey), count: studyFactorCount('antiparasiticStatus') });
-		if (studySpecies) factors.push({ label: t('analysis.study.species'), value: speciesLabel(studySpecies), count: studyFactorCount('species') });
-		if (studyBreed) factors.push({ label: t('analysis.study.breed'), value: breedLabel(studyBreed), count: studyFactorCount('breed') });
-		if (studySex) factors.push({ label: t('analysis.study.sex'), value: sexLabel(studySex), count: studyFactorCount('sex') });
-		if (studyAge) factors.push({ label: t('analysis.study.age'), value: ageBandLabel(studyAge), count: studyFactorCount('age') });
-		if (studyCity) factors.push({ label: t('analysis.study.city'), value: selectedCityLabel(), count: studyFactorCount('city') });
-		if (studyOwnerPetCount) factors.push({ label: t('analysis.study.ownerPetCount'), value: t(petCountLabelKey(studyOwnerPetCount)), count: studyFactorCount('ownerPetCount') });
-		return factors;
+	function renderStudyFactor(factor: { factor: ClinicAnalyticsStudyFilterFactor; valueKey: string; count: number }): StudyFactor {
+		if (factor.factor === 'vaccine') return { label: t('analysis.study.vaccine'), value: selectedNamedBucketLabel(studyAnalyticsView.filterOptions.vaccines, factor.valueKey), count: factor.count };
+		if (factor.factor === 'vaccineStatus') return { label: t('analysis.study.vaccineStatus'), value: vaccineStatusLabel(factor.valueKey as ClinicAnalyticsVaccineStatusKey), count: factor.count };
+		if (factor.factor === 'antiparasitic') return { label: t('antiparasiticTreatment.name'), value: selectedNamedBucketLabel(studyAnalyticsView.filterOptions.antiparasitics, factor.valueKey), count: factor.count };
+		if (factor.factor === 'antiparasiticStatus') return { label: t('treatment.analytics.filterMode.status'), value: antiparasiticStatusLabel(factor.valueKey as ClinicAnalyticsAntiparasiticStatusKey), count: factor.count };
+		if (factor.factor === 'species') return { label: t('analysis.study.species'), value: speciesLabel(factor.valueKey), count: factor.count };
+		if (factor.factor === 'breed') return { label: t('analysis.study.breed'), value: breedLabel(factor.valueKey), count: factor.count };
+		if (factor.factor === 'sex') return { label: t('analysis.study.sex'), value: sexLabel(factor.valueKey), count: factor.count };
+		if (factor.factor === 'age') return { label: t('analysis.study.age'), value: ageBandLabel(factor.valueKey), count: factor.count };
+		if (factor.factor === 'city') return { label: t('analysis.study.city'), value: selectedNamedBucketLabel(studyAnalyticsView.filterOptions.cities, factor.valueKey), count: factor.count };
+		return { label: t('analysis.study.ownerPetCount'), value: t(petCountLabelKey(factor.valueKey)), count: factor.count };
 	}
 
-	function studyFactorCount(factor: StudyFactorKind): number {
-		return countClinicAnalyticsStudyTargetForFilter({
-			target: studyTarget,
-			pets: allStudyPets,
-			owners: allStudyOwners,
-			vaccines: allStudyVaccines,
-			antiparasitics: allStudyAntiparasitics,
-			filters: studyFilters,
-			factor
-		});
-	}
-
-	function selectedStudyVaccineLabel(): string {
-		const bucket = clinic.dashboard?.analytics.study.vaccines.find((item) => item.key === studyVaccineNormalizedName);
+	function selectedNamedBucketLabel(buckets: AnalyticsNamedBucket[], key: string): string {
+		const bucket = buckets.find((item) => item.key === key);
 		return bucket ? renderBucketLabel(bucket) : t('common.notInformed');
-	}
-
-	function selectedStudyAntiparasiticLabel(): string {
-		const bucket = clinic.dashboard?.analytics.study.antiparasitics.find((item) => item.key === studyAntiparasiticNormalizedName);
-		return bucket ? renderBucketLabel(bucket) : t('common.notInformed');
-	}
-
-	function selectedCityLabel(): string {
-		return studyCityOptions().find((option) => option.value === studyCity)?.label.replace(/ \([0-9.,]+\)$/, '') ?? t('common.notInformed');
 	}
 
 	function studyBucketPrimaryLabel(bucket: StudyCrossBucket): string {
-		return studyDimensionKeyLabel(studyPrimaryDimension, bucket.primaryKey);
+		return studyDimensionKeyLabel(studyAnalyticsView.primaryDimension, bucket.primaryKey);
 	}
 
 	function studyBucketSecondaryLabel(bucket: StudyCrossBucket): string {
-		return studyDimensionKeyLabel(studySecondaryDimension, bucket.secondaryKey);
+		return studyDimensionKeyLabel(studyAnalyticsView.secondaryDimension, bucket.secondaryKey);
 	}
 
 	function studyDimensionKeyLabel(dimension: StudyDimension, key: string): string {
@@ -426,30 +242,12 @@
 	}
 
 	function selectedStudyBucketLabel(): string {
-		return selectedStudyBucket ? `${studyDimensionKeyLabel(selectedStudyBucket.primaryDimension, selectedStudyBucket.primaryKey)} - ${studyDimensionKeyLabel(selectedStudyBucket.secondaryDimension, selectedStudyBucket.secondaryKey)}` : '';
+		const bucket = studyAnalyticsView.selectedBucket;
+		return bucket ? `${studyDimensionKeyLabel(bucket.primaryDimension, bucket.primaryKey)} - ${studyDimensionKeyLabel(bucket.secondaryDimension, bucket.secondaryKey)}` : '';
 	}
 
 	function studyVisualizationTitle(): string {
-		return `${studyDimensionLabel(studyPrimaryDimension)} ${t('common.and')} ${studyDimensionLabel(studySecondaryDimension)}`;
-	}
-
-	function chartGroupTotal(buckets: { count: number }[]): number {
-		return buckets.reduce((total, bucket) => total + bucket.count, 0);
-	}
-
-	function chartBucketPercentLabel(count: number, buckets: { count: number }[]): string {
-		const total = chartGroupTotal(buckets);
-		if (total <= 0 || count <= 0) return '0%';
-		const percent = (count / total) * 100;
-		return `${new Intl.NumberFormat(i18n.locale, { maximumFractionDigits: 1 }).format(Math.round(percent * 10) / 10)}%`;
-	}
-
-	function maxChartBucketCount(buckets: { count: number }[]): number {
-		return buckets.reduce((max, bucket) => Math.max(max, bucket.count), 0);
-	}
-
-	function topChartBuckets<T>(buckets: T[], limit: number): T[] {
-		return buckets.slice(0, limit);
+		return `${studyDimensionLabel(studyAnalyticsView.primaryDimension)} ${t('common.and')} ${studyDimensionLabel(studyAnalyticsView.secondaryDimension)}`;
 	}
 
 	function bucketWidth(count: number, max: number): number {
@@ -541,20 +339,17 @@
 	}
 
 	$effect(() => {
-		const dimensionOptions = availableStudyDimensions();
-		if (!dimensionOptions.some((option) => option.dimension === studyPrimaryDimension)) studyPrimaryDimension = defaultStudyPrimaryDimension(studyTarget);
-		if (!dimensionOptions.some((option) => option.dimension === studySecondaryDimension)) studySecondaryDimension = defaultStudySecondaryDimension(studyTarget);
-		if (studyBreed && !studyBreedOptions().some((option) => option.value === studyBreed)) studyBreed = '';
-		if (studyOwnerPetCount && !studyOwnerPetCountOptions().some((option) => option.value === studyOwnerPetCount)) studyOwnerPetCount = '';
-		if (studyVaccineStatus && !studyVaccineStatusOptions().some((option) => option.value === studyVaccineStatus)) studyVaccineStatus = '';
-		if (studyAntiparasiticStatus && !studyAntiparasiticStatusOptions().some((option) => option.value === studyAntiparasiticStatus)) studyAntiparasiticStatus = '';
+		if (studyPrimaryDimension !== studyAnalyticsView.primaryDimension) studyPrimaryDimension = studyAnalyticsView.primaryDimension;
+		if (studySecondaryDimension !== studyAnalyticsView.secondaryDimension) studySecondaryDimension = studyAnalyticsView.secondaryDimension;
+		if (studyBreed && !studyBreedSelectOptions.some((option) => option.value === studyBreed)) studyBreed = '';
+		if (studyOwnerPetCount && !studyOwnerPetCountSelectOptions.some((option) => option.value === studyOwnerPetCount)) studyOwnerPetCount = '';
+		if (studyVaccineStatus && !studyVaccineStatusSelectOptions.some((option) => option.value === studyVaccineStatus)) studyVaccineStatus = '';
+		if (studyAntiparasiticStatus && !studyAntiparasiticStatusSelectOptions.some((option) => option.value === studyAntiparasiticStatus)) studyAntiparasiticStatus = '';
 	});
 
 	$effect(() => {
 		if (!selectedStudyBucket) return;
-		const dimensionChanged = selectedStudyBucket.primaryDimension !== studyPrimaryDimension || selectedStudyBucket.secondaryDimension !== studySecondaryDimension;
-		const bucketExists = selectedStudyBuckets.some((bucket) => bucket.primaryKey === selectedStudyBucket?.primaryKey && bucket.secondaryKey === selectedStudyBucket?.secondaryKey);
-		if (dimensionChanged || !bucketExists) selectedStudyBucket = null;
+		if (!studyAnalyticsView.selectedBucket) selectedStudyBucket = null;
 	});
 </script>
 
@@ -592,7 +387,7 @@
 							<SlidersHorizontal class="size-4" />
 							<span>{t('analysis.study.yAxis')}</span>
 						</div>
-						<button class="inline-flex size-9 items-center justify-center rounded-md border border-border bg-background hover:bg-accent disabled:opacity-50" type="button" disabled={!hasStudyFilters()} onclick={clearStudyFilters} aria-label={t('analysis.study.clear')}>
+						<button class="inline-flex size-9 items-center justify-center rounded-md border border-border bg-background hover:bg-accent disabled:opacity-50" type="button" disabled={studyAnalyticsView.activeFactors.length === 0} onclick={clearStudyFilters} aria-label={t('analysis.study.clear')}>
 							<X class="size-4" />
 						</button>
 					</div>
@@ -602,11 +397,11 @@
 							<p class="text-sm font-semibold">{t('analysis.study.vaccineCriteria')}</p>
 							<div class="space-y-1">
 								<label class="text-sm font-medium" for="study-vaccine">{t('analysis.study.vaccine')}</label>
-								<Select id="study-vaccine" bind:value={studyVaccineNormalizedName} options={studyVaccineOptions()} />
+								<Select id="study-vaccine" bind:value={studyVaccineNormalizedName} options={studyVaccineSelectOptions} />
 							</div>
 							<div class="space-y-1">
 								<label class="text-sm font-medium" for="study-vaccine-status">{t('analysis.study.vaccineStatus')}</label>
-								<Select id="study-vaccine-status" bind:value={studyVaccineStatus} options={studyVaccineStatusOptions()} />
+								<Select id="study-vaccine-status" bind:value={studyVaccineStatus} options={studyVaccineStatusSelectOptions} />
 							</div>
 						</div>
 
@@ -614,11 +409,11 @@
 							<p class="text-sm font-semibold">{t('analysis.view.antiparasitics')}</p>
 							<div class="space-y-1">
 								<label class="text-sm font-medium" for="study-antiparasitic">{t('antiparasiticTreatment.name')}</label>
-								<Select id="study-antiparasitic" bind:value={studyAntiparasiticNormalizedName} options={studyAntiparasiticOptions()} />
+								<Select id="study-antiparasitic" bind:value={studyAntiparasiticNormalizedName} options={studyAntiparasiticSelectOptions} />
 							</div>
 							<div class="space-y-1">
 								<label class="text-sm font-medium" for="study-antiparasitic-status">{t('treatment.analytics.filterMode.status')}</label>
-								<Select id="study-antiparasitic-status" bind:value={studyAntiparasiticStatus} options={studyAntiparasiticStatusOptions()} />
+								<Select id="study-antiparasitic-status" bind:value={studyAntiparasiticStatus} options={studyAntiparasiticStatusSelectOptions} />
 							</div>
 						</div>
 
@@ -626,19 +421,19 @@
 							<p class="text-sm font-semibold">{t('analysis.study.petCriteria')}</p>
 							<div class="space-y-1">
 								<label class="text-sm font-medium" for="study-species">{t('analysis.study.species')}</label>
-								<Select id="study-species" bind:value={studySpecies} options={studySpeciesOptions()} />
+								<Select id="study-species" bind:value={studySpecies} options={studySpeciesSelectOptions} />
 							</div>
 							<div class="space-y-1">
 								<label class="text-sm font-medium" for="study-breed">{t('analysis.study.breed')}</label>
-								<Select id="study-breed" bind:value={studyBreed} options={studyBreedOptions()} />
+								<Select id="study-breed" bind:value={studyBreed} options={studyBreedSelectOptions} />
 							</div>
 							<div class="space-y-1">
 								<label class="text-sm font-medium" for="study-sex">{t('analysis.study.sex')}</label>
-								<Select id="study-sex" bind:value={studySex} options={studySexOptions()} />
+								<Select id="study-sex" bind:value={studySex} options={studySexSelectOptions} />
 							</div>
 							<div class="space-y-1">
 								<label class="text-sm font-medium" for="study-age">{t('analysis.study.age')}</label>
-								<Select id="study-age" bind:value={studyAge} options={studyAgeOptions()} />
+								<Select id="study-age" bind:value={studyAge} options={studyAgeSelectOptions} />
 							</div>
 						</div>
 
@@ -646,11 +441,11 @@
 							<p class="text-sm font-semibold">{t('analysis.study.ownerCriteria')}</p>
 							<div class="space-y-1">
 								<label class="text-sm font-medium" for="study-city">{t('analysis.study.city')}</label>
-								<Select id="study-city" bind:value={studyCity} options={studyCityOptions()} />
+								<Select id="study-city" bind:value={studyCity} options={studyCitySelectOptions} />
 							</div>
 							<div class="space-y-1">
 								<label class="text-sm font-medium" for="study-owner-pet-count">{t('analysis.study.ownerPetCount')}</label>
-								<Select id="study-owner-pet-count" bind:value={studyOwnerPetCount} options={studyOwnerPetCountOptions()} />
+								<Select id="study-owner-pet-count" bind:value={studyOwnerPetCount} options={studyOwnerPetCountSelectOptions} />
 							</div>
 						</div>
 					</div>
@@ -687,11 +482,11 @@
 						<div class="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(12rem,1fr)_minmax(12rem,1fr)_auto]">
 							<div class="space-y-1">
 								<label class="text-sm font-medium" for="study-primary-dimension">{t('analysis.study.visualizeByPrimary')}</label>
-								<Select id="study-primary-dimension" bind:value={studyPrimaryDimension} options={studyDimensionOptions()} />
+								<Select id="study-primary-dimension" bind:value={studyPrimaryDimension} options={studyDimensionSelectOptions} />
 							</div>
 							<div class="space-y-1">
 								<label class="text-sm font-medium" for="study-secondary-dimension">{t('analysis.study.visualizeBySecondary')}</label>
-								<Select id="study-secondary-dimension" bind:value={studySecondaryDimension} options={studyDimensionOptions()} />
+								<Select id="study-secondary-dimension" bind:value={studySecondaryDimension} options={studyDimensionSelectOptions} />
 							</div>
 							<div class="space-y-1 sm:col-span-2 xl:col-span-1">
 								<span class="text-sm font-medium">{t('analysis.study.visualFormat')}</span>
@@ -721,18 +516,18 @@
 					<div class="mt-4">
 						<div class="flex items-center justify-between gap-3 border-b border-border pb-2">
 							<h4 class="truncate text-sm font-semibold">{studyVisualizationTitle()}</h4>
-							<span class="shrink-0 text-xs font-medium tabular-nums text-muted-foreground">{metricFormatter(chartGroupTotal(selectedStudyBuckets))}</span>
+							<span class="shrink-0 text-xs font-medium tabular-nums text-muted-foreground">{metricFormatter(studyAnalyticsView.bucketTotal)}</span>
 						</div>
 
 						{#if studyVisualizationMode === 'bars'}
 							<div class="divide-y divide-border/70">
-								{#each topChartBuckets(selectedStudyBuckets, 16) as bucket}
+								{#each limitedStudyBuckets as bucket}
 									<div class="grid grid-cols-[minmax(7rem,1fr)_minmax(7rem,1fr)_minmax(8rem,1.6fr)_5rem_4.5rem_3.5rem] items-center gap-3 py-2 text-sm">
 										<span class="truncate text-muted-foreground" title={studyBucketPrimaryLabel(bucket)}>{studyBucketPrimaryLabel(bucket)}</span>
 										<span class="truncate text-muted-foreground" title={studyBucketSecondaryLabel(bucket)}>{studyBucketSecondaryLabel(bucket)}</span>
-										<span class="h-2 rounded-full bg-muted"><span class="block h-2 rounded-full bg-primary" style={`width: ${bucketWidth(bucket.count, maxChartBucketCount(selectedStudyBuckets))}%`}></span></span>
+										<span class="h-2 rounded-full bg-muted"><span class="block h-2 rounded-full bg-primary" style={`width: ${bucketWidth(bucket.count, studyAnalyticsView.bucketMaxCount)}%`}></span></span>
 										<span class="text-right font-medium tabular-nums">{metricFormatter(bucket.count)}</span>
-										<span class="text-right text-xs font-medium tabular-nums text-muted-foreground">{chartBucketPercentLabel(bucket.count, selectedStudyBuckets)}</span>
+										<span class="text-right text-xs font-medium tabular-nums text-muted-foreground">{metricFormatter(bucket.percent)}%</span>
 										<button class="inline-flex h-8 items-center justify-center rounded-md border border-border bg-background px-2 text-xs font-medium hover:bg-accent" type="button" onclick={() => selectStudyBucket(bucket)}>{t('actions.view')}</button>
 									</div>
 								{:else}
@@ -752,12 +547,12 @@
 										</tr>
 									</thead>
 									<tbody class="divide-y divide-border">
-										{#each topChartBuckets(selectedStudyBuckets, 16) as bucket}
+										{#each limitedStudyBuckets as bucket}
 											<tr>
 												<td class="truncate px-3 py-2 text-muted-foreground" title={studyBucketPrimaryLabel(bucket)}>{studyBucketPrimaryLabel(bucket)}</td>
 												<td class="truncate px-3 py-2 text-muted-foreground" title={studyBucketSecondaryLabel(bucket)}>{studyBucketSecondaryLabel(bucket)}</td>
 												<td class="px-3 py-2 text-right font-medium tabular-nums">{metricFormatter(bucket.count)}</td>
-												<td class="px-3 py-2 text-right font-medium tabular-nums text-muted-foreground">{chartBucketPercentLabel(bucket.count, selectedStudyBuckets)}</td>
+												<td class="px-3 py-2 text-right font-medium tabular-nums text-muted-foreground">{metricFormatter(bucket.percent)}%</td>
 												<td class="px-3 py-2 text-right"><button class="inline-flex h-8 items-center justify-center rounded-md border border-border bg-background px-2 text-xs font-medium hover:bg-accent" type="button" onclick={() => selectStudyBucket(bucket)}>{t('actions.view')}</button></td>
 											</tr>
 										{:else}
@@ -783,7 +578,7 @@
 						</div>
 						<span class="rounded-md bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">{metricFormatter(studyTarget === 'vaccines' ? listedStudyVaccines.length : studyTarget === 'antiparasitics' ? listedStudyAntiparasitics.length : studyTarget === 'owners' ? listedStudyOwners.length : listedStudyPets.length)}</span>
 					</div>
-					{#if selectedStudyBucket}
+					{#if studyAnalyticsView.selectedBucket}
 						<div class="mt-3 flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
 							<span class="min-w-0 truncate text-muted-foreground">{t('analysis.study.chartCut')}: {selectedStudyBucketLabel()}</span>
 							<button class="inline-flex h-8 items-center justify-center rounded-md border border-border bg-background px-2 text-xs font-medium hover:bg-accent" type="button" onclick={clearSelectedStudyBucket}>{t('analysis.study.clearChartCut')}</button>
@@ -791,7 +586,7 @@
 					{/if}
 					<div class="mt-4 divide-y divide-border rounded-md border border-border">
 						{#if studyTarget === 'vaccines'}
-							{#each listedStudyVaccines.slice(0, 40) as vaccine}
+							{#each limitedListedStudyVaccines as vaccine}
 								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 									<div class="min-w-0">
 										<p class="wrap-break-word text-sm font-semibold">{vaccine.name} · {vaccineDoseLabel(vaccine)} - {vaccineStatusLabel(vaccine.status)}</p>
@@ -805,7 +600,7 @@
 								<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyVaccines')}</p>
 							{/each}
 						{:else if studyTarget === 'antiparasitics'}
-							{#each listedStudyAntiparasitics.slice(0, 40) as antiparasitic}
+							{#each limitedListedStudyAntiparasitics as antiparasitic}
 								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 									<div class="min-w-0">
 										<p class="wrap-break-word text-sm font-semibold">{antiparasitic.name} · {antiparasiticDoseLabel(antiparasitic)} - {antiparasiticStatusLabel(antiparasitic.status)}</p>
@@ -819,7 +614,7 @@
 								<p class="p-4 text-center text-sm text-muted-foreground">{t('treatment.analytics.emptyStatus')}</p>
 							{/each}
 						{:else if studyTarget === 'owners'}
-							{#each listedStudyOwners.slice(0, 40) as owner}
+							{#each limitedListedStudyOwners as owner}
 								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 									<div class="min-w-0">
 										<p class="wrap-break-word text-sm font-semibold">{owner.name}</p>
@@ -832,7 +627,7 @@
 								<p class="p-4 text-center text-sm text-muted-foreground">{t('analysis.study.emptyOwners')}</p>
 							{/each}
 						{:else}
-							{#each listedStudyPets.slice(0, 40) as pet}
+							{#each limitedListedStudyPets as pet}
 								<article class="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 									<div class="min-w-0">
 										<p class="wrap-break-word text-sm font-semibold">{pet.name}</p>

@@ -4,7 +4,7 @@
 	import { PetAvatar } from '@vet/modules/registry/pets';
 	import { clinicAnalyticsAgeBandYear } from '@vet/types/clinic-analytics.js';
 	import { clinicAnalyticsPetDimensions, type AnalyticsBucket, type AnalyticsBucketSortField, type ClinicAnalyticsPetDimension, type ClinicAnalyticsPetStudyItem, type AnalyticsSortDirection, type ClinicAnalyticsVaccineStatusKey } from '@vet/types/clinic-analytics.js';
-	import { filterClinicAnalyticsPetsByBucket, selectClinicPetAnalyticsBuckets, sortClinicAnalyticsPets, sortClinicPetAnalyticsBuckets, type ClinicAnalyticsPetSortOrder } from '@vet/app-services/analytics';
+	import { buildClinicPetAnalyticsSummaryViewModels, buildClinicPetAnalyticsViewModel, type ClinicAnalyticsPetSortOrder } from '@vet/app-services/analytics';
 	import { getPetBreedOption, getPetSpeciesOption, isPetBreed, isPetSpecies } from '@vet/types/domain/pet/taxonomy.js';
 	import { loadPetAvatarsByPetIds } from '@vet/modules/registry';
 	import { clinic } from '$lib/stores/clinic.svelte.js';
@@ -28,19 +28,33 @@
 	let avatarBytesByPetId = $state(new Map<string, Uint8Array | null>());
 	let renderRequestId = 0;
 
-	const activeBuckets = $derived(
-		sortClinicPetAnalyticsBuckets({
-			buckets: petAnalyticsBuckets(activeAnalysis),
-			dimension: activeAnalysis,
-			field: bucketSortField,
-			direction: bucketSortDirection,
+	const petAnalyticsView = $derived(
+		buildClinicPetAnalyticsViewModel({
+			analytics: dashboard?.analytics,
+			pets: allPets,
+			activeDimension: activeAnalysis,
+			selectedBucketKey,
+			bucketSortField,
+			bucketSortDirection,
+			listSortOrder: sortOrder,
+			bucketLimit: 16,
 			labelForKey: bucketLabel,
 			locale: i18n.locale
 		})
 	);
-	const selectedBucket = $derived(activeBuckets.find((bucket) => bucket.key === selectedBucketKey) ?? null);
-	const listedPets = $derived(sortClinicAnalyticsPets(filterClinicAnalyticsPetsByBucket(allPets, activeAnalysis, selectedBucketKey), sortOrder));
-	const selectedPercent = $derived(allPets.length > 0 ? Math.round((listedPets.length / allPets.length) * 1000) / 10 : 0);
+	const petAnalysisSummaries = $derived(
+		buildClinicPetAnalyticsSummaryViewModels({
+			analytics: dashboard?.analytics,
+			pets: allPets,
+			bucketLimit: 16,
+			labelForKey: bucketLabel,
+			locale: i18n.locale
+		})
+	);
+	const activeBuckets = $derived(petAnalyticsView.limitedBuckets);
+	const selectedBucket = $derived(petAnalyticsView.selectedBucket);
+	const listedPets = $derived(petAnalyticsView.listedPets);
+	const selectedPercent = $derived(petAnalyticsView.selectedPercent);
 
 	function metricFormatter(value: number): string {
 		return new Intl.NumberFormat(i18n.locale, { maximumFractionDigits: 1 }).format(value);
@@ -62,34 +76,9 @@
 		return t(analysisLabelKey(kind));
 	}
 
-	function petAnalyticsBuckets(kind: ClinicAnalyticsPetDimension): AnalyticsBucket[] {
-		if (!dashboard) return [];
-		return selectClinicPetAnalyticsBuckets(dashboard.analytics, kind);
-	}
-
-	function bucketTotal(kind: ClinicAnalyticsPetDimension): number {
-		return petAnalyticsBuckets(kind).reduce((total, bucket) => total + bucket.count, 0);
-	}
-
-	function bucketPercent(bucket: AnalyticsBucket, buckets = activeBuckets): number {
-		const total = buckets.reduce((sum, item) => sum + item.count, 0);
-		if (total <= 0 || bucket.count <= 0) return 0;
-		return Math.round((bucket.count / total) * 1000) / 10;
-	}
-
 	function bucketWidth(bucket: AnalyticsBucket, buckets = activeBuckets): number {
 		const max = buckets.reduce((currentMax, item) => Math.max(currentMax, item.count), 0);
 		return max > 0 ? Math.max(4, Math.round((bucket.count / max) * 100)) : 0;
-	}
-
-	function topBucket(kind: ClinicAnalyticsPetDimension): AnalyticsBucket | null {
-		return petAnalyticsBuckets(kind)[0] ?? null;
-	}
-
-	function topBucketText(kind: ClinicAnalyticsPetDimension): string {
-		const bucket = topBucket(kind);
-		if (!bucket) return t('analysis.empty');
-		return `${bucketLabel(kind, bucket.key)} - ${metricFormatter(bucket.count)}`;
 	}
 
 	function speciesLabel(key: string): string {
@@ -229,7 +218,7 @@
 	});
 
 	$effect(() => {
-		if (selectedBucketKey && !activeBuckets.some((bucket) => bucket.key === selectedBucketKey)) selectedBucketKey = '';
+		if (selectedBucketKey && !petAnalyticsView.buckets.some((bucket) => bucket.key === selectedBucketKey)) selectedBucketKey = '';
 	});
 </script>
 
@@ -240,9 +229,10 @@
 			{t('analysis.pets.title')}
 		</div>
 
-		<div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5" role="tablist" aria-label={t('analysis.pets.title')}>
-			{#each analysisKinds as kind}
-				{@const top = topBucket(kind)}
+			<div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5" role="tablist" aria-label={t('analysis.pets.title')}>
+				{#each analysisKinds as kind}
+					{@const summary = petAnalysisSummaries[kind]}
+					{@const top = summary.topBucket}
 				<button
 					class="flex min-h-36 flex-col rounded-md border bg-background p-3 text-left transition-colors hover:bg-accent {activeAnalysis === kind ? 'border-primary ring-2 ring-ring/30' : 'border-border'}"
 					type="button"
@@ -256,15 +246,15 @@
 								{#if kind === 'vaccineStatus'}<Syringe class="size-4 shrink-0" />{:else}<ChartColumn class="size-4 shrink-0" />{/if}
 								<span class="truncate">{analysisLabel(kind)}</span>
 							</span>
-							<span class="mt-2 block min-h-10 text-xs leading-5 text-muted-foreground">{topBucketText(kind)}</span>
+							<span class="mt-2 block min-h-10 text-xs leading-5 text-muted-foreground">{top ? `${bucketLabel(kind, top.key)} - ${metricFormatter(top.count)}` : t('analysis.empty')}</span>
 						</span>
 						<span class="shrink-0 text-right">
-							<span class="block text-2xl font-semibold text-foreground">{metricFormatter(bucketTotal(kind))}</span>
-							<span class="mt-1 block text-xs text-muted-foreground">{top ? percentFormatter(bucketPercent(top, petAnalyticsBuckets(kind))) : '0%'}</span>
+							<span class="block text-2xl font-semibold text-foreground">{metricFormatter(summary.totalCount)}</span>
+							<span class="mt-1 block text-xs text-muted-foreground">{top ? percentFormatter(top.percent) : '0%'}</span>
 						</span>
 					</span>
 					<span class="mt-auto block h-2 rounded-full bg-muted">
-						<span class="block h-2 rounded-full bg-primary" style={`width: ${top ? bucketWidth(top, petAnalyticsBuckets(kind)) : 0}%`}></span>
+						<span class="block h-2 rounded-full bg-primary" style={`width: ${top ? bucketWidth(top, summary.buckets) : 0}%`}></span>
 					</span>
 				</button>
 			{/each}
@@ -304,7 +294,7 @@
 						onclick={clearSelectedBucket}
 					>
 						<span class="truncate font-medium">{t('analysis.study.all')}</span>
-						<span class="shrink-0 font-semibold tabular-nums">{metricFormatter(allPets.length)}</span>
+						<span class="shrink-0 font-semibold tabular-nums">{metricFormatter(petAnalyticsView.totalCount)}</span>
 					</button>
 
 					{#each activeBuckets as bucket}
@@ -320,7 +310,7 @@
 							<span class="mt-2 block h-2 rounded-full bg-muted">
 								<span class="block h-2 rounded-full bg-primary" style={`width: ${bucketWidth(bucket)}%`}></span>
 							</span>
-							<span class="mt-1 block text-right text-xs text-muted-foreground">{percentFormatter(bucketPercent(bucket))}</span>
+							<span class="mt-1 block text-right text-xs text-muted-foreground">{percentFormatter(bucket.percent)}</span>
 						</button>
 					{:else}
 						<p class="rounded-md border border-dashed border-border px-3 py-4 text-center text-sm text-muted-foreground">{t('analysis.empty')}</p>
@@ -351,7 +341,7 @@
 								]}
 								onchange={(value) => (sortOrder = value as ClinicAnalyticsPetSortOrder)}
 							/>
-							<span class="rounded-md bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">{metricFormatter(listedPets.length)}</span>
+							<span class="rounded-md bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">{metricFormatter(petAnalyticsView.selectedCount)}</span>
 						</div>
 					</div>
 				</div>

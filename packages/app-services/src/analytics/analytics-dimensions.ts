@@ -53,10 +53,11 @@ export function listClinicAnalyticsQueryRows(input: {
 	antiparasitics: readonly AntiparasiticSummary[];
 }): ClinicAnalyticsQueryRow[] {
 	const ownersById = new Map(input.owners.map((owner) => [owner.id, owner]));
+	const ownersByPetId = ownersByPetIdFromOwners(input.owners);
 	if (input.target === 'owners') return input.owners.map((owner) => ({ kind: 'owner', owner }));
-	if (input.target === 'vaccines') return input.vaccines.map((vaccine) => ({ kind: 'vaccine', vaccine, pet: vaccine.pet, owners: listOwnersForPet(vaccine.pet, input.owners, ownersById) }));
-	if (input.target === 'antiparasitics') return input.antiparasitics.map((antiparasitic) => ({ kind: 'antiparasitic', antiparasitic, pet: antiparasitic.pet, owners: listOwnersForPet(antiparasitic.pet, input.owners, ownersById) }));
-	return input.pets.map((pet) => ({ kind: 'pet', pet, owners: listOwnersForPet(pet, input.owners, ownersById) }));
+	if (input.target === 'vaccines') return input.vaccines.map((vaccine) => ({ kind: 'vaccine', vaccine, pet: vaccine.pet, owners: listOwnersForPet(vaccine.pet, ownersById, ownersByPetId) }));
+	if (input.target === 'antiparasitics') return input.antiparasitics.map((antiparasitic) => ({ kind: 'antiparasitic', antiparasitic, pet: antiparasitic.pet, owners: listOwnersForPet(antiparasitic.pet, ownersById, ownersByPetId) }));
+	return input.pets.map((pet) => ({ kind: 'pet', pet, owners: listOwnersForPet(pet, ownersById, ownersByPetId) }));
 }
 
 export function listClinicAnalyticsTargetDimensions(target: ClinicAnalyticsQueryTarget): ClinicAnalyticsQueryDimension[] {
@@ -156,10 +157,22 @@ function ownerLocationKeysForRow(row: ClinicAnalyticsQueryRow): string[] {
 	return row.kind === 'owner' ? [] : row.pet.ownerLocationKeys;
 }
 
-function listOwnersForPet(pet: ClinicAnalyticsPetStudyItem, owners: readonly ClinicAnalyticsOwnerStudyItem[], ownersById: Map<string, ClinicAnalyticsOwnerStudyItem>): ClinicAnalyticsOwnerStudyItem[] {
+function listOwnersForPet(pet: ClinicAnalyticsPetStudyItem, ownersById: Map<string, ClinicAnalyticsOwnerStudyItem>, ownersByPetId: ReadonlyMap<string, ClinicAnalyticsOwnerStudyItem[]>): ClinicAnalyticsOwnerStudyItem[] {
 	const directOwners = pet.owners.map((owner) => ownersById.get(owner.id)).filter((owner): owner is ClinicAnalyticsOwnerStudyItem => !!owner);
 	if (directOwners.length > 0) return directOwners;
-	return owners.filter((owner) => owner.pets.some((ownerPet) => ownerPet.id === pet.id));
+	return ownersByPetId.get(pet.id) ?? [];
+}
+
+function ownersByPetIdFromOwners(owners: readonly ClinicAnalyticsOwnerStudyItem[]): Map<string, ClinicAnalyticsOwnerStudyItem[]> {
+	const ownersByPetId = new Map<string, ClinicAnalyticsOwnerStudyItem[]>();
+	for (const owner of owners) {
+		for (const pet of owner.pets) {
+			const petOwners = ownersByPetId.get(pet.id) ?? [];
+			petOwners.push(owner);
+			ownersByPetId.set(pet.id, petOwners);
+		}
+	}
+	return ownersByPetId;
 }
 
 function clinicAnalyticsOwnerPetCountBand(value: number): ClinicAnalyticsPetCountBandKey {
