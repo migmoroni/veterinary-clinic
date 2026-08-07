@@ -1,40 +1,39 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import Select from '@vet/ui/components/ui/Select.svelte';
-	import DateField from '@vet/ui/components/forms/DateField.svelte';
 	import type { OwnerAssociatedContact } from '@vet/types/domain/owner/owner.js';
 	import { formatDateForDisplay } from '@vet/types/domain/shared/date-input.js';
 	import type { TreatmentKind } from '@vet/types/domain/treatment/treatment.js';
-	import type { TreatmentAnalyticsCatalogItem, TreatmentDueFilterMode, TreatmentHistoryPeriod, TreatmentHistoryPoint, TreatmentStatusItem, TreatmentStatusKey, TreatmentStatusSummary } from '@vet/types/domain/treatment/analytics.js';
-	import { emptyTreatmentStatusSummary, shiftIsoDate, todayIsoDate, treatmentHistoryPeriods } from '@vet/types/domain/treatment/analytics.js';
+	import type { TreatmentAnalyticsCatalogItem, TreatmentAnalyticsOverview, TreatmentDueItem, TreatmentDuePeriodKey, TreatmentHistoryPeriod, TreatmentHistoryPoint } from '@vet/types/domain/treatment/analytics.js';
+	import { treatmentHistoryPeriods } from '@vet/types/domain/treatment/analytics.js';
 	import type { TranslationKey } from '@vet/core-local/i18n/index.js';
 	import { i18n, t } from '@vet/core-local/i18n/index.js';
 	import {
-		analyticsPercent,
+		buildTreatmentDuePeriodChart,
+		buildTreatmentHistoryBarChart,
+		defaultTreatmentAnalyticsDueOrder,
+		filterTreatmentAnalyticsDueItems,
 		loadAnalyticsTreatments,
-		loadTreatmentAnalyticsOverview,
+		loadTreatmentDueAnalytics,
 		loadTreatmentHistory,
-		loadTreatmentStatusItems,
-		normalizeTreatmentAnalyticsDueFilterMode,
+		normalizeTreatmentAnalyticsDuePeriod,
 		normalizeTreatmentAnalyticsPeriod,
-		normalizeTreatmentAnalyticsPeriodEndDate,
-		normalizeTreatmentAnalyticsPeriodStartDate,
 		normalizeTreatmentAnalyticsSortOrder,
-		normalizeTreatmentAnalyticsStatus,
-		sortTreatmentAnalyticsHistoryPoints,
-		sortTreatmentAnalyticsStatusItems,
+		sortTreatmentAnalyticsDueItems,
+		type TreatmentAnalyticsChartLabels,
 		type TreatmentAnalyticsSortOrder
 	} from '@vet/app-services/analytics';
 	import { OwnerContactDialog } from '@vet/modules/registry/owners';
 	import { PetAvatar, loadPetAvatarsByPetIds } from '@vet/modules/registry/pets';
 	import { listOwnerAssociatedContactsByOwnerIds } from '@vet/modules/registry/owners';
+	import { DonutChart, HorizontalBarChart } from '@vet/ui/charts';
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import Phone from '@lucide/svelte/icons/phone';
 	import Pill from '@lucide/svelte/icons/pill';
 	import RotateCw from '@lucide/svelte/icons/rotate-cw';
 	import Syringe from '@lucide/svelte/icons/syringe';
 
-	type ActiveTab = 'status' | 'history';
+	type ActiveTab = 'due' | 'history';
 
 	interface TreatmentAnalyticsConfig {
 		defaultBasePath: string;
@@ -57,64 +56,51 @@
 		}
 	};
 
-	const statusOptionStyles: { status: TreatmentStatusKey; barClass: string; textClass: string }[] = [
-		{ status: 'current', barClass: 'bg-emerald-600', textClass: 'text-emerald-700' },
-		{ status: 'dueSoon', barClass: 'bg-sky-600', textClass: 'text-sky-700' },
-		{ status: 'dueVerySoon', barClass: 'bg-amber-600', textClass: 'text-amber-700' },
-		{ status: 'expired', barClass: 'bg-orange-600', textClass: 'text-orange-700' },
-		{ status: 'overdue', barClass: 'bg-destructive', textClass: 'text-destructive' }
-	];
-
 	const { kind = 'vaccine', basePath }: TreatmentAnalyticsPageProps = $props();
 	const config = $derived(treatmentAnalyticsConfigs[kind]);
 	const pageBasePath = $derived(basePath ?? config.defaultBasePath);
-	const statusOptions = $derived(
-		statusOptionStyles.map((option) => ({
-			...option,
-			labelKey: treatmentKey(`status.${option.status}`),
-			detailKey: treatmentKey(`status.${option.status}Detail`)
-		}))
-	);
 
-	const todayDate = todayIsoDate();
-	const defaultPeriodStartDate = shiftIsoDate(todayDate, -30);
-	const defaultPeriodEndDate = shiftIsoDate(todayDate, 30);
-
-	let dueFilterMode = $state<TreatmentDueFilterMode>('status');
-	let status = $state<TreatmentStatusKey>('expired');
-	let periodStartDate = $state(defaultPeriodStartDate);
-	let periodEndDate = $state(defaultPeriodEndDate);
+	let duePeriod = $state<TreatmentDuePeriodKey>('dueWithin30Days');
 	let period = $state<TreatmentHistoryPeriod>('month');
 	let selectedNormalizedName = $state('');
-	let activeTab = $state<ActiveTab>('status');
-	let statusOrder = $state<TreatmentAnalyticsSortOrder>('recent');
-	let historyOrder = $state<TreatmentAnalyticsSortOrder>('recent');
-	let items = $state<TreatmentStatusItem[]>([]);
-	let visibleItems = $state<TreatmentStatusItem[]>([]);
+	let activeTab = $state<ActiveTab>('due');
+	let dueOrder = $state<TreatmentAnalyticsSortOrder>('old');
+	let allDueItems = $state<TreatmentDueItem[]>([]);
+	let items = $state<TreatmentDueItem[]>([]);
+	let visibleItems = $state<TreatmentDueItem[]>([]);
 	let avatarBytesByPetId = $state(new Map<string, Uint8Array | null>());
-	let statusSummary = $state<TreatmentStatusSummary>(emptyTreatmentStatusSummary());
-	let statusTotalTracked = $state(0);
+	let ownerContactsByOwnerId = $state(new Map<string, OwnerAssociatedContact[]>());
+	let treatmentOverview = $state<TreatmentAnalyticsOverview | null>(null);
 	let history = $state<TreatmentHistoryPoint[]>([]);
 	let analyticsTreatments = $state<TreatmentAnalyticsCatalogItem[]>([]);
-	let statusLoading = $state(false);
-	let statusListLoading = $state(false);
+	let dueLoading = $state(false);
+	let dueListLoading = $state(false);
 	let historyLoading = $state(false);
 	let catalogLoading = $state(false);
-	let statusLoaded = $state(false);
+	let dueLoaded = $state(false);
 	let historyLoaded = $state(false);
 	let catalogLoaded = $state(false);
-	let statusError = $state('');
+	let dueError = $state('');
 	let historyError = $state('');
 	let contactDialogOpen = $state(false);
 	let contactDialogOwnerName = $state('');
 	let contactDialogContacts = $state<OwnerAssociatedContact[]>([]);
-	let statusRequestId = 0;
-	let statusRenderRequestId = 0;
+	let dueRequestId = 0;
+	let dueRenderRequestId = 0;
 	let historyRequestId = 0;
 	let catalogRequestId = 0;
 
-	const sortedHistory = $derived(sortTreatmentAnalyticsHistoryPoints(history, historyOrder));
-	const maxHistoryCount = $derived(history.reduce((max, point) => Math.max(max, point.count), 0));
+	const dueChartLabels = $derived({
+		centerLabel: kind === 'vaccine' ? t('analysis.view.vaccines') : t('analysis.view.antiparasitics'),
+		duePeriods: {
+			dueAfter30Days: t('treatment.duePeriod.dueAfter30Days'),
+			dueWithin30Days: t('treatment.duePeriod.dueWithin30Days'),
+			expiredWithin30Days: t('treatment.duePeriod.expiredWithin30Days'),
+			expiredAfter30Days: t('treatment.duePeriod.expiredAfter30Days')
+		}
+	} satisfies TreatmentAnalyticsChartLabels);
+	const dueChart = $derived(buildTreatmentDuePeriodChart({ overview: treatmentOverview, labels: dueChartLabels, locale: i18n.locale }));
+	const historyChart = $derived(buildTreatmentHistoryBarChart(history));
 
 	function treatmentKey(path: string): TranslationKey {
 		return `treatment.${path}` as TranslationKey;
@@ -133,69 +119,47 @@
 		return analyticsKey(`period.${value}`);
 	}
 
-	function statusLabelKey(value: TreatmentStatusKey): TranslationKey {
-		return treatmentKey(`status.${value}`);
+	function duePeriodLabelKey(value: TreatmentDuePeriodKey): TranslationKey {
+		return treatmentKey(`duePeriod.${value}`);
 	}
 
-	function statusSectionTitleKey(): TranslationKey {
-		return dueFilterMode === 'status' ? statusLabelKey(status) : analyticsKey('periodFilterTitle');
+	function metricFormatter(value: number): string {
+		return new Intl.NumberFormat(i18n.locale).format(value);
 	}
 
-	function statusCount(value: TreatmentStatusKey): number {
-		return statusSummary[value] ?? 0;
+	function percentFormatter(value: number | undefined): string {
+		return new Intl.NumberFormat(i18n.locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value ?? 0);
 	}
 
-	function statusPercent(value: TreatmentStatusKey): number {
-		if (statusTotalTracked <= 0) return 0;
-
-		const count = statusCount(value);
-		if (count <= 0) return 0;
-
-		const rounded = analyticsPercent({ value: count, total: statusTotalTracked });
-		return rounded >= 0.1 ? rounded : 0.1;
-	}
-
-	function statusPercentLabel(value: TreatmentStatusKey): string {
-		const count = statusCount(value);
-		if (statusTotalTracked <= 0 || count <= 0) return '0';
-
-		const rawPercent = analyticsPercent({ value: count, total: statusTotalTracked });
-		const formatter = new Intl.NumberFormat(i18n.locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-		if (rawPercent < 0.1) return `< ${formatter.format(0.1)}`;
-		return formatter.format(rawPercent);
-	}
-
-	function ownerDisplayName(item: TreatmentStatusItem): string {
+	function ownerDisplayName(item: TreatmentDueItem): string {
 		return item.ownerName || t('owner.unassigned');
 	}
 
-	function petProfileHref(item: TreatmentStatusItem): string {
+	function petProfileHref(item: TreatmentDueItem): string {
 		return `/pets/${item.petId}`;
 	}
 
-	function petAvatarBytes(item: TreatmentStatusItem): Uint8Array | null {
+	function petAvatarBytes(item: TreatmentDueItem): Uint8Array | null {
 		return avatarBytesByPetId.get(item.petId) ?? item.petAvatarBytes;
+	}
+
+	function ownerContacts(item: TreatmentDueItem): OwnerAssociatedContact[] {
+		return ownerContactsByOwnerId.get(item.ownerId) ?? item.ownerContacts;
 	}
 
 	function updateUrl() {
 		if (typeof window === 'undefined') return;
 		const params = new URLSearchParams();
 		params.set('tab', activeTab);
-		params.set('filterMode', dueFilterMode);
-		if (dueFilterMode === 'status') params.set('status', status);
-		if (dueFilterMode === 'period') {
-			params.set('startDate', periodStartDate);
-			params.set('endDate', periodEndDate);
-		}
-		params.set('statusOrder', statusOrder);
+		params.set('duePeriod', duePeriod);
+		params.set('dueOrder', dueOrder);
 		params.set('period', period);
-		params.set('historyOrder', historyOrder);
 		if (selectedNormalizedName) params.set(config.historyParam, selectedNormalizedName);
 		window.history.replaceState(null, '', `${pageBasePath}?${params.toString()}`);
 	}
 
 	function isRefreshing(): boolean {
-		return activeTab === 'status' ? statusLoading : historyLoading || catalogLoading;
+		return activeTab === 'due' ? dueLoading : historyLoading || catalogLoading;
 	}
 
 	async function waitForNextPaint() {
@@ -204,24 +168,24 @@
 		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 	}
 
-	async function renderStatusItemsInChunks(source: TreatmentStatusItem[], order = statusOrder) {
-		const requestId = ++statusRenderRequestId;
-		const sortedSource = sortTreatmentAnalyticsStatusItems(source, order);
-		statusListLoading = true;
+	async function renderDueItemsInChunks(source: TreatmentDueItem[], order = dueOrder) {
+		const requestId = ++dueRenderRequestId;
+		const sortedSource = sortTreatmentAnalyticsDueItems(source, order);
+		dueListLoading = true;
 		visibleItems = [];
 		await waitForNextPaint();
 
 		const chunkSize = 80;
 		for (let index = 0; index < sortedSource.length; index += chunkSize) {
-			if (requestId !== statusRenderRequestId || activeTab !== 'status') return;
+			if (requestId !== dueRenderRequestId || activeTab !== 'due') return;
 			visibleItems = sortedSource.slice(0, Math.min(sortedSource.length, index + chunkSize));
 			await waitForNextPaint();
 		}
 
-		if (requestId === statusRenderRequestId) statusListLoading = false;
+		if (requestId === dueRenderRequestId) dueListLoading = false;
 	}
 
-	async function loadVisiblePetAvatars(source: TreatmentStatusItem[]): Promise<void> {
+	async function loadVisiblePetAvatars(source: TreatmentDueItem[]): Promise<void> {
 		const missingIds = [...new Set(source.map((item) => item.petId))].filter((id) => !avatarBytesByPetId.has(id));
 		if (missingIds.length === 0) return;
 
@@ -235,49 +199,59 @@
 		}
 	}
 
-	async function withOwnerContacts(source: TreatmentStatusItem[]): Promise<TreatmentStatusItem[]> {
-		const ownerIds = [...new Set(source.map((item) => item.ownerId).filter((id) => id.trim().length > 0))];
-		if (ownerIds.length === 0) return source;
-		const contactsByOwnerId = await listOwnerAssociatedContactsByOwnerIds(ownerIds);
-		return source.map((item) => ({ ...item, ownerContacts: contactsByOwnerId.get(item.ownerId) ?? item.ownerContacts }));
-	}
+	async function loadVisibleOwnerContacts(source: TreatmentDueItem[]): Promise<void> {
+		const missingIds = [...new Set(source.map((item) => item.ownerId).filter((id) => id.trim().length > 0))].filter((id) => !ownerContactsByOwnerId.has(id));
+		if (missingIds.length === 0) return;
 
-	function cancelStatusListRender() {
-		statusRenderRequestId += 1;
-		statusListLoading = false;
-		visibleItems = [];
-	}
-
-	async function loadStatusData() {
-		const requestId = ++statusRequestId;
-		const requestedKind = kind;
-		const requestedFilterMode = dueFilterMode;
-		const requestedStatus = status;
-		const requestedStartDate = periodStartDate;
-		const requestedEndDate = periodEndDate;
-		statusLoading = true;
-		statusListLoading = true;
-		visibleItems = [];
-		statusError = '';
 		try {
-			const [loadedItems, loadedOverview] = await Promise.all([
-				loadTreatmentStatusItems(requestedKind, { mode: requestedFilterMode, status: requestedStatus, startDate: requestedStartDate, endDate: requestedEndDate }).then(withOwnerContacts),
-				loadTreatmentAnalyticsOverview(requestedKind)
-			]);
-			if (requestId !== statusRequestId || requestedKind !== kind || requestedFilterMode !== dueFilterMode || requestedStatus !== status || requestedStartDate !== periodStartDate || requestedEndDate !== periodEndDate) return;
-			items = loadedItems;
-			statusSummary = loadedOverview.summary;
-			statusTotalTracked = loadedOverview.totalTracked;
-			statusLoaded = true;
-			if (activeTab === 'status') void renderStatusItemsInChunks(loadedItems);
-			else statusListLoading = false;
+			const loadedContacts = await listOwnerAssociatedContactsByOwnerIds(missingIds);
+			const nextContacts = new Map(ownerContactsByOwnerId);
+			for (const id of missingIds) nextContacts.set(id, loadedContacts.get(id) ?? []);
+			ownerContactsByOwnerId = nextContacts;
+		} catch (error) {
+			console.error(error);
+		}
+	}
+
+	function selectItemsForDuePeriod(source: readonly TreatmentDueItem[], selectedDuePeriod = duePeriod): TreatmentDueItem[] {
+		return filterTreatmentAnalyticsDueItems(source, selectedDuePeriod);
+	}
+
+	function renderSelectedDuePeriod(source = allDueItems, selectedDuePeriod = duePeriod, order = dueOrder) {
+		const selectedItems = selectItemsForDuePeriod(source, selectedDuePeriod);
+		items = selectedItems;
+		void renderDueItemsInChunks(selectedItems, order);
+	}
+
+	function cancelDueListRender() {
+		dueRenderRequestId += 1;
+		dueListLoading = false;
+		visibleItems = [];
+	}
+
+	async function loadDueData() {
+		const requestId = ++dueRequestId;
+		const requestedKind = kind;
+		dueLoading = true;
+		dueListLoading = true;
+		visibleItems = [];
+		dueError = '';
+		try {
+			const loadedAnalytics = await loadTreatmentDueAnalytics(requestedKind);
+			if (requestId !== dueRequestId || requestedKind !== kind) return;
+			allDueItems = loadedAnalytics.items;
+			treatmentOverview = loadedAnalytics.overview;
+			items = selectItemsForDuePeriod(loadedAnalytics.items, duePeriod);
+			dueLoaded = true;
+			if (activeTab === 'due') void renderDueItemsInChunks(items);
+			else dueListLoading = false;
 		} catch (err) {
-			if (requestId !== statusRequestId) return;
+			if (requestId !== dueRequestId) return;
 			console.error(err);
-			statusError = err instanceof Error ? err.message : t('common.error');
-			statusListLoading = false;
+			dueError = err instanceof Error ? err.message : t('common.error');
+			dueListLoading = false;
 		} finally {
-			if (requestId === statusRequestId) statusLoading = false;
+			if (requestId === dueRequestId) dueLoading = false;
 		}
 	}
 
@@ -326,14 +300,15 @@
 		}
 	}
 
-	function queueStatusLoad() {
-		cancelStatusListRender();
-		statusLoading = true;
-		statusListLoading = true;
-		statusLoaded = false;
+	function queueDueLoad() {
+		cancelDueListRender();
+		dueLoading = true;
+		dueListLoading = true;
+		dueLoaded = false;
+		allDueItems = [];
 		items = [];
 		visibleItems = [];
-		void waitForNextPaint().then(() => loadStatusData());
+		void waitForNextPaint().then(() => loadDueData());
 	}
 
 	function queueHistoryLoad(forceCatalog = false) {
@@ -344,8 +319,8 @@
 	}
 
 	function loadInitialTab() {
-		if (activeTab === 'status') {
-			queueStatusLoad();
+		if (activeTab === 'due') {
+			queueDueLoad();
 			return;
 		}
 
@@ -353,8 +328,8 @@
 	}
 
 	function refreshActiveTab() {
-		if (activeTab === 'status') {
-			queueStatusLoad();
+		if (activeTab === 'due') {
+			queueDueLoad();
 			return;
 		}
 
@@ -363,51 +338,34 @@
 
 	function selectTab(tab: ActiveTab) {
 		activeTab = tab;
-		if (tab === 'history') cancelStatusListRender();
+		if (tab === 'history') cancelDueListRender();
 		updateUrl();
 
-		if (tab === 'status' && statusLoaded && !statusLoading) void renderStatusItemsInChunks(items);
-		if (tab === 'status' && !statusLoaded && !statusLoading) queueStatusLoad();
+		if (tab === 'due' && dueLoaded && !dueLoading) void renderDueItemsInChunks(items);
+		if (tab === 'due' && !dueLoaded && !dueLoading) queueDueLoad();
 		if (tab === 'history' && ((!historyLoaded && !historyLoading) || (!catalogLoaded && !catalogLoading))) queueHistoryLoad();
 	}
 
-	function selectStatus(value: string) {
-		activeTab = 'status';
-		dueFilterMode = 'status';
-		status = normalizeTreatmentAnalyticsStatus(value);
+	function selectDuePeriod(value: string) {
+		activeTab = 'due';
+		const nextDuePeriod = normalizeTreatmentAnalyticsDuePeriod(value);
+		duePeriod = nextDuePeriod;
+		dueOrder = defaultTreatmentAnalyticsDueOrder(nextDuePeriod);
 		updateUrl();
-		queueStatusLoad();
+		cancelDueListRender();
+		if (dueLoaded && !dueLoading) {
+			renderSelectedDuePeriod(allDueItems, nextDuePeriod, dueOrder);
+			return;
+		}
+		if (!dueLoading) queueDueLoad();
 	}
 
-	function selectDueFilterMode(value: string) {
-		activeTab = 'status';
-		dueFilterMode = normalizeTreatmentAnalyticsDueFilterMode(value);
-		updateUrl();
-		queueStatusLoad();
-	}
-
-	function selectPeriodStartDate(value: string) {
-		activeTab = 'status';
-		dueFilterMode = 'period';
-		periodStartDate = normalizeTreatmentAnalyticsPeriodStartDate(value);
-		updateUrl();
-		queueStatusLoad();
-	}
-
-	function selectPeriodEndDate(value: string) {
-		activeTab = 'status';
-		dueFilterMode = 'period';
-		periodEndDate = normalizeTreatmentAnalyticsPeriodEndDate(value);
-		updateUrl();
-		queueStatusLoad();
-	}
-
-	function selectStatusOrder(value: string) {
-		activeTab = 'status';
-		statusOrder = normalizeTreatmentAnalyticsSortOrder(value);
+	function selectDueOrder(value: string) {
+		activeTab = 'due';
+		dueOrder = normalizeTreatmentAnalyticsSortOrder(value);
 		updateUrl();
 
-		if (statusLoaded && !statusLoading) void renderStatusItemsInChunks(items, statusOrder);
+		if (dueLoaded && !dueLoading) void renderDueItemsInChunks(items, dueOrder);
 	}
 
 	function selectPeriod(nextPeriod: TreatmentHistoryPeriod) {
@@ -417,12 +375,6 @@
 		queueHistoryLoad();
 	}
 
-	function selectHistoryOrder(value: string) {
-		activeTab = 'history';
-		historyOrder = normalizeTreatmentAnalyticsSortOrder(value);
-		updateUrl();
-	}
-
 	function selectTreatment(value: string) {
 		activeTab = 'history';
 		selectedNormalizedName = value;
@@ -430,11 +382,7 @@
 		queueHistoryLoad();
 	}
 
-	function historyWidth(point: TreatmentHistoryPoint): number {
-		return maxHistoryCount > 0 ? Math.max(4, Math.round((point.count / maxHistoryCount) * 100)) : 0;
-	}
-
-	function daysText(item: TreatmentStatusItem): string {
+	function daysText(item: TreatmentDueItem): string {
 		const absoluteDays = Math.abs(item.daysUntilDue);
 		const unit = absoluteDays === 1 ? t(treatmentKey('daySingular')) : t(treatmentKey('dayPlural'));
 		if (item.daysUntilDue < 0) return `${absoluteDays} ${unit} ${t(treatmentKey('status.daysOverdue'))}`;
@@ -446,29 +394,25 @@
 		return contacts.some((contact) => contact.value.trim().length > 0);
 	}
 
-	function openContactDialog(item: TreatmentStatusItem) {
+	function openContactDialog(item: TreatmentDueItem) {
 		contactDialogOwnerName = ownerDisplayName(item);
-		contactDialogContacts = item.ownerContacts;
+		contactDialogContacts = ownerContacts(item);
 		contactDialogOpen = true;
 	}
 
 	function initialActiveTab(params: URLSearchParams): ActiveTab {
 		const tab = params.get('tab');
-		if (tab === 'history' || tab === 'status') return tab;
-		if (params.has('status') || params.has('filterMode') || params.has('startDate') || params.has('endDate')) return 'status';
-		return params.has('period') || params.has(config.historyParam) ? 'history' : 'status';
+		if (tab === 'history' || tab === 'due') return tab;
+		if (params.has('period') || params.has(config.historyParam)) return 'history';
+		return 'due';
 	}
 
 	onMount(() => {
 		if (typeof window !== 'undefined') {
 			const params = new URLSearchParams(window.location.search);
-			dueFilterMode = params.has('startDate') || params.has('endDate') ? 'period' : normalizeTreatmentAnalyticsDueFilterMode(params.get('filterMode'));
-			status = normalizeTreatmentAnalyticsStatus(params.get('status'));
-			periodStartDate = normalizeTreatmentAnalyticsPeriodStartDate(params.get('startDate'));
-			periodEndDate = normalizeTreatmentAnalyticsPeriodEndDate(params.get('endDate'));
-			statusOrder = normalizeTreatmentAnalyticsSortOrder(params.get('statusOrder'));
+			duePeriod = normalizeTreatmentAnalyticsDuePeriod(params.get('duePeriod'));
+			dueOrder = params.has('dueOrder') ? normalizeTreatmentAnalyticsSortOrder(params.get('dueOrder')) : defaultTreatmentAnalyticsDueOrder(duePeriod);
 			period = normalizeTreatmentAnalyticsPeriod(params.get('period'));
-			historyOrder = normalizeTreatmentAnalyticsSortOrder(params.get('historyOrder'));
 			selectedNormalizedName = params.get(config.historyParam) ?? '';
 			activeTab = initialActiveTab(params);
 		}
@@ -476,7 +420,7 @@
 	});
 
 	$effect(() => {
-		void loadVisiblePetAvatars(visibleItems);
+		void Promise.all([loadVisiblePetAvatars(visibleItems), loadVisibleOwnerContacts(visibleItems)]);
 	});
 </script>
 
@@ -499,11 +443,11 @@
 
 	<div class="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1" role="tablist" aria-label={t(kindAnalyticsKey('title'))}>
 		<button
-			class="inline-flex h-10 items-center justify-center gap-2 rounded-sm px-3 text-sm font-medium transition-colors {activeTab === 'status' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}"
+			class="inline-flex h-10 items-center justify-center gap-2 rounded-sm px-3 text-sm font-medium transition-colors {activeTab === 'due' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}"
 			type="button"
 			role="tab"
-			aria-selected={activeTab === 'status'}
-			onclick={() => selectTab('status')}
+			aria-selected={activeTab === 'due'}
+			onclick={() => selectTab('due')}
 		>
 			{#if kind === 'vaccine'}
 				<Syringe class="size-4" />
@@ -524,7 +468,7 @@
 		</button>
 	</div>
 
-	{#if activeTab === 'status'}
+	{#if activeTab === 'due'}
 		<section class="min-w-0 rounded-md border border-border bg-card p-4 shadow-sm sm:p-5" role="tabpanel">
 			<div class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
 				{#if kind === 'vaccine'}
@@ -535,95 +479,43 @@
 				{t(analyticsKey('statusTitle'))}
 			</div>
 
-			<div class="mt-4 grid gap-3 rounded-md border border-border bg-background p-3 lg:grid-cols-[14rem_minmax(0,1fr)]">
-				<div class="space-y-1">
-					<label class="text-sm font-medium" for="due-filter-mode">{t(analyticsKey('filterMode'))}</label>
-					<Select
-						id="due-filter-mode"
-						value={dueFilterMode}
-						options={[
-							{ value: 'status', label: t(analyticsKey('filterMode.status')) },
-							{ value: 'period', label: t(analyticsKey('filterMode.period')) }
-						]}
-						onchange={(value) => selectDueFilterMode(value as string)}
-					/>
-				</div>
+			{#if dueError}
+				<p class="mt-4 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{dueError}</p>
+			{/if}
 
-				{#if dueFilterMode === 'status'}
-					<div class="space-y-2">
-						<span class="text-sm font-medium">{t(analyticsKey('statusFilter'))}</span>
-						<div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
-							{#each statusOptions as option}
-								<button
-									type="button"
-									class="flex h-full min-h-28 flex-col rounded-md border bg-background p-3 text-left text-sm transition-colors hover:bg-accent {status === option.status ? 'border-primary ring-2 ring-ring/30' : 'border-border'}"
-									aria-pressed={status === option.status}
-									onclick={() => selectStatus(option.status)}
-								>
-									<span class="flex min-h-16 items-start justify-between gap-3">
-										<span class="min-w-0">
-											<span class="block font-medium">{t(option.labelKey)}</span>
-											<span class="mt-1 block min-h-10 text-xs leading-5 text-muted-foreground">{t(option.detailKey)}</span>
-										</span>
-										<span class="text-right">
-											<span class="block text-2xl font-semibold {option.textClass}">{statusCount(option.status)}</span>
-											<span class="mt-1 block text-xs text-muted-foreground">{statusPercentLabel(option.status)}%</span>
-										</span>
-									</span>
-									<span class="mt-auto block h-2 rounded-full bg-muted">
-										<span class="block h-2 rounded-full {option.barClass}" style={`width: ${statusPercent(option.status)}%`}></span>
-									</span>
-								</button>
-							{/each}
-						</div>
-					</div>
+			<div class="mt-4">
+				{#if dueLoading && !treatmentOverview}
+					<div class="h-80 animate-pulse rounded-md bg-muted"></div>
 				{:else}
-					<div class="grid gap-3 md:grid-cols-3">
-						<div class="space-y-1">
-							<span class="text-sm font-medium">{t(analyticsKey('periodStartDate'))}</span>
-							<DateField bind:value={periodStartDate} max={todayDate} ariaLabel={t(analyticsKey('periodStartDate'))} onChange={selectPeriodStartDate} />
-						</div>
-						<div class="space-y-1">
-							<span class="text-sm font-medium">{t(analyticsKey('periodToday'))}</span>
-							<span class="flex h-10 items-center rounded-md border border-border bg-muted px-3 text-sm text-muted-foreground">{formatDateForDisplay(todayDate)}</span>
-						</div>
-						<div class="space-y-1">
-							<span class="text-sm font-medium">{t(analyticsKey('periodEndDate'))}</span>
-							<DateField bind:value={periodEndDate} min={todayDate} ariaLabel={t(analyticsKey('periodEndDate'))} onChange={selectPeriodEndDate} />
-						</div>
-					</div>
+					<DonutChart model={dueChart} selectedKey={duePeriod} onSelect={selectDuePeriod} formatValue={metricFormatter} formatPercent={percentFormatter} emptyLabel={t('analysis.overview.emptyChart')} ariaLabel={t(analyticsKey('statusTitle'))} />
 				{/if}
 			</div>
-
-			{#if statusError}
-				<p class="mt-4 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{statusError}</p>
-			{/if}
 
 			<div class="mt-5 border-t border-border pt-4">
 				<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 					<div class="min-w-0">
-						<h3 class="text-base font-semibold">{t(statusSectionTitleKey())}</h3>
+						<h3 class="text-base font-semibold">{t(duePeriodLabelKey(duePeriod))}</h3>
 						<p class="mt-1 text-sm text-muted-foreground">{t(analyticsKey('listDescription'))}</p>
 					</div>
 					<div class="flex flex-col gap-2 sm:items-end">
-						<label class="text-sm font-medium" for="status-order">{t(analyticsKey('order'))}</label>
+						<label class="text-sm font-medium" for="due-order">{t(analyticsKey('order'))}</label>
 						<div class="flex items-center gap-2">
 							<Select
-								id="status-order"
+								id="due-order"
 								class="h-9 w-40"
-								value={statusOrder}
+								value={dueOrder}
 								options={[
 									{ value: 'recent', label: t(analyticsKey('order.recent')) },
 									{ value: 'old', label: t(analyticsKey('order.old')) }
 								]}
-								onchange={(value) => selectStatusOrder(value as string)}
+								onchange={(value) => selectDueOrder(value as string)}
 							/>
 							<span class="rounded-md bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">{items.length}</span>
 						</div>
 					</div>
 				</div>
 
-				{#if statusLoading || (statusListLoading && visibleItems.length === 0)}
+				{#if dueLoading || (dueListLoading && visibleItems.length === 0)}
 					<div class="mt-4 space-y-3">
 						{#each [0, 1, 2, 3, 4] as placeholderIndex (placeholderIndex)}
 							<div class="h-24 animate-pulse rounded-md bg-muted"></div>
@@ -654,7 +546,7 @@
 									<button
 										class="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50 sm:w-auto"
 										type="button"
-										disabled={!hasContacts(item.ownerContacts)}
+										disabled={!hasContacts(ownerContacts(item))}
 										onclick={() => openContactDialog(item)}
 										aria-label={`${t('owner.contact')}: ${ownerDisplayName(item)}`}
 									>
@@ -664,7 +556,7 @@
 								</div>
 							</article>
 						{/each}
-						{#if statusListLoading}
+						{#if dueListLoading}
 							<p class="p-4 text-center text-sm text-muted-foreground">{t('common.loading')}</p>
 						{/if}
 					</div>
@@ -708,42 +600,13 @@
 							onchange={(value) => selectTreatment(value as string)}
 						/>
 					</div>
-
-					<div class="space-y-1">
-						<label class="block text-sm font-medium" for="history-order">{t(analyticsKey('order'))}</label>
-						<Select
-							id="history-order"
-							value={historyOrder}
-							options={[
-								{ value: 'recent', label: t(analyticsKey('order.recent')) },
-								{ value: 'old', label: t(analyticsKey('order.old')) }
-							]}
-							onchange={(value) => selectHistoryOrder(value as string)}
-						/>
-					</div>
 				</div>
 
 				<div class="min-w-0">
 					{#if historyLoading || catalogLoading}
-						<div class="space-y-3">
-							{#each Array(8) as _}
-								<div class="h-9 animate-pulse rounded-md bg-muted"></div>
-							{/each}
-						</div>
-					{:else if sortedHistory.length === 0}
-						<p class="rounded-md border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">{t(analyticsKey('emptyHistory'))}</p>
+						<div class="h-80 animate-pulse rounded-md bg-muted"></div>
 					{:else}
-						<div class="max-h-128 space-y-3 overflow-auto pr-1">
-							{#each sortedHistory as point}
-								<div class="grid grid-cols-[4.75rem_minmax(0,1fr)_2.25rem] items-center gap-3 text-sm sm:grid-cols-[5.5rem_minmax(0,1fr)_2.5rem]">
-									<span class="truncate text-muted-foreground">{point.label}</span>
-									<span class="h-3 rounded-full bg-muted">
-										<span class="block h-3 rounded-full bg-primary" style={`width: ${historyWidth(point)}%`}></span>
-									</span>
-									<span class="text-right font-medium">{point.count}</span>
-								</div>
-							{/each}
-						</div>
+						<HorizontalBarChart model={historyChart} emptyLabel={t(analyticsKey('emptyHistory'))} ariaLabel={t(analyticsKey('historyTitle'))} tone={kind === 'vaccine' ? 'success' : 'warning'} dynamicHeight minHeight={320} rowHeight={24} labelWidth={72} class="min-h-80" />
 					{/if}
 				</div>
 			</div>

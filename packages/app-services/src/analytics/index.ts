@@ -1,5 +1,7 @@
 export * from './clinic-analytics.service.js';
+export * from './clinic-dashboard-overview.view-model.js';
 export * from './treatment-analytics.service.js';
+export * from './treatment-analytics.view-model.js';
 export * from './analytics-query.js';
 export * from './analytics-dimensions.js';
 export * from './analytics-bucket.selectors.js';

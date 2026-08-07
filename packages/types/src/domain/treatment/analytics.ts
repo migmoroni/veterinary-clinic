@@ -2,12 +2,12 @@ import type { OwnerAssociatedContact } from '@vet/types/domain/owner/owner.js';
 import { computeTreatmentDueAt, type TreatmentValidityUnit } from './treatment.js';
 
 export type TreatmentStatusKey = 'current' | 'dueSoon' | 'dueVerySoon' | 'expired' | 'overdue';
+export type TreatmentDuePeriodKey = 'dueAfter30Days' | 'dueWithin30Days' | 'expiredWithin30Days' | 'expiredAfter30Days';
 export type TreatmentHistoryPeriod = 'week' | 'month' | 'quarter' | 'semester' | 'year';
-export type TreatmentDueFilterMode = 'status' | 'period';
 
 export const treatmentStatusKeys: TreatmentStatusKey[] = ['current', 'dueSoon', 'dueVerySoon', 'expired', 'overdue'];
+export const treatmentDuePeriodKeys: TreatmentDuePeriodKey[] = ['dueAfter30Days', 'dueWithin30Days', 'expiredWithin30Days', 'expiredAfter30Days'];
 export const treatmentHistoryPeriods: TreatmentHistoryPeriod[] = ['week', 'month', 'quarter', 'semester', 'year'];
-export const treatmentDueFilterModes: TreatmentDueFilterMode[] = ['status', 'period'];
 
 export interface TreatmentStatusSummary {
 	current: number;
@@ -17,12 +17,25 @@ export interface TreatmentStatusSummary {
 	overdue: number;
 }
 
+export interface TreatmentDuePeriodSummary {
+	dueAfter30Days: number;
+	dueWithin30Days: number;
+	expiredWithin30Days: number;
+	expiredAfter30Days: number;
+}
+
 export interface TreatmentAnalyticsOverview {
 	totalTracked: number;
 	summary: TreatmentStatusSummary;
+	duePeriodSummary: TreatmentDuePeriodSummary;
 }
 
-export interface TreatmentStatusItem {
+export interface TreatmentDueAnalytics {
+	overview: TreatmentAnalyticsOverview;
+	items: TreatmentDueItem[];
+}
+
+export interface TreatmentDueItem {
 	ownerId: string;
 	ownerName: string;
 	ownerContacts: OwnerAssociatedContact[];
@@ -49,10 +62,7 @@ export interface TreatmentHistoryFilter {
 }
 
 export interface TreatmentDueFilter {
-	mode: TreatmentDueFilterMode;
-	status: TreatmentStatusKey;
-	startDate: string;
-	endDate: string;
+	duePeriod: TreatmentDuePeriodKey;
 }
 
 export interface TreatmentAnalyticsCatalogItem {
@@ -80,16 +90,6 @@ function isoDate(date: Date): string {
 	return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-export function todayIsoDate(now = new Date()): string {
-	return isoDate(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
-}
-
-export function shiftIsoDate(value: string, days: number): string {
-	const date = parseIsoDate(value) ?? parseIsoDate(todayIsoDate())!;
-	date.setDate(date.getDate() + days);
-	return isoDate(date);
-}
-
 function startOfIsoWeek(date: Date): Date {
 	const copy = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 	const day = copy.getDay() || 7;
@@ -101,6 +101,10 @@ export function emptyTreatmentStatusSummary(): TreatmentStatusSummary {
 	return { current: 0, dueSoon: 0, dueVerySoon: 0, expired: 0, overdue: 0 };
 }
 
+export function emptyTreatmentDuePeriodSummary(): TreatmentDuePeriodSummary {
+	return { dueAfter30Days: 0, dueWithin30Days: 0, expiredWithin30Days: 0, expiredAfter30Days: 0 };
+}
+
 export function getTreatmentStatus(daysUntilDue: number): TreatmentStatusKey {
 	if (daysUntilDue <= -15) return 'overdue';
 	if (daysUntilDue < 0) return 'expired';
@@ -109,9 +113,15 @@ export function getTreatmentStatus(daysUntilDue: number): TreatmentStatusKey {
 	return 'current';
 }
 
-export function matchesTreatmentDueFilter(item: TreatmentStatusItem, filter: TreatmentDueFilter): boolean {
-	if (filter.mode === 'status') return item.status === filter.status;
-	return item.dueAt >= filter.startDate && item.dueAt <= filter.endDate;
+export function getTreatmentDuePeriod(daysUntilDue: number): TreatmentDuePeriodKey {
+	if (daysUntilDue > 30) return 'dueAfter30Days';
+	if (daysUntilDue >= 0) return 'dueWithin30Days';
+	if (daysUntilDue >= -30) return 'expiredWithin30Days';
+	return 'expiredAfter30Days';
+}
+
+export function matchesTreatmentDueFilter(item: TreatmentDueItem, filter: TreatmentDueFilter): boolean {
+	return getTreatmentDuePeriod(item.daysUntilDue) === filter.duePeriod;
 }
 
 export function isPlausibleTreatmentAppliedAt(value: string, now = new Date()): boolean {

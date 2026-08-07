@@ -1,17 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { shiftIsoDate, todayIsoDate, type TreatmentHistoryPoint, type TreatmentStatusItem } from '@vet/types/domain/treatment/analytics.js';
+import type { TreatmentDueItem } from '@vet/types/domain/treatment/analytics.js';
 import {
-	normalizeTreatmentAnalyticsDueFilterMode,
+	defaultTreatmentAnalyticsDueOrder,
+	filterTreatmentAnalyticsDueItems,
+	normalizeTreatmentAnalyticsDuePeriod,
 	normalizeTreatmentAnalyticsPeriod,
-	normalizeTreatmentAnalyticsPeriodEndDate,
-	normalizeTreatmentAnalyticsPeriodStartDate,
 	normalizeTreatmentAnalyticsSortOrder,
-	normalizeTreatmentAnalyticsStatus,
-	sortTreatmentAnalyticsHistoryPoints,
-	sortTreatmentAnalyticsStatusItems
+	summarizeTreatmentAnalyticsDueItems,
+	sortTreatmentAnalyticsDueItems
 } from '../treatment-analytics.selectors.js';
 
-function statusItem(input: Partial<TreatmentStatusItem> & Pick<TreatmentStatusItem, 'petId' | 'petName' | 'name' | 'appliedAt' | 'dueAt'>): TreatmentStatusItem {
+function dueItem(input: Partial<TreatmentDueItem> & Pick<TreatmentDueItem, 'petId' | 'petName' | 'name' | 'appliedAt' | 'dueAt'>): TreatmentDueItem {
 	return {
 		ownerId: '',
 		ownerName: '',
@@ -26,42 +25,48 @@ function statusItem(input: Partial<TreatmentStatusItem> & Pick<TreatmentStatusIt
 
 describe('treatment analytics selectors', () => {
 	it('normalizes query parameter values', () => {
-		const today = todayIsoDate();
-		expect(normalizeTreatmentAnalyticsStatus('overdue')).toBe('overdue');
-		expect(normalizeTreatmentAnalyticsStatus('missing')).toBe('expired');
-		expect(normalizeTreatmentAnalyticsDueFilterMode('period')).toBe('period');
-		expect(normalizeTreatmentAnalyticsDueFilterMode('missing')).toBe('status');
+		expect(normalizeTreatmentAnalyticsDuePeriod('expiredAfter30Days')).toBe('expiredAfter30Days');
+		expect(normalizeTreatmentAnalyticsDuePeriod('missing')).toBe('dueWithin30Days');
 		expect(normalizeTreatmentAnalyticsPeriod('quarter')).toBe('quarter');
 		expect(normalizeTreatmentAnalyticsPeriod('missing')).toBe('month');
 		expect(normalizeTreatmentAnalyticsSortOrder('old')).toBe('old');
 		expect(normalizeTreatmentAnalyticsSortOrder('missing')).toBe('recent');
-		expect(normalizeTreatmentAnalyticsPeriodStartDate(today)).toBe(today);
-		expect(normalizeTreatmentAnalyticsPeriodStartDate('not-a-date')).toBe(shiftIsoDate(today, -30));
-		expect(normalizeTreatmentAnalyticsPeriodEndDate(today)).toBe(today);
-		expect(normalizeTreatmentAnalyticsPeriodEndDate('not-a-date')).toBe(shiftIsoDate(today, 30));
 	});
 
-	it('sorts status items by recency with stable fallbacks', () => {
-		const sorted = sortTreatmentAnalyticsStatusItems(
+	it('chooses the default due order around day zero', () => {
+		expect(defaultTreatmentAnalyticsDueOrder('dueAfter30Days')).toBe('old');
+		expect(defaultTreatmentAnalyticsDueOrder('dueWithin30Days')).toBe('old');
+		expect(defaultTreatmentAnalyticsDueOrder('expiredWithin30Days')).toBe('recent');
+		expect(defaultTreatmentAnalyticsDueOrder('expiredAfter30Days')).toBe('recent');
+	});
+
+	it('summarizes and filters due items from the same collection', () => {
+		const source = [
+			dueItem({ petId: 'p1', petName: 'Luna', name: 'V10', appliedAt: '2026-01-01', dueAt: '2026-09-10', daysUntilDue: 34, status: 'current' }),
+			dueItem({ petId: 'p2', petName: 'Bella', name: 'Raiva', appliedAt: '2026-01-01', dueAt: '2026-08-20', daysUntilDue: 13, status: 'dueVerySoon' }),
+			dueItem({ petId: 'p3', petName: 'Thor', name: 'Giardia', appliedAt: '2026-01-01', dueAt: '2026-08-01', daysUntilDue: -6, status: 'expired' }),
+			dueItem({ petId: 'p4', petName: 'Nina', name: 'Bravecto', appliedAt: '2026-01-01', dueAt: '2026-06-01', daysUntilDue: -67, status: 'overdue' })
+		];
+
+		expect(summarizeTreatmentAnalyticsDueItems(source).duePeriodSummary).toEqual({
+			dueAfter30Days: 1,
+			dueWithin30Days: 1,
+			expiredWithin30Days: 1,
+			expiredAfter30Days: 1
+		});
+		expect(filterTreatmentAnalyticsDueItems(source, 'expiredWithin30Days').map((item) => item.petName)).toEqual(['Thor']);
+	});
+
+	it('sorts due items by recency with stable fallbacks', () => {
+		const sorted = sortTreatmentAnalyticsDueItems(
 			[
-				statusItem({ petId: 'p1', petName: 'Bia', name: 'V10', appliedAt: '2026-01-01', dueAt: '2026-02-01' }),
-				statusItem({ petId: 'p2', petName: 'Ana', name: 'Raiva', appliedAt: '2026-02-01', dueAt: '2026-03-01' }),
-				statusItem({ petId: 'p3', petName: 'Caio', name: 'Giardia', appliedAt: '2026-01-15', dueAt: '2026-02-01' })
+				dueItem({ petId: 'p1', petName: 'Bia', name: 'V10', appliedAt: '2026-01-01', dueAt: '2026-02-01' }),
+				dueItem({ petId: 'p2', petName: 'Ana', name: 'Raiva', appliedAt: '2026-02-01', dueAt: '2026-03-01' }),
+				dueItem({ petId: 'p3', petName: 'Caio', name: 'Giardia', appliedAt: '2026-01-15', dueAt: '2026-02-01' })
 			],
 			'recent'
 		);
 
 		expect(sorted.map((item) => item.petName)).toEqual(['Ana', 'Caio', 'Bia']);
-	});
-
-	it('sorts history points by period key', () => {
-		const history: TreatmentHistoryPoint[] = [
-			{ key: '2026-01', label: '2026-01', count: 1 },
-			{ key: '2026-03', label: '2026-03', count: 1 },
-			{ key: '2026-02', label: '2026-02', count: 1 }
-		];
-
-		expect(sortTreatmentAnalyticsHistoryPoints(history, 'recent').map((point) => point.key)).toEqual(['2026-03', '2026-02', '2026-01']);
-		expect(sortTreatmentAnalyticsHistoryPoints(history, 'old').map((point) => point.key)).toEqual(['2026-01', '2026-02', '2026-03']);
 	});
 });

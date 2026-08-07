@@ -1,30 +1,24 @@
 import type {
 	TreatmentAnalyticsOverview,
 	TreatmentAnalyticsCatalogItem,
+	TreatmentDueAnalytics,
 	TreatmentDueFilter,
-	TreatmentDueFilterMode,
 	TreatmentHistoryFilter,
 	TreatmentHistoryPeriod,
 	TreatmentHistoryPoint,
-	TreatmentStatusItem,
+	TreatmentDueItem,
 	TreatmentStatusKey,
-	TreatmentStatusSummary
 } from '@vet/types/domain/treatment/analytics.js';
 import {
 	buildTreatmentStatus,
-	emptyTreatmentStatusSummary,
 	historyBucket,
 	isPlausibleTreatmentAppliedAt,
-	matchesTreatmentDueFilter,
-	shiftIsoDate,
-	todayIsoDate,
-	treatmentDueFilterModes,
-	treatmentHistoryPeriods,
-	treatmentStatusKeys
+	treatmentHistoryPeriods
 } from '@vet/types/domain/treatment/analytics.js';
 import type { OwnerAssociatedContact } from '@vet/types/domain/owner/owner.js';
 import type { TreatmentKind, TreatmentValidityUnit } from '@vet/types/domain/treatment/treatment.js';
 import { selectMany } from '@vet/core-local/sqlite/client.js';
+import { filterTreatmentAnalyticsDueItems, normalizeTreatmentAnalyticsDuePeriod, summarizeTreatmentAnalyticsDueItems } from './treatment-analytics.selectors.js';
 
 interface LatestTreatmentRow {
 	id: string;
@@ -92,36 +86,12 @@ function parseOwnerIds(value: string | null | undefined): string[] {
 		.filter((id) => id.length > 0);
 }
 
-function normalizeStatus(value: string | null | undefined): TreatmentStatusKey {
-	return treatmentStatusKeys.includes(value as TreatmentStatusKey) ? (value as TreatmentStatusKey) : 'expired';
-}
-
-function normalizeDueFilterMode(value: string | null | undefined): TreatmentDueFilterMode {
-	return treatmentDueFilterModes.includes(value as TreatmentDueFilterMode) ? (value as TreatmentDueFilterMode) : 'status';
-}
-
-function normalizeDueDate(value: string | null | undefined, fallback: string): string {
-	return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : fallback;
-}
-
 function normalizeDueFilter(filter: Partial<TreatmentDueFilter> | string | null | undefined): TreatmentDueFilter {
-	const today = todayIsoDate();
-	const defaultStartDate = shiftIsoDate(today, -30);
-	const defaultEndDate = shiftIsoDate(today, 30);
-
 	if (typeof filter === 'string') {
-		return { mode: 'status', status: normalizeStatus(filter), startDate: defaultStartDate, endDate: defaultEndDate };
+		return { duePeriod: normalizeTreatmentAnalyticsDuePeriod(filter) };
 	}
 
-	const startDate = normalizeDueDate(filter?.startDate, defaultStartDate);
-	const endDate = normalizeDueDate(filter?.endDate, defaultEndDate);
-
-	return {
-		mode: normalizeDueFilterMode(filter?.mode),
-		status: normalizeStatus(filter?.status),
-		startDate: startDate <= endDate ? startDate : endDate,
-		endDate: endDate >= startDate ? endDate : startDate
-	};
+	return { duePeriod: normalizeTreatmentAnalyticsDuePeriod(filter?.duePeriod ?? null) };
 }
 
 function normalizePeriod(value: string | null | undefined): TreatmentHistoryPeriod {
@@ -184,7 +154,7 @@ async function listLatestTreatmentRows(kind: TreatmentKind): Promise<LatestTreat
 	}));
 }
 
-function mapStatusItem(row: LatestTreatmentRow, now = new Date()): TreatmentStatusItem | null {
+function mapDueItem(row: LatestTreatmentRow, now = new Date()): TreatmentDueItem | null {
 	const status = buildTreatmentStatus(row.applied_at, row.validity_value, row.validity_unit, now);
 	if (!status) return null;
 
@@ -204,7 +174,7 @@ function mapStatusItem(row: LatestTreatmentRow, now = new Date()): TreatmentStat
 	};
 }
 
-function sortStatusItems(items: TreatmentStatusItem[]): TreatmentStatusItem[] {
+function sortDueItems(items: TreatmentDueItem[]): TreatmentDueItem[] {
 	return [...items].sort((first, second) => {
 		if (first.status !== second.status) return statusOrder[first.status] - statusOrder[second.status];
 		if (first.dueAt !== second.dueAt) return first.dueAt.localeCompare(second.dueAt);
@@ -212,25 +182,22 @@ function sortStatusItems(items: TreatmentStatusItem[]): TreatmentStatusItem[] {
 	});
 }
 
-export async function getTreatmentAnalyticsOverview(kind: TreatmentKind): Promise<TreatmentAnalyticsOverview> {
+export async function getTreatmentDueAnalytics(kind: TreatmentKind): Promise<TreatmentDueAnalytics> {
 	const rows = await listLatestTreatmentRows(kind);
-	const summary = emptyTreatmentStatusSummary();
-	let totalTracked = 0;
+	const items = sortDueItems(rows.map((row) => mapDueItem(row)).filter((item): item is TreatmentDueItem => !!item));
 
-	for (const row of rows) {
-		const item = mapStatusItem(row);
-		if (!item) continue;
-		summary[item.status] += 1;
-		totalTracked += 1;
-	}
-
-	return { totalTracked, summary };
+	return { overview: summarizeTreatmentAnalyticsDueItems(items), items };
 }
 
-export async function listTreatmentStatusItems(kind: TreatmentKind, filter: Partial<TreatmentDueFilter> | string | null | undefined): Promise<TreatmentStatusItem[]> {
+export async function getTreatmentAnalyticsOverview(kind: TreatmentKind): Promise<TreatmentAnalyticsOverview> {
+	const analytics = await getTreatmentDueAnalytics(kind);
+	return analytics.overview;
+}
+
+export async function listTreatmentDueItems(kind: TreatmentKind, filter: Partial<TreatmentDueFilter> | string | null | undefined): Promise<TreatmentDueItem[]> {
 	const normalizedFilter = normalizeDueFilter(filter);
-	const rows = await listLatestTreatmentRows(kind);
-	return sortStatusItems(rows.map((row) => mapStatusItem(row)).filter((item): item is TreatmentStatusItem => !!item && matchesTreatmentDueFilter(item, normalizedFilter)));
+	const analytics = await getTreatmentDueAnalytics(kind);
+	return filterTreatmentAnalyticsDueItems(analytics.items, normalizedFilter.duePeriod);
 }
 
 export async function listTreatmentHistory(kind: TreatmentKind, filter: Partial<TreatmentHistoryFilter>): Promise<TreatmentHistoryPoint[]> {

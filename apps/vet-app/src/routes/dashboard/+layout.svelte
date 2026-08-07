@@ -4,25 +4,21 @@
 	import { clinic } from '$lib/stores/clinic.svelte.js';
 	import { t } from '@vet/core-local/i18n/index.js';
 	import ChartColumn from '@lucide/svelte/icons/chart-column';
-	import PawPrint from '@lucide/svelte/icons/paw-print';
 	import Pill from '@lucide/svelte/icons/pill';
 	import RotateCw from '@lucide/svelte/icons/rotate-cw';
 	import Syringe from '@lucide/svelte/icons/syringe';
-	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import type { Component, Snippet } from 'svelte';
 
 	const { children } = $props<{ children: Snippet }>();
 
-	type DashboardView = 'general' | 'vaccines' | 'antiparasitics' | 'pets' | 'owners';
+	type DashboardView = 'overview' | 'vaccines' | 'antiparasitics';
 
-	const dashboardViews = ['general', 'vaccines', 'antiparasitics', 'pets', 'owners'] as const satisfies readonly DashboardView[];
+	const dashboardViews = ['overview', 'vaccines', 'antiparasitics'] as const satisfies readonly DashboardView[];
 
 	const viewOptions: { view: DashboardView; labelKey: Parameters<typeof t>[0]; icon: Component }[] = [
-		{ view: 'general', labelKey: 'analysis.view.general', icon: ChartColumn },
+		{ view: 'overview', labelKey: 'analysis.view.general', icon: ChartColumn },
 		{ view: 'vaccines', labelKey: 'analysis.view.vaccines', icon: Syringe },
-		{ view: 'antiparasitics', labelKey: 'analysis.view.antiparasitics', icon: Pill },
-		{ view: 'pets', labelKey: 'analysis.view.pets', icon: PawPrint },
-		{ view: 'owners', labelKey: 'analysis.view.owners', icon: UserPlus }
+		{ view: 'antiparasitics', labelKey: 'analysis.view.antiparasitics', icon: Pill }
 	];
 
 	const activeView = $derived(resolveActiveView(page.url.pathname));
@@ -30,7 +26,7 @@
 	function resolveActiveView(pathname: string): DashboardView {
 		const segment = pathname.split('/').filter(Boolean)[1];
 		if (dashboardViews.includes(segment as DashboardView)) return segment as DashboardView;
-		return 'general';
+		return 'overview';
 	}
 
 	function viewHref(view: DashboardView): string {
@@ -59,7 +55,7 @@
 		</button>
 	</header>
 
-	<div class="grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1 lg:grid-cols-5" role="tablist" aria-label={t('analysis.dashboard.title')}>
+	<div class="grid grid-cols-1 gap-1 rounded-md border border-border bg-muted p-1 sm:grid-cols-3" role="tablist" aria-label={t('analysis.dashboard.title')}>
 		{#each viewOptions as option}
 			<a
 				href={viewHref(option.view)}

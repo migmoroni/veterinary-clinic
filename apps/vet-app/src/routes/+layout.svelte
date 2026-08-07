@@ -44,7 +44,7 @@
 				path === "/pets/new"
 			);
 		return href === "/"
-			? path === "/" || path === "/dashboard"
+			? path === "/" || path.startsWith("/dashboard")
 			: path.startsWith(href);
 	}
 

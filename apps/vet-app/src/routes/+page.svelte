@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import type { ClinicAnalyticsStudyTarget } from '@vet/types/clinic-analytics.js';
 	import { defaultProductCatalogItems } from '@vet/types/domain/product/default-catalog.js';
 	import { breedReferenceProfiles } from '@vet/types/domain/pet/breed-reference.js';
 	import { clinic } from '$lib/stores/clinic.svelte.js';
@@ -12,14 +11,12 @@
 	import Syringe from '@lucide/svelte/icons/syringe';
 	import Pill from '@lucide/svelte/icons/pill';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import PawPrint from '@lucide/svelte/icons/paw-print';
-	import UserPlus from '@lucide/svelte/icons/user-plus';
 
-	const analysisCards: { view: ClinicAnalyticsStudyTarget; titleKey: TranslationKey; descriptionKey: TranslationKey; metricKey: TranslationKey; icon: typeof Syringe }[] = [
+	type TreatmentDashboardView = 'vaccines' | 'antiparasitics';
+
+	const analysisCards: { view: TreatmentDashboardView; titleKey: TranslationKey; descriptionKey: TranslationKey; metricKey: TranslationKey; icon: typeof Syringe }[] = [
 		{ view: 'vaccines', titleKey: 'analysis.card.vaccines.title', descriptionKey: 'analysis.card.vaccines.description', metricKey: 'analysis.trackedVaccineItems', icon: Syringe },
-		{ view: 'antiparasitics', titleKey: 'analysis.card.antiparasitics.title', descriptionKey: 'analysis.card.antiparasitics.description', metricKey: 'analysis.trackedAntiparasiticItems', icon: Pill },
-		{ view: 'pets', titleKey: 'analysis.card.pets.title', descriptionKey: 'analysis.card.pets.description', metricKey: 'stats.pets', icon: PawPrint },
-		{ view: 'owners', titleKey: 'analysis.card.owners.title', descriptionKey: 'analysis.card.owners.description', metricKey: 'stats.owners', icon: UserPlus }
+		{ view: 'antiparasitics', titleKey: 'analysis.card.antiparasitics.title', descriptionKey: 'analysis.card.antiparasitics.description', metricKey: 'analysis.trackedAntiparasiticItems', icon: Pill }
 	];
 
 	let setupStatusKey = $state<TranslationKey | null>(null);
@@ -45,11 +42,9 @@
 		return Number.isInteger(value) ? new Intl.NumberFormat(i18n.locale).format(value) : formatter.format(value);
 	}
 
-	function analysisCount(view: ClinicAnalyticsStudyTarget): number {
+	function analysisCount(view: TreatmentDashboardView): number {
 		if (view === 'vaccines') return clinic.dashboard?.vaccines.totalTracked ?? 0;
-		if (view === 'antiparasitics') return clinic.dashboard?.antiparasitics.totalTracked ?? 0;
-		if (view === 'pets') return clinic.dashboard?.counts.pets ?? 0;
-		return clinic.dashboard?.counts.owners ?? 0;
+		return clinic.dashboard?.antiparasitics.totalTracked ?? 0;
 	}
 
 	function breedReferenceCount(): number {
@@ -146,20 +141,20 @@
 				</div>
 				<p class="mt-1 text-sm leading-6 text-muted-foreground">{t('home.analysisDescription')}</p>
 			</div>
-			<a href="/dashboard/general" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={t('actions.openDashboard')}>
+			<a href="/dashboard/overview" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-accent" aria-label={t('actions.openDashboard')}>
 				{t('analysis.view.general')}
 				<ArrowRight class="size-4" />
 			</a>
 		</div>
 
 		{#if clinic.loading}
-			<div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+			<div class="mt-4 grid gap-3 sm:grid-cols-2">
 				{#each analysisCards as _card}
 					<div class="h-36 animate-pulse rounded-md bg-muted"></div>
 				{/each}
 			</div>
 		{:else}
-			<div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+			<div class="mt-4 grid gap-3 sm:grid-cols-2">
 				{#each analysisCards as card}
 					<a href={`/dashboard/${card.view}`} class="flex min-h-40 flex-col rounded-md border border-border bg-background p-4 hover:bg-accent" aria-label={`${t(card.titleKey)}: ${metricFormatter(analysisCount(card.view))}`}>
 						<span class="flex items-start justify-between gap-3">

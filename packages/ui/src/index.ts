@@ -13,4 +13,5 @@ export { default as Input } from './components/ui/Input.svelte';
 export { default as SearchableSelect } from './components/ui/SearchableSelect.svelte';
 export { default as Select } from './components/ui/Select.svelte';
 export { default as Textarea } from './components/ui/Textarea.svelte';
+export * from './charts/index.js';
 export * from './utils.js';

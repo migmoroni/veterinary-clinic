@@ -10,13 +10,20 @@
 			"types": "./src/index.ts",
 			"default": "./src/index.ts"
 		},
+		"./charts": {
+			"svelte": "./src/charts/index.ts",
+			"types": "./src/charts/index.ts",
+			"default": "./src/charts/index.ts"
+		},
+		"./charts/*": "./src/charts/*",
 		"./*.js": "./src/*.ts",
 		"./*.svelte": "./src/*.svelte",
 		"./*": "./src/*"
 	},
 	"dependencies": {
 		"@vet/core-local": "file:../core-local",
-		"@vet/types": "file:../types"
+		"@vet/types": "file:../types",
+		"echarts": "^6.1.0"
 	},
 	"peerDependencies": {
 		"@lucide/svelte": "^1.23.0",

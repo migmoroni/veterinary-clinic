@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { TreatmentStatusItem } from '../analytics.js';
-import { buildTreatmentStatus, getTreatmentStatus, historyBucket, isPlausibleTreatmentAppliedAt, matchesTreatmentDueFilter } from '../analytics.js';
+import type { TreatmentDueItem } from '../analytics.js';
+import { buildTreatmentStatus, getTreatmentDuePeriod, getTreatmentStatus, historyBucket, isPlausibleTreatmentAppliedAt, matchesTreatmentDueFilter } from '../analytics.js';
 
-function statusItem(daysUntilDue: number, dueAt = '2026-05-08'): TreatmentStatusItem {
+function dueItem(daysUntilDue: number, dueAt = '2026-05-08'): TreatmentDueItem {
 	return {
 		ownerId: '019f9689-0000-7000-8000-000000000001',
 		ownerName: 'Owner',
@@ -63,20 +63,20 @@ describe('treatment analytics helpers', () => {
 		expect(getTreatmentStatus(-16)).toBe('overdue');
 	});
 
-	it('filters due dates inside the selected analysis period', () => {
-		const filter = { mode: 'period', status: 'current', startDate: '2026-05-01', endDate: '2026-05-31' } as const;
-
-		expect(matchesTreatmentDueFilter(statusItem(0, '2026-05-01'), filter)).toBe(true);
-		expect(matchesTreatmentDueFilter(statusItem(0, '2026-05-08'), filter)).toBe(true);
-		expect(matchesTreatmentDueFilter(statusItem(0, '2026-05-31'), filter)).toBe(true);
-		expect(matchesTreatmentDueFilter(statusItem(0, '2026-04-30'), filter)).toBe(false);
-		expect(matchesTreatmentDueFilter(statusItem(0, '2026-06-01'), filter)).toBe(false);
+	it('groups treatment due dates by the four operational ranges', () => {
+		expect(getTreatmentDuePeriod(31)).toBe('dueAfter30Days');
+		expect(getTreatmentDuePeriod(30)).toBe('dueWithin30Days');
+		expect(getTreatmentDuePeriod(0)).toBe('dueWithin30Days');
+		expect(getTreatmentDuePeriod(-1)).toBe('expiredWithin30Days');
+		expect(getTreatmentDuePeriod(-30)).toBe('expiredWithin30Days');
+		expect(getTreatmentDuePeriod(-31)).toBe('expiredAfter30Days');
 	});
 
-	it('filters by status when preset mode is selected', () => {
-		const filter = { mode: 'status', status: 'expired', startDate: '2026-01-01', endDate: '2026-01-31' } as const;
+	it('filters by due period', () => {
+		const filter = { duePeriod: 'expiredWithin30Days' } as const;
 
-		expect(matchesTreatmentDueFilter(statusItem(-1, '2030-01-01'), filter)).toBe(true);
-		expect(matchesTreatmentDueFilter(statusItem(0, '2026-01-15'), filter)).toBe(false);
+		expect(matchesTreatmentDueFilter(dueItem(-1, '2030-01-01'), filter)).toBe(true);
+		expect(matchesTreatmentDueFilter(dueItem(-31, '2026-01-15'), filter)).toBe(false);
+		expect(matchesTreatmentDueFilter(dueItem(0, '2026-01-15'), filter)).toBe(false);
 	});
 });

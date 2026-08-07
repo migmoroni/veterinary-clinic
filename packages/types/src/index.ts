@@ -1,5 +1,6 @@
 export * from './domain/active-ingredient/catalog.js';
 export * from './domain/active-ingredient/classification.js';
+export * from './domain/analytics/charts.js';
 export * from './domain/catalog/catalog-entity.js';
 export * from './domain/catalog/classification.js';
 export * from './domain/condition/catalog.js';
