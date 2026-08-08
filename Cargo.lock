@@ -4698,6 +4698,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "tauri",
+ "webkit2gtk",
 ]
 
 [[package]]
@@ -4717,7 +4718,6 @@ dependencies = [
  "tauri-plugin-shell",
  "tauri-plugin-single-instance",
  "vet-engine",
- "webkit2gtk",
 ]
 
 [[package]]

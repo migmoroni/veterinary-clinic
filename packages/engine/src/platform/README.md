@@ -12,10 +12,12 @@ clínicas, persistência SQLite, distribuição ou replicação.
 flowchart LR
     UI[UI Svelte]
     FILE_MANAGER[file_manager.rs]
+    MEDIA_CAPTURE[media_capture.rs]
     SYSTEM_FONTS[system_fonts.rs]
     OS[(Sistema operacional)]
 
     UI --> FILE_MANAGER --> OS
+    UI --> MEDIA_CAPTURE --> OS
     UI --> SYSTEM_FONTS --> OS
 ```
 
@@ -27,6 +29,8 @@ flowchart LR
 `platform` faz:
 
 - abrir caminhos no gerenciador de arquivos do sistema;
+- configurar captura de mídia da WebView quando a plataforma exige ajuste
+  nativo;
 - listar fontes disponíveis no sistema e em diretórios extras informados pelo
   app;
 - normalizar pequenas diferenças entre Linux, macOS e Windows para esses
@@ -64,6 +68,12 @@ Erros públicos:
 - `path_not_found: <path>`;
 - `file_manager_open_failed: <error>`;
 - `file_manager_open_unsupported`.
+
+`media_capture.rs`
+
+Implementa `configure_media_capture`. No Linux, configura a WebView para liberar
+recursos de mídia e WebRTC usados por captura de câmera/microfone. Em Windows e
+macOS, a função existe como no-op para manter a API multiplataforma estável.
 
 `system_fonts.rs`
 
