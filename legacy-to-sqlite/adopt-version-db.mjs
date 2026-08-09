@@ -13,7 +13,10 @@ const userLogsDatabasePath = resolve(outputDir, 'veterinary_clinic_user_logs.db'
 const packageStagingPath = resolve(outputDir, '.native-package-staging');
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, '..');
-const CURRENT_SCHEMA_VERSION = 1;
+const CURRENT_USER_MAIN_SCHEMA_VERSION = 1;
+const CURRENT_USER_MEDIA_SCHEMA_VERSION = 1;
+const CURRENT_USER_LOGS_SCHEMA_VERSION = 1;
+const CURRENT_USER_MANIFEST_SCHEMA_VERSION = 1;
 
 const MEDIA_BLOBS_DDL = `
 CREATE TABLE IF NOT EXISTS blobs (
@@ -96,6 +99,7 @@ function createMediaDatabase(path) {
 		database.pragma('cache_size = -4000');
 		database.pragma('mmap_size = 33554432');
 		database.exec(MEDIA_BLOBS_DDL);
+		database.pragma(`user_version = ${CURRENT_USER_MEDIA_SCHEMA_VERSION}`);
 		database.pragma('wal_checkpoint(TRUNCATE)');
 	} finally {
 		database.close();
@@ -112,6 +116,7 @@ function createLogsDatabase(path) {
 		database.pragma('cache_size = -2000');
 		database.exec(USER_LOGS_DDL);
 		ensureDatabaseManifest(database);
+		database.pragma(`user_version = ${CURRENT_USER_LOGS_SCHEMA_VERSION}`);
 		database.pragma('wal_checkpoint(TRUNCATE)');
 	} finally {
 		database.close();
@@ -149,7 +154,7 @@ function ensureDatabaseManifest(database) {
 				SELECT 1 FROM database_manifest WHERE scope = 'user'
 			)
 		`)
-		.run(createUuidV7(), readAppVersion(), CURRENT_SCHEMA_VERSION, createdAt, createdAt);
+		.run(createUuidV7(), readAppVersion(), CURRENT_USER_MANIFEST_SCHEMA_VERSION, createdAt, createdAt);
 }
 
 function snapshotDatabase(sourcePath, destinationPath) {
@@ -954,8 +959,8 @@ function adaptUserDatabase() {
 			database.prepare(
 				`INSERT OR IGNORE INTO schema_migrations (version, name, app_version, applied_at)
 				 VALUES (?, ?, ?, ?)`
-			).run(CURRENT_SCHEMA_VERSION, '0001_baseline_current_schema', readAppVersion(), nowIsoWithoutMilliseconds());
-			database.pragma('user_version = 1');
+			).run(CURRENT_USER_MAIN_SCHEMA_VERSION, '0001_baseline_current_schema', readAppVersion(), nowIsoWithoutMilliseconds());
+			database.pragma(`user_version = ${CURRENT_USER_MAIN_SCHEMA_VERSION}`);
 			database.exec('COMMIT');
 		} catch (error) {
 			database.exec('ROLLBACK');

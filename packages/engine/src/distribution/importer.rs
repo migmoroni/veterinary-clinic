@@ -12,10 +12,11 @@ use super::{
         normalized_existing_file_path, normalized_existing_path, path_to_string,
         replace_dir_recursive_if_exists, replace_sqlite_file, TempDirectory,
     },
-    sqlite::{create_empty_schema_from, validate_sqlite_database},
+    sqlite::{create_empty_schema_from, set_user_version, validate_sqlite_database},
     time::timestamp_for_file,
     zip::extract_zip_file,
-    CURRENT_SCHEMA_VERSION, USER_DB_PACKAGE_PATH, USER_LOGS_DB_PACKAGE_PATH,
+    CURRENT_USER_LOGS_SCHEMA_VERSION, CURRENT_USER_MAIN_SCHEMA_VERSION,
+    CURRENT_USER_MEDIA_SCHEMA_VERSION, USER_DB_PACKAGE_PATH, USER_LOGS_DB_PACKAGE_PATH,
     USER_MEDIA_DB_PACKAGE_PATH,
 };
 use crate::replication::orchestrator;
@@ -120,9 +121,12 @@ fn import_package(
 }
 
 fn validate_native_import_source(source: &NativeImportSource) -> Result<(), String> {
-    validate_sqlite_database(&source.user_db, true)?;
-    validate_sqlite_database(&source.user_media_db, false)?;
-    validate_sqlite_database(&source.user_logs_db, false)?;
+    validate_sqlite_database(&source.user_db, Some(CURRENT_USER_MAIN_SCHEMA_VERSION))?;
+    validate_sqlite_database(
+        &source.user_media_db,
+        Some(CURRENT_USER_MEDIA_SCHEMA_VERSION),
+    )?;
+    validate_sqlite_database(&source.user_logs_db, Some(CURRENT_USER_LOGS_SCHEMA_VERSION))?;
     validate_logs_manifest(&source.user_logs_db)
 }
 
@@ -149,14 +153,15 @@ fn prepare_csv_import_source(
         let target = Connection::open(&temp_user_db)
             .map_err(|error| format!("csv_user_database_open_failed:{error}"))?;
         import_csv_tables(&target, USER_CSV_TABLES, staging_path)?;
-        target
-            .execute_batch(&format!("PRAGMA user_version = {CURRENT_SCHEMA_VERSION};"))
+        set_user_version(&target, CURRENT_USER_MAIN_SCHEMA_VERSION)
             .map_err(|error| format!("csv_user_version_failed:{error}"))?;
     }
 
     {
         let media = open_sqlite_db(&temp_media_db, DbType::MediaIndex)?;
         import_csv_tables(&media, &[MEDIA_CSV_TABLE], staging_path)?;
+        set_user_version(&media, CURRENT_USER_MEDIA_SCHEMA_VERSION)
+            .map_err(|error| format!("csv_media_version_failed:{error}"))?;
     }
 
     {
@@ -167,11 +172,13 @@ fn prepare_csv_import_source(
         logs.execute("DELETE FROM database_manifest", [])
             .map_err(|error| format!("csv_logs_manifest_clear_failed:{error}"))?;
         import_csv_tables(&logs, LOG_CSV_TABLES, staging_path)?;
+        set_user_version(&logs, CURRENT_USER_LOGS_SCHEMA_VERSION)
+            .map_err(|error| format!("csv_logs_version_failed:{error}"))?;
     }
 
-    validate_sqlite_database(&temp_user_db, true)?;
-    validate_sqlite_database(&temp_media_db, false)?;
-    validate_sqlite_database(&temp_logs_db, false)?;
+    validate_sqlite_database(&temp_user_db, Some(CURRENT_USER_MAIN_SCHEMA_VERSION))?;
+    validate_sqlite_database(&temp_media_db, Some(CURRENT_USER_MEDIA_SCHEMA_VERSION))?;
+    validate_sqlite_database(&temp_logs_db, Some(CURRENT_USER_LOGS_SCHEMA_VERSION))?;
     validate_logs_manifest(&temp_logs_db)?;
     Ok(NativeImportSource {
         user_db: temp_user_db,

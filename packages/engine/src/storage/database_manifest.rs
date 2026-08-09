@@ -8,7 +8,7 @@ use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
 
 const DATABASE_SCOPE: &str = "user";
-const CURRENT_SCHEMA_VERSION: i64 = 1;
+const CURRENT_USER_MANIFEST_SCHEMA_VERSION: i64 = 1;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -42,7 +42,7 @@ pub(crate) fn ensure_database_manifest(connection: &Connection) -> Result<(), St
             params![
                 uuid_v7_string(),
                 env!("CARGO_PKG_VERSION"),
-                CURRENT_SCHEMA_VERSION
+                CURRENT_USER_MANIFEST_SCHEMA_VERSION
             ],
         )
         .map_err(|error| format!("database_manifest_insert_failed:{error}"))?;
@@ -80,7 +80,7 @@ pub(crate) fn validate_database_manifest_schema(manifest: &DatabaseManifest) -> 
             manifest.scope
         ));
     }
-    if manifest.schema_version > CURRENT_SCHEMA_VERSION {
+    if manifest.schema_version > CURRENT_USER_MANIFEST_SCHEMA_VERSION {
         return Err(format!(
             "database_manifest_schema_from_future:{}",
             manifest.schema_version

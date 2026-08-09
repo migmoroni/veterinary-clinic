@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { isTauriRuntime } from '@vet/core-local/native/platform.js';
+import { CURRENT_SYSTEM_MEDIA_SCHEMA_VERSION, CURRENT_USER_MEDIA_SCHEMA_VERSION } from './schema-versions.js';
 import type { SqliteDatabase } from './client.js';
 
 export type MediaSyncStatus = 'pending' | 'synced' | 'error';
@@ -151,7 +152,7 @@ export async function configureMediaDatabase(database: SqliteDatabase, source: M
 	await database.execute('PRAGMA journal_mode = WAL');
 	await database.execute('PRAGMA cache_size = -4000');
 	await database.execute('PRAGMA mmap_size = 33554432');
-	await ensureCurrentMediaSchema(database, source);
+	await ensureMediaSchemaVersion(database, source);
 }
 
 function inferMimeType(bytes: Uint8Array): string {
@@ -200,6 +201,24 @@ async function createImageThumbnail(bytes: Uint8Array, mimeType: string): Promis
 
 interface MediaColumnRow {
 	name: string;
+}
+
+interface UserVersionRow {
+	user_version: number;
+}
+
+function mediaSchemaVersionForSource(source: MediaStoreSource): number {
+	return source === 'system' ? CURRENT_SYSTEM_MEDIA_SCHEMA_VERSION : CURRENT_USER_MEDIA_SCHEMA_VERSION;
+}
+
+async function getMediaSchemaVersion(database: SqliteDatabase): Promise<number> {
+	const rows = await database.select<UserVersionRow[]>('PRAGMA user_version');
+	return Number(rows[0]?.user_version ?? 0);
+}
+
+async function setMediaSchemaVersion(database: SqliteDatabase, version: number): Promise<void> {
+	if (!Number.isInteger(version) || version < 0) throw new Error(`database_schema_invalid_version:${version}`);
+	await database.execute(`PRAGMA user_version = ${version}`);
 }
 
 async function ensureCurrentMediaSchema(database: SqliteDatabase, source: MediaStoreSource): Promise<void> {
@@ -293,6 +312,14 @@ async function ensureCurrentMediaSchema(database: SqliteDatabase, source: MediaS
 		await database.execute('ROLLBACK').catch(() => undefined);
 		throw error;
 	}
+}
+
+async function ensureMediaSchemaVersion(database: SqliteDatabase, source: MediaStoreSource): Promise<void> {
+	const targetVersion = mediaSchemaVersionForSource(source);
+	const currentVersion = await getMediaSchemaVersion(database);
+	if (currentVersion > targetVersion) throw new Error(`database_schema_from_future:${currentVersion}`);
+	await ensureCurrentMediaSchema(database, source);
+	await setMediaSchemaVersion(database, targetVersion);
 }
 
 interface SaveMediaCommandResponse {

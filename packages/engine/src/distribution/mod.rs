@@ -18,7 +18,12 @@ mod zip;
 
 pub use commands::*;
 
-const CURRENT_SCHEMA_VERSION: i64 = 1;
+const CURRENT_USER_MAIN_SCHEMA_VERSION: i64 =
+    crate::schema_versions::CURRENT_USER_MAIN_SCHEMA_VERSION;
+const CURRENT_USER_MEDIA_SCHEMA_VERSION: i64 =
+    crate::schema_versions::CURRENT_USER_MEDIA_SCHEMA_VERSION;
+const CURRENT_USER_LOGS_SCHEMA_VERSION: i64 =
+    crate::schema_versions::CURRENT_USER_LOGS_SCHEMA_VERSION;
 const USER_DB_PACKAGE_PATH: &str = "data/veterinary_clinic_user.db";
 const USER_MEDIA_DB_PACKAGE_PATH: &str = "data/veterinary_clinic_user_media.db";
 const USER_LOGS_DB_PACKAGE_PATH: &str = "data/veterinary_clinic_user_logs.db";

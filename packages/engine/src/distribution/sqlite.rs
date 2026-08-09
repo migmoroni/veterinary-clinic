@@ -3,7 +3,7 @@
 //! These helpers validate imported DBs, clone empty schemas for CSV import and
 //! produce safe snapshots with `VACUUM INTO`.
 
-use super::{files::remove_file_if_exists, CURRENT_SCHEMA_VERSION};
+use super::files::remove_file_if_exists;
 use rusqlite::{params, Connection};
 use std::path::Path;
 
@@ -25,7 +25,7 @@ pub(crate) fn user_version(connection: &Connection) -> Result<i64, String> {
 
 pub(crate) fn validate_sqlite_database(
     path: &Path,
-    check_schema_version: bool,
+    target_schema_version: Option<i64>,
 ) -> Result<(), String> {
     let connection =
         Connection::open(path).map_err(|error| format!("database_validate_open_failed:{error}"))?;
@@ -36,13 +36,19 @@ pub(crate) fn validate_sqlite_database(
         return Err(format!("database_integrity_check_failed:{integrity}"));
     }
 
-    if check_schema_version {
+    if let Some(target_schema_version) = target_schema_version {
         let version = user_version(&connection)?;
-        if version > CURRENT_SCHEMA_VERSION {
+        if version > target_schema_version {
             return Err(format!("database_schema_from_future:{version}"));
         }
     }
     Ok(())
+}
+
+pub(crate) fn set_user_version(connection: &Connection, version: i64) -> Result<(), String> {
+    connection
+        .execute_batch(&format!("PRAGMA user_version = {version};"))
+        .map_err(|error| format!("database_user_version_set_failed:{error}"))
 }
 
 pub(crate) fn create_empty_schema_from(

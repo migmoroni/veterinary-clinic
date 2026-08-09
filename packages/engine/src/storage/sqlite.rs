@@ -4,6 +4,10 @@
 //! and user logs are created here because they are Rust storage primitives.
 
 use super::{ensure_database_manifest, DbType};
+use crate::schema_versions::{
+    CURRENT_SYSTEM_MEDIA_SCHEMA_VERSION, CURRENT_USER_LOGS_SCHEMA_VERSION,
+    CURRENT_USER_MEDIA_SCHEMA_VERSION,
+};
 use rusqlite::Connection;
 use std::{fs, path::Path, time::Duration};
 
@@ -86,6 +90,8 @@ pub fn open_sqlite_db(path: &Path, db_type: DbType) -> Result<Connection, String
         .map_err(|error| format!("database_busy_timeout_failed:{error}"))?;
     connection.set_prepared_statement_cache_capacity(prepared_statement_cache_capacity(db_type));
     apply_sqlite_pragmas(&connection, db_type)?;
+    let schema_was_empty = sqlite_schema_is_empty(&connection)?;
+    validate_sqlite_user_version(&connection, db_type)?;
     match db_type {
         DbType::MediaIndex => connection
             .execute_batch(USER_MEDIA_BLOBS_DDL)
@@ -101,6 +107,7 @@ pub fn open_sqlite_db(path: &Path, db_type: DbType) -> Result<Connection, String
         }
         DbType::Operational => {}
     }
+    stamp_sqlite_user_version_if_needed(&connection, db_type, schema_was_empty)?;
     Ok(connection)
 }
 
@@ -151,4 +158,157 @@ fn apply_sqlite_pragmas(connection: &Connection, db_type: DbType) -> Result<(), 
             .map_err(|error| format!("database_logs_pragma_failed:{error}"))?,
     }
     Ok(())
+}
+
+fn current_schema_version_for_db_type(db_type: DbType) -> Option<i64> {
+    match db_type {
+        DbType::MediaIndex => Some(CURRENT_USER_MEDIA_SCHEMA_VERSION),
+        DbType::SystemMediaIndex => Some(CURRENT_SYSTEM_MEDIA_SCHEMA_VERSION),
+        DbType::Logs => Some(CURRENT_USER_LOGS_SCHEMA_VERSION),
+        DbType::Operational => None,
+    }
+}
+
+fn sqlite_user_version(connection: &Connection) -> Result<i64, String> {
+    connection
+        .query_row("PRAGMA user_version", [], |row| row.get::<_, i64>(0))
+        .map_err(|error| format!("database_user_version_failed:{error}"))
+}
+
+fn set_sqlite_user_version(connection: &Connection, version: i64) -> Result<(), String> {
+    connection
+        .execute_batch(&format!("PRAGMA user_version = {version};"))
+        .map_err(|error| format!("database_user_version_set_failed:{error}"))
+}
+
+fn sqlite_schema_is_empty(connection: &Connection) -> Result<bool, String> {
+    let object_count = connection
+        .query_row(
+            r#"
+            SELECT COUNT(*)
+            FROM sqlite_master
+            WHERE type IN ('table', 'view', 'trigger', 'index')
+                AND name NOT LIKE 'sqlite_%'
+            "#,
+            [],
+            |row| row.get::<_, i64>(0),
+        )
+        .map_err(|error| format!("database_schema_probe_failed:{error}"))?;
+    Ok(object_count == 0)
+}
+
+fn validate_sqlite_user_version(connection: &Connection, db_type: DbType) -> Result<(), String> {
+    let Some(target_version) = current_schema_version_for_db_type(db_type) else {
+        return Ok(());
+    };
+    let current_version = sqlite_user_version(connection)?;
+    if current_version > target_version {
+        return Err(format!("database_schema_from_future:{current_version}"));
+    }
+    Ok(())
+}
+
+fn stamp_sqlite_user_version_if_needed(
+    connection: &Connection,
+    db_type: DbType,
+    schema_was_empty: bool,
+) -> Result<(), String> {
+    let Some(target_version) = current_schema_version_for_db_type(db_type) else {
+        return Ok(());
+    };
+    if sqlite_user_version(connection)? != 0 {
+        return Ok(());
+    }
+    if schema_was_empty || matches!(db_type, DbType::Logs) {
+        set_sqlite_user_version(connection, target_version)?;
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::{
+        fs,
+        path::{Path, PathBuf},
+        time::{SystemTime, UNIX_EPOCH},
+    };
+
+    #[test]
+    fn stamps_new_media_database_with_user_version() {
+        let path = test_database_path("user-media-version");
+        let connection = open_sqlite_db(&path, DbType::MediaIndex).expect("open media database");
+
+        assert_eq!(
+            sqlite_user_version(&connection).expect("read user_version"),
+            CURRENT_USER_MEDIA_SCHEMA_VERSION
+        );
+        remove_sqlite_file_set(&path);
+    }
+
+    #[test]
+    fn stamps_new_system_media_database_with_user_version() {
+        let path = test_database_path("system-media-version");
+        let connection =
+            open_sqlite_db(&path, DbType::SystemMediaIndex).expect("open system media database");
+
+        assert_eq!(
+            sqlite_user_version(&connection).expect("read user_version"),
+            CURRENT_SYSTEM_MEDIA_SCHEMA_VERSION
+        );
+        remove_sqlite_file_set(&path);
+    }
+
+    #[test]
+    fn stamps_new_logs_database_with_user_version() {
+        let path = test_database_path("logs-version");
+        let connection = open_sqlite_db(&path, DbType::Logs).expect("open logs database");
+
+        assert_eq!(
+            sqlite_user_version(&connection).expect("read user_version"),
+            CURRENT_USER_LOGS_SCHEMA_VERSION
+        );
+        remove_sqlite_file_set(&path);
+    }
+
+    #[test]
+    fn rejects_future_media_schema_version() {
+        let path = test_database_path("future-media-version");
+        {
+            let connection = Connection::open(&path).expect("create database");
+            set_sqlite_user_version(&connection, CURRENT_USER_MEDIA_SCHEMA_VERSION + 1)
+                .expect("set future version");
+        }
+
+        let error = match open_sqlite_db(&path, DbType::MediaIndex) {
+            Ok(_) => panic!("future media schema should be rejected"),
+            Err(error) => error,
+        };
+
+        assert_eq!(
+            error,
+            format!(
+                "database_schema_from_future:{}",
+                CURRENT_USER_MEDIA_SCHEMA_VERSION + 1
+            )
+        );
+        remove_sqlite_file_set(&path);
+    }
+
+    fn test_database_path(label: &str) -> PathBuf {
+        std::env::temp_dir().join(format!(
+            "vclinic-storage-{label}-{}-{}.db",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("clock")
+                .as_nanos()
+        ))
+    }
+
+    fn remove_sqlite_file_set(path: &Path) {
+        let _ = fs::remove_file(path);
+        let _ = fs::remove_file(path.with_extension("db-wal"));
+        let _ = fs::remove_file(path.with_extension("db-shm"));
+    }
 }

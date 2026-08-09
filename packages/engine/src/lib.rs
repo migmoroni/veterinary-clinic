@@ -1,3 +1,5 @@
+mod schema_versions;
+
 pub mod distribution;
 pub mod platform;
 pub mod replication;

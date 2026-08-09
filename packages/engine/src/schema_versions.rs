@@ -1,0 +1,4 @@
+pub(crate) const CURRENT_USER_MAIN_SCHEMA_VERSION: i64 = 1;
+pub(crate) const CURRENT_USER_MEDIA_SCHEMA_VERSION: i64 = 1;
+pub(crate) const CURRENT_USER_LOGS_SCHEMA_VERSION: i64 = 1;
+pub(crate) const CURRENT_SYSTEM_MEDIA_SCHEMA_VERSION: i64 = 1;

@@ -7,7 +7,14 @@ import { createUuidV7, isUuidV4 } from '@vet/types/domain/shared/uuid.js';
 import type { SqliteDatabase as Database } from '../client.js';
 import { defaultTreatmentProtocols } from '@vet/types/domain/treatment/default-protocol.js';
 import { configureMediaDatabase } from '../media.js';
-import { CURRENT_SCHEMA_VERSION, runMigrations, runSystemMigrations } from '../migrations.js';
+import {
+	CURRENT_SYSTEM_MAIN_SCHEMA_VERSION,
+	CURRENT_SYSTEM_MEDIA_SCHEMA_VERSION,
+	CURRENT_USER_MAIN_SCHEMA_VERSION,
+	CURRENT_USER_MEDIA_SCHEMA_VERSION,
+	runMigrations,
+	runSystemMigrations
+} from '../migrations.js';
 
 interface UserVersionRow {
 	user_version: number;
@@ -103,7 +110,7 @@ describeWithSqlite('SQLite schema migrations', () => {
 			ORDER BY name
 		`);
 
-		expect(versions[0]?.user_version).toBe(CURRENT_SCHEMA_VERSION);
+		expect(versions[0]?.user_version).toBe(CURRENT_USER_MAIN_SCHEMA_VERSION);
 		expect(migrations).toEqual([{ version: 1, name: '0001_baseline_current_schema' }]);
 		expect(owners[0]?.total).toBe(0);
 		expect(systemOnlyTables).toEqual([]);
@@ -111,14 +118,18 @@ describeWithSqlite('SQLite schema migrations', () => {
 	});
 
 	it('keeps default system treatment protocols in the system database', async () => {
-		await configureMediaDatabase(mediaDatabase as unknown as Database);
+		await configureMediaDatabase(mediaDatabase as unknown as Database, 'system');
 		await runSystemMigrations(database as unknown as Database, { mediaDatabase: mediaDatabase as unknown as Database });
 
+		const versions = await database.select<UserVersionRow[]>('PRAGMA user_version');
+		const mediaVersions = await mediaDatabase.select<UserVersionRow[]>('PRAGMA user_version');
 		const protocols = await database.select<CountRow[]>("SELECT COUNT(*) AS total FROM treatment_protocols WHERE origin = 'system'");
 		const protocolIds = await database.select<IdRow[]>("SELECT id FROM treatment_protocols WHERE origin = 'system' ORDER BY id");
 		const items = await database.select<CountRow[]>('SELECT COUNT(*) AS total FROM treatment_protocol_items');
 		const doses = await database.select<CountRow[]>('SELECT COUNT(*) AS total FROM treatment_protocol_doses');
 
+		expect(versions[0]?.user_version).toBe(CURRENT_SYSTEM_MAIN_SCHEMA_VERSION);
+		expect(mediaVersions[0]?.user_version).toBe(CURRENT_SYSTEM_MEDIA_SCHEMA_VERSION);
 		expect(protocols[0]?.total).toBe(defaultTreatmentProtocols.length);
 		expect(protocolIds.map((row) => row.id)).toEqual([...defaultTreatmentProtocols.map((protocol) => protocol.id)].sort());
 		expect(protocolIds.every((row) => isUuidV4(row.id))).toBe(true);
@@ -137,18 +148,25 @@ describeWithSqlite('SQLite schema migrations', () => {
 		const versions = await database.select<UserVersionRow[]>('PRAGMA user_version');
 		const owners = await database.select<CountRow[]>("SELECT COUNT(*) AS total FROM owners WHERE name = 'Ana' AND additional_information = 'client data'");
 
-		expect(versions[0]?.user_version).toBe(CURRENT_SCHEMA_VERSION);
+		expect(versions[0]?.user_version).toBe(CURRENT_USER_MAIN_SCHEMA_VERSION);
 		expect(owners[0]?.total).toBe(1);
 	});
 
 	it('refuses to open a database from a future schema version', async () => {
-		await database.execute(`PRAGMA user_version = ${CURRENT_SCHEMA_VERSION + 1}`);
+		await database.execute(`PRAGMA user_version = ${CURRENT_USER_MAIN_SCHEMA_VERSION + 1}`);
 
-		await expect(runMigrations(database as unknown as Database)).rejects.toThrow(`database_schema_from_future:${CURRENT_SCHEMA_VERSION + 1}`);
+		await expect(runMigrations(database as unknown as Database)).rejects.toThrow(`database_schema_from_future:${CURRENT_USER_MAIN_SCHEMA_VERSION + 1}`);
+	});
+
+	it('refuses a system database from a future schema version', async () => {
+		await configureMediaDatabase(mediaDatabase as unknown as Database, 'system');
+		await database.execute(`PRAGMA user_version = ${CURRENT_SYSTEM_MAIN_SCHEMA_VERSION + 1}`);
+
+		await expect(runSystemMigrations(database as unknown as Database, { mediaDatabase: mediaDatabase as unknown as Database })).rejects.toThrow(`database_schema_from_future:${CURRENT_SYSTEM_MAIN_SCHEMA_VERSION + 1}`);
 	});
 
 	it('refuses a database that announces the current version but does not match the current schema', async () => {
-		await database.execute(`PRAGMA user_version = ${CURRENT_SCHEMA_VERSION}`);
+		await database.execute(`PRAGMA user_version = ${CURRENT_USER_MAIN_SCHEMA_VERSION}`);
 		await database.execute('CREATE TABLE unrelated_table (id INTEGER PRIMARY KEY AUTOINCREMENT, value TEXT NOT NULL)');
 
 		await expect(runMigrations(database as unknown as Database)).rejects.toThrow('database_schema_unsupported');
@@ -163,5 +181,19 @@ describeWithSqlite('SQLite schema migrations', () => {
 		`);
 
 		await expect(runMigrations(database as unknown as Database)).rejects.toThrow('database_schema_unsupported');
+	});
+
+	it('stamps the user media database schema version', async () => {
+		await configureMediaDatabase(mediaDatabase as unknown as Database, 'user');
+
+		const versions = await mediaDatabase.select<UserVersionRow[]>('PRAGMA user_version');
+
+		expect(versions[0]?.user_version).toBe(CURRENT_USER_MEDIA_SCHEMA_VERSION);
+	});
+
+	it('refuses a media database from a future schema version', async () => {
+		await mediaDatabase.execute(`PRAGMA user_version = ${CURRENT_USER_MEDIA_SCHEMA_VERSION + 1}`);
+
+		await expect(configureMediaDatabase(mediaDatabase as unknown as Database, 'user')).rejects.toThrow(`database_schema_from_future:${CURRENT_USER_MEDIA_SCHEMA_VERSION + 1}`);
 	});
 });

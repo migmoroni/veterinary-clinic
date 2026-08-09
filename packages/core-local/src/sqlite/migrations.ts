@@ -16,9 +16,18 @@ import { createUuidV7 } from '@vet/types/domain/shared/uuid.js';
 import { insertMediaBlob, mediaHashToSqlLiteral } from './media.js';
 import { incrementalSchemaMigrations } from './schema-migrations/registry.js';
 import type { SchemaMigration } from './schema-migrations/types.js';
+import { CURRENT_SYSTEM_MAIN_SCHEMA_VERSION, CURRENT_USER_MAIN_SCHEMA_VERSION } from './schema-versions.js';
 import type { SqliteDatabase as Database } from './client.js';
 
-export const CURRENT_SCHEMA_VERSION = 1;
+export {
+	CURRENT_SYSTEM_MAIN_SCHEMA_VERSION,
+	CURRENT_USER_LOGS_SCHEMA_VERSION,
+	CURRENT_USER_MAIN_SCHEMA_VERSION,
+	CURRENT_USER_MEDIA_SCHEMA_VERSION,
+	CURRENT_SYSTEM_MEDIA_SCHEMA_VERSION
+} from './schema-versions.js';
+
+export const CURRENT_SCHEMA_VERSION = CURRENT_USER_MAIN_SCHEMA_VERSION;
 export const BASELINE_APP_VERSION = '0.2.0';
 
 type BaselineDetection = 'empty' | 'current-unversioned' | 'unknown-unversioned' | 'versioned';
@@ -1380,10 +1389,10 @@ async function hasSchemaMigrationRecord(database: Database, version: number): Pr
 export async function getSchemaStatus(database: Database): Promise<SchemaStatus> {
 	const currentVersion = await getUserVersion(database);
 
-	if (currentVersion > CURRENT_SCHEMA_VERSION) {
+	if (currentVersion > CURRENT_USER_MAIN_SCHEMA_VERSION) {
 		return {
 			currentVersion,
-			targetVersion: CURRENT_SCHEMA_VERSION,
+			targetVersion: CURRENT_USER_MAIN_SCHEMA_VERSION,
 			migrationRequired: false,
 			detection: 'versioned',
 			isSupported: false,
@@ -1392,10 +1401,10 @@ export async function getSchemaStatus(database: Database): Promise<SchemaStatus>
 	}
 
 	if (currentVersion > 0) {
-		if (currentVersion === CURRENT_SCHEMA_VERSION && !(await hasCurrentUnversionedSchema(database))) {
+		if (currentVersion === CURRENT_USER_MAIN_SCHEMA_VERSION && !(await hasCurrentUnversionedSchema(database))) {
 			return {
 				currentVersion,
-				targetVersion: CURRENT_SCHEMA_VERSION,
+				targetVersion: CURRENT_USER_MAIN_SCHEMA_VERSION,
 				migrationRequired: false,
 				detection: 'versioned',
 				isSupported: false,
@@ -1406,8 +1415,8 @@ export async function getSchemaStatus(database: Database): Promise<SchemaStatus>
 		const missingMetadata = !(await hasSchemaMigrationRecord(database, currentVersion));
 		return {
 			currentVersion,
-			targetVersion: CURRENT_SCHEMA_VERSION,
-			migrationRequired: currentVersion < CURRENT_SCHEMA_VERSION || missingMetadata,
+			targetVersion: CURRENT_USER_MAIN_SCHEMA_VERSION,
+			migrationRequired: currentVersion < CURRENT_USER_MAIN_SCHEMA_VERSION || missingMetadata,
 			detection: 'versioned',
 			isSupported: true
 		};
@@ -1416,7 +1425,7 @@ export async function getSchemaStatus(database: Database): Promise<SchemaStatus>
 	if (await isEmptyDatabase(database)) {
 		return {
 			currentVersion,
-			targetVersion: CURRENT_SCHEMA_VERSION,
+			targetVersion: CURRENT_USER_MAIN_SCHEMA_VERSION,
 			migrationRequired: true,
 			detection: 'empty',
 			isSupported: true
@@ -1426,7 +1435,7 @@ export async function getSchemaStatus(database: Database): Promise<SchemaStatus>
 	if (await hasCurrentUnversionedSchema(database)) {
 		return {
 			currentVersion,
-			targetVersion: CURRENT_SCHEMA_VERSION,
+			targetVersion: CURRENT_USER_MAIN_SCHEMA_VERSION,
 			migrationRequired: true,
 			detection: 'current-unversioned',
 			isSupported: true
@@ -1435,7 +1444,7 @@ export async function getSchemaStatus(database: Database): Promise<SchemaStatus>
 
 	return {
 		currentVersion,
-		targetVersion: CURRENT_SCHEMA_VERSION,
+		targetVersion: CURRENT_USER_MAIN_SCHEMA_VERSION,
 		migrationRequired: false,
 		detection: 'unknown-unversioned',
 		isSupported: false,
@@ -1504,10 +1513,10 @@ function buildSchemaMigrationRegistry(): SchemaMigration[] {
 	for (const migration of migrations) {
 		if (seenVersions.has(migration.version)) throw new Error(`database_schema_migration_duplicate:${migration.version}`);
 		seenVersions.add(migration.version);
-		if (migration.version > CURRENT_SCHEMA_VERSION) throw new Error(`database_schema_migration_above_current:${migration.version}`);
+		if (migration.version > CURRENT_USER_MAIN_SCHEMA_VERSION) throw new Error(`database_schema_migration_above_current:${migration.version}`);
 	}
 
-	for (let expectedVersion = 1; expectedVersion <= CURRENT_SCHEMA_VERSION; expectedVersion += 1) {
+	for (let expectedVersion = 1; expectedVersion <= CURRENT_USER_MAIN_SCHEMA_VERSION; expectedVersion += 1) {
 		if (!seenVersions.has(expectedVersion)) throw new Error(`database_schema_migration_registry_gap:${expectedVersion}`);
 	}
 
@@ -1612,6 +1621,8 @@ async function refreshOutdatedSystemCatalogSchema(database: Database): Promise<v
 export async function runSystemMigrations(database: Database, options: RunSystemMigrationsOptions = {}): Promise<void> {
 	const { createIndexes = true, mediaDatabase } = options;
 	if (!mediaDatabase) throw new Error('system_media_database_required');
+	const currentVersion = await getUserVersion(database);
+	if (currentVersion > CURRENT_SYSTEM_MAIN_SCHEMA_VERSION) throw new Error(`database_schema_from_future:${currentVersion}`);
 
 	await database.execute('BEGIN IMMEDIATE');
 	try {
@@ -1625,7 +1636,7 @@ export async function runSystemMigrations(database: Database, options: RunSystem
 		await syncDefaultBreedReferenceCatalog(database, mediaDatabase);
 		await syncDefaultTreatmentProtocols(database);
 		if (createIndexes) await createSystemIndexes(database);
-		await setUserVersion(database, CURRENT_SCHEMA_VERSION);
+		await setUserVersion(database, CURRENT_SYSTEM_MAIN_SCHEMA_VERSION);
 		await validateDatabaseIntegrity(database);
 		await database.execute('COMMIT');
 	} catch (error) {
@@ -1645,9 +1656,9 @@ export async function runMigrations(database: Database, options: RunMigrationsOp
 		if (status.detection === 'current-unversioned') {
 			await createCurrentSchema(database);
 			await assertCurrentSchema(database);
-			await backfillMigrationMetadata(database, CURRENT_SCHEMA_VERSION);
+			await backfillMigrationMetadata(database, CURRENT_USER_MAIN_SCHEMA_VERSION);
 		} else {
-			const unappliedMigrations = SCHEMA_MIGRATIONS.filter((migration) => migration.version > status.currentVersion && migration.version <= CURRENT_SCHEMA_VERSION);
+			const unappliedMigrations = SCHEMA_MIGRATIONS.filter((migration) => migration.version > status.currentVersion && migration.version <= CURRENT_USER_MAIN_SCHEMA_VERSION);
 			for (const migration of unappliedMigrations) {
 				await applyMigration(database, migration);
 			}
