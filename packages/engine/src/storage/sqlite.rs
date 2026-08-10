@@ -3,7 +3,10 @@
 //! Operational schemas are created by the TypeScript migrator; media indexes
 //! and user logs are created here because they are Rust storage primitives.
 
-use super::{ensure_database_manifest, DbType};
+use super::{
+    classify_connection_schema_version, ensure_database_manifest, ensure_not_from_future,
+    set_schema_version, DbType, SchemaVersionStatus,
+};
 use crate::schema_versions::{
     CURRENT_SYSTEM_MEDIA_SCHEMA_VERSION, CURRENT_USER_LOGS_SCHEMA_VERSION,
     CURRENT_USER_MEDIA_SCHEMA_VERSION,
@@ -90,8 +93,10 @@ pub fn open_sqlite_db(path: &Path, db_type: DbType) -> Result<Connection, String
         .map_err(|error| format!("database_busy_timeout_failed:{error}"))?;
     connection.set_prepared_statement_cache_capacity(prepared_statement_cache_capacity(db_type));
     apply_sqlite_pragmas(&connection, db_type)?;
-    let schema_was_empty = sqlite_schema_is_empty(&connection)?;
-    validate_sqlite_user_version(&connection, db_type)?;
+    let version_status = schema_version_status_for_db_type(&connection, db_type)?;
+    if let Some(status) = version_status {
+        ensure_not_from_future(status)?;
+    }
     match db_type {
         DbType::MediaIndex => connection
             .execute_batch(USER_MEDIA_BLOBS_DDL)
@@ -107,7 +112,7 @@ pub fn open_sqlite_db(path: &Path, db_type: DbType) -> Result<Connection, String
         }
         DbType::Operational => {}
     }
-    stamp_sqlite_user_version_if_needed(&connection, db_type, schema_was_empty)?;
+    apply_storage_owned_schema_version_status(&connection, db_type, version_status)?;
     Ok(connection)
 }
 
@@ -169,65 +174,200 @@ fn current_schema_version_for_db_type(db_type: DbType) -> Option<i64> {
     }
 }
 
-fn sqlite_user_version(connection: &Connection) -> Result<i64, String> {
-    connection
-        .query_row("PRAGMA user_version", [], |row| row.get::<_, i64>(0))
-        .map_err(|error| format!("database_user_version_failed:{error}"))
-}
-
-fn set_sqlite_user_version(connection: &Connection, version: i64) -> Result<(), String> {
-    connection
-        .execute_batch(&format!("PRAGMA user_version = {version};"))
-        .map_err(|error| format!("database_user_version_set_failed:{error}"))
-}
-
-fn sqlite_schema_is_empty(connection: &Connection) -> Result<bool, String> {
-    let object_count = connection
-        .query_row(
-            r#"
-            SELECT COUNT(*)
-            FROM sqlite_master
-            WHERE type IN ('table', 'view', 'trigger', 'index')
-                AND name NOT LIKE 'sqlite_%'
-            "#,
-            [],
-            |row| row.get::<_, i64>(0),
-        )
-        .map_err(|error| format!("database_schema_probe_failed:{error}"))?;
-    Ok(object_count == 0)
-}
-
-fn validate_sqlite_user_version(connection: &Connection, db_type: DbType) -> Result<(), String> {
-    let Some(target_version) = current_schema_version_for_db_type(db_type) else {
-        return Ok(());
-    };
-    let current_version = sqlite_user_version(connection)?;
-    if current_version > target_version {
-        return Err(format!("database_schema_from_future:{current_version}"));
-    }
-    Ok(())
-}
-
-fn stamp_sqlite_user_version_if_needed(
+fn schema_version_status_for_db_type(
     connection: &Connection,
     db_type: DbType,
-    schema_was_empty: bool,
+) -> Result<Option<SchemaVersionStatus>, String> {
+    let Some(target_version) = current_schema_version_for_db_type(db_type) else {
+        return Ok(None);
+    };
+    classify_connection_schema_version(connection, target_version).map(Some)
+}
+
+fn apply_storage_owned_schema_version_status(
+    connection: &Connection,
+    db_type: DbType,
+    version_status: Option<SchemaVersionStatus>,
 ) -> Result<(), String> {
     let Some(target_version) = current_schema_version_for_db_type(db_type) else {
         return Ok(());
     };
-    if sqlite_user_version(connection)? != 0 {
+    let Some(version_status) = version_status else {
         return Ok(());
+    };
+    assert_storage_owned_schema(connection, db_type)?;
+    match version_status {
+        SchemaVersionStatus::Current => Ok(()),
+        SchemaVersionStatus::MigrationRequired { .. } => {
+            set_schema_version(connection, target_version)
+        }
+        SchemaVersionStatus::FromFuture { found, .. } => {
+            Err(format!("database_schema_from_future:{found}"))
+        }
     }
-    if schema_was_empty || matches!(db_type, DbType::Logs) {
-        set_sqlite_user_version(connection, target_version)?;
+}
+
+fn assert_storage_owned_schema(connection: &Connection, db_type: DbType) -> Result<(), String> {
+    match db_type {
+        DbType::MediaIndex => {
+            assert_exact_tables(connection, &["blobs"], "media_database_schema_invalid")?;
+            assert_exact_columns(
+                connection,
+                "blobs",
+                &[
+                    "hash",
+                    "thumbnail",
+                    "mime_type",
+                    "size_bytes",
+                    "width",
+                    "height",
+                    "sync_status",
+                    "created_at",
+                    "updated_at",
+                    "updated_by",
+                    "uploaded_at",
+                    "removed_at",
+                ],
+                "media_database_schema_invalid",
+            )
+        }
+        DbType::SystemMediaIndex => {
+            assert_exact_tables(
+                connection,
+                &["blobs"],
+                "system_media_database_schema_invalid",
+            )?;
+            assert_exact_columns(
+                connection,
+                "blobs",
+                &[
+                    "hash",
+                    "thumbnail",
+                    "mime_type",
+                    "size_bytes",
+                    "width",
+                    "height",
+                    "sync_status",
+                    "uploaded_at",
+                ],
+                "system_media_database_schema_invalid",
+            )
+        }
+        DbType::Logs => {
+            assert_exact_tables(
+                connection,
+                &[
+                    "database_manifest",
+                    "permanent_deletion_logs",
+                    "system_audit_logs",
+                ],
+                "logs_database_schema_invalid",
+            )?;
+            assert_exact_columns(
+                connection,
+                "database_manifest",
+                &[
+                    "scope",
+                    "database_id",
+                    "app_version",
+                    "schema_version",
+                    "created_at",
+                    "updated_at",
+                ],
+                "logs_database_schema_invalid",
+            )?;
+            assert_exact_columns(
+                connection,
+                "permanent_deletion_logs",
+                &[
+                    "id",
+                    "domain",
+                    "target_table",
+                    "target_id",
+                    "deleted_by",
+                    "snapshot_json",
+                    "created_at",
+                ],
+                "logs_database_schema_invalid",
+            )?;
+            assert_exact_columns(
+                connection,
+                "system_audit_logs",
+                &["id", "action_type", "description", "actor_id", "created_at"],
+                "logs_database_schema_invalid",
+            )
+        }
+        DbType::Operational => Ok(()),
+    }
+}
+
+fn assert_exact_tables(
+    connection: &Connection,
+    expected_tables: &[&str],
+    error_code: &str,
+) -> Result<(), String> {
+    let mut statement = connection
+        .prepare(
+            r#"
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+                AND name NOT LIKE 'sqlite_%'
+            ORDER BY name
+            "#,
+        )
+        .map_err(|error| format!("{error_code}:{error}"))?;
+    let rows = statement
+        .query_map([], |row| row.get::<_, String>(0))
+        .map_err(|error| format!("{error_code}:{error}"))?;
+    let mut actual = Vec::new();
+    for row in rows {
+        actual.push(row.map_err(|error| format!("{error_code}:{error}"))?);
+    }
+    let expected = expected_tables
+        .iter()
+        .map(|table| table.to_string())
+        .collect::<Vec<_>>();
+    if actual != expected {
+        return Err(error_code.to_string());
     }
     Ok(())
+}
+
+fn assert_exact_columns(
+    connection: &Connection,
+    table: &str,
+    expected_columns: &[&str],
+    error_code: &str,
+) -> Result<(), String> {
+    let mut statement = connection
+        .prepare(&format!("PRAGMA table_info({})", quote_identifier(table)))
+        .map_err(|error| format!("{error_code}:{error}"))?;
+    let rows = statement
+        .query_map([], |row| row.get::<_, String>(1))
+        .map_err(|error| format!("{error_code}:{error}"))?;
+    let mut actual = Vec::new();
+    for row in rows {
+        actual.push(row.map_err(|error| format!("{error_code}:{error}"))?);
+    }
+    let expected = expected_columns
+        .iter()
+        .map(|column| column.to_string())
+        .collect::<Vec<_>>();
+    if actual != expected {
+        return Err(error_code.to_string());
+    }
+    Ok(())
+}
+
+fn quote_identifier(value: &str) -> String {
+    format!("\"{}\"", value.replace('"', "\"\""))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::storage::schema_version::read_schema_version;
     use std::{
         fs,
         path::{Path, PathBuf},
@@ -240,7 +380,7 @@ mod tests {
         let connection = open_sqlite_db(&path, DbType::MediaIndex).expect("open media database");
 
         assert_eq!(
-            sqlite_user_version(&connection).expect("read user_version"),
+            read_schema_version(&connection).expect("read user_version"),
             CURRENT_USER_MEDIA_SCHEMA_VERSION
         );
         remove_sqlite_file_set(&path);
@@ -253,7 +393,7 @@ mod tests {
             open_sqlite_db(&path, DbType::SystemMediaIndex).expect("open system media database");
 
         assert_eq!(
-            sqlite_user_version(&connection).expect("read user_version"),
+            read_schema_version(&connection).expect("read user_version"),
             CURRENT_SYSTEM_MEDIA_SCHEMA_VERSION
         );
         remove_sqlite_file_set(&path);
@@ -265,7 +405,65 @@ mod tests {
         let connection = open_sqlite_db(&path, DbType::Logs).expect("open logs database");
 
         assert_eq!(
-            sqlite_user_version(&connection).expect("read user_version"),
+            read_schema_version(&connection).expect("read user_version"),
+            CURRENT_USER_LOGS_SCHEMA_VERSION
+        );
+        remove_sqlite_file_set(&path);
+    }
+
+    #[test]
+    fn adopts_recognized_user_media_schema_from_zero_version() {
+        let path = test_database_path("adopt-user-media-version");
+        {
+            let connection = Connection::open(&path).expect("create database");
+            connection
+                .execute_batch(USER_MEDIA_BLOBS_DDL)
+                .expect("create media schema");
+        }
+
+        let connection = open_sqlite_db(&path, DbType::MediaIndex).expect("open media database");
+
+        assert_eq!(
+            read_schema_version(&connection).expect("read user_version"),
+            CURRENT_USER_MEDIA_SCHEMA_VERSION
+        );
+        remove_sqlite_file_set(&path);
+    }
+
+    #[test]
+    fn adopts_recognized_system_media_schema_from_zero_version() {
+        let path = test_database_path("adopt-system-media-version");
+        {
+            let connection = Connection::open(&path).expect("create database");
+            connection
+                .execute_batch(SYSTEM_MEDIA_BLOBS_DDL)
+                .expect("create system media schema");
+        }
+
+        let connection =
+            open_sqlite_db(&path, DbType::SystemMediaIndex).expect("open system media database");
+
+        assert_eq!(
+            read_schema_version(&connection).expect("read user_version"),
+            CURRENT_SYSTEM_MEDIA_SCHEMA_VERSION
+        );
+        remove_sqlite_file_set(&path);
+    }
+
+    #[test]
+    fn adopts_recognized_logs_schema_from_zero_version() {
+        let path = test_database_path("adopt-logs-version");
+        {
+            let connection = Connection::open(&path).expect("create database");
+            connection
+                .execute_batch(USER_LOGS_DDL)
+                .expect("create logs schema");
+        }
+
+        let connection = open_sqlite_db(&path, DbType::Logs).expect("open logs database");
+
+        assert_eq!(
+            read_schema_version(&connection).expect("read user_version"),
             CURRENT_USER_LOGS_SCHEMA_VERSION
         );
         remove_sqlite_file_set(&path);
@@ -276,7 +474,7 @@ mod tests {
         let path = test_database_path("future-media-version");
         {
             let connection = Connection::open(&path).expect("create database");
-            set_sqlite_user_version(&connection, CURRENT_USER_MEDIA_SCHEMA_VERSION + 1)
+            set_schema_version(&connection, CURRENT_USER_MEDIA_SCHEMA_VERSION + 1)
                 .expect("set future version");
         }
 

@@ -12,7 +12,7 @@ use super::{
         normalized_existing_file_path, normalized_existing_path, path_to_string,
         replace_dir_recursive_if_exists, replace_sqlite_file, TempDirectory,
     },
-    sqlite::{create_empty_schema_from, set_user_version, validate_sqlite_database},
+    sqlite::{create_empty_schema_from, validate_sqlite_database},
     time::timestamp_for_file,
     zip::extract_zip_file,
     CURRENT_USER_LOGS_SCHEMA_VERSION, CURRENT_USER_MAIN_SCHEMA_VERSION,
@@ -20,7 +20,9 @@ use super::{
     USER_MEDIA_DB_PACKAGE_PATH,
 };
 use crate::replication::orchestrator;
-use crate::storage::{open_sqlite_db, DbType, StorageManager};
+use crate::storage::{
+    open_sqlite_db, set_schema_version, DbType, SchemaVersionStatus, StorageManager,
+};
 use crate::storage::{read_database_manifest, validate_database_manifest_schema};
 use rusqlite::Connection;
 use std::{
@@ -121,13 +123,27 @@ fn import_package(
 }
 
 fn validate_native_import_source(source: &NativeImportSource) -> Result<(), String> {
-    validate_sqlite_database(&source.user_db, Some(CURRENT_USER_MAIN_SCHEMA_VERSION))?;
-    validate_sqlite_database(
-        &source.user_media_db,
-        Some(CURRENT_USER_MEDIA_SCHEMA_VERSION),
-    )?;
-    validate_sqlite_database(&source.user_logs_db, Some(CURRENT_USER_LOGS_SCHEMA_VERSION))?;
+    validate_current_sqlite_database(&source.user_db, CURRENT_USER_MAIN_SCHEMA_VERSION)?;
+    validate_current_sqlite_database(&source.user_media_db, CURRENT_USER_MEDIA_SCHEMA_VERSION)?;
+    validate_current_sqlite_database(&source.user_logs_db, CURRENT_USER_LOGS_SCHEMA_VERSION)?;
     validate_logs_manifest(&source.user_logs_db)
+}
+
+fn validate_current_sqlite_database(path: &Path, target_schema_version: i64) -> Result<(), String> {
+    require_current_schema_version(validate_sqlite_database(path, Some(target_schema_version))?)
+}
+
+fn require_current_schema_version(status: Option<SchemaVersionStatus>) -> Result<(), String> {
+    match status {
+        Some(SchemaVersionStatus::Current) => Ok(()),
+        Some(SchemaVersionStatus::MigrationRequired { from, to }) => {
+            Err(format!("database_schema_migration_required:{from}:{to}"))
+        }
+        Some(SchemaVersionStatus::FromFuture { found, .. }) => {
+            Err(format!("database_schema_from_future:{found}"))
+        }
+        None => Ok(()),
+    }
 }
 
 fn prepare_csv_import_source(
@@ -153,14 +169,14 @@ fn prepare_csv_import_source(
         let target = Connection::open(&temp_user_db)
             .map_err(|error| format!("csv_user_database_open_failed:{error}"))?;
         import_csv_tables(&target, USER_CSV_TABLES, staging_path)?;
-        set_user_version(&target, CURRENT_USER_MAIN_SCHEMA_VERSION)
+        set_schema_version(&target, CURRENT_USER_MAIN_SCHEMA_VERSION)
             .map_err(|error| format!("csv_user_version_failed:{error}"))?;
     }
 
     {
         let media = open_sqlite_db(&temp_media_db, DbType::MediaIndex)?;
         import_csv_tables(&media, &[MEDIA_CSV_TABLE], staging_path)?;
-        set_user_version(&media, CURRENT_USER_MEDIA_SCHEMA_VERSION)
+        set_schema_version(&media, CURRENT_USER_MEDIA_SCHEMA_VERSION)
             .map_err(|error| format!("csv_media_version_failed:{error}"))?;
     }
 
@@ -172,7 +188,7 @@ fn prepare_csv_import_source(
         logs.execute("DELETE FROM database_manifest", [])
             .map_err(|error| format!("csv_logs_manifest_clear_failed:{error}"))?;
         import_csv_tables(&logs, LOG_CSV_TABLES, staging_path)?;
-        set_user_version(&logs, CURRENT_USER_LOGS_SCHEMA_VERSION)
+        set_schema_version(&logs, CURRENT_USER_LOGS_SCHEMA_VERSION)
             .map_err(|error| format!("csv_logs_version_failed:{error}"))?;
     }
 
@@ -377,6 +393,20 @@ mod tests {
 
         assert_eq!(error, "native_distribution_directory_ambiguous");
         let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn rejects_native_import_source_that_requires_schema_migration() {
+        let error =
+            match require_current_schema_version(Some(SchemaVersionStatus::MigrationRequired {
+                from: 0,
+                to: 1,
+            })) {
+                Ok(_) => panic!("migration-required import should be rejected"),
+                Err(error) => error,
+            };
+
+        assert_eq!(error, "database_schema_migration_required:0:1");
     }
 
     fn seed_local_mirror_files(path: &Path) {

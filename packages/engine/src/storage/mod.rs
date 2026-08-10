@@ -13,6 +13,7 @@ mod database_manifest;
 mod deletion;
 mod dirty;
 mod media;
+mod schema_version;
 mod sql_bridge;
 mod sqlite;
 mod uuid;
@@ -33,5 +34,9 @@ pub(crate) use database_manifest::{
     validate_database_manifest_schema,
 };
 pub(crate) use dirty::UserBundleDirtyFlags;
+pub(crate) use schema_version::{
+    classify_connection_schema_version, ensure_not_from_future, set_schema_version,
+    SchemaVersionStatus,
+};
 pub(crate) use sql_bridge::{execute_statement, select_rows};
 pub(crate) use uuid::uuid_v7_string;

@@ -4,6 +4,9 @@
 //! produce safe snapshots with `VACUUM INTO`.
 
 use super::files::remove_file_if_exists;
+use crate::storage::{
+    classify_connection_schema_version, ensure_not_from_future, SchemaVersionStatus,
+};
 use rusqlite::{params, Connection};
 use std::path::Path;
 
@@ -17,16 +20,10 @@ pub(crate) fn vacuum_into(connection: &Connection, destination: &Path) -> Result
         .map_err(|error| format!("vacuum_into_failed:{error}"))
 }
 
-pub(crate) fn user_version(connection: &Connection) -> Result<i64, String> {
-    connection
-        .query_row("PRAGMA user_version", [], |row| row.get::<_, i64>(0))
-        .map_err(|error| format!("database_user_version_failed:{error}"))
-}
-
 pub(crate) fn validate_sqlite_database(
     path: &Path,
     target_schema_version: Option<i64>,
-) -> Result<(), String> {
+) -> Result<Option<SchemaVersionStatus>, String> {
     let connection =
         Connection::open(path).map_err(|error| format!("database_validate_open_failed:{error}"))?;
     let integrity = connection
@@ -36,19 +33,12 @@ pub(crate) fn validate_sqlite_database(
         return Err(format!("database_integrity_check_failed:{integrity}"));
     }
 
-    if let Some(target_schema_version) = target_schema_version {
-        let version = user_version(&connection)?;
-        if version > target_schema_version {
-            return Err(format!("database_schema_from_future:{version}"));
-        }
-    }
-    Ok(())
-}
-
-pub(crate) fn set_user_version(connection: &Connection, version: i64) -> Result<(), String> {
-    connection
-        .execute_batch(&format!("PRAGMA user_version = {version};"))
-        .map_err(|error| format!("database_user_version_set_failed:{error}"))
+    let Some(target_schema_version) = target_schema_version else {
+        return Ok(None);
+    };
+    let status = classify_connection_schema_version(&connection, target_schema_version)?;
+    ensure_not_from_future(status)?;
+    Ok(Some(status))
 }
 
 pub(crate) fn create_empty_schema_from(
@@ -92,4 +82,88 @@ pub(crate) fn create_empty_schema_from(
 
 pub(crate) fn quote_identifier(value: &str) -> String {
     format!("\"{}\"", value.replace('"', "\"\""))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::set_schema_version;
+    use std::{
+        fs,
+        path::{Path, PathBuf},
+        time::{SystemTime, UNIX_EPOCH},
+    };
+
+    #[test]
+    fn validation_classifies_zero_version_as_migration_required() {
+        let path = test_database_path("distribution-zero-version");
+        {
+            let connection = Connection::open(&path).expect("create database");
+            connection
+                .execute_batch("CREATE TABLE sample (id TEXT PRIMARY KEY);")
+                .expect("create table");
+        }
+
+        let status = validate_sqlite_database(&path, Some(1)).expect("validate database");
+
+        assert_eq!(
+            status,
+            Some(SchemaVersionStatus::MigrationRequired { from: 0, to: 1 })
+        );
+        remove_sqlite_file_set(&path);
+    }
+
+    #[test]
+    fn validation_classifies_current_version() {
+        let path = test_database_path("distribution-current-version");
+        {
+            let connection = Connection::open(&path).expect("create database");
+            connection
+                .execute_batch("CREATE TABLE sample (id TEXT PRIMARY KEY);")
+                .expect("create table");
+            set_schema_version(&connection, 1).expect("set version");
+        }
+
+        let status = validate_sqlite_database(&path, Some(1)).expect("validate database");
+
+        assert_eq!(status, Some(SchemaVersionStatus::Current));
+        remove_sqlite_file_set(&path);
+    }
+
+    #[test]
+    fn validation_rejects_future_version() {
+        let path = test_database_path("distribution-future-version");
+        {
+            let connection = Connection::open(&path).expect("create database");
+            connection
+                .execute_batch("CREATE TABLE sample (id TEXT PRIMARY KEY);")
+                .expect("create table");
+            set_schema_version(&connection, 2).expect("set version");
+        }
+
+        let error = match validate_sqlite_database(&path, Some(1)) {
+            Ok(_) => panic!("future schema should be rejected"),
+            Err(error) => error,
+        };
+
+        assert_eq!(error, "database_schema_from_future:2");
+        remove_sqlite_file_set(&path);
+    }
+
+    fn test_database_path(label: &str) -> PathBuf {
+        std::env::temp_dir().join(format!(
+            "vclinic-distribution-{label}-{}-{}.db",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("clock")
+                .as_nanos()
+        ))
+    }
+
+    fn remove_sqlite_file_set(path: &Path) {
+        let _ = fs::remove_file(path);
+        let _ = fs::remove_file(path.with_extension("db-wal"));
+        let _ = fs::remove_file(path.with_extension("db-shm"));
+    }
 }
