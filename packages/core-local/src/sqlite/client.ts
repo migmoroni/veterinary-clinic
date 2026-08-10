@@ -5,7 +5,7 @@ import {
 	hasDatabaseFile
 } from '@vet/core-local/native/database-file.js';
 import { isTauriRuntime } from '@vet/core-local/native/platform.js';
-import { configureMediaDatabase } from './media.js';
+import { configureMediaDatabase } from './create/media.js';
 import { getSchemaStatus, runMigrations, runSystemMigrations } from './migrations.js';
 
 export interface SqlExecuteResult {

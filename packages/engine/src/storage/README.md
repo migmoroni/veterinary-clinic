@@ -2,8 +2,9 @@
 
 Este módulo é a fronteira Rust de armazenamento ativo do app.
 
-Ele abre os bancos SQLite, aplica PRAGMAs, resolve arquivos CAS, expõe comandos
-Tauri para a UI e mantém o conjunto ativo de usuário e sistema.
+Ele abre os bancos SQLite, aplica PRAGMAs, valida versões de schema, resolve
+arquivos CAS, expõe comandos Tauri para a UI e mantém o conjunto ativo de
+usuário e sistema.
 
 Documentação maior: [Arquitetura De Armazenamento](../../../docs/storage-architecture.md).
 
@@ -33,10 +34,12 @@ flowchart LR
 
 - abrir os bancos fixos do app;
 - aplicar PRAGMAs de SQLite;
+- classificar e validar `PRAGMA user_version`;
 - manter conexões em `Arc<Mutex<Connection>>`;
 - executar SQL solicitado pela camada TypeScript;
 - salvar mídia original no CAS por SHA-256;
 - registrar metadados e thumbnails nos bancos de mídia;
+- criar schemas pequenos de storage em Rust;
 - manter `database_manifest` no banco de logs;
 - marcar indicadores de alteração para a replicação;
 - executar exclusão definitiva por linha morta e trilha de auditoria.
@@ -47,6 +50,7 @@ flowchart LR
 - manter backup contínuo;
 - decidir conflito entre dispositivos;
 - rodar migração de domínio do banco operacional;
+- criar schema clínico do banco operacional;
 - conhecer regras clínicas de tutores, pets, produtos ou prontuários.
 
 ## Conjunto De Bancos
@@ -68,11 +72,31 @@ veterinary_clinic_system_media.db
 vault/system/xx/yy/<hash_sha256>.bin
 ```
 
+## Versão De Schema
+
+Cada banco SQLite tem versão técnica em `PRAGMA user_version`.
+
+`storage` classifica versões com uma regra única:
+
+| Estado | Condição | Ação |
+| --- | --- | --- |
+| `current` | versão igual à suportada | o banco pode ser aberto |
+| `migration_required` | versão `0` ou menor que a suportada | o banco só é elevado quando o schema de storage é reconhecido |
+| `from_future` | versão maior que a suportada | o banco é recusado |
+
+Os bancos `user/media`, `system/media` e `user/logs` são schemas de storage.
+Quando estão vazios, recebem o schema atual e a versão atual. Quando têm
+estrutura reconhecida e versão menor, recebem a versão atual. Quando têm versão
+futura ou estrutura desconhecida, são recusados.
+
+O banco operacional usa esta fronteira apenas para abertura e execução SQL. As
+migrations de domínio do banco operacional ficam na camada TypeScript.
+
 ## Módulos
 
 `mod.rs`
 
-Fachada do módulo. Exporta comandos, contratos e utilitários usados por
+Fachada do módulo. Exporta comandos, DTOs e utilitários usados por
 `distribution`, `replication` e `lib.rs`.
 
 `data.rs`
@@ -85,7 +109,13 @@ SQL.
 
 Abre SQLite com PRAGMAs, cache de instruções preparadas e estruturas pequenas
 que pertencem ao Rust: `blobs`, `database_manifest`, `permanent_deletion_logs` e
-`system_audit_logs`.
+`system_audit_logs`. Também valida a versão e a estrutura dos bancos cujo schema
+é criado pelo storage.
+
+`schema_version.rs`
+
+Lê e grava `PRAGMA user_version`, classifica a versão encontrada e recusa bancos
+criados por uma versão superior do app.
 
 `cas.rs`
 
@@ -135,6 +165,8 @@ Gerador local de UUIDv7 em string para linhas criadas pelo Rust.
 - Não salvar bytes originais de mídia no SQLite.
 - Não copiar arquivo CAS com nome fornecido pelo usuário; sempre usar SHA-256.
 - Não abrir SQLite fora de `open_sqlite_db` quando for banco gerenciado pelo app.
+- Não elevar versão de banco com estrutura desconhecida.
+- Não rodar migration de domínio do banco operacional em Rust.
 - Não executar `rusqlite` direto em comando assíncrono; usar `spawn_blocking`.
 - Ao criar tabela de storage em Rust, atualizar este README e
   `docs/storage-architecture.md`.

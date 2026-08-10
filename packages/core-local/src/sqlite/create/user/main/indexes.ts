@@ -1,0 +1,52 @@
+import type { Database } from '../../shared/types.js';
+
+export async function createCurrentIndexes(database: Database): Promise<void> {
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_owners_name ON owners(name)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_addresses_owner_id ON addresses(owner_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_addresses_workplace_id ON addresses(workplace_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_addresses_city ON addresses(city)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_addresses_state ON addresses(state)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_contacts_owner_id ON contacts(owner_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_contacts_responsible_id ON contacts(responsible_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_contacts_veterinarian_profile_id ON contacts(veterinarian_profile_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_contacts_workplace_id ON contacts(workplace_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_contacts_label ON contacts(label)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_contacts_value ON contacts(value)');
+	await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_owner_unique_active ON contacts(owner_id, kind, label, value) WHERE owner_id IS NOT NULL AND removed_at IS NULL');
+	await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_responsible_unique_active ON contacts(responsible_id, kind, label, value) WHERE responsible_id IS NOT NULL AND removed_at IS NULL');
+	await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_veterinarian_unique_active ON contacts(veterinarian_profile_id, kind, label, value) WHERE veterinarian_profile_id IS NOT NULL AND removed_at IS NULL');
+	await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_workplace_unique_active ON contacts(workplace_id, kind, label, value) WHERE workplace_id IS NOT NULL AND removed_at IS NULL');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_image_collections_entity ON image_collections(entity_type, entity_id)');
+	await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_image_collections_entity_active ON image_collections(entity_type, entity_id) WHERE removed_at IS NULL');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_image_collection_items_collection_id ON image_collection_items(collection_id, sort_order, id)');
+	await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_image_collection_items_primary ON image_collection_items(collection_id) WHERE is_primary = 1 AND removed_at IS NULL');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_additional_responsibles_owner_id ON owner_additional_responsibles(owner_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_owner_additional_responsibles_name ON owner_additional_responsibles(name)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_owners_pet_id ON pet_owners(pet_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_owners_owner_id ON pet_owners(owner_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pets_name ON pets(name)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pets_species ON pets(species)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pets_breed ON pets(breed)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_pet_id ON medical_records(pet_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_medical_records_removed_at ON medical_records(removed_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_user_product_catalog_items_type_name ON user_product_catalog_items(type, name COLLATE NOCASE)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_user_product_catalog_items_type_normalized_name ON user_product_catalog_items(type, normalized_name)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_user_product_catalog_items_manufacturer_id ON user_product_catalog_items(manufacturer_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_user_product_catalog_items_hidden_at ON user_product_catalog_items(hidden_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_user_product_catalog_items_removed_at ON user_product_catalog_items(removed_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_name ON treatment_protocols(kind, name COLLATE NOCASE)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_kind_normalized_name ON treatment_protocols(kind, normalized_name)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_hidden_at ON treatment_protocols(hidden_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocols_removed_at ON treatment_protocols(removed_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocol_items_protocol_id ON treatment_protocol_items(protocol_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocol_items_catalog_item_id ON treatment_protocol_items(catalog_item_id)');
+	await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_treatment_protocol_items_unique_active ON treatment_protocol_items(protocol_id, catalog_item_id) WHERE removed_at IS NULL');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_treatment_protocol_doses_protocol_id ON treatment_protocol_doses(protocol_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_pet_id ON pet_treatments(pet_id)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_kind_applied_at ON pet_treatments(kind, applied_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_kind_normalized_name ON pet_treatments(kind, normalized_name)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_latest_active ON pet_treatments(kind, pet_id, normalized_name, applied_at DESC, id DESC) WHERE removed_at IS NULL AND validity_ignored_at IS NULL');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_validity_ignored_at ON pet_treatments(validity_ignored_at)');
+	await database.execute('CREATE INDEX IF NOT EXISTS idx_pet_treatments_removed_at ON pet_treatments(removed_at)');
+}
+

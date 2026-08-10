@@ -107,7 +107,7 @@ Antes de substituir a base ativa:
 
 1. o pacote é extraído para uma pasta temporária;
 2. os bancos são validados com `PRAGMA integrity_check`;
-3. a versão de estrutura é recusada se vier do futuro;
+3. `user.db`, `user_media.db` e `user_logs.db` precisam estar na versão atual;
 4. o manifesto em `user_logs.db` é validado;
 5. `replication::orchestrator::prepare_for_database_import` tenta uma última
    sincronização com o backup contínuo atual;
@@ -115,6 +115,14 @@ Antes de substituir a base ativa:
    `AppData/import_safety_exports/`;
 7. as conexões do conjunto do usuário são fechadas;
 8. os arquivos do usuário são substituídos e as conexões reabertas.
+
+Pacotes nativos e espelhos locais são importados somente quando os três bancos
+de usuário estão na versão atual suportada pelo app. Bancos abaixo da versão
+atual pertencem ao fluxo de migration e não são consumidos por `distribution`.
+Bancos acima da versão atual são recusados.
+
+Na importação CSV, `distribution` cria bancos temporários com o schema atual,
+importa as tabelas declaradas e grava a versão atual antes da validação final.
 
 Quando a origem é uma pasta de `local_mirror`, o importer aceita tanto a pasta
 efetiva do espelho quanto a pasta-pai escolhida pelo usuário, desde que encontre
@@ -148,7 +156,8 @@ copia CAS.
 `importer.rs`
 
 Fluxo de importação. Resolve origem, valida pacote, prepara segurança,
-substitui o conjunto do usuário e devolve caminhos relevantes para a UI.
+exige a versão atual dos três bancos de usuário, substitui o conjunto do usuário
+e devolve caminhos relevantes para a UI.
 
 `database_package.rs`
 
@@ -171,7 +180,8 @@ de arquivos SQLite removendo sidecars `-wal` e `-shm`.
 
 `sqlite.rs`
 
-Validação SQLite, clone de estrutura vazia para importação CSV e `VACUUM INTO`.
+Validação SQLite, classificação de versão de schema, clone de estrutura vazia
+para importação CSV e `VACUUM INTO`.
 
 `zip.rs`
 
@@ -210,7 +220,9 @@ flowchart TD
 - Não exportar tabelas de sistema no CSV do usuário.
 - Não colocar regras de domínio nos pacotes; o pacote é transporte.
 - Não criar `manifest.json`; a identidade da base vive em `user_logs.db`.
+- Não importar pacote nativo com banco abaixo ou acima da versão atual.
+- Na importação CSV, gravar a versão atual depois de materializar os bancos
+  temporários.
 - Ao adicionar tabela de usuário, atualizar `csv_tables.rs` e este README.
-- Ao mudar o formato nativo, manter compatibilidade apenas quando isso for
-  explicitamente desejado. A direção atual do projeto é limpa, sem legacy
-  interno desnecessário.
+- Ao mudar o formato nativo, atualizar a validação de versão, os testes e este
+  README no mesmo fluxo.

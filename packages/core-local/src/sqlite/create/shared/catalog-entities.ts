@@ -1,0 +1,10 @@
+export const PRODUCT_CATALOG_IMAGE_COLLECTION_TYPE = 'product_catalog_item';
+export const PRODUCT_CATALOG_IMAGE_MAX_ITEMS = 9;
+export const MANUFACTURER_CATALOG_IMAGE_COLLECTION_TYPE = 'manufacturer_catalog_item';
+export const MANUFACTURER_CATALOG_IMAGE_MAX_ITEMS = 9;
+export const ACTIVE_INGREDIENT_CATALOG_IMAGE_COLLECTION_TYPE = 'active_ingredient_catalog_item';
+export const ACTIVE_INGREDIENT_CATALOG_IMAGE_MAX_ITEMS = 9;
+export const CONDITION_CATALOG_IMAGE_COLLECTION_TYPE = 'condition_catalog_item';
+export const CONDITION_CATALOG_IMAGE_MAX_ITEMS = 9;
+export const BREED_REFERENCE_IMAGE_COLLECTION_TYPE = 'breed_reference_item';
+export const BREED_REFERENCE_IMAGE_MAX_ITEMS = 9;

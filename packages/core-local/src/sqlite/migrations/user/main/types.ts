@@ -1,4 +1,4 @@
-import type { SqliteDatabase as Database } from '../client.js';
+import type { SqliteDatabase as Database } from '../../../client.js';
 
 export interface SchemaMigration {
 	version: number;
