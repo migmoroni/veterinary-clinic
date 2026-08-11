@@ -31,7 +31,7 @@ Use junto com:
 - [Versionamento De Banco E Ritual De Lancamento](../database-versioning.md)
 - [Plano De Refatoracao De Prontuarios Para Timeline Clinica](medical-records-timeline-refactor.md)
 - [Plano De Intercambio FHIR Via Distribution](fhir-interchange-distribution-plan.md)
-- [Plano Do Server Open](server-open-plan.md)
+- [Plano Do Hub Server](hub-server-plan.md)
 
 ## Modelo Alvo
 
@@ -50,8 +50,7 @@ veterinary-apps/
     store-app/
     cleaner-app/
     pharma-app/
-
-  server-open/
+    hub-server/
 
   packages/
     types/
@@ -61,9 +60,9 @@ veterinary-apps/
     modules/
 ```
 
-## Papel Do `server-open`
+## Papel Do `hub-server`
 
-`server-open` faz parte da estrategia open source do workspace, mas nao e o
+`hub-server` faz parte da estrategia open source do workspace, mas nao e o
 backend operacional do produto SaaS.
 
 Ele deve concentrar:
@@ -779,12 +778,12 @@ Criar a casca:
 Cargo.toml
 pnpm-workspace.yaml
 apps/vet-app/
+apps/hub-server/
 packages/types/
 packages/ui/
 packages/engine/
 packages/core-local/
 packages/modules/
-server-open/
 ```
 
 Mover o app inteiro:
@@ -944,7 +943,7 @@ nao puxar codigo interno de `apps/vet-app`.
   contratos internos do proprio modulo; `timeline` e a camada de composicao.
 - `apps/vet-app` pode importar todos os packages.
 - Outros apps futuros nao podem importar codigo de `apps/vet-app`.
-- `server-open` compartilha contratos por `packages/types`; nao deve depender
+- `apps/hub-server` compartilha contratos por `packages/types`; nao deve depender
   de UI ou Tauri.
 
 ## Checks Funcionais Apos Movimentos
@@ -1016,4 +1015,4 @@ npm run adopt:version
 11. `docs/plans/fases.md`
 12. `docs/plans/medical-records-timeline-refactor.md`
 13. `docs/plans/fhir-interchange-distribution-plan.md`
-14. `docs/plans/server-open-plan.md`
+14. `docs/plans/hub-server-plan.md`

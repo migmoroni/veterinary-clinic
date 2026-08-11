@@ -3,8 +3,9 @@
 2. em `packages/core-local/src/sqlite`, versionar cada banco SQLite de forma independente e depois separar operação que cria bancos, operação que migra bancos e conjuntos de tabelas por banco/perfil de app, mantendo o schema de domínio atual:
    [sqlite-modular-refactor-plan.md](sqlite-modular-refactor-plan.md)
 
-3. desenvolvimento do server-open, com Rails, como servidor aberto de dados publicos, pacotes de banco, CAS/system, system_media, updates e builds dos apps. Os apps passam a consumir dados prontos/versionados vindos dele, sem manter JSONs fonte nem gerar esses bancos dentro dos apps:
-   [server-open-plan.md](server-open-plan.md)
+3. desenvolvimento do hub-server, com Rails, como hub aberto de dados publicos, pacotes de banco, CAS/system, system_media, updates e builds dos apps. Os apps passam a consumir dados prontos/versionados vindos dele, sem manter JSONs fonte nem gerar esses bancos dentro dos apps:
+   [hub-server-plan.md](hub-server-plan.md)
+   [hub-server-implementation-phases.md](hub-server-implementation-phases.md)
 
 4. refatorar medical_records para novo modelo que segue os padroes de mercado:
    [medical-records-timeline-refactor.md](medical-records-timeline-refactor.md)
