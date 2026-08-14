@@ -48,6 +48,8 @@ KnowledgeReleaseComponent
 KnowledgeCasObjectSource
 KnowledgeDeliverySource
 KnowledgeManifestSnapshot
+KnowledgeManifestSource
+KnowledgeManifestReplica
 KnowledgeChannelRelease
 ```
 
@@ -93,6 +95,17 @@ Restrições principais:
 - `expires_at` é posterior a `published_at` e respeita a duração máxima
   configurada para snapshots;
 - o snapshot é imutável depois de publicado;
+- `KnowledgeManifestSource` é única por canal e provider;
+- prioridades de manifest sources são positivas e únicas por canal;
+- `current_url_pattern` contém `{channel}`, pode conter `{appName}` e
+  `{appVersion}` e não aceita outros placeholders;
+- `snapshot_url_pattern` contém exatamente uma ocorrência de `{channel}`,
+  `{sequence}` e `{snapshotId}` e não aceita outros placeholders;
+- esquema, host e base de URL das duas formas pertencem à allowlist do provider;
+- `KnowledgeManifestReplica` é única por snapshot e source e somente alcança
+  status `verified` quando seus bytes coincidem com o checksum canônico;
+- status de réplica aceita `pending`, `published`, `verified` ou `failed`;
+- providers externos não geram sequência, payload ou assinatura;
 - registros associados a uma release publicada não aceitam alteração ou remoção;
 - ponteiros de canal referenciam somente releases com status `published`;
 - o snapshot e a release de `KnowledgeChannelRelease` pertencem ao mesmo estado
@@ -120,6 +133,7 @@ canal, sem modificar releases, artefatos ou snapshots publicados.
 GET /api/v1/health
 GET /api/v1/apps/:app_name/updates/:platform/:current_version
 GET /api/v1/knowledge/manifest
+GET /api/v1/knowledge/channels/:channel/manifests/:sequence/:snapshot_id
 GET /api/v1/knowledge/releases/:release_id/package
 GET /api/v1/downloads/:artifact_id
 GET /api/v1/cas/system/:hash
@@ -134,6 +148,11 @@ suportadas. A API devolve o `KnowledgeManifestSnapshot` vigente, oferece `ETag`
 derivado de seu checksum, aplica
 `Cache-Control: public, max-age=300, must-revalidate` e responde
 `304 Not Modified` quando aplicável.
+
+`/api/v1/knowledge/channels/:channel/manifests/:sequence/:snapshot_id` devolve os
+bytes canônicos e imutáveis de um snapshot publicado. Canal, sequência e ID
+precisam identificar o mesmo registro. A resposta usa o checksum persistido como
+`ETag` e nunca reconstrói o payload a partir do estado vigente.
 
 `/api/v1/knowledge/releases/:release_id/package` resolve exatamente uma release
 publicada e entrega ou redireciona seu pacote global por uma
@@ -160,6 +179,7 @@ POST /api/v1/internal/app_channels/:app_name/:channel/promote
 POST /api/v1/internal/knowledge_channels/:channel/snapshots
 PUT /api/v1/internal/knowledge_delivery_sources/:delivery_kind/:provider
 PUT /api/v1/internal/knowledge_cas_object_sources/:provider
+PUT /api/v1/internal/knowledge_manifest_sources/:provider
 ```
 
 Criação e publicação são operações distintas. As rotas de mutação exigem token,
@@ -179,6 +199,10 @@ publica alterações de sources ou validade sem criar uma versão de conheciment
 As rotas de source fazem upsert por canal e chave natural. Alterar uma source não
 reescreve manifests publicados; a configuração passa a integrar somente novos
 snapshots assinados.
+
+A configuração de manifest source define os padrões `current` e imutável, a
+prioridade, o estado habilitado e se a réplica é necessária para considerar o
+canal saudável. Ela não é incorporada ao próprio manifest descoberto.
 
 ## Segurança Dos Resolvers
 
@@ -203,8 +227,11 @@ app/services/releases/manifest_signer.rb
 app/services/releases/publisher.rb
 app/services/releases/knowledge_chain_validator.rb
 app/services/releases/knowledge_snapshot_publisher.rb
+app/services/releases/knowledge_manifest_replica_publisher.rb
+app/services/releases/knowledge_manifest_replica_verifier.rb
 app/services/releases/channel_promoter.rb
 app/jobs/knowledge/renew_channel_snapshot_job.rb
+app/jobs/knowledge/replicate_channel_snapshot_job.rb
 app/services/artifacts/resolver.rb
 app/services/knowledge/package_resolver.rb
 app/services/cas/system_object_resolver.rb
@@ -215,6 +242,15 @@ Builders recebem modelos validados e não consultam estado global oculto. O
 `publisher` valida artefatos e publica releases sem alterar canais. O
 `knowledge_snapshot_publisher` aloca a próxima sequência sob lock do canal,
 persiste o payload assinado imutável e troca os ponteiros na mesma transação.
+Na mesma confirmação, ele grava uma outbox para cada manifest source habilitada.
+
+`knowledge_manifest_replica_publisher` envia exatamente os bytes persistidos
+ao adapter da source. O adapter publica diretamente ou aciona o mecanismo
+próprio do provider para preencher os caminhos imutável e `current` do canal. O
+verifier lê as duas cópias, compara tamanho e checksum e atualiza
+`KnowledgeManifestReplica`.
+Falhas ficam registradas e são retomadas por
+`replicate_channel_snapshot_job`, sem gerar outro snapshot.
 
 `renew_channel_snapshot_job` seleciona snapshots próximos da expiração e publica
 a próxima sequência apontando para a mesma release. A renovação usa as sources
@@ -238,6 +274,10 @@ Cobrir:
 - promoção da mesma release entre canais;
 - novo snapshot para a mesma release após alteração de source;
 - sequência monotônica, expiração e imutabilidade do snapshot;
+- unicidade, prioridade e allowlist de manifest sources;
+- réplica externa byte a byte e verificação por checksum;
+- retry idempotente de réplica sem nova sequência;
+- source externa atrasada preservando o snapshot canônico;
 - criação e repetição idempotente pela API interna;
 - recusa sem token ou com token inválido;
 - limites de payload e rate limit;
@@ -246,6 +286,8 @@ Cobrir:
 - recusa de prioridade, versão global ou checksum inválido;
 - recusa de delivery source sem `{releaseId}`, com placeholder desconhecido ou
   repetido;
+- recusa de manifest source com placeholder desconhecido, host fora da allowlist
+  ou padrão imutável incompleto;
 - recusa de geração, revisão ou predecessor incoerente;
 - recusa de componente ausente, duplicado ou incompatível com `delivery_mode`;
 - recusa de `entry_path` ausente, duplicado ou fora da allowlist;
@@ -278,6 +320,8 @@ Cobrir:
 - A promoção cria e assina um snapshot sequencial e troca o canal de forma
   transacional.
 - Snapshots são renovados antes da expiração sem criar release de conhecimento.
+- O manifest vigente pode ser obtido por mais de uma source permitida.
+- O Hub permanece o único emissor; as demais sources entregam réplicas idênticas.
 - Resolvers validam entradas e destinos.
 - Nenhum código do SaaS fechado entra no servidor.
 

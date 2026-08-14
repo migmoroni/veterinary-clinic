@@ -31,9 +31,12 @@ aceite próprios antes do início da seguinte.
 - A API interna usa Bearer Token via `INTERNAL_RELEASE_TOKEN`.
 - O manifest é o contrato público usado pelos apps para descobrir releases,
   fontes e downloads.
+- O `hub-server` é o único emissor dos manifests de conhecimento. Providers
+  externos hospedam réplicas byte a byte dos snapshots assinados.
 - O `hub-server` é o plano de controle. Providers como GitHub, Cloudflare R2 e
   IPFS podem armazenar e entregar os bytes.
-- A source `hub_server` de prioridade 1 é o caminho padrão dos apps.
+- A source `hub_server` de prioridade 1 é o caminho padrão para descoberta do
+  manifest e entrega dos pacotes.
 - GitHub Releases é o primeiro provider externo de artefatos versionados.
 - Cloudflare R2, GitLab e IPFS ficam previstos no contrato e desativados até suas
   fases próprias.
@@ -216,6 +219,28 @@ KnowledgeManifestSnapshot
   key_id
   published_at
   expires_at
+
+KnowledgeManifestSource
+  channel
+  provider
+  priority
+  enabled
+  transport
+  current_url_pattern
+  snapshot_url_pattern
+  required_for_healthy_channel
+  metadata
+
+KnowledgeManifestReplica
+  knowledge_manifest_snapshot_id
+  knowledge_manifest_source_id
+  checksum_sha256
+  immutable_url
+  current_url
+  status
+  published_at
+  verified_at
+  error_code
 ```
 
 `KnowledgeReleasePackage` liga a release ao único ZIP de bootstrap ou delta.
@@ -265,6 +290,19 @@ inteiro positivo, monotônico e único por canal. Um novo snapshot pode apontar
 para a mesma `KnowledgeRelease` quando mudam apenas sources, validade ou outros
 metadados de distribuição.
 
+`KnowledgeManifestSource` configura onde o documento canônico pode ser
+descoberto. `current_url_pattern` resolve a cópia vigente do canal;
+`snapshot_url_pattern` resolve a cópia imutável por `{channel}`, `{sequence}` e
+`{snapshotId}`. `current_url_pattern` também pode usar `{appName}` e
+`{appVersion}` quando a source possui resolução dinâmica. Essa configuração não
+vive dentro do manifest que está sendo descoberto. Os apps recebem uma lista
+mínima e permitida de manifest sources em sua configuração de distribuição.
+
+`KnowledgeManifestReplica` registra a publicação e a verificação de cada cópia.
+Uma réplica válida possui exatamente os mesmos bytes e o mesmo checksum do
+snapshot persistido pelo Hub nos caminhos imutável e `current`. Providers nunca
+remontam, alteram ou assinam o payload.
+
 ### Ponteiros De Canal
 
 ```text
@@ -300,7 +338,11 @@ draft -> validating -> published -> withdrawn
 Uma release somente muda para `published` quando todos os artefatos obrigatórios
 estão disponíveis. Publicar a release não altera canais. A promoção de canal
 carrega as configurações de entrega, cria o próximo snapshot assinado e troca os
-ponteiros do canal em uma transação idempotente própria.
+ponteiros do canal em uma transação idempotente própria. Uma outbox durável
+replica os bytes assinados nas manifest sources habilitadas e verifica cada cópia
+por checksum. A saúde operacional do canal exige a source `hub_server` e ao menos
+uma source externa marcada como obrigatória quando essa source estiver
+implementada.
 
 ## Contrato De Artefatos
 
@@ -450,6 +492,27 @@ barreira final contra respostas antigas mantidas por cache ou provider. Quando
 não consegue obter um snapshot vigente, o app conserva a release ativa, mas não
 instala conteúdo novo a partir de um snapshot expirado.
 
+O app conhece uma lista ordenada de manifest sources permitidas. Ele consulta a
+source habilitada de maior prioridade e usa a seguinte diante de indisponibilidade,
+timeout, resposta inválida, assinatura inválida, expiração ou sequência anterior
+à já aceita. O primeiro snapshot aceitável encerra a descoberta; o app não
+consulta todos os providers em cada inicialização.
+
+Cada source publica o mesmo documento em dois endereços lógicos:
+
+```text
+manifests/<channel>/current.json
+manifests/<channel>/<sequence>-<snapshotId>.json
+```
+
+`current.json` contém o snapshot assinado completo, não um ponteiro sem
+assinatura. Ele é um alias mutável de descoberta do canal e não identifica o
+artefato. O caminho com sequência e `snapshotId` é a identidade imutável usada
+para auditoria e recuperação. Nenhuma source usa `latest` como identidade. A
+replicação externa converge por outbox e retry; uma réplica temporariamente
+atrasada pode oferecer o snapshot anterior ainda vigente, mas nunca outro
+conteúdo sob a mesma sequência.
+
 Um job periódico publica uma nova sequência para a mesma release antes da
 expiração. Falha de renovação preserva o snapshot vigente e produz alerta com
 antecedência suficiente para intervenção.
@@ -521,7 +584,11 @@ descobrir uma revisão incrementando URLs que não estejam declaradas.
   idempotência e limites de payload.
 - Tokens, assinaturas privadas e URLs sensíveis não aparecem em logs.
 - Downloads usam limites de tamanho, tempo, redirects e concorrência.
-- Publicação parcial nunca troca o ponteiro do canal.
+- Publicação parcial da release ou do snapshot canônico no Hub nunca troca o
+  ponteiro do canal.
+- O Hub é o único emissor de sequência e assinatura de manifest.
+- Réplicas externas são verificadas contra o checksum canônico antes de serem
+  consideradas saudáveis.
 
 ## Ordem Recomendada
 

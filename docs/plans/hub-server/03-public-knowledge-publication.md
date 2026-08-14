@@ -52,12 +52,15 @@ rails knowledge:build_release_components
 rails knowledge:build_release_package
 rails knowledge:publish_release
 rails knowledge:promote_channel
+rails knowledge:replicate_manifests
 ```
 
 `knowledge:publish_release` orquestra geração, validação e publicação do conteúdo
 imutável. `knowledge:promote_channel` cria o próximo snapshot assinado e troca o
 ponteiro do canal. Uma execução repetida com a mesma entrada, versão e
 configuração produz os mesmos artefatos e reutiliza objetos CAS existentes.
+`knowledge:replicate_manifests` retoma cópias pendentes sem alterar o snapshot, a
+sequência ou a release do canal.
 
 ## Versão Global
 
@@ -415,6 +418,38 @@ ipfs             priority 5  enabled false, somente objects
 IPFS usa `cidField` para localizar o CID no índice de mídia. O app sempre valida
 o conteúdo recebido pelo SHA-256 local, independentemente do provider.
 
+As manifest sources formam uma configuração de descoberta separada:
+
+```text
+hub_server       priority 1  enabled true
+github           priority 2  enabled false
+cloudflare_r2    priority 3  enabled false
+gitlab           priority 4  enabled false
+```
+
+Cada manifest source define `currentUrlPattern`, `snapshotUrlPattern` e
+`requiredForHealthyChannel`. O caminho `current` entrega o snapshot assinado
+vigente do canal. O caminho de snapshot inclui `{channel}`, `{sequence}` e
+`{snapshotId}` e permanece imutável.
+
+Os padrões da source `hub_server` são:
+
+```text
+/api/v1/knowledge/manifest?channel={channel}&app_name={appName}&app_version={appVersion}
+/api/v1/knowledge/channels/{channel}/manifests/{sequence}/{snapshotId}
+```
+
+Uma source estática usa:
+
+```text
+manifests/{channel}/current.json
+manifests/{channel}/{sequence}-{snapshotId}.json
+```
+
+A configuração não integra o payload do manifest, pois o app precisa conhecê-la
+antes da descoberta. Os providers recebem os bytes canônicos produzidos pelo Hub
+e não executam serialização ou assinatura próprias.
+
 Os padrões da source `hub_server` seguem:
 
 ```text
@@ -444,6 +479,19 @@ Cada promoção cria um `KnowledgeManifestSnapshot` com:
 Uma alteração somente de source ou validade cria outro snapshot apontando para a
 mesma release. A sequência é alocada sob lock do canal. Persistência do snapshot
 e troca de `KnowledgeChannelRelease` ocorrem na mesma transação.
+
+A transação também grava uma outbox para replicação. Cada worker publica
+exatamente o documento persistido no caminho imutável da source, atualiza o
+caminho `current` e lê novamente a resposta para conferir tamanho e checksum.
+Falhas registram a réplica como pendente ou falha e são retomadas de forma
+idempotente.
+
+A transação do banco e a publicação em providers externos não formam uma
+transação distribuída. O Hub oferece o novo snapshot imediatamente após a
+promoção, enquanto as réplicas convergem. Quando houver source externa marcada
+como obrigatória, o canal só é considerado saudável quando ela e a source
+`hub_server` entregam o mesmo checksum. Uma réplica anterior ainda vigente é
+segura durante essa janela, e o atraso gera diagnóstico operacional.
 
 Um job periódico renova canais cujo snapshot se aproxima de `expiresAt`. A
 renovação cria a próxima sequência para a mesma release usando as sources
@@ -518,11 +566,17 @@ selecionar uma KnowledgeRelease publicada
 -> definir publishedAt e expiresAt
 -> assinar e verificar o KnowledgeManifestSnapshot
 -> persistir o snapshot e trocar KnowledgeChannelRelease na mesma transação
+-> gravar outbox para as manifest sources habilitadas
+-> publicar os mesmos bytes nos caminhos imutável e current
+-> verificar checksum de cada réplica
+-> confirmar a saúde do canal conforme as sources obrigatórias
 ```
 
 Nenhum arquivo de staging fica publicamente acessível antes da conclusão. Falha
-na publicação deixa a release indisponível. Falha na promoção preserva o snapshot
-e o ponteiro vigentes.
+na publicação deixa a release indisponível. Falha anterior à confirmação da
+transação de promoção preserva o snapshot e o ponteiro vigentes. Falha posterior
+em uma réplica conserva o novo snapshot no Hub, marca o canal como degradado e
+aciona retry sem gerar outra sequência.
 
 ## Regras De Publicação
 
@@ -546,6 +600,11 @@ e o ponteiro vigentes.
 - Uma release publicada não aceita alterações em artefatos ou componentes.
 - Um snapshot publicado não aceita alterações de payload, sources, validade ou
   assinatura.
+- Somente o Hub aloca `manifestSequence` e assina snapshots.
+- Toda réplica contém exatamente os bytes canônicos persistidos no Hub.
+- O caminho `current` nunca contém um ponteiro sem assinatura nem depende de
+  resolução `latest`.
+- Falha de réplica não cria nova sequência e é retomada pela outbox.
 - Retirada ou substituição altera os ponteiros por meio de novo snapshot, sem
   reescrever snapshots existentes.
 
@@ -570,6 +629,10 @@ Cobrir:
 - promoção da mesma release para mais de um canal;
 - snapshot posterior para a mesma release após alteração de source;
 - sequência concorrente sob lock, expiração e recusa de validade excessiva;
+- publicação e verificação das réplicas de manifest;
+- retry idempotente de réplica sem alteração de sequência;
+- source `current` contendo exatamente o snapshot canônico;
+- atraso de réplica mantendo o canal disponível pelo Hub;
 - renovação antecipada para a mesma release e alerta diante de falha;
 - recusa de assinatura inválida;
 - recusa de source habilitada com destino não permitido;
@@ -596,9 +659,12 @@ Cobrir:
 - O armazenamento persistente do Hub resolve todos os hashes antes de habilitar
   sua source individual.
 - O manifest é assinado e verificável pelas chaves confiáveis do app.
+- O mesmo manifest assinado é resolvível pela source principal e, quando
+  configurada, por uma source externa habilitada.
 - Publicar uma release não altera canais.
 - A promoção cria um snapshot sequencial e troca o canal de forma transacional.
-- Publicação incompleta não se torna visível.
+- A replicação externa é verificável, idempotente e observável.
+- Release ou snapshot canônico incompleto não se torna visível pelo Hub.
 
 ## Próxima Parte
 

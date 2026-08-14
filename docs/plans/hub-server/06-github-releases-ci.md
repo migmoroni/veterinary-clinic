@@ -20,10 +20,13 @@ GitHub é o primeiro provider externo de:
 
 - binários e bundles dos apps;
 - pacotes globais `knowledge-bootstrap-<version>-<release-id>.zip`;
-- pacotes globais `knowledge-delta-<version>-<release-id>.zip`.
+- pacotes globais `knowledge-delta-<version>-<release-id>.zip`;
+- réplicas estáticas dos manifests assinados por canal.
 
-O manifest de conhecimento é servido pelo `hub-server` como snapshot assinado do
-canal. Sua renovação não depende da criação de GitHub Releases.
+O Hub permanece o único emissor do manifest de conhecimento. GitHub Pages entrega
+uma réplica byte a byte de cada snapshot e do caminho `current` do canal. A
+renovação não cria GitHub Release e não concede ao GitHub autoridade para gerar
+sequência ou assinatura.
 
 GitHub Releases não representa, nesta parte, uma árvore arbitrária com um asset
 por hash. O download individual de `CAS/system` continua pela source
@@ -49,9 +52,30 @@ Separar workflows reutilizáveis:
 .github/workflows/ci.yml
 .github/workflows/release-app.yml
 .github/workflows/release-knowledge.yml
+.github/workflows/publish-knowledge-manifest.yml
 ```
 
 `ci.yml` valida código, testes e geração determinística sem publicar.
+
+`publish-knowledge-manifest.yml` recebe ou descobre um snapshot publicado pelo
+Hub, valida identidade, assinatura e checksum e implanta no GitHub Pages:
+
+```text
+manifests/<channel>/<sequence>-<snapshotId>.json
+manifests/<channel>/current.json
+```
+
+O workflow executa por chamada explícita após promoção, por agendamento para
+reconciliar renovações e manualmente para recuperação. Ele publica exatamente os
+bytes recebidos do endpoint imutável do Hub.
+
+Para a source GitHub, o adapter de replicação do Hub aciona esse workflow e
+acompanha sua conclusão. O agendamento funciona como reconciliação independente
+caso a chamada imediata falhe.
+
+Uma branch gerada e dedicada à hospedagem mantém os snapshots anteriores. Cada
+execução adiciona o novo caminho imutável e atualiza `current.json` no mesmo
+commit, sem alterar snapshots existentes e sem aceitar regressão de sequência.
 
 `release-app.yml`:
 
@@ -80,6 +104,7 @@ invoca as tarefas knowledge do hub-server
 -> CI solicita publicação da KnowledgeRelease
 -> CI solicita promoção da release no canal
 -> confirma KnowledgeManifestSnapshot assinado, sequência e ponteiro do canal
+-> publica e verifica a réplica do manifest no GitHub Pages
 ```
 
 ## URLs E Imutabilidade
@@ -87,6 +112,10 @@ invoca as tarefas knowledge do hub-server
 - Cada URL de pacote inclui o `releaseId` e aponta para tag e nome de asset
   imutáveis.
 - O manifest não usa endpoint `latest` como URL de artefato.
+- O manifest vigente usa um caminho estável por canal, e cada snapshot também
+  possui um caminho imutável por sequência e `snapshotId`.
+- `current.json` contém o envelope assinado completo e possui o mesmo checksum
+  dos bytes servidos pelo Hub.
 - O endpoint de pacote do `hub-server` recebe `releaseId` e resolve exatamente o
   `KnowledgeReleasePackage` imutável correspondente.
 - Substituir bytes de um asset exige nova release e novo registro.
@@ -118,14 +147,22 @@ A configuração inicial ou alteração do provider usa a rota interna idempoten
 `KnowledgeDeliverySource`, com provider, prioridade, `urlPattern` e canal. Ela não
 é repetida no payload de cada release.
 
+A manifest source GitHub é registrada separadamente com os padrões `current` e
+imutável. Sua réplica é considerada verificada somente depois que o Hub ou o
+workflow lê os bytes publicados e confirma o checksum canônico.
+Nesta parte, ela usa `enabled: true`, prioridade `2` e
+`requiredForHealthyChannel: true`.
+
 ## Sources Externas
 
 Depois da publicação do provider:
 
-- GitHub fica habilitado para artefatos de app, pacotes globais e delivery
-  sources;
+- GitHub fica habilitado para artefatos de app, pacotes globais, delivery sources
+  e manifest source;
 - `hub_server` permanece prioridade 1 para o contrato consumido pelo app;
-- GitHub pode ser fallback ou destino do redirect controlado;
+- GitHub Pages fica como fallback de descoberta do manifest;
+- GitHub Releases pode ser fallback ou destino do redirect controlado para
+  pacotes;
 - Cloudflare R2, GitLab e IPFS permanecem `enabled: false`;
 - GitHub para objeto CAS individual permanece `enabled: false` nesta parte.
 
@@ -144,6 +181,8 @@ pelo app.
 - O token interno aceita rotação e fica restrito ao endpoint do Hub.
 - Falhas não imprimem secrets, assinatura privada ou payload sensível.
 - Concorrência por canal impede duas publicações simultâneas.
+- O workflow de réplica possui somente permissões de leitura do Hub e publicação
+  no GitHub Pages; ele não recebe a chave privada do manifest.
 
 ## Testes
 
@@ -163,6 +202,10 @@ Cobrir:
 - source GitHub desativada para objeto individual CAS;
 - resolução pública por redirect controlado;
 - manifest público apontando para a release registrada;
+- igualdade byte a byte entre manifest do Hub e GitHub Pages;
+- fallback de descoberta quando o endpoint do Hub está indisponível;
+- réplica estática adulterada, expirada ou regressiva sendo recusada;
+- reconciliação agendada de snapshot renovado;
 - sequência monotônica do snapshot promovido;
 - manutenção do canal anterior quando a publicação falha.
 
@@ -174,6 +217,9 @@ Cobrir:
 - Releases de app e conhecimento são registradas de forma idempotente.
 - O Hub valida os assets e publica a release antes da promoção de canal.
 - A promoção publica um snapshot assinado com sequência e expiração válidas.
+- GitHub Pages hospeda a cópia `current` e os snapshots imutáveis por canal.
+- O app pode descobrir o mesmo snapshot pelo Hub ou pelo GitHub sem alterar o
+  fluxo de validação.
 - O Hub materializa em armazenamento persistente todos os objetos exigidos pelo
   índice antes de habilitar download individual.
 - O updater recebe um manifest válido gerado pelo `hub-server`.

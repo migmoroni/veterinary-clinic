@@ -12,6 +12,7 @@ mesma versão. Esta parte consome a publicação definida na
 ## Escopo
 
 - consultar e verificar o manifest de conhecimento;
+- aplicar fallback entre manifest sources conhecidas e permitidas;
 - comparar versões como pares inteiros de geração e revisão;
 - impedir replay, downgrade e schema incompatível;
 - baixar um pacote global por bootstrap ou revisão delta;
@@ -43,7 +44,12 @@ highest_manifest_sequence
 accepted_manifest_checksum_sha256
 accepted_manifest_expires_at
 verified_manifest_key_id
+accepted_manifest_source_provider
 ```
+
+O cache HTTP de cada manifest source persiste separadamente `ETag`, instante da
+última tentativa e resultado da última validação. Esses dados são diagnósticos e
+otimizações de transporte; nunca substituem sequência, assinatura ou expiração.
 
 Staging mantém separadamente:
 
@@ -58,6 +64,50 @@ prepared_cas_set_digest_sha256
 
 O estado ativo muda somente depois da validação completa. O estado preparado
 permite retomar a cadeia sem apresentar uma revisão intermediária ao app.
+
+## Descoberta Do Manifest
+
+O app recebe em sua configuração de distribuição uma lista mínima de manifest
+sources permitidas por canal. A lista começa com `hub_server` e pode habilitar
+GitHub e outros providers implementados. Ela não é carregada a partir do próprio
+manifest.
+
+Cada item local declara somente o necessário para a descoberta:
+
+```text
+provider
+priority
+enabled
+currentUrlPattern
+allowedHosts
+```
+
+`currentUrlPattern` pode usar `{channel}`, `{appName}` e `{appVersion}`. A source
+estática pode ignorar os dois últimos valores; nesse caso, o próprio app executa
+a validação de compatibilidade declarada no snapshot.
+
+Para cada consulta:
+
+```text
+ordenar manifest sources habilitadas por prioridade
+-> consultar a primeira com timeout e limite de resposta
+-> aceitar 304 somente quando o snapshot em cache continua vigente
+-> validar integralmente a resposta recebida
+-> encerrar no primeiro snapshot aceitável
+-> tentar a próxima source diante de falha ou snapshot inaceitável
+-> conservar a release ativa quando nenhuma source produz snapshot aceitável
+```
+
+Indisponibilidade, timeout, erro HTTP, estrutura inválida, assinatura inválida,
+expiração, sequência regressiva ou sequência repetida divergente acionam a
+próxima source e geram diagnóstico. Uma resposta válida da source prioritária
+encerra a descoberta; o app não consulta todos os providers para procurar uma
+sequência maior.
+
+As sources externas entregam o mesmo documento assinado em
+`manifests/<channel>/current.json`. O app pode registrar qual provider respondeu,
+mas a confiança decorre exclusivamente da assinatura, da sequência e das
+invariantes do payload.
 
 ## Validação Do Manifest
 
@@ -211,6 +261,8 @@ aplicar a política de retenção da release anterior.
 ## Download E Fallback
 
 - Sources são ordenadas por prioridade e filtradas por `enabled`.
+- Manifest sources e delivery sources possuem listas, fallbacks e caches
+  independentes.
 - `primary_first` usa a source habilitada de maior prioridade e tenta as seguintes
   em erro.
 - `balanced` pode distribuir objetos individuais entre providers habilitados.
@@ -289,6 +341,9 @@ artefatos obrigatórios encerra o build com mensagem explícita.
 Cobrir:
 
 - manifest válido, assinatura inválida e `keyId` desconhecido;
+- fallback do manifest entre Hub e source estática externa;
+- réplica externa com os mesmos bytes, atrasada, expirada e adulterada;
+- `304` com cache vigente e com cache expirado;
 - sequência nova para a mesma release sem reinstalação;
 - sequência regressiva, sequência repetida divergente e snapshot expirado;
 - tolerância limitada para relógio local e validade excessiva;
@@ -320,6 +375,8 @@ Cobrir:
 ## Critérios De Aceite
 
 - O app confia somente em manifests válidos e assinados.
+- O app descobre o manifest por uma lista local de sources permitidas e usa
+  fallback sem mudar o contrato de validação.
 - O app aceita somente snapshots vigentes e sequência monotônica por canal.
 - Sequência igual exige identidade e checksum previamente aceitos.
 - Geração e revisão são comparadas como inteiros.
