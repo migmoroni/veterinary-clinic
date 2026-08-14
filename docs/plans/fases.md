@@ -4,8 +4,7 @@
    [sqlite-modular-refactor-plan.md](sqlite-modular-refactor-plan.md)
 
 3. desenvolvimento do hub-server, com Rails, como hub aberto de dados publicos, pacotes de banco, CAS/system, system_media, updates e builds dos apps. Os apps passam a consumir dados prontos/versionados vindos dele, sem manter JSONs fonte nem gerar esses bancos dentro dos apps:
-   [hub-server-plan.md](hub-server-plan.md)
-   [hub-server-implementation-phases.md](hub-server-implementation-phases.md)
+   [hub-server/README.md](hub-server/README.md)
 
 4. refatorar medical_records para novo modelo que segue os padroes de mercado:
    [medical-records-timeline-refactor.md](medical-records-timeline-refactor.md)
