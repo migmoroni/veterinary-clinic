@@ -22,6 +22,51 @@ pertencem a outro servidor.
 As partes são executadas em ordem. Cada uma termina com testes e critérios de
 aceite próprios antes do início da seguinte.
 
+## Evolução Do Fluxo
+
+```mermaid
+flowchart LR
+    P1["Parte 1<br/>fonte canônica + gerador local"]
+    P2["Parte 2<br/>base Rails + contratos"]
+    P3["Parte 3<br/>gerador Ruby + releases"]
+    P4["Parte 4<br/>apps consomem a API"]
+    P5["Parte 5<br/>updater Tauri local"]
+    P6["Parte 6<br/>GitHub + CI/CD"]
+
+    P1 --> P2 --> P3 --> P4 --> P5 --> P6
+```
+
+As mudanças de origem dos artefatos são deliberadas:
+
+```mermaid
+flowchart TB
+    subgraph S1["Parte 1"]
+        D1["Dados canônicos no workspace"] --> G1["Gerador local"]
+        G1 --> B1["build/knowledge-artifacts"]
+        B1 --> A1["App em desenvolvimento e build"]
+    end
+
+    subgraph S2["Partes 3 e 4"]
+        D2["Dados canônicos no hub-server"] --> G2["Gerador Ruby"]
+        G2 --> R2["Releases e manifest"]
+        R2 --> H2["API do hub-server"]
+        H2 --> A2["Apps"]
+    end
+
+    subgraph S3["Parte 6"]
+        H3["Hub: source primária"] --> A3["Apps"]
+        GH3["GitHub: réplica e fallback"] --> A3
+    end
+
+    S1 --> S2 --> S3
+```
+
+A Parte 1 estabelece o formato dos dados e dos artefatos por locale com uma
+integração local executável. A Parte 3 transfere a posse operacional dos dados e
+da geração para o `hub-server`. A Parte 4 refatora a aquisição e a instalação nos
+apps para o contrato de distribuição do Hub. A Parte 6 mantém esse contrato e
+acrescenta o GitHub como provider externo.
+
 ## Decisões De Arquitetura
 
 - A aplicação Rails fica em `apps/hub-server/`, seguindo o padrão `apps/*` do
@@ -40,26 +85,45 @@ aceite próprios antes do início da seguinte.
 - GitHub Releases é o primeiro provider externo de artefatos versionados.
 - Cloudflare R2, GitLab e IPFS ficam previstos no contrato e desativados até suas
   fases próprias.
-- `system_media.db` é o índice canônico das mídias públicas de sistema.
+- Os dados fonte de conhecimento são organizados por domínio e entidade. Cada
+  entidade reúne suas traduções em um mapa `localizations` indexado pelos locales
+  suportados.
+- IDs, relações, classificações, regiões e referências CAS são estruturais e
+  permanecem únicos; a geração projeta a mesma entidade canônica nos bancos de
+  cada locale.
+- Cada locale possui seu próprio `system_media.db`, que indexa somente as mídias
+  exigidas por aquele conjunto localizado.
 - `CAS/system` contém objetos imutáveis endereçados por SHA-256.
 - A preparação local usa uma `build_version` inteira e sempre produz bancos
-  completos para desenvolvimento e builds dos apps.
-- Cada versão de conhecimento coordena `system`, `system_media` e `CAS/system`
-  como uma unidade indivisível.
+  completos para os seis locales suportados.
+- Cada versão de conhecimento coordena os seis pares `system` e `system_media`
+  sob uma release global. Cada par é instalado como unidade indivisível e usa o
+  `CAS/system` compartilhado.
 - Releases de app e de conhecimento são independentes de canal. Os canais mantêm
   apenas ponteiros para releases publicadas.
 - Cada canal de conhecimento possui snapshots assinados, sequenciais e
   expirantes do manifest.
 - Revisões `generation.0` são bootstraps completos; revisões
   `generation.revision` posteriores são deltas encadeados.
-- Pacotes globais de bootstrap e delta são meios de transporte; não são fontes de
-  verdade.
+- Pacotes de locale de bootstrap e delta são meios de transporte; não são fontes
+  de verdade.
 - Artefatos e manifests publicados são imutáveis.
 - Versão do app, versão dos schemas SQLite e versão global de conhecimento são
   conceitos independentes.
 - Site público e painel administrativo entram em uma fase própria.
 
 ## Fronteiras De Responsabilidade
+
+```mermaid
+flowchart LR
+    DATA["Dados públicos canônicos"] --> HUB["apps/hub-server<br/>geração, releases, manifests e APIs"]
+    HUB --> APP["apps/*<br/>consumo, validação e instalação"]
+    HUB --> PROVIDERS["Providers externos<br/>réplicas e entrega de bytes"]
+    PROVIDERS --> APP
+    CORE["packages/core-local<br/>schemas e SQLite"] --> HUB
+    CORE --> APP
+    ENGINE["packages/engine<br/>armazenamento, integridade e distribuição"] --> APP
+```
 
 ```text
 apps/hub-server/
@@ -133,8 +197,12 @@ KnowledgeRelease
   published_at
   metadata
 
-KnowledgeArtifact
+KnowledgeReleaseLocale
   knowledge_release_id
+  locale
+
+KnowledgeArtifact
+  knowledge_release_locale_id
   artifact_type
   checksum_sha256
   size_bytes
@@ -161,17 +229,21 @@ O par `generation`, `revision` é globalmente único e não depende de canal.
 versão de conhecimento. Cada `KnowledgeArtifact` representa um conteúdo.
 `KnowledgeArtifactSource` atende artefatos de conhecimento com endereço fixo.
 
+Cada release possui exatamente um `KnowledgeReleaseLocale` para cada locale
+suportado: `pt-BR`, `pt-PT`, `gn-PY`, `en-US`, `es-ES` e `fr-FR`. A release só
+pode ser publicada quando os seis filhos estão completos e validados.
+
 ### Componentes Da Release
 
 ```text
 KnowledgeReleasePackage
-  knowledge_release_id
+  knowledge_release_locale_id
   knowledge_artifact_id
   package_kind
   descriptor_checksum_sha256
 
 KnowledgeReleaseComponent
-  knowledge_release_id
+  knowledge_release_locale_id
   component
   delivery_mode
   entry_path
@@ -243,10 +315,10 @@ KnowledgeManifestReplica
   error_code
 ```
 
-`KnowledgeReleasePackage` liga a release ao único ZIP de bootstrap ou delta.
-`package_kind` corresponde a `bootstrap` ou `delta`. O checksum do artefato
-protege o ZIP completo, enquanto `descriptor_checksum_sha256` protege o
-`release.json` interno.
+`KnowledgeReleasePackage` liga um locale da release ao seu único ZIP de bootstrap
+ou delta. Cada release possui seis pacotes, um por locale. `package_kind`
+corresponde a `bootstrap` ou `delta`. O checksum do artefato protege o ZIP
+completo, enquanto `descriptor_checksum_sha256` protege o `release.json` interno.
 
 `component` aceita `system`, `system_media` ou `cas_system`. `delivery_mode`
 aceita `snapshot`, `patch`, `index_only` ou `unchanged`:
@@ -268,20 +340,22 @@ Patches de `system` e `system_media` usam `bsdiff_v1`, compatível com o formato
 BSDIFF40, sempre sobre os bytes exatos do banco publicado anterior.
 `base_checksum_sha256` protege a entrada e `target_checksum_sha256` protege o
 banco resultante. Os bancos de sistema são abertos em modo somente leitura pelo
-app. Toda revisão delta possui patches para ambos os bancos, pois os dois
-registram a versão global em seus próprios metadados.
+app. Toda revisão delta possui patches para os dois bancos de cada locale, pois
+todos registram a versão global em seus próprios metadados.
 
-O componente `cas_system` usa entradas `CAS/<hash>` dentro do pacote global. Seu
-estado final é definido pelos hashes do `system_media` da mesma versão.
+O componente `cas_system` usa entradas `CAS/<hash>` dentro do pacote do locale.
+Seu estado final é definido pelos hashes do `system_media` do mesmo locale e da
+mesma versão. Objetos iguais em pacotes diferentes convergem para o mesmo caminho
+do CAS compartilhado.
 
 `KnowledgeCasObjectSource` não cria um registro por hash. Os hashes e os
-metadados das mídias vêm de `system_media.db`. A configuração é própria do canal
-e permanece separada da entrega dos pacotes globais.
+metadados das mídias vêm do `system_media.db` do locale instalado. A configuração
+é própria do canal e permanece separada da entrega dos pacotes.
 
 `KnowledgeDeliverySource` define um padrão que inclui obrigatoriamente
-`{releaseId}` para o pacote global. `{generation}` e `{revision}` podem compor o
-nome legível. Cada provider aparece no máximo uma vez por canal e tipo de
-entrega. O manifest publicado captura essas configurações em
+`{releaseId}` e `{locale}` para resolver um pacote sem ambiguidade.
+`{generation}` e `{revision}` podem compor o nome legível. Cada provider aparece
+no máximo uma vez por canal e tipo de entrega. O manifest publicado captura essas configurações em
 `deliverySources.bootstrap[]` e `deliverySources.delta[]`; releases e componentes
 não recebem cópias dessas linhas.
 
@@ -352,6 +426,7 @@ Todo artefato recompõe publicamente estes dados:
 artifact_type
 app_name
 platform
+locale
 version
 checksum_sha256
 size_bytes
@@ -370,11 +445,11 @@ transport
 url
 ```
 
-Pacotes globais de conhecimento usam `deliverySources.bootstrap[]` ou
+Pacotes de locale usam `deliverySources.bootstrap[]` ou
 `deliverySources.delta[]`, com `urlPattern` no lugar de `url`. O padrão resolve o
-pacote por `{releaseId}`, podendo também usar `{generation}` e `{revision}` no
-nome do arquivo. `storage_key` permanece um dado interno do servidor e
-componentes internos não possuem source própria.
+pacote por `{releaseId}` e `{locale}`, podendo também usar `{generation}` e
+`{revision}` no nome do arquivo. `storage_key` permanece um dado interno do
+servidor e componentes internos não possuem source própria.
 
 Providers aceitos pelo contrato:
 
@@ -405,7 +480,7 @@ por hash sem criar um `KnowledgeArtifact` para cada mídia.
 - `app_version`: versão SemVer do app publicado.
 - `system_schema_version`: versão técnica do banco `system`.
 - `system_media_schema_version`: versão técnica do banco `system_media`.
-- `knowledge_generation`: geração do bootstrap global, iniciada em `1`.
+- `knowledge_generation`: geração dos bootstraps de locale, iniciada em `1`.
 - `knowledge_revision`: revisão incremental dentro da geração, iniciada em `0`.
 - `manifest_schema_version`: versão do contrato JSON do manifest.
 - `manifest_sequence`: sequência monotônica do snapshot assinado dentro do canal.
@@ -414,9 +489,10 @@ por hash sem criar um `KnowledgeArtifact` para cada mídia.
 inteiros. A versão textual `1.10` significa geração `1`, revisão `10`; ela nunca
 é tratada como número decimal.
 
-Uma versão `1.0` contém snapshots completos dos dois bancos e do conjunto CAS.
-As versões `1.1`, `1.2` e seguintes contêm deltas encadeados. A versão `2.0`
-inicia outra geração com um bootstrap completo consolidado.
+Uma versão `1.0` contém, para cada locale, snapshots completos dos dois bancos e
+do conjunto CAS correspondente. As versões `1.1`, `1.2` e seguintes contêm
+deltas encadeados para os seis locales. A versão `2.0` inicia outra geração com
+seis bootstraps completos consolidados.
 
 Os bancos `system` e `system_media` contêm uma tabela singleton:
 
@@ -425,7 +501,8 @@ CREATE TABLE knowledge_release_metadata (
     singleton INTEGER PRIMARY KEY CHECK(singleton = 1),
     release_id TEXT NOT NULL,
     generation INTEGER NOT NULL CHECK(generation >= 1),
-    revision INTEGER NOT NULL CHECK(revision >= 0)
+    revision INTEGER NOT NULL CHECK(revision >= 0),
+    locale TEXT NOT NULL
 );
 ```
 
@@ -456,8 +533,13 @@ O manifest de conhecimento é um snapshot assinado e imutável. Sua forma lógic
       "min": "0.2.0",
       "max": null
     },
-    "bootstrap": {},
-    "deltas": [],
+    "supportedLocales": ["pt-BR", "pt-PT", "gn-PY", "en-US", "es-ES", "fr-FR"],
+    "locales": {
+      "pt-BR": {
+        "bootstrap": {},
+        "deltas": []
+      }
+    },
     "deliverySources": {
       "bootstrap": [],
       "delta": []
@@ -477,6 +559,10 @@ O manifest de conhecimento é um snapshot assinado e imutável. Sua forma lógic
   }
 }
 ```
+
+O esqueleto detalha somente a chave `pt-BR`. Um snapshot publicável contém as
+seis chaves declaradas em `supportedLocales`, cada uma com bootstrap e cadeia de
+deltas completos.
 
 A assinatura cobre o `payload` serializado com JSON Canonicalization Scheme. O
 app mantém as chaves públicas confiáveis por `keyId`, verifica a assinatura antes
@@ -520,58 +606,62 @@ antecedência suficiente para intervenção.
 O updater Tauri conserva o mecanismo oficial de assinatura do próprio updater.
 O adapter do `hub-server` não substitui nem enfraquece essa verificação.
 
-## Contrato De Atualização Global
+## Contrato De Atualização Por Locale
 
 O manifest declara:
 
 - `currentVersion`: geração e revisão vigentes;
-- `bootstrap`: release `generation.0` com snapshots de `system`, `system_media` e
-  `CAS/system`;
-- `deltas[]`: cadeia ordenada de releases posteriores ao bootstrap;
+- `locales`: mapa completo dos locales suportados;
+- `locales[locale].bootstrap`: pacote `generation.0` com snapshots do par de
+  bancos e do conjunto CAS daquele locale;
+- `locales[locale].deltas[]`: cadeia ordenada dos pacotes posteriores;
 - `components`: estado e entrega de `system`, `system_media` e `cas_system` em
-  cada release;
-- `package`: checksum, tamanho, assinatura e descritor do ZIP global;
+  cada pacote de locale;
+- `package`: locale, checksum, tamanho, assinatura e descritor do ZIP;
 - `deliverySources`: padrões por provider para resolver pacotes de bootstrap e
   delta;
 - `objects`: sources para reconciliação individual do CAS por hash.
 
-Cada pacote contém um `release.json` canônico. O descritor repete a identidade e
-a versão da release, o tipo do pacote e os descritores dos três componentes. Para
-o CAS, ele inclui `artifactHashes`, uma lista ordenada e sem duplicatas com os
-hashes transportados naquele ZIP. O checksum do descritor e o checksum do pacote
-devem coincidir com o manifest assinado.
+Cada pacote contém um `release.json` canônico. O descritor repete a identidade, a
+versão e o locale da release, o tipo do pacote e os descritores dos três
+componentes. Para o CAS, ele inclui `artifactHashes`, uma lista ordenada e sem
+duplicatas com os hashes transportados naquele ZIP. O checksum do descritor e o
+checksum do pacote devem coincidir com o manifest assinado.
 
-Cada delta contém `fromVersion`, `toVersion` e os três componentes. Os dois bancos
-usam `deliveryMode: patch`, com checksum da base, checksum do resultado e o
-`entryPath` correspondente. O CAS usa `patch`, `index_only` ou `unchanged`
-conforme a mudança no conjunto de hashes.
+Cada delta de locale contém `fromVersion`, `toVersion` e os três componentes. Os
+dois bancos usam `deliveryMode: patch`, com checksum da base, checksum do
+resultado e o `entryPath` correspondente. O CAS usa `patch`, `index_only` ou
+`unchanged` conforme a mudança no conjunto de hashes daquele locale.
 
 Invariantes obrigatórias:
 
-- `bootstrap.version.revision` é `0`;
-- `bootstrap.version.generation` é igual a `currentVersion.generation`;
-- o primeiro delta parte da versão do bootstrap;
-- cada `fromVersion` é igual ao `toVersion` do delta anterior;
+- o manifest declara exatamente os seis locales suportados;
+- cada release possui exatamente um pacote por locale;
+- cada `bootstrap.version.revision` é `0`;
+- cada `bootstrap.version.generation` é igual a `currentVersion.generation`;
+- para cada locale, o primeiro delta parte da versão do bootstrap;
+- para cada locale, cada `fromVersion` é igual ao `toVersion` anterior;
 - todo `toVersion` pertence à geração vigente e incrementa a revisão em uma
   unidade;
-- o último `toVersion` é igual a `currentVersion`;
-- cada release descreve os três componentes e seus estados finais;
-- cada release possui exatamente um pacote global com checksum e assinatura;
-- o `release.json` pertence à mesma release e coincide com os componentes do
+- o último `toVersion` de cada locale é igual a `currentVersion`;
+- cada pacote descreve os três componentes e seus estados finais;
+- o `release.json` pertence à mesma release e ao mesmo locale declarados no
   manifest;
-- todo delta possui patches válidos para `system` e `system_media`;
+- todo delta de locale possui patches válidos para `system` e `system_media`;
 - componentes `patch` possuem base idêntica ao estado final anterior;
-- os hashes de `system_media` na versão final são resolvíveis no `CAS/system`;
-- cada URL de pacote inclui o `releaseId` da release correspondente;
+- os IDs e relações não localizáveis são equivalentes entre os seis bancos
+  `system` da mesma release;
+- os hashes de cada `system_media` final são resolvíveis no `CAS/system`;
+- cada URL de pacote inclui o `releaseId` e o `locale` correspondentes;
 - sources habilitadas não repetem prioridade dentro do mesmo tipo;
-- toda source habilitada resolve o mesmo pacote global imutável.
+- toda source habilitada resolve os mesmos pacotes de locale imutáveis.
 
 O servidor recusa a publicação quando alguma invariante falha. O app nunca tenta
 descobrir uma revisão incrementando URLs que não estejam declaradas.
 
 ## Regras De Segurança
 
-- Manifests de produção, artefatos executáveis e pacotes globais exigem assinatura
+- Manifests de produção, artefatos executáveis e pacotes de locale exigem assinatura
   válida.
 - SHA-256 é obrigatório para bancos, pacotes e objetos CAS.
 - A API usa HTTPS fora do desenvolvimento local.

@@ -9,6 +9,27 @@ O updater de app é independente da atualização dos dados de conhecimento da
 [Parte 4](./04-app-artifact-consumption.md), embora ambos usem o `hub-server` como
 plano de controle.
 
+## Fluxo Da Parte
+
+```mermaid
+flowchart LR
+    HUB["hub-server local<br/>canal e release do app"] --> ENDPOINT["Endpoint do updater"]
+    ENDPOINT --> ADAPTER["Adapter para o contrato Tauri"]
+    ADAPTER --> PLUGIN["Plugin oficial do updater"]
+    PLUGIN --> VERIFY["Assinatura, versão<br/>e artefato"]
+    VERIFY --> INSTALL["Instalação da nova versão"]
+```
+
+Os dois ciclos continuam separados:
+
+```mermaid
+flowchart TB
+    CONTROL["hub-server"] --> APPUPDATE["Atualização do executável<br/>Release + AppChannelRelease"]
+    CONTROL --> DATAUPDATE["Atualização de conhecimento<br/>KnowledgeRelease + manifest"]
+    APPUPDATE --> APP["vet-app"]
+    DATAUPDATE --> APP
+```
+
 ## Escopo
 
 Configurar no `vet-app`:

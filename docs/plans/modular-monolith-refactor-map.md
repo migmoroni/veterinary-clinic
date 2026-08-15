@@ -62,20 +62,21 @@ veterinary-apps/
 
 ## Papel Do `hub-server`
 
-`hub-server` faz parte da estrategia open source do workspace, mas nao e o
+`hub-server` faz parte da estratégia open source do workspace, mas não é o
 backend operacional do produto SaaS.
 
 Ele deve concentrar:
 
-- dados fonte publicos usados para gerar bancos de referencia;
-- pacotes prontos/versionados para `system`, `system_media` e `CAS/system`;
-- manifests de versao, hashes, tamanho, changelog e compatibilidade;
+- dados fonte públicos usados para gerar bancos de referência;
+- locale packs prontos e versionados, cada um com seu par `system` e
+  `system_media`, usando o `CAS/system` compartilhado;
+- manifests de versão, hashes, tamanho, changelog e compatibilidade;
 - updates completos ou incrementais para os apps;
-- empacotamento, publicacao e metadados de builds dos apps.
+- empacotamento, publicação e metadados de builds dos apps.
 
-Os apps devem consumir esses pacotes prontos. Eles nao devem carregar JSONs
-fonte dos catalogos publicos nem gerar internamente os bancos publicos de
-referencia.
+Os apps consomem somente os locale packs necessários. Eles não carregam JSONs
+fonte dos catálogos públicos nem geram internamente os bancos públicos de
+referência.
 
 Operacoes de SaaS, contas comerciais, billing, sincronizacao privada e recursos
 fechados pertencem a outro servidor, fora do escopo deste repositorio publico.

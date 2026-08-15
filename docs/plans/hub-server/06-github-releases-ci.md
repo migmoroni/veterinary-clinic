@@ -9,6 +9,39 @@ validados localmente.
 Esta parte depende do [updater local](./05-tauri-updater-local.md) e do consumo de
 conhecimento já funcional pela API.
 
+## Fluxo Da Parte
+
+```mermaid
+flowchart LR
+    REPO["Repositório dedicado"] --> ACTIONS["GitHub Actions"]
+    ACTIONS --> APPASSETS["GitHub Releases<br/>builds dos apps"]
+    ACTIONS -->|orquestra| HUB["hub-server<br/>gerador e emissor canônico"]
+    HUB --> PACKAGES["Pacotes de locale"]
+    PACKAGES --> KNOWLEDGE["GitHub Releases<br/>réplica dos pacotes"]
+    HUB --> MANIFEST["Snapshot assinado"]
+    MANIFEST --> HUBAPI["API do Hub"]
+    MANIFEST --> PAGES["GitHub Pages<br/>réplica byte a byte"]
+```
+
+No consumo, Hub e GitHub oferecem o mesmo contrato assinado e os mesmos
+artefatos imutáveis:
+
+```mermaid
+flowchart TB
+    APP["App buildado"] --> MS1["Manifest source 1<br/>hub_server"]
+    APP -.-> MS2["Fallback de manifest<br/>GitHub Pages"]
+    APP --> DS1["Delivery source 1<br/>hub_server"]
+    APP -.-> DS2["Fallback de pacote<br/>GitHub Releases"]
+    MS1 --> VERIFY["Validação comum"]
+    MS2 --> VERIFY
+    DS1 --> INSTALL["Instalação comum"]
+    DS2 --> INSTALL
+```
+
+O app não possui um fluxo de atualização específico para GitHub. Sources são
+ordenadas por prioridade, e a mesma validação de assinatura, identidade,
+checksum, versão e locale é aplicada independentemente do provider.
+
 ## Pré-Requisito
 
 O código está em um repositório dedicado ao projeto. A automação nasce nesse
@@ -19,8 +52,8 @@ repositório e usa environments protegidos para canais que publicam releases.
 GitHub é o primeiro provider externo de:
 
 - binários e bundles dos apps;
-- pacotes globais `knowledge-bootstrap-<version>-<release-id>.zip`;
-- pacotes globais `knowledge-delta-<version>-<release-id>.zip`;
+- pacotes `knowledge-bootstrap-<version>-<locale>-<release-id>.zip`;
+- pacotes `knowledge-delta-<version>-<locale>-<release-id>.zip`;
 - réplicas estáticas dos manifests assinados por canal.
 
 O Hub permanece o único emissor do manifest de conhecimento. GitHub Pages entrega
@@ -33,16 +66,15 @@ por hash. O download individual de `CAS/system` continua pela source
 `hub_server`. A source `github` em `knowledge_cas_object` permanece desativada até
 existir um mecanismo explícito, imutável e testado para objetos individuais.
 
-GitHub distribui cada release de conhecimento como um único asset, sem depender
-de milhares de arquivos individuais. Cloudflare R2 e IPFS são os providers
-previstos para distribuição direta por conteúdo.
+GitHub distribui cada release de conhecimento como seis assets, um por locale,
+sem depender de milhares de arquivos individuais. Cloudflare R2 e IPFS são os
+providers previstos para distribuição direta por conteúdo.
 
 O `hub-server` mantém um armazenamento persistente para sua cópia de
-`CAS/system`. Durante a validação de uma release, ele baixa o pacote global pela
+`CAS/system`. Durante a validação de uma release, ele baixa os seis pacotes pela
 delivery source, extrai com validação defensiva e materializa somente os objetos
-ausentes. A source `hub_server` para hash
-individual só fica habilitada depois que todos os hashes do `system_media.db`
-forem resolvíveis.
+ausentes. A source `hub_server` para hash individual só fica habilitada depois
+que todos os hashes dos seis `system_media.db` forem resolvíveis.
 
 ## Workflows
 
@@ -96,8 +128,8 @@ recebe versão e canal
 
 ```text
 invoca as tarefas knowledge do hub-server
--> valida componentes e pacote global
--> publica o pacote global no GitHub Release
+-> valida os seis locales, componentes e pacotes
+-> publica os seis pacotes no GitHub Release
 -> confirma a KnowledgeDeliverySource GitHub configurada para o canal
 -> solicita validação da KnowledgeRelease
 -> Hub materializa objetos CAS ausentes a partir do pacote publicado
@@ -109,15 +141,15 @@ invoca as tarefas knowledge do hub-server
 
 ## URLs E Imutabilidade
 
-- Cada URL de pacote inclui o `releaseId` e aponta para tag e nome de asset
-  imutáveis.
+- Cada URL de pacote inclui `releaseId` e `locale` e aponta para tag e nome de
+  asset imutáveis.
 - O manifest não usa endpoint `latest` como URL de artefato.
 - O manifest vigente usa um caminho estável por canal, e cada snapshot também
   possui um caminho imutável por sequência e `snapshotId`.
 - `current.json` contém o envelope assinado completo e possui o mesmo checksum
   dos bytes servidos pelo Hub.
-- O endpoint de pacote do `hub-server` recebe `releaseId` e resolve exatamente o
-  `KnowledgeReleasePackage` imutável correspondente.
+- O endpoint de pacote do `hub-server` recebe `releaseId` e `locale` e resolve
+  exatamente o `KnowledgeReleasePackage` imutável correspondente.
 - Substituir bytes de um asset exige nova release e novo registro.
 - Checksums são calculados sobre os bytes efetivamente enviados ao provider.
 - O CI verifica novamente o asset publicado antes de solicitar `published`.
@@ -131,9 +163,9 @@ O CI usa a API interna com:
 - token armazenado em GitHub Environment Secret;
 - `Idempotency-Key` derivada de workflow, release e tentativa lógica;
 - payload com artefatos e sources separados;
-- checksum, tamanho e assinatura do pacote global;
-- geração, revisão, predecessor e componentes da release global;
-- checksums de base e resultado dos patches de banco;
+- locale, checksum, tamanho e assinatura de cada pacote;
+- geração, revisão, predecessor e seis locales da release global;
+- checksums de base e resultado dos doze patches de banco;
 - nenhuma chave privada ou credencial de provider.
 
 Uma falha no upload ou na verificação impede a publicação no Hub. Reexecutar o
@@ -157,7 +189,7 @@ Nesta parte, ela usa `enabled: true`, prioridade `2` e
 
 Depois da publicação do provider:
 
-- GitHub fica habilitado para artefatos de app, pacotes globais, delivery sources
+- GitHub fica habilitado para artefatos de app, pacotes de locale, delivery sources
   e manifest source;
 - `hub_server` permanece prioridade 1 para o contrato consumido pelo app;
 - GitHub Pages fica como fallback de descoberta do manifest;
@@ -191,9 +223,10 @@ Cobrir:
 - CI sem publicação em pull request;
 - matriz de builds suportada;
 - assinatura, checksum e tamanho dos assets;
-- cadeia global de bootstrap e deltas com os três componentes;
-- nomes e URLs de pacote vinculados ao `releaseId`;
-- pacote único contendo os dois bancos ou patches e as entradas CAS aplicáveis;
+- cadeia global com bootstrap e deltas dos seis locales;
+- nomes e URLs de pacote vinculados a `releaseId` e `locale`;
+- seis pacotes, cada um contendo seu par de bancos ou patches e as entradas CAS
+  aplicáveis;
 - patches internos vinculados à base e ao resultado corretos;
 - payload idempotente para releases de app e conhecimento;
 - recusa de registro com asset ausente ou divergente;
@@ -214,6 +247,8 @@ Cobrir:
 - O projeto usa um repositório dedicado.
 - GitHub Actions executa CI sem acesso indevido a secrets.
 - GitHub Releases hospeda os artefatos versionados definidos nesta parte.
+- Cada release de conhecimento publica exatamente um asset para cada locale
+  suportado.
 - Releases de app e conhecimento são registradas de forma idempotente.
 - O Hub valida os assets e publica a release antes da promoção de canal.
 - A promoção publica um snapshot assinado com sequência e expiração válidas.

@@ -8,6 +8,22 @@ distribuição e a fronteira de publicação interna.
 Esta parte implementa os modelos e as regras definidos no
 [índice arquitetural](./README.md).
 
+## Fluxo Da Parte
+
+```mermaid
+flowchart LR
+    INTERNAL["API interna autenticada"] --> SERVICES["Services de registro,<br/>validação e publicação"]
+    SERVICES --> MODELS["Releases, artefatos,<br/>sources e canais"]
+    MODELS --> SQLITE["SQLite do hub-server"]
+    MODELS --> PUBLIC["API pública /api/v1"]
+    OUTBOX["Outbox e jobs idempotentes"] --> SERVICES
+    PUBLIC --> CLIENTS["Apps e automações"]
+```
+
+Esta parte estabelece o plano de controle e seus contratos. Dados públicos,
+geração de bancos, publicação efetiva e consumo pelos apps entram nas partes
+seguintes sem alterar a identidade dos modelos definidos aqui.
+
 ## Aplicação
 
 Criar a aplicação:
@@ -41,6 +57,7 @@ ReleaseArtifactSource
 AppChannelRelease
 
 KnowledgeRelease
+KnowledgeReleaseLocale
 KnowledgeArtifact
 KnowledgeArtifactSource
 KnowledgeReleasePackage
@@ -64,12 +81,18 @@ Restrições principais:
 - bootstrap exige revisão zero e não possui `previous_release_id`;
 - delta exige revisão positiva e aponta para a revisão imediatamente anterior;
 - `KnowledgeRelease` guarda versões independentes de `system` e `system_media`;
-- toda release possui exatamente um componente `system`, um `system_media` e um
-  `cas_system`;
-- a combinação de `knowledge_release_id` e `component` é única;
-- toda release possui exatamente um `KnowledgeReleasePackage`;
+- locale usa a allowlist canônica `pt-BR`, `pt-PT`, `gn-PY`, `en-US`, `es-ES` e
+  `fr-FR`;
+- cada release possui exatamente um `KnowledgeReleaseLocale` para cada locale da
+  allowlist;
+- a combinação de `knowledge_release_id` e `locale` é única;
+- cada `KnowledgeReleaseLocale` possui exatamente um componente `system`, um
+  `system_media` e um `cas_system`;
+- a combinação de `knowledge_release_locale_id` e `component` é única;
+- cada `KnowledgeReleaseLocale` possui exatamente um
+  `KnowledgeReleasePackage`;
 - o pacote referencia um `KnowledgeArtifact` do tipo compatível com
-  `release_kind`;
+  `release_kind` e pertencente ao mesmo locale;
 - `descriptor_checksum_sha256` corresponde ao `release.json` canônico interno;
 - `delivery_mode` aceita `snapshot`, `patch`, `index_only` ou `unchanged` conforme
   o componente e o tipo da release;
@@ -84,8 +107,8 @@ Restrições principais:
 - `cas_system` declara digest e quantidade do conjunto final;
 - `KnowledgeDeliverySource` é única por canal, tipo de entrega e provider;
 - prioridades de `KnowledgeDeliverySource` são únicas por canal e tipo de entrega;
-- todo `KnowledgeDeliverySource.url_pattern` contém exatamente um
-  `{releaseId}` e somente placeholders permitidos;
+- todo `KnowledgeDeliverySource.url_pattern` contém exatamente um `{releaseId}`
+  e um `{locale}` e somente placeholders permitidos;
 - `KnowledgeCasObjectSource` é única por canal e provider;
 - `KnowledgeManifestSnapshot.sequence` é inteiro positivo, monotônico e único por
   canal;
@@ -112,16 +135,21 @@ Restrições principais:
   publicado;
 - versões de app são únicas por `app_name`, independentemente de canal.
 
+`KnowledgeReleaseLocale` é a projeção localizada de uma release global.
 `KnowledgeReleaseComponent` descreve as entradas e o estado final dentro do
-pacote global. A cadeia pertence às `KnowledgeRelease`; bancos e CAS não possuem
-contadores de atualização independentes.
+pacote daquele locale. A cadeia pertence às `KnowledgeRelease`; bancos e CAS não
+possuem contadores públicos de atualização independentes.
+
+IDs de entidades e relações não localizáveis precisam formar conjuntos
+equivalentes entre os seis bancos `system` de uma release. Campos de texto,
+aliases, descrições e índices de busca podem variar conforme o locale.
 
 `KnowledgeArtifactSource` atende artefatos de endereço fixo.
-`KnowledgeDeliverySource` resolve pacotes globais por `{releaseId}` e pode usar
-`{generation}` e `{revision}` na composição do nome. Ela é uma configuração do
-canal, e o manifest assinado captura o conjunto vigente no momento da publicação.
-Cada provider aparece uma vez por `delivery_kind`, sem sources dentro dos
-componentes ou repetidas em cada release.
+`KnowledgeDeliverySource` resolve pacotes por `{releaseId}` e `{locale}` e pode
+usar `{generation}` e `{revision}` na composição do nome. Ela é uma configuração
+do canal, e o manifest assinado captura o conjunto vigente no momento da
+publicação. Cada provider aparece uma vez por `delivery_kind`, sem sources dentro
+dos componentes ou repetidas em cada release.
 
 `KnowledgeManifestSnapshot` separa a evolução do manifest da evolução dos dados.
 Promover outra release ou alterar apenas sources cria o próximo snapshot do
@@ -134,7 +162,7 @@ GET /api/v1/health
 GET /api/v1/apps/:app_name/updates/:platform/:current_version
 GET /api/v1/knowledge/manifest
 GET /api/v1/knowledge/channels/:channel/manifests/:sequence/:snapshot_id
-GET /api/v1/knowledge/releases/:release_id/package
+GET /api/v1/knowledge/releases/:release_id/locales/:locale/package
 GET /api/v1/downloads/:artifact_id
 GET /api/v1/cas/system/:hash
 ```
@@ -149,16 +177,21 @@ derivado de seu checksum, aplica
 `Cache-Control: public, max-age=300, must-revalidate` e responde
 `304 Not Modified` quando aplicável.
 
+O endpoint não filtra o payload por locale. O mesmo snapshot contém as seis
+cadeias, é replicável byte a byte em sources estáticas e permite que o cliente
+selecione localmente quais pacotes baixar.
+
 `/api/v1/knowledge/channels/:channel/manifests/:sequence/:snapshot_id` devolve os
 bytes canônicos e imutáveis de um snapshot publicado. Canal, sequência e ID
 precisam identificar o mesmo registro. A resposta usa o checksum persistido como
 `ETag` e nunca reconstrói o payload a partir do estado vigente.
 
-`/api/v1/knowledge/releases/:release_id/package` resolve exatamente uma release
-publicada e entrega ou redireciona seu pacote global por uma
-`KnowledgeDeliverySource` habilitada. O resolver confere que o `release_id`
-corresponde ao pacote e ao tipo registrados na release. O cliente confere essa
-mesma identidade contra o snapshot assinado.
+`/api/v1/knowledge/releases/:release_id/locales/:locale/package` resolve
+exatamente o pacote localizado de uma release publicada e o entrega ou
+redireciona por uma `KnowledgeDeliverySource` habilitada. O resolver confere que
+`release_id`, `locale` e tipo correspondem ao pacote registrado. O cliente
+confere a mesma identidade contra o snapshot assinado.
+Locale é validado pela allowlist canônica e não recebe normalização implícita.
 
 `/api/v1/downloads/:artifact_id` resolve somente um artefato publicado. O
 servidor entrega seus bytes ou redireciona para uma source habilitada e permitida.
@@ -256,9 +289,10 @@ Falhas ficam registradas e são retomadas por
 a próxima sequência apontando para a mesma release. A renovação usa as sources
 vigentes, preserva o canal diante de falha e nunca reescreve o snapshot anterior.
 
-`package_importer` valida `release.json`, extrai as entradas permitidas e
-materializa objetos ausentes no armazenamento persistente do Hub. Ele aplica os
-mesmos limites de extração, validação por hash e gravação atômica exigidos do app.
+`package_importer` valida release, locale e `release.json`, extrai as entradas
+permitidas e materializa objetos ausentes no armazenamento persistente do Hub.
+Ele aplica os mesmos limites de extração, validação por hash e gravação atômica
+exigidos do app.
 
 ## Testes
 
@@ -281,11 +315,13 @@ Cobrir:
 - criação e repetição idempotente pela API interna;
 - recusa sem token ou com token inválido;
 - limites de payload e rate limit;
-- validações de artefato, delivery source e pacote global;
-- resolução de pacote por `release_id` sem ambiguidade entre canais;
+- validações de artefato, delivery source e pacote de locale;
+- seis locales obrigatórios, únicos e completos por release;
+- IDs e relações estruturais equivalentes entre os bancos localizados;
+- resolução de pacote por `release_id` e `locale` sem ambiguidade entre canais;
 - recusa de prioridade, versão global ou checksum inválido;
-- recusa de delivery source sem `{releaseId}`, com placeholder desconhecido ou
-  repetido;
+- recusa de delivery source sem `{releaseId}` ou `{locale}`, com placeholder
+  desconhecido ou repetido;
 - recusa de manifest source com placeholder desconhecido, host fora da allowlist
   ou padrão imutável incompleto;
 - recusa de geração, revisão ou predecessor incoerente;
@@ -294,8 +330,9 @@ Cobrir:
 - recusa de `artifactHashes` divergente das entradas CAS do pacote;
 - recusa de `release.json` divergente do manifest da release;
 - recusa de patch cuja base não corresponda ao estado final anterior;
-- recusa de bancos com `knowledge_release_metadata` divergente da release;
-- recusa de contagem ou digest CAS divergente de `system_media`;
+- recusa de bancos com `knowledge_release_metadata` divergente da release ou do
+  locale;
+- recusa de contagem ou digest CAS divergente do `system_media` do locale;
 - recusa de hash CAS malformado;
 - recusa de redirect para provider ou host não permitido;
 - geração determinística dos dois manifests;
@@ -312,7 +349,8 @@ Cobrir:
 - Artefatos e sources possuem entidades separadas.
 - Releases possuem identidade independente de canal, geração, revisão e
   predecessor explícitos.
-- Cada release possui um pacote global e três componentes internos.
+- Cada release possui seis locales completos, cada um com um pacote e três
+  componentes internos.
 - Sources de entrega aparecem uma vez por provider e tipo de pacote.
 - Os dois schemas SQLite são representados separadamente.
 - Releases publicadas são imutáveis.
