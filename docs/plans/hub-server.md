@@ -3,6 +3,7 @@
 A implementação de `apps/hub-server/` segue o plano canônico:
 
 - [Arquitetura e contratos](./hub-server/README.md)
+- [Pré-fase 0: migração do workspace para pnpm](./hub-server/00-pnpm-workspace-migration.md)
 - [Parte 1: preparação local dos artefatos `system`](./hub-server/01-knowledge-artifacts-preparation.md)
 - [Parte 2: base Rails e contratos públicos](./hub-server/02-rails-api-contracts.md)
 - [Parte 3: dados públicos e publicação](./hub-server/03-public-knowledge-publication.md)

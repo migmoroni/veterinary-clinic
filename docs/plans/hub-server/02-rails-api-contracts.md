@@ -8,6 +8,11 @@ distribuição e a fronteira de publicação interna.
 Esta parte implementa os modelos e as regras definidos no
 [índice arquitetural](./README.md).
 
+A aplicação entra em um workspace já gerenciado por pnpm conforme a
+[Pré-fase 0](./00-pnpm-workspace-migration.md). O Rails API não cria lockfile
+JavaScript próprio. Qualquer `package.json` presente em `apps/hub-server` participa
+do workspace raiz e usa o mesmo `pnpm-lock.yaml`.
+
 ## Fluxo Da Parte
 
 ```mermaid

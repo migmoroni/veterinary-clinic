@@ -95,6 +95,11 @@ Separar workflows reutilizáveis:
 validação das fixtures e duas compilações da mesma entrada para comparar
 `build-result.json` e checksums.
 
+Os jobs JavaScript fixam Node.js 22 e pnpm `11.18.0`, restauram o store do pnpm
+pela chave de `pnpm-lock.yaml` e executam `pnpm install --frozen-lockfile`. O
+cache não armazena `node_modules`. Checks, testes, builds web e comandos Tauri
+usam os scripts públicos da raiz.
+
 `publish-knowledge-manifest.yml` recebe ou descobre um snapshot publicado pelo
 Hub, valida identidade, assinatura e checksum e implanta no GitHub Pages:
 
@@ -229,6 +234,9 @@ pelo app.
 Cobrir:
 
 - CI sem publicação em pull request;
+- instalação pnpm com lockfile congelado;
+- falha do CI quando manifest e `pnpm-lock.yaml` divergem;
+- ausência de `package-lock.json` e lockfiles JavaScript internos;
 - build, lint e testes do `knowledge-builder` no Cargo Workspace;
 - determinismo do builder sob toolchain e lockfile fixados;
 - proveniência do builder registrada na release;
@@ -257,6 +265,8 @@ Cobrir:
 
 - O projeto usa um repositório dedicado.
 - GitHub Actions executa CI sem acesso indevido a secrets.
+- GitHub Actions usa Node.js 22, pnpm `11.18.0` e
+  `pnpm install --frozen-lockfile`.
 - O CI valida o mesmo `knowledge-builder` executado pelo Hub.
 - GitHub Releases hospeda os artefatos versionados definidos nesta parte.
 - Cada release de conhecimento publica exatamente um asset para cada locale

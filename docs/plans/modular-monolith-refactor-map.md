@@ -1,6 +1,6 @@
 # Mapa Para Extrair O App Atual Para Workspace Modular
 
-Atualizado em 2026-08-04.
+Atualizado em 2026-08-17.
 
 Este documento registra o estado real do app atual e o mapeia para o alvo
 informado: um repositorio publico `veterinary-apps` com varios aplicativos em
@@ -32,6 +32,11 @@ Use junto com:
 - [Plano De Refatoracao De Prontuarios Para Timeline Clinica](medical-records-timeline-refactor.md)
 - [Plano De Intercambio FHIR Via Distribution](fhir-interchange-distribution-plan.md)
 - [Plano Do Hub Server](hub-server-plan.md)
+- [Plano De Migracao Do Workspace Para pnpm](hub-server/00-pnpm-workspace-migration.md)
+
+O gerenciador definido para o modelo alvo é pnpm. A migração completa de
+manifests, scripts, lockfile e documentação operacional pertence à Pré-fase 0 do
+Hub Server.
 
 ## Modelo Alvo
 
@@ -867,8 +872,8 @@ processamento de exames/laudos/imagens, especialmente para servir `vet-app` e
 Depois de cada modulo, rodar:
 
 ```sh
-npm run check
-npm run test:run
+pnpm check
+pnpm test:run
 ```
 
 Objetivo desta fase: criar a fronteira modular correta sem redesenhar ainda o
@@ -980,9 +985,9 @@ Fluxos minimos:
 Checks:
 
 ```sh
-npm run check
-npm run test:run
-npm run build
+pnpm check
+pnpm test:run
+pnpm build
 cargo check --manifest-path apps/vet-app/src-tauri/Cargo.toml
 ```
 
@@ -996,18 +1001,17 @@ Se mexer em schema ou scripts de adocao:
 
 ```sh
 cd legacy-to-sqlite
-npm run adopt:version
+pnpm adopt:version
 ```
 
 ## Perguntas A Fechar Antes Da IA Mover Codigo
 
-1. O workspace vai usar `pnpm` ou `bun` como gerenciador principal?
-2. O repo atual sera convertido in-place para `veterinary-apps` ou o app sera
+1. O repo atual sera convertido in-place para `veterinary-apps` ou o app sera
    movido para um novo repositorio?
-3. `migrations.ts` deve continuar pertencendo ao `vet-app` inicialmente?
-4. `analytics` sera package reutilizavel ou composicao exclusiva do `vet-app`?
-5. `practice-profile` fica em `core-local/practice` ou vira modulo proprio?
-6. As URLs atuais do `vet-app` devem ser preservadas no primeiro lancamento do
+2. `migrations.ts` deve continuar pertencendo ao `vet-app` inicialmente?
+3. `analytics` sera package reutilizavel ou composicao exclusiva do `vet-app`?
+4. `practice-profile` fica em `core-local/practice` ou vira modulo proprio?
+5. As URLs atuais do `vet-app` devem ser preservadas no primeiro lancamento do
    workspace?
 
 ## Ordem De Leitura Para Outra IA

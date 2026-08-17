@@ -12,6 +12,7 @@ pertencem a outro servidor.
 
 ## Partes
 
+0. [Migração do workspace para pnpm](./00-pnpm-workspace-migration.md)
 1. [Preparação local dos artefatos `system`](./01-knowledge-artifacts-preparation.md)
 2. [Base Rails e contratos públicos](./02-rails-api-contracts.md)
 3. [Dados públicos e publicação](./03-public-knowledge-publication.md)
@@ -19,13 +20,14 @@ pertencem a outro servidor.
 5. [Updater Tauri com ambiente local](./05-tauri-updater-local.md)
 6. [Repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
 
-As partes são executadas em ordem. Cada uma termina com testes e critérios de
-aceite próprios antes do início da seguinte.
+A pré-fase e as partes são executadas em ordem. Cada uma termina com testes e
+critérios de aceite próprios antes do início da seguinte.
 
 ## Evolução Do Fluxo
 
 ```mermaid
 flowchart LR
+    P0["Pré-fase 0<br/>workspace pnpm"]
     P1["Parte 1<br/>fonte canônica + builder Rust"]
     P2["Parte 2<br/>base Rails + contratos"]
     P3["Parte 3<br/>Rails orquestra builder + releases"]
@@ -33,7 +35,7 @@ flowchart LR
     P5["Parte 5<br/>updater Tauri local"]
     P6["Parte 6<br/>GitHub + CI/CD"]
 
-    P1 --> P2 --> P3 --> P4 --> P5 --> P6
+    P0 --> P1 --> P2 --> P3 --> P4 --> P5 --> P6
 ```
 
 As mudanças de origem dos artefatos são deliberadas:
@@ -61,7 +63,8 @@ flowchart TB
     S1 --> S2 --> S3
 ```
 
-A Parte 1 estabelece o formato dos dados e dos artefatos por locale com o
+A Pré-fase 0 estabelece pnpm como único gerenciador do workspace JavaScript. A
+Parte 1 estabelece o formato dos dados e dos artefatos por locale com o
 `knowledge-builder` definitivo em Rust. A Parte 3 transfere os dados fonte para o
 `hub-server`, que passa a invocar a mesma ferramenta e assume releases,
 assinatura e publicação. A Parte 4 refatora a aquisição e a instalação nos apps
@@ -72,6 +75,11 @@ acrescenta o GitHub como provider externo.
 
 - A aplicação Rails fica em `apps/hub-server/`, seguindo o padrão `apps/*` do
   workspace.
+- O workspace JavaScript usa Node.js 22, pnpm `11.18.0`,
+  `pnpm-workspace.yaml`, um único `pnpm-lock.yaml` e dependências internas com
+  `workspace:*`.
+- As partes do Hub usam somente comandos pnpm; não mantêm lockfiles ou comandos
+  concorrentes de outro gerenciador.
 - `tools/knowledge-builder/` é um binário Rust membro do Cargo Workspace e o
   único compilador de dados canônicos para `system`, `system_media` e
   `CAS/system`.
@@ -704,13 +712,14 @@ descobrir uma revisão incrementando URLs que não estejam declaradas.
 
 ## Ordem Recomendada
 
-1. Implementar e validar a Parte 1.
-2. Implementar e validar a Parte 2.
-3. Implementar e validar a Parte 3.
-4. Implementar e validar a Parte 4.
-5. Implementar e validar a Parte 5.
-6. Mover o projeto para o repositório dedicado.
-7. Implementar e validar a Parte 6.
+1. Implementar e validar a Pré-fase 0.
+2. Implementar e validar a Parte 1.
+3. Implementar e validar a Parte 2.
+4. Implementar e validar a Parte 3.
+5. Implementar e validar a Parte 4.
+6. Implementar e validar a Parte 5.
+7. Mover o projeto para o repositório dedicado.
+8. Implementar e validar a Parte 6.
 
 ## Expansões Previstas
 

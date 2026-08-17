@@ -11,6 +11,13 @@ builds empacotáveis.
 Cada execução materializa um estado integral dos dados públicos. A identidade
 local desse estado é `build_version`, representada por um inteiro positivo.
 
+## Pré-requisito
+
+A [Pré-fase 0](./00-pnpm-workspace-migration.md) está integralmente concluída. O
+workspace usa pnpm, um único `pnpm-lock.yaml` e dependências locais com
+`workspace:*`. Todos os comandos JavaScript desta parte são executados pela raiz
+com pnpm.
+
 ## Escopo
 
 - reorganizar todas as fontes públicas de conhecimento no contrato canônico por
@@ -479,6 +486,8 @@ Cobrir:
 
 ## Critérios De Aceite
 
+- O workspace continua passando em `pnpm install --frozen-lockfile`,
+  `pnpm check`, `pnpm test:run` e `pnpm build`.
 - A geração roda por comando explícito.
 - `tools/knowledge-builder` é membro do Cargo Workspace e passa em build, lint e
   testes.
