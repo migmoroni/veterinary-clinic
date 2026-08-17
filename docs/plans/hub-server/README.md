@@ -26,9 +26,9 @@ aceite próprios antes do início da seguinte.
 
 ```mermaid
 flowchart LR
-    P1["Parte 1<br/>fonte canônica + gerador local"]
+    P1["Parte 1<br/>fonte canônica + builder Rust"]
     P2["Parte 2<br/>base Rails + contratos"]
-    P3["Parte 3<br/>gerador Ruby + releases"]
+    P3["Parte 3<br/>Rails orquestra builder + releases"]
     P4["Parte 4<br/>apps consomem a API"]
     P5["Parte 5<br/>updater Tauri local"]
     P6["Parte 6<br/>GitHub + CI/CD"]
@@ -41,14 +41,14 @@ As mudanças de origem dos artefatos são deliberadas:
 ```mermaid
 flowchart TB
     subgraph S1["Parte 1"]
-        D1["Dados canônicos no workspace"] --> G1["Gerador local"]
+        D1["Dados canônicos no workspace"] --> G1["knowledge-builder Rust"]
         G1 --> B1["build/knowledge-artifacts"]
         B1 --> A1["App em desenvolvimento e build"]
     end
 
     subgraph S2["Partes 3 e 4"]
-        D2["Dados canônicos no hub-server"] --> G2["Gerador Ruby"]
-        G2 --> R2["Releases e manifest"]
+        D2["Dados canônicos no hub-server"] --> G2["Mesmo knowledge-builder Rust"]
+        G2 --> R2["Rails: releases e manifest"]
         R2 --> H2["API do hub-server"]
         H2 --> A2["Apps"]
     end
@@ -61,16 +61,22 @@ flowchart TB
     S1 --> S2 --> S3
 ```
 
-A Parte 1 estabelece o formato dos dados e dos artefatos por locale com uma
-integração local executável. A Parte 3 transfere a posse operacional dos dados e
-da geração para o `hub-server`. A Parte 4 refatora a aquisição e a instalação nos
-apps para o contrato de distribuição do Hub. A Parte 6 mantém esse contrato e
+A Parte 1 estabelece o formato dos dados e dos artefatos por locale com o
+`knowledge-builder` definitivo em Rust. A Parte 3 transfere os dados fonte para o
+`hub-server`, que passa a invocar a mesma ferramenta e assume releases,
+assinatura e publicação. A Parte 4 refatora a aquisição e a instalação nos apps
+para o contrato de distribuição do Hub. A Parte 6 mantém esse contrato e
 acrescenta o GitHub como provider externo.
 
 ## Decisões De Arquitetura
 
 - A aplicação Rails fica em `apps/hub-server/`, seguindo o padrão `apps/*` do
   workspace.
+- `tools/knowledge-builder/` é um binário Rust membro do Cargo Workspace e o
+  único compilador de dados canônicos para `system`, `system_media` e
+  `CAS/system`.
+- O `hub-server` executa o builder por uma CLI versionada e valida seu
+  `build-result.json`; ele não mantém outra implementação do compilador em Ruby.
 - O servidor começa em Rails 8 API com SQLite.
 - A API pública usa o namespace `/api/v1`.
 - A API interna usa Bearer Token via `INTERNAL_RELEASE_TOKEN`.
@@ -86,8 +92,8 @@ acrescenta o GitHub como provider externo.
 - Cloudflare R2, GitLab e IPFS ficam previstos no contrato e desativados até suas
   fases próprias.
 - Os dados fonte de conhecimento são organizados por domínio e entidade. Cada
-  entidade reúne suas traduções em um mapa `localizations` indexado pelos locales
-  suportados.
+  entidade possui um diretório com `entity.json` para os campos estruturais e um
+  arquivo JSON separado por locale em `localizations/`.
 - IDs, relações, classificações, regiões e referências CAS são estruturais e
   permanecem únicos; a geração projeta a mesma entidade canônica nos bancos de
   cada locale.
@@ -116,24 +122,29 @@ acrescenta o GitHub como provider externo.
 
 ```mermaid
 flowchart LR
-    DATA["Dados públicos canônicos"] --> HUB["apps/hub-server<br/>geração, releases, manifests e APIs"]
+    DATA["Dados públicos canônicos"] --> BUILDER["tools/knowledge-builder<br/>compilação Rust"]
+    HUB["apps/hub-server<br/>jobs, releases, manifests e APIs"] --> BUILDER
+    BUILDER --> HUB
     HUB --> APP["apps/*<br/>consumo, validação e instalação"]
     HUB --> PROVIDERS["Providers externos<br/>réplicas e entrega de bytes"]
     PROVIDERS --> APP
-    CORE["packages/core-local<br/>schemas e SQLite"] --> HUB
+    CORE["packages/core-local<br/>leitura e contratos SQLite"] --> HUB
     CORE --> APP
     ENGINE["packages/engine<br/>armazenamento, integridade e distribuição"] --> APP
 ```
 
 ```text
 apps/hub-server/
-  dados públicos, geração, publicação, manifests e APIs
+  dados públicos, orquestração, publicação, manifests e APIs
+
+tools/knowledge-builder/
+  validação, projeção, geração dos bancos, CAS e relatório do build
 
 apps/vet-app/
   consumo, validação, instalação e atualização
 
 packages/core-local/
-  schemas e utilitários SQLite reutilizáveis
+  queries, contratos de leitura e validação de compatibilidade SQLite
 
 packages/engine/
   operações nativas de armazenamento, integridade e distribuição
@@ -190,6 +201,11 @@ KnowledgeRelease
   revision
   release_kind
   previous_release_id
+  build_version
+  builder_version
+  build_result_schema_version
+  build_result_checksum_sha256
+  source_digest_sha256
   system_schema_version
   system_media_schema_version
   status
@@ -224,6 +240,12 @@ KnowledgeArtifactSource
 `generation.revision`. `release_kind` aceita `bootstrap` ou `delta`.
 `previous_release_id` é nulo no bootstrap e obrigatório no delta.
 O par `generation`, `revision` é globalmente único e não depende de canal.
+
+`build_version`, `builder_version`, `build_result_schema_version`,
+`build_result_checksum_sha256` e `source_digest_sha256` registram a proveniência
+da compilação. Retry do mesmo draft conserva esses valores quando repete a mesma
+entrada e o mesmo builder; qualquer mudança exige descartar o resultado preparado
+e executar outra compilação antes da validação.
 
 `system_schema_version` e `system_media_schema_version` permanecem separados da
 versão de conhecimento. Cada `KnowledgeArtifact` representa um conteúdo.

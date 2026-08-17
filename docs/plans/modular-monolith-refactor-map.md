@@ -58,6 +58,9 @@ veterinary-apps/
     engine/
     core-local/
     modules/
+
+  tools/
+    knowledge-builder/
 ```
 
 ## Papel Do `hub-server`
@@ -68,6 +71,8 @@ backend operacional do produto SaaS.
 Ele deve concentrar:
 
 - dados fonte públicos usados para gerar bancos de referência;
+- orquestracao do `tools/knowledge-builder`, compilador Rust unico de `system`,
+  `system_media` e `CAS/system`;
 - locale packs prontos e versionados, cada um com seu par `system` e
   `system_media`, usando o `CAS/system` compartilhado;
 - manifests de versão, hashes, tamanho, changelog e compatibilidade;
@@ -946,6 +951,10 @@ nao puxar codigo interno de `apps/vet-app`.
 - Outros apps futuros nao podem importar codigo de `apps/vet-app`.
 - `apps/hub-server` compartilha contratos por `packages/types`; nao deve depender
   de UI ou Tauri.
+- `tools/knowledge-builder` e membro do Cargo Workspace, pode depender somente de
+  crates Rust reutilizaveis e nao importa apps.
+- Apps e packages nao dependem do builder em runtime. `apps/hub-server` o invoca
+  pela CLI e valida o relatorio estruturado.
 
 ## Checks Funcionais Apos Movimentos
 

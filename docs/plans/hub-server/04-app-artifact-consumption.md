@@ -443,7 +443,7 @@ release ativa informa que o serviço de desenvolvimento precisa ser iniciado.
 Ao concluir esta parte, o runtime do app não lê
 `build/knowledge-artifacts`, não conhece o diretório dos dados fonte e não possui
 um provider de pasta solta. A tarefa transitória
-`rails knowledge:export_workspace` é removida. A fronteira de leitura resolve
+`rails knowledge:prepare_workspace` é removida. A fronteira de leitura resolve
 exclusivamente o armazenamento de releases instaladas.
 
 O pipeline do build empacotável declara uma lista não vazia de locales e obtém do
@@ -496,7 +496,7 @@ Cobrir:
 - continuidade com release ativa quando o Hub local fica indisponível;
 - recusa da primeira inicialização sem Hub e sem release ativa;
 - ausência de leitura direta de `build/knowledge-artifacts` no runtime;
-- ausência da tarefa `knowledge:export_workspace` e de seu provider local;
+- ausência da tarefa `knowledge:prepare_workspace` e de seu provider local;
 - importação e ativação do bootstrap incorporado ao build pelo mesmo instalador;
 - falha explícita do build sem todos os bootstraps selecionados.
 

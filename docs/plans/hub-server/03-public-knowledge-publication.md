@@ -14,14 +14,11 @@ com `CAS/system` compartilhado. Esta parte depende da
 
 ```mermaid
 flowchart LR
-    SOURCE["apps/hub-server/data/knowledge<br/>entidades canônicas"] --> VALIDATE["Validação Ruby"]
-    VALIDATE --> PROJECT["Projeção dos seis locales"]
-    PROJECT --> DATABASES["12 bancos SQLite"]
-    PROJECT --> CAS["CAS/system compartilhado"]
-    DATABASES --> CANDIDATE["Estado integral candidato"]
-    CAS --> CANDIDATE
+    SOURCE["apps/hub-server/data/knowledge<br/>entidades canônicas"] --> JOB["Job Rails"]
+    JOB --> BUILDER["knowledge-builder Rust"]
+    BUILDER --> CANDIDATE["12 bancos + CAS<br/>build-result.json"]
     CANDIDATE -.-> WORKSPACE["Exportação até a Parte 4<br/>build/knowledge-artifacts"]
-    CANDIDATE --> RELEASE["Bootstrap ou delta<br/>por locale"]
+    CANDIDATE --> RELEASE["Rails: bootstrap ou delta<br/>por locale"]
     RELEASE --> MANIFEST["Snapshot assinado do manifest"]
     MANIFEST --> API["API pública do hub-server"]
     RELEASE --> API
@@ -39,166 +36,204 @@ Modelar e validar:
 - protocolos públicos;
 - mídias públicas associadas aos catálogos.
 
-`apps/hub-server` possui operacionalmente os dados fonte públicos e a geração dos
-artefatos. `packages/types` conserva contratos compartilhados, sem armazenar o
-catálogo publicado.
+`apps/hub-server` possui operacionalmente os dados fonte públicos e orquestra a
+geração dos artefatos pelo `knowledge-builder`. `packages/types` conserva
+contratos compartilhados, sem armazenar o catálogo publicado.
 
-Os dados fonte ficam organizados por domínio e entidade:
+Os dados fonte ficam organizados por domínio e diretório de entidade:
 
 ```text
 apps/hub-server/data/knowledge/
 ├── breeds/
 │   ├── canine/
-│   │   └── <entity>.json
+│   │   └── <entity>/
 │   └── feline/
-│       └── <entity>.json
+│       └── <entity>/
 ├── manufacturers/
-│   └── <entity>.json
+│   └── <entity>/
 ├── products/
-│   └── <entity>.json
+│   └── <entity>/
 ├── active_ingredients/
-│   └── <entity>.json
+│   └── <entity>/
 ├── conditions/
-│   └── <entity>.json
+│   └── <entity>/
 ├── protocols/
-│   └── <entity>.json
+│   └── <entity>/
 └── media/
-    └── <entity>.json
+    └── <entity>/
 ```
 
-Cada arquivo contém uma entidade canônica. IDs, relações, classificações,
-regiões, identificadores regulatórios e referências CAS aparecem uma única vez.
-Nomes localizados, aliases, descrições, seções editoriais, legendas e textos
-alternativos ficam em `localizations` quando forem traduzíveis naquele domínio.
+Todo diretório de entidade segue o mesmo envelope físico:
 
-`localizations` é um objeto indexado pelo locale, e não uma lista:
+```text
+<entity>/
+├── entity.json
+└── localizations/
+    ├── pt-BR.json
+    ├── pt-PT.json
+    ├── gn-PY.json
+    ├── en-US.json
+    ├── es-ES.json
+    └── fr-FR.json
+```
+
+O nome do diretório é um identificador legível para autoria e navegação. O UUID
+de `entity.json` é a identidade canônica usada pelos bancos, relações e releases.
+
+`entity.json` contém somente os campos estruturais compartilhados pelas seis
+projeções:
 
 ```json
 {
   "id": "<uuid-estavel>",
   "species": ["canine"],
   "regions": ["BRA", "PRT"],
-  "media": ["<sha256>"],
-  "localizations": {
-    "pt-BR": {
-      "name": "Pastor Alemão",
-      "aliases": ["capa-preta"],
-      "description": "<conteúdo localizado>"
-    },
-    "pt-PT": {
-      "name": "Pastor-alemão",
-      "aliases": [],
-      "description": "<conteúdo localizado>"
-    },
-    "gn-PY": {
-      "name": "<conteúdo localizado>",
-      "aliases": [],
-      "description": "<conteúdo localizado>"
-    },
-    "en-US": {
-      "name": "German Shepherd",
-      "aliases": ["Alsatian"],
-      "description": "<localized content>"
-    },
-    "es-ES": {
-      "name": "Pastor alemán",
-      "aliases": [],
-      "description": "<contenido localizado>"
-    },
-    "fr-FR": {
-      "name": "Berger allemand",
-      "aliases": [],
-      "description": "<contenu localisé>"
+  "classification": {},
+  "relations": {},
+  "media": [
+    {
+      "hash": "<sha256-compartilhado>",
+      "role": "reference"
     }
-  }
+  ]
 }
 ```
 
-Cada domínio possui um schema que declara seus campos estruturais, campos
-localizados obrigatórios e campos localizados opcionais. Nomes próprios,
-denominações científicas e marcas que não exigem tradução permanecem no nível
-estrutural. Relações usam IDs estáveis e nunca nomes localizados. Regiões definem
+Cada arquivo em `localizations/` contém somente o conteúdo de seu locale:
+
+```json
+{
+  "locale": "pt-BR",
+  "name": "Pastor Alemão",
+  "aliases": ["capa-preta"],
+  "description": "<conteúdo localizado>",
+  "sections": {},
+  "media": [
+    {
+      "hash": "<sha256-especifico-do-locale>",
+      "role": "illustration",
+      "alt": "<texto alternativo>",
+      "caption": "<legenda>"
+    }
+  ]
+}
+```
+
+Cada domínio possui um schema estrutural para `entity.json` e um schema de
+localização para os seis arquivos de idioma. Nomes próprios, denominações
+científicas e marcas que não exigem tradução permanecem em `entity.json`.
+Relações usam IDs estáveis e nunca nomes localizados. Regiões definem
 aplicabilidade de domínio e não controlam em quais bancos localizados a entidade
 existe.
 
-A validação exige exatamente as seis chaves de locale em cada entidade e recusa
-ID duplicado, referência inexistente, locale desconhecido, campo estrutural
-localizado ou campo traduzível fora de `localizations`. A projeção de cada locale
-combina a estrutura comum com a localização correspondente, produzindo o mesmo
-conjunto de IDs e relações não localizáveis nos seis bancos.
+Referências de mídia em `entity.json` pertencem a todos os locales. Um arquivo de
+localização pode referenciar o mesmo hash para acrescentar textos localizados ou
+declarar hashes exigidos somente por aquele locale. O `system_media` projetado é
+a união das referências compartilhadas com as referências da localização
+selecionada; o `CAS/system` continua deduplicado por SHA-256.
+
+A validação exige exatamente os seis arquivos de localização em cada entidade.
+O campo `locale` precisa coincidir com o nome do arquivo. O processo recusa ID
+duplicado, referência inexistente, locale desconhecido, arquivo adicional, campo
+estrutural em localização ou campo traduzível em `entity.json`. A projeção de
+cada locale combina a estrutura comum com um único arquivo localizado,
+produzindo o mesmo conjunto de IDs e relações não localizáveis nos seis bancos.
 
 ## Fronteira Com A Preparação Local
 
-O gerador Ruby produz primeiro um estado integral candidato, composto pelos seis
-pares de bancos finais e pela união CAS referenciada. A publicação transforma
-esse estado em uma release pública:
+O mesmo `knowledge-builder` Rust da Parte 1 produz o estado integral candidato,
+composto pelos seis pares de bancos finais, pela união CAS referenciada e por
+`build-result.json`. O Rails reserva primeiro a identidade da release em estado
+`draft`, fornece essa identidade em `build-context.json` e transforma o resultado
+validado em uma release publicável:
 
 - uma nova geração produz um bootstrap completo por locale;
 - uma revisão compara cada locale com a release anterior e produz um delta por
   locale;
-- os pacotes, patches e manifests são derivados e validados no `hub-server`.
+- os pacotes, patches e manifests são derivados e validados pelo `hub-server`.
 
-Nesta parte, a posse operacional da geração fica integralmente no
-`apps/hub-server`:
+A fronteira operacional é:
 
 ```mermaid
 flowchart LR
-    CONTRACTS["packages/types<br/>contratos compartilhados"] --> RUBY["hub-server<br/>gerador Ruby"]
-    DATA["hub-server/data/knowledge"] --> RUBY
-    RUBY --> RELEASES["Releases publicáveis"]
+    DATA["hub-server/data/knowledge"] --> BUILDER["tools/knowledge-builder"]
+    JOB["Solid Queue job"] --> BUILDER
+    BUILDER --> RESULT["Staging + build-result.json"]
+    RESULT --> SERVICES["Services Rails de release"]
+    SERVICES --> RELEASES["Releases publicáveis"]
 ```
 
-Para concluir essa transferência:
+Nesta parte:
 
 - mover as entidades canônicas para `apps/hub-server/data/knowledge/`;
-- implementar em Ruby a validação, projeção, geração dos bancos e montagem do
-  `CAS/system`;
-- comparar uma geração Ruby com fixtures e checksums lógicos produzidos pela
-  preparação local;
-- remover `scripts/knowledge-artifacts/` depois da equivalência validada;
 - remover os catálogos publicados de `packages/types`, conservando somente
   contratos, tipos e utilitários compartilhados;
-- impedir que o `hub-server` invoque o gerador local em TypeScript como etapa de
-  produção.
+- compilar o `knowledge-builder` e incluí-lo no ambiente do Hub por build
+  multi-stage;
+- executar o binário em job assíncrono com argumentos separados, sem shell;
+- reservar sob lock o `releaseId`, `generation`, `revision` e predecessor antes
+  de montar `build-context.json`;
+- usar um diretório exclusivo por job em
+  `apps/hub-server/tmp/knowledge-builds/<job-id>/`;
+- aplicar timeout, limite de recursos, lock de geração e ambiente mínimo;
+- recusar código de saída diferente de zero;
+- validar `schemaVersion`, `builderVersion`, `sourceDigestSha256`, os seis locales,
+  identidade da release, versões de schema, checksums e digests de
+  `build-result.json`;
+- resolver somente caminhos relativos normalizados dentro do staging e validar
+  tamanho e SHA-256 de cada arquivo declarado;
+- calcular o SHA-256 dos bytes de `build-result.json` e persistir toda a
+  proveniência em `KnowledgeRelease`;
+- exigir que `knowledge_release_metadata` nos doze bancos corresponda ao draft e
+  ao locale projetado;
+- nunca editar os bancos produzidos pelo builder;
+- mover somente artefatos validados para o armazenamento persistente configurado;
+- manter em Ruby somente jobs, estados, releases, patches, pacotes, assinatura,
+  manifests, publicação e providers;
+- impedir DDL, seeds, projeção de locale ou montagem de `CAS/system` em Ruby.
 
-Ao concluir esta parte, existe um único gerador operacional e uma única fonte
-canônica dos dados publicados, ambos pertencentes ao `hub-server`. O app ainda
-mantém sua integração local até a refatoração de consumo da Parte 4.
+O diretório `tmp/` é staging descartável e nunca armazena uma release publicada.
+O armazenamento persistente do Hub conserva pacotes, bancos necessários à cadeia
+de patches e objetos CAS conforme a política de retenção.
 
-A `build_version` inteira usada na preparação local identifica somente uma saída
-de desenvolvimento ou build. Ela não entra no manifest público e não determina
-`generation` ou `revision`. A release pública recebe sua identidade dentro do
-`hub-server`.
+Ao concluir esta parte, existe uma única fonte canônica, pertencente ao
+`hub-server`, e um único compilador, pertencente a `tools/knowledge-builder/`. O
+app ainda mantém sua integração local até a refatoração de consumo da Parte 4.
+
+`buildVersion` identifica a execução e o namespace de saída do builder. Ela é
+interna, não entra no manifest público e não determina `generation` ou
+`revision`. A release pública recebe sua identidade no `hub-server` antes da
+invocação e o builder apenas a materializa nos bancos.
 
 ## Comandos Operacionais
 
 ```text
 rails knowledge:validate
-rails knowledge:build_system
-rails knowledge:build_system_media
-rails knowledge:build_cas_system
+rails knowledge:build
 rails knowledge:build_database_patches
 rails knowledge:build_release_components
 rails knowledge:build_release_package
-rails knowledge:export_workspace
+rails knowledge:prepare_workspace
 rails knowledge:publish_release
 rails knowledge:promote_channel
 rails knowledge:replicate_manifests
 ```
 
-`knowledge:publish_release` orquestra geração, validação e publicação do conteúdo
-imutável. `knowledge:promote_channel` cria o próximo snapshot assinado e troca o
-ponteiro do canal. Uma execução repetida com a mesma entrada, versão e
-configuração produz os mesmos artefatos e reutiliza objetos CAS existentes.
+`knowledge:validate` e `knowledge:build` invocam respectivamente `validate` e
+`build` na CLI Rust. `knowledge:publish_release` orquestra build, validação,
+empacotamento e publicação do conteúdo imutável. `knowledge:promote_channel` cria
+o próximo snapshot assinado e troca o ponteiro do canal. Uma execução repetida
+com a mesma entrada, versão do builder e configuração produz os mesmos artefatos
+e reutiliza objetos CAS existentes.
 `knowledge:replicate_manifests` retoma cópias pendentes sem alterar o snapshot, a
 sequência ou a release do canal.
 
-`knowledge:export_workspace` materializa, a partir da geração Ruby, o layout
-`build/knowledge-artifacts` consumido pelo app ao final da Parte 1. Essa tarefa
-mantém o desenvolvimento e os builds executáveis durante esta parte sem
-preservar o gerador independente ou duplicar dados fonte. Ela não publica
-release, não cria outra identidade de versão e é retirada na Parte 4, quando o
-app passa a consumir a API.
+`knowledge:prepare_workspace` invoca o mesmo binário Rust com a fonte do Hub e o
+destino `build/knowledge-artifacts` consumido pelo app ao final da Parte 1 e usa
+um contexto com `release: null`. Essa tarefa mantém o desenvolvimento e os builds
+executáveis durante esta parte sem duplicar compilador ou dados fonte. Ela não
+publica release, não cria outra identidade pública e é retirada na Parte 4,
+quando o app passa a consumir a API. O `knowledge-builder` permanece.
 
 Os comandos de build e publicação operam sobre o conjunto completo de seis
 locales. Não existe publicação parcial de um locale sob uma versão global.
@@ -784,17 +819,35 @@ aciona retry sem gerar outra sequência.
 
 Cobrir:
 
-- equivalência lógica entre a última fixture da preparação local e a primeira
-  geração Ruby;
-- ausência do gerador independente depois da transferência validada;
+- mesma fixture produzindo os mesmos checksums pela execução direta e pela
+  orquestração Rails do builder;
+- inclusão do binário Rust no ambiente executável do Hub;
+- invocação por argumentos sem interpolação de shell;
+- diretório de staging exclusivo por job e limpeza após sucesso ou falha;
+- timeout, código de saída não zero e concorrência sob lock;
+- reserva atômica do draft antes da invocação do builder;
+- retry idempotente usando a mesma identidade de draft;
+- bloqueio de publicação e promoção enquanto o draft não possui build válido;
+- contexto público com `releaseId`, geração e revisão coerentes com o draft;
+- predecessor do draft coerente com a cadeia global;
+- recusa de `build-result.json` ausente, malformado ou incompatível;
+- recusa de `builderVersion`, `sourceDigestSha256`, checksum ou locale divergente;
+- recusa de caminho absoluto, com `..` ou fora do staging;
+- recusa de relatório ou banco cuja identidade pública diverge do draft;
+- ausência de alteração nos bancos depois da saída do builder;
+- ausência de DDL, seeds, projeção ou geração de CAS em Ruby;
 - ausência de catálogos publicados em `packages/types`;
-- exportação do layout local pelo gerador Ruby em um workspace limpo;
+- preparação do layout local pelo mesmo builder Rust em um workspace limpo;
 - inicialização do app com os artefatos exportados durante esta parte;
-- validação dos schemas canônicos por domínio;
-- uma entidade por ID e integridade de todas as referências estruturais;
-- mapa `localizations` completo e restrito aos seis locales suportados;
+- validação dos schemas estruturais e localizados de cada domínio;
+- um diretório de entidade por ID e integridade de todas as referências
+  estruturais;
+- presença exata dos seis arquivos em cada diretório `localizations/`;
+- correspondência entre o nome de cada arquivo e seu campo `locale`;
 - projeção isolada de cada localização sem alterar campos estruturais;
-- recusa de campos estruturais divergentes entre traduções;
+- recusa de campo estrutural em localização e de campo traduzível em
+  `entity.json`;
+- composição da mídia compartilhada e localizada em cada `system_media`;
 - geração e integridade dos bancos finais;
 - geração dos seis pares de bancos;
 - igualdade de IDs e relações estruturais entre locales;
@@ -832,13 +885,20 @@ Cobrir:
 ## Critérios De Aceite
 
 - O `hub-server` possui e valida os dados públicos.
-- O gerador Ruby é o único gerador operacional dos artefatos públicos.
+- `tools/knowledge-builder` é o único compilador dos artefatos públicos.
+- O Rails invoca a CLI Rust e valida integralmente `build-result.json` antes de
+  registrar os artefatos.
+- Toda release pública reserva sua identidade antes do build e os doze bancos
+  registram exatamente essa identidade e seus respectivos locales.
+- O ambiente executável do Hub contém uma versão explícita do builder.
+- Ruby não implementa DDL, seeds, projeção de locale nem montagem do CAS.
 - Os catálogos publicados pertencem somente a
   `apps/hub-server/data/knowledge/`.
-- O gerador Ruby consegue materializar a saída local necessária ao app até a
-  Parte 4.
-- Os dados fonte são organizados por domínio e entidade, com campos localizados
-  reunidos no mapa `localizations` de cada entidade.
+- O Hub consegue usar o builder para materializar a saída local necessária ao app
+  até a Parte 4.
+- Os dados fonte são organizados por domínio e diretório de entidade, com
+  `entity.json` estrutural e um arquivo independente por locale em
+  `localizations/`.
 - Toda versão coordena os seis pares de bancos e o `CAS/system` compartilhado.
 - A versão usa geração e revisão inteiras.
 - Os doze bancos registram a mesma versão global e seus respectivos locales.

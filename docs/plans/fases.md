@@ -3,7 +3,7 @@
 2. em `packages/core-local/src/sqlite`, versionar cada banco SQLite de forma independente e depois separar operação que cria bancos, operação que migra bancos e conjuntos de tabelas por banco/perfil de app, mantendo o schema de domínio atual:
    [sqlite-modular-refactor-plan.md](sqlite-modular-refactor-plan.md)
 
-3. desenvolvimento do hub-server, com Rails, como hub aberto de dados públicos, pares `system` e `system_media` por locale, `CAS/system` compartilhado, updates e builds dos apps. Os apps passam a consumir somente os locale packs necessários, prontos e versionados, sem manter JSONs fonte nem gerar esses bancos dentro dos apps:
+3. desenvolvimento do `knowledge-builder` definitivo em Rust e do hub-server com Rails, como hub aberto de dados públicos, pares `system` e `system_media` por locale, `CAS/system` compartilhado, updates e builds dos apps. O Rails orquestra o builder pela CLI versionada. Os apps passam a consumir somente os locale packs necessários, prontos e versionados, sem manter JSONs fonte nem gerar esses bancos dentro dos apps:
    [hub-server/README.md](hub-server/README.md)
 
 4. refatorar medical_records para novo modelo que segue os padroes de mercado:

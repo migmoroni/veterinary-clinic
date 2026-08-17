@@ -78,9 +78,20 @@ Restrições principais:
 - versão, canal, tipo de artefato, provider e transport usam enums validados;
 - `KnowledgeRelease` guarda `generation` e `revision` como inteiros não negativos;
 - a combinação de geração e revisão é globalmente única;
+- status de conhecimento aceita `draft`, `building`, `failed`, `validating`,
+  `published` ou `withdrawn`;
+- o fluxo normal é `draft -> building -> validating -> published -> withdrawn`;
+- falha do builder produz `building -> failed`, e retry explícito usa
+  `failed -> building` sobre o mesmo draft;
 - bootstrap exige revisão zero e não possui `previous_release_id`;
 - delta exige revisão positiva e aponta para a revisão imediatamente anterior;
 - `KnowledgeRelease` guarda versões independentes de `system` e `system_media`;
+- `KnowledgeRelease.build_version` é inteiro positivo e único;
+- `builder_version` é SemVer válido e identifica o binário Rust usado;
+- `build_result_schema_version` é inteiro positivo suportado pelo Hub;
+- `build_result_checksum_sha256` e `source_digest_sha256` usam SHA-256 válido;
+- uma release só alcança estado validado depois que a identidade do draft, a
+  proveniência do builder e os artefatos coincidem com `build-result.json`;
 - locale usa a allowlist canônica `pt-BR`, `pt-PT`, `gn-PY`, `en-US`, `es-ES` e
   `fr-FR`;
 - cada release possui exatamente um `KnowledgeReleaseLocale` para cada locale da
@@ -129,6 +140,7 @@ Restrições principais:
   status `verified` quando seus bytes coincidem com o checksum canônico;
 - status de réplica aceita `pending`, `published`, `verified` ou `failed`;
 - providers externos não geram sequência, payload ou assinatura;
+- releases publicadas não aceitam alteração de proveniência do builder;
 - registros associados a uma release publicada não aceitam alteração ou remoção;
 - ponteiros de canal referenciam somente releases com status `published`;
 - o snapshot e a release de `KnowledgeChannelRelease` pertencem ao mesmo estado
@@ -300,7 +312,8 @@ Cobrir:
 
 - healthcheck público;
 - ausência de release publicada;
-- ciclo `draft -> validating -> published -> withdrawn`;
+- ciclo `draft -> building -> validating -> published -> withdrawn`;
+- falha e retry `building -> failed -> building` sem outra identidade;
 - recusa de transições inválidas;
 - imutabilidade de release publicada;
 - troca transacional do ponteiro de canal;
@@ -325,6 +338,9 @@ Cobrir:
 - recusa de manifest source com placeholder desconhecido, host fora da allowlist
   ou padrão imutável incompleto;
 - recusa de geração, revisão ou predecessor incoerente;
+- recusa de `build_version`, `builder_version`, contrato do relatório ou digest da
+  fonte inválido;
+- imutabilidade da proveniência depois da validação;
 - recusa de componente ausente, duplicado ou incompatível com `delivery_mode`;
 - recusa de `entry_path` ausente, duplicado ou fora da allowlist;
 - recusa de `artifactHashes` divergente das entradas CAS do pacote;
@@ -349,6 +365,8 @@ Cobrir:
 - Artefatos e sources possuem entidades separadas.
 - Releases possuem identidade independente de canal, geração, revisão e
   predecessor explícitos.
+- Releases de conhecimento persistem a proveniência verificável do builder e da
+  fonte compilada.
 - Cada release possui seis locales completos, cada um com um pacote e três
   componentes internos.
 - Sources de entrega aparecem uma vez por provider e tipo de pacote.

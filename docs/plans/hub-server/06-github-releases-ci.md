@@ -15,7 +15,10 @@ conhecimento já funcional pela API.
 flowchart LR
     REPO["Repositório dedicado"] --> ACTIONS["GitHub Actions"]
     ACTIONS --> APPASSETS["GitHub Releases<br/>builds dos apps"]
-    ACTIONS -->|orquestra| HUB["hub-server<br/>gerador e emissor canônico"]
+    ACTIONS -->|orquestra| HUB["hub-server<br/>plano de controle"]
+    HUB --> BUILDER["knowledge-builder Rust"]
+    BUILDER --> CANDIDATE["Bancos + CAS + relatório"]
+    CANDIDATE --> HUB
     HUB --> PACKAGES["Pacotes de locale"]
     PACKAGES --> KNOWLEDGE["GitHub Releases<br/>réplica dos pacotes"]
     HUB --> MANIFEST["Snapshot assinado"]
@@ -87,7 +90,10 @@ Separar workflows reutilizáveis:
 .github/workflows/publish-knowledge-manifest.yml
 ```
 
-`ci.yml` valida código, testes e geração determinística sem publicar.
+`ci.yml` valida código, testes e geração determinística sem publicar. Para o
+`knowledge-builder`, executa formatação, lint, testes do Cargo Workspace,
+validação das fixtures e duas compilações da mesma entrada para comparar
+`build-result.json` e checksums.
 
 `publish-knowledge-manifest.yml` recebe ou descobre um snapshot publicado pelo
 Hub, valida identidade, assinatura e checksum e implanta no GitHub Pages:
@@ -128,6 +134,8 @@ recebe versão e canal
 
 ```text
 invoca as tarefas knowledge do hub-server
+-> Hub reserva o draft e invoca o knowledge-builder Rust
+-> valida proveniência, build-result.json e artefatos gerados
 -> valida os seis locales, componentes e pacotes
 -> publica os seis pacotes no GitHub Release
 -> confirma a KnowledgeDeliverySource GitHub configurada para o canal
@@ -221,6 +229,9 @@ pelo app.
 Cobrir:
 
 - CI sem publicação em pull request;
+- build, lint e testes do `knowledge-builder` no Cargo Workspace;
+- determinismo do builder sob toolchain e lockfile fixados;
+- proveniência do builder registrada na release;
 - matriz de builds suportada;
 - assinatura, checksum e tamanho dos assets;
 - cadeia global com bootstrap e deltas dos seis locales;
@@ -246,6 +257,7 @@ Cobrir:
 
 - O projeto usa um repositório dedicado.
 - GitHub Actions executa CI sem acesso indevido a secrets.
+- O CI valida o mesmo `knowledge-builder` executado pelo Hub.
 - GitHub Releases hospeda os artefatos versionados definidos nesta parte.
 - Cada release de conhecimento publica exatamente um asset para cada locale
   suportado.
