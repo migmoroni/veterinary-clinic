@@ -18,7 +18,7 @@ Ferramentas em uso nesta maquina:
 | Tauri CLI | `2.11.1` via scripts pnpm |
 | WebKitGTK | `2.52.3` via `webkit2gtk-4.1` |
 
-O `Cargo.toml` declara Rust minimo `1.77.2`, mas o ambiente atual usa Rust stable recente. Para evitar diferencas sutis entre maquinas, use Node 22 e Rust stable.
+O `Cargo.toml` declara Rust minimo `1.77.2`, mas o ambiente atual usa Rust stable recente. Para evitar diferencas sutis entre maquinas, use Node 22.x e Rust stable.
 
 ## Pacotes do Debian
 
@@ -82,11 +82,16 @@ Notas:
 
 ## Node e Rust
 
-Use qualquer gerenciador de versões que mantenha Node 22 disponível, por exemplo
-`nvm`, `fnm` ou `asdf`. Ative o Corepack distribuído com Node 22 e confirme a
-versão fixada em `packageManager`:
+Use qualquer gerenciador de versões que mantenha Node 22.x disponível, por
+exemplo `nvm`, `fnm` ou `asdf`. O arquivo `.nvmrc` seleciona a versão instalada
+mais recente da linha 22.x. Ative o Corepack distribuído com Node 22.x e
+confirme a versão fixada em `packageManager`:
+
+O contrato `engines` aceita Node.js `>=22.0.0`; a linha 22.x é a versão
+recomendada e verificada para o desenvolvimento local.
 
 ```sh
+nvm use
 corepack enable
 pnpm --version
 pnpm install --frozen-lockfile

@@ -111,6 +111,7 @@ O conjunto do sistema é reconstruído pelo app a partir dos defaults do program
 Instale dependências:
 
 ```sh
+nvm use
 pnpm install --frozen-lockfile
 ```
 

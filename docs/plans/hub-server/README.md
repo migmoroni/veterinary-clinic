@@ -75,7 +75,8 @@ acrescenta o GitHub como provider externo.
 
 - A aplicação Rails fica em `apps/hub-server/`, seguindo o padrão `apps/*` do
   workspace.
-- O workspace JavaScript usa Node.js 22, pnpm `11.22.0`,
+- O workspace JavaScript exige Node.js `>=22.0.0`, usa a linha 22.x no ambiente
+  local e no CI, adota pnpm `11.22.0`,
   `pnpm-workspace.yaml`, um único `pnpm-lock.yaml` e dependências internas com
   `workspace:*`.
 - As partes do Hub usam somente comandos pnpm; não mantêm lockfiles ou comandos

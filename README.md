@@ -65,6 +65,7 @@ no UI, routes, Svelte stores or app-local `$lib` imports.
 ## Quick Start
 
 ```sh
+nvm use
 pnpm install --frozen-lockfile
 pnpm tauri:dev
 ```

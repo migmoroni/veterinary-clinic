@@ -13,7 +13,7 @@ versionamento e CI/CD.
 
 O workspace usa:
 
-- Node.js 22;
+- Node.js `>=22.0.0`, com a linha 22.x selecionada para desenvolvimento;
 - pnpm `11.22.0`, fixado no `packageManager` da raiz;
 - `pnpm-workspace.yaml` como fonte única da composição do workspace;
 - `pnpm-lock.yaml` como único lockfile JavaScript;
@@ -75,6 +75,7 @@ para outro gerenciador.
 Ao concluir a migração, a raiz contém:
 
 ```text
+.nvmrc
 package.json
 pnpm-workspace.yaml
 pnpm-lock.yaml
@@ -133,9 +134,13 @@ O `package.json` da raiz declara:
 }
 ```
 
-O ambiente de desenvolvimento usa Node.js 22 e ativa a versão de pnpm declarada
-pelo projeto. A documentação fornece instalação por Corepack para Node.js 22 e
-um caminho explícito para Windows, Linux e CI.
+O projeto aceita Node.js `>=22.0.0`. O ambiente de desenvolvimento e o CI usam a
+linha 22.x e ativam a versão de pnpm declarada pelo projeto. A documentação
+fornece instalação por Corepack e um caminho explícito para Windows, Linux e CI.
+
+O `.nvmrc` seleciona a versão instalada mais recente da linha Node.js 22.x. O
+guard de instalação aceita pnpm `11.22.0` ou superior e recusa outros
+gerenciadores ou versões anteriores.
 
 O CI não instala uma versão flutuante de pnpm. A configuração lê ou replica
 exatamente `11.22.0`, e o cache usa `pnpm-lock.yaml` como chave de dependências.
@@ -431,7 +436,8 @@ operacionais para esta validação. Comandos de execução vigentes usam pnpm.
 Cobrir:
 
 - instalação limpa com lockfile congelado;
-- recusa de npm pelo guard da raiz;
+- recusa de outros gerenciadores e de versões do pnpm anteriores a `11.22.0`
+  pelo guard da raiz;
 - resolução de todos os packages `@vet/*` pelo protocolo `workspace:*`;
 - execução do fluxo atual de `legacy-to-sqlite` pelo workspace raiz;
 - ausência de ciclos entre packages;
@@ -450,7 +456,8 @@ Cobrir:
 ## Critérios De Aceite
 
 - `pnpm-workspace.yaml` é a única definição do workspace JavaScript.
-- O projeto fixa pnpm `11.22.0` e Node.js 22.
+- O projeto fixa pnpm `11.22.0`, exige Node.js `>=22.0.0` e seleciona a linha
+  22.x no `.nvmrc`.
 - `pnpm-lock.yaml` é o único lockfile JavaScript versionado.
 - Todas as dependências locais usam `workspace:*`.
 - Não existe ciclo entre packages do workspace.
