@@ -6,12 +6,12 @@ import { isBumpLevel } from './semver.mjs';
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const USAGE = [
 	'Usage:',
-	'  npm run version:bump -- <major|minor|patch> "Release note"',
-	'  npm run version:bump -- <major|minor|patch> --change "First note" --change "Second note"',
+	'  pnpm version:bump -- <major|minor|patch> "Release note"',
+	'  pnpm version:bump -- <major|minor|patch> --change "First note" --change "Second note"',
 	'',
 	'Examples:',
-	'  npm run version:bump -- patch "Fix Linux package metadata"',
-	'  npm run version:bump -- minor --change "Add vaccine protocols" --change "Improve backups"'
+	'  pnpm version:bump -- patch "Fix Linux package metadata"',
+	'  pnpm version:bump -- minor --change "Add vaccine protocols" --change "Improve backups"'
 ].join('\n');
 
 export function usage() {

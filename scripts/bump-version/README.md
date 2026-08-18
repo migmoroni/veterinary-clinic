@@ -2,10 +2,10 @@
 
 This tool bumps the application version by semantic level and updates the release metadata used by the app and Linux packages.
 
-Run it from the project root through npm:
+Run it from the project root through pnpm:
 
 ```sh
-npm run version:bump -- <major|minor|patch> "Release note"
+pnpm version:bump -- <major|minor|patch> "Release note"
 ```
 
 ## Examples
@@ -13,25 +13,25 @@ npm run version:bump -- <major|minor|patch> "Release note"
 Bump the patch version and add one changelog entry:
 
 ```sh
-npm run version:bump -- patch "Fix Linux package metadata"
+pnpm version:bump -- patch "Fix Linux package metadata"
 ```
 
 Bump the minor version and add multiple changelog entries:
 
 ```sh
-npm run version:bump -- minor --change "Add vaccine protocols" --change "Improve backup exports"
+pnpm version:bump -- minor --change "Add vaccine protocols" --change "Improve backup exports"
 ```
 
 Bump the major version with an explicit release date:
 
 ```sh
-npm run version:bump -- major --date 2026-07-09 "Prepare the first stable release"
+pnpm version:bump -- major --date 2026-07-09 "Prepare the first stable release"
 ```
 
 If no release note is passed and the command is running in an interactive terminal, it prompts for one:
 
 ```sh
-npm run version:bump -- patch
+pnpm version:bump -- patch
 ```
 
 ## Arguments
@@ -51,7 +51,6 @@ The script updates these project files:
 
 - `package.json`
 - `apps/vet-app/package.json`
-- `package-lock.json`
 - `packages/*/package.json`
 - `apps/vet-app/src-tauri/tauri.conf.json`
 - `apps/vet-app/src-tauri/Cargo.toml`

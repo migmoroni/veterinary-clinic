@@ -12,7 +12,7 @@
 		"./*": "./src/*"
 	},
 	"dependencies": {
-		"@vet/types": "file:../types"
+		"@vet/types": "workspace:*"
 	},
 	"peerDependencies": {
 		"@tauri-apps/api": "^2.11.0",

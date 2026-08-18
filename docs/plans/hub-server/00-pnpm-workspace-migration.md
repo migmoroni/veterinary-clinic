@@ -14,7 +14,7 @@ versionamento e CI/CD.
 O workspace usa:
 
 - Node.js 22;
-- pnpm `11.18.0`, fixado no `packageManager` da raiz;
+- pnpm `11.22.0`, fixado no `packageManager` da raiz;
 - `pnpm-workspace.yaml` como fonte única da composição do workspace;
 - `pnpm-lock.yaml` como único lockfile JavaScript;
 - protocolo `workspace:*` em todas as dependências entre packages locais;
@@ -48,6 +48,7 @@ para outro gerenciador.
 - migrar o lockfile sem atualizar deliberadamente dependências;
 - converter as dependências locais `@vet/*` para `workspace:*`;
 - adaptar scripts da raiz e de `apps/vet-app`;
+- incorporar `legacy-to-sqlite` ao mesmo workspace e lockfile;
 - adaptar os comandos executados pelo Tauri e pelo empacotamento Flatpak;
 - ajustar o script de versionamento para não editar lockfile manualmente;
 - detectar e declarar dependências que hoje são acessadas sem estarem no
@@ -92,6 +93,7 @@ packages:
   - "apps/*"
   - "packages/*"
   - "tools/*"
+  - "legacy-to-sqlite"
 
 linkWorkspacePackages: false
 saveWorkspaceProtocol: true
@@ -100,10 +102,15 @@ disallowWorkspaceCycles: true
 strictPeerDependencies: true
 engineStrict: true
 strictDepBuilds: true
+allowBuilds:
+  better-sqlite3: true
 ```
 
 `tools/*` permite ferramentas JavaScript futuras sem interferir no crate Rust
 `tools/knowledge-builder`, que não possui `package.json`.
+
+`legacy-to-sqlite` participa do mesmo workspace e lockfile, mas conserva sua
+fronteira de ferramenta externa de adoção de bancos.
 
 `linkWorkspacePackages: false` exige que cada vínculo local seja intencional por
 meio de `workspace:*`. `disallowWorkspaceCycles: true` transforma ciclos entre
@@ -119,9 +126,9 @@ O `package.json` da raiz declara:
 
 ```json
 {
-  "packageManager": "pnpm@11.18.0",
+  "packageManager": "pnpm@11.22.0",
   "engines": {
-    "node": ">=22.0.0 <23"
+    "node": ">=22.0.0"
   }
 }
 ```
@@ -131,7 +138,7 @@ pelo projeto. A documentação fornece instalação por Corepack para Node.js 22
 um caminho explícito para Windows, Linux e CI.
 
 O CI não instala uma versão flutuante de pnpm. A configuração lê ou replica
-exatamente `11.18.0`, e o cache usa `pnpm-lock.yaml` como chave de dependências.
+exatamente `11.22.0`, e o cache usa `pnpm-lock.yaml` como chave de dependências.
 
 ## Contrato Das Dependências Locais
 
@@ -174,11 +181,11 @@ filtros pelo nome do package:
 pnpm dev
 pnpm build
 pnpm preview
-pnpm prepare
 pnpm check
 pnpm check:watch
 pnpm test
 pnpm test:run
+pnpm adopt:version
 pnpm version:bump
 pnpm tauri
 pnpm tauri:dev
@@ -197,6 +204,14 @@ Para comandos pertencentes ao `vet-app`, o `package.json` da raiz usa o padrão:
 ```text
 pnpm --filter vet-app run <script>
 ```
+
+Os scripts diretos de Vite, SvelteKit e Tauri pertencem ao manifest do
+`vet-app`. A raiz apenas expõe os comandos públicos que delegam ao app. O
+`prepare` permanece como lifecycle do `vet-app` e não é delegado pela raiz,
+evitando duas execuções de `svelte-kit sync` durante a instalação.
+
+Tarefas que operam sobre o repositório, como `version:bump` e
+`tauri:flatpak`, existem somente na raiz.
 
 Nesta pré-fase, `pnpm dev` conserva o comportamento atual do `vet-app`. A Parte
 4 amplia esse comando para orquestrar também o Hub local.
@@ -263,10 +278,10 @@ migração inspeciona os scripts solicitados pela árvore instalada e registra e
 `allowBuilds` somente os packages necessários para o toolchain usado pelo
 projeto.
 
-Cada autorização possui uma justificativa verificável, como a preparação de um
-binário nativo exigido por Vite, Tauri ou testes. Não habilitar todos os scripts,
-não aceitar uma allowlist por conveniência e não manter uma dependência
-autorizada depois que ela sair do grafo.
+Cada autorização possui uma justificativa verificável. `better-sqlite3` é
+autorizado para preparar o binding nativo usado por `legacy-to-sqlite`. Não
+habilitar todos os scripts, não aceitar uma allowlist por conveniência e não
+manter uma dependência autorizada depois que ela sair do grafo.
 
 Com `strictDepBuilds: true`, um script necessário que não esteja classificado
 interrompe a instalação. O lockfile e a allowlist são revisados juntos.
@@ -316,7 +331,7 @@ Os workflows da Parte 6 seguem esta base:
 ```text
 checkout
 -> configurar Node.js 22
--> configurar pnpm 11.18.0
+-> configurar pnpm 11.22.0
 -> restaurar cache do store pela chave de pnpm-lock.yaml
 -> pnpm install --frozen-lockfile
 -> pnpm check
@@ -389,7 +404,7 @@ pnpm check
 pnpm test:run
 pnpm build
 cargo check --workspace
-pnpm tauri -- --version
+pnpm tauri --version
 ```
 
 Executar os builds empacotáveis suportados pelo ambiente disponível. No Linux,
@@ -418,6 +433,7 @@ Cobrir:
 - instalação limpa com lockfile congelado;
 - recusa de npm pelo guard da raiz;
 - resolução de todos os packages `@vet/*` pelo protocolo `workspace:*`;
+- execução do fluxo atual de `legacy-to-sqlite` pelo workspace raiz;
 - ausência de ciclos entre packages;
 - ausência de dependências ocultas por hoisting;
 - execução dos scripts públicos da raiz;
@@ -434,7 +450,7 @@ Cobrir:
 ## Critérios De Aceite
 
 - `pnpm-workspace.yaml` é a única definição do workspace JavaScript.
-- O projeto fixa pnpm `11.18.0` e Node.js 22.
+- O projeto fixa pnpm `11.22.0` e Node.js 22.
 - `pnpm-lock.yaml` é o único lockfile JavaScript versionado.
 - Todas as dependências locais usam `workspace:*`.
 - Não existe ciclo entre packages do workspace.

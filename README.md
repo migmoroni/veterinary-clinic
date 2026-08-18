@@ -65,32 +65,32 @@ no UI, routes, Svelte stores or app-local `$lib` imports.
 ## Quick Start
 
 ```sh
-npm ci
-npm run tauri:dev
+pnpm install --frozen-lockfile
+pnpm tauri:dev
 ```
 
 For a clean development state:
 
 ```sh
-npm run tauri:dev:new
+pnpm tauri:dev:new
 ```
 
 ## Common Checks
 
 ```sh
-npm run check
-npm run test:run
-npm run build
+pnpm check
+pnpm test:run
+pnpm build
 cargo check --workspace
 ```
 
 Desktop bundles:
 
 ```sh
-npm run tauri:appimage
-npm run tauri:deb
-npm run tauri:flatpak
-npm run tauri:msi
+pnpm tauri:appimage
+pnpm tauri:deb
+pnpm tauri:flatpak
+pnpm tauri:msi
 ```
 
 ## Documentation

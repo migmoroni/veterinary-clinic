@@ -110,7 +110,7 @@ O repositorio atual ainda e um app unico.
 ```text
 /
   package.json
-  package-lock.json
+  pnpm-lock.yaml
   vite.config.ts
   svelte.config.js
   tsconfig.json
@@ -130,7 +130,7 @@ Stack atual:
 - Persistencia: SQLite por comandos Tauri `storage_*`; Rust executa queries com
   `rusqlite`.
 - Midia: CAS no disco, metadados em SQLite.
-- Checks: `npm run check`, `npm run test:run`, `npm run build`, `cargo check`.
+- Checks: `pnpm check`, `pnpm test:run`, `pnpm build`, `cargo check`.
 
 Fluxo mental atual:
 
@@ -773,9 +773,9 @@ seguir `docs/database-versioning.md`.
 Antes de mover:
 
 ```sh
-npm run check
-npm run test:run
-npm run build
+pnpm check
+pnpm test:run
+pnpm build
 cargo check --manifest-path src-tauri/Cargo.toml
 ```
 

@@ -23,6 +23,21 @@ packages/
 reutilizáveis do produto: contratos, infraestrutura local, UI, módulos de
 negócio, serviços de aplicação e motor nativo.
 
+## Scripts Do Workspace
+
+O manifest de cada projeto mantém os comandos diretos de seu próprio
+toolchain. `apps/vet-app/package.json` contém os scripts de Vite, SvelteKit e
+Tauri necessários para desenvolver, validar e empacotar o app.
+
+O `package.json` da raiz funciona como interface operacional do repositório. Os
+comandos públicos delegam ao projeto dono com filtros do pnpm, enquanto tarefas
+que atuam sobre o repositório, como versionamento e montagem do Flatpak, existem
+somente na raiz.
+
+Lifecycles de packages não são repetidos na raiz. O `prepare` do `vet-app`, por
+exemplo, executa `svelte-kit sync` uma única vez durante a instalação do
+workspace.
+
 ## DAG De Dependências
 
 O fluxo de dependências TypeScript segue esta ordem:
@@ -311,8 +326,8 @@ Subpaths centrais:
 rg -n "\$lib" packages
 rg -n "@vet/app-services" packages/types/src packages/core-local/src packages/ui/src packages/modules/src
 rg -n "from ['\"]@vet/modules/.*/repositories|from ['\"]@vet/modules/.*/services" apps packages/app-services/src
-npm run check
-npm run test:run
+pnpm check
+pnpm test:run
 cargo check --workspace
 ```
 

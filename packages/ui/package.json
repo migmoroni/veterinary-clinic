@@ -21,8 +21,9 @@
 		"./*": "./src/*"
 	},
 	"dependencies": {
-		"@vet/core-local": "file:../core-local",
-		"@vet/types": "file:../types",
+		"@vet/core-local": "workspace:*",
+		"@vet/types": "workspace:*",
+		"clsx": "^2.1.1",
 		"echarts": "^6.1.0"
 	},
 	"peerDependencies": {

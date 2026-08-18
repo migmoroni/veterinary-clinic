@@ -44,16 +44,6 @@ export async function updateAppVersionFiles(nextVersion) {
 		});
 	}
 
-	await updateJson('package-lock.json', (json) => {
-		json.version = nextVersion;
-		json.packages ??= {};
-		for (const filePath of PACKAGE_JSON_FILES) {
-			const packageKey = filePath === 'package.json' ? '' : filePath.replace(/\/package\.json$/, '');
-			json.packages[packageKey] ??= {};
-			json.packages[packageKey].version = nextVersion;
-		}
-	});
-
 	await updateJson(TAURI_CONFIG, (json) => {
 		json.version = nextVersion;
 	});

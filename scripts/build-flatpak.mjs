@@ -27,7 +27,7 @@ try {
   await requireFlatpakRef(`${FLATPAK_RUNTIME}//${FLATPAK_RUNTIME_VERSION}`);
   await requireFlatpakRef(`${FLATPAK_SDK}//${FLATPAK_RUNTIME_VERSION}`);
 
-  await run('npm', ['--workspace', 'apps/vet-app', 'run', 'tauri', '--', 'build', '--no-bundle']);
+  await run('pnpm', ['--filter', 'vet-app', 'run', 'tauri', 'build', '--no-bundle']);
   await prepareStaging();
   await run('appstreamcli', ['validate', resolve(STAGING_DIR, `share/metainfo/${APP_ID}.metainfo.xml`)]);
   await run('desktop-file-validate', [resolve(STAGING_DIR, `share/applications/${APP_ID}.desktop`)]);

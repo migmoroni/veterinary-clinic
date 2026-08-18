@@ -1,6 +1,6 @@
 - [x] Verify that the copilot-instructions.md file in the .github directory is created.
 - [x] Clarify Project Requirements
-  Project requirements are specified: SvelteKit + Tauri 2 + SQLite via tauri-plugin-sql, no direct rusqlite dependency, local-first veterinary clinic app.
+  Project requirements are specified: SvelteKit + Tauri 2 + SQLite via Tauri commands backed by `rusqlite`, local-first veterinary clinic app.
 - [x] Scaffold the Project
   SvelteKit minimal TypeScript project created in the current directory and Tauri 2 initialized.
 - [x] Customize the Project
@@ -8,7 +8,7 @@
 - [x] Install Required Extensions
   No VS Code extensions were required by setup info.
 - [x] Compile the Project
-  `npm run check`, `npm run build`, `npm run test:run`, and `cargo check` pass.
+  `pnpm check`, `pnpm build`, `pnpm test:run`, and `cargo check` pass.
 - [x] Create and Run Task
   VS Code `build` task created and run successfully.
 - [x] Launch the Project

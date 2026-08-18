@@ -111,19 +111,19 @@ O conjunto do sistema é reconstruído pelo app a partir dos defaults do program
 Instale dependências:
 
 ```sh
-npm ci
+pnpm install --frozen-lockfile
 ```
 
 Execute o app desktop:
 
 ```sh
-npm run tauri:dev
+pnpm tauri:dev
 ```
 
 Execute com estado local limpo:
 
 ```sh
-npm run tauri:dev:new
+pnpm tauri:dev:new
 ```
 
 Esse comando limpa bancos, CAS, fila/baselines de replicação, WebView storage e
@@ -133,26 +133,26 @@ e `import_safety_exports/`, são preservadas.
 ## Checks
 
 ```sh
-npm run check
-npm run test:run
-npm run build
+pnpm check
+pnpm test:run
+pnpm build
 cargo check --workspace
 ```
 
 ## Pacotes
 
 ```sh
-npm run tauri:appimage
-npm run tauri:deb
-npm run tauri:flatpak
-npm run tauri:msi
+pnpm tauri:appimage
+pnpm tauri:deb
+pnpm tauri:flatpak
+pnpm tauri:msi
 ```
 
 Android está planejado via Tauri Android:
 
 ```sh
-npm run tauri:android:dev
-npm run tauri:android:build
+pnpm tauri:android:dev
+pnpm tauri:android:build
 ```
 
 ## Scripts Externos De Banco
@@ -161,20 +161,11 @@ Os scripts em `legacy-to-sqlite/` não fazem parte da migração em runtime do a
 Eles existem para preparar bases fora da execução normal.
 
 ```sh
-cd legacy-to-sqlite
-npm run adopt:version
+pnpm adopt:version
 ```
 
 O script de adoção usa a base de entrada definida em `legacy-to-sqlite/dist/` e
 gera o conjunto atual esperado pelo app, incluindo pacote nativo importável.
-
-Conversor CSV, quando usado manualmente:
-
-```sh
-cd legacy-to-sqlite
-npm run build:csv
-npm run csv
-```
 
 ## Documentação Técnica
 
@@ -204,7 +195,7 @@ READMEs internos:
 Para atualizar a versão pública do app:
 
 ```sh
-npm run version:bump -- patch "Corrigir validacao de importacao"
+pnpm version:bump -- patch "Corrigir validacao de importacao"
 ```
 
 Use `major`, `minor` ou `patch`. O script atualiza metadados do app,

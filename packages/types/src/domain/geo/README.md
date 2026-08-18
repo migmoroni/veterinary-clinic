@@ -200,4 +200,4 @@ For non-Brazil countries, `normalizeOwnerState` and `normalizeOwnerCity` return 
 - Keep `country-data/types.ts`, all per-country files, and `country-data/index.ts` in sync when regenerating country labels.
 - Keep `brazil-data.ts` in sync with IBGE when updating Brazilian municipalities.
 - Keep `legacy-to-sqlite/to-sqlite.ts` and the ignored `legacy-to-sqlite/to-sqlite.js` synchronized when country storage or Brazilian normalization changes.
-- After updates, run `npm run check`, `npm run test:run`, `npm run build`, and `git diff --check`.
+- After updates, run `pnpm check`, `pnpm test:run`, `pnpm build`, and `git diff --check`.

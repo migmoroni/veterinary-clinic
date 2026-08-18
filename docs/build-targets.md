@@ -8,16 +8,16 @@ Regras de migração de estrutura e lançamento estão em
 ## Desenvolvimento
 
 ```sh
-npm run dev
-npm run tauri:dev
+pnpm dev
+pnpm tauri:dev
 ```
 
 ## Verificações
 
 ```sh
-npm run check
-npm run test:run
-npm run build
+pnpm check
+pnpm test:run
+pnpm build
 cargo check --workspace
 ```
 
@@ -25,8 +25,7 @@ Quando alterar a estrutura SQLite canônica ou regras de importação, valide ta
 as ferramentas externas de adoção/importação:
 
 ```sh
-cd legacy-to-sqlite
-npm run adopt:version
+pnpm adopt:version
 ```
 
 O script de adoção gera o conjunto atual do usuário e um ZIP nativo importável
@@ -36,10 +35,10 @@ Quando alterar a estrutura SQLite de execução, adicione uma nova migração,
 incremente `CURRENT_SCHEMA_VERSION` e atualize a versão pública do app:
 
 ```sh
-npm run version:bump -- minor "Adicionar migracao de estrutura para protocolos vacinais"
-npm run check
-npm run test:run
-npm run build
+pnpm version:bump -- minor "Adicionar migracao de estrutura para protocolos vacinais"
+pnpm check
+pnpm test:run
+pnpm build
 cargo check --workspace
 ```
 
@@ -54,10 +53,10 @@ rode o pacote Tauri da plataforma alvo do cliente.
 ## Pacotes Desktop
 
 ```sh
-npm run tauri:appimage
-npm run tauri:deb
-npm run tauri:flatpak
-npm run tauri:msi
+pnpm tauri:appimage
+pnpm tauri:deb
+pnpm tauri:flatpak
+pnpm tauri:msi
 ```
 
 O suporte Flatpak usa `flatpak-builder`, não um alvo nativo do Tauri. Veja
@@ -73,8 +72,8 @@ o changelog raiz como metadados de pacote.
 Android está planejado via Tauri Android:
 
 ```sh
-npm run tauri:android:dev
-npm run tauri:android:build
+pnpm tauri:android:dev
+pnpm tauri:android:build
 ```
 
 Rode `tauri android init` depois que o build desktop estiver saudável e o SDK

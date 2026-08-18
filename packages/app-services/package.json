@@ -12,8 +12,8 @@
 		"./search": "./src/search/index.ts"
 	},
 	"dependencies": {
-		"@vet/core-local": "file:../core-local",
-		"@vet/modules": "file:../modules",
-		"@vet/types": "file:../types"
+		"@vet/core-local": "workspace:*",
+		"@vet/modules": "workspace:*",
+		"@vet/types": "workspace:*"
 	}
 }

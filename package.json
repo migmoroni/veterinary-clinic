@@ -3,29 +3,30 @@
 	"private": true,
 	"version": "0.2.0",
 	"type": "module",
-	"workspaces": [
-		"apps/*",
-		"packages/*"
-	],
+	"packageManager": "pnpm@11.22.0",
+	"engines": {
+		"node": ">=22.0.0"
+	},
 	"scripts": {
-		"dev": "npm --workspace apps/vet-app run dev",
-		"build": "npm --workspace apps/vet-app run build",
-		"preview": "npm --workspace apps/vet-app run preview",
-		"prepare": "npm --workspace apps/vet-app run prepare",
-		"check": "npm --workspace apps/vet-app run check",
-		"check:watch": "npm --workspace apps/vet-app run check:watch",
-		"test": "npm --workspace apps/vet-app run test",
-		"test:run": "npm --workspace apps/vet-app run test:run",
+		"preinstall": "node scripts/ensure-pnpm.mjs",
+		"dev": "pnpm --filter vet-app run dev",
+		"build": "pnpm --filter vet-app run build",
+		"preview": "pnpm --filter vet-app run preview",
+		"check": "pnpm --filter vet-app run check",
+		"check:watch": "pnpm --filter vet-app run check:watch",
+		"test": "pnpm --filter vet-app run test",
+		"test:run": "pnpm --filter vet-app run test:run",
+		"adopt:version": "pnpm --filter @vet/legacy-to-sqlite run adopt:version",
 		"version:bump": "node scripts/bump-version/index.mjs",
-		"tauri": "npm --workspace apps/vet-app run tauri",
-		"tauri:dev": "npm --workspace apps/vet-app run tauri:dev",
-		"tauri:dev:new": "node scripts/new-state.mjs && node -e \"setTimeout(() => process.exit(0), 1000)\" && npm run tauri:dev",
-		"tauri:build": "npm --workspace apps/vet-app run tauri:build",
-		"tauri:appimage": "npm --workspace apps/vet-app run tauri:appimage",
-		"tauri:deb": "npm --workspace apps/vet-app run tauri:deb",
+		"tauri": "pnpm --filter vet-app run tauri",
+		"tauri:dev": "pnpm --filter vet-app run tauri:dev",
+		"tauri:dev:new": "pnpm --filter vet-app run tauri:dev:new",
+		"tauri:build": "pnpm --filter vet-app run tauri:build",
+		"tauri:appimage": "pnpm --filter vet-app run tauri:appimage",
+		"tauri:deb": "pnpm --filter vet-app run tauri:deb",
 		"tauri:flatpak": "node scripts/build-flatpak.mjs",
-		"tauri:msi": "npm --workspace apps/vet-app run tauri:msi",
-		"tauri:android:dev": "npm --workspace apps/vet-app run tauri:android:dev",
-		"tauri:android:build": "npm --workspace apps/vet-app run tauri:android:build"
+		"tauri:msi": "pnpm --filter vet-app run tauri:msi",
+		"tauri:android:dev": "pnpm --filter vet-app run tauri:android:dev",
+		"tauri:android:build": "pnpm --filter vet-app run tauri:android:build"
 	}
 }

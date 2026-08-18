@@ -25,9 +25,9 @@
 		"./medical_records/treatment_protocols": "./src/medical_records/treatment_protocols/index.ts"
 	},
 	"dependencies": {
-		"@vet/core-local": "file:../core-local",
-		"@vet/types": "file:../types",
-		"@vet/ui": "file:../ui"
+		"@vet/core-local": "workspace:*",
+		"@vet/types": "workspace:*",
+		"@vet/ui": "workspace:*"
 	},
 	"peerDependencies": {
 		"@lucide/svelte": "^1.23.0",

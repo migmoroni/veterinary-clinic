@@ -185,20 +185,21 @@ Para alterações complexas de tabela SQLite, prefira o padrão seguro de rebuil
 Use um comando para alterar a versão pública do app:
 
 ```sh
-npm run version:bump -- minor "Adicionar migracao de estrutura para protocolos vacinais"
+pnpm version:bump -- minor "Adicionar migracao de estrutura para protocolos vacinais"
 ```
 
 Escolha `major`, `minor` ou `patch` conforme o impacto do lançamento. A nota pode
 ser passada como string posicional ou com `--change` repetido:
 
 ```sh
-npm run version:bump -- patch --change "Corrigir validacao de importacao de backup" --change "Melhorar metadados do pacote Linux"
+pnpm version:bump -- patch --change "Corrigir validacao de importacao de backup" --change "Melhorar metadados do pacote Linux"
 ```
 
 O script atualiza:
 
 - `package.json`;
-- `package-lock.json`;
+- `pnpm-lock.yaml` não é editado pelo script e permanece válido quando somente as
+  versões dos manifests locais mudam;
 - `apps/vet-app/src-tauri/tauri.conf.json`;
 - `apps/vet-app/src-tauri/Cargo.toml`;
 - entrada do pacote no `Cargo.lock`;
@@ -214,9 +215,9 @@ usa o fallback gerado.
 Antes de enviar um pacote com mudança de banco:
 
 ```sh
-npm run check
-npm run test:run
-npm run build
+pnpm check
+pnpm test:run
+pnpm build
 cargo check --workspace
 ```
 
