@@ -30,6 +30,8 @@ A [Parte 1A](./01a-canonical-knowledge-data.md) está concluída, com
 - produzir checksums e `build-result.json`;
 - garantir determinismo lógico e escrita atômica;
 - oferecer CLI estável para validação e build;
+- reproduzir em Rust os contratos válidos da criação atual de `system`,
+  `system_media` e `vault/system`, ajustados ao modelo canônico e localizado;
 - manter o runtime e o pipeline dos apps inalterados.
 
 Os locales obrigatórios são:
@@ -50,6 +52,41 @@ locale invalida toda a saída.
 
 Esta parte produz somente estados integrais. Releases públicas, bootstraps,
 deltas, manifests, providers e publicação pertencem à Parte 3.
+
+## Base Da Implementação
+
+O builder parte do comportamento efetivo que produz os dados de sistema no app:
+
+```text
+packages/core-local/src/sqlite/create/system/main/schema.ts
+packages/core-local/src/sqlite/create/system/main/indexes.ts
+packages/core-local/src/sqlite/create/system/main/assertions.ts
+packages/core-local/src/sqlite/create/system/main/refresh.ts
+packages/core-local/src/sqlite/create/system/main/seeds.ts
+packages/engine/src/storage/sqlite.rs
+packages/engine/src/storage/media.rs
+packages/engine/src/storage/cas.rs
+```
+
+O levantamento identifica DDL, constraints, índices, normalização, projeção de
+catálogos, composição de coleções de mídia, geração de thumbnails, SHA-256 e
+disposição física do CAS. Os novos schemas preservam as garantias válidas desse
+processo e aplicam os contratos de locale, `mediaId` e dados canônicos definidos
+na Parte 1A.
+
+A referência de comportamento está dividida por responsabilidade: `core-local`
+descreve e preenche `system`, enquanto o Rust cria `system_media`, calcula hashes
+e materializa os objetos em `vault/system`. O builder consolida essas regras como
+compilação offline própria e produz sua saída em `build/knowledge-artifacts`.
+
+`knowledge-builder` implementa esse processo dentro do próprio crate. Ele não
+importa código TypeScript, não invoca comandos Tauri, não abre IPC com o app e não
+usa `@vet/engine` como serviço de geração. A paridade é comprovada por fixtures,
+inventário de tabelas, campos, relações e resultados semânticos.
+
+Essa transferência contempla somente `system`, `system_media` e `CAS/system`.
+Schemas, migrations, escrita de mídia, sincronização, replicação e CAS do ramo
+`user` permanecem sob seus responsáveis atuais.
 
 ## Fluxo
 
@@ -204,8 +241,43 @@ Cada banco registra:
 
 - seu locale canônico;
 - `PRAGMA user_version` de `system` ou `system_media`;
-- a `build_version` integral;
+- a identidade integral da compilação em `knowledge_build_metadata`;
 - metadados públicos de release somente quando fornecidos no contexto.
+
+## Metadados Da Compilação
+
+Os dois bancos de cada locale possuem exatamente uma linha em
+`knowledge_build_metadata`, inclusive quando a saída é local e `release` é
+`null`:
+
+```sql
+CREATE TABLE knowledge_build_metadata (
+    singleton INTEGER PRIMARY KEY CHECK(singleton = 1),
+    build_version INTEGER NOT NULL CHECK(build_version > 0),
+    builder_version TEXT NOT NULL CHECK(length(trim(builder_version)) > 0),
+    build_result_schema_version INTEGER NOT NULL
+        CHECK(build_result_schema_version > 0),
+    source_digest_sha256 BLOB NOT NULL
+        CHECK(length(source_digest_sha256) = 32),
+    locale TEXT NOT NULL
+        CHECK(locale IN ('pt-BR', 'pt-PT', 'gn-PY', 'en-US', 'es-ES', 'fr-FR'))
+);
+```
+
+O conteúdo dessa linha é idêntico no par. Cada banco conserva separadamente seu
+`PRAGMA user_version`, conforme o próprio schema. A combinação permite provar
+que `system` e `system_media` pertencem à mesma compilação antes de abrir o
+conjunto.
+
+O padrão segue o princípio de identidade persistida já usado pelo storage em
+Rust, mas não reutiliza `database_manifest`: esse manifesto identifica o conjunto
+privado do usuário e permanece em `user/logs`. Metadados de compilação de
+conhecimento pertencem somente aos bancos públicos gerados pelo builder.
+
+Quando `release` é informado, os dois bancos também recebem uma linha em
+`knowledge_release_metadata`, com `release_id`, `generation`, `revision` e
+`locale`. Quando `release` é `null`, essa tabela permanece sem linha. O
+`build_version` nunca é inferido de `generation` e `revision`.
 
 ## Responsabilidade Dos Schemas
 
@@ -236,6 +308,7 @@ para o conteúdo físico atual:
 CREATE TABLE media_assets (
     media_id TEXT PRIMARY KEY,
     content_hash BLOB NOT NULL CHECK(length(content_hash) = 32),
+    thumbnail BLOB,
     mime_type TEXT NOT NULL,
     size_bytes INTEGER NOT NULL CHECK(size_bytes > 0),
     width INTEGER CHECK(width IS NULL OR width > 0),
@@ -249,6 +322,13 @@ CREATE INDEX idx_media_assets_content_hash
 O DDL definitivo aplica o `CHECK` compartilhado de UUIDv7 a `media_id`. O hash
 não é `UNIQUE`: mais de um `mediaId` pode representar logicamente ativos
 distintos com bytes idênticos, enquanto o CAS armazena esses bytes uma única vez.
+O thumbnail é produzido deterministicamente pelo builder com os mesmos limites e
+orientação esperados pelos consumidores de galeria.
+
+Esse schema pertence exclusivamente a `system_media`. O banco `user_media`
+continua usando sua tabela `blobs`, identidade por hash, campos de sincronização,
+remoção lógica e escrita local. O builder não cria, abre ou modifica bancos de
+mídia do usuário.
 
 Cada `system_media` contém somente os `mediaId` exigidos pelo locale. Mídias
 compartilhadas aparecem em todos os bancos que as referenciam; variantes
@@ -343,7 +423,10 @@ código não zero sem finalizar uma versão parcial.
   },
   "cas": {
     "algorithm": "sha256",
+    "hashEncoding": "lowercase_hex",
     "root": "CAS/system",
+    "layout": "sha256_hex_2_2_bin",
+    "pathPattern": "{hash[0..2]}/{hash[2..4]}/{hash}.bin",
     "objectCount": 0,
     "setDigestSha256": "<sha256>"
   },
@@ -364,13 +447,20 @@ Todos os caminhos são relativos a `--output`, normalizados e sem componentes
 absolutos, vazios ou `..`. O relatório usa serialização JSON determinística em
 UTF-8.
 
+`cas.root`, `cas.layout` e `cas.pathPattern` formam um contrato único. Nenhum
+objeto pode ser gravado diretamente como `CAS/system/<hash>` ou
+`CAS/system/<hash>.bin`; os dois níveis derivados do próprio hash são
+obrigatórios em toda saída do builder.
+
 ## Saída Local
 
 ```text
 build/knowledge-artifacts/
 ├── CAS/
 │   └── system/
-│       └── <hashes SHA-256>
+│       └── <primeiros-2-hex>/
+│           └── <próximos-2-hex>/
+│               └── <hash-sha256-hex>.bin
 └── versions/
     └── <build_version>/
         ├── locales/
@@ -460,8 +550,10 @@ seis locales.
 
 ## CAS E Mídias
 
-`CAS/system` é único e incremental. Objetos existentes são reaproveitados entre
-builds e novos bytes são gravados pelo hash SHA-256 do conteúdo.
+`CAS/system` é a raiz lógica única e incremental. Todos os objetos, inclusive na
+primeira build, são gravados diretamente no layout fragmentado
+`<hash[0..2]>/<hash[2..4]>/<hash>.bin`. Não existe etapa, cache ou saída oficial
+com os hashes armazenados de forma plana.
 
 Para cada arquivo de autoria, o builder:
 
@@ -471,12 +563,19 @@ mediaId do nome-base
 -> ler os bytes
 -> calcular SHA-256
 -> validar extensão, MIME e metadados
--> materializar CAS/system/<contentHash>
+-> gerar thumbnail e metadados técnicos determinísticos
+-> converter o hash para 64 caracteres hexadecimais minúsculos
+-> materializar CAS/system/<hex[0..2]>/<hex[2..4]>/<hex>.bin
 -> registrar mediaId -> contentHash em system_media
 ```
 
 O SHA-256 é recalculado em todo build oficial. O nome não é usado como prova de
 integridade e caches locais não substituem essa verificação.
+
+O banco armazena `content_hash` como 32 bytes. Relatórios, arquivos de checksum e
+caminhos físicos usam exclusivamente a representação hexadecimal minúscula de 64
+caracteres. A disposição fragmentada corresponde ao resolvedor CAS já adotado
+pelo app e evita diretórios com quantidade excessiva de objetos.
 
 Cada `system_media.db` é o índice canônico das mídias exigidas por seu locale. O
 conjunto de IDs de um locale une:
@@ -565,6 +664,8 @@ O builder recusa:
 - linha de `system_media` sem objeto CAS correspondente;
 - mesmo `mediaId` resolvendo hashes diferentes entre locales da mesma build;
 - banco com schema, locale ou metadado divergente;
+- ausência ou divergência de `knowledge_build_metadata` entre os dois bancos do
+  locale;
 - saída parcial ou checksum incoerente.
 
 Ao final, executa `PRAGMA integrity_check` e `PRAGMA foreign_key_check` nos doze
@@ -580,11 +681,12 @@ relações, cobertura, hashes e relatórios.
 5. Definir o modelo canônico Rust e o registro exaustivo de projectors.
 6. Definir DDL, constraints, índices e versões dos dois bancos.
 7. Implementar os Data Mappers e a projeção localizada.
-8. Implementar a auditoria de cobertura e os fingerprints dos schemas.
-9. Implementar `system_media` e o CAS incremental.
-10. Implementar staging, checksums e finalização atômica.
-11. Implementar a CLI, `projection-report.json` e `build-result.json`.
-12. Validar fixtures, determinismo e os seis locales.
+8. Implementar `knowledge_build_metadata` e os metadados opcionais de release.
+9. Implementar a auditoria de cobertura e os fingerprints dos schemas.
+10. Implementar `system_media`, thumbnails e o CAS incremental fragmentado.
+11. Implementar staging, checksums e finalização atômica.
+12. Implementar a CLI, `projection-report.json` e `build-result.json`.
+13. Validar fixtures, determinismo, paridade semântica e os seis locales.
 
 ## Testes
 
@@ -615,6 +717,7 @@ Cobrir:
 - recusa de UUIDv7 inválido ou duplicado;
 - recusa de `mediaId` ausente ou não referenciado;
 - geração da relação `mediaId -> contentHash` em `system_media`;
+- geração determinística de thumbnails e metadados técnicos de sistema;
 - igualdade do `contentHash` de um `mediaId` compartilhado entre locales;
 - alteração dos bytes preservando `mediaId` e produzindo novo hash;
 - conservação do objeto CAS anterior após a alteração;
@@ -631,7 +734,12 @@ Cobrir:
 - objeto CAS ausente ou corrompido;
 - reaproveitamento de objeto CAS existente;
 - contexto local sem metadado de release;
+- `knowledge_build_metadata` sempre presente e idêntico no par do locale;
 - contexto público com identidade igual nos doze bancos;
+- ausência de qualquer abertura ou alteração de `user_media` e `vault/user`;
+- equivalência entre a disposição CAS gerada e o resolvedor fragmentado do app;
+- ausência de objetos diretamente na raiz `CAS/system` ou fora dos dois níveis
+  de fragmentação;
 - `build-result.json` completo e determinístico;
 - recusa de sobrescrita divergente da mesma `build_version`;
 - ausência de acesso a rede, Rails, TypeScript e i18n do app.
@@ -640,6 +748,8 @@ Cobrir:
 
 - `tools/knowledge-builder/`;
 - schemas de fonte, `system` e `system_media`;
+- fixtures e relatório de paridade com o processo de produção de sistema
+  inventariado na Parte 1A;
 - seis `veterinary_clinic_system.db`;
 - seis `veterinary_clinic_system_media.db`;
 - `CAS/system` único e incremental;
@@ -659,17 +769,22 @@ Cobrir:
 - O DDL é a fonte de verdade da disposição relacional.
 - Toda entidade e relação possui cobertura comprovada no relatório de projeção.
 - Os seis pares de bancos são produzidos na mesma execução.
+- Cada par possui `knowledge_build_metadata` coerente e verificável mesmo sem
+  identidade pública de release.
 - Cada banco contém nomes, aliases, descrições e termos do locale projetado.
 - Nenhum banco exige i18n do app para resolver conteúdo de conhecimento.
 - IDs e relações estruturais são iguais nos seis locales.
 - Todo `mediaId` referenciado resolve em `system_media` para um hash com objeto
   válido no CAS.
+- Todo objeto CAS usa exatamente
+  `CAS/system/<2-hex>/<2-hex>/<hash-sha256-hex>.bin`; não há variante plana.
 - Alterações de bytes preservam referências lógicas e produzem novos objetos CAS
   imutáveis.
 - Os doze bancos passam em integridade, foreign keys, fingerprint e
   versionamento.
 - Checksums e `build-result.json` descrevem exatamente a saída.
 - O runtime, os repositories e os builds dos apps permanecem inalterados.
+- O processo não cria nem modifica bancos ou objetos CAS do ramo `user`.
 - Não existe publicação, bootstrap, delta ou manifest nesta parte.
 
 ## Próxima Parte

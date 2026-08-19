@@ -351,6 +351,8 @@ Cobrir:
 - recusa de `artifactHashes` divergente das entradas CAS do pacote;
 - recusa de `release.json` divergente do manifest da release;
 - recusa de patch cuja base não corresponda ao estado final anterior;
+- recusa de bancos com `knowledge_build_metadata` divergente do
+  `build-result.json` ou entre os integrantes do par;
 - recusa de bancos com `knowledge_release_metadata` divergente da release ou do
   locale;
 - recusa de contagem ou digest CAS divergente do `system_media` do locale;

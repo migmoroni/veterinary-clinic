@@ -80,12 +80,21 @@ packages/core-local/src/i18n/catalog-aliases/
 packages/core-local/src/i18n/type-tree/
 packages/core-local/src/i18n/classification/
 packages/core-local/src/i18n/<locale>.ts
+packages/core-local/src/sqlite/create/system/main/
+packages/engine/src/storage/sqlite.rs
+packages/engine/src/storage/media.rs
+packages/engine/src/storage/cas.rs
 ```
 
 O inventário é orientado pelo conteúdo que alimenta `system` e `system_media`,
 não apenas por esses caminhos. Qualquer constante, agregado TypeScript, JSON,
 texto localizado ou referência de mídia que participe desse preenchimento entra
 no levantamento.
+
+No Rust, o inventário considera exclusivamente os ramos que criam ou escrevem
+`system_media` e `vault/system`. A criação, a escrita, a sincronização, a
+replicação e o CAS de `user/main`, `user/media`, `user/logs` e `vault/user` não
+pertencem a esta conversão.
 
 ## Fronteira Com I18n
 
@@ -313,9 +322,10 @@ O parser de Markdown da Parte 1B trata `knowledge-media://<mediaId>` como
 referência de mídia, valida sua existência e inclui o ativo na projeção do locale
 correspondente.
 
-O contrato da Parte 1B calcula o SHA-256 dos bytes, materializa o objeto em
-`CAS/system/<contentHash>` e grava em `system_media` a relação entre `mediaId` e
-o hash da versão atual do conteúdo.
+O contrato da Parte 1B calcula o SHA-256 dos bytes, materializa o objeto na
+disposição
+`CAS/system/<hash[0..2]>/<hash[2..4]>/<hash-sha256-hex>.bin` e grava em
+`system_media` a relação entre `mediaId` e o hash da versão atual do conteúdo.
 
 Nenhum arquivo JSON contém bytes embutidos em base64. Caminhos de autoria não se
 tornam identidade pública nem são persistidos como relação de domínio.
@@ -330,6 +340,9 @@ tornam identidade pública nem são persistidos como relação de domínio.
 3. Classificar cada campo como estrutural, localizado, mídia ou texto de UI.
 4. Registrar IDs duplicados, referências implícitas e traduções ausentes antes
    da conversão.
+5. Registrar separadamente quais operações atuais pertencem à produção de
+   `system`, `system_media` e `vault/system`, sem incluir operações equivalentes
+   do ramo `user`.
 
 ### Atividade 2: Contratos De Autoria
 

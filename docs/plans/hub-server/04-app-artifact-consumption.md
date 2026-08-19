@@ -116,25 +116,35 @@ O estado preparado permite retomar a cadeia sem apresentar uma revisão
 intermediária ao app. A sequência aceita do manifest continua única por canal,
 independentemente de quantos locales estão instalados.
 
-A organização lógica local é:
+A organização lógica local preserva os destinos ativos do storage e mantém
+staging e releases retidas separadamente:
 
 ```text
-knowledge/
-├── locales/
-│   └── <locale>/
-│       ├── active
-│       ├── staging/
-│       └── releases/
-│           └── <releaseId>/
-│               ├── veterinary_clinic_system.db
-│               └── veterinary_clinic_system_media.db
-└── CAS/
+<app_database_dir>/
+├── veterinary_clinic_system.db
+└── veterinary_clinic_system_media.db
+
+<app_data_dir>/
+├── knowledge/
+│   └── locales/
+│       └── <locale>/
+│           ├── staging/
+│           └── releases/
+│               └── <releaseId>/
+│                   ├── veterinary_clinic_system.db
+│                   └── veterinary_clinic_system_media.db
+└── vault/
     └── system/
-        └── <hashes SHA-256>
+        └── <2-hex>/
+            └── <2-hex>/
+                └── <hash-sha256-hex>.bin
 ```
 
-`active` é um ponteiro atômico próprio do locale. O cofre CAS é compartilhado
-entre todos eles.
+O estado persistido identifica qual release fornece o par ativo nos nomes fixos
+do `app_database_dir`. Esse nome lógico resolve para `app.path().app_config_dir()`
+na implementação Tauri e identifica somente o diretório dos arquivos SQLite. A
+substituição usa staging, marcador recuperável e backups, sem expor um par misto
+ao engine. O cofre em `vault/system` é compartilhado entre todos os locales.
 
 ## Descoberta Do Manifest
 
@@ -273,6 +283,8 @@ resolver deliverySources.bootstrap com bootstrap.releaseId e locale
 -> validar checksum dos bancos resultantes
 -> executar PRAGMA integrity_check
 -> conferir PRAGMA user_version com o manifest
+-> conferir knowledge_build_metadata com a proveniência assinada por meio do
+   release.json
 -> conferir release, versão e locale em knowledge_release_metadata nos dois bancos
 -> abrir os bancos em modo somente leitura
 -> incorporar entradas CAS/<hash> no cofre compartilhado
@@ -303,7 +315,7 @@ exigir fromVersion == preparedVersion
 -> aplicar bsdiff_v1 em novos arquivos temporários
 -> validar targetChecksumSha256 e targetSizeBytes
 -> executar PRAGMA integrity_check nos bancos resultantes
--> conferir schemaVersion e knowledge_release_metadata
+-> conferir schemaVersion, knowledge_build_metadata e knowledge_release_metadata
 -> incorporar CAS/<hash> quando deliveryMode é patch
 -> aceitar ausência de entradas CAS somente para index_only ou unchanged
 -> validar cada objeto CAS pelo SHA-256 de seu nome
@@ -326,7 +338,7 @@ suportadas.
 somente leitura preserva os bytes necessários para o próximo patch e impede
 divergência silenciosa da cadeia.
 
-## Ativação Atômica
+## Ativação Recuperável
 
 Depois do último delta do locale:
 
@@ -337,16 +349,25 @@ exigir preparedVersion == currentVersion
 -> validar os checksums finais dos dois bancos
 -> validar o digest final do conjunto CAS
 -> sincronizar arquivos e diretórios de staging
--> trocar atomicamente o ponteiro da release ativa do locale
--> persistir os metadados ativos
--> abrir a nova release em modo somente leitura
+-> promover o staging para a release instalada do locale
+-> persistir os metadados instalados
+-> se o locale é o selecionado, preparar a substituição dos dois arquivos ativos
+-> gravar marcador recuperável e drenar as conexões de sistema
+-> substituir o par no app_database_dir
+-> abrir e validar o novo par em modo somente leitura
+-> remover marcador e backups depois da confirmação
 -> conservar a release anterior para rollback
 ```
 
-Os dois bancos de um locale nunca são substituídos individualmente. Uma falha
-conserva a release ativa daquele locale e o staging válido para retomada. O
-primeiro uso confirmado permite aplicar a política de retenção da release
-anterior.
+Atualizar um locale não selecionado conclui sua instalação sem substituir o par
+aberto pelo runtime. Ao selecionar esse locale, o mesmo processo de ativação
+instala sua release preparada nos nomes fixos do `app_database_dir`.
+
+Os dois bancos nunca ficam disponíveis individualmente ao storage. Uma falha
+conserva o par ativo e o staging válido para retomada. Uma interrupção durante a
+substituição usa o marcador e os backups para restaurar o par anterior na mesma
+execução ou na próxima inicialização. O primeiro uso confirmado permite aplicar
+a política de retenção da release anterior.
 
 ## Download E Fallback
 
@@ -389,7 +410,8 @@ extração:
 - extrai bancos e patches no staging da release;
 - extrai objetos CAS em diretório temporário no mesmo filesystem do cofre;
 - valida checksums dos bancos, patches e objetos antes do uso;
-- move cada objeto validado atomicamente para `CAS/system/<hash>`;
+- move cada objeto validado atomicamente para
+  `vault/system/<2-hex>/<2-hex>/<hash>.bin`;
 - ignora objeto já presente somente depois de verificar seu conteúdo.
 
 O pacote não pode conter entradas além da allowlist derivada do manifest e de
@@ -478,6 +500,7 @@ Cobrir:
 - divergência entre manifest e `release.json`;
 - divergência entre `artifactHashes` e as entradas CAS do pacote;
 - atualização incremental dos dois bancos por patch;
+- `knowledge_build_metadata` coerente com a proveniência do `release.json`;
 - `knowledge_release_metadata` com release, versão e locale iguais nos dois bancos;
 - base de patch incorreta e checksum final divergente;
 - componente CAS `index_only` ou `unchanged` sem download;
@@ -489,7 +512,7 @@ Cobrir:
 - deduplicação de objeto CAS compartilhado entre locales;
 - mesmo `mediaId` resolvendo o novo hash depois da ativação de uma release;
 - garbage collection preservando a união dos locales e rollbacks;
-- rollback antes e depois da troca do ponteiro;
+- rollback antes, durante e depois da substituição recuperável do par ativo;
 - fallback de provider por pacote de locale e por objeto individual;
 - checksum incorreto, ZIP bomb, ZIP Slip, links e entrada duplicada;
 - limite de concorrência, timeout e espaço insuficiente;

@@ -140,9 +140,14 @@ localizados ou usar outro ID para uma variante própria. Markdown referencia
 Os arquivos ficam em `data/knowledge/media/`, usam UUIDv7 como nome-base e podem
 ser organizados livremente em subpastas. O builder calcula o SHA-256 dos bytes,
 grava `mediaId -> contentHash` no `system_media` de cada locale aplicável e
-materializa `CAS/system/<contentHash>`. Alterar os bytes preserva o `mediaId`
-quando a mídia continua representando o mesmo ativo lógico; o CAS recebe outro
-objeto imutável.
+materializa o objeto na disposição fragmentada de `CAS/system`. Alterar os bytes
+preserva o `mediaId` quando a mídia continua representando o mesmo ativo lógico;
+o CAS recebe outro objeto imutável.
+
+Na saída física do builder, cada objeto usa a disposição
+`CAS/system/<2-hex>/<2-hex>/<hash>.bin`. O Hub localiza os objetos pelo relatório
+do build e pelo resolvedor de hash; ele não deduz a identidade a partir da pasta
+editorial da mídia.
 
 A validação exige exatamente os seis arquivos de localização em cada entidade.
 O campo `locale` precisa coincidir com o nome do arquivo. O processo recusa ID
@@ -198,6 +203,8 @@ Nesta parte:
   tamanho e SHA-256 de cada arquivo declarado;
 - calcular o SHA-256 dos bytes de `build-result.json` e persistir toda a
   proveniência em `KnowledgeRelease`;
+- exigir que `knowledge_build_metadata` nos doze bancos corresponda ao
+  `build-result.json` e seja coerente em cada par;
 - exigir que `knowledge_release_metadata` nos doze bancos corresponda ao draft e
   ao locale projetado;
 - nunca editar os bancos produzidos pelo builder;
@@ -307,6 +314,9 @@ Os bancos são snapshots completos do locale. `CAS/` contém todos os objetos
 referenciados pelo `system_media.db` daquele locale e versão. Objetos sem
 referência não entram no pacote. O mesmo objeto pode aparecer em mais de um ZIP,
 mas converge para um único arquivo no CAS compartilhado do app e do servidor.
+O empacotador lê a disposição fragmentada da saída do builder e usa
+`CAS/<hash>` como caminho interno canônico de transporte. Essa normalização não
+altera bytes nem identidade do objeto.
 
 ## Artefatos De Delta
 
@@ -619,6 +629,11 @@ O `release.json` interno usa a mesma identidade, versão, locale, tipo de pacote
 descritores de componentes declarados no item correspondente do manifest. Seu
 campo `artifactHashes` lista, em ordem lexicográfica e sem duplicatas, cada hash
 presente sob `CAS/`. `artifactHashCount` deve ser igual ao tamanho dessa lista.
+O descritor também inclui `buildVersion`, `builderVersion`,
+`buildResultSchemaVersion`, `buildResultChecksumSha256` e
+`sourceDigestSha256`. Esses campos são copiados da proveniência validada da
+release e permitem conferir `knowledge_build_metadata` nos bancos transportados
+ou reconstruídos por patch.
 
 Sources previstas inicialmente:
 
@@ -877,6 +892,7 @@ Cobrir:
 - recusa de locale ausente, desconhecido ou incompleto;
 - geração dos seis bootstraps na mesma versão global;
 - geração e verificação de `release.json` por locale;
+- proveniência do `release.json` idêntica a `knowledge_build_metadata` nos bancos;
 - geração de seis ZIPs por release;
 - geração e aplicação de patch binário para cada banco;
 - patches dos doze bancos em toda revisão;

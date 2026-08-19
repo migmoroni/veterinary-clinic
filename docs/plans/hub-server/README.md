@@ -129,6 +129,15 @@ externo.
 - Cada locale possui seu próprio `system_media.db`, que indexa somente as mídias
   exigidas por aquele conjunto localizado.
 - `CAS/system` contém objetos imutáveis endereçados por SHA-256.
+- No app, o cofre físico de sistema usa
+  `vault/system/<2-hex>/<2-hex>/<hash>.bin`, conforme o resolvedor do
+  `engine/storage`.
+- `system`, `system_media` e `vault/system` são instalados a partir de artefatos
+  prontos e permanecem em somente leitura para o runtime de conhecimento.
+- `engine/distribution` instala bytes públicos verificados;
+  `engine/storage` apenas abre e lê o conjunto de sistema ativo.
+- A criação, as migrations e a escrita de `user/main`, `user/media`, `user/logs`
+  e `vault/user` permanecem independentes desse fluxo.
 - A preparação local usa uma `build_version` inteira e sempre produz bancos
   completos para os seis locales suportados.
 - Cada versão de conhecimento coordena os seis pares `system` e `system_media`
@@ -178,7 +187,8 @@ packages/core-local/
   queries, contratos de leitura e validação de compatibilidade SQLite
 
 packages/engine/
-  operações nativas de armazenamento, integridade e distribuição
+  armazenamento gravável do usuário, leitura dos recursos ativos de sistema,
+  integridade e distribuição
 
 providers externos/
   armazenamento e entrega de bytes publicados
