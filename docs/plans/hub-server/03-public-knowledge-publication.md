@@ -45,9 +45,6 @@ Os dados fonte ficam organizados por domínio e diretório de entidade:
 
 ```text
 data/knowledge/
-├── _media/
-│   └── objects/
-│       └── <sha256>
 ├── catalog/
 │   ├── products/
 │   ├── manufacturers/
@@ -59,8 +56,11 @@ data/knowledge/
 │   └── taxonomies/
 ├── geo/
 │   └── places/
-└── clinical/
-    └── treatment-protocols/
+├── clinical/
+│   └── treatment-protocols/
+└── media/
+    └── <subpastas-editoriais>/
+        └── <media_id_uuidv7>.<extensão>
 ```
 
 Todo diretório de entidade segue o mesmo envelope físico:
@@ -96,7 +96,7 @@ projeções:
   "relations": {},
   "media": [
     {
-      "hash": "<sha256-compartilhado>",
+      "mediaId": "019c7a75-f51f-7d4c-a1f0-abcdef123456",
       "role": "reference"
     }
   ]
@@ -115,7 +115,7 @@ Cada arquivo em `localizations/` contém somente o conteúdo de seu locale:
   "sections": {},
   "media": [
     {
-      "hash": "<sha256-especifico-do-locale>",
+      "mediaId": "019c7a75-f51f-7d4c-a1f0-abcdef123456",
       "role": "illustration",
       "alt": "<texto alternativo>",
       "caption": "<legenda>"
@@ -133,11 +133,16 @@ aplicabilidade de domínio e não controlam em quais bancos localizados a entida
 existe.
 
 Referências de mídia em `entity.json` pertencem a todos os locales. Um arquivo de
-localização pode referenciar o mesmo hash para acrescentar textos localizados ou
-declarar hashes exigidos somente por aquele locale. O `system_media` projetado é
-a união das referências compartilhadas com as referências da localização
-selecionada; o `CAS/system` continua deduplicado por SHA-256. Os bytes de autoria
-residem em `data/knowledge/_media/objects/<sha256>` e são validados pelo builder.
+localização pode referenciar o mesmo `mediaId` para acrescentar textos
+localizados ou usar outro ID para uma variante própria. Markdown referencia
+`knowledge-media://<mediaId>`.
+
+Os arquivos ficam em `data/knowledge/media/`, usam UUIDv7 como nome-base e podem
+ser organizados livremente em subpastas. O builder calcula o SHA-256 dos bytes,
+grava `mediaId -> contentHash` no `system_media` de cada locale aplicável e
+materializa `CAS/system/<contentHash>`. Alterar os bytes preserva o `mediaId`
+quando a mídia continua representando o mesmo ativo lógico; o CAS recebe outro
+objeto imutável.
 
 A validação exige exatamente os seis arquivos de localização em cada entidade.
 O campo `locale` precisa coincidir com o nome do arquivo. O processo recusa ID
@@ -861,6 +866,11 @@ Cobrir:
 - recusa de campo estrutural em localização e de campo traduzível em
   `entity.json`;
 - composição da mídia compartilhada e localizada em cada `system_media`;
+- resolução de referências JSON e Markdown por `mediaId` UUIDv7;
+- geração e validação da relação `mediaId -> contentHash`;
+- alteração de bytes preservando `mediaId` e mantendo objetos CAS anteriores;
+- alteração de bytes produzindo patch de `system_media` e adição CAS, sem exigir
+  mudança nas referências das entidades ou do Markdown;
 - geração e integridade dos bancos finais;
 - geração dos seis pares de bancos;
 - igualdade de IDs e relações estruturais entre locales;

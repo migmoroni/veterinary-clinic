@@ -23,6 +23,8 @@ publicação definida na [Parte 3](./03-public-knowledge-publication.md).
 - incorporar as entradas `CAS/<hash>` do mesmo pacote;
 - manter os bancos de sistema em modo somente leitura;
 - reconciliar objetos ausentes pelo índice `system_media` do locale;
+- preservar a resolução `mediaId -> contentHash` ao instalar ou atualizar o
+  `system_media`;
 - ativar o par de bancos do locale e seu conjunto CAS como unidade indivisível;
 - aplicar fallback somente entre sources habilitadas;
 - retomar atualizações interrompidas;
@@ -485,6 +487,7 @@ Cobrir:
 - fallback para bootstrap quando a base local diverge;
 - validação do digest CAS contra o `system_media` do locale;
 - deduplicação de objeto CAS compartilhado entre locales;
+- mesmo `mediaId` resolvendo o novo hash depois da ativação de uma release;
 - garbage collection preservando a união dos locales e rollbacks;
 - rollback antes e depois da troca do ponteiro;
 - fallback de provider por pacote de locale e por objeto individual;
@@ -516,6 +519,8 @@ Cobrir:
 - A release anterior do locale permanece utilizável diante de falha.
 - A ativação ocorre somente quando os estados finais coincidem com o manifest.
 - A reconciliação usa o `system_media.db` do locale como índice canônico.
+- O runtime resolve mídias por `mediaId`; hashes permanecem detalhes do índice e
+  do armazenamento CAS.
 - Todo objeto gravado corresponde ao SHA-256 de seu caminho.
 - Extração e downloads respeitam limites e entradas seguras.
 - Desenvolvimento e builds consomem artefatos prontos.

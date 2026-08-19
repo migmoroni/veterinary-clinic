@@ -184,6 +184,37 @@ disponíveis em campos próprios quando possuem significado de domínio.
 Repositories não chamam `translate()` para montar uma entidade. O locale é
 determinado pelo banco ativo, e o retorno já contém o conteúdo correto.
 
+## Resolução De Mídia
+
+Contratos de domínio expõem `mediaId`, papel e metadados localizados. Eles não
+expõem caminho de autoria nem usam o hash como identidade lógica.
+
+Uma fronteira única resolve a mídia no par ativo:
+
+```text
+mediaId
+-> consultar system_media.media_assets
+-> obter contentHash e metadados técnicos
+-> resolver CAS/system/<contentHash>
+-> fornecer URL ou stream seguro ao consumidor
+```
+
+O renderer de Markdown reconhece somente o contrato interno:
+
+```markdown
+![Texto alternativo](knowledge-media://<mediaId>)
+```
+
+Ele extrai e valida o UUIDv7, usa a mesma fronteira de resolução e nunca converte
+o ID em caminho diretamente. Uma referência ausente produz estado explícito de
+mídia indisponível, sem buscar arquivos em `data/knowledge` ou aceitar caminhos
+relativos.
+
+Ao ativar outra build ou locale, o mesmo `mediaId` pode resolver para outro
+`contentHash` conforme o `system_media` ativo. Caches de URLs e metadados usam a
+identidade composta por versão, locale, `mediaId` e `contentHash`, evitando
+reutilizar bytes de outra versão.
+
 ## Busca E Normalização
 
 Os bancos armazenam campos normalizados derivados do conteúdo de cada locale.
@@ -324,6 +355,11 @@ Cobrir:
 - troca de locale sem reutilizar conexão ou cache anterior;
 - conservação do par ativo quando a troca falha;
 - leitura das mídias pelo `system_media` correspondente;
+- resolução de `mediaId` para `contentHash` e objeto CAS;
+- Markdown resolvendo `knowledge-media://<mediaId>`;
+- mesmo `mediaId` resolvendo novo conteúdo após troca de build;
+- invalidação de cache de mídia após troca de locale ou hash;
+- recusa de UUID, caminho ou URI de mídia inválido;
 - detecção de objeto CAS ausente ou corrompido;
 - ausência de imports de `data/knowledge` no runtime;
 - ausência de JSONs, defaults, seeds e agregadores substituídos;
@@ -348,6 +384,8 @@ Cobrir:
   responsabilidades locais legítimas.
 - Não permanecem fontes paralelas nem fallbacks de conhecimento.
 - O par do locale é validado e aberto como unidade indivisível.
+- Entidades e Markdown referenciam mídia por `mediaId`; somente a fronteira de
+  mídia conhece hashes e caminhos CAS.
 - Desenvolvimento consome uma `build_version` explicitamente preparada.
 - Builds empacotáveis incluem somente os locales e objetos CAS necessários.
 - O app não gera bancos ou CAS em desenvolvimento, runtime ou build.

@@ -114,6 +114,8 @@ O builder:
 - seleciona o schema por `entityType`;
 - converte a entrada validada para um modelo canônico Rust;
 - seleciona um projector registrado para o tipo canônico;
+- percorre `data/knowledge/media/` recursivamente e indexa cada arquivo pelo
+  `mediaId` UUIDv7 de seu nome-base;
 - recusa identidade duplicada;
 - recusa arquivo de localização ausente, duplicado ou desconhecido;
 - recusa divergência entre nome do arquivo e `locale` interno;
@@ -223,6 +225,36 @@ build.
 `packages/core-local` conserva temporariamente o fluxo usado pelo app. Sua
 adaptação para somente leitura dos novos bancos ocorre na Parte 1C. Nenhum DDL do
 builder é importado de TypeScript.
+
+## Contrato Relacional Das Mídias
+
+Tabelas de domínio e coleções em `system` referenciam mídias por `media_id`,
+nunca pelo hash dos bytes. O DDL de `system_media` mantém a resolução canônica
+para o conteúdo físico atual:
+
+```sql
+CREATE TABLE media_assets (
+    media_id TEXT PRIMARY KEY,
+    content_hash BLOB NOT NULL CHECK(length(content_hash) = 32),
+    mime_type TEXT NOT NULL,
+    size_bytes INTEGER NOT NULL CHECK(size_bytes > 0),
+    width INTEGER CHECK(width IS NULL OR width > 0),
+    height INTEGER CHECK(height IS NULL OR height > 0)
+);
+
+CREATE INDEX idx_media_assets_content_hash
+    ON media_assets(content_hash);
+```
+
+O DDL definitivo aplica o `CHECK` compartilhado de UUIDv7 a `media_id`. O hash
+não é `UNIQUE`: mais de um `mediaId` pode representar logicamente ativos
+distintos com bytes idênticos, enquanto o CAS armazena esses bytes uma única vez.
+
+Cada `system_media` contém somente os `mediaId` exigidos pelo locale. Mídias
+compartilhadas aparecem em todos os bancos que as referenciam; variantes
+localizadas usam IDs próprios e aparecem apenas nos locales correspondentes. Na
+mesma build, um `mediaId` resolve obrigatoriamente para o mesmo `contentHash` em
+todos os bancos que o incluem.
 
 ## Contrato Da CLI
 
@@ -397,8 +429,11 @@ consumidas por um projector. Seu contrato inicial é:
     }
   },
   "media": {
-    "referencedObjects": 0,
-    "missingObjects": []
+    "sourceMediaIds": 0,
+    "referencedMediaIds": 0,
+    "uniqueContentHashes": 0,
+    "missingMediaIds": [],
+    "unreferencedMediaIds": []
   }
 }
 ```
@@ -414,7 +449,8 @@ Uma saída somente é válida quando:
   projector do seu tipo;
 - todas as relações foram resolvidas em cada locale;
 - as contagens por entidade e por tabela são coerentes;
-- `unconsumedEntities`, `unresolvedRelations` e `missingObjects` estão vazios;
+- `unconsumedEntities`, `unresolvedRelations`, `missingMediaIds` e
+  `unreferencedMediaIds` estão vazios;
 - o checksum do relatório corresponde ao declarado em `build-result.json`.
 
 Cada banco também possui um `schemaFingerprintSha256` calculado a partir da
@@ -427,17 +463,40 @@ seis locales.
 `CAS/system` é único e incremental. Objetos existentes são reaproveitados entre
 builds e novos bytes são gravados pelo hash SHA-256 do conteúdo.
 
+Para cada arquivo de autoria, o builder:
+
+```text
+mediaId do nome-base
+-> validar UUIDv7 e unicidade global
+-> ler os bytes
+-> calcular SHA-256
+-> validar extensão, MIME e metadados
+-> materializar CAS/system/<contentHash>
+-> registrar mediaId -> contentHash em system_media
+```
+
+O SHA-256 é recalculado em todo build oficial. O nome não é usado como prova de
+integridade e caches locais não substituem essa verificação.
+
 Cada `system_media.db` é o índice canônico das mídias exigidas por seu locale. O
-conjunto de um locale une:
+conjunto de IDs de um locale une:
 
 - referências compartilhadas de `entity.json`;
 - referências específicas do arquivo localizado;
+- referências `knowledge-media://<mediaId>` extraídas de Markdown por parser
+  estruturado;
 - metadados localizados associados a referências compartilhadas.
 
-O cofre físico contém a união deduplicada dos seis conjuntos. O builder confirma
-que todo hash indexado existe e corresponde aos bytes declarados. Objetos não
-referenciados podem permanecer no cofre incremental, mas não entram no conjunto
-de recursos de um locale.
+O cofre físico contém a união deduplicada dos hashes resolvidos para os seis
+locales. Dois `mediaId` com os mesmos bytes apontam para o mesmo objeto CAS.
+Arquivos de autoria não referenciados não entram no CAS da build e invalidam a
+auditoria da fonte.
+
+Alterar os bytes de um arquivo preservando o mesmo `mediaId` produz outro
+`contentHash`, atualiza a linha correspondente nos novos bancos `system_media` e
+adiciona um objeto ao CAS. O objeto anterior permanece imutável enquanto puder
+ser exigido por outra build ou release retida; sua remoção pertence à política de
+garbage collection.
 
 `checksums.sha256` cobre os doze bancos e todos os objetos CAS referenciados pela
 `build_version`.
@@ -451,13 +510,15 @@ dos diretórios. Sua entrada canônica é ordenada por:
 entityType
 id
 locale
-papel da mídia
-hash da mídia
+mediaId
+contentHash
 ```
 
 O digest cobre os JSONs normalizados, os schemas de autoria efetivamente usados
 e os bytes de mídia. Caminhos absolutos e caminhos organizacionais não entram na
 identidade. Mover uma entidade sem alterar seus conteúdos produz o mesmo digest.
+Mover uma mídia entre subpastas sem alterar `mediaId` ou bytes também preserva o
+digest.
 
 Adicionar, remover ou alterar uma entrada efetiva muda o digest.
 
@@ -495,8 +556,14 @@ O builder recusa:
 - campo localizado em `entity.json`;
 - `labelKey` ou `translationKey` em conteúdo de conhecimento;
 - divergência estrutural entre locales;
-- hash de mídia inválido;
-- mídia ausente ou corrompida;
+- `mediaId` ausente, inválido, duplicado ou não correspondente a UUIDv7;
+- mais de um arquivo de autoria reivindicando o mesmo `mediaId`;
+- referência de JSON ou Markdown sem arquivo de mídia correspondente;
+- mídia de autoria não referenciada;
+- URI `knowledge-media` malformada ou com ID inexistente;
+- arquivo vazio ou extensão, MIME e bytes incoerentes;
+- linha de `system_media` sem objeto CAS correspondente;
+- mesmo `mediaId` resolvendo hashes diferentes entre locales da mesma build;
 - banco com schema, locale ou metadado divergente;
 - saída parcial ou checksum incoerente.
 
@@ -543,6 +610,16 @@ Cobrir:
 - preservação de múltiplos `originPlaceIds` na ordem definida pela fonte;
 - projeção de protocolos e suas relações;
 - composição das mídias compartilhadas e localizadas;
+- descoberta de mídia independente de sua subpasta editorial;
+- referência de JSON e Markdown exclusivamente por `mediaId`;
+- recusa de UUIDv7 inválido ou duplicado;
+- recusa de `mediaId` ausente ou não referenciado;
+- geração da relação `mediaId -> contentHash` em `system_media`;
+- igualdade do `contentHash` de um `mediaId` compartilhado entre locales;
+- alteração dos bytes preservando `mediaId` e produzindo novo hash;
+- conservação do objeto CAS anterior após a alteração;
+- deduplicação CAS de dois `mediaId` com bytes idênticos;
+- parser de Markdown reconhecendo e validando `knowledge-media://<mediaId>`;
 - geração repetível dos doze bancos;
 - `PRAGMA integrity_check`, `PRAGMA foreign_key_check` e `PRAGMA user_version`;
 - fingerprint do schema igual entre bancos do mesmo tipo;
@@ -585,7 +662,10 @@ Cobrir:
 - Cada banco contém nomes, aliases, descrições e termos do locale projetado.
 - Nenhum banco exige i18n do app para resolver conteúdo de conhecimento.
 - IDs e relações estruturais são iguais nos seis locales.
-- Todo hash de `system_media` possui objeto válido no CAS.
+- Todo `mediaId` referenciado resolve em `system_media` para um hash com objeto
+  válido no CAS.
+- Alterações de bytes preservam referências lógicas e produzem novos objetos CAS
+  imutáveis.
 - Os doze bancos passam em integridade, foreign keys, fingerprint e
   versionamento.
 - Checksums e `build-result.json` descrevem exatamente a saída.

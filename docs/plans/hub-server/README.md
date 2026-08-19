@@ -114,8 +114,8 @@ externo.
   entidade possui um diretório com `entity.json` para os campos estruturais e um
   arquivo JSON separado por locale em `localizations/`.
 - A árvore de pastas é somente editorial. `entityType`, IDs, relações,
-  classificações, regiões e referências CAS ficam nos JSONs e a geração não
-  deduz semântica do caminho.
+  classificações, regiões e referências por `mediaId` ficam nos JSONs e a
+  geração não deduz semântica do caminho.
 - Os JSONs não contêm nomes de tabelas ou colunas. `entityType` seleciona um Data
   Mapper explícito, e o DDL do builder é a fonte de verdade da projeção
   relacional.
@@ -124,6 +124,8 @@ externo.
 - Nomes, aliases, descrições e rótulos de conhecimento ficam nas localizações e
   são projetados diretamente no banco do locale; o app não usa i18n como fonte
   paralela de conhecimento.
+- Mídias de autoria possuem `mediaId` UUIDv7 estável. JSON e Markdown referenciam
+  esse ID; `system_media` resolve `mediaId` para o SHA-256 dos bytes atuais.
 - Cada locale possui seu próprio `system_media.db`, que indexa somente as mídias
   exigidas por aquele conjunto localizado.
 - `CAS/system` contém objetos imutáveis endereçados por SHA-256.

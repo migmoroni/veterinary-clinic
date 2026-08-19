@@ -20,9 +20,6 @@ A [Pré-fase 0](./00-pnpm-workspace-migration.md) está integralmente concluída
 ```text
 data/knowledge/
 ├── README.md
-├── _media/
-│   └── objects/
-│       └── <sha256>
 ├── catalog/
 │   ├── products/
 │   │   └── medications/
@@ -39,8 +36,11 @@ data/knowledge/
 │   └── taxonomies/
 ├── geo/
 │   └── places/
-└── clinical/
-    └── treatment-protocols/
+├── clinical/
+│   └── treatment-protocols/
+└── media/
+    └── <subpastas-editoriais>/
+        └── <media_id_uuidv7>.<extensão>
 ```
 
 As subpastas servem exclusivamente para autoria e navegação humana. O caminho
@@ -136,7 +136,12 @@ Cada entidade ocupa um diretório próprio:
   "id": "beagle",
   "species": ["canine"],
   "relations": {},
-  "media": []
+  "media": [
+    {
+      "mediaId": "019c7a75-f51f-7d4c-a1f0-abcdef123456",
+      "role": "primary"
+    }
+  ]
 }
 ```
 
@@ -150,7 +155,14 @@ Cada localização contém somente conteúdo daquele locale:
   "aliases": [],
   "description": null,
   "sections": {},
-  "media": []
+  "media": [
+    {
+      "mediaId": "019c7a75-f51f-7d4c-a1f0-abcdef123456",
+      "role": "illustration",
+      "alt": "Beagle adulto",
+      "caption": null
+    }
+  ]
 }
 ```
 
@@ -269,10 +281,41 @@ campo como `sortOrder`.
 Referências compartilhadas ficam em `entity.json`. Legendas, textos alternativos
 e mídias específicas de um locale ficam no arquivo de localização.
 
-Os bytes de autoria ficam em `data/knowledge/_media/objects/<sha256>`. O nome do
-objeto é o SHA-256 de seus bytes e toda referência informa esse hash e seu papel.
-O contrato da Parte 1B valida os objetos e os projeta para `system_media` e
-`CAS/system`.
+Os bytes de autoria ficam em `data/knowledge/media/`. Suas subpastas servem
+somente para organização editorial e não participam da identidade, das relações
+ou da projeção.
+
+Cada arquivo possui como nome-base um `mediaId` UUIDv7 criado uma única vez no
+momento da inclusão da mídia:
+
+```text
+data/knowledge/media/<qualquer-organização>/<mediaId>.<extensão>
+```
+
+`mediaId` é a identidade lógica e estável. Alterar os bytes de uma mídia que
+continua representando o mesmo ativo preserva seu `mediaId`. Uma mídia com outro
+significado recebe um novo UUIDv7. O builder nunca cria ou substitui IDs durante
+o build.
+
+O nome-base é globalmente único em `data/knowledge/media`, independentemente da
+subpasta e da extensão. Mídias localizadas diferentes possuem IDs próprios. A
+extensão auxilia autoria e inspeção, mas não faz parte da identidade e precisa ser
+coerente com o tipo real dos bytes.
+
+JSONs referenciam somente `mediaId`, nunca caminho, nome de arquivo, extensão ou
+hash. Conteúdo Markdown usa o mesmo identificador:
+
+```markdown
+![Beagle adulto](knowledge-media://019c7a75-f51f-7d4c-a1f0-abcdef123456)
+```
+
+O parser de Markdown da Parte 1B trata `knowledge-media://<mediaId>` como
+referência de mídia, valida sua existência e inclui o ativo na projeção do locale
+correspondente.
+
+O contrato da Parte 1B calcula o SHA-256 dos bytes, materializa o objeto em
+`CAS/system/<contentHash>` e grava em `system_media` a relação entre `mediaId` e
+o hash da versão atual do conteúdo.
 
 Nenhum arquivo JSON contém bytes embutidos em base64. Caminhos de autoria não se
 tornam identidade pública nem são persistidos como relação de domínio.
@@ -305,7 +348,8 @@ tornam identidade pública nem são persistidos como relação de domínio.
 3. Transformar relações implícitas em referências explícitas.
 4. Retirar do conteúdo estrutural nomes, aliases e descrições destinados à
    apresentação.
-5. Materializar os bytes de mídia pelo SHA-256 em `_media/objects/`.
+5. Atribuir um UUIDv7 estável a cada mídia e materializar seus bytes em
+   `media/<subpastas-editoriais>/<mediaId>.<extensão>`.
 
 ### Atividade 4: Conversão Das Localizações
 
@@ -356,7 +400,11 @@ Cobrir por auditoria automatizada ou determinística:
 - cobertura de produtos, fabricantes, princípios ativos, condições, raças,
   localizações geográficas, taxonomias e protocolos;
 - cobertura das referências de mídia;
-- correspondência entre cada referência de mídia e seu objeto SHA-256;
+- validade e unicidade global dos UUIDv7 usados como `mediaId`;
+- correspondência entre cada `mediaId` referenciado e exatamente um arquivo de
+  autoria;
+- resolução de referências `knowledge-media://<mediaId>` presentes em Markdown;
+- ausência de caminhos e hashes nas referências de autoria;
 - independência entre identidade e caminho organizacional.
 
 ## Entregáveis
@@ -368,7 +416,7 @@ Cobrir por auditoria automatizada ou determinística:
 - taxonomias e classificações localizadas;
 - localizações geográficas reutilizáveis em `geo/places`;
 - relações explícitas por ID;
-- objetos de mídia canônicos em `_media/objects/`;
+- mídias canônicas em `media/`, nomeadas por `mediaId` UUIDv7;
 - inventário e auditoria de paridade reproduzíveis.
 
 ## Critérios De Aceite
@@ -383,7 +431,10 @@ Cobrir por auditoria automatizada ou determinística:
 - Raças referenciam `geo_place` por `originPlaceIds`, sem possuir cópias da
   estrutura geográfica.
 - Os JSONs descrevem domínio e não incorporam detalhes do modelo relacional.
-- Toda mídia referenciada possui objeto canônico com SHA-256 válido.
+- Toda mídia referenciada usa um `mediaId` UUIDv7 e possui exatamente um arquivo
+  de autoria correspondente.
+- Alterar a organização de uma mídia não altera sua identidade; alterar seus
+  bytes preserva o ID quando o ativo lógico continua sendo o mesmo.
 - Mover um diretório de entidade sem alterar seus JSONs não altera sua identidade
   nem suas relações.
 - O runtime do app e a geração vigente dos bancos permanecem inalterados.
