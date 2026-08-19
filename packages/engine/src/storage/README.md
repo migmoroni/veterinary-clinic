@@ -55,20 +55,25 @@ flowchart LR
 
 ## Conjunto De Bancos
 
+Todos os bancos ficam no diretório lógico `<app_database_dir>`, resolvido pelo
+engine como `<app_data_dir>/databases`. O cofre CAS fica em
+`<app_data_dir>/vault`.
+
 Usuário:
 
 ```text
-veterinary_clinic_user.db
-veterinary_clinic_user_media.db
-veterinary_clinic_user_logs.db
+databases/veterinary_clinic_user.db
+databases/veterinary_clinic_user_media.db
+databases/veterinary_clinic_user_logs.db
+databases/backups/<backup>.db
 vault/user/xx/yy/<hash_sha256>.bin
 ```
 
 Sistema:
 
 ```text
-veterinary_clinic_system.db
-veterinary_clinic_system_media.db
+databases/veterinary_clinic_system.db
+databases/veterinary_clinic_system_media.db
 vault/system/xx/yy/<hash_sha256>.bin
 ```
 
@@ -101,9 +106,9 @@ Fachada do módulo. Exporta comandos, DTOs e utilitários usados por
 
 `data.rs`
 
-Define `StorageManager`, abre conexões fixas, controla bancos externos de
-configuração e implementa `storage_select`/`storage_execute` por meio da ponte
-SQL.
+Define `StorageManager`, resolve `<app_database_dir>`, abre conexões fixas,
+controla bancos adicionais e implementa `storage_select`/`storage_execute` por
+meio da ponte SQL.
 
 `sqlite.rs`
 

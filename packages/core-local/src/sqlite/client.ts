@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import {
-	copyDatabaseToAppConfigBackup,
+	copyDatabaseToBackup,
 	ensureDatabaseDirectory,
 	hasDatabaseFile
 } from '@vet/core-local/native/database-file.js';
@@ -19,7 +19,7 @@ export interface SqliteDatabase {
 	close?(): Promise<void>;
 }
 
-type StorageDatabaseKind = 'user' | 'system' | 'userMedia' | 'systemMedia' | 'userLogs' | 'appConfigFile';
+type StorageDatabaseKind = 'user' | 'system' | 'userMedia' | 'systemMedia' | 'userLogs' | 'databaseFile';
 type StorageDbType = 'operational' | 'mediaIndex' | 'systemMediaIndex' | 'logs';
 
 interface StorageDatabaseOptions {
@@ -71,9 +71,9 @@ async function reopenStorageDatabase(options: StorageDatabaseOptions): Promise<v
 	await invoke('storage_reopen', { request: databaseRequest(options) });
 }
 
-export function createAppConfigDatabase(fileName: string, dbType: StorageDbType = 'operational'): SqliteDatabase {
+export function createFileDatabase(fileName: string, dbType: StorageDbType = 'operational'): SqliteDatabase {
 	assertTauriDatabaseRuntime();
-	return createDatabaseAdapter({ database: 'appConfigFile', fileName, dbType });
+	return createDatabaseAdapter({ database: 'databaseFile', fileName, dbType });
 }
 
 export async function getDatabase(): Promise<SqliteDatabase> {
@@ -93,7 +93,7 @@ export async function getDatabase(): Promise<SqliteDatabase> {
 			if (status.migrationRequired && status.detection !== 'empty' && (await hasDatabaseFile().catch(() => false))) {
 				await database.execute('PRAGMA wal_checkpoint(TRUNCATE)').catch(() => undefined);
 				await database.close?.().catch(() => undefined);
-				await copyDatabaseToAppConfigBackup('pre-migration-veterinary-clinic');
+				await copyDatabaseToBackup('pre-migration-veterinary-clinic');
 				await reopenStorageDatabase({ database: 'user', dbType: 'operational' });
 				await database.execute('PRAGMA foreign_keys = ON');
 			}

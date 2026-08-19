@@ -141,10 +141,10 @@ staging e releases retidas separadamente:
 ```
 
 O estado persistido identifica qual release fornece o par ativo nos nomes fixos
-do `app_database_dir`. Esse nome lógico resolve para `app.path().app_config_dir()`
-na implementação Tauri e identifica somente o diretório dos arquivos SQLite. A
-substituição usa staging, marcador recuperável e backups, sem expor um par misto
-ao engine. O cofre em `vault/system` é compartilhado entre todos os locales.
+do `app_database_dir`. Na implementação Tauri, esse diretório resolve para
+`app.path().app_data_dir()/databases`. A substituição usa staging, marcador
+recuperável e backups, sem expor um par misto ao engine. O cofre em
+`vault/system` é compartilhado entre todos os locales.
 
 ## Descoberta Do Manifest
 

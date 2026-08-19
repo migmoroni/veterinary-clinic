@@ -56,6 +56,10 @@ arquivos SQLite gerenciados pelo app passa pelo `engine/storage`.
 
 ## Conjunto De Bancos
 
+Os adaptadores acessam os bancos por meio de `engine/storage`. Os arquivos ficam
+em `<app_database_dir>`, cujo caminho físico é
+`<app_data_dir>/databases`.
+
 Usuário:
 
 ```text

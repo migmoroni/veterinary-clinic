@@ -19,8 +19,8 @@
     {
       "identifier": "fs:scope",
       "allow": [
-        { "path": "$APPCONFIG" },
-        { "path": "$APPCONFIG/**" },
+        { "path": "$APPDATA/databases" },
+        { "path": "$APPDATA/databases/**" },
         { "path": "$DOWNLOAD/**" },
         { "path": "$DOCUMENT/**" }
       ]

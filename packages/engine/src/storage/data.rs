@@ -1,7 +1,7 @@
 //! Main storage manager and SQLite connection ownership.
 //!
 //! This module owns the fixed user/system database connections, lazily opens
-//! app-config database files, and exposes the generic SQL bridge used by the UI.
+//! additional database files, and exposes the generic SQL bridge used by the UI.
 
 use super::{
     execute_statement, open_sqlite_db, select_rows, DbType, SqlConnectionRequest,
@@ -22,6 +22,7 @@ const SYSTEM_DATABASE_FILE: &str = "veterinary_clinic_system.db";
 const USER_MEDIA_DATABASE_FILE: &str = "veterinary_clinic_user_media.db";
 const SYSTEM_MEDIA_DATABASE_FILE: &str = "veterinary_clinic_system_media.db";
 const USER_LOGS_DATABASE_FILE: &str = "veterinary_clinic_user_logs.db";
+const DATABASE_DIRECTORY: &str = "databases";
 
 #[derive(Clone)]
 pub struct StorageManager {
@@ -38,14 +39,11 @@ pub struct StorageManager {
 
 impl StorageManager {
     pub fn new(app: AppHandle) -> Result<Self, String> {
-        let database_dir = app
-            .path()
-            .app_config_dir()
-            .map_err(|error| format!("app_config_dir_unavailable:{error}"))?;
         let app_data_dir = app
             .path()
             .app_data_dir()
             .map_err(|error| format!("app_data_dir_unavailable:{error}"))?;
+        let database_dir = app_database_dir(&app_data_dir);
         let base_vault_path = app_data_dir.join("vault");
 
         fs::create_dir_all(&database_dir)
@@ -238,8 +236,8 @@ impl StorageManager {
     }
 
     pub(crate) fn close_connection(&self, request: SqlConnectionRequest) -> Result<(), String> {
-        if request.database == StorageDatabase::AppConfigFile {
-            let file_name = validate_app_config_file_name(
+        if request.database == StorageDatabase::DatabaseFile {
+            let file_name = validate_database_file_name(
                 request
                     .file_name
                     .as_deref()
@@ -265,8 +263,8 @@ impl StorageManager {
     }
 
     pub(crate) fn reopen_connection(&self, request: SqlConnectionRequest) -> Result<(), String> {
-        if request.database == StorageDatabase::AppConfigFile {
-            let file_name = validate_app_config_file_name(
+        if request.database == StorageDatabase::DatabaseFile {
+            let file_name = validate_database_file_name(
                 request
                     .file_name
                     .as_deref()
@@ -298,7 +296,7 @@ impl StorageManager {
             }
             StorageDatabase::System
             | StorageDatabase::SystemMedia
-            | StorageDatabase::AppConfigFile => open_sqlite_db(&path, db_type)?,
+            | StorageDatabase::DatabaseFile => open_sqlite_db(&path, db_type)?,
         };
         Ok(())
     }
@@ -313,7 +311,7 @@ impl StorageManager {
             StorageDatabase::UserMedia => Some(Arc::clone(&self.user_media_db)),
             StorageDatabase::SystemMedia => Some(Arc::clone(&self.system_media_db)),
             StorageDatabase::UserLogs => Some(Arc::clone(&self.user_logs_db)),
-            StorageDatabase::AppConfigFile => None,
+            StorageDatabase::DatabaseFile => None,
         }
     }
 
@@ -328,8 +326,8 @@ impl StorageManager {
             StorageDatabase::UserMedia => Ok(self.database_dir.join(USER_MEDIA_DATABASE_FILE)),
             StorageDatabase::SystemMedia => Ok(self.database_dir.join(SYSTEM_MEDIA_DATABASE_FILE)),
             StorageDatabase::UserLogs => Ok(self.database_dir.join(USER_LOGS_DATABASE_FILE)),
-            StorageDatabase::AppConfigFile => {
-                Ok(self.database_dir.join(validate_app_config_file_name(
+            StorageDatabase::DatabaseFile => {
+                Ok(self.database_dir.join(validate_database_file_name(
                     file_name.ok_or_else(|| "database_file_name_required".to_string())?,
                 )?))
             }
@@ -344,7 +342,7 @@ impl StorageManager {
             return Ok(connection);
         }
 
-        let file_name = validate_app_config_file_name(
+        let file_name = validate_database_file_name(
             request
                 .file_name
                 .as_deref()
@@ -399,11 +397,15 @@ fn fixed_database_type(database: StorageDatabase, requested: Option<DbType>) -> 
         StorageDatabase::UserMedia => DbType::MediaIndex,
         StorageDatabase::SystemMedia => DbType::SystemMediaIndex,
         StorageDatabase::UserLogs => DbType::Logs,
-        StorageDatabase::AppConfigFile => requested.unwrap_or(DbType::Operational),
+        StorageDatabase::DatabaseFile => requested.unwrap_or(DbType::Operational),
     }
 }
 
-fn validate_app_config_file_name(value: &str) -> Result<&str, String> {
+fn app_database_dir(app_data_dir: &Path) -> PathBuf {
+    app_data_dir.join(DATABASE_DIRECTORY)
+}
+
+fn validate_database_file_name(value: &str) -> Result<&str, String> {
     let trimmed = value.trim();
     if trimmed.is_empty()
         || trimmed.contains('/')

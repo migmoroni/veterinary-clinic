@@ -65,7 +65,12 @@ await removeDirectoryContentsExcept(appConfigDir, preservedUserOutputDirectories
 
 for (const root of appDataRoots()) {
 	const appDataDir = join(root, appIdentifier);
-	await removeDirectoryContentsExcept(appDataDir, preservedUserOutputDirectories, preservedUserOutputPrefixes);
+	await removeDirectoryContentsExcept(
+		appDataDir,
+		new Set([...preservedUserOutputDirectories, 'databases']),
+		preservedUserOutputPrefixes
+	);
+	await removeDirectoryContentsExcept(join(appDataDir, 'databases'), new Set(['backups']));
 }
 
 for (const root of appCacheRoots()) {

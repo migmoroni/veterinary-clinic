@@ -62,20 +62,38 @@ replication  = patches contínuos entre app, espelho local e cloud
 
 O app separa dados do usuário e dados de sistema.
 
+O `StorageManager` resolve `<app_database_dir>` como
+`<app_data_dir>/databases`. Bancos, backups de banco e o cofre CAS ficam
+organizados sob o diretório de dados persistentes do app:
+
+```text
+<app_data_dir>/
+├── databases/
+│   ├── veterinary_clinic_user.db
+│   ├── veterinary_clinic_user_media.db
+│   ├── veterinary_clinic_user_logs.db
+│   ├── veterinary_clinic_system.db
+│   ├── veterinary_clinic_system_media.db
+│   └── backups/
+└── vault/
+    ├── user/
+    └── system/
+```
+
 Conjunto do usuário:
 
 ```text
-veterinary_clinic_user.db
-veterinary_clinic_user_media.db
-veterinary_clinic_user_logs.db
+databases/veterinary_clinic_user.db
+databases/veterinary_clinic_user_media.db
+databases/veterinary_clinic_user_logs.db
 vault/user/xx/yy/<hash_sha256>.bin
 ```
 
 Conjunto do sistema:
 
 ```text
-veterinary_clinic_system.db
-veterinary_clinic_system_media.db
+databases/veterinary_clinic_system.db
+databases/veterinary_clinic_system_media.db
 vault/system/xx/yy/<hash_sha256>.bin
 ```
 

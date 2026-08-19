@@ -175,10 +175,10 @@ O conjunto de usuario em execucao e composto por:
 No Debian atual, o arquivo local aparece em:
 
 ```sh
-~/.config/app.veterinary-clinic.local/veterinary_clinic_user.db
-~/.config/app.veterinary-clinic.local/veterinary_clinic_user_media.db
-~/.config/app.veterinary-clinic.local/veterinary_clinic_user_logs.db
-~/.config/app.veterinary-clinic.local/vault/user/
+~/.local/share/app.veterinary-clinic.local/databases/veterinary_clinic_user.db
+~/.local/share/app.veterinary-clinic.local/databases/veterinary_clinic_user_media.db
+~/.local/share/app.veterinary-clinic.local/databases/veterinary_clinic_user_logs.db
+~/.local/share/app.veterinary-clinic.local/vault/user/
 ```
 
 Na primeira execucao, o app pergunta se deve importar uma base SQLite compativel ou criar uma base vazia. Para reiniciar o estado local durante desenvolvimento, feche o app e remova ou renomeie esse arquivo.

@@ -24,7 +24,7 @@ pub enum StorageDatabase {
     UserMedia,
     SystemMedia,
     UserLogs,
-    AppConfigFile,
+    DatabaseFile,
 }
 
 #[derive(Debug, Deserialize)]

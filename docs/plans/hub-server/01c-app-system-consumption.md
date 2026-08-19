@@ -201,9 +201,8 @@ O destino ativo preserva os locais gerenciados pelo app:
 ```
 
 `<app_database_dir>` é o nome lógico do diretório que reúne os arquivos SQLite
-gerenciados pelo app. Na implementação Tauri, ele resolve para o caminho obtido
-por `app.path().app_config_dir()`. Essa localização física não atribui conteúdo
-de configuração aos bancos `system` ou `system_media`.
+gerenciados pelo app. Na implementação Tauri, ele resolve para
+`app.path().app_data_dir()/databases`.
 
 Os objetos CAS são aditivos e imutáveis. A preparação copia somente hashes
 ausentes para um arquivo temporário no diretório de destino, confirma o SHA-256 e

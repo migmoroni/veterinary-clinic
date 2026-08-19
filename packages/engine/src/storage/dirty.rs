@@ -45,7 +45,7 @@ impl UserBundleDirtyFlags {
             StorageDatabase::UserLogs => Some(&self.user_logs),
             StorageDatabase::System
             | StorageDatabase::SystemMedia
-            | StorageDatabase::AppConfigFile => None,
+            | StorageDatabase::DatabaseFile => None,
         }
     }
 }
