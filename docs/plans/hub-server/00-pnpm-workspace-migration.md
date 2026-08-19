@@ -31,7 +31,8 @@ não depende do gerenciador usado para instalá-los.
 ```mermaid
 flowchart LR
     CURRENT["Workspace modular"] --> PNPM["Pré-fase 0<br/>pnpm"]
-    PNPM --> BUILDER["Parte 1<br/>knowledge-builder Rust"]
+    PNPM --> DATA["Parte 1A<br/>data/knowledge"]
+    DATA --> BUILDER["Parte 1B<br/>knowledge-builder Rust"]
     BUILDER --> HUB["Partes 2 e 3<br/>hub-server"]
     HUB --> APPS["Partes 4 e 5<br/>consumo e updater"]
     APPS --> CI["Parte 6<br/>GitHub e CI/CD"]
@@ -469,13 +470,13 @@ Cobrir:
 - O versionador não lê nem escreve lockfile manualmente.
 - Documentação operacional e instruções ativas usam pnpm.
 - Instalação, checks, testes, build web e Cargo passam em árvore limpa.
-- A Parte 1 pode começar sem carregar comandos ou lockfiles de outro
+- A Parte 1A pode começar sem carregar comandos ou lockfiles de outro
   gerenciador.
 
 ## Próxima Parte
 
 Após cumprir todos os critérios, seguir para a
-[Parte 1: preparação local dos artefatos `system`](./01-knowledge-artifacts-preparation.md).
+[Parte 1A: dados canônicos de conhecimento](./01a-canonical-knowledge-data.md).
 
 ## Referências Técnicas
 

@@ -2,9 +2,9 @@
 
 ## Objetivo
 
-`apps/hub-server/` é o hub aberto do ecossistema veterinário. Ele concentra dados
-públicos, manifests, releases, artefatos de conhecimento e distribuição pública
-dos apps.
+`apps/hub-server/` é o hub aberto do ecossistema veterinário. Ele orquestra a
+publicação dos dados públicos e concentra manifests, releases, artefatos de
+conhecimento e distribuição pública dos apps.
 
 O `hub-server` não é o servidor operacional do SaaS. Dados privados de usuários,
 billing, permissões comerciais, sincronização privada e recursos fechados
@@ -13,44 +13,49 @@ pertencem a outro servidor.
 ## Partes
 
 0. [Migração do workspace para pnpm](./00-pnpm-workspace-migration.md)
-1. [Preparação local dos artefatos `system`](./01-knowledge-artifacts-preparation.md)
-2. [Base Rails e contratos públicos](./02-rails-api-contracts.md)
-3. [Dados públicos e publicação](./03-public-knowledge-publication.md)
-4. [Consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
-5. [Updater Tauri com ambiente local](./05-tauri-updater-local.md)
-6. [Repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
+1. [Parte 1A: dados canônicos de conhecimento](./01a-canonical-knowledge-data.md)
+2. [Parte 1B: `knowledge-builder` e artefatos locais](./01b-knowledge-builder.md)
+3. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
+4. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
+5. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
+6. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
+7. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
+8. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
 
-A pré-fase e as partes são executadas em ordem. Cada uma termina com testes e
-critérios de aceite próprios antes do início da seguinte.
+A pré-fase, as subpartes 1A, 1B e 1C e as partes seguintes são executadas em
+ordem. Cada documento termina com testes e critérios de aceite próprios.
 
 ## Evolução Do Fluxo
 
 ```mermaid
 flowchart LR
     P0["Pré-fase 0<br/>workspace pnpm"]
-    P1["Parte 1<br/>fonte canônica + builder Rust"]
+    P1A["Parte 1A<br/>fonte canônica"]
+    P1B["Parte 1B<br/>builder Rust"]
+    P1C["Parte 1C<br/>consumo local"]
     P2["Parte 2<br/>base Rails + contratos"]
     P3["Parte 3<br/>Rails orquestra builder + releases"]
     P4["Parte 4<br/>apps consomem a API"]
     P5["Parte 5<br/>updater Tauri local"]
     P6["Parte 6<br/>GitHub + CI/CD"]
 
-    P0 --> P1 --> P2 --> P3 --> P4 --> P5 --> P6
+    P0 --> P1A --> P1B --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
 ```
 
 As mudanças de origem dos artefatos são deliberadas:
 
 ```mermaid
 flowchart TB
-    subgraph S1["Parte 1"]
-        D1["Dados canônicos no workspace"] --> G1["knowledge-builder Rust"]
+    subgraph S1["Partes 1A, 1B e 1C"]
+        D1["data/knowledge<br/>fonte canônica"] --> G1["knowledge-builder Rust"]
         G1 --> B1["build/knowledge-artifacts"]
-        B1 --> A1["App em desenvolvimento e build"]
+        B1 --> A1["Apps em desenvolvimento e build"]
     end
 
     subgraph S2["Partes 3 e 4"]
-        D2["Dados canônicos no hub-server"] --> G2["Mesmo knowledge-builder Rust"]
-        G2 --> R2["Rails: releases e manifest"]
+        D2["data/knowledge"] --> G2["Mesmo knowledge-builder Rust"]
+        R2["Rails: jobs, releases e manifest"] --> G2
+        G2 --> R2
         R2 --> H2["API do hub-server"]
         H2 --> A2["Apps"]
     end
@@ -64,12 +69,12 @@ flowchart TB
 ```
 
 A Pré-fase 0 estabelece pnpm como único gerenciador do workspace JavaScript. A
-Parte 1 estabelece o formato dos dados e dos artefatos por locale com o
-`knowledge-builder` definitivo em Rust. A Parte 3 transfere os dados fonte para o
-`hub-server`, que passa a invocar a mesma ferramenta e assume releases,
-assinatura e publicação. A Parte 4 refatora a aquisição e a instalação nos apps
-para o contrato de distribuição do Hub. A Parte 6 mantém esse contrato e
-acrescenta o GitHub como provider externo.
+Parte 1A estabelece `data/knowledge` como fonte canônica, a Parte 1B implementa o
+`knowledge-builder` definitivo em Rust e a Parte 1C faz os apps consumirem os
+artefatos locais. A Parte 3 faz o `hub-server` invocar a mesma ferramenta e
+assumir releases, assinatura e publicação. A Parte 4 substitui a aquisição local
+pelo contrato de distribuição do Hub. A Parte 6 acrescenta o GitHub como provider
+externo.
 
 ## Decisões De Arquitetura
 
@@ -84,6 +89,11 @@ acrescenta o GitHub como provider externo.
 - `tools/knowledge-builder/` é um binário Rust membro do Cargo Workspace e o
   único compilador de dados canônicos para `system`, `system_media` e
   `CAS/system`.
+- `data/knowledge/` na raiz é a única fonte de autoria dos dados públicos. O
+  diretório não pertence ao app, ao Rails nem a um package de código.
+- `geo/` é um domínio de conhecimento compartilhado. Localizações usam
+  `entityType: "geo_place"`; raças e outros domínios apenas referenciam seus IDs
+  conforme o papel exercido pela relação.
 - O `hub-server` executa o builder por uma CLI versionada e valida seu
   `build-result.json`; ele não mantém outra implementação do compilador em Ruby.
 - O servidor começa em Rails 8 API com SQLite.
@@ -103,9 +113,17 @@ acrescenta o GitHub como provider externo.
 - Os dados fonte de conhecimento são organizados por domínio e entidade. Cada
   entidade possui um diretório com `entity.json` para os campos estruturais e um
   arquivo JSON separado por locale em `localizations/`.
-- IDs, relações, classificações, regiões e referências CAS são estruturais e
-  permanecem únicos; a geração projeta a mesma entidade canônica nos bancos de
-  cada locale.
+- A árvore de pastas é somente editorial. `entityType`, IDs, relações,
+  classificações, regiões e referências CAS ficam nos JSONs e a geração não
+  deduz semântica do caminho.
+- Os JSONs não contêm nomes de tabelas ou colunas. `entityType` seleciona um Data
+  Mapper explícito, e o DDL do builder é a fonte de verdade da projeção
+  relacional.
+- Cada build registra cobertura de entidades e relações e fingerprints dos
+  schemas efetivamente materializados.
+- Nomes, aliases, descrições e rótulos de conhecimento ficam nas localizações e
+  são projetados diretamente no banco do locale; o app não usa i18n como fonte
+  paralela de conhecimento.
 - Cada locale possui seu próprio `system_media.db`, que indexa somente as mídias
   exigidas por aquele conjunto localizado.
 - `CAS/system` contém objetos imutáveis endereçados por SHA-256.
@@ -137,14 +155,16 @@ flowchart LR
     HUB --> APP["apps/*<br/>consumo, validação e instalação"]
     HUB --> PROVIDERS["Providers externos<br/>réplicas e entrega de bytes"]
     PROVIDERS --> APP
-    CORE["packages/core-local<br/>leitura e contratos SQLite"] --> HUB
-    CORE --> APP
+    CORE["packages/core-local<br/>leitura e contratos SQLite"] --> APP
     ENGINE["packages/engine<br/>armazenamento, integridade e distribuição"] --> APP
 ```
 
 ```text
+data/knowledge/
+  autoria dos dados públicos canônicos
+
 apps/hub-server/
-  dados públicos, orquestração, publicação, manifests e APIs
+  orquestração, publicação, manifests e APIs
 
 tools/knowledge-builder/
   validação, projeção, geração dos bancos, CAS e relatório do build
@@ -714,13 +734,15 @@ descobrir uma revisão incrementando URLs que não estejam declaradas.
 ## Ordem Recomendada
 
 1. Implementar e validar a Pré-fase 0.
-2. Implementar e validar a Parte 1.
-3. Implementar e validar a Parte 2.
-4. Implementar e validar a Parte 3.
-5. Implementar e validar a Parte 4.
-6. Implementar e validar a Parte 5.
-7. Mover o projeto para o repositório dedicado.
-8. Implementar e validar a Parte 6.
+2. Implementar e validar a Parte 1A.
+3. Implementar e validar a Parte 1B.
+4. Implementar e validar a Parte 1C.
+5. Implementar e validar a Parte 2.
+6. Implementar e validar a Parte 3.
+7. Implementar e validar a Parte 4.
+8. Implementar e validar a Parte 5.
+9. Mover o projeto para o repositório dedicado.
+10. Implementar e validar a Parte 6.
 
 ## Expansões Previstas
 

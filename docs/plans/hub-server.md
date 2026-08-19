@@ -4,7 +4,9 @@ A implementação de `apps/hub-server/` segue o plano canônico:
 
 - [Arquitetura e contratos](./hub-server/README.md)
 - [Pré-fase 0: migração do workspace para pnpm](./hub-server/00-pnpm-workspace-migration.md)
-- [Parte 1: preparação local dos artefatos `system`](./hub-server/01-knowledge-artifacts-preparation.md)
+- [Parte 1A: dados canônicos de conhecimento](./hub-server/01a-canonical-knowledge-data.md)
+- [Parte 1B: `knowledge-builder` e artefatos locais](./hub-server/01b-knowledge-builder.md)
+- [Parte 1C: consumo local dos artefatos `system`](./hub-server/01c-app-system-consumption.md)
 - [Parte 2: base Rails e contratos públicos](./hub-server/02-rails-api-contracts.md)
 - [Parte 3: dados públicos e publicação](./hub-server/03-public-knowledge-publication.md)
 - [Parte 4: consumo dos artefatos nos apps](./hub-server/04-app-artifact-consumption.md)

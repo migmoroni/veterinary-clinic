@@ -54,7 +54,7 @@ sequenceDiagram
 A refatoração desta parte altera deliberadamente a aquisição e a instalação dos
 artefatos no app. A API pública usada pelas consultas de conhecimento pode
 preservar seus contratos, mas sua resolução passa a apontar para a release ativa
-instalada, e não para a saída local da Parte 1.
+instalada, e não para a saída local da Parte 1C.
 
 ```mermaid
 flowchart LR

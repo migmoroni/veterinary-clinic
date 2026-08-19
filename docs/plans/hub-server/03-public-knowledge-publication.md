@@ -2,9 +2,9 @@
 
 ## Objetivo
 
-Fazer `apps/hub-server` concentrar os dados públicos, gerar os artefatos de
-referência por locale e publicar releases globais de conhecimento completas e
-assinadas.
+Fazer `apps/hub-server` orquestrar a compilação dos dados públicos canônicos,
+gerar os artefatos de referência por locale e publicar releases globais de
+conhecimento completas e assinadas.
 
 Cada release coordena seis pares `system` e `system_media` sob a mesma versão,
 com `CAS/system` compartilhado. Esta parte depende da
@@ -14,7 +14,7 @@ com `CAS/system` compartilhado. Esta parte depende da
 
 ```mermaid
 flowchart LR
-    SOURCE["apps/hub-server/data/knowledge<br/>entidades canônicas"] --> JOB["Job Rails"]
+    SOURCE["data/knowledge<br/>entidades canônicas"] --> JOB["Job Rails"]
     JOB --> BUILDER["knowledge-builder Rust"]
     BUILDER --> CANDIDATE["12 bancos + CAS<br/>build-result.json"]
     CANDIDATE -.-> WORKSPACE["Exportação até a Parte 4<br/>build/knowledge-artifacts"]
@@ -29,6 +29,7 @@ flowchart LR
 Modelar e validar:
 
 - raças;
+- localizações geográficas reutilizáveis;
 - fabricantes;
 - produtos;
 - princípios ativos;
@@ -36,31 +37,30 @@ Modelar e validar:
 - protocolos públicos;
 - mídias públicas associadas aos catálogos.
 
-`apps/hub-server` possui operacionalmente os dados fonte públicos e orquestra a
+`data/knowledge` possui os dados fonte públicos. `apps/hub-server` orquestra a
 geração dos artefatos pelo `knowledge-builder`. `packages/types` conserva
 contratos compartilhados, sem armazenar o catálogo publicado.
 
 Os dados fonte ficam organizados por domínio e diretório de entidade:
 
 ```text
-apps/hub-server/data/knowledge/
-├── breeds/
-│   ├── canine/
-│   │   └── <entity>/
-│   └── feline/
-│       └── <entity>/
-├── manufacturers/
-│   └── <entity>/
-├── products/
-│   └── <entity>/
-├── active_ingredients/
-│   └── <entity>/
-├── conditions/
-│   └── <entity>/
-├── protocols/
-│   └── <entity>/
-└── media/
-    └── <entity>/
+data/knowledge/
+├── _media/
+│   └── objects/
+│       └── <sha256>
+├── catalog/
+│   ├── products/
+│   ├── manufacturers/
+│   ├── active-ingredients/
+│   ├── conditions/
+│   └── taxonomies/
+├── animals/
+│   ├── breeds/
+│   └── taxonomies/
+├── geo/
+│   └── places/
+└── clinical/
+    └── treatment-protocols/
 ```
 
 Todo diretório de entidade segue o mesmo envelope físico:
@@ -77,16 +77,20 @@ Todo diretório de entidade segue o mesmo envelope físico:
     └── fr-FR.json
 ```
 
-O nome do diretório é um identificador legível para autoria e navegação. O UUID
-de `entity.json` é a identidade canônica usada pelos bancos, relações e releases.
+O nome e a posição do diretório servem somente para autoria e navegação. Os
+campos `entityType` e `id` de `entity.json` formam a identidade usada pelos
+bancos e relações. O builder não infere semântica do caminho.
 
 `entity.json` contém somente os campos estruturais compartilhados pelas seis
 projeções:
 
 ```json
 {
-  "id": "<uuid-estavel>",
+  "schemaVersion": 1,
+  "entityType": "breed",
+  "id": "<id-estavel>",
   "species": ["canine"],
+  "originPlaceIds": ["england"],
   "regions": ["BRA", "PRT"],
   "classification": {},
   "relations": {},
@@ -103,6 +107,7 @@ Cada arquivo em `localizations/` contém somente o conteúdo de seu locale:
 
 ```json
 {
+  "schemaVersion": 1,
   "locale": "pt-BR",
   "name": "Pastor Alemão",
   "aliases": ["capa-preta"],
@@ -120,9 +125,10 @@ Cada arquivo em `localizations/` contém somente o conteúdo de seu locale:
 ```
 
 Cada domínio possui um schema estrutural para `entity.json` e um schema de
-localização para os seis arquivos de idioma. Nomes próprios, denominações
-científicas e marcas que não exigem tradução permanecem em `entity.json`.
-Relações usam IDs estáveis e nunca nomes localizados. Regiões definem
+localização para os seis arquivos de idioma. Todo nome, alias, descrição e rótulo
+apresentável fica na localização, mesmo quando o texto é igual nos seis locales.
+Identificadores científicos e regulatórios permanecem estruturais em campos
+próprios. Relações usam IDs estáveis e nunca nomes localizados. Regiões definem
 aplicabilidade de domínio e não controlam em quais bancos localizados a entidade
 existe.
 
@@ -130,7 +136,8 @@ Referências de mídia em `entity.json` pertencem a todos os locales. Um arquivo
 localização pode referenciar o mesmo hash para acrescentar textos localizados ou
 declarar hashes exigidos somente por aquele locale. O `system_media` projetado é
 a união das referências compartilhadas com as referências da localização
-selecionada; o `CAS/system` continua deduplicado por SHA-256.
+selecionada; o `CAS/system` continua deduplicado por SHA-256. Os bytes de autoria
+residem em `data/knowledge/_media/objects/<sha256>` e são validados pelo builder.
 
 A validação exige exatamente os seis arquivos de localização em cada entidade.
 O campo `locale` precisa coincidir com o nome do arquivo. O processo recusa ID
@@ -141,7 +148,7 @@ produzindo o mesmo conjunto de IDs e relações não localizáveis nos seis banc
 
 ## Fronteira Com A Preparação Local
 
-O mesmo `knowledge-builder` Rust da Parte 1 produz o estado integral candidato,
+O mesmo `knowledge-builder` Rust da Parte 1B produz o estado integral candidato,
 composto pelos seis pares de bancos finais, pela união CAS referenciada e por
 `build-result.json`. O Rails reserva primeiro a identidade da release em estado
 `draft`, fornece essa identidade em `build-context.json` e transforma o resultado
@@ -156,7 +163,7 @@ A fronteira operacional é:
 
 ```mermaid
 flowchart LR
-    DATA["hub-server/data/knowledge"] --> BUILDER["tools/knowledge-builder"]
+    DATA["data/knowledge"] --> BUILDER["tools/knowledge-builder"]
     JOB["Solid Queue job"] --> BUILDER
     BUILDER --> RESULT["Staging + build-result.json"]
     RESULT --> SERVICES["Services Rails de release"]
@@ -165,9 +172,9 @@ flowchart LR
 
 Nesta parte:
 
-- mover as entidades canônicas para `apps/hub-server/data/knowledge/`;
-- remover os catálogos publicados de `packages/types`, conservando somente
-  contratos, tipos e utilitários compartilhados;
+- usar `data/knowledge/` como fonte canônica configurada para o job;
+- incluir ou montar essa fonte como diretório somente leitura no ambiente do
+  Hub;
 - compilar o `knowledge-builder` e incluí-lo no ambiente do Hub por build
   multi-stage;
 - executar o binário em job assíncrono com argumentos separados, sem shell;
@@ -178,8 +185,10 @@ Nesta parte:
 - aplicar timeout, limite de recursos, lock de geração e ambiente mínimo;
 - recusar código de saída diferente de zero;
 - validar `schemaVersion`, `builderVersion`, `sourceDigestSha256`, os seis locales,
-  identidade da release, versões de schema, checksums e digests de
-  `build-result.json`;
+  identidade da release, versões e fingerprints de schema, checksums, digests e
+  o contrato de `projection-report.json` declarado por `build-result.json`;
+- exigir cobertura integral de entidades e relações, sem item não consumido ou
+  referência não resolvida;
 - resolver somente caminhos relativos normalizados dentro do staging e validar
   tamanho e SHA-256 de cada arquivo declarado;
 - calcular o SHA-256 dos bytes de `build-result.json` e persistir toda a
@@ -196,9 +205,9 @@ O diretório `tmp/` é staging descartável e nunca armazena uma release publica
 O armazenamento persistente do Hub conserva pacotes, bancos necessários à cadeia
 de patches e objetos CAS conforme a política de retenção.
 
-Ao concluir esta parte, existe uma única fonte canônica, pertencente ao
-`hub-server`, e um único compilador, pertencente a `tools/knowledge-builder/`. O
-app ainda mantém sua integração local até a refatoração de consumo da Parte 4.
+Ao concluir esta parte, existe uma única fonte canônica em `data/knowledge/` e um
+único compilador em `tools/knowledge-builder/`. O app ainda mantém o consumo local
+estabelecido na Parte 1C até a refatoração de aquisição da Parte 4.
 
 `buildVersion` identifica a execução e o namespace de saída do builder. Ela é
 interna, não entra no manifest público e não determina `generation` ou
@@ -228,8 +237,8 @@ e reutiliza objetos CAS existentes.
 `knowledge:replicate_manifests` retoma cópias pendentes sem alterar o snapshot, a
 sequência ou a release do canal.
 
-`knowledge:prepare_workspace` invoca o mesmo binário Rust com a fonte do Hub e o
-destino `build/knowledge-artifacts` consumido pelo app ao final da Parte 1 e usa
+`knowledge:prepare_workspace` invoca o mesmo binário Rust com `data/knowledge` e
+o destino `build/knowledge-artifacts` consumido pelo app ao final da Parte 1C e usa
 um contexto com `release: null`. Essa tarefa mantém o desenvolvimento e os builds
 executáveis durante esta parte sem duplicar compilador ou dados fonte. Ela não
 publica release, não cria outra identidade pública e é retirada na Parte 4,
@@ -832,6 +841,8 @@ Cobrir:
 - predecessor do draft coerente com a cadeia global;
 - recusa de `build-result.json` ausente, malformado ou incompatível;
 - recusa de `builderVersion`, `sourceDigestSha256`, checksum ou locale divergente;
+- recusa de fingerprint de schema divergente;
+- recusa de relatório de projeção ausente, inválido ou com cobertura incompleta;
 - recusa de caminho absoluto, com `..` ou fora do staging;
 - recusa de relatório ou banco cuja identidade pública diverge do draft;
 - ausência de alteração nos bancos depois da saída do builder;
@@ -845,6 +856,8 @@ Cobrir:
 - presença exata dos seis arquivos em cada diretório `localizations/`;
 - correspondência entre o nome de cada arquivo e seu campo `locale`;
 - projeção isolada de cada localização sem alterar campos estruturais;
+- projeção de `geo_place` como domínio compartilhado e resolução de todos os
+  `originPlaceIds` das raças;
 - recusa de campo estrutural em localização e de campo traduzível em
   `entity.json`;
 - composição da mídia compartilhada e localizada em cada `system_media`;
@@ -884,16 +897,17 @@ Cobrir:
 
 ## Critérios De Aceite
 
-- O `hub-server` possui e valida os dados públicos.
+- O `hub-server` valida os dados públicos canônicos antes de preparar uma
+  release.
 - `tools/knowledge-builder` é o único compilador dos artefatos públicos.
 - O Rails invoca a CLI Rust e valida integralmente `build-result.json` antes de
   registrar os artefatos.
+- O Rails valida o checksum e a cobertura integral de `projection-report.json`.
 - Toda release pública reserva sua identidade antes do build e os doze bancos
   registram exatamente essa identidade e seus respectivos locales.
 - O ambiente executável do Hub contém uma versão explícita do builder.
 - Ruby não implementa DDL, seeds, projeção de locale nem montagem do CAS.
-- Os catálogos publicados pertencem somente a
-  `apps/hub-server/data/knowledge/`.
+- Os catálogos publicados possuem `data/knowledge/` como única fonte de autoria.
 - O Hub consegue usar o builder para materializar a saída local necessária ao app
   até a Parte 4.
 - Os dados fonte são organizados por domínio e diretório de entidade, com
