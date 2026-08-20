@@ -93,16 +93,41 @@ Schemas, migrations, escrita de mídia, sincronização, replicação e CAS do r
 
 ```mermaid
 flowchart LR
-    DATA["data/knowledge<br/>entity.json + Markdown + media"] --> LOAD["Descoberta recursiva"]
-    LOAD --> VALIDATE["Schemas, AST, IDs,<br/>relações e caminhos"]
-    VALIDATE --> COMPILE["Compilação de conteúdo<br/>e mídias"]
-    COMPILE --> PROJECT["Projeção dos seis locales"]
+    DATA["entity.json + Markdown + mídias"] --> PATHS["Resolver caminhos<br/>editoriais"]
+    PATHS --> PARSE["Parser Markdown<br/>por AST"]
+    PARSE --> ALLOWLIST["Validar allowlist"]
+    ALLOWLIST --> NORMALIZE["Normalizar AST"]
+    NORMALIZE --> MEDIA["Resolver mediaKey<br/>e contentHash"]
+    MEDIA --> MODEL["Modelo semântico<br/>canônico"]
+    MODEL --> DIGEST["sourceDigestSha256"]
+    MODEL --> PROJECT["Projeção dos seis locales"]
     PROJECT --> DATABASES["6 × system<br/>6 × system_media"]
     PROJECT --> CAS["CAS/system compartilhado"]
     DATABASES --> VERIFY["Integridade + checksums"]
     CAS --> VERIFY
     VERIFY --> OUTPUT["build/knowledge-artifacts"]
 ```
+
+O pipeline normativo é:
+
+```text
+entity.json + Markdown + mídias
+-> validação estrutural do entity.json
+-> resolução segura dos caminhos editoriais
+-> parser Markdown por AST
+-> validação por allowlist
+-> normalização determinística do AST
+-> resolução das mídias para mediaKey e contentHash
+-> construção do modelo semântico canônico
+-> cálculo do sourceDigestSha256
+-> representação compilada segura
+-> projeção relacional
+=> build de system, system_media e CAS/system
+```
+
+Somente o modelo semântico canônico chega aos projectors. JSON bruto, bytes
+Markdown originais e caminhos editoriais de conteúdo não são projetados nem
+participam diretamente do digest.
 
 ## Local Do Código
 
@@ -159,8 +184,11 @@ O builder:
 - lê os arquivos `<locale>.md` declarados pelo manifesto;
 - analisa Markdown por parser estruturado, sem expressões regulares sobre o
   texto-fonte;
-- valida campos simples, listas e seções conforme o schema do domínio;
-- converte manifesto, AST localizado e mídias em um modelo canônico Rust;
+- valida campos simples, listas e seções conforme o schema do domínio e a
+  allowlist Markdown;
+- normaliza deterministicamente os ASTs aceitos;
+- resolve as mídias e converte estrutura, AST normalizado e descritores de mídia
+  em um modelo semântico canônico Rust;
 - seleciona um projector registrado para o tipo canônico;
 - recusa identidade duplicada;
 - recusa arquivo localizado ausente, duplicado ou desconhecido;
@@ -171,6 +199,29 @@ O builder:
 - trata o caminho relativo da mídia dentro da entidade como parte de sua
   referência editorial estável.
 
+## Representação Markdown Compilada
+
+O builder implementa o perfil fechado definido na Parte 1A sem depender das
+opções permissivas padrão da biblioteca de Markdown escolhida. Antes da projeção,
+ele:
+
+1. remove BOM e normaliza quebras de linha;
+2. normaliza strings textuais em UTF-8 NFC;
+3. descarta posições e metadados sintáticos sem significado de domínio;
+4. valida nós, profundidade, quantidade de nós, links e destinos de imagem;
+5. normaliza deterministicamente headings internos e estruturas equivalentes;
+6. reescreve imagens relativas para `knowledge-media://asset/<media-key>`;
+7. serializa o AST aceito em Markdown canônico determinístico.
+
+Campos simples são projetados como valores tipados, aliases como coleções
+tipadas e corpos de seção como Markdown canônico compilado. A saída não contém
+HTML bruto, caminhos editoriais, imagens remotas ou URI com protocolo não
+permitido. A ordem semântica de parágrafos, listas, tabelas e seções é preservada.
+
+O renderer não precisa interpretar a fonte de autoria. O perfil da representação
+compilada integra o contrato do schema de `system`; qualquer ampliação que exija
+suporte novo no consumidor eleva essa versão.
+
 ## Padrão De Projeção Relacional
 
 O builder segue uma arquitetura schema-first com Data Mappers explícitos. O DDL
@@ -179,7 +230,7 @@ as mídias são a fonte de verdade do conteúdo de domínio.
 
 ```text
 entity.json + Markdown + mídias
--> validação pelo schema de fonte
+-> validação e compilação canônica da fonte
 -> modelo canônico Rust
 -> projector do entityType
 -> tabelas definidas pelo DDL
@@ -658,25 +709,46 @@ sua remoção pertence à política de garbage collection.
 ## Digest Lógico Da Fonte
 
 `sourceDigestSha256` representa o conteúdo lógico, não a organização editorial
-dos diretórios. Sua entrada canônica é ordenada por:
+dos diretórios. Ele é calculado depois da validação, normalização dos ASTs e
+resolução das mídias, sobre o mesmo modelo semântico entregue aos projectors. Sua
+entrada canônica é ordenada por:
 
 ```text
 entityType
 id
+campo estrutural ou relação
 campo localizado ou sectionKey
 locale
 mediaKey
 contentHash
 ```
 
-O digest cobre os JSONs normalizados, o conteúdo lógico dos ASTs Markdown, os
-schemas de autoria efetivamente usados e os bytes de mídia. Caminhos absolutos,
-nomes dos diretórios de conteúdo e a posição organizacional da entidade não
-entram na identidade. Mover uma entidade inteira ou renomear uma pasta de texto
-com a atualização do manifesto preserva o digest quando o conteúdo lógico não
-muda. Renomear ou mover uma mídia dentro da entidade altera sua `media_key` e o
-digest; alterar apenas seus bytes preserva a chave e altera o digest pelo novo
+O digest cobre:
+
+- campos estruturais e relações do `entity.json`, após validação e conversão para
+  o modelo tipado;
+- campos e seções localizados, identificados por chave semântica e locale;
+- conteúdo lógico dos ASTs Markdown normalizados;
+- fingerprints canônicos dos schemas de autoria efetivamente usados;
+- `mediaKey`, `contentHash` e metadados de mídia com significado no resultado.
+
+O digest não usa os bytes do JSON ou Markdown original. `contentPath`, nomes dos
+diretórios de conteúdo, caminhos absolutos, posição organizacional da entidade,
+BOM, estilo de quebra de linha e diferenças sintáticas eliminadas pela
+normalização não entram na identidade. O caminho relativo normalizado da mídia
+participa por meio da `mediaKey`, e seus bytes participam por meio de
 `contentHash`.
+
+A serialização usada pelo digest é versionada pelo contrato do builder e
+determinística: UTF-8 NFC, chaves de mapas em ordem lexicográfica, conjuntos sem
+ordem de domínio classificados por sua identidade e arrays semanticamente
+ordenados preservados na ordem da fonte. `buildVersion`, identidade de release,
+diretório de saída e timestamps não participam.
+
+Mover uma entidade inteira ou renomear uma pasta de texto com a atualização do
+manifesto preserva o digest quando o conteúdo lógico não muda. Renomear ou mover
+uma mídia dentro da entidade altera sua `media_key` e o digest; alterar apenas
+seus bytes preserva a chave e altera o digest pelo novo `contentHash`.
 
 Adicionar, remover ou alterar uma entrada efetiva muda o digest.
 
@@ -714,6 +786,9 @@ O builder recusa:
 - caminho de conteúdo ausente, absoluto, remoto ou que escape da entidade;
 - front matter em arquivo Markdown;
 - AST incompatível com o campo localizado declarado;
+- HTML bruto, nó fora da allowlist ou AST acima dos limites definidos;
+- link com protocolo não permitido ou imagem que não use mídia relativa da
+  própria entidade;
 - `sectionKey` desconhecida ou repetida;
 - `parentSectionKey` inexistente, proibida ou cíclica;
 - conteúdo localizado sem associação no `entity.json`;
@@ -771,7 +846,14 @@ Cobrir:
 - recusa de entidade sem projector ou sem destino relacional;
 - combinação do manifesto com cada conjunto de fragmentos dos seis locales;
 - parser Markdown baseado em AST;
-- validação de texto simples, listas e seções livres;
+- validação de texto simples, listas e seções pelo perfil canônico;
+- recusa de HTML bruto, nós fora da allowlist, imagens remotas e protocolos
+  `javascript:`, `data:`, `file:` ou desconhecidos;
+- limites de tamanho, profundidade e quantidade de nós do AST;
+- normalização de BOM, quebras de linha, Unicode e estruturas Markdown
+  semanticamente equivalentes;
+- mesma representação compilada e mesmo digest para fontes que resultem no mesmo
+  AST semântico;
 - recusa de front matter e conteúdo incompatível com o campo declarado;
 - associação de diretório arbitrário à `sectionKey` definida no manifesto;
 - composição determinística da hierarquia de seções por `parentSectionKey`;

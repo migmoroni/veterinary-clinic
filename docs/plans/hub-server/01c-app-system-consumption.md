@@ -313,7 +313,7 @@ mediaKey
 -> fornecer URL ou stream seguro ao consumidor
 ```
 
-O renderer de Markdown reconhece somente o contrato interno:
+Para mídias, o renderer de Markdown reconhece somente o contrato interno:
 
 ```markdown
 ![Texto alternativo](knowledge-media://asset/<media-key> "Legenda opcional")
@@ -323,6 +323,14 @@ Ele extrai e valida a `media_key`, usa a mesma fronteira de resolução e nunca 
 converte em caminho físico diretamente. Uma referência ausente produz estado
 explícito de mídia indisponível, sem buscar arquivos em `data/knowledge` nem
 aceitar caminhos relativos de autoria.
+
+O renderer recebe somente Markdown canônico compilado dos bancos `system` e usa
+um perfil compatível com o schema ativo. HTML bruto permanece desabilitado, nós
+desconhecidos não são convertidos em DOM e URLs são validadas novamente por
+protocolo. Referências `knowledge-media` passam exclusivamente pelo resolvedor
+acima; links externos `https` usam a fronteira de abertura externa da plataforma.
+`javascript:`, `data:`, `file:`, imagens remotas e outros protocolos não
+permitidos são recusados mesmo diante de um artefato inválido.
 
 Ao ativar outra build ou locale, a mesma `mediaKey` pode resolver para outro
 `contentHash` conforme o `system_media` ativo. Caches de URLs e metadados usam a
@@ -510,6 +518,10 @@ Cobrir:
 - leitura das mídias pelo `system_media` correspondente;
 - resolução de `mediaKey` para `contentHash` e objeto CAS;
 - Markdown resolvendo `knowledge-media://asset/<media-key>`;
+- renderização do perfil Markdown compilado com HTML bruto desabilitado;
+- recusa no runtime de nós desconhecidos, imagens remotas e protocolos de URI
+  não permitidos;
+- abertura de links `https` pela fronteira externa da plataforma;
 - mesma `mediaKey` resolvendo novo conteúdo após troca de build;
 - invalidação de cache de mídia após troca de locale ou hash;
 - recusa de `mediaKey`, caminho físico ou URI de mídia inválida;

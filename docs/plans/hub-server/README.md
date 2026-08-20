@@ -123,6 +123,10 @@ externo.
 - Nomes, aliases, descrições e seções de conhecimento ficam em Markdown puro,
   sem front matter, e são projetados diretamente no banco do locale; o app não
   usa i18n como fonte paralela de conhecimento.
+- O builder interpreta Markdown por AST, aplica uma allowlist fechada, normaliza
+  o resultado deterministicamente e projeta somente a representação compilada
+  segura. O digest da fonte usa o modelo semântico canônico, sem depender de
+  caminhos editoriais de conteúdo.
 - Mídias de autoria usam nomes e caminhos relativos legíveis. O builder deriva
   uma `media_key`, calcula o SHA-256, reescreve as referências Markdown para o
   contrato interno e registra `media_key -> contentHash` em `system_media`.

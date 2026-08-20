@@ -112,7 +112,8 @@ composição do conteúdo localizado:
 ```
 
 Cada arquivo Markdown contém somente o valor ou o corpo do locale, sem front
-matter. Um fragmento de seção pode usar Markdown livre e referências relativas:
+matter. Um fragmento de seção usa o perfil Markdown canônico e pode conter
+referências relativas de mídia:
 
 ```markdown
 Conteúdo localizado da seção.
@@ -129,10 +130,12 @@ localizados. Títulos e subtítulos padronizados formam uma hierarquia explícit
 por `parentSectionKey`, sem depender de headings ou nomes de diretório.
 
 O builder resolve caminhos relativos dentro da entidade, analisa Markdown por
-AST, calcula SHA-256, deriva uma `media_key` de `entityType`, `id` e caminho
-relativo, grava `media_key -> contentHash` no `system_media` aplicável e
-materializa o objeto no `CAS/system`. O conteúdo compilado recebe referências
-`knowledge-media://asset/<media-key>`; a fonte de autoria nunca contém essa URI.
+AST, aplica a allowlist, normaliza o AST deterministicamente e constrói o modelo
+semântico canônico. Em seguida calcula SHA-256, deriva uma `media_key` de
+`entityType`, `id` e caminho relativo, grava `media_key -> contentHash` no
+`system_media` aplicável e materializa o objeto no `CAS/system`. O conteúdo
+compilado seguro recebe referências `knowledge-media://asset/<media-key>`; a
+fonte de autoria nunca contém essa URI.
 
 Alterar os bytes preservando o caminho editorial mantém a `media_key` e produz
 outro objeto CAS imutável. Renomear a mídia exige atualizar as referências e
@@ -146,9 +149,10 @@ editorial da mídia.
 A validação exige os seis arquivos Markdown para cada campo ou seção obrigatória.
 O processo recusa ID duplicado, referência inexistente, locale desconhecido,
 front matter, arquivo não declarado, `sectionKey` inválida, AST incompatível,
-caminho absoluto, remoto ou que resolva fora da entidade e mídia não
-referenciada. A projeção de cada locale combina o manifesto com seus fragmentos
-e produz o mesmo conjunto de IDs e relações não localizáveis nos seis bancos.
+HTML bruto, nó fora da allowlist, protocolo não permitido, caminho absoluto,
+remoto ou que resolva fora da entidade e mídia não referenciada. A projeção de
+cada locale combina o manifesto com seus fragmentos e produz o mesmo conjunto de
+IDs e relações não localizáveis nos seis bancos.
 
 ## Fronteira Com A Preparação Local
 

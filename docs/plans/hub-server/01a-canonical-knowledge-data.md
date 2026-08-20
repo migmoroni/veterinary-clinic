@@ -236,8 +236,32 @@ O schema da chave localizada determina como o AST é validado e projetado:
 
 - `name`: texto simples sem bloco estrutural adicional;
 - `aliases`: lista Markdown de textos simples;
-- seção: corpo Markdown livre;
+- seção: corpo Markdown dentro do perfil canônico permitido;
 - outros campos localizados: contrato tipado próprio do `entityType`.
+
+### Perfil Markdown Canônico
+
+O conteúdo usa um perfil fechado baseado em CommonMark. Seções podem conter
+texto, parágrafos, quebras, ênfase, negrito, headings internos, listas ordenadas
+e não ordenadas, citações, separadores, código tratado como texto, tabelas e
+links externos `https`. Imagens usam somente caminhos relativos para arquivos
+declarados dentro da própria entidade.
+
+O perfil recusa:
+
+- HTML bruto, comentários HTML e atributos injetados;
+- scripts, estilos, formulários, iframes, objetos, embeds, áudio e vídeo;
+- links ou imagens com `javascript:`, `data:`, `file:` ou protocolo
+  desconhecido;
+- imagens remotas;
+- nós ou extensões Markdown fora da allowlist;
+- AST acima dos limites definidos para tamanho, profundidade e quantidade de
+  nós.
+
+Os contratos de `name`, `aliases` e outros campos simples aplicam subconjuntos
+mais restritos dessa allowlist. O perfil faz parte dos schemas de autoria e da
+representação compilada; uma alteração que exija comportamento novo do runtime
+também eleva a versão do schema de `system`.
 
 O título principal de uma seção não precisa aparecer no fragmento. Subtítulos
 internos são permitidos e permanecem localizados; o builder normaliza sua
@@ -447,7 +471,7 @@ caminho CAS, base64 ou referência interna já compilada.
 
 1. Criar os seis Markdown exigidos em cada diretório localizado.
 2. Transportar nomes e aliases para fragmentos tipados.
-3. Transportar descrições e seções para Markdown livre.
+3. Transportar descrições e seções para o perfil Markdown canônico.
 4. Converter referências de mídia em links relativos comuns.
 5. Distribuir aliases por locale.
 6. Manter no i18n somente textos de interface e rótulos padronizados.
@@ -484,6 +508,9 @@ Cobrir por auditoria automatizada e determinística:
 - ausência de locale desconhecido;
 - ausência de front matter nos Markdown;
 - formato AST correto para campos simples, listas e seções;
+- conformidade de todo AST com a allowlist Markdown;
+- recusa de HTML bruto, nós não permitidos, imagens remotas e protocolos de URI
+  não autorizados;
 - equivalência de nomes, aliases, descrições e seções por locale;
 - resolução de todos os caminhos relativos de mídia;
 - recusa de caminho absoluto, remoto ou que, depois de normalizado e
@@ -512,7 +539,8 @@ Cobrir por auditoria automatizada e determinística:
 - Todo dado público que compõe os bancos de sistema possui representação em
   `data/knowledge`.
 - Campos estruturais e relações ficam em `entity.json`.
-- Textos de conhecimento ficam em Markdown por locale, sem front matter.
+- Textos de conhecimento ficam em Markdown por locale, sem front matter e
+  dentro do perfil canônico permitido.
 - O manifesto define a finalidade de cada diretório de conteúdo.
 - Títulos de seções padronizadas não precisam ser repetidos nos Markdown.
 - Nenhuma entidade canônica depende do i18n para obter conteúdo de conhecimento.
