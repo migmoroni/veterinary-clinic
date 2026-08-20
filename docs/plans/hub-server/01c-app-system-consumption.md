@@ -154,8 +154,23 @@ parte se limita aos bancos públicos de sistema.
 
 ## Resolução Local
 
-O desenvolvimento seleciona explicitamente uma `build_version` e um ou mais
-locales disponíveis em:
+O `knowledge-builder` sempre produz os seis locales. Desenvolvimento e bundles
+selecionam quais desses artefatos ficam disponíveis localmente por uma
+configuração explícita:
+
+```text
+buildVersion
+includedKnowledgeLocales
+defaultKnowledgeLocale
+```
+
+`includedKnowledgeLocales` é uma lista não vazia, sem duplicatas e composta
+somente pelos seis locales suportados. `defaultKnowledgeLocale` pertence
+obrigatoriamente a essa lista. Essa configuração não altera nem reduz a saída
+integral do builder; ela controla apenas a preparação local e os recursos
+incorporados ao app.
+
+Os artefatos selecionados ficam disponíveis em:
 
 ```text
 build/knowledge-artifacts/versions/<build_version>/locales/<locale>/veterinary_clinic_system.db
@@ -235,14 +250,24 @@ Rotas, componentes, módulos e app-services não constroem caminhos para
 
 O setup nativo respeita esta ordem:
 
-1. resolver a origem local ou incorporada e o locale inicial;
-2. recuperar qualquer substituição interrompida;
-3. instalar e validar o par ativo quando ele estiver ausente ou não corresponder
+1. validar `includedKnowledgeLocales` e `defaultKnowledgeLocale`;
+2. resolver a origem local ou incorporada;
+3. recuperar qualquer substituição interrompida;
+4. usar o locale persistido quando ele estiver incluído ou, na primeira
+   inicialização sem seleção persistida, usar `defaultKnowledgeLocale`;
+5. instalar e validar o par ativo quando ele estiver ausente ou não corresponder
    à seleção;
-4. construir o `StorageManager`;
-5. abrir os bancos de usuário por seus perfis graváveis;
-6. abrir `system` e `system_media` pelos perfis de somente leitura;
-7. disponibilizar o storage ao restante do app.
+6. construir o `StorageManager`;
+7. abrir os bancos de usuário por seus perfis graváveis;
+8. abrir `system` e `system_media` pelos perfis de somente leitura;
+9. disponibilizar o storage ao restante do app.
+
+Uma seleção persistida que não esteja incluída produz estado explícito de locale
+indisponível. Com um par válido já ativo, o app conserva esse par. Sem par ativo,
+ele registra a indisponibilidade solicitada e inicializa interface e conhecimento
+com `defaultKnowledgeLocale`. A interface e o conhecimento confirmam qualquer
+mudança posterior somente depois que o novo par estiver validado, sem combinar
+silenciosamente idiomas diferentes.
 
 Assim, `StorageManager::new` não cria arquivos de sistema vazios quando ainda não
 há artefato preparado. Em um bundle instalado, a cópia inicial dos recursos
@@ -250,6 +275,11 @@ incorporados ocorre antes da abertura do par. Em desenvolvimento, o comando da
 raiz pode concluir a mesma preparação antes de iniciar o processo Tauri.
 
 ## Troca De Locale
+
+Na Parte 1C, somente integrantes de `includedKnowledgeLocales` podem ser
+ativados. A UI não oferece os demais como disponíveis offline, e uma chamada
+programática para um locale ausente é recusada antes de fechar conexões ou
+alterar estado persistido.
 
 Ao alterar o locale ativo, a camada de conhecimento:
 
@@ -431,7 +461,7 @@ A raiz oferece comandos explícitos e documentados para:
 validar data/knowledge
 gerar uma build_version integral
 verificar uma build_version existente
-iniciar o app com build_version e locales selecionados
+iniciar o app com buildVersion, includedKnowledgeLocales e defaultKnowledgeLocale
 ```
 
 O comando de desenvolvimento verifica a saída existente e informa o comando de
@@ -447,16 +477,19 @@ de verdade.
 Cada build declara:
 
 - uma `build_version` existente;
-- uma lista não vazia de locales.
+- `includedKnowledgeLocales` como lista não vazia de locales;
+- `defaultKnowledgeLocale` como integrante obrigatório dessa lista.
 
 O empacotamento inclui somente:
 
 - o par `system` e `system_media` de cada locale selecionado;
 - a união dos hashes referenciados por esses bancos `system_media`;
-- metadados necessários para validar os recursos incorporados.
+- metadados necessários para validar os recursos incorporados, incluindo a lista
+  e o locale padrão.
 
 Objetos CAS compartilhados são copiados uma vez. O build falha quando faltar um
-banco, checksum, locale ou objeto obrigatório.
+banco, checksum, locale ou objeto obrigatório, quando a lista estiver vazia ou
+duplicada e quando o locale padrão não estiver incluído.
 
 Os artefatos incorporados são uma origem somente leitura do bundle. Na primeira
 ativação de um locale, a fronteira de preparação instala o par nos nomes fixos do
@@ -480,7 +513,8 @@ APIs de consulta de conhecimento nem o formato físico do CAS local.
 
 ## Sequência De Implementação
 
-1. Definir configuração explícita de `build_version` e locales.
+1. Definir `buildVersion`, `includedKnowledgeLocales` e
+   `defaultKnowledgeLocale`.
 2. Implementar a preparação e instalação nos caminhos gerenciados pelo app.
 3. Separar no engine os perfis graváveis de usuário dos perfis de sistema em
    somente leitura.
@@ -549,6 +583,10 @@ Cobrir:
   construir o `StorageManager`;
 - ausência de criação de banco de sistema vazio durante a inicialização;
 - seleção de locales no empacotamento;
+- recusa de lista vazia, duplicada, desconhecida ou sem o locale padrão;
+- primeira inicialização usando `defaultKnowledgeLocale`;
+- recusa de locale não incorporado sem alterar o par ativo;
+- confirmação conjunta do locale da interface e do conhecimento;
 - cópia da união exata dos objetos CAS;
 - bundles Tauri suportados;
 - `pnpm check`, `pnpm test:run`, `pnpm build` e testes Rust.
@@ -572,6 +610,10 @@ Cobrir:
   fronteira de mídia conhece hashes e caminhos CAS.
 - Desenvolvimento consome uma `build_version` explicitamente preparada.
 - Builds empacotáveis incluem somente os locales e objetos CAS necessários.
+- Todo bundle possui `defaultKnowledgeLocale` dentro de sua lista não vazia de
+  `includedKnowledgeLocales`.
+- Um locale localmente indisponível nunca substitui o par ativo nem produz
+  combinação silenciosa de idiomas.
 - O app não gera bancos ou CAS em desenvolvimento, runtime ou build.
 - A preparação instala os bancos nos nomes ativos do `app_database_dir` e os
   objetos no `vault/system` fragmentado.

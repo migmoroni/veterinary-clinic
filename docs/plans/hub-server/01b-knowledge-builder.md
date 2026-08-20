@@ -14,7 +14,20 @@ componentes, desenvolvimento ou builds dos apps. A integração pertence à
 ## Pré-requisito
 
 A [Parte 1A](./01a-canonical-knowledge-data.md) está concluída, com
-`data/knowledge/` completo e auditado.
+`data/knowledge/` completo e auditado quanto à cobertura e à paridade com as
+fontes inventariadas.
+
+## Gate Inicial De Validação
+
+A primeira entrega executável desta parte implementa os schemas de fonte, o
+parser Markdown, a allowlist e o comando `validate`. Antes de iniciar DDL,
+projectors ou geração de artefatos, esse gate valida integralmente
+`data/knowledge` e produz diagnóstico por arquivo, entidade, campo, seção e
+locale.
+
+Nenhuma build começa enquanto houver erro de schema, AST, relação, locale,
+caminho ou mídia. As correções são feitas na fonte canônica; não existe
+normalização tolerante, fallback de conteúdo ou ferramenta provisória paralela.
 
 ## Escopo
 
@@ -793,6 +806,9 @@ O builder recusa:
 - `parentSectionKey` inexistente, proibida ou cíclica;
 - conteúdo localizado sem associação no `entity.json`;
 - `labelKey` ou `translationKey` em conteúdo de conhecimento;
+- ID técnico criado somente para mídia ou projeção na fonte canônica;
+- hash, base64, caminho físico de CAS ou outro detalhe de materialização em JSON
+  ou Markdown;
 - divergência estrutural entre locales;
 - caminho de mídia ausente, absoluto, remoto ou que resolva fora da entidade;
 - colisão de `media_key` entre referências editoriais distintas;

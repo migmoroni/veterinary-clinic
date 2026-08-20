@@ -495,38 +495,37 @@ caminho CAS, base64 ou referência interna já compilada.
 - O significado de um fragmento vem exclusivamente do `entity.json`.
 - O builder da Parte 1B é o único consumidor da fonte canônica.
 
-## Testes E Verificações
+## Auditoria De Cobertura E Paridade
 
-Cobrir por auditoria automatizada e determinística:
+Esta parte audita a conversão do conteúdo, sem implementar um parser, um schema
+runner ou outro validador paralelo ao `knowledge-builder`. A auditoria produz um
+inventário reproduzível que confirma:
 
-- descoberta de todas as entidades esperadas;
-- identidade única e integridade das relações;
-- validade dos schemas JSON por `entityType`;
-- validade e unicidade de `localizedContent` e `sectionKey`;
-- validade da hierarquia de `parentSectionKey` e ausência de ciclos;
-- correspondência dos seis locales exigidos;
-- ausência de locale desconhecido;
-- ausência de front matter nos Markdown;
-- formato AST correto para campos simples, listas e seções;
-- conformidade de todo AST com a allowlist Markdown;
-- recusa de HTML bruto, nós não permitidos, imagens remotas e protocolos de URI
-  não autorizados;
-- equivalência de nomes, aliases, descrições e seções por locale;
-- resolução de todos os caminhos relativos de mídia;
-- recusa de caminho absoluto, remoto ou que, depois de normalizado e
-  canonicalizado, escape da entidade diretamente ou por symlink;
-- detecção de mídia referenciada e inexistente;
-- detecção de mídia presente e não referenciada;
-- ausência de IDs técnicos de mídia ou projeção, hash, base64, caminho CAS e URI
-  `knowledge-media` na fonte;
-- independência entre `sectionKey` e nome de diretório;
-- cobertura de todos os domínios públicos de conhecimento.
+- presença de uma entidade canônica para cada item público inventariado;
+- preservação dos IDs de domínio e declaração das relações identificadas;
+- destino canônico para cada campo estrutural e conteúdo localizado da fonte;
+- matriz dos seis arquivos por locale para cada campo ou seção obrigatória
+  documentada;
+- correspondência de nomes, aliases, descrições e seções com as fontes
+  inventariadas;
+- correspondência entre mídias inventariadas, arquivos copiados e referências
+  editoriais declaradas;
+- independência entre o significado de campo ou `sectionKey` e o nome do
+  diretório;
+- cobertura de todos os domínios públicos de conhecimento;
+- ausência de alteração no runtime, nos bancos ativos e no ramo `user`.
+
+A validação executável de schemas, AST, allowlist, relações, locales, caminhos,
+mídias e demais invariantes pertence ao primeiro gate da Parte 1B. Qualquer erro
+encontrado por esse gate é corrigido em `data/knowledge` antes da geração dos
+artefatos.
 
 ## Entregáveis
 
 - árvore completa `data/knowledge/`;
 - `data/knowledge/README.md` com o contrato de autoria;
-- `entity.json` validado para cada entidade pública;
+- `entity.json` para cada entidade pública, conforme o contrato de autoria
+  documentado;
 - seis fragmentos Markdown por conteúdo localizado obrigatório;
 - seções associadas explicitamente a `sectionKey`;
 - taxonomias e localizações geográficas reutilizáveis;
@@ -544,12 +543,14 @@ Cobrir por auditoria automatizada e determinística:
 - O manifesto define a finalidade de cada diretório de conteúdo.
 - Títulos de seções padronizadas não precisam ser repetidos nos Markdown.
 - Nenhuma entidade canônica depende do i18n para obter conteúdo de conhecimento.
-- Os seis locales possuem cobertura completa conforme o schema do domínio.
+- O inventário de paridade registra cobertura dos seis locales conforme o
+  contrato documentado do domínio.
 - IDs e relações de domínio são explícitos.
 - JSON e Markdown não incorporam detalhes físicos de SQLite ou CAS.
 - Mídias são referenciadas por caminhos relativos e legíveis.
 - O runtime e a geração vigente dos bancos permanecem inalterados nesta parte.
-- A auditoria confirma paridade com o conteúdo público em uso.
+- A auditoria de cobertura confirma paridade com o conteúdo público em uso.
+- A validação executável integral fica reservada ao primeiro gate da Parte 1B.
 - Não existe geração de banco, CAS ou integração com o app nesta parte.
 
 ## Próxima Parte

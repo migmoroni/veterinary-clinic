@@ -232,8 +232,10 @@ locale não selecionado permanece apenas no manifest e não produz download.
 
 Ao escolher um locale ainda não instalado, o app prepara seu bootstrap e deltas
 antes de trocar o locale usado pelas consultas de conhecimento. Uma falha mantém
-o locale anterior ativo. Pares anteriormente instalados podem ser conservados
-para troca offline conforme a política de espaço local.
+o locale anterior ativo. A interface e as consultas de conhecimento confirmam a
+mudança somente depois da instalação e da validação do novo par. Pares
+anteriormente instalados podem ser conservados para troca offline conforme a
+política de espaço local.
 
 Todos os IDs de entidades permanecem iguais entre locales. Dados privados podem
 referenciar esses IDs sem depender do banco localizado atualmente aberto.
@@ -470,12 +472,14 @@ um provider de pasta solta. A tarefa transitória
 `rails knowledge:prepare_workspace` é removida. A fronteira de leitura resolve
 exclusivamente o armazenamento de releases instaladas.
 
-O pipeline do build empacotável declara uma lista não vazia de locales e obtém do
+O pipeline do build empacotável declara `includedKnowledgeLocales` como lista não
+vazia e `defaultKnowledgeLocale` como integrante obrigatório. Ele obtém do
 `hub-server` os respectivos bootstraps publicados e verificados. Os bootstraps
-iniciais são incorporados como recursos do instalador; no primeiro uso, passam
-pelo mesmo validador e instalador de releases antes da ativação. A união dos
-objetos CAS é copiada sem duplicação. Ausência do Hub, de uma release publicada
-ou de qualquer artefato obrigatório encerra o build com mensagem explícita.
+iniciais são incorporados como recursos do instalador; no primeiro uso, o locale
+padrão passa pelo mesmo validador e instalador de releases antes da ativação. A
+união dos objetos CAS é copiada sem duplicação. Ausência do Hub, de uma release
+publicada ou de qualquer artefato obrigatório encerra o build com mensagem
+explícita.
 
 ## Testes
 
@@ -492,7 +496,9 @@ Cobrir:
 - schema incompatível, replay e downgrade;
 - `ETag`, `Cache-Control` e resposta sem alteração;
 - seleção do locale ativo e de locales para uso offline;
+- presença de `defaultKnowledgeLocale` em `includedKnowledgeLocales` no bundle;
 - ausência de download para locale não selecionado;
+- download e validação de locale ausente antes da confirmação conjunta da troca;
 - instalação transacional do bootstrap de locale;
 - uma requisição de pacote por locale e release;
 - resolução do pacote por `releaseId` e `locale` correspondentes;
@@ -535,6 +541,10 @@ Cobrir:
 - Sequência igual exige identidade e checksum previamente aceitos.
 - Geração e revisão são comparadas como inteiros.
 - O app baixa somente os locales ativos ou selecionados para uso offline.
+- Todo bundle contém um `defaultKnowledgeLocale` válido dentro de
+  `includedKnowledgeLocales`.
+- Um locale ainda não instalado é baixado e validado antes de alterar a interface
+  e as consultas de conhecimento.
 - Bootstrap instala os três componentes do locale sob a mesma versão.
 - Deltas atualizam os três componentes do locale como uma única cadeia.
 - Cada locale exige somente seu pacote antes da reconciliação individual.

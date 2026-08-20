@@ -144,6 +144,9 @@ externo.
   e `vault/user` permanecem independentes desse fluxo.
 - A preparação local usa uma `build_version` inteira e sempre produz bancos
   completos para os seis locales suportados.
+- Cada bundle declara `includedKnowledgeLocales` e um `defaultKnowledgeLocale`
+  obrigatoriamente incluído. Um locale ausente só é ativado depois de seus
+  artefatos serem obtidos e validados.
 - Cada versão de conhecimento coordena os seis pares `system` e `system_media`
   sob uma release global. Cada par é instalado como unidade indivisível e usa o
   `CAS/system` compartilhado.
