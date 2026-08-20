@@ -21,7 +21,8 @@ A [Parte 1A](./01a-canonical-knowledge-data.md) está concluída, com
 - criar `tools/knowledge-builder/` como binário e biblioteca Rust no Cargo
   Workspace;
 - implementar schemas executáveis para todos os `entityType` canônicos;
-- validar entidades, localizações, relações, taxonomias e mídias;
+- validar manifestos JSON, Markdown, relações, taxonomias e mídias;
+- analisar Markdown por AST e compilar fragmentos localizados;
 - projetar conteúdo localizado diretamente nos bancos de cada locale;
 - criar e versionar o DDL de `system` e `system_media` no builder;
 - gerar seis bancos `system` completos;
@@ -70,9 +71,9 @@ packages/engine/src/storage/cas.rs
 
 O levantamento identifica DDL, constraints, índices, normalização, projeção de
 catálogos, composição de coleções de mídia, geração de thumbnails, SHA-256 e
-disposição física do CAS. Os novos schemas preservam as garantias válidas desse
-processo e aplicam os contratos de locale, `mediaId` e dados canônicos definidos
-na Parte 1A.
+disposição física do CAS. Os schemas preservam as garantias válidas desse
+processo e aplicam o contrato canônico de `entity.json`, fragmentos Markdown,
+locales e caminhos relativos definido na Parte 1A.
 
 A referência de comportamento está dividida por responsabilidade: `core-local`
 descreve e preenche `system`, enquanto o Rust cria `system_media`, calcula hashes
@@ -92,9 +93,10 @@ Schemas, migrations, escrita de mídia, sincronização, replicação e CAS do r
 
 ```mermaid
 flowchart LR
-    DATA["data/knowledge<br/>estrutura + localizações"] --> LOAD["Descoberta recursiva"]
-    LOAD --> VALIDATE["Schemas, IDs,<br/>relações e mídias"]
-    VALIDATE --> PROJECT["Projeção dos seis locales"]
+    DATA["data/knowledge<br/>entity.json + Markdown + media"] --> LOAD["Descoberta recursiva"]
+    LOAD --> VALIDATE["Schemas, AST, IDs,<br/>relações e caminhos"]
+    VALIDATE --> COMPILE["Compilação de conteúdo<br/>e mídias"]
+    COMPILE --> PROJECT["Projeção dos seis locales"]
     PROJECT --> DATABASES["6 × system<br/>6 × system_media"]
     PROJECT --> CAS["CAS/system compartilhado"]
     DATABASES --> VERIFY["Integridade + checksums"]
@@ -112,6 +114,7 @@ tools/knowledge-builder/
 │   ├── main.rs
 │   ├── cli.rs
 │   ├── source/
+│   ├── markdown/
 │   ├── validation/
 │   ├── projection/
 │   ├── databases/
@@ -143,32 +146,39 @@ O carregamento segue esta ordem lógica:
 ```text
 entityType
 -> id
+-> campo localizado ou sectionKey
 -> locale
 ```
 
 O builder:
 
 - seleciona o schema por `entityType`;
-- converte a entrada validada para um modelo canônico Rust;
+- desserializa `entity.json` de forma estrita;
+- resolve os caminhos de `localizedContent`, `sections` e mídias em relação ao
+  diretório da entidade;
+- lê os arquivos `<locale>.md` declarados pelo manifesto;
+- analisa Markdown por parser estruturado, sem expressões regulares sobre o
+  texto-fonte;
+- valida campos simples, listas e seções conforme o schema do domínio;
+- converte manifesto, AST localizado e mídias em um modelo canônico Rust;
 - seleciona um projector registrado para o tipo canônico;
-- percorre `data/knowledge/media/` recursivamente e indexa cada arquivo pelo
-  `mediaId` UUIDv7 de seu nome-base;
 - recusa identidade duplicada;
-- recusa arquivo de localização ausente, duplicado ou desconhecido;
-- recusa divergência entre nome do arquivo e `locale` interno;
+- recusa arquivo localizado ausente, duplicado ou desconhecido;
 - resolve referências por IDs;
-- não persiste caminhos de autoria como relações;
-- produz o mesmo conteúdo lógico quando uma pasta é movida sem alteração dos
-  JSONs.
+- não infere significado pelo nome dos diretórios;
+- produz o mesmo conteúdo lógico quando uma entidade ou um diretório de texto é
+  movido com o manifesto atualizado e sem mudança de conteúdo ou identidade;
+- trata o caminho relativo da mídia dentro da entidade como parte de sua
+  referência editorial estável.
 
 ## Padrão De Projeção Relacional
 
 O builder segue uma arquitetura schema-first com Data Mappers explícitos. O DDL
-é a fonte de verdade da estrutura SQL; os JSONs são a fonte de verdade do
-conteúdo de domínio.
+é a fonte de verdade da estrutura SQL; `entity.json`, os fragmentos Markdown e
+as mídias são a fonte de verdade do conteúdo de domínio.
 
 ```text
-JSON canônico
+entity.json + Markdown + mídias
 -> validação pelo schema de fonte
 -> modelo canônico Rust
 -> projector do entityType
@@ -194,7 +204,7 @@ enum CanonicalEntity {
 O processamento exaustivo impede aceitar um novo `entityType` sem schema,
 modelo e projector correspondentes. Cada projector:
 
-- recebe uma entidade canônica e a localização selecionada;
+- recebe uma entidade canônica e o conteúdo compilado do locale selecionado;
 - grava em uma transação;
 - pode preencher uma ou várias tabelas;
 - resolve relações somente por IDs;
@@ -300,13 +310,37 @@ builder é importado de TypeScript.
 
 ## Contrato Relacional Das Mídias
 
-Tabelas de domínio e coleções em `system` referenciam mídias por `media_id`,
-nunca pelo hash dos bytes. O DDL de `system_media` mantém a resolução canônica
-para o conteúdo físico atual:
+Tabelas de domínio e conteúdo compilado em `system` referenciam mídias por
+`media_key`, nunca pelo caminho editorial original nem pelo hash dos bytes. O
+builder deriva a chave técnica de:
+
+```text
+entityType
+id da entidade
+caminho relativo normalizado da mídia dentro da entidade
+```
+
+Essa derivação é determinística e versionada pelo contrato do builder. O mesmo
+arquivo referenciado por `cover` e por Markdown dentro da mesma entidade resolve
+para a mesma `media_key`.
+
+O formato lógico é:
+
+```text
+<entityType>/<entityId>/<caminho-relativo-normalizado>
+```
+
+Separadores são `/`, componentes `.` e `..` são resolvidos antes da derivação,
+e o caminho final precisa permanecer dentro da entidade. Strings são
+normalizadas em UTF-8 NFC. O valor é armazenado dessa forma em SQLite e recebe
+percent-encoding por segmento, preservando os separadores `/`, somente quando
+inserido na URI interna do Markdown compilado.
+
+O DDL de `system_media` mantém a resolução canônica para o conteúdo físico:
 
 ```sql
 CREATE TABLE media_assets (
-    media_id TEXT PRIMARY KEY,
+    media_key TEXT PRIMARY KEY,
     content_hash BLOB NOT NULL CHECK(length(content_hash) = 32),
     thumbnail BLOB,
     mime_type TEXT NOT NULL,
@@ -319,22 +353,35 @@ CREATE INDEX idx_media_assets_content_hash
     ON media_assets(content_hash);
 ```
 
-O DDL definitivo aplica o `CHECK` compartilhado de UUIDv7 a `media_id`. O hash
-não é `UNIQUE`: mais de um `mediaId` pode representar logicamente ativos
-distintos com bytes idênticos, enquanto o CAS armazena esses bytes uma única vez.
-O thumbnail é produzido deterministicamente pelo builder com os mesmos limites e
-orientação esperados pelos consumidores de galeria.
+O banco usa `media_key`, DTOs e relatórios JSON usam `mediaKey`, e a URI interna
+usa o segmento `<media-key>`. Os três nomes representam a mesma chave técnica.
+
+O DDL definitivo limita e valida o formato de `media_key`. O hash não é
+`UNIQUE`: referências editoriais diferentes podem possuir bytes idênticos,
+enquanto o CAS armazena esses bytes uma única vez. O thumbnail é produzido
+deterministicamente pelo builder com os limites e a orientação esperados pelos
+consumidores.
 
 Esse schema pertence exclusivamente a `system_media`. O banco `user_media`
 continua usando sua tabela `blobs`, identidade por hash, campos de sincronização,
 remoção lógica e escrita local. O builder não cria, abre ou modifica bancos de
 mídia do usuário.
 
-Cada `system_media` contém somente os `mediaId` exigidos pelo locale. Mídias
-compartilhadas aparecem em todos os bancos que as referenciam; variantes
-localizadas usam IDs próprios e aparecem apenas nos locales correspondentes. Na
-mesma build, um `mediaId` resolve obrigatoriamente para o mesmo `contentHash` em
-todos os bancos que o incluem.
+Cada `system_media` contém somente as `media_key` exigidas pelo locale. Capas e
+outras referências estruturais aparecem em todos os bancos aplicáveis; imagens
+referenciadas por um fragmento Markdown aparecem nos locales que usam esse
+fragmento. Na mesma build, uma `media_key` resolve obrigatoriamente para o mesmo
+`contentHash` em todos os bancos que a incluem.
+
+Durante a compilação, links relativos de Markdown são reescritos para o contrato
+interno:
+
+```markdown
+![Texto alternativo](knowledge-media://asset/<media-key> "Legenda opcional")
+```
+
+A fonte canônica nunca contém essa URI. Ela existe somente no conteúdo
+compilado entregue ao app.
 
 ## Contrato Da CLI
 
@@ -493,7 +540,10 @@ consumidas por um projector. Seu contrato inicial é:
       "breed": 410,
       "product": 82
     },
-    "relationCount": 560
+    "relationCount": 560,
+    "localizedFragmentsByLocale": {
+      "pt-BR": 1230
+    }
   },
   "locales": {
     "pt-BR": {
@@ -514,16 +564,18 @@ consumidas por um projector. Seu contrato inicial é:
         }
       },
       "resolvedRelationCount": 560,
+      "consumedLocalizedFragments": 1230,
       "unconsumedEntities": [],
+      "unconsumedLocalizedFragments": [],
       "unresolvedRelations": []
     }
   },
   "media": {
-    "sourceMediaIds": 0,
-    "referencedMediaIds": 0,
+    "sourceFiles": 0,
+    "referencedMediaKeys": 0,
     "uniqueContentHashes": 0,
-    "missingMediaIds": [],
-    "unreferencedMediaIds": []
+    "missingSourcePaths": [],
+    "unreferencedSourcePaths": []
   }
 }
 ```
@@ -538,9 +590,11 @@ Uma saída somente é válida quando:
 - cada identidade de origem foi consumida exatamente uma vez por locale pelo
   projector do seu tipo;
 - todas as relações foram resolvidas em cada locale;
+- cada fragmento Markdown declarado foi consumido exatamente uma vez no locale
+  correspondente;
 - as contagens por entidade e por tabela são coerentes;
-- `unconsumedEntities`, `unresolvedRelations`, `missingMediaIds` e
-  `unreferencedMediaIds` estão vazios;
+- `unconsumedEntities`, `unconsumedLocalizedFragments`, `unresolvedRelations`,
+  `missingSourcePaths` e `unreferencedSourcePaths` estão vazios;
 - o checksum do relatório corresponde ao declarado em `build-result.json`.
 
 Cada banco também possui um `schemaFingerprintSha256` calculado a partir da
@@ -558,15 +612,18 @@ com os hashes armazenados de forma plana.
 Para cada arquivo de autoria, o builder:
 
 ```text
-mediaId do nome-base
--> validar UUIDv7 e unicidade global
+referência relativa de entity.json ou Markdown
+-> resolver dentro do diretório da entidade
+-> normalizar o caminho relativo
+-> derivar media_key de entityType + id + caminho relativo
 -> ler os bytes
 -> calcular SHA-256
 -> validar extensão, MIME e metadados
 -> gerar thumbnail e metadados técnicos determinísticos
 -> converter o hash para 64 caracteres hexadecimais minúsculos
 -> materializar CAS/system/<hex[0..2]>/<hex[2..4]>/<hex>.bin
--> registrar mediaId -> contentHash em system_media
+-> registrar media_key -> contentHash em system_media
+-> reescrever links Markdown para knowledge-media://asset/<media-key>
 ```
 
 O SHA-256 é recalculado em todo build oficial. O nome não é usado como prova de
@@ -578,24 +635,22 @@ caracteres. A disposição fragmentada corresponde ao resolvedor CAS já adotado
 pelo app e evita diretórios com quantidade excessiva de objetos.
 
 Cada `system_media.db` é o índice canônico das mídias exigidas por seu locale. O
-conjunto de IDs de um locale une:
+conjunto de chaves de um locale une:
 
-- referências compartilhadas de `entity.json`;
-- referências específicas do arquivo localizado;
-- referências `knowledge-media://<mediaId>` extraídas de Markdown por parser
-  estruturado;
-- metadados localizados associados a referências compartilhadas.
+- referências estruturais de `entity.json`, como `cover`;
+- links relativos extraídos dos Markdown por parser estruturado;
+- mídias exigidas pelo projector do domínio.
 
 O cofre físico contém a união deduplicada dos hashes resolvidos para os seis
-locales. Dois `mediaId` com os mesmos bytes apontam para o mesmo objeto CAS.
+locales. Duas `media_key` com os mesmos bytes apontam para o mesmo objeto CAS.
 Arquivos de autoria não referenciados não entram no CAS da build e invalidam a
 auditoria da fonte.
 
-Alterar os bytes de um arquivo preservando o mesmo `mediaId` produz outro
-`contentHash`, atualiza a linha correspondente nos novos bancos `system_media` e
-adiciona um objeto ao CAS. O objeto anterior permanece imutável enquanto puder
-ser exigido por outra build ou release retida; sua remoção pertence à política de
-garbage collection.
+Alterar os bytes de um arquivo preservando seu caminho relativo produz outro
+`contentHash`, mantém a mesma `media_key`, atualiza a linha correspondente nos
+novos bancos `system_media` e adiciona um objeto ao CAS. O objeto anterior
+permanece imutável enquanto puder ser exigido por outra build ou release retida;
+sua remoção pertence à política de garbage collection.
 
 `checksums.sha256` cobre os doze bancos e todos os objetos CAS referenciados pela
 `build_version`.
@@ -608,16 +663,20 @@ dos diretórios. Sua entrada canônica é ordenada por:
 ```text
 entityType
 id
+campo localizado ou sectionKey
 locale
-mediaId
+mediaKey
 contentHash
 ```
 
-O digest cobre os JSONs normalizados, os schemas de autoria efetivamente usados
-e os bytes de mídia. Caminhos absolutos e caminhos organizacionais não entram na
-identidade. Mover uma entidade sem alterar seus conteúdos produz o mesmo digest.
-Mover uma mídia entre subpastas sem alterar `mediaId` ou bytes também preserva o
-digest.
+O digest cobre os JSONs normalizados, o conteúdo lógico dos ASTs Markdown, os
+schemas de autoria efetivamente usados e os bytes de mídia. Caminhos absolutos,
+nomes dos diretórios de conteúdo e a posição organizacional da entidade não
+entram na identidade. Mover uma entidade inteira ou renomear uma pasta de texto
+com a atualização do manifesto preserva o digest quando o conteúdo lógico não
+muda. Renomear ou mover uma mídia dentro da entidade altera sua `media_key` e o
+digest; alterar apenas seus bytes preserva a chave e altera o digest pelo novo
+`contentHash`.
 
 Adicionar, remover ou alterar uma entrada efetiva muda o digest.
 
@@ -633,6 +692,8 @@ O processo:
 - configura PRAGMAs explicitamente;
 - ordena entidades, relações e inserções;
 - não introduz timestamps ou valores aleatórios sem entrada explícita;
+- deriva de forma determinística qualquer identificador técnico exigido pelo
+  DDL para linhas projetadas;
 - escreve bancos e objetos em staging;
 - executa todas as validações antes da finalização;
 - move a versão validada atomicamente para `versions/<build_version>`;
@@ -650,19 +711,23 @@ O builder recusa:
 - referência estrutural inexistente;
 - relação por nome ou caminho;
 - locale ausente, duplicado ou desconhecido;
-- divergência entre arquivo e campo `locale`;
-- campo estrutural em localização;
-- campo localizado em `entity.json`;
+- caminho de conteúdo ausente, absoluto, remoto ou que escape da entidade;
+- front matter em arquivo Markdown;
+- AST incompatível com o campo localizado declarado;
+- `sectionKey` desconhecida ou repetida;
+- `parentSectionKey` inexistente, proibida ou cíclica;
+- conteúdo localizado sem associação no `entity.json`;
 - `labelKey` ou `translationKey` em conteúdo de conhecimento;
 - divergência estrutural entre locales;
-- `mediaId` ausente, inválido, duplicado ou não correspondente a UUIDv7;
-- mais de um arquivo de autoria reivindicando o mesmo `mediaId`;
+- caminho de mídia ausente, absoluto, remoto ou que resolva fora da entidade;
+- colisão de `media_key` entre referências editoriais distintas;
 - referência de JSON ou Markdown sem arquivo de mídia correspondente;
 - mídia de autoria não referenciada;
-- URI `knowledge-media` malformada ou com ID inexistente;
+- URI `knowledge-media` presente na fonte canônica;
+- URI interna compilada com `media_key` inexistente;
 - arquivo vazio ou extensão, MIME e bytes incoerentes;
 - linha de `system_media` sem objeto CAS correspondente;
-- mesmo `mediaId` resolvendo hashes diferentes entre locales da mesma build;
+- mesma `media_key` resolvendo hashes diferentes entre locales da mesma build;
 - banco com schema, locale ou metadado divergente;
 - ausência ou divergência de `knowledge_build_metadata` entre os dois bancos do
   locale;
@@ -675,18 +740,19 @@ relações, cobertura, hashes e relatórios.
 ## Sequência De Implementação
 
 1. Criar o crate e integrar ao Cargo Workspace.
-2. Implementar modelos estritos e schemas de fonte.
+2. Implementar modelos estritos e schemas de `entity.json`.
 3. Implementar descoberta recursiva e ordenação lógica.
-4. Implementar validações estruturais e semânticas.
-5. Definir o modelo canônico Rust e o registro exaustivo de projectors.
-6. Definir DDL, constraints, índices e versões dos dois bancos.
-7. Implementar os Data Mappers e a projeção localizada.
-8. Implementar `knowledge_build_metadata` e os metadados opcionais de release.
-9. Implementar a auditoria de cobertura e os fingerprints dos schemas.
-10. Implementar `system_media`, thumbnails e o CAS incremental fragmentado.
-11. Implementar staging, checksums e finalização atômica.
-12. Implementar a CLI, `projection-report.json` e `build-result.json`.
-13. Validar fixtures, determinismo, paridade semântica e os seis locales.
+4. Implementar parser Markdown, validação de AST e normalização de fragmentos.
+5. Implementar resolução segura de caminhos e derivação de `media_key`.
+6. Definir o modelo canônico Rust e o registro exaustivo de projectors.
+7. Definir DDL, constraints, índices e versões dos dois bancos.
+8. Implementar os Data Mappers e a projeção localizada.
+9. Implementar `knowledge_build_metadata` e os metadados opcionais de release.
+10. Implementar a auditoria de cobertura e os fingerprints dos schemas.
+11. Implementar `system_media`, thumbnails e o CAS incremental fragmentado.
+12. Implementar staging, checksums e finalização atômica.
+13. Implementar a CLI, `projection-report.json` e `build-result.json`.
+14. Validar fixtures, determinismo, paridade semântica e os seis locales.
 
 ## Testes
 
@@ -697,38 +763,51 @@ Cobrir:
 - execução a partir de diretórios de trabalho diferentes;
 - descoberta independente da árvore organizacional;
 - mesmo digest e mesma saída após mover uma entidade;
+- mesmo digest após renomear diretório de texto e atualizar seu caminho no
+  manifesto;
 - seleção do projector exclusivamente por `entityType`;
 - enum canônico e dispatch exaustivos para todos os tipos suportados;
 - uma entidade projetada em múltiplas tabelas conforme o DDL;
 - recusa de entidade sem projector ou sem destino relacional;
-- combinação de estrutura com cada uma das seis localizações;
+- combinação do manifesto com cada conjunto de fragmentos dos seis locales;
+- parser Markdown baseado em AST;
+- validação de texto simples, listas e seções livres;
+- recusa de front matter e conteúdo incompatível com o campo declarado;
+- associação de diretório arbitrário à `sectionKey` definida no manifesto;
+- composição determinística da hierarquia de seções por `parentSectionKey`;
+- normalização da hierarquia de subtítulos internos;
 - campos localizados corretos em cada banco;
 - ausência de chaves de i18n nos bancos;
 - IDs e relações estruturais iguais entre locales;
 - recusa de schema, ID, relação ou locale inválido;
-- recusa de campo na camada errada;
+- recusa de campo, seção ou caminho não declarado no manifesto;
 - projeção de taxonomias e classificações;
 - projeção de `geo_place`, sua hierarquia e relações com raças;
 - preservação de múltiplos `originPlaceIds` na ordem definida pela fonte;
 - projeção de protocolos e suas relações;
-- composição das mídias compartilhadas e localizadas;
-- descoberta de mídia independente de sua subpasta editorial;
-- referência de JSON e Markdown exclusivamente por `mediaId`;
-- recusa de UUIDv7 inválido ou duplicado;
-- recusa de `mediaId` ausente ou não referenciado;
-- geração da relação `mediaId -> contentHash` em `system_media`;
+- composição de capas estruturais e imagens inseridas em Markdown;
+- resolução de caminho relativo em relação à entidade;
+- recusa de caminho absoluto, remoto ou que resolva fora da entidade diretamente
+  ou por symlink;
+- derivação determinística de `media_key`;
+- recusa de colisão entre chaves técnicas;
+- geração da relação `media_key -> contentHash` em `system_media`;
 - geração determinística de thumbnails e metadados técnicos de sistema;
-- igualdade do `contentHash` de um `mediaId` compartilhado entre locales;
-- alteração dos bytes preservando `mediaId` e produzindo novo hash;
+- igualdade do `contentHash` de uma `media_key` compartilhada entre locales;
+- alteração dos bytes no mesmo caminho preservando `media_key` e produzindo novo
+  hash;
+- alteração do caminho produzindo nova `media_key`;
 - conservação do objeto CAS anterior após a alteração;
-- deduplicação CAS de dois `mediaId` com bytes idênticos;
-- parser de Markdown reconhecendo e validando `knowledge-media://<mediaId>`;
+- deduplicação CAS de duas `media_key` com bytes idênticos;
+- reescrita de imagem Markdown relativa para
+  `knowledge-media://asset/<media-key>`;
+- recusa de URI `knowledge-media` na fonte de autoria;
 - geração repetível dos doze bancos;
 - `PRAGMA integrity_check`, `PRAGMA foreign_key_check` e `PRAGMA user_version`;
 - fingerprint do schema igual entre bancos do mesmo tipo;
 - detecção de divergência entre projector e DDL;
 - relatório com cobertura integral de entidades e relações;
-- recusa de entidade não consumida ou relação não resolvida;
+- recusa de entidade, fragmento Markdown não consumido ou relação não resolvida;
 - validação do locale registrado em cada par;
 - SHA-256 dos bancos e objetos;
 - objeto CAS ausente ou corrompido;
@@ -763,7 +842,9 @@ Cobrir:
 - O crate pertence ao Cargo Workspace e passa em build, lint e testes.
 - A CLI funciona sem Node, Rails, rede ou dependência do diretório de trabalho.
 - A única entrada de conteúdo é `data/knowledge`.
-- A identidade e o digest não dependem da posição das pastas.
+- A identidade da entidade e o digest não dependem de sua posição editorial nem
+  do nome dos diretórios de texto. O caminho relativo da mídia dentro da entidade
+  participa de sua `media_key`.
 - `entityType` seleciona um projector explícito, sem nomes de tabelas nos dados
   canônicos.
 - O DDL é a fonte de verdade da disposição relacional.
@@ -774,12 +855,12 @@ Cobrir:
 - Cada banco contém nomes, aliases, descrições e termos do locale projetado.
 - Nenhum banco exige i18n do app para resolver conteúdo de conhecimento.
 - IDs e relações estruturais são iguais nos seis locales.
-- Todo `mediaId` referenciado resolve em `system_media` para um hash com objeto
+- Toda `media_key` compilada resolve em `system_media` para um hash com objeto
   válido no CAS.
 - Todo objeto CAS usa exatamente
   `CAS/system/<2-hex>/<2-hex>/<hash-sha256-hex>.bin`; não há variante plana.
-- Alterações de bytes preservam referências lógicas e produzem novos objetos CAS
-  imutáveis.
+- Alterações de bytes no mesmo caminho preservam referências lógicas e produzem
+  novos objetos CAS imutáveis.
 - Os doze bancos passam em integridade, foreign keys, fingerprint e
   versionamento.
 - Checksums e `build-result.json` descrevem exatamente a saída.

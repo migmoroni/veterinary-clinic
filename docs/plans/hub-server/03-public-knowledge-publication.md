@@ -56,11 +56,8 @@ data/knowledge/
 │   └── taxonomies/
 ├── geo/
 │   └── places/
-├── clinical/
-│   └── treatment-protocols/
-└── media/
-    └── <subpastas-editoriais>/
-        └── <media_id_uuidv7>.<extensão>
+└── clinical/
+    └── treatment-protocols/
 ```
 
 Todo diretório de entidade segue o mesmo envelope físico:
@@ -68,21 +65,27 @@ Todo diretório de entidade segue o mesmo envelope físico:
 ```text
 <entity>/
 ├── entity.json
-└── localizations/
-    ├── pt-BR.json
-    ├── pt-PT.json
-    ├── gn-PY.json
-    ├── en-US.json
-    ├── es-ES.json
-    └── fr-FR.json
+├── localized/
+│   └── <campo-arbitrario>/
+│       ├── pt-BR.md
+│       ├── pt-PT.md
+│       ├── gn-PY.md
+│       ├── en-US.md
+│       ├── es-ES.md
+│       └── fr-FR.md
+├── sections/
+│   └── <diretorio-arbitrario>/
+│       └── <locale>.md
+└── media/
+    └── <arquivo-editorial>.<extensão>
 ```
 
-O nome e a posição do diretório servem somente para autoria e navegação. Os
-campos `entityType` e `id` de `entity.json` formam a identidade usada pelos
-bancos e relações. O builder não infere semântica do caminho.
+Os campos `entityType` e `id` formam a identidade usada pelos bancos e relações.
+O `entity.json` associa explicitamente cada diretório de conteúdo a um campo ou
+`sectionKey`; o builder não infere semântica pelo nome das pastas.
 
-`entity.json` contém somente os campos estruturais compartilhados pelas seis
-projeções:
+`entity.json` contém os campos estruturais compartilhados, as relações e a
+composição do conteúdo localizado:
 
 ```json
 {
@@ -94,67 +97,58 @@ projeções:
   "regions": ["BRA", "PRT"],
   "classification": {},
   "relations": {},
-  "media": [
+  "localizedContent": {
+    "name": "./localized/display",
+    "aliases": "./localized/search-names"
+  },
+  "sections": [
     {
-      "mediaId": "019c7a75-f51f-7d4c-a1f0-abcdef123456",
-      "role": "reference"
+      "sectionKey": "overview",
+      "contentPath": "./sections/content-a"
     }
-  ]
+  ],
+  "cover": "./media/cover.webp"
 }
 ```
 
-Cada arquivo em `localizations/` contém somente o conteúdo de seu locale:
+Cada arquivo Markdown contém somente o valor ou o corpo do locale, sem front
+matter. Um fragmento de seção pode usar Markdown livre e referências relativas:
 
-```json
-{
-  "schemaVersion": 1,
-  "locale": "pt-BR",
-  "name": "Pastor Alemão",
-  "aliases": ["capa-preta"],
-  "description": "<conteúdo localizado>",
-  "sections": {},
-  "media": [
-    {
-      "mediaId": "019c7a75-f51f-7d4c-a1f0-abcdef123456",
-      "role": "illustration",
-      "alt": "<texto alternativo>",
-      "caption": "<legenda>"
-    }
-  ]
-}
+```markdown
+Conteúdo localizado da seção.
+
+![Texto alternativo](../../media/detail.webp "Legenda opcional")
 ```
 
-Cada domínio possui um schema estrutural para `entity.json` e um schema de
-localização para os seis arquivos de idioma. Todo nome, alias, descrição e rótulo
-apresentável fica na localização, mesmo quando o texto é igual nos seis locales.
-Identificadores científicos e regulatórios permanecem estruturais em campos
-próprios. Relações usam IDs estáveis e nunca nomes localizados. Regiões definem
-aplicabilidade de domínio e não controlam em quais bancos localizados a entidade
-existe.
+Cada domínio possui um schema estrito de `entity.json`, formatos esperados para
+os campos localizados e um conjunto fechado de `sectionKey`. Todo nome, alias,
+descrição e conteúdo apresentável fica no fragmento Markdown correspondente,
+mesmo quando o texto coincide nos seis locales. Identificadores científicos e
+regulatórios permanecem estruturais. Relações usam IDs estáveis e nunca nomes
+localizados. Títulos e subtítulos padronizados formam uma hierarquia explícita
+por `parentSectionKey`, sem depender de headings ou nomes de diretório.
 
-Referências de mídia em `entity.json` pertencem a todos os locales. Um arquivo de
-localização pode referenciar o mesmo `mediaId` para acrescentar textos
-localizados ou usar outro ID para uma variante própria. Markdown referencia
-`knowledge-media://<mediaId>`.
+O builder resolve caminhos relativos dentro da entidade, analisa Markdown por
+AST, calcula SHA-256, deriva uma `media_key` de `entityType`, `id` e caminho
+relativo, grava `media_key -> contentHash` no `system_media` aplicável e
+materializa o objeto no `CAS/system`. O conteúdo compilado recebe referências
+`knowledge-media://asset/<media-key>`; a fonte de autoria nunca contém essa URI.
 
-Os arquivos ficam em `data/knowledge/media/`, usam UUIDv7 como nome-base e podem
-ser organizados livremente em subpastas. O builder calcula o SHA-256 dos bytes,
-grava `mediaId -> contentHash` no `system_media` de cada locale aplicável e
-materializa o objeto na disposição fragmentada de `CAS/system`. Alterar os bytes
-preserva o `mediaId` quando a mídia continua representando o mesmo ativo lógico;
-o CAS recebe outro objeto imutável.
+Alterar os bytes preservando o caminho editorial mantém a `media_key` e produz
+outro objeto CAS imutável. Renomear a mídia exige atualizar as referências e
+produz outra chave técnica. Bytes idênticos continuam deduplicados pelo hash.
 
 Na saída física do builder, cada objeto usa a disposição
 `CAS/system/<2-hex>/<2-hex>/<hash>.bin`. O Hub localiza os objetos pelo relatório
 do build e pelo resolvedor de hash; ele não deduz a identidade a partir da pasta
 editorial da mídia.
 
-A validação exige exatamente os seis arquivos de localização em cada entidade.
-O campo `locale` precisa coincidir com o nome do arquivo. O processo recusa ID
-duplicado, referência inexistente, locale desconhecido, arquivo adicional, campo
-estrutural em localização ou campo traduzível em `entity.json`. A projeção de
-cada locale combina a estrutura comum com um único arquivo localizado,
-produzindo o mesmo conjunto de IDs e relações não localizáveis nos seis bancos.
+A validação exige os seis arquivos Markdown para cada campo ou seção obrigatória.
+O processo recusa ID duplicado, referência inexistente, locale desconhecido,
+front matter, arquivo não declarado, `sectionKey` inválida, AST incompatível,
+caminho absoluto, remoto ou que resolva fora da entidade e mídia não
+referenciada. A projeção de cada locale combina o manifesto com seus fragmentos
+e produz o mesmo conjunto de IDs e relações não localizáveis nos seis bancos.
 
 ## Fronteira Com A Preparação Local
 
@@ -870,22 +864,23 @@ Cobrir:
 - ausência de catálogos publicados em `packages/types`;
 - preparação do layout local pelo mesmo builder Rust em um workspace limpo;
 - inicialização do app com os artefatos exportados durante esta parte;
-- validação dos schemas estruturais e localizados de cada domínio;
+- validação dos schemas de `entity.json` e dos contratos Markdown de cada
+  domínio;
 - um diretório de entidade por ID e integridade de todas as referências
   estruturais;
-- presença exata dos seis arquivos em cada diretório `localizations/`;
-- correspondência entre o nome de cada arquivo e seu campo `locale`;
-- projeção isolada de cada localização sem alterar campos estruturais;
+- presença dos seis Markdown em cada campo ou seção obrigatória;
+- associação de cada diretório a um campo ou `sectionKey` no manifesto;
+- recusa de front matter, AST inválido e conteúdo não declarado;
+- projeção isolada de cada locale sem alterar campos estruturais;
 - projeção de `geo_place` como domínio compartilhado e resolução de todos os
   `originPlaceIds` das raças;
-- recusa de campo estrutural em localização e de campo traduzível em
-  `entity.json`;
-- composição da mídia compartilhada e localizada em cada `system_media`;
-- resolução de referências JSON e Markdown por `mediaId` UUIDv7;
-- geração e validação da relação `mediaId -> contentHash`;
-- alteração de bytes preservando `mediaId` e mantendo objetos CAS anteriores;
+- composição de capas e imagens Markdown em cada `system_media`;
+- resolução segura das referências relativas de mídia;
+- geração e validação da relação `mediaKey -> contentHash`;
+- alteração de bytes no mesmo caminho preservando `mediaKey` e mantendo objetos
+  CAS anteriores;
 - alteração de bytes produzindo patch de `system_media` e adição CAS, sem exigir
-  mudança nas referências das entidades ou do Markdown;
+  mudança nas referências compiladas;
 - geração e integridade dos bancos finais;
 - geração dos seis pares de bancos;
 - igualdade de IDs e relações estruturais entre locales;
@@ -937,8 +932,8 @@ Cobrir:
 - O Hub consegue usar o builder para materializar a saída local necessária ao app
   até a Parte 4.
 - Os dados fonte são organizados por domínio e diretório de entidade, com
-  `entity.json` estrutural e um arquivo independente por locale em
-  `localizations/`.
+  `entity.json`, fragmentos Markdown por locale e mídias referenciadas por
+  caminhos relativos.
 - Toda versão coordena os seis pares de bancos e o `CAS/system` compartilhado.
 - A versão usa geração e revisão inteiras.
 - Os doze bancos registram a mesma versão global e seus respectivos locales.

@@ -54,7 +54,7 @@ flowchart LR
     DATA["data/knowledge"] --> BUILDER["knowledge-builder Rust"]
     BUILDER --> OUTPUT["build/knowledge-artifacts"]
     OUTPUT --> PREPARE["Validar e instalar<br/>locale selecionado"]
-    PREPARE --> ACTIVE["app_config + vault/system"]
+    PREPARE --> ACTIVE["app_database_dir + vault/system"]
     ACTIVE --> ENGINE["engine/storage<br/>system somente leitura"]
     ENGINE --> CORE["core-local<br/>queries de leitura"]
     CORE --> MODULES["módulos e app-services"]
@@ -288,18 +288,24 @@ conhecimento. Relações de origem expõem `geo_place` por ID e conteúdo locali
 sem reconstruir localizações no módulo de raças. Códigos técnicos continuam
 disponíveis em campos próprios quando possuem significado de domínio.
 
+Cada item de `sections` expõe `sectionKey`, `parentSectionKey` quando houver,
+ordem e corpo Markdown compilado. `sectionKey` é um enum semântico do domínio,
+não uma chave de conteúdo. A camada de interface fornece o título padronizado da
+seção no locale ativo, enquanto nomes, aliases e corpos permanecem integralmente
+resolvidos pelo banco.
+
 Repositories não chamam `translate()` para montar uma entidade. O locale é
 determinado pelo banco ativo, e o retorno já contém o conteúdo correto.
 
 ## Resolução De Mídia
 
-Contratos de domínio expõem `mediaId`, papel e metadados localizados. Eles não
+Contratos de domínio expõem `mediaKey`, papel e metadados compilados. Eles não
 expõem caminho de autoria nem usam o hash como identidade lógica.
 
 Uma fronteira única resolve a mídia no par ativo:
 
 ```text
-mediaId
+mediaKey
 -> consultar system_media.media_assets
 -> obter contentHash e metadados técnicos
 -> converter contentHash BLOB(32) para hexadecimal minúsculo
@@ -310,17 +316,17 @@ mediaId
 O renderer de Markdown reconhece somente o contrato interno:
 
 ```markdown
-![Texto alternativo](knowledge-media://<mediaId>)
+![Texto alternativo](knowledge-media://asset/<media-key> "Legenda opcional")
 ```
 
-Ele extrai e valida o UUIDv7, usa a mesma fronteira de resolução e nunca converte
-o ID em caminho diretamente. Uma referência ausente produz estado explícito de
-mídia indisponível, sem buscar arquivos em `data/knowledge` ou aceitar caminhos
-relativos.
+Ele extrai e valida a `media_key`, usa a mesma fronteira de resolução e nunca a
+converte em caminho físico diretamente. Uma referência ausente produz estado
+explícito de mídia indisponível, sem buscar arquivos em `data/knowledge` nem
+aceitar caminhos relativos de autoria.
 
-Ao ativar outra build ou locale, o mesmo `mediaId` pode resolver para outro
+Ao ativar outra build ou locale, a mesma `mediaKey` pode resolver para outro
 `contentHash` conforme o `system_media` ativo. Caches de URLs e metadados usam a
-identidade composta por versão, locale, `mediaId` e `contentHash`, evitando
+identidade composta por versão, locale, `mediaKey` e `contentHash`, evitando
 reutilizar bytes de outra versão.
 
 Esse fluxo é exclusivo de mídias públicas de sistema. Mídias do usuário
@@ -328,8 +334,8 @@ continuam identificadas por hash em `user_media.blobs`, com escrita, remoção
 lógica, status de sincronização e CAS em `vault/user`.
 
 Os contratos nativos refletem essa diferença: operações de conhecimento recebem
-`mediaId` e resolvem o hash internamente; operações de mídia do usuário continuam
-recebendo o hash. Não se adiciona `mediaId` a `user_media` nem se mantém uma API
+`mediaKey` e resolvem o hash internamente; operações de mídia do usuário continuam
+recebendo o hash. Não se adiciona `mediaKey` a `user_media` nem se mantém uma API
 gravável comum aos dois ramos.
 
 ## Busca E Normalização
@@ -473,7 +479,7 @@ APIs de consulta de conhecimento nem o formato físico do CAS local.
 4. Adaptar conexões de `system` e `system_media` para o par ativo localizado.
 5. Implementar o contrato estável de recursos ativos e suas validações.
 6. Adaptar a leitura de `system_media` de `blobs` para `media_assets` por
-   `mediaId`.
+   `mediaKey`.
 7. Adaptar repositories e DTOs aos campos resolvidos.
 8. Adaptar módulos, buscas e consumidores.
 9. Implementar a troca recuperável de locale e invalidação de caches.
@@ -502,11 +508,11 @@ Cobrir:
 - troca de locale sem reutilizar conexão ou cache anterior;
 - conservação do par ativo quando a troca falha;
 - leitura das mídias pelo `system_media` correspondente;
-- resolução de `mediaId` para `contentHash` e objeto CAS;
-- Markdown resolvendo `knowledge-media://<mediaId>`;
-- mesmo `mediaId` resolvendo novo conteúdo após troca de build;
+- resolução de `mediaKey` para `contentHash` e objeto CAS;
+- Markdown resolvendo `knowledge-media://asset/<media-key>`;
+- mesma `mediaKey` resolvendo novo conteúdo após troca de build;
 - invalidação de cache de mídia após troca de locale ou hash;
-- recusa de UUID, caminho ou URI de mídia inválido;
+- recusa de `mediaKey`, caminho físico ou URI de mídia inválida;
 - detecção de objeto CAS ausente ou corrompido;
 - instalação CAS em `vault/system/<2-hex>/<2-hex>/<hash>.bin`;
 - recusa de artefato CAS em layout plano ou cujos prefixos não correspondam ao
@@ -514,7 +520,7 @@ Cobrir:
 - recuperação após falha em cada etapa da substituição do par ativo;
 - recusa de escrita SQL, criação de schema ou elevação de versão em `system` e
   `system_media`;
-- leitura de sistema por `media_assets.media_id`;
+- leitura de sistema por `media_assets.media_key`;
 - recusa de `save_media` e atualização de sincronização para
   `StorageDomain::System`;
 - criação, escrita, remoção lógica e sincronização de `user_media.blobs` sem
@@ -550,8 +556,8 @@ Cobrir:
   responsabilidades locais legítimas.
 - Não permanecem fontes paralelas nem fallbacks de conhecimento.
 - O par do locale é validado e aberto como unidade indivisível.
-- Entidades e Markdown referenciam mídia por `mediaId`; somente a fronteira de
-  mídia conhece hashes e caminhos CAS.
+- Entidades e Markdown compilado referenciam mídia por `mediaKey`; somente a
+  fronteira de mídia conhece hashes e caminhos CAS.
 - Desenvolvimento consome uma `build_version` explicitamente preparada.
 - Builds empacotáveis incluem somente os locales e objetos CAS necessários.
 - O app não gera bancos ou CAS em desenvolvimento, runtime ou build.

@@ -111,21 +111,21 @@ externo.
 - Cloudflare R2, GitLab e IPFS ficam previstos no contrato e desativados até suas
   fases próprias.
 - Os dados fonte de conhecimento são organizados por domínio e entidade. Cada
-  entidade possui um diretório com `entity.json` para os campos estruturais e um
-  arquivo JSON separado por locale em `localizations/`.
-- A árvore de pastas é somente editorial. `entityType`, IDs, relações,
-  classificações, regiões e referências por `mediaId` ficam nos JSONs e a
-  geração não deduz semântica do caminho.
+  entidade possui `entity.json` para estrutura e composição, fragmentos
+  Markdown por locale e um diretório `media/` com os bytes editoriais.
+- `entity.json` associa explicitamente cada diretório de conteúdo a um campo ou
+  `sectionKey` padronizado. O builder não deduz semântica do nome das pastas.
 - Os JSONs não contêm nomes de tabelas ou colunas. `entityType` seleciona um Data
   Mapper explícito, e o DDL do builder é a fonte de verdade da projeção
   relacional.
 - Cada build registra cobertura de entidades e relações e fingerprints dos
   schemas efetivamente materializados.
-- Nomes, aliases, descrições e rótulos de conhecimento ficam nas localizações e
-  são projetados diretamente no banco do locale; o app não usa i18n como fonte
-  paralela de conhecimento.
-- Mídias de autoria possuem `mediaId` UUIDv7 estável. JSON e Markdown referenciam
-  esse ID; `system_media` resolve `mediaId` para o SHA-256 dos bytes atuais.
+- Nomes, aliases, descrições e seções de conhecimento ficam em Markdown puro,
+  sem front matter, e são projetados diretamente no banco do locale; o app não
+  usa i18n como fonte paralela de conhecimento.
+- Mídias de autoria usam nomes e caminhos relativos legíveis. O builder deriva
+  uma `media_key`, calcula o SHA-256, reescreve as referências Markdown para o
+  contrato interno e registra `media_key -> contentHash` em `system_media`.
 - Cada locale possui seu próprio `system_media.db`, que indexa somente as mídias
   exigidas por aquele conjunto localizado.
 - `CAS/system` contém objetos imutáveis endereçados por SHA-256.
