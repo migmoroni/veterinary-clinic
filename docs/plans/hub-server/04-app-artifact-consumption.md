@@ -481,6 +481,45 @@ união dos objetos CAS é copiada sem duplicação. Ausência do Hub, de uma rel
 publicada ou de qualquer artefato obrigatório encerra o build com mensagem
 explícita.
 
+O conjunto incorporado continua descrito por `knowledge-bundle.json`. Nesta
+parte, `resources.kind` usa a variante `published_bootstraps`:
+
+```json
+{
+  "schemaVersion": 1,
+  "buildVersion": 42,
+  "includedKnowledgeLocales": ["pt-BR", "en-US"],
+  "defaultKnowledgeLocale": "pt-BR",
+  "resources": {
+    "kind": "published_bootstraps",
+    "releaseId": "<uuid>",
+    "generation": 2,
+    "revision": 0,
+    "locales": {
+      "pt-BR": {
+        "path": "bootstraps/knowledge-bootstrap-2.0-pt-BR-<release-id>.zip",
+        "checksumSha256": "<sha256>"
+      },
+      "en-US": {
+        "path": "bootstraps/knowledge-bootstrap-2.0-en-US-<release-id>.zip",
+        "checksumSha256": "<sha256>"
+      }
+    }
+  }
+}
+```
+
+O mapa `resources.locales` possui exatamente as entradas declaradas em
+`includedKnowledgeLocales`. Todos os pacotes pertencem à mesma release global e
+à revisão `0` da geração declarada; `buildVersion` e a proveniência são conferidos
+contra cada `release.json` interno. Caminhos são relativos à raiz de recursos
+`knowledge/` e passam pelas mesmas regras de contenção da Parte 1C.
+
+Esse arquivo descreve somente recursos incorporados ao app. Ele não é uma cópia,
+um cache nem uma fonte alternativa do manifest assinado do canal. Depois da
+instalação inicial, descoberta e atualização continuam exclusivamente pelo
+contrato público de manifests e releases.
+
 ## Testes
 
 Cobrir:
@@ -497,6 +536,10 @@ Cobrir:
 - `ETag`, `Cache-Control` e resposta sem alteração;
 - seleção do locale ativo e de locales para uso offline;
 - presença de `defaultKnowledgeLocale` em `includedKnowledgeLocales` no bundle;
+- variante `published_bootstraps` de `knowledge-bundle.json` com uma entrada
+  válida e verificada por locale incorporado;
+- recusa de divergência de release, versão, locale, caminho ou checksum entre
+  `knowledge-bundle.json` e os `release.json` internos;
 - ausência de download para locale não selecionado;
 - download e validação de locale ausente antes da confirmação conjunta da troca;
 - instalação transacional do bootstrap de locale;
@@ -543,6 +586,8 @@ Cobrir:
 - O app baixa somente os locales ativos ou selecionados para uso offline.
 - Todo bundle contém um `defaultKnowledgeLocale` válido dentro de
   `includedKnowledgeLocales`.
+- Todo bundle descreve seus bootstraps incorporados por um
+  `knowledge-bundle.json` versionado e separado do manifest assinado do canal.
 - Um locale ainda não instalado é baixado e validado antes de alterar a interface
   e as consultas de conhecimento.
 - Bootstrap instala os três componentes do locale sob a mesma versão.

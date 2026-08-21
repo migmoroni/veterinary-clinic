@@ -170,6 +170,54 @@ obrigatoriamente a essa lista. Essa configuração não altera nem reduz a saíd
 integral do builder; ela controla apenas a preparação local e os recursos
 incorporados ao app.
 
+## Contrato De `knowledge-bundle.json`
+
+A preparação materializa a configuração do app em
+`<knowledge_resource_root>/knowledge-bundle.json`. O arquivo é gerado, não é
+versionado como fonte e não substitui `build-result.json` nem o manifest assinado
+de releases. Seu contrato inicial é:
+
+```json
+{
+  "schemaVersion": 1,
+  "buildVersion": 42,
+  "includedKnowledgeLocales": ["pt-BR", "en-US"],
+  "defaultKnowledgeLocale": "pt-BR",
+  "resources": {
+    "kind": "builder_output",
+    "buildResultPath": "versions/42/build-result.json",
+    "buildResultChecksumSha256": "<sha256>"
+  }
+}
+```
+
+`schemaVersion` versiona exclusivamente esse contrato de recursos do app.
+`resources.kind` é um discriminador fechado; nesta parte, o único valor aceito é
+`builder_output`. A Parte 4 acrescenta a variante `published_bootstraps` para os
+recursos incorporados a partir de releases, preservando os campos superiores de
+seleção de locales.
+
+O diretório que contém `knowledge-bundle.json` é a raiz para todos os caminhos
+relativos declarados nele e nos descritores alcançados. A preparação recusa
+caminhos absolutos, componentes `..`, symlinks que escapem dessa raiz e arquivos
+cujo checksum não corresponda ao contrato.
+
+Antes de preparar um locale, o app valida:
+
+1. `schemaVersion` e `resources.kind` suportados;
+2. `buildVersion` como inteiro positivo;
+3. lista não vazia, sem duplicatas e restrita aos seis locales suportados;
+4. presença de `defaultKnowledgeLocale` na lista;
+5. caminho relativo e SHA-256 de `build-result.json`;
+6. igualdade de `buildVersion` entre os dois documentos;
+7. presença, no resultado do builder, de cada locale declarado.
+
+O arquivo usa UTF-8 e serialização JSON determinística. A preparação local da
+raiz gera a árvore em `build/app-resources/<app-name>/knowledge/`. O bundle Tauri
+incorpora a mesma árvore como seu recurso lógico `knowledge/`, de modo que
+desenvolvimento, empacotamento e primeira inicialização exercitam o mesmo parser
+e as mesmas validações.
+
 Os artefatos selecionados ficam disponíveis em:
 
 ```text
@@ -187,7 +235,8 @@ Esses caminhos são fontes preparadas e nunca são abertos diretamente pelos
 repositories. Uma fronteira de preparação recebe a origem de artefatos:
 
 ```text
-prepareLocalKnowledgeResources({ artifactRoot, buildVersion, locale })
+prepareLocalKnowledgeResources({ knowledgeResourceRoot, locale })
+  -> ler e validar knowledge-bundle.json
   -> validar a saída do builder
   -> instalar o par ativo
   -> incorporar os objetos CAS ausentes
@@ -196,16 +245,17 @@ prepareLocalKnowledgeResources({ artifactRoot, buildVersion, locale })
 
 Antes de instalar, a fronteira:
 
-1. lê `build-result.json`;
-2. valida seu contrato;
-3. resolve somente caminhos internos ao diretório de artefatos;
-4. confere tamanho e SHA-256 dos dois bancos;
-5. confere `PRAGMA integrity_check` quando exigido pela política local;
-6. valida versões e fingerprints dos schemas;
-7. confirma a linha singleton de `knowledge_build_metadata` nos dois bancos;
-8. confirma `build_version`, builder, digest da fonte e locale idênticos no par;
-9. confirma a presença dos objetos exigidos por `system_media`;
-10. verifica cada objeto CAS pelo hash antes de instalá-lo.
+1. lê e valida `knowledge-bundle.json`;
+2. lê `build-result.json` pelo caminho interno declarado e confere seu SHA-256;
+3. valida o contrato de `build-result.json`;
+4. resolve somente caminhos internos à raiz de recursos de conhecimento;
+5. confere tamanho e SHA-256 dos dois bancos;
+6. confere `PRAGMA integrity_check` quando exigido pela política local;
+7. valida versões e fingerprints dos schemas;
+8. confirma a linha singleton de `knowledge_build_metadata` nos dois bancos;
+9. confirma `build_version`, builder, digest da fonte e locale idênticos no par;
+10. confirma a presença dos objetos exigidos por `system_media`;
+11. verifica cada objeto CAS pelo hash antes de instalá-lo.
 
 O destino ativo preserva os locais gerenciados pelo app:
 
@@ -318,11 +368,16 @@ conhecimento. Relações de origem expõem `geo_place` por ID e conteúdo locali
 sem reconstruir localizações no módulo de raças. Códigos técnicos continuam
 disponíveis em campos próprios quando possuem significado de domínio.
 
-Cada item de `sections` expõe `sectionKey`, `parentSectionKey` quando houver,
-ordem e corpo Markdown compilado. `sectionKey` é um enum semântico do domínio,
-não uma chave de conteúdo. A camada de interface fornece o título padronizado da
-seção no locale ativo, enquanto nomes, aliases e corpos permanecem integralmente
-resolvidos pelo banco.
+Cada item de `sections` expõe `sectionKey`, `compiledMarkdown` e seus `children`.
+`sectionKey` é um enum semântico do domínio, não uma chave de conteúdo. A camada
+de interface fornece o título padronizado da seção no locale ativo, enquanto
+nomes, aliases e corpos permanecem integralmente resolvidos pelo banco.
+
+O repository lê o `content_json` da entidade, valida a `schemaVersion` suportada
+e desserializa o documento para um DTO tipado. A página percorre `sections` e
+`children` na ordem recebida para montar sua estrutura; ela não ordena, procura
+pais nem interpreta caminhos de autoria. Cada nó entrega seu
+`compiledMarkdown` diretamente ao renderer seguro.
 
 Repositories não chamam `translate()` para montar uma entidade. O locale é
 determinado pelo banco ativo, e o retorno já contém o conteúdo correto.
@@ -386,6 +441,10 @@ As APIs de busca utilizam:
 - nomes localizados de relações relevantes;
 - termos de taxonomia localizados;
 - campos estruturais pesquisáveis definidos pelo domínio.
+
+Quando o corpo das seções participar de uma busca, o repository usa o texto ou o
+índice FTS derivado pelo builder. A busca não interpreta nem percorre
+`content_json` em tempo de execução.
 
 `@vet/app-services/search` continua responsável pela composição reutilizável das
 buscas. SQL e filtros pertencentes a um domínio permanecem no repository ou
@@ -482,10 +541,11 @@ Cada build declara:
 
 O empacotamento inclui somente:
 
+- `knowledge-bundle.json` com o contrato validado do conjunto incorporado;
+- o `build-result.json` referenciado, com seu checksum;
 - o par `system` e `system_media` de cada locale selecionado;
 - a união dos hashes referenciados por esses bancos `system_media`;
-- metadados necessários para validar os recursos incorporados, incluindo a lista
-  e o locale padrão.
+- os metadados necessários para validar os recursos incorporados.
 
 Objetos CAS compartilhados são copiados uma vez. O build falha quando faltar um
 banco, checksum, locale ou objeto obrigatório, quando a lista estiver vazia ou
@@ -513,32 +573,41 @@ APIs de consulta de conhecimento nem o formato físico do CAS local.
 
 ## Sequência De Implementação
 
-1. Definir `buildVersion`, `includedKnowledgeLocales` e
-   `defaultKnowledgeLocale`.
-2. Implementar a preparação e instalação nos caminhos gerenciados pelo app.
-3. Separar no engine os perfis graváveis de usuário dos perfis de sistema em
+1. Definir o schema versionado de `knowledge-bundle.json` e seu gerador a partir
+   de `buildVersion`, `includedKnowledgeLocales` e `defaultKnowledgeLocale`.
+2. Implementar a validação da raiz de recursos, do contrato do bundle e do
+   `build-result.json` referenciado.
+3. Implementar a preparação e instalação nos caminhos gerenciados pelo app.
+4. Separar no engine os perfis graváveis de usuário dos perfis de sistema em
    somente leitura.
-4. Adaptar conexões de `system` e `system_media` para o par ativo localizado.
-5. Implementar o contrato estável de recursos ativos e suas validações.
-6. Adaptar a leitura de `system_media` de `blobs` para `media_assets` por
+5. Adaptar conexões de `system` e `system_media` para o par ativo localizado.
+6. Implementar o contrato estável de recursos ativos e suas validações.
+7. Adaptar a leitura de `system_media` de `blobs` para `media_assets` por
    `mediaKey`.
-7. Adaptar repositories e DTOs aos campos resolvidos.
-8. Adaptar módulos, buscas e consumidores.
-9. Implementar a troca recuperável de locale e invalidação de caches.
-10. Remover o conteúdo de conhecimento do i18n.
-11. Remover defaults, agregadores, seeds e produção de sistema substituídos em
+8. Adaptar repositories e DTOs aos campos resolvidos.
+9. Adaptar módulos, buscas e consumidores.
+10. Implementar a troca recuperável de locale e invalidação de caches.
+11. Remover o conteúdo de conhecimento do i18n.
+12. Remover defaults, agregadores, seeds e produção de sistema substituídos em
     `core-local` e `engine`.
-12. Integrar a preparação explícita ao desenvolvimento.
-13. Integrar a seleção de locales aos builds empacotáveis.
-14. Auditar que os ramos de criação e escrita de usuário permanecem funcionais.
-15. Auditar imports, caminhos, termos e fontes paralelas.
-16. Executar a validação integral do workspace e dos bundles.
+13. Integrar a geração e o consumo da raiz de recursos ao desenvolvimento.
+14. Integrar a geração e a incorporação da mesma raiz aos builds empacotáveis.
+15. Auditar que os ramos de criação e escrita de usuário permanecem funcionais.
+16. Auditar imports, caminhos, termos e fontes paralelas.
+17. Executar a validação integral do workspace e dos bundles.
 
 ## Testes
 
 Cobrir:
 
 - resolução de cada um dos seis locales;
+- geração determinística de `knowledge-bundle.json`;
+- recusa de schema, discriminador, `buildVersion`, lista ou locale padrão
+  inválido no contrato do bundle;
+- recusa de caminho absoluto, travessia, symlink externo ou checksum divergente
+  declarado em `knowledge-bundle.json`;
+- divergência de `buildVersion` ou locale entre `knowledge-bundle.json` e
+  `build-result.json`;
 - validação de `build-result.json`, tamanho e SHA-256;
 - validação de `knowledge_build_metadata` nos dois bancos;
 - validação dos fingerprints de `system` e `system_media`;
@@ -546,6 +615,11 @@ Cobrir:
 - recusa de schema ou locale incompatível;
 - abertura dos doze bancos pelas APIs de leitura;
 - nomes, aliases, descrições e taxonomias corretos por locale;
+- desserialização de `content_json` para a árvore tipada de seções;
+- montagem da página na ordem dos arrays `sections` e `children`;
+- entrega exclusiva de `compiledMarkdown` normalizado ao renderer;
+- recusa de `schemaVersion` de conteúdo não suportada ou documento malformado;
+- ausência de consultas JSON ad hoc para montar páginas ou pesquisar seções;
 - queries e buscas sem consulta a i18n de conhecimento;
 - troca de locale sem reutilizar conexão ou cache anterior;
 - conservação do par ativo quando a troca falha;
@@ -601,6 +675,8 @@ Cobrir:
   ativos.
 - `knowledge_build_metadata` prova a identidade comum do par antes da abertura.
 - Os contratos retornam conteúdo localizado, sem chaves de tradução.
+- As páginas são compostas pela árvore tipada de `content_json`, sem consultas ou
+  tabelas independentes por seção.
 - Busca, catálogo, raças e protocolos usam nomes e aliases dos bancos.
 - O i18n contém somente textos pertencentes à interface e a outras
   responsabilidades locais legítimas.
@@ -610,6 +686,8 @@ Cobrir:
   fronteira de mídia conhece hashes e caminhos CAS.
 - Desenvolvimento consome uma `build_version` explicitamente preparada.
 - Builds empacotáveis incluem somente os locales e objetos CAS necessários.
+- Desenvolvimento e bundles usam o mesmo contrato versionado
+  `knowledge-bundle.json` para descrever os recursos incorporados.
 - Todo bundle possui `defaultKnowledgeLocale` dentro de sua lista não vazia de
   `includedKnowledgeLocales`.
 - Um locale localmente indisponível nunca substitui o par ativo nem produz

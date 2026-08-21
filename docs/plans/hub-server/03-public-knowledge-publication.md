@@ -137,6 +137,12 @@ semântico canônico. Em seguida calcula SHA-256, deriva uma `media_key` de
 compilado seguro recebe referências `knowledge-media://asset/<media-key>`; a
 fonte de autoria nunca contém essa URI.
 
+Para cada entidade e locale, o builder compõe todas as seções em um único
+`content_json` versionado. A ordem dos arrays representa a ordem da página,
+`children` representa a hierarquia e cada nó contém seu `sectionKey` e o Markdown
+normalizado. Pacotes publicados transportam esse documento dentro do banco
+`system`; não são criadas tabelas, linhas ou artefatos independentes por seção.
+
 Alterar os bytes preservando o caminho editorial mantém a `media_key` e produz
 outro objeto CAS imutável. Renomear a mídia exige atualizar as referências e
 produz outra chave técnica. Bytes idênticos continuam deduplicados pelo hash.
@@ -874,6 +880,8 @@ Cobrir:
   estruturais;
 - presença dos seis Markdown em cada campo ou seção obrigatória;
 - associação de cada diretório a um campo ou `sectionKey` no manifesto;
+- composição determinística de um `content_json` localizado por entidade, com
+  ordem, hierarquia e Markdown compilado;
 - recusa de front matter, AST inválido e conteúdo não declarado;
 - projeção isolada de cada locale sem alterar campos estruturais;
 - projeção de `geo_place` como domínio compartilhado e resolução de todos os

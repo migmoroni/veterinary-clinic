@@ -295,6 +295,12 @@ Cada `sectionKey` é única na entidade. O schema do `entityType` valida pais
 permitidos, profundidade máxima e se uma seção exige conteúdo próprio. O builder
 recusa pais inexistentes e ciclos.
 
+O array de autoria descreve a composição da página. Na Parte 1B, ele é compilado
+para um único documento de conteúdo localizado por item: a hierarquia declarada
+por `parentSectionKey` vira uma árvore ordenada, e cada fragmento Markdown vira o
+corpo normalizado de sua seção. Os arquivos canônicos não incluem nomes de
+colunas, formato de persistência ou estrutura física desse documento.
+
 ## Identidade E Descoberta
 
 - `id` é estável e único no espaço definido pelo contrato da entidade;

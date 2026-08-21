@@ -134,7 +134,7 @@ entity.json + Markdown + mídias
 -> construção do modelo semântico canônico
 -> cálculo do sourceDigestSha256
 -> representação compilada segura
--> projeção relacional
+-> projeção SQL tipada e serialização canônica de content_json
 => build de system, system_media e CAS/system
 ```
 
@@ -277,16 +277,69 @@ modelo e projector correspondentes. Cada projector:
 - não infere comportamento pelo caminho da fonte.
 
 Uma entidade `breed`, por exemplo, pode preencher a tabela principal de raças,
-as tabelas de aliases, seções, relações com `geo_place` e coleções de mídia. O
-projector geográfico materializa lugares, hierarquias e seus textos localizados.
-Essas decisões pertencem aos projectors e ao DDL, não aos diretórios nem aos
-JSONs de autoria.
+as tabelas de aliases, relações com `geo_place`, coleções de mídia e seu documento
+de conteúdo localizado. O projector geográfico materializa lugares, hierarquias
+e seus textos localizados. Essas decisões pertencem aos projectors e ao DDL, não
+aos diretórios nem aos JSONs de autoria.
 
 Não existe regra “um JSON corresponde a uma tabela”. Também não se usa uma
 tabela genérica EAV para evitar a modelagem do domínio. Dados consultáveis,
 ordenáveis ou relacionados usam tabelas e constraints próprias; JSON em coluna
-é reservado a conteúdo opaco, versionado e validado que não precise dessas
-garantias relacionais.
+é reservado a documentos versionados e validados que sejam consumidos como uma
+unidade e permaneçam opacos para consultas relacionais.
+
+## Documento Canônico De Conteúdo
+
+As seções de uma entidade formam um único value object localizado, armazenado em
+`content_json`. Ele contém a estrutura pronta para montar a página e todo corpo
+Markdown já normalizado:
+
+```json
+{
+  "schemaVersion": 1,
+  "sections": [
+    {
+      "sectionKey": "composition",
+      "compiledMarkdown": "Conteúdo compilado da seção.",
+      "children": [
+        {
+          "sectionKey": "active_ingredients",
+          "compiledMarkdown": "Conteúdo compilado da subseção.",
+          "children": []
+        }
+      ]
+    }
+  ]
+}
+```
+
+A ordem dos arrays é a ordem canônica de apresentação. O documento não armazena
+`sortOrder`, `parentSectionKey`, IDs técnicos de seção, caminhos editoriais ou
+ASTs. `parentSectionKey` serve à validação e à compilação da fonte; no resultado,
+a posição em `children` representa a hierarquia. Quando o schema permitir uma
+seção estrutural sem corpo, `compiledMarkdown` usa a string canônica vazia.
+
+Cada tabela principal de entidade que possui conteúdo editorial oferece uma
+coluna equivalente a:
+
+```sql
+content_json TEXT NOT NULL CHECK(json_valid(content_json))
+```
+
+Entidades sem seções usam o documento válido
+`{"schemaVersion":1,"sections":[]}` quando o contrato do domínio exigir a
+coluna. Não são criadas tabelas ou linhas independentes para seções.
+
+O builder valida chaves permitidas e únicas, pais, ciclos, profundidade, ordem,
+perfil Markdown e referências de mídia antes de montar a árvore. Em seguida,
+serializa o documento deterministicamente em UTF-8. Alterar a forma desse
+documento eleva sua `schemaVersion` e, quando exigir comportamento novo do
+consumidor, também a versão do schema `system`.
+
+Campos usados por relações, filtros, ordenação ou busca permanecem em colunas,
+tabelas ou índices próprios. Quando um domínio precisar pesquisar o corpo das
+seções, o builder deriva texto normalizado ou FTS a partir do modelo canônico; as
+buscas não percorrem `content_json` com consultas JSON ad hoc.
 
 ## Contrato Dos Bancos Localizados
 
@@ -297,7 +350,7 @@ As projeções armazenam, conforme o domínio:
 
 - `name` localizado;
 - aliases do locale;
-- descrição e seções localizadas;
+- descrição localizada e `content_json` com a árvore de seções do locale;
 - rótulos localizados de taxonomias e classificações;
 - nomes e observações localizados de protocolos;
 - campos normalizados usados por busca;
@@ -834,16 +887,23 @@ relações, cobertura, hashes e relatórios.
 2. Implementar modelos estritos e schemas de `entity.json`.
 3. Implementar descoberta recursiva e ordenação lógica.
 4. Implementar parser Markdown, validação de AST e normalização de fragmentos.
-5. Implementar resolução segura de caminhos e derivação de `media_key`.
-6. Definir o modelo canônico Rust e o registro exaustivo de projectors.
-7. Definir DDL, constraints, índices e versões dos dois bancos.
-8. Implementar os Data Mappers e a projeção localizada.
-9. Implementar `knowledge_build_metadata` e os metadados opcionais de release.
-10. Implementar a auditoria de cobertura e os fingerprints dos schemas.
-11. Implementar `system_media`, thumbnails e o CAS incremental fragmentado.
-12. Implementar staging, checksums e finalização atômica.
-13. Implementar a CLI, `projection-report.json` e `build-result.json`.
-14. Validar fixtures, determinismo, paridade semântica e os seis locales.
+5. Implementar resolução segura de caminhos, validação de mídia, derivação de
+   `media_key` e o modelo semântico canônico da fonte.
+6. Entregar o subcomando `validate` com diagnósticos por arquivo, entidade, campo,
+   seção e locale.
+7. Executar o gate sobre todos os seis locales e corrigir integralmente os erros
+   encontrados em `data/knowledge`.
+8. Definir DDL, constraints, índices e versões dos dois bancos, incluindo o
+   contrato canônico de `content_json`.
+9. Definir os modelos de projeção e o registro exaustivo de projectors.
+10. Implementar os Data Mappers e a projeção localizada.
+11. Implementar `knowledge_build_metadata` e os metadados opcionais de release.
+12. Implementar a auditoria de cobertura e os fingerprints dos schemas.
+13. Implementar `system_media`, thumbnails e o CAS incremental fragmentado.
+14. Implementar staging, checksums e finalização atômica.
+15. Entregar o subcomando `build`, `projection-report.json` e
+    `build-result.json`.
+16. Validar fixtures, determinismo, paridade semântica e os seis locales.
 
 ## Testes
 
@@ -873,6 +933,15 @@ Cobrir:
 - recusa de front matter e conteúdo incompatível com o campo declarado;
 - associação de diretório arbitrário à `sectionKey` definida no manifesto;
 - composição determinística da hierarquia de seções por `parentSectionKey`;
+- geração de um único `content_json` por entidade e locale;
+- serialização determinística de `schemaVersion`, `sections`, `sectionKey`,
+  `compiledMarkdown` e `children`;
+- preservação da ordem editorial nos arrays raiz e `children`;
+- ausência de `sortOrder`, `parentSectionKey`, IDs técnicos, caminhos editoriais
+  e ASTs no documento compilado;
+- recusa de `sectionKey` duplicada, pai inexistente e hierarquia cíclica ou acima
+  da profundidade permitida;
+- `content_json` válido segundo o schema do documento e `json_valid` do SQLite;
 - normalização da hierarquia de subtítulos internos;
 - campos localizados corretos em cada banco;
 - ausência de chaves de i18n nos bancos;
@@ -946,6 +1015,9 @@ Cobrir:
 - `entityType` seleciona um projector explícito, sem nomes de tabelas nos dados
   canônicos.
 - O DDL é a fonte de verdade da disposição relacional.
+- As seções de cada entidade são armazenadas juntas em um `content_json`
+  canônico, versionado, ordenado e composto somente por Markdown compilado.
+- Nenhuma tabela ou linha independente é criada para seções.
 - Toda entidade e relação possui cobertura comprovada no relatório de projeção.
 - Os seis pares de bancos são produzidos na mesma execução.
 - Cada par possui `knowledge_build_metadata` coerente e verificável mesmo sem

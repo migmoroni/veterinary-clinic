@@ -123,6 +123,9 @@ externo.
 - Nomes, aliases, descrições e seções de conhecimento ficam em Markdown puro,
   sem front matter, e são projetados diretamente no banco do locale; o app não
   usa i18n como fonte paralela de conhecimento.
+- As seções de cada item são compiladas em um único `content_json` versionado. A
+  árvore ordenada organiza a página, e cada nó contém seu Markdown normalizado;
+  não existem tabelas independentes por seção.
 - O builder interpreta Markdown por AST, aplica uma allowlist fechada, normaliza
   o resultado deterministicamente e projeta somente a representação compilada
   segura. O digest da fonte usa o modelo semântico canônico, sem depender de
@@ -147,6 +150,9 @@ externo.
 - Cada bundle declara `includedKnowledgeLocales` e um `defaultKnowledgeLocale`
   obrigatoriamente incluído. Um locale ausente só é ativado depois de seus
   artefatos serem obtidos e validados.
+- Recursos de conhecimento incorporados são descritos por um
+  `knowledge-bundle.json` versionado. Ele registra a seleção de locales e sua
+  origem local ou publicada, sem substituir o manifest assinado de releases.
 - Cada versão de conhecimento coordena os seis pares `system` e `system_media`
   sob uma release global. Cada par é instalado como unidade indivisível e usa o
   `CAS/system` compartilhado.
