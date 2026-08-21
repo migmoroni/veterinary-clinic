@@ -197,10 +197,10 @@ de releases. Seu contrato inicial é:
 recursos incorporados a partir de releases, preservando os campos superiores de
 seleção de locales.
 
-O diretório que contém `knowledge-bundle.json` é a raiz para todos os caminhos
-relativos declarados nele e nos descritores alcançados. A preparação recusa
-caminhos absolutos, componentes `..`, symlinks que escapem dessa raiz e arquivos
-cujo checksum não corresponda ao contrato.
+O diretório que contém `knowledge-bundle.json` é a raiz para os caminhos de
+recursos que o contrato manda resolver. A preparação recusa caminhos absolutos,
+componentes `..`, symlinks que escapem dessa raiz e arquivos cujo checksum não
+corresponda ao contrato.
 
 Antes de preparar um locale, o app valida:
 
@@ -211,6 +211,13 @@ Antes de preparar um locale, o app valida:
 5. caminho relativo e SHA-256 de `build-result.json`;
 6. igualdade de `buildVersion` entre os dois documentos;
 7. presença, no resultado do builder, de cada locale declarado.
+
+O `build-result.json` preserva o relatório integral dos seis locales produzido
+pela Parte 1B. Na raiz reduzida do app, as entradas que não pertencem a
+`includedKnowledgeLocales` servem somente como proveniência e não obrigam a
+presença de seus bancos ou objetos CAS. O runtime resolve e valida arquivos apenas
+para os locales incluídos. Ele também não resolve `projection.reportPath`,
+`checksumFile` nem o digest CAS global dessa saída integral.
 
 O arquivo usa UTF-8 e serialização JSON determinística. A preparação local da
 raiz gera a árvore em `build/app-resources/<app-name>/knowledge/`. O bundle Tauri
@@ -247,15 +254,18 @@ Antes de instalar, a fronteira:
 
 1. lê e valida `knowledge-bundle.json`;
 2. lê `build-result.json` pelo caminho interno declarado e confere seu SHA-256;
-3. valida o contrato de `build-result.json`;
+3. valida o contrato integral de `build-result.json`, incluindo suas seis entradas
+   de locale, sem exigir na raiz reduzida os arquivos dos locales não incluídos;
 4. resolve somente caminhos internos à raiz de recursos de conhecimento;
 5. confere tamanho e SHA-256 dos dois bancos;
 6. confere `PRAGMA integrity_check` quando exigido pela política local;
 7. valida versões e fingerprints dos schemas;
 8. confirma a linha singleton de `knowledge_build_metadata` nos dois bancos;
 9. confirma `build_version`, builder, digest da fonte e locale idênticos no par;
-10. confirma a presença dos objetos exigidos por `system_media`;
-11. verifica cada objeto CAS pelo hash antes de instalá-lo.
+10. deriva de `system_media` o conjunto CAS exato do locale e confere seu
+    `casSetDigestSha256` declarado em `build-result.json`;
+11. confirma a presença dos objetos exigidos por esse conjunto;
+12. verifica cada objeto CAS pelo hash antes de instalá-lo.
 
 O destino ativo preserva os locais gerenciados pelo app:
 
@@ -539,6 +549,18 @@ Cada build declara:
 - `includedKnowledgeLocales` como lista não vazia de locales;
 - `defaultKnowledgeLocale` como integrante obrigatório dessa lista.
 
+Antes de selecionar recursos, o pipeline valida a saída integral da Parte 1B em
+`build/knowledge-artifacts`:
+
+1. confere o contrato de `build-result.json` e suas seis entradas de locale;
+2. confere o checksum e a cobertura integral de `projection-report.json`;
+3. confere `checksums.sha256` contra os doze bancos e todos os objetos CAS da
+   `build_version`;
+4. valida metadados, fingerprints, integridade e digests do conjunto completo;
+5. encerra o empacotamento diante de qualquer divergência.
+
+Somente depois dessa auditoria o pipeline cria a raiz reduzida de recursos do app.
+
 O empacotamento inclui somente:
 
 - `knowledge-bundle.json` com o contrato validado do conjunto incorporado;
@@ -546,6 +568,14 @@ O empacotamento inclui somente:
 - o par `system` e `system_media` de cada locale selecionado;
 - a união dos hashes referenciados por esses bancos `system_media`;
 - os metadados necessários para validar os recursos incorporados.
+
+`projection-report.json` e `checksums.sha256` permanecem na saída integral de
+build e não são incorporados ao app. O `build-result.json` copiado permanece
+integral, mas o runtime usa somente os descritores dos locales incluídos. Para
+cada um deles, o conjunto CAS incorporado é derivado do respectivo
+`system_media`, comparado com `casSetDigestSha256` e copiado sem objetos extras.
+O digest CAS global do resultado integral é validado pelo pipeline antes da
+seleção e não é usado para exigir no bundle objetos pertencentes a outros locales.
 
 Objetos CAS compartilhados são copiados uma vez. O build falha quando faltar um
 banco, checksum, locale ou objeto obrigatório, quando a lista estiver vazia ou
@@ -591,7 +621,8 @@ APIs de consulta de conhecimento nem o formato físico do CAS local.
 12. Remover defaults, agregadores, seeds e produção de sistema substituídos em
     `core-local` e `engine`.
 13. Integrar a geração e o consumo da raiz de recursos ao desenvolvimento.
-14. Integrar a geração e a incorporação da mesma raiz aos builds empacotáveis.
+14. Integrar aos builds empacotáveis a auditoria da saída integral, a seleção de
+    locales e a geração da raiz reduzida com o conjunto CAS exato.
 15. Auditar que os ramos de criação e escrita de usuário permanecem funcionais.
 16. Auditar imports, caminhos, termos e fontes paralelas.
 17. Executar a validação integral do workspace e dos bundles.
@@ -609,6 +640,14 @@ Cobrir:
 - divergência de `buildVersion` ou locale entre `knowledge-bundle.json` e
   `build-result.json`;
 - validação de `build-result.json`, tamanho e SHA-256;
+- auditoria integral de `projection-report.json`, `checksums.sha256`, dos doze
+  bancos e do CAS antes da seleção de locales;
+- ausência de `projection-report.json` e `checksums.sha256` na raiz reduzida sem
+  impedir sua validação prévia no pipeline;
+- `build-result.json` integral em bundle com subconjunto de locales, sem tentativa
+  de resolver bancos ou CAS dos locales não incluídos;
+- derivação do conjunto CAS por `system_media` e igualdade com o
+  `casSetDigestSha256` do locale selecionado;
 - validação de `knowledge_build_metadata` nos dois bancos;
 - validação dos fingerprints de `system` e `system_media`;
 - recusa de par ausente, incompleto ou divergente;
@@ -686,6 +725,11 @@ Cobrir:
   fronteira de mídia conhece hashes e caminhos CAS.
 - Desenvolvimento consome uma `build_version` explicitamente preparada.
 - Builds empacotáveis incluem somente os locales e objetos CAS necessários.
+- O pipeline valida a saída integral do builder antes de produzir a raiz reduzida
+  do app.
+- O runtime resolve somente os descritores de locales declarados no
+  `knowledge-bundle.json` e deriva seu conjunto CAS pelo respectivo
+  `system_media`.
 - Desenvolvimento e bundles usam o mesmo contrato versionado
   `knowledge-bundle.json` para descrever os recursos incorporados.
 - Todo bundle possui `defaultKnowledgeLocale` dentro de sua lista não vazia de
