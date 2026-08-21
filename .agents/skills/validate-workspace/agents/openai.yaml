@@ -1,0 +1,4 @@
+interface:
+  display_name: "Validações Gerais"
+  short_description: "Valida Svelte, testes, build e Rust"
+  default_prompt: "Use $validate-workspace para executar todas as validações gerais do repositório e relatar os resultados."
