@@ -3,8 +3,8 @@
 [Portuguese README](README.pt-BR.md) | English
 
 Veterinary Clinic is a local-first desktop application for veterinary clinic
-workflows. It is built with SvelteKit, Tauri 2, Rust and SQLite, with the data
-model moving toward durable offline ownership, explicit import/export, and
+workflows. It is built with SvelteKit, Tauri 2, Rust and SQLite, with a data
+model designed for durable offline ownership, explicit import/export, and
 continuous replication through small SQLite changesets.
 
 The project is developer-facing and under active development. The current public
@@ -17,6 +17,7 @@ remote service:
 
 - owners, pets and medical records live in local SQLite databases;
 - reference catalogs are separated from user-owned operational data;
+- analytics and search live as reusable headless application services;
 - original media files are stored through content-addressable storage instead of
   operational SQLite BLOB columns;
 - full import/export is handled as a distribution concern;
@@ -25,16 +26,29 @@ remote service:
 ## Architecture Snapshot
 
 ```text
-Svelte UI -> TypeScript services -> Tauri commands -> Rust -> SQLite + CAS
+apps/vet-app -> (@vet/app-services, @vet/modules, @vet/ui) -> @vet/core-local -> Tauri commands -> vet-engine -> SQLite + CAS
 ```
 
-The persistence boundary is intentionally split into three Rust modules:
+The workspace is intentionally split by runtime boundary:
 
-| Module | Responsibility |
+| Package | Responsibility |
 | --- | --- |
-| `storage` | Active SQLite connections, database paths, CAS files and low-level primitives. |
-| `distribution` | Complete native/CSV import and export packages. |
-| `replication` | Continuous local-first backup and synchronization through patches. |
+| `apps/vet-app` | SvelteKit/Tauri shell, routes and cross-module composition. |
+| `packages/types` | Pure domain contracts and data rules. |
+| `packages/core-local` | Local TypeScript runtime, SQLite bridge, i18n, preferences, import/export clients and media repositories. |
+| `packages/ui` | Reusable Svelte UI primitives. |
+| `packages/modules` | Business modules: `knowledge`, `registry` and `medical_records`. |
+| `packages/app-services` | Headless application services: `analytics` and `search`. |
+| `packages/engine` | Native product engine for storage, distribution, replication and platform integrations. |
+
+The TypeScript dependency DAG is:
+
+```text
+@vet/types <- @vet/core-local <- @vet/ui <- @vet/modules <- @vet/app-services <- apps/vet-app
+```
+
+Each item imports only packages to its left. `@vet/app-services` stays headless:
+no UI, routes, Svelte stores or app-local `$lib` imports.
 
 ## Stack
 
@@ -51,38 +65,40 @@ The persistence boundary is intentionally split into three Rust modules:
 ## Quick Start
 
 ```sh
-npm ci
-npm run tauri:dev
+nvm use
+pnpm install --frozen-lockfile
+pnpm tauri:dev
 ```
 
 For a clean development state:
 
 ```sh
-npm run tauri:dev:new
+pnpm tauri:dev:new
 ```
 
 ## Common Checks
 
 ```sh
-npm run check
-npm run test:run
-npm run build
-cargo check --manifest-path src-tauri/Cargo.toml
+pnpm check
+pnpm test:run
+pnpm build
+cargo check --workspace
 ```
 
 Desktop bundles:
 
 ```sh
-npm run tauri:appimage
-npm run tauri:deb
-npm run tauri:flatpak
-npm run tauri:msi
+pnpm tauri:appimage
+pnpm tauri:deb
+pnpm tauri:flatpak
+pnpm tauri:msi
 ```
 
 ## Documentation
 
 Detailed architecture documentation is currently maintained in Portuguese only.
-Start with [README.pt-BR.md](README.pt-BR.md).
+Start with [README.pt-BR.md](README.pt-BR.md) and
+[docs/modular-architecture.md](docs/modular-architecture.md).
 
 English documentation for the full architecture map is still to do.
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { updateAppStreamRelease } from './appstream.mjs';
-import { updateAppVersionFiles, readCurrentVersion } from './app-files.mjs';
+import { APPSTREAM_METAINFO, updateAppVersionFiles, readCurrentVersion } from './app-files.mjs';
 import { updateChangelog } from './changelog.mjs';
 import { collectChanges, parseArgs } from './cli.mjs';
 import { formatLocalDate } from './date.mjs';
@@ -23,8 +23,8 @@ try {
 	const changelog = await readText('CHANGELOG.md');
 	await writeText('CHANGELOG.md', updateChangelog(changelog, release));
 
-	const appStreamMetainfo = await readText('src-tauri/metainfo/io.github.migmoroni.VeterinaryClinic.metainfo.xml');
-	await writeText('src-tauri/metainfo/io.github.migmoroni.VeterinaryClinic.metainfo.xml', updateAppStreamRelease(appStreamMetainfo, release));
+	const appStreamMetainfo = await readText(APPSTREAM_METAINFO);
+	await writeText(APPSTREAM_METAINFO, updateAppStreamRelease(appStreamMetainfo, release));
 
 	console.log(`Version bumped from ${currentVersion} to ${nextVersion} (${options.level})`);
 } catch (error) {

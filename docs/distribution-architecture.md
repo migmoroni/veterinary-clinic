@@ -1,6 +1,6 @@
 # Arquitetura De Distribuição
 
-Este documento explica a arquitetura de `src-tauri/src/distribution`.
+Este documento explica a arquitetura de `packages/engine/src/distribution`.
 Ele existe para deixar claro que **distribuição** é o fluxo manual de
 importação/exportação completa, enquanto **replicação** é o fluxo contínuo de
 backup/sincronização por patches.

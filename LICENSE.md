@@ -1,4 +1,13 @@
-MIT License
+# Monorepo Licensing Structure
+
+This repository utilizes a granular, directory-based licensing model:
+
+* **Default / Root License:** Unless a specific subdirectory contains its own `LICENSE` file (or specifies a different license in its local manifest), all root-level files, configurations, scripts, and general source code in this repository are licensed under the **MIT License** provided in full below.
+* **Submodules & Packages:** Individual applications, services, or packages within this repository may be distributed under different license terms (e.g., AGPL-3.0-or-later, GPL-3.0-or-later, or LGPL-3.0-or-later). **Always check the `LICENSE` file or `package.json` manifest located within each respective module directory to determine its applicable terms.**
+
+---
+
+## Root License: MIT License
 
 Copyright (c) 2026 Miguel Eduardo Senna Moroni
 

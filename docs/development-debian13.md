@@ -11,18 +11,19 @@ Ferramentas em uso nesta maquina:
 | Ferramenta | Versao verificada |
 | --- | --- |
 | Node.js | `v22.21.1` |
-| npm | `11.11.1` |
+| pnpm | `11.22.0` |
 | Rust | `rustc 1.95.0` |
 | Cargo | `cargo 1.95.0` |
 | rustup | `1.29.0` |
-| Tauri CLI | `2.11.1` via `npx tauri`/scripts npm |
+| Tauri CLI | `2.11.1` via scripts pnpm |
 | WebKitGTK | `2.52.3` via `webkit2gtk-4.1` |
 
-O `Cargo.toml` declara Rust minimo `1.77.2`, mas o ambiente atual usa Rust stable recente. Para evitar diferencas sutis entre maquinas, use Node 22 e Rust stable.
+O `Cargo.toml` declara Rust minimo `1.77.2`, mas o ambiente atual usa Rust stable recente. Para evitar diferencas sutis entre maquinas, use Node 22.x e Rust stable.
 
 ## Pacotes do Debian
 
-Instale os pacotes do sistema antes de rodar `npm ci` ou qualquer comando Tauri:
+Instale os pacotes do sistema antes de rodar `pnpm install --frozen-lockfile` ou
+qualquer comando Tauri:
 
 ```sh
 sudo apt update
@@ -81,10 +82,19 @@ Notas:
 
 ## Node e Rust
 
-Use qualquer gerenciador de versoes que mantenha Node 22 disponivel, por exemplo `nvm`, `fnm` ou `asdf`. O projeto usa `package-lock.json`, entao em maquinas limpas prefira:
+Use qualquer gerenciador de versões que mantenha Node 22.x disponível, por
+exemplo `nvm`, `fnm` ou `asdf`. O arquivo `.nvmrc` seleciona a versão instalada
+mais recente da linha 22.x. Ative o Corepack distribuído com Node 22.x e
+confirme a versão fixada em `packageManager`:
+
+O contrato `engines` aceita Node.js `>=22.0.0`; a linha 22.x é a versão
+recomendada e verificada para o desenvolvimento local.
 
 ```sh
-npm ci
+nvm use
+corepack enable
+pnpm --version
+pnpm install --frozen-lockfile
 ```
 
 Para Rust, instale via `rustup` e use a toolchain stable:
@@ -103,16 +113,16 @@ Na raiz do projeto:
 
 ```sh
 cd /home/miguel/Projects/proprios/veterinary-clinic
-npm ci
+pnpm install --frozen-lockfile
 ```
 
 Depois valide que o ambiente esta saudavel:
 
 ```sh
-npm run check
-npm run test:run
-npm run build
-cargo check --manifest-path src-tauri/Cargo.toml
+pnpm check
+pnpm test:run
+pnpm build
+cargo check --workspace
 ```
 
 ## Executar em desenvolvimento
@@ -120,30 +130,39 @@ cargo check --manifest-path src-tauri/Cargo.toml
 Para executar o aplicativo desktop com Tauri:
 
 ```sh
-npm run tauri:dev
+pnpm tauri:dev
 ```
 
-Esse comando ja executa a UI configurada em `src-tauri/tauri.conf.json` por meio de `beforeDevCommand: npm run dev`. Em geral, nao precisa iniciar `npm run dev` em outro terminal antes.
+Esse comando já executa a UI configurada em
+`apps/vet-app/src-tauri/tauri.conf.json` por meio de
+`beforeDevCommand: pnpm run dev`. Em geral, não é necessário iniciar `pnpm dev`
+em outro terminal antes.
 
 Para remover o banco SQLite local de desenvolvimento, o armazenamento local do WebView e iniciar o Tauri em seguida:
 
 ```sh
-npm run tauri:dev:new
+pnpm tauri:dev:new
 ```
 
-Esse comando executa `scripts/new-state.mjs`, aguarda 1 segundo e entao chama o fluxo normal de `npm run tauri:dev`. A limpeza remove o estado local de desenvolvimento do app, incluindo bancos SQLite, WAL/SHM, CAS em `vault/`, fila e baselines de `replication/`, armazenamento do WebView e cache. Diretorios de saida do usuario, como `backups/`, `exports/`, `import_safety_exports/` e pastas de backup continuo rotuladas como `Veterinary Clinic - <database_id>`, sao preservados.
+Esse comando executa `scripts/new-state.mjs`, aguarda 1 segundo e então chama o
+fluxo normal de `pnpm tauri:dev`. A limpeza remove o estado local de
+desenvolvimento do app, incluindo bancos SQLite, WAL/SHM, CAS em `vault/`, fila
+e baselines de `replication/`, armazenamento do WebView e cache. Diretórios de
+saída do usuário, como `backups/`, `exports/`, `import_safety_exports/` e pastas
+de backup contínuo rotuladas como `Veterinary Clinic - <database_id>`, são
+preservados.
 
 Para testar apenas a camada web no navegador, sem shell Tauri e sem todos os recursos nativos:
 
 ```sh
-npm run dev
+pnpm dev
 ```
 
 Para visualizar a construcao web estatica:
 
 ```sh
-npm run build
-npm run preview
+pnpm build
+pnpm preview
 ```
 
 ## Banco SQLite local
@@ -156,18 +175,20 @@ O conjunto de usuario em execucao e composto por:
 No Debian atual, o arquivo local aparece em:
 
 ```sh
-~/.config/app.veterinary-clinic.local/veterinary_clinic_user.db
-~/.config/app.veterinary-clinic.local/veterinary_clinic_user_media.db
-~/.config/app.veterinary-clinic.local/veterinary_clinic_user_logs.db
-~/.config/app.veterinary-clinic.local/vault/user/
+~/.local/share/app.veterinary-clinic.local/databases/veterinary_clinic_user.db
+~/.local/share/app.veterinary-clinic.local/databases/veterinary_clinic_user_media.db
+~/.local/share/app.veterinary-clinic.local/databases/veterinary_clinic_user_logs.db
+~/.local/share/app.veterinary-clinic.local/vault/user/
 ```
 
 Na primeira execucao, o app pergunta se deve importar uma base SQLite compativel ou criar uma base vazia. Para reiniciar o estado local durante desenvolvimento, feche o app e remova ou renomeie esse arquivo.
-O atalho `npm run tauri:dev:new` faz essa limpeza automaticamente antes de iniciar o app em modo dev, incluindo bancos do usuario, indices de midia, CAS local, fila de replicacao e armazenamento web como o historico recente da busca.
+O atalho `pnpm tauri:dev:new` faz essa limpeza automaticamente antes de iniciar
+o app em modo dev, incluindo bancos do usuário, índices de mídia, CAS local,
+fila de replicação e armazenamento web como o histórico recente da busca.
 
 ## Camera e video no Linux
 
-O fluxo de avatar usa `navigator.mediaDevices.getUserMedia()` dentro do WebKitGTK. Na camada Rust do Tauri Linux, `src-tauri/src/lib.rs` habilita explicitamente:
+O fluxo de avatar usa `navigator.mediaDevices.getUserMedia()` dentro do WebKitGTK. Na camada Rust do Tauri Linux, `apps/vet-app/src-tauri/src/lib.rs` habilita explicitamente:
 
 - `enable-media`
 - `enable-webrtc`
@@ -225,10 +246,10 @@ Se aparecer renderizacao por software, a camera e o webview podem ficar menos fl
 Use estes comandos antes de abrir PR ou gerar pacote:
 
 ```sh
-npm run check
-npm run test:run
-npm run build
-cargo check --manifest-path src-tauri/Cargo.toml
+pnpm check
+pnpm test:run
+pnpm build
+cargo check --workspace
 ```
 
 ## Pacotes desktop no Debian
@@ -236,30 +257,34 @@ cargo check --manifest-path src-tauri/Cargo.toml
 AppImage:
 
 ```sh
-npm run tauri:appimage
+pnpm tauri:appimage
 ```
 
-O AppImage inclui suporte de midia por causa de `bundle.linux.appimage.bundleMediaFramework = true` em `src-tauri/tauri.conf.json`; isso requer `patchelf` no PATH.
+O AppImage inclui suporte de midia por causa de `bundle.linux.appimage.bundleMediaFramework = true` em `apps/vet-app/src-tauri/tauri.conf.json`; isso requer `patchelf` no PATH.
 
 Deb:
 
 ```sh
-npm run tauri:deb
+pnpm tauri:deb
 ```
 
 MSI deve ser gerado no Windows ou em CI apropriado:
 
 ```sh
-npm run tauri:msi
+pnpm tauri:msi
 ```
 
 Flatpak:
 
 ```sh
-npm run tauri:flatpak
+pnpm tauri:flatpak
 ```
 
-O Tauri nao possui `flatpak` como alvo nativo de `tauri build --bundles`; neste projeto o Flatpak e gerado por `scripts/build-flatpak.mjs`. O script primeiro executa `npm run tauri -- build --no-bundle`, copia o binario Tauri e os metadados Linux para `flatpak/staging`, valida AppStream e desktop file, executa `flatpak-builder` e entao exporta o pacote unico:
+O Tauri não possui `flatpak` como alvo nativo de `tauri build --bundles`; neste
+projeto o Flatpak é gerado por `scripts/build-flatpak.mjs`. O script primeiro
+executa `pnpm tauri build --no-bundle`, copia o binário Tauri e os metadados
+Linux para `flatpak/staging`, valida AppStream e desktop file, executa
+`flatpak-builder` e então exporta o pacote único:
 
 ```text
 flatpak/io.github.migmoroni.VeterinaryClinic.flatpak
@@ -310,14 +335,12 @@ legacy-to-sqlite/build/veterinary_clinic_user_import.zip
 O pacote ZIP gerado segue o formato nativo de `distribution` e pode ser
 importado pelo app.
 
-Preparacao e execucao:
+Preparação e execução pela raiz do workspace:
 
 ```sh
-cd legacy-to-sqlite
-npm ci
-mkdir -p dist build
-# coloque o banco base em dist/veterinary_clinic-version-1.user.db
-npm run adopt:version
+mkdir -p legacy-to-sqlite/dist legacy-to-sqlite/build
+# coloque o banco base em legacy-to-sqlite/dist/veterinary_clinic-version-1.user.db
+pnpm adopt:version
 ```
 
 O arquivo gerado pode ser importado pelo app na primeira execucao ou pelo fluxo de importacao de dados.
@@ -326,7 +349,7 @@ O arquivo gerado pode ser importado pelo app na primeira execucao ou pelo fluxo 
 
 Os scripts antigos de rebuild foram preservados em `legacy-to-sqlite/old_scripts`
 apenas como referencia historica. O fluxo atual para preparar um pacote
-importavel e `npm run adopt:version`.
+importável é `pnpm adopt:version`.
 
 Se for necessario reconstruir uma base antiga durante desenvolvimento, trate o
 arquivo gerado como entrada para o script de adocao atual, nao como banco final
@@ -335,39 +358,36 @@ do app.
 Comando principal:
 
 ```sh
-cd legacy-to-sqlite
-npm run adopt:version
+pnpm adopt:version
 ```
 
-## Scripts npm principais
+## Scripts pnpm principais
 
 | Script | Uso |
 | --- | --- |
-| `npm run dev` | Vite dev server web-only |
-| `npm run tauri:dev` | App desktop Tauri em desenvolvimento |
-| `npm run check` | `svelte-check` com `tsconfig.json` |
-| `npm run test:run` | Vitest em modo nao interativo |
-| `npm run build` | Construcao web estatica via SvelteKit |
-| `npm run tauri:appimage` | Pacote AppImage |
-| `npm run tauri:deb` | Pacote `.deb` |
-| `npm run tauri:flatpak` | Pacote `.flatpak` via `flatpak-builder` |
+| `pnpm dev` | Vite dev server web-only |
+| `pnpm tauri:dev` | App desktop Tauri em desenvolvimento |
+| `pnpm check` | `svelte-check` com `tsconfig.json` |
+| `pnpm test:run` | Vitest em modo não interativo |
+| `pnpm build` | Construção web estática via SvelteKit |
+| `pnpm tauri:appimage` | Pacote AppImage |
+| `pnpm tauri:deb` | Pacote `.deb` |
+| `pnpm tauri:flatpak` | Pacote `.flatpak` via `flatpak-builder` |
 
 Scripts principais dentro de `legacy-to-sqlite/`:
 
 | Script | Uso |
 | --- | --- |
-| `npm run adopt:version` | Gera o conjunto atual de usuario e ZIP nativo a partir de `dist/veterinary_clinic-version-1.user.db` |
-| `npm run build:csv` | Compila o conversor CSV legado antigo, quando usado manualmente |
-| `npm run csv` | Executa o conversor CSV legado antigo |
+| `pnpm adopt:version` | Gera o conjunto atual de usuário e ZIP nativo a partir de `legacy-to-sqlite/dist/veterinary_clinic-version-1.user.db` |
 
 ## Diagnostico rapido
 
 ```sh
 node --version
-npm --version
+pnpm --version
 rustc --version
 cargo --version
-npx tauri --version
+pnpm tauri --version
 pkg-config --modversion webkit2gtk-4.1
 command -v patchelf
 command -v flatpak

@@ -17,8 +17,9 @@ de arquitetura, organização de código, persistência local e comandos de trab
 
 O app trabalha com:
 
-- tutores, pets, prontuários, lixeira e busca global;
+- owners, pets, prontuários, lixeira e busca global;
 - catálogo de produtos, fabricantes, princípios ativos, condições e raças;
+- analytics e search como serviços de aplicação reutilizáveis;
 - banco de dados local-first em SQLite;
 - mídia original em CAS no disco, com índices e miniaturas em SQLite;
 - importação/exportação completa em pacotes nativos ou CSV;
@@ -27,19 +28,32 @@ O app trabalha com:
 ## Modelo Mental
 
 ```text
-UI Svelte -> Serviços TypeScript -> Comandos Tauri -> Rust -> SQLite + CAS
+apps/vet-app -> (@vet/app-services, @vet/modules, @vet/ui) -> @vet/core-local -> Comandos Tauri -> vet-engine -> SQLite + CAS
 ```
 
-O ponto central é separar claramente três responsabilidades:
+O ponto central é separar claramente as fronteiras do workspace:
 
 | Fronteira | Papel |
 | --- | --- |
-| `storage` | Mantém bancos ativos, conexões SQLite, manifesto da base e arquivos CAS. |
-| `distribution` | Cria e importa pacotes completos nativos ou CSV. |
-| `replication` | Mantém backup e sincronização contínua por patches. |
+| `apps/vet-app` | Shell SvelteKit/Tauri, rotas e composição entre módulos. |
+| `packages/types` | Contratos e regras puras de domínio. |
+| `packages/core-local` | Runtime local TypeScript: SQLite, i18n, preferências, import/export e mídia. |
+| `packages/ui` | Primitivos Svelte reutilizáveis. |
+| `packages/modules` | Módulos de negócio: `knowledge`, `registry` e `medical_records`. |
+| `packages/app-services` | Serviços de aplicação headless: `analytics` e `search`. |
+| `packages/engine` | Motor nativo do produto: `storage`, `distribution`, `replication` e `platform`. |
 
 Essa separação evita misturar backup vivo, exportação completa e conexão ativa
 de banco no mesmo lugar.
+
+O DAG TypeScript segue:
+
+```text
+@vet/types <- @vet/core-local <- @vet/ui <- @vet/modules <- @vet/app-services <- apps/vet-app
+```
+
+Cada item importa apenas pacotes à esquerda. `@vet/app-services` permanece sem
+UI, sem rotas e sem `$lib`.
 
 ## Conjuntos De Dados
 
@@ -79,10 +93,14 @@ O conjunto do sistema é reconstruído pelo app a partir dos defaults do program
 
 | Caminho | Conteúdo |
 | --- | --- |
-| `src/` | UI Svelte, serviços TypeScript, stores, componentes e domínio de frontend. |
-| `src-tauri/src/storage/` | Armazenamento ativo, SQLite, CAS, mídia, manifesto e comandos Tauri. |
-| `src-tauri/src/distribution/` | Importação/exportação completa em ZIP nativo ou CSV. |
-| `src-tauri/src/replication/` | Captura, outbox, targets e aplicação de patches de sincronização. |
+| `apps/vet-app/` | App SvelteKit/Tauri, rotas, stores e composição entre pacotes. |
+| `apps/vet-app/src-tauri/` | Casca Tauri do app veterinário e metadados de empacotamento. |
+| `packages/types/` | Tipos e contratos puros. |
+| `packages/core-local/` | Infra local TypeScript compartilhável. |
+| `packages/ui/` | Componentes e primitivas visuais reutilizáveis. |
+| `packages/modules/` | Módulos de negócio por feature. |
+| `packages/app-services/` | Analytics, search e serviços de aplicação reutilizáveis. |
+| `packages/engine/` | Motor nativo para storage, distribuição, replicação e integrações de sistema. |
 | `legacy-to-sqlite/` | Scripts externos para adoção/conversão de bases. |
 | `docs/` | Documentação técnica em português. |
 | `flatpak/` | Manifesto e apoio para empacotamento Flatpak. |
@@ -93,19 +111,20 @@ O conjunto do sistema é reconstruído pelo app a partir dos defaults do program
 Instale dependências:
 
 ```sh
-npm ci
+nvm use
+pnpm install --frozen-lockfile
 ```
 
 Execute o app desktop:
 
 ```sh
-npm run tauri:dev
+pnpm tauri:dev
 ```
 
 Execute com estado local limpo:
 
 ```sh
-npm run tauri:dev:new
+pnpm tauri:dev:new
 ```
 
 Esse comando limpa bancos, CAS, fila/baselines de replicação, WebView storage e
@@ -115,26 +134,26 @@ e `import_safety_exports/`, são preservadas.
 ## Checks
 
 ```sh
-npm run check
-npm run test:run
-npm run build
-cargo check --manifest-path src-tauri/Cargo.toml
+pnpm check
+pnpm test:run
+pnpm build
+cargo check --workspace
 ```
 
 ## Pacotes
 
 ```sh
-npm run tauri:appimage
-npm run tauri:deb
-npm run tauri:flatpak
-npm run tauri:msi
+pnpm tauri:appimage
+pnpm tauri:deb
+pnpm tauri:flatpak
+pnpm tauri:msi
 ```
 
 Android está planejado via Tauri Android:
 
 ```sh
-npm run tauri:android:dev
-npm run tauri:android:build
+pnpm tauri:android:dev
+pnpm tauri:android:build
 ```
 
 ## Scripts Externos De Banco
@@ -143,26 +162,18 @@ Os scripts em `legacy-to-sqlite/` não fazem parte da migração em runtime do a
 Eles existem para preparar bases fora da execução normal.
 
 ```sh
-cd legacy-to-sqlite
-npm run adopt:version
+pnpm adopt:version
 ```
 
 O script de adoção usa a base de entrada definida em `legacy-to-sqlite/dist/` e
 gera o conjunto atual esperado pelo app, incluindo pacote nativo importável.
-
-Conversor CSV legado antigo, quando usado manualmente:
-
-```sh
-cd legacy-to-sqlite
-npm run build:csv
-npm run csv
-```
 
 ## Documentação Técnica
 
 | Documento | Assunto |
 | --- | --- |
 | [Arquitetura Geral](docs/architecture.md) | Mapa raiz das fronteiras do app. |
+| [Arquitetura Modular](docs/modular-architecture.md) | Packages, DAG, subpath exports e regras de manutenção modular. |
 | [Arquitetura De Armazenamento](docs/storage-architecture.md) | `storage`, bancos ativos, CAS, manifesto e comandos. |
 | [Arquitetura De Distribuição](docs/distribution-architecture.md) | Import/export nativo e CSV. |
 | [Arquitetura De Replicação](docs/replication-architecture.md) | Capture, outbox, targets, applier e sincronização. |
@@ -175,16 +186,17 @@ READMEs internos:
 
 | Módulo | README |
 | --- | --- |
-| `storage` | [src-tauri/src/storage/README.md](src-tauri/src/storage/README.md) |
-| `distribution` | [src-tauri/src/distribution/README.md](src-tauri/src/distribution/README.md) |
-| `replication` | [src-tauri/src/replication/README.md](src-tauri/src/replication/README.md) |
+| `storage` | [packages/engine/src/storage/README.md](packages/engine/src/storage/README.md) |
+| `distribution` | [packages/engine/src/distribution/README.md](packages/engine/src/distribution/README.md) |
+| `replication` | [packages/engine/src/replication/README.md](packages/engine/src/replication/README.md) |
+| `platform` | [packages/engine/src/platform/README.md](packages/engine/src/platform/README.md) |
 
 ## Versionamento
 
 Para atualizar a versão pública do app:
 
 ```sh
-npm run version:bump -- patch "Corrigir validacao de importacao"
+pnpm version:bump -- patch "Corrigir validacao de importacao"
 ```
 
 Use `major`, `minor` ou `patch`. O script atualiza metadados do app,

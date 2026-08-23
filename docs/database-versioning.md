@@ -22,14 +22,14 @@ O app possui migrações para bancos que já pertencem à linhagem de estrutura 
 Bancos de sistema/referência são gerados separadamente pelo app e não fazem
 parte de importação/exportação de usuário.
 
-O migrator vive em `src/lib/persistence/sqlite/migrations.ts` e define:
+O migrator vive em `packages/core-local/src/sqlite/migrations.ts` e define:
 
 - `CURRENT_SCHEMA_VERSION`;
 - runner de migração;
 - detecção de suporte/status;
 - transação, metadados e validação de integridade.
 
-Migrações incrementais ficam em `src/lib/persistence/sqlite/schema-migrations`:
+Migrações incrementais ficam em `packages/core-local/src/sqlite/schema-migrations`:
 
 - `types.ts` define o contrato `SchemaMigration`;
 - `registry.ts` importa e ordena migrações `v2+`;
@@ -61,7 +61,7 @@ CREATE TABLE schema_migrations (
 
 ## Fluxo De Inicialização
 
-`src/lib/persistence/sqlite/client.ts` abre o banco por comandos Rust de storage:
+`packages/core-local/src/sqlite/client.ts` abre o banco por comandos Rust de storage:
 
 1. pede ao `StorageManager` para abrir/reabrir `veterinary_clinic_user.db`;
 2. ativa foreign keys;
@@ -90,7 +90,7 @@ disponível.
 
 ## Importações, Exportações E Replicação
 
-Importação/exportação completa vive em `src-tauri/src/distribution`. Pacotes
+Importação/exportação completa vive em `packages/engine/src/distribution`. Pacotes
 nativos carregam os três bancos do usuário e arquivos CAS. Pacotes CSV carregam
 `data_csv/`, `media_csv/`, `logs_csv/` e arquivos CAS do usuário.
 
@@ -98,7 +98,7 @@ A identidade da base e o manifesto do pacote vivem em
 `veterinary_clinic_user_logs.db`, tabela `database_manifest`; não há
 `manifest.json` solto.
 
-Backup/sincronização contínua vive em `src-tauri/src/replication` e usa SQLite
+Backup/sincronização contínua vive em `packages/engine/src/replication` e usa SQLite
 Session changesets em vez de instantâneos completos.
 
 ## Quando Uma Nova Versão De Estrutura É Necessária
@@ -128,13 +128,13 @@ Não crie migração de estrutura para:
 Nunca edite uma migração que já foi enviada a um cliente. Adicione uma nova.
 
 1. Decida a próxima versão inteira de estrutura.
-2. Crie um arquivo em `src/lib/persistence/sqlite/schema-migrations/versions`,
+2. Crie um arquivo em `packages/core-local/src/sqlite/schema-migrations/versions`,
    como `0002_add_field_to_table.ts`.
 3. Exporte um objeto `SchemaMigration`.
-4. Importe-o em `src/lib/persistence/sqlite/schema-migrations/registry.ts`.
+4. Importe-o em `packages/core-local/src/sqlite/schema-migrations/registry.ts`.
 5. Adicione-o a `incrementalSchemaMigrations`.
 6. Incremente `CURRENT_SCHEMA_VERSION` em
-   `src/lib/persistence/sqlite/migrations.ts`.
+   `packages/core-local/src/sqlite/migrations.ts`.
 7. Defina `introducedInAppVersion` com a versão do app que leva a migração.
 8. Implemente `up(database)`.
 9. Adicione `verify(database)` quando houver invariantes importantes.
@@ -185,26 +185,27 @@ Para alterações complexas de tabela SQLite, prefira o padrão seguro de rebuil
 Use um comando para alterar a versão pública do app:
 
 ```sh
-npm run version:bump -- minor "Adicionar migracao de estrutura para protocolos vacinais"
+pnpm version:bump -- minor "Adicionar migracao de estrutura para protocolos vacinais"
 ```
 
 Escolha `major`, `minor` ou `patch` conforme o impacto do lançamento. A nota pode
 ser passada como string posicional ou com `--change` repetido:
 
 ```sh
-npm run version:bump -- patch --change "Corrigir validacao de importacao de backup" --change "Melhorar metadados do pacote Linux"
+pnpm version:bump -- patch --change "Corrigir validacao de importacao de backup" --change "Melhorar metadados do pacote Linux"
 ```
 
 O script atualiza:
 
 - `package.json`;
-- `package-lock.json`;
-- `src-tauri/tauri.conf.json`;
-- `src-tauri/Cargo.toml`;
-- entrada do pacote no `src-tauri/Cargo.lock`;
-- `src/lib/generated/app-version.ts`;
+- `pnpm-lock.yaml` não é editado pelo script e permanece válido quando somente as
+  versões dos manifests locais mudam;
+- `apps/vet-app/src-tauri/tauri.conf.json`;
+- `apps/vet-app/src-tauri/Cargo.toml`;
+- entrada do pacote no `Cargo.lock`;
+- `packages/core-local/src/generated/app-version.ts`;
 - `CHANGELOG.md`;
-- `src-tauri/metainfo/io.github.migmoroni.VeterinaryClinic.metainfo.xml`.
+- `apps/vet-app/src-tauri/metainfo/io.github.migmoroni.VeterinaryClinic.metainfo.xml`.
 
 A UI mostra a versão em Ajustes. No Tauri, lê a versão de execução; em dev/web,
 usa o fallback gerado.
@@ -214,9 +215,10 @@ usa o fallback gerado.
 Antes de enviar um pacote com mudança de banco:
 
 ```sh
-npm run check
-npm run test:run
-npm run build
+pnpm check
+pnpm test:run
+pnpm build
+cargo check --workspace
 ```
 
 Também testar:

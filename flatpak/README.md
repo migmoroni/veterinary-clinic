@@ -17,7 +17,7 @@ flatpak install flathub org.gnome.Platform//50 org.gnome.Sdk//50
 From the project root:
 
 ```sh
-npm run tauri:flatpak
+pnpm tauri:flatpak
 ```
 
 The script writes generated files under `flatpak/staging`, `flatpak/build-dir`, and `flatpak/repo`, then creates:

@@ -1,0 +1,11 @@
+export { default as OwnerAdditionalResponsiblesField } from '../components/owner/OwnerAdditionalResponsiblesField.svelte';
+export { default as OwnerAvatar } from '../components/owner/OwnerAvatar.svelte';
+export { default as OwnerAvatarEditorDialog } from '../components/owner/OwnerAvatarEditorDialog.svelte';
+export { default as OwnerContactDialog } from '../components/owner/OwnerContactDialog.svelte';
+export { default as OwnerContactEditorList } from '../components/owner/OwnerContactEditorList.svelte';
+export { default as OwnerContactsField } from '../components/owner/OwnerContactsField.svelte';
+export * from '../components/owner/owner-contact-utils.js';
+export { loadOwnerAvatarsByOwnerIds } from '../services/avatar.service.js';
+export * from '../services/contact.service.js';
+export * from '../services/cep.service.js';
+export * from '../services/owner.service.js';

@@ -1,5 +1,7 @@
 import { replaceOrFail } from './io.mjs';
 
+const APPSTREAM_METAINFO = 'apps/vet-app/src-tauri/metainfo/io.github.migmoroni.VeterinaryClinic.metainfo.xml';
+
 export function updateAppStreamRelease(contents, release) {
 	if (contents.includes(`<release version="${release.version}"`)) return ensureFinalNewline(contents);
 
@@ -18,7 +20,7 @@ export function updateAppStreamRelease(contents, release) {
 				contents,
 				/(\s*<releases>\n)/,
 				`$1${releaseEntry}`,
-				'src-tauri/metainfo/io.github.migmoroni.VeterinaryClinic.metainfo.xml'
+				APPSTREAM_METAINFO
 			)
 		);
 	}
@@ -29,7 +31,7 @@ export function updateAppStreamRelease(contents, release) {
 			contents,
 			/(\s*<content_rating\b)/,
 			`\n${releasesBlock}$1`,
-			'src-tauri/metainfo/io.github.migmoroni.VeterinaryClinic.metainfo.xml'
+			APPSTREAM_METAINFO
 		)
 	);
 }

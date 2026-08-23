@@ -1,0 +1,15 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+  - "tools/*"
+  - "legacy-to-sqlite"
+
+linkWorkspacePackages: false
+saveWorkspaceProtocol: true
+sharedWorkspaceLockfile: true
+disallowWorkspaceCycles: true
+strictPeerDependencies: true
+engineStrict: true
+strictDepBuilds: true
+allowBuilds:
+  better-sqlite3: true

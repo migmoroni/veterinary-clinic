@@ -1,0 +1,36 @@
+{
+	"name": "@vet/modules",
+	"private": true,
+	"version": "0.2.0",
+	"type": "module",
+	"svelte": "./src/index.ts",
+	"exports": {
+		".": {
+			"svelte": "./src/index.ts",
+			"types": "./src/index.ts",
+			"default": "./src/index.ts"
+		},
+		"./knowledge": "./src/knowledge/index.ts",
+		"./knowledge/breeds": "./src/knowledge/breeds/index.ts",
+		"./knowledge/products": "./src/knowledge/products/index.ts",
+		"./knowledge/active_ingredients": "./src/knowledge/active_ingredients/index.ts",
+		"./knowledge/conditions": "./src/knowledge/conditions/index.ts",
+		"./knowledge/manufacturers": "./src/knowledge/manufacturers/index.ts",
+		"./registry": "./src/registry/index.ts",
+		"./registry/owners": "./src/registry/owners/index.ts",
+		"./registry/pets": "./src/registry/pets/index.ts",
+		"./medical_records": "./src/medical_records/index.ts",
+		"./medical_records/records": "./src/medical_records/records/index.ts",
+		"./medical_records/treatments": "./src/medical_records/treatments/index.ts",
+		"./medical_records/treatment_protocols": "./src/medical_records/treatment_protocols/index.ts"
+	},
+	"dependencies": {
+		"@vet/core-local": "workspace:*",
+		"@vet/types": "workspace:*",
+		"@vet/ui": "workspace:*"
+	},
+	"peerDependencies": {
+		"@lucide/svelte": "^1.23.0",
+		"svelte": "^5.56.4"
+	}
+}

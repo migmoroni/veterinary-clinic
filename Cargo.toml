@@ -1,0 +1,6 @@
+[workspace]
+resolver = "2"
+members = [
+	"apps/vet-app/src-tauri",
+	"packages/engine"
+]

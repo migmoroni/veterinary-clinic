@@ -1,4 +1,7 @@
 node_modules
+/target
+/src-tauri/target
+/apps/vet-app/src-tauri/target
 
 # Output
 .output
@@ -7,6 +10,8 @@ node_modules
 .wrangler
 /.svelte-kit
 /build
+/apps/vet-app/.svelte-kit
+/apps/vet-app/build
 
 # OS
 .DS_Store

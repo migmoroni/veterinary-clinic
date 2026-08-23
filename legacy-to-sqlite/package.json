@@ -1,19 +1,11 @@
 {
+  "name": "@vet/legacy-to-sqlite",
+  "private": true,
   "type": "module",
   "scripts": {
-    "build:csv": "tsc -p tsconfig.csv.json",
-    "csv": "node build/generated/legacy-to-sqlite/to-sqlite.js",
-    "adopt:version": "node adopt-version-db.mjs",
-    "build:exported-db": "tsc exported-db-to-sqlite.ts --ignoreConfig",
-    "exported-db": "npm run build:exported-db && node exported-db-to-sqlite.js"
+    "adopt:version": "node adopt-version-db.mjs"
   },
   "dependencies": {
-    "better-sqlite3": "^12.9.0",
-    "csv-parse": "^6.2.1"
-  },
-  "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
-    "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "better-sqlite3": "12.9.0"
   }
 }

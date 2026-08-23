@@ -3,7 +3,7 @@
 All notable changes to Veterinary Clinic are documented in this file.
 
 This project uses semantic versioning for public releases. New entries are added
-by `npm run version:bump`, which keeps package metadata, AppStream metadata and
+by `pnpm version:bump`, which keeps package metadata, AppStream metadata and
 this changelog aligned.
 
 ## 0.2.0 - 2026-07-09

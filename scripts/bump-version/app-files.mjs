@@ -1,5 +1,32 @@
 import { readJson, readText, replaceOrFail, updateJson, writeText } from './io.mjs';
 
+export const APP_PACKAGE_JSON = 'apps/vet-app/package.json';
+export const APPSTREAM_METAINFO = 'apps/vet-app/src-tauri/metainfo/io.github.migmoroni.VeterinaryClinic.metainfo.xml';
+export const CARGO_LOCK = 'Cargo.lock';
+export const GENERATED_APP_VERSION = 'packages/core-local/src/generated/app-version.ts';
+export const TAURI_CARGO_TOML = 'apps/vet-app/src-tauri/Cargo.toml';
+export const TAURI_CONFIG = 'apps/vet-app/src-tauri/tauri.conf.json';
+
+const PACKAGE_JSON_FILES = [
+	'package.json',
+	APP_PACKAGE_JSON,
+	'packages/app-services/package.json',
+	'packages/core-local/package.json',
+	'packages/modules/package.json',
+	'packages/types/package.json',
+	'packages/ui/package.json'
+];
+
+const CARGO_TOML_FILES = [
+	TAURI_CARGO_TOML,
+	'packages/engine/Cargo.toml'
+];
+
+const CARGO_LOCK_PACKAGES = [
+	'veterinary_clinic',
+	'vet-engine'
+];
+
 export async function readCurrentVersion() {
 	const packageJson = await readJson('package.json');
 	if (typeof packageJson.version !== 'string') throw new Error('package.json version is missing');
@@ -7,34 +34,38 @@ export async function readCurrentVersion() {
 }
 
 export async function updateAppVersionFiles(nextVersion) {
-	await updateJson('package.json', (json) => {
-		json.version = nextVersion;
-		json.scripts ??= {};
-		json.scripts['version:bump'] = 'node scripts/bump-version/index.mjs';
-	});
+	for (const filePath of PACKAGE_JSON_FILES) {
+		await updateJson(filePath, (json) => {
+			json.version = nextVersion;
+			if (filePath === 'package.json') {
+				json.scripts ??= {};
+				json.scripts['version:bump'] = 'node scripts/bump-version/index.mjs';
+			}
+		});
+	}
 
-	await updateJson('package-lock.json', (json) => {
-		json.version = nextVersion;
-		json.packages ??= {};
-		json.packages[''] ??= {};
-		json.packages[''].version = nextVersion;
-	});
-
-	await updateJson('src-tauri/tauri.conf.json', (json) => {
+	await updateJson(TAURI_CONFIG, (json) => {
 		json.version = nextVersion;
 	});
 
-	const cargoToml = await readText('src-tauri/Cargo.toml');
-	await writeText(
-		'src-tauri/Cargo.toml',
-		replaceOrFail(cargoToml, /(\[package\][\s\S]*?\nversion = ")[^"]+(")/, `$1${nextVersion}$2`, 'src-tauri/Cargo.toml')
-	);
+	for (const filePath of CARGO_TOML_FILES) {
+		const cargoToml = await readText(filePath);
+		await writeText(
+			filePath,
+			replaceOrFail(cargoToml, /(\[package\][\s\S]*?\nversion = ")[^"]+(")/, `$1${nextVersion}$2`, filePath)
+		);
+	}
 
-	const cargoLock = await readText('src-tauri/Cargo.lock');
-	await writeText(
-		'src-tauri/Cargo.lock',
-		replaceOrFail(cargoLock, /(\[\[package\]\]\nname = "veterinary_clinic"\nversion = ")[^"]+(")/, `$1${nextVersion}$2`, 'src-tauri/Cargo.lock')
-	);
+	let cargoLock = await readText(CARGO_LOCK);
+	for (const packageName of CARGO_LOCK_PACKAGES) {
+		cargoLock = replaceOrFail(
+			cargoLock,
+			new RegExp(`(\\[\\[package\\]\\]\\nname = "${packageName}"\\nversion = ")[^"]+(")`),
+			`$1${nextVersion}$2`,
+			CARGO_LOCK
+		);
+	}
+	await writeText(CARGO_LOCK, cargoLock);
 
-	await writeText('src/lib/generated/app-version.ts', `export const APP_VERSION = '${nextVersion}';\n`);
+	await writeText(GENERATED_APP_VERSION, `export const APP_VERSION = '${nextVersion}';\n`);
 }
