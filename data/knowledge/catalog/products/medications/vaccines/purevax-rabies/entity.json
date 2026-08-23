@@ -1,0 +1,46 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "3ae7f942-4372-42bb-89d5-8a24796de766",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Purevax Rabies",
+			"pt-PT": "Purevax Rabies",
+			"gn-PY": "Purevax Rabies",
+			"en-US": "Purevax Rabies",
+			"es-ES": "Purevax Rabies",
+			"fr-FR": "Purevax Rabies"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"disease.rabies"
+	]
+}

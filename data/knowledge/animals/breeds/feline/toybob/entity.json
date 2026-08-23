@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "toybob",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"ru"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			2,
+			3
+		],
+		"female": [
+			1.5,
+			2.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			18,
+			22
+		],
+		"female": [
+			17,
+			21
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Toybob",
+			"pt-PT": "Toybob",
+			"gn-PY": "Toybob",
+			"en-US": "Toybob",
+			"es-ES": "Toybob",
+			"fr-FR": "Toybob"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

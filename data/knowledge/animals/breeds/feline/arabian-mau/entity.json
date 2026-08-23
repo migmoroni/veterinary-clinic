@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "arabian-mau",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"middle-east"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			7
+		],
+		"female": [
+			3,
+			5.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			24,
+			30
+		],
+		"female": [
+			22,
+			28
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Mau Árabe",
+			"pt-PT": "Mau Árabe",
+			"gn-PY": "Mau árabe",
+			"en-US": "Arabian Mau",
+			"es-ES": "Mau árabe",
+			"fr-FR": "Mau arabe"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

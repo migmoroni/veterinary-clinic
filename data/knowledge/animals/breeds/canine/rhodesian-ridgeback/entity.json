@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "rhodesian-ridgeback",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"zw"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			36,
+			41
+		],
+		"female": [
+			29,
+			34
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			63,
+			69
+		],
+		"female": [
+			61,
+			66
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Rhodesian Ridgeback",
+			"pt-PT": "Rhodesian Ridgeback",
+			"gn-PY": "Rhodesian Ridgeback",
+			"en-US": "Rhodesian Ridgeback",
+			"es-ES": "Rhodesian Ridgeback",
+			"fr-FR": "Rhodesian Ridgeback"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

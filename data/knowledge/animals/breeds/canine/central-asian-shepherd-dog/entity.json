@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "central-asian-shepherd-dog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"central-asia"
+	],
+	"sizeTermKey": "giant",
+	"averageWeightKg": {
+		"male": [
+			50,
+			79
+		],
+		"female": [
+			40,
+			65
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			70,
+			78
+		],
+		"female": [
+			65,
+			73
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Pastor da Ásia Central",
+			"pt-PT": "Pastor da Ásia Central",
+			"gn-PY": "Pastor de Asia Central",
+			"en-US": "Central Asian Shepherd Dog",
+			"es-ES": "Pastor de Asia Central",
+			"fr-FR": "Berger d'Asie centrale"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

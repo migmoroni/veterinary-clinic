@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "xoloitzcuintli",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"mx"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			10,
+			25
+		],
+		"female": [
+			8,
+			22
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			36,
+			60
+		],
+		"female": [
+			35,
+			58
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Xoloitzcuintli",
+			"pt-PT": "Xoloitzcuintli",
+			"gn-PY": "Xoloitzcuintli",
+			"en-US": "Xoloitzcuintli",
+			"es-ES": "Xoloitzcuintli",
+			"fr-FR": "Xoloitzcuintle"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

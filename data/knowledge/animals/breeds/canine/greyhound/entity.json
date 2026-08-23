@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "greyhound",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"england"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			29,
+			40
+		],
+		"female": [
+			27,
+			34
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			71,
+			76
+		],
+		"female": [
+			68,
+			71
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Greyhound",
+			"pt-PT": "Greyhound",
+			"gn-PY": "Greyhound",
+			"en-US": "Greyhound",
+			"es-ES": "Greyhound",
+			"fr-FR": "Greyhound"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

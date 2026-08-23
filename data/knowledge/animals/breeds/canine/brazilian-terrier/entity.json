@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "brazilian-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"br"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			8,
+			10
+		],
+		"female": [
+			7,
+			9
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			35,
+			40
+		],
+		"female": [
+			33,
+			38
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Terrier Brasileiro",
+			"pt-PT": "Terrier brasileiro",
+			"gn-PY": "Terrier brasileño",
+			"en-US": "Brazilian Terrier",
+			"es-ES": "Terrier brasileño",
+			"fr-FR": "Terrier brésilien"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

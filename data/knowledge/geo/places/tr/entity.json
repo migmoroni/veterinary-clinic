@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "tr",
+	"placeType": "country",
+	"countryCodes": [
+		"TR"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 38.9,
+		"longitude": 35.2
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Turquia",
+			"pt-PT": "Turquia",
+			"gn-PY": "Türkiye",
+			"en-US": "Türkiye",
+			"es-ES": "Turquía",
+			"fr-FR": "Turquie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

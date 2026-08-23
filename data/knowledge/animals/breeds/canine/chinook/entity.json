@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "chinook",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			27,
+			41
+		],
+		"female": [
+			23,
+			32
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			61,
+			69
+		],
+		"female": [
+			53,
+			61
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Chinook",
+			"pt-PT": "Chinook",
+			"gn-PY": "Chinook",
+			"en-US": "Chinook",
+			"es-ES": "Chinook",
+			"fr-FR": "Chinook"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

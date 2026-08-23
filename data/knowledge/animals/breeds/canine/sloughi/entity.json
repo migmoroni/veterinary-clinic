@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "sloughi",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"ma"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			23,
+			30
+		],
+		"female": [
+			18,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			66,
+			72
+		],
+		"female": [
+			61,
+			68
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Sloughi",
+			"pt-PT": "Sloughi",
+			"gn-PY": "Sloughi",
+			"en-US": "Sloughi",
+			"es-ES": "Sloughi",
+			"fr-FR": "Sloughi"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

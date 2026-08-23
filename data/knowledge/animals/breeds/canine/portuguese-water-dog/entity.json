@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "portuguese-water-dog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"pt"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			19,
+			27
+		],
+		"female": [
+			16,
+			23
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			50,
+			57
+		],
+		"female": [
+			43,
+			52
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cão de Água Português",
+			"pt-PT": "Cão de água português",
+			"gn-PY": "Perro de agua portugués",
+			"en-US": "Portuguese Water Dog",
+			"es-ES": "Perro de agua portugués",
+			"fr-FR": "Chien d'eau portugais"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

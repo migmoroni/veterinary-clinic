@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "dutch-shepherd",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"nl"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			26,
+			32
+		],
+		"female": [
+			23,
+			29
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			57,
+			62
+		],
+		"female": [
+			55,
+			60
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Pastor Holandês",
+			"pt-PT": "Pastor Holandês",
+			"gn-PY": "Pastor holandés",
+			"en-US": "Dutch Shepherd",
+			"es-ES": "Pastor holandés",
+			"fr-FR": "Berger hollandais"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

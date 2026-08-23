@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "tenterfield-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"au"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			4,
+			6
+		],
+		"female": [
+			3.5,
+			5.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			30
+		],
+		"female": [
+			24,
+			29
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Tenterfield Terrier",
+			"pt-PT": "Tenterfield Terrier",
+			"gn-PY": "Tenterfield Terrier",
+			"en-US": "Tenterfield Terrier",
+			"es-ES": "Tenterfield Terrier",
+			"fr-FR": "Tenterfield Terrier"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

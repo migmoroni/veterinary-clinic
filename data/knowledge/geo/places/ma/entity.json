@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "ma",
+	"placeType": "country",
+	"countryCodes": [
+		"MA"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 31.8,
+		"longitude": -7.1
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Marrocos",
+			"pt-PT": "Marrocos",
+			"gn-PY": "Morocco",
+			"en-US": "Morocco",
+			"es-ES": "Marruecos",
+			"fr-FR": "Maroc"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

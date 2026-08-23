@@ -1,0 +1,24 @@
+{
+	"schemaVersion": 1,
+	"entityType": "taxonomy",
+	"id": "product-therapeutic-scopes",
+	"domain": "product",
+	"purpose": "therapeutic_scope",
+	"terms": [
+		{
+			"key": "broadSpectrum",
+			"parentKey": null,
+			"order": 0,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "antiparasitário de amplo espectro",
+					"pt-PT": "antiparasitário de largo espetro",
+					"gn-PY": "antiparasitario de amplio espectro",
+					"en-US": "broad-spectrum antiparasitic",
+					"es-ES": "antiparasitario de amplio espectro",
+					"fr-FR": "antiparasitaire à large spectre"
+				}
+			}
+		}
+	]
+}

@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "french-bulldog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"fr"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			9,
+			14
+		],
+		"female": [
+			8,
+			13
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			28,
+			35
+		],
+		"female": [
+			27,
+			34
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Bulldog Francês",
+			"pt-PT": "Bulldog francês",
+			"gn-PY": "Bulldog francés",
+			"en-US": "French Bulldog",
+			"es-ES": "Bulldog francés",
+			"fr-FR": "Bouledogue français"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "in",
+	"placeType": "country",
+	"countryCodes": [
+		"IN"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 20.6,
+		"longitude": 78.9
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Índia",
+			"pt-PT": "Índia",
+			"gn-PY": "India",
+			"en-US": "India",
+			"es-ES": "India",
+			"fr-FR": "Inde"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

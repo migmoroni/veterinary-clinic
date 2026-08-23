@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "basenji",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"cd"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			10,
+			12
+		],
+		"female": [
+			9,
+			11
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			41,
+			43
+		],
+		"female": [
+			38,
+			41
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Basenji",
+			"pt-PT": "Basenji",
+			"gn-PY": "Basenji",
+			"en-US": "Basenji",
+			"es-ES": "Basenji",
+			"fr-FR": "Basenji"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

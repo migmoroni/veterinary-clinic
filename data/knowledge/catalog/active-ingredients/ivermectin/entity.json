@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"entityType": "active_ingredient",
+	"id": "456d6f0e-e862-4c3c-ae30-15e96b5e7459",
+	"typeTermKey": "antiInfective.antiparasitic.macrocyclicLactones",
+	"classificationTermKeys": [],
+	"regions": [],
+	"nomenclature": {
+		"scientificName": null,
+		"casNumber": null,
+		"denominationStandards": []
+	},
+	"atcVetCode": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Ivermectina",
+			"pt-PT": "Ivermectina",
+			"gn-PY": "Ivermectina",
+			"en-US": "Ivermectin",
+			"es-ES": "Ivermectina",
+			"fr-FR": "Ivermectine"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

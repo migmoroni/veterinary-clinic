@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "shiba-inu",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"jp"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			9,
+			11
+		],
+		"female": [
+			8,
+			10
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			38,
+			41
+		],
+		"female": [
+			35,
+			38
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Shiba Inu",
+			"pt-PT": "Shiba Inu",
+			"gn-PY": "Shiba Inu",
+			"en-US": "Shiba Inu",
+			"es-ES": "Shiba Inu",
+			"fr-FR": "Shiba Inu"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

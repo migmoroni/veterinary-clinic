@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "puli",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"hu"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			13,
+			15
+		],
+		"female": [
+			10,
+			13
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			41,
+			43
+		],
+		"female": [
+			38,
+			41
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Puli",
+			"pt-PT": "Puli",
+			"gn-PY": "Puli",
+			"en-US": "Puli",
+			"es-ES": "Puli",
+			"fr-FR": "Puli"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

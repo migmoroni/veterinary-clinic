@@ -1,0 +1,66 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "9b8b5e0f-0dd3-40fb-876b-090c8dfbfbfb",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Nobivac Feline 1-HCPCh + FeLV",
+			"pt-PT": "Nobivac Feline 1-HCPCh + FeLV",
+			"gn-PY": "Nobivac Feline 1-HCPCh + FeLV",
+			"en-US": "Nobivac Feline 1-HCPCh + FeLV",
+			"es-ES": "Nobivac Feline 1-HCPCh + FeLV",
+			"fr-FR": "Nobivac Feline 1-HCPCh + FeLV"
+		},
+		"aliases": {
+			"pt-BR": [
+				"HCPCh+FeLV"
+			],
+			"pt-PT": [
+				"HCPCh+FeLV"
+			],
+			"gn-PY": [
+				"HCPCh+FeLV"
+			],
+			"en-US": [
+				"HCPCh+FeLV"
+			],
+			"es-ES": [
+				"HCPCh+FeLV"
+			],
+			"fr-FR": [
+				"HCPCh+FeLV"
+			]
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"disease.felineLeukemia",
+		"pathogen.felineLeukemiaVirus",
+		"disease.felineRhinotracheitis",
+		"disease.felineCalicivirosis",
+		"disease.felinePanleukopenia",
+		"disease.felineChlamydiosis"
+	],
+	"vaccineProfileTermKeys": [
+		"feline.pentavalent"
+	]
+}

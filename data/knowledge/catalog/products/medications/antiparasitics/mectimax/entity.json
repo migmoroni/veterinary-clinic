@@ -1,0 +1,45 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "fe51d5e2-6ed5-4e6a-b316-7e079a1e6db6",
+	"typeTermKey": "medication.antiparasitic.endectocide",
+	"classificationTermKeys": [
+		"origin.allopathic",
+		"therapeuticAction.control"
+	],
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "d7569f36-cd2f-416b-906f-ee89e82145cb",
+	"activeIngredientIds": [
+		"456d6f0e-e862-4c3c-ae30-15e96b5e7459"
+	],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Mectimax",
+			"pt-PT": "Mectimax",
+			"gn-PY": "Mectimax",
+			"en-US": "Mectimax",
+			"es-ES": "Mectimax",
+			"fr-FR": "Mectimax"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

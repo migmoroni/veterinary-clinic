@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "scottish-fold",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"scotland"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			6
+		],
+		"female": [
+			2.7,
+			4.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			22,
+			28
+		],
+		"female": [
+			20,
+			26
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Scottish Fold",
+			"pt-PT": "Scottish Fold",
+			"gn-PY": "Scottish Fold",
+			"en-US": "Scottish Fold",
+			"es-ES": "Scottish Fold",
+			"fr-FR": "Scottish Fold"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

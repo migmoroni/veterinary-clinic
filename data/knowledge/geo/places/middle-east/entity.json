@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "middle-east",
+	"placeType": "region",
+	"countryCodes": [],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 30,
+		"longitude": 40
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Oriente Médio",
+			"pt-PT": "Oriente Médio",
+			"gn-PY": "Oriente Medio",
+			"en-US": "Middle East",
+			"es-ES": "Oriente Medio",
+			"fr-FR": "Moyen-Orient"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

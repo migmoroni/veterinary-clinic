@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "de",
+	"placeType": "country",
+	"countryCodes": [
+		"DE"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 51.2,
+		"longitude": 10.5
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Alemanha",
+			"pt-PT": "Alemanha",
+			"gn-PY": "Germany",
+			"en-US": "Germany",
+			"es-ES": "Alemania",
+			"fr-FR": "Allemagne"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

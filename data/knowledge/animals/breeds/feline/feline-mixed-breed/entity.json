@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "feline-mixed-breed",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"varied"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			6.5
+		],
+		"female": [
+			3,
+			5.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			23,
+			28
+		],
+		"female": [
+			21,
+			27
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Felino sem raça definida",
+			"pt-PT": "Gato sem raça definida",
+			"gn-PY": "Mbarakaja rása jehe’a",
+			"en-US": "Mixed-breed cat",
+			"es-ES": "Gato mestizo",
+			"fr-FR": "Chat croisé"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

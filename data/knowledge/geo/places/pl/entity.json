@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "pl",
+	"placeType": "country",
+	"countryCodes": [
+		"PL"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 52.1,
+		"longitude": 19.4
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Polônia",
+			"pt-PT": "Polónia",
+			"gn-PY": "Poland",
+			"en-US": "Poland",
+			"es-ES": "Polonia",
+			"fr-FR": "Pologne"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

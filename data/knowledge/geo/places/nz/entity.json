@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "nz",
+	"placeType": "country",
+	"countryCodes": [
+		"NZ"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": -40.9,
+		"longitude": 174.9
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Nova Zelândia",
+			"pt-PT": "Nova Zelândia",
+			"gn-PY": "New Zealand",
+			"en-US": "New Zealand",
+			"es-ES": "Nueva Zelanda",
+			"fr-FR": "Nouvelle-Zélande"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

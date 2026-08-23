@@ -1,0 +1,67 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "19e28b02-007a-4c09-82a3-4a33f1c54d1d",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Versican Plus DHPPi/L4R",
+			"pt-PT": "Versican Plus DHPPi/L4R",
+			"gn-PY": "Versican Plus DHPPi/L4R",
+			"en-US": "Versican Plus DHPPi/L4R",
+			"es-ES": "Versican Plus DHPPi/L4R",
+			"fr-FR": "Versican Plus DHPPi/L4R"
+		},
+		"aliases": {
+			"pt-BR": [
+				"DHPPi/L4R"
+			],
+			"pt-PT": [
+				"DHPPi/L4R"
+			],
+			"gn-PY": [
+				"DHPPi/L4R"
+			],
+			"en-US": [
+				"DHPPi/L4R"
+			],
+			"es-ES": [
+				"DHPPi/L4R"
+			],
+			"fr-FR": [
+				"DHPPi/L4R"
+			]
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"disease.canineDistemper",
+		"pathogen.canineAdenovirusType2",
+		"disease.canineParainfluenza",
+		"disease.canineParvovirosis",
+		"pathogen.canineParvovirus",
+		"disease.canineLeptospirosis",
+		"disease.rabies"
+	],
+	"vaccineProfileTermKeys": [
+		"canine.multivalent"
+	]
+}

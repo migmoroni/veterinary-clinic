@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "co",
+	"placeType": "country",
+	"countryCodes": [
+		"CO"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 4.6,
+		"longitude": -74.1
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Colômbia",
+			"pt-PT": "Colômbia",
+			"gn-PY": "Colombia",
+			"en-US": "Colombia",
+			"es-ES": "Colombia",
+			"fr-FR": "Colombie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

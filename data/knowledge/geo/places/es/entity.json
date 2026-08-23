@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "es",
+	"placeType": "country",
+	"countryCodes": [
+		"ES"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 40.5,
+		"longitude": -3.7
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Espanha",
+			"pt-PT": "Espanha",
+			"gn-PY": "Spain",
+			"en-US": "Spain",
+			"es-ES": "España",
+			"fr-FR": "Espagne"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

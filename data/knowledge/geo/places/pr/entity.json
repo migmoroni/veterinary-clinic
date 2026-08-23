@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "pr",
+	"placeType": "country",
+	"countryCodes": [
+		"PR"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 18.2,
+		"longitude": -66.6
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Porto Rico",
+			"pt-PT": "Porto Rico",
+			"gn-PY": "Puerto Rico",
+			"en-US": "Puerto Rico",
+			"es-ES": "Puerto Rico",
+			"fr-FR": "Porto Rico"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

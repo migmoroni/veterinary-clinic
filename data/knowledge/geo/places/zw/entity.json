@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "zw",
+	"placeType": "country",
+	"countryCodes": [
+		"ZW"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": -19,
+		"longitude": 29.2
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Zimbábue",
+			"pt-PT": "Zimbabué",
+			"gn-PY": "Zimbabwe",
+			"en-US": "Zimbabwe",
+			"es-ES": "Zimbabue",
+			"fr-FR": "Zimbabwe"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

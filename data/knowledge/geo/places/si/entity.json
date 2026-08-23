@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "si",
+	"placeType": "country",
+	"countryCodes": [
+		"SI"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 46.1,
+		"longitude": 14.9
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Eslovênia",
+			"pt-PT": "Eslovénia",
+			"gn-PY": "Slovenia",
+			"en-US": "Slovenia",
+			"es-ES": "Eslovenia",
+			"fr-FR": "Slovénie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

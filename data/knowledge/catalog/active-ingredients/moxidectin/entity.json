@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"entityType": "active_ingredient",
+	"id": "9aba4d14-23bb-4f25-bae1-6f0a6f3e37c5",
+	"typeTermKey": "antiInfective.antiparasitic.macrocyclicLactones",
+	"classificationTermKeys": [],
+	"regions": [],
+	"nomenclature": {
+		"scientificName": null,
+		"casNumber": null,
+		"denominationStandards": []
+	},
+	"atcVetCode": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Moxidectina",
+			"pt-PT": "Moxidectina",
+			"gn-PY": "Moxidectina",
+			"en-US": "Moxidectin",
+			"es-ES": "Moxidectina",
+			"fr-FR": "Moxidectine"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

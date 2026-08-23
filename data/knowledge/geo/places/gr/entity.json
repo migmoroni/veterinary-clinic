@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "gr",
+	"placeType": "country",
+	"countryCodes": [
+		"GR"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 39.1,
+		"longitude": 21.8
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Grécia",
+			"pt-PT": "Grécia",
+			"gn-PY": "Greece",
+			"en-US": "Greece",
+			"es-ES": "Grecia",
+			"fr-FR": "Grèce"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

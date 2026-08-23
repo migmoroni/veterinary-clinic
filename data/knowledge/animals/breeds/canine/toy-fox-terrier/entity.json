@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "toy-fox-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			1.5,
+			3.5
+		],
+		"female": [
+			1.5,
+			3.2
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			22,
+			29
+		],
+		"female": [
+			21,
+			28
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Toy Fox Terrier",
+			"pt-PT": "Toy Fox Terrier",
+			"gn-PY": "Toy Fox Terrier",
+			"en-US": "Toy Fox Terrier",
+			"es-ES": "Toy Fox Terrier",
+			"fr-FR": "Toy Fox Terrier"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

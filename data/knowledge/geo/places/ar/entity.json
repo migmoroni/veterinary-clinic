@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "ar",
+	"placeType": "country",
+	"countryCodes": [
+		"AR"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": -38.4,
+		"longitude": -63.6
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Argentina",
+			"pt-PT": "Argentina",
+			"gn-PY": "Argentina",
+			"en-US": "Argentina",
+			"es-ES": "Argentina",
+			"fr-FR": "Argentine"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

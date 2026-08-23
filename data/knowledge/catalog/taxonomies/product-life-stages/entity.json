@@ -1,0 +1,24 @@
+{
+	"schemaVersion": 1,
+	"entityType": "taxonomy",
+	"id": "product-life-stages",
+	"domain": "product",
+	"purpose": "life_stage",
+	"terms": [
+		{
+			"key": "puppy",
+			"parentKey": null,
+			"order": 0,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "filhote",
+					"pt-PT": "cachorro",
+					"gn-PY": "jagua ra’y",
+					"en-US": "puppy",
+					"es-ES": "cachorro",
+					"fr-FR": "chiot"
+				}
+			}
+		}
+	]
+}

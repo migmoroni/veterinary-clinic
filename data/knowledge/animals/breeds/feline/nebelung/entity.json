@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "nebelung",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			6.5
+		],
+		"female": [
+			3,
+			5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			23,
+			30
+		],
+		"female": [
+			21,
+			28
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Nebelung",
+			"pt-PT": "Nebelung",
+			"gn-PY": "Nebelung",
+			"en-US": "Nebelung",
+			"es-ES": "Nebelung",
+			"fr-FR": "Nebelung"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

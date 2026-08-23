@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "fr",
+	"placeType": "country",
+	"countryCodes": [
+		"FR"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 46.2,
+		"longitude": 2.2
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "França",
+			"pt-PT": "França",
+			"gn-PY": "France",
+			"en-US": "France",
+			"es-ES": "Francia",
+			"fr-FR": "France"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

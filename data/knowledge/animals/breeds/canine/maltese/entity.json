@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "maltese",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"mt"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			3,
+			4
+		],
+		"female": [
+			3,
+			4
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			21,
+			25
+		],
+		"female": [
+			20,
+			23
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Maltês",
+			"pt-PT": "Maltês",
+			"gn-PY": "Bichón maltés",
+			"en-US": "Maltese",
+			"es-ES": "Bichón maltés",
+			"fr-FR": "Bichon maltais"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

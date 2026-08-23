@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "alaskan-klee-kai",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			4,
+			10
+		],
+		"female": [
+			4,
+			9
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			33,
+			43
+		],
+		"female": [
+			33,
+			40
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Alaskan Klee Kai",
+			"pt-PT": "Alaskan Klee Kai",
+			"gn-PY": "Alaskan Klee Kai",
+			"en-US": "Alaskan Klee Kai",
+			"es-ES": "Alaskan Klee Kai",
+			"fr-FR": "Alaskan Klee Kai"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

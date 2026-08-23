@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "cimarron-uruguayo",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"uy"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			38,
+			45
+		],
+		"female": [
+			33,
+			40
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			58,
+			61
+		],
+		"female": [
+			55,
+			58
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cimarrón Uruguaio",
+			"pt-PT": "Cimarrón Uruguaio",
+			"gn-PY": "Cimarrón uruguayo",
+			"en-US": "Uruguayan Cimarron",
+			"es-ES": "Cimarrón uruguayo",
+			"fr-FR": "Cimarron uruguayen"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

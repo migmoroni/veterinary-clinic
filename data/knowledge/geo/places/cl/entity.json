@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "cl",
+	"placeType": "country",
+	"countryCodes": [
+		"CL"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": -35.7,
+		"longitude": -71.5
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Chile",
+			"pt-PT": "Chile",
+			"gn-PY": "Chile",
+			"en-US": "Chile",
+			"es-ES": "Chile",
+			"fr-FR": "Chili"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "is",
+	"placeType": "country",
+	"countryCodes": [
+		"IS"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 64.9,
+		"longitude": -19
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Islândia",
+			"pt-PT": "Islândia",
+			"gn-PY": "Iceland",
+			"en-US": "Iceland",
+			"es-ES": "Islandia",
+			"fr-FR": "Islande"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "ukrainian-levkoy",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"ua"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			6
+		],
+		"female": [
+			3,
+			5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			22,
+			28
+		],
+		"female": [
+			20,
+			26
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Levkoy Ucraniano",
+			"pt-PT": "Levkoy Ucraniano",
+			"gn-PY": "Levkoy ucraniano",
+			"en-US": "Ukrainian Levkoy",
+			"es-ES": "Levkoy ucraniano",
+			"fr-FR": "Levkoy ukrainien"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

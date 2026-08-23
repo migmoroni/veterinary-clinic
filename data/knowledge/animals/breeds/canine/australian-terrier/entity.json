@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "australian-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"au"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			6,
+			7
+		],
+		"female": [
+			5.5,
+			6.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			28
+		],
+		"female": [
+			23,
+			26
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Terrier Australiano",
+			"pt-PT": "Terrier Australiano",
+			"gn-PY": "Terrier australiano",
+			"en-US": "Australian Terrier",
+			"es-ES": "Terrier australiano",
+			"fr-FR": "Terrier australien"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

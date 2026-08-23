@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "singapura",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"sg"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			2.5,
+			3.5
+		],
+		"female": [
+			2,
+			3
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			18,
+			22
+		],
+		"female": [
+			17,
+			21
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Singapura",
+			"pt-PT": "Singapura",
+			"gn-PY": "Singapura",
+			"en-US": "Singapura",
+			"es-ES": "Singapura",
+			"fr-FR": "Singapura"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

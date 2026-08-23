@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "canadian-eskimo-dog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"ca"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			30,
+			40
+		],
+		"female": [
+			18,
+			30
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			58,
+			70
+		],
+		"female": [
+			50,
+			60
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cão Esquimó Canadense",
+			"pt-PT": "Cão Esquimó Canadense",
+			"gn-PY": "Perro esquimal canadiense",
+			"en-US": "Canadian Eskimo Dog",
+			"es-ES": "Perro esquimal canadiense",
+			"fr-FR": "Chien esquimau canadien"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

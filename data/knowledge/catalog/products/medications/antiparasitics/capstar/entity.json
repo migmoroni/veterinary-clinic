@@ -1,0 +1,49 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "f881d856-3d4e-41e6-b4ff-b6a77c3808f9",
+	"typeTermKey": "medication.antiparasitic.ectoparasiticide",
+	"classificationTermKeys": [
+		"origin.allopathic",
+		"therapeuticAction.control"
+	],
+	"species": [
+		"canine",
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
+	"activeIngredientIds": [
+		"0a86ea8d-df19-4b1f-884e-2439685db3a8"
+	],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Capstar",
+			"pt-PT": "Capstar",
+			"gn-PY": "Capstar",
+			"en-US": "Capstar",
+			"es-ES": "Capstar",
+			"fr-FR": "Capstar"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"parasite.flea"
+	]
+}

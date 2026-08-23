@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "briard",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"fr"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			30,
+			41
+		],
+		"female": [
+			23,
+			34
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			62,
+			69
+		],
+		"female": [
+			56,
+			64
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Briard",
+			"pt-PT": "Briard",
+			"gn-PY": "Briard",
+			"en-US": "Briard",
+			"es-ES": "Briard",
+			"fr-FR": "Briard"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

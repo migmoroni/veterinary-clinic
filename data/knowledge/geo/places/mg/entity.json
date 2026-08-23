@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "mg",
+	"placeType": "country",
+	"countryCodes": [
+		"MG"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": -18.8,
+		"longitude": 46.9
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Madagascar",
+			"pt-PT": "Madagáscar",
+			"gn-PY": "Madagascar",
+			"en-US": "Madagascar",
+			"es-ES": "Madagascar",
+			"fr-FR": "Madagascar"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

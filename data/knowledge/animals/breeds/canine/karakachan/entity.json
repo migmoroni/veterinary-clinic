@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "karakachan",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"bg"
+	],
+	"sizeTermKey": "giant",
+	"averageWeightKg": {
+		"male": [
+			40,
+			55
+		],
+		"female": [
+			35,
+			50
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			63,
+			75
+		],
+		"female": [
+			60,
+			70
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Karakachan",
+			"pt-PT": "Karakachan",
+			"gn-PY": "Karakachan",
+			"en-US": "Karakachan",
+			"es-ES": "Karakachan",
+			"fr-FR": "Karakachan"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

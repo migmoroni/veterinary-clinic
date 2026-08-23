@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "tierra-del-fuego",
+	"placeType": "region",
+	"countryCodes": [],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": -54.7,
+		"longitude": -68.1
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Terra do Fogo",
+			"pt-PT": "Terra do Fogo",
+			"gn-PY": "Tierra del Fuego",
+			"en-US": "Tierra del Fuego",
+			"es-ES": "Tierra del Fuego",
+			"fr-FR": "Terre de Feu"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

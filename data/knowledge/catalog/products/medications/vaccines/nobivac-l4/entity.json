@@ -1,0 +1,58 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "bf738f9a-577b-4153-ae71-4e405952e481",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Nobivac L4",
+			"pt-PT": "Nobivac L4",
+			"gn-PY": "Nobivac L4",
+			"en-US": "Nobivac L4",
+			"es-ES": "Nobivac L4",
+			"fr-FR": "Nobivac L4"
+		},
+		"aliases": {
+			"pt-BR": [
+				"L4"
+			],
+			"pt-PT": [
+				"L4"
+			],
+			"gn-PY": [
+				"L4"
+			],
+			"en-US": [
+				"L4"
+			],
+			"es-ES": [
+				"L4"
+			],
+			"fr-FR": [
+				"L4"
+			]
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"disease.canineLeptospirosis"
+	]
+}

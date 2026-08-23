@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "england",
+	"placeType": "region",
+	"countryCodes": [],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 52.4,
+		"longitude": -1.5
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Inglaterra",
+			"pt-PT": "Inglaterra",
+			"gn-PY": "Inglaterra",
+			"en-US": "England",
+			"es-ES": "Inglaterra",
+			"fr-FR": "Angleterre"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

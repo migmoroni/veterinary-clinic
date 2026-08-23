@@ -1,0 +1,68 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "f4e49a9e-5a5b-4132-b957-320d3e12c3a6",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Nobivac Canine 1-DAPPVL2+CV",
+			"pt-PT": "Nobivac Canine 1-DAPPVL2+CV",
+			"gn-PY": "Nobivac Canine 1-DAPPVL2+CV",
+			"en-US": "Nobivac Canine 1-DAPPVL2+CV",
+			"es-ES": "Nobivac Canine 1-DAPPVL2+CV",
+			"fr-FR": "Nobivac Canine 1-DAPPVL2+CV"
+		},
+		"aliases": {
+			"pt-BR": [
+				"DAPPVL2+CV"
+			],
+			"pt-PT": [
+				"DAPPVL2+CV"
+			],
+			"gn-PY": [
+				"DAPPVL2+CV"
+			],
+			"en-US": [
+				"DAPPVL2+CV"
+			],
+			"es-ES": [
+				"DAPPVL2+CV"
+			],
+			"fr-FR": [
+				"DAPPVL2+CV"
+			]
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"disease.canineDistemper",
+		"pathogen.canineAdenovirusType2",
+		"disease.canineCoronavirusInfection",
+		"pathogen.canineCoronavirus",
+		"disease.canineParainfluenza",
+		"disease.canineParvovirosis",
+		"pathogen.canineParvovirus",
+		"disease.canineLeptospirosis"
+	],
+	"vaccineProfileTermKeys": [
+		"canine.multivalent"
+	]
+}

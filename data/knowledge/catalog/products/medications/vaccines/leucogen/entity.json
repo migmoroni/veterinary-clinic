@@ -1,0 +1,47 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "a6fd6ba3-fef0-46bc-85df-8b90f42bd0e0",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Leucogen",
+			"pt-PT": "Leucogen",
+			"gn-PY": "Leucogen",
+			"en-US": "Leucogen",
+			"es-ES": "Leucogen",
+			"fr-FR": "Leucogen"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"disease.felineLeukemia",
+		"pathogen.felineLeukemiaVirus"
+	]
+}

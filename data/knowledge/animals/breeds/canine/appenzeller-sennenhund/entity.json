@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "appenzeller-sennenhund",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"ch"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			25,
+			32
+		],
+		"female": [
+			22,
+			29
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			52,
+			56
+		],
+		"female": [
+			50,
+			54
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Appenzeller Sennenhund",
+			"pt-PT": "Appenzeller Sennenhund",
+			"gn-PY": "Appenzeller Sennenhund",
+			"en-US": "Appenzeller Sennenhund",
+			"es-ES": "Appenzeller Sennenhund",
+			"fr-FR": "Bouvier de l'Appenzell"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

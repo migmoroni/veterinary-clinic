@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "ir",
+	"placeType": "country",
+	"countryCodes": [
+		"IR"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 32.4,
+		"longitude": 53.7
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Irã",
+			"pt-PT": "Irão",
+			"gn-PY": "Iran",
+			"en-US": "Iran",
+			"es-ES": "Irán",
+			"fr-FR": "Iran"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

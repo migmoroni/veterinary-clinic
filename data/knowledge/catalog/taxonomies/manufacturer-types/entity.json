@@ -1,0 +1,159 @@
+{
+	"schemaVersion": 1,
+	"entityType": "taxonomy",
+	"id": "manufacturer-types",
+	"domain": "manufacturer",
+	"purpose": "type",
+	"terms": [
+		{
+			"key": "humanIndustrial",
+			"parentKey": null,
+			"order": 0,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Indústria humana",
+					"pt-PT": "Indústria humana",
+					"gn-PY": "Indústria humana",
+					"en-US": "Human industry",
+					"es-ES": "Industria humana",
+					"fr-FR": "Industrie humaine"
+				}
+			}
+		},
+		{
+			"key": "humanIndustrial.humanCompoundingPharmacy",
+			"parentKey": "humanIndustrial",
+			"order": 1,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Farmácia de manipulação humana",
+					"pt-PT": "Farmácia de manipulação humana",
+					"gn-PY": "Farmácia de manipulação humana",
+					"en-US": "Human compounding pharmacy",
+					"es-ES": "Farmacia de formulación humana",
+					"fr-FR": "Pharmacie de préparation humaine"
+				}
+			}
+		},
+		{
+			"key": "humanIndustrial.humanIndustrialLaboratory",
+			"parentKey": "humanIndustrial",
+			"order": 2,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Laboratório humano industrial",
+					"pt-PT": "Laboratório humano industrial",
+					"gn-PY": "Laboratório humano industrial",
+					"en-US": "Human industrial laboratory",
+					"es-ES": "Laboratorio humano industrial",
+					"fr-FR": "Laboratoire humain industriel"
+				}
+			}
+		},
+		{
+			"key": "simplifiedRegister",
+			"parentKey": null,
+			"order": 3,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Registro simplificado",
+					"pt-PT": "Registo simplificado",
+					"gn-PY": "Registro simplificado",
+					"en-US": "Simplified register",
+					"es-ES": "Registro simplificado",
+					"fr-FR": "Enregistrement simplifié"
+				}
+			}
+		},
+		{
+			"key": "simplifiedRegister.hygieneIndustry",
+			"parentKey": "simplifiedRegister",
+			"order": 4,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Indústria de higiene",
+					"pt-PT": "Indústria de higiene",
+					"gn-PY": "Indústria de higiene",
+					"en-US": "Hygiene industry",
+					"es-ES": "Industria de higiene",
+					"fr-FR": "Industrie de l'hygiène"
+				}
+			}
+		},
+		{
+			"key": "simplifiedRegister.medicalDevicesIndustry",
+			"parentKey": "simplifiedRegister",
+			"order": 5,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Indústria de dispositivos médicos",
+					"pt-PT": "Indústria de dispositivos médicos",
+					"gn-PY": "Indústria de dispositivos médicos",
+					"en-US": "Medical devices industry",
+					"es-ES": "Industria de dispositivos médicos",
+					"fr-FR": "Industrie des dispositifs médicaux"
+				}
+			}
+		},
+		{
+			"key": "simplifiedRegister.nutritionIndustry",
+			"parentKey": "simplifiedRegister",
+			"order": 6,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Indústria de nutrição",
+					"pt-PT": "Indústria de nutrição",
+					"gn-PY": "Indústria de nutrição",
+					"en-US": "Nutrition industry",
+					"es-ES": "Industria de nutrición",
+					"fr-FR": "Industrie de la nutrition"
+				}
+			}
+		},
+		{
+			"key": "veterinaryIndustrial",
+			"parentKey": null,
+			"order": 7,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Indústria veterinária",
+					"pt-PT": "Indústria veterinária",
+					"gn-PY": "Indústria veterinária",
+					"en-US": "Veterinary industry",
+					"es-ES": "Industria veterinaria",
+					"fr-FR": "Industrie vétérinaire"
+				}
+			}
+		},
+		{
+			"key": "veterinaryIndustrial.veterinaryCompoundingPharmacy",
+			"parentKey": "veterinaryIndustrial",
+			"order": 8,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Farmácia de manipulação veterinária",
+					"pt-PT": "Farmácia de manipulação veterinária",
+					"gn-PY": "Farmácia de manipulação veterinária",
+					"en-US": "Veterinary compounding pharmacy",
+					"es-ES": "Farmacia de formulación veterinaria",
+					"fr-FR": "Pharmacie de préparation vétérinaire"
+				}
+			}
+		},
+		{
+			"key": "veterinaryIndustrial.veterinaryIndustrialLaboratory",
+			"parentKey": "veterinaryIndustrial",
+			"order": 9,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Laboratório veterinário industrial",
+					"pt-PT": "Laboratório veterinário industrial",
+					"gn-PY": "Laboratório veterinário industrial",
+					"en-US": "Veterinary industrial laboratory",
+					"es-ES": "Laboratorio veterinario industrial",
+					"fr-FR": "Laboratoire vétérinaire industriel"
+				}
+			}
+		}
+	]
+}

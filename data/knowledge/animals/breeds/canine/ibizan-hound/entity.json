@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "ibizan-hound",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"es"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			23,
+			29
+		],
+		"female": [
+			20,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			66,
+			72
+		],
+		"female": [
+			60,
+			67
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Podenco Ibicenco",
+			"pt-PT": "Podenco Ibicenco",
+			"gn-PY": "Podenco ibicenco",
+			"en-US": "Ibizan Hound",
+			"es-ES": "Podenco ibicenco",
+			"fr-FR": "Podenco d'Ibiza"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

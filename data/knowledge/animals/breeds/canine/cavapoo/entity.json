@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "cavapoo",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			5,
+			11
+		],
+		"female": [
+			5,
+			10
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			35
+		],
+		"female": [
+			23,
+			33
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cavapoo",
+			"pt-PT": "Cavapoo",
+			"gn-PY": "Cavapoo",
+			"en-US": "Cavapoo",
+			"es-ES": "Cavapoo",
+			"fr-FR": "Cavapoo"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

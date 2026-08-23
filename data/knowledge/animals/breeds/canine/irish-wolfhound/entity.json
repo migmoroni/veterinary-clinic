@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "irish-wolfhound",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"ie"
+	],
+	"sizeTermKey": "giant",
+	"averageWeightKg": {
+		"male": [
+			54,
+			82
+		],
+		"female": [
+			48,
+			68
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			81,
+			90
+		],
+		"female": [
+			76,
+			86
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Wolfhound Irlandês",
+			"pt-PT": "Wolfhound irlandês",
+			"gn-PY": "Lobero irlandés",
+			"en-US": "Irish Wolfhound",
+			"es-ES": "Lobero irlandés",
+			"fr-FR": "Lévrier irlandais"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

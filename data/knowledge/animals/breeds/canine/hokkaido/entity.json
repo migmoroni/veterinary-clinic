@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "hokkaido",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"jp"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			20,
+			25
+		],
+		"female": [
+			17,
+			22
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			48,
+			52
+		],
+		"female": [
+			45,
+			49
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Hokkaido",
+			"pt-PT": "Hokkaido",
+			"gn-PY": "Hokkaido",
+			"en-US": "Hokkaido",
+			"es-ES": "Hokkaido",
+			"fr-FR": "Hokkaïdo"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

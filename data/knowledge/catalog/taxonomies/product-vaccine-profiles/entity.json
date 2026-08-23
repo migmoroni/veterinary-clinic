@@ -1,0 +1,285 @@
+{
+	"schemaVersion": 1,
+	"entityType": "taxonomy",
+	"id": "product-vaccine-profiles",
+	"domain": "product",
+	"purpose": "vaccine_profile",
+	"terms": [
+		{
+			"key": "canine",
+			"parentKey": null,
+			"order": 0,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Canino",
+					"pt-PT": "Canino",
+					"gn-PY": "Canino",
+					"en-US": "Canine",
+					"es-ES": "Canino",
+					"fr-FR": "Canin"
+				}
+			}
+		},
+		{
+			"key": "canine.multivalent",
+			"parentKey": "canine",
+			"order": 1,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "polivalente",
+					"pt-PT": "polivalente",
+					"gn-PY": "polivalente",
+					"en-US": "polyvalent",
+					"es-ES": "polivalente",
+					"fr-FR": "polyvalent"
+				},
+				"aliases": {
+					"pt-BR": [
+						"múltipla canina"
+					],
+					"pt-PT": [
+						"múltipla canina"
+					],
+					"gn-PY": [
+						"vacuna múltiple canina"
+					],
+					"en-US": [
+						"canine combination vaccine"
+					],
+					"es-ES": [
+						"vacuna múltiple canina"
+					],
+					"fr-FR": [
+						"vaccin combiné canin"
+					]
+				}
+			}
+		},
+		{
+			"key": "canine.v8",
+			"parentKey": "canine",
+			"order": 2,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "V8",
+					"pt-PT": "V8",
+					"gn-PY": "V8",
+					"en-US": "V8",
+					"es-ES": "V8",
+					"fr-FR": "V8"
+				},
+				"aliases": {
+					"pt-BR": [
+						"V 8"
+					],
+					"pt-PT": [
+						"V 8"
+					],
+					"gn-PY": [
+						"V 8"
+					],
+					"en-US": [
+						"V 8"
+					],
+					"es-ES": [
+						"V 8"
+					],
+					"fr-FR": [
+						"V 8"
+					]
+				}
+			}
+		},
+		{
+			"key": "canine.v10",
+			"parentKey": "canine",
+			"order": 3,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "V10",
+					"pt-PT": "V10",
+					"gn-PY": "V10",
+					"en-US": "V10",
+					"es-ES": "V10",
+					"fr-FR": "V10"
+				},
+				"aliases": {
+					"pt-BR": [
+						"V 10"
+					],
+					"pt-PT": [
+						"V 10"
+					],
+					"gn-PY": [
+						"V 10"
+					],
+					"en-US": [
+						"V 10"
+					],
+					"es-ES": [
+						"V 10"
+					],
+					"fr-FR": [
+						"V 10"
+					]
+				}
+			}
+		},
+		{
+			"key": "feline",
+			"parentKey": null,
+			"order": 4,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Felino",
+					"pt-PT": "Felino",
+					"gn-PY": "Felino",
+					"en-US": "Feline",
+					"es-ES": "Felino",
+					"fr-FR": "Félin"
+				}
+			}
+		},
+		{
+			"key": "feline.trivalent",
+			"parentKey": "feline",
+			"order": 5,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "tríplice felina",
+					"pt-PT": "tríplice felina",
+					"gn-PY": "triple felina",
+					"en-US": "feline three-way vaccine",
+					"es-ES": "triple felina",
+					"fr-FR": "vaccin trivalent félin"
+				},
+				"aliases": {
+					"pt-BR": [
+						"FVRCP",
+						"V3",
+						"V 3"
+					],
+					"pt-PT": [
+						"FVRCP",
+						"V3",
+						"V 3"
+					],
+					"gn-PY": [
+						"FVRCP",
+						"V3",
+						"V 3"
+					],
+					"en-US": [
+						"FVRCP",
+						"V3",
+						"V 3"
+					],
+					"es-ES": [
+						"FVRCP",
+						"V3",
+						"V 3"
+					],
+					"fr-FR": [
+						"FVRCP",
+						"V3",
+						"V 3"
+					]
+				}
+			}
+		},
+		{
+			"key": "feline.tetravalent",
+			"parentKey": "feline",
+			"order": 6,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "quádrupla felina",
+					"pt-PT": "quádrupla felina",
+					"gn-PY": "cuádruple felina",
+					"en-US": "feline four-way vaccine",
+					"es-ES": "cuádruple felina",
+					"fr-FR": "vaccin tétravalent félin"
+				},
+				"aliases": {
+					"pt-BR": [
+						"FVRCP+Ch",
+						"V4",
+						"V 4"
+					],
+					"pt-PT": [
+						"FVRCP+Ch",
+						"V4",
+						"V 4"
+					],
+					"gn-PY": [
+						"FVRCP+Ch",
+						"V4",
+						"V 4"
+					],
+					"en-US": [
+						"FVRCP+Ch",
+						"V4",
+						"V 4"
+					],
+					"es-ES": [
+						"FVRCP+Ch",
+						"V4",
+						"V 4"
+					],
+					"fr-FR": [
+						"FVRCP+Ch",
+						"V4",
+						"V 4"
+					]
+				}
+			}
+		},
+		{
+			"key": "feline.pentavalent",
+			"parentKey": "feline",
+			"order": 7,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "quíntupla felina",
+					"pt-PT": "quíntupla felina",
+					"gn-PY": "quíntuple felina",
+					"en-US": "feline five-way vaccine",
+					"es-ES": "quíntuple felina",
+					"fr-FR": "vaccin pentavalent félin"
+				},
+				"aliases": {
+					"pt-BR": [
+						"FVRCP+Ch+FeLV",
+						"V5",
+						"V 5"
+					],
+					"pt-PT": [
+						"FVRCP+Ch+FeLV",
+						"V5",
+						"V 5"
+					],
+					"gn-PY": [
+						"FVRCP+Ch+FeLV",
+						"V5",
+						"V 5"
+					],
+					"en-US": [
+						"FVRCP+Ch+FeLV",
+						"V5",
+						"V 5"
+					],
+					"es-ES": [
+						"FVRCP+Ch+FeLV",
+						"V5",
+						"V 5"
+					],
+					"fr-FR": [
+						"FVRCP+Ch+FeLV",
+						"V5",
+						"V 5"
+					]
+				}
+			}
+		}
+	]
+}

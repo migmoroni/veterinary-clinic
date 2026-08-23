@@ -16,6 +16,7 @@
 		"check:watch": "pnpm --filter vet-app run check:watch",
 		"test": "pnpm --filter vet-app run test",
 		"test:run": "pnpm --filter vet-app run test:run",
+		"knowledge:audit": "node scripts/audit-knowledge.mjs",
 		"adopt:version": "pnpm --filter @vet/legacy-to-sqlite run adopt:version",
 		"version:bump": "node scripts/bump-version/index.mjs",
 		"tauri": "pnpm --filter vet-app run tauri",

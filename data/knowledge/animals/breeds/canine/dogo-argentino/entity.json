@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "dogo-argentino",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"ar"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			40,
+			45
+		],
+		"female": [
+			35,
+			40
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			62,
+			68
+		],
+		"female": [
+			60,
+			65
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Dogo Argentino",
+			"pt-PT": "Dogo argentino",
+			"gn-PY": "Dogo argentino",
+			"en-US": "Dogo Argentino",
+			"es-ES": "Dogo argentino",
+			"fr-FR": "Dogue argentin"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

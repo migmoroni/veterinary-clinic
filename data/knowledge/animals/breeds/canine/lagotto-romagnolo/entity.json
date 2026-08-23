@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "lagotto-romagnolo",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"it"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			13,
+			16
+		],
+		"female": [
+			11,
+			14
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			43,
+			48
+		],
+		"female": [
+			41,
+			46
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Lagotto Romagnolo",
+			"pt-PT": "Lagotto Romagnolo",
+			"gn-PY": "Lagotto Romagnolo",
+			"en-US": "Lagotto Romagnolo",
+			"es-ES": "Lagotto Romagnolo",
+			"fr-FR": "Lagotto Romagnolo"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

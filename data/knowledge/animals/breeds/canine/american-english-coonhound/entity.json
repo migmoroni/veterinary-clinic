@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "american-english-coonhound",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			20,
+			29
+		],
+		"female": [
+			20,
+			29
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			61,
+			66
+		],
+		"female": [
+			58,
+			64
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "American English Coonhound",
+			"pt-PT": "American English Coonhound",
+			"gn-PY": "American English Coonhound",
+			"en-US": "American English Coonhound",
+			"es-ES": "American English Coonhound",
+			"fr-FR": "American English Coonhound"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

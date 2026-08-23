@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "il",
+	"placeType": "country",
+	"countryCodes": [
+		"IL"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 31,
+		"longitude": 35
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Israel",
+			"pt-PT": "Israel",
+			"gn-PY": "Israel",
+			"en-US": "Israel",
+			"es-ES": "Israel",
+			"fr-FR": "Israël"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

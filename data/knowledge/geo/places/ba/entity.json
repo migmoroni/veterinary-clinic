@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "ba",
+	"placeType": "country",
+	"countryCodes": [
+		"BA"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 44.2,
+		"longitude": 17.8
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Bósnia e Herzegovina",
+			"pt-PT": "Bósnia e Herzegovina",
+			"gn-PY": "Bosnia & Herzegovina",
+			"en-US": "Bosnia & Herzegovina",
+			"es-ES": "Bosnia y Herzegovina",
+			"fr-FR": "Bosnie-Herzégovine"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

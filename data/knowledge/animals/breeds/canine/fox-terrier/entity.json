@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "fox-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"england"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			7,
+			9
+		],
+		"female": [
+			6.5,
+			8
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			36,
+			39
+		],
+		"female": [
+			33,
+			36
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Fox Terrier",
+			"pt-PT": "Fox Terrier",
+			"gn-PY": "Fox Terrier",
+			"en-US": "Fox Terrier",
+			"es-ES": "Fox Terrier",
+			"fr-FR": "Fox-terrier"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

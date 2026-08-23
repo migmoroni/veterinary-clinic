@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "american-shorthair",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			5,
+			7
+		],
+		"female": [
+			3.5,
+			5.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			30
+		],
+		"female": [
+			23,
+			28
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "American Shorthair",
+			"pt-PT": "American Shorthair",
+			"gn-PY": "Americano de pelo corto",
+			"en-US": "American Shorthair",
+			"es-ES": "Americano de pelo corto",
+			"fr-FR": "American Shorthair"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

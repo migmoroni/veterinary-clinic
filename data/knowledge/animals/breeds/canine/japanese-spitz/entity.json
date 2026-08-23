@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "japanese-spitz",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"jp"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			6,
+			11
+		],
+		"female": [
+			5,
+			10
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			30,
+			38
+		],
+		"female": [
+			28,
+			36
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Spitz Japonês",
+			"pt-PT": "Spitz japonês",
+			"gn-PY": "Spitz japonés",
+			"en-US": "Japanese Spitz",
+			"es-ES": "Spitz japonés",
+			"fr-FR": "Spitz japonais"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

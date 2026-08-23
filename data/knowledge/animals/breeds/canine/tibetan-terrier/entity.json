@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "tibetan-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"tibet"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			9,
+			14
+		],
+		"female": [
+			8,
+			13
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			38,
+			41
+		],
+		"female": [
+			35,
+			39
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Terrier Tibetano",
+			"pt-PT": "Terrier Tibetano",
+			"gn-PY": "Terrier tibetano",
+			"en-US": "Tibetan Terrier",
+			"es-ES": "Terrier tibetano",
+			"fr-FR": "Terrier du Tibet"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

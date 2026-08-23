@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "fi",
+	"placeType": "country",
+	"countryCodes": [
+		"FI"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 61.9,
+		"longitude": 25.7
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Finlândia",
+			"pt-PT": "Finlândia",
+			"gn-PY": "Finland",
+			"en-US": "Finland",
+			"es-ES": "Finlandia",
+			"fr-FR": "Finlande"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

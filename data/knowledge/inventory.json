@@ -1,0 +1,164 @@
+{
+	"schemaVersion": 1,
+	"locales": [
+		"pt-BR",
+		"pt-PT",
+		"gn-PY",
+		"en-US",
+		"es-ES",
+		"fr-FR"
+	],
+	"scope": {
+		"included": [
+			"system",
+			"system_media",
+			"CAS/system"
+		],
+		"excluded": [
+			"user/main",
+			"user/media",
+			"user/logs",
+			"CAS/user"
+		],
+		"runtimeIntegrationChanged": false
+	},
+	"sources": {
+		"catalog": "packages/types/src/catalog/defaults",
+		"breeds": "packages/types/src/domain/pet/defaults",
+		"protocols": "packages/types/src/domain/treatment/defaults",
+		"breedTranslations": "packages/core-local/src/i18n/breeds",
+		"catalogAliases": "packages/core-local/src/i18n/catalog-aliases",
+		"typeTrees": "packages/core-local/src/i18n/type-tree",
+		"classifications": "packages/core-local/src/i18n/classification",
+		"geographicLabels": "packages/core-local/src/i18n/<locale>.ts"
+	},
+	"publicSystemTables": {
+		"image_collections": "structural media collection metadata",
+		"image_collection_items": "media relations and presentation order",
+		"manufacturer_catalog_items": "manufacturer entities",
+		"active_ingredient_catalog_items": "active ingredient entities",
+		"condition_catalog_items": "condition entities",
+		"product_catalog_items": "product entities",
+		"product_active_ingredients": "product-to-active-ingredient relations",
+		"breed_reference_items": "breed entities and geo-place relations",
+		"treatment_protocols": "public treatment protocol entities",
+		"treatment_protocol_items": "ordered protocol-to-product relations",
+		"treatment_protocol_doses": "ordered protocol doses"
+	},
+	"fieldClassification": {
+		"structural": [
+			"ids",
+			"taxonomy term references",
+			"species",
+			"regions",
+			"measurements",
+			"validity",
+			"regulatory identifiers"
+		],
+		"localizedJson": [
+			"names and entity-owned aliases",
+			"simple catalog fields",
+			"protocol names, observations and dose labels",
+			"taxonomy labels and aliases",
+			"active-ingredient denominations and ATC Vet system labels"
+		],
+		"editorialMarkdown": [
+			"declared section bodies"
+		],
+		"media": [
+			"entity image collections and Markdown image references"
+		],
+		"interface": [
+			"commands",
+			"errors",
+			"empty states",
+			"controls",
+			"standard section titles"
+		]
+	},
+	"entitiesByType": {
+		"manufacturer": 12,
+		"active_ingredient": 17,
+		"condition": 1,
+		"product": 62,
+		"breed": 408,
+		"geo_place": 84,
+		"treatment_protocol": 3,
+		"taxonomy": 13
+	},
+	"relations": {
+		"productManufacturer": 62,
+		"productActiveIngredient": 46,
+		"productTarget": 132,
+		"productVaccineProfile": 23,
+		"productLifeStage": 1,
+		"productTherapeuticScope": 9,
+		"breedOriginPlace": 408,
+		"protocolProduct": 24,
+		"taxonomyType": 92,
+		"taxonomyClassification": 175,
+		"taxonomySize": 408
+	},
+	"taxonomies": {
+		"terms": 585,
+		"semanticTerms": {
+			"productTargets": 31,
+			"productVaccineProfiles": 8,
+			"productLifeStages": 1,
+			"productTherapeuticScopes": 1
+		},
+		"genericSearchTerms": 0
+	},
+	"editorial": {
+		"entities": 17,
+		"documents": 102,
+		"documentsPerLocale": {
+			"pt-BR": 17,
+			"pt-PT": 17,
+			"gn-PY": 17,
+			"en-US": 17,
+			"es-ES": 17,
+			"fr-FR": 17
+		},
+		"sections": 77
+	},
+	"searchProjectionValues": {
+		"product": 492,
+		"manufacturer": 372,
+		"activeIngredients": 358,
+		"targets": 968,
+		"vaccineProfiles": 372,
+		"lifeStages": 6,
+		"therapeuticScopes": 54,
+		"typesAndClassifications": 1242
+	},
+	"media": {
+		"sourceAssets": 0,
+		"canonicalAssets": 0,
+		"note": "Os defaults públicos atuais não declaram imagens; placeholders do app são recursos de interface e não pertencem a system_media."
+	},
+	"localization": {
+		"coverage": "Todo campo JSON localizado presente possui exatamente os seis locales; cada entidade editorial possui um documento consolidado por locale.",
+		"counts": {
+			"localizedFields": 1789,
+			"scalarLocaleValues": 7134,
+			"localizedListItems": 298,
+			"entityAliasValues": 168,
+			"taxonomyLabelValues": 3510,
+			"taxonomyAliasValues": 124,
+			"editorialDocuments": 102,
+			"markdownFragments": 102
+		},
+		"nativePerLocale": [
+			"breed names",
+			"geo-place names",
+			"taxonomy labels and semantic vocabulary aliases",
+			"active-ingredient denomination and ATC Vet labels"
+		],
+		"sourceSharedAcrossLocales": [
+			"catalog names and entity-owned aliases without localized source",
+			"catalog narrative sections",
+			"protocol names, observations and dose labels"
+		]
+	}
+}

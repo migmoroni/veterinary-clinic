@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"entityType": "active_ingredient",
+	"id": "42ecd4a0-c4b3-4276-8122-693460cfe6a6",
+	"typeTermKey": "antiInfective.antiparasitic.isoxazolines",
+	"classificationTermKeys": [],
+	"regions": [],
+	"nomenclature": {
+		"scientificName": null,
+		"casNumber": null,
+		"denominationStandards": []
+	},
+	"atcVetCode": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Afoxolaner",
+			"pt-PT": "Afoxolaner",
+			"gn-PY": "Afoxolaner",
+			"en-US": "Afoxolaner",
+			"es-ES": "Afoxolaner",
+			"fr-FR": "Afoxolaner"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

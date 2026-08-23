@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "aksaray-malaklisi",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"tr"
+	],
+	"sizeTermKey": "giant",
+	"averageWeightKg": {
+		"male": [
+			65,
+			85
+		],
+		"female": [
+			55,
+			75
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			75,
+			85
+		],
+		"female": [
+			70,
+			80
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Aksaray Malaklisi",
+			"pt-PT": "Aksaray Malaklisi",
+			"gn-PY": "Aksaray Malaklisi",
+			"en-US": "Aksaray Malaklisi",
+			"es-ES": "Aksaray Malaklisi",
+			"fr-FR": "Aksaray Malaklisi"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

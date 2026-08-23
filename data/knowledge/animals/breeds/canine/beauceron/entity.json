@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "beauceron",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"fr"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			35,
+			45
+		],
+		"female": [
+			30,
+			40
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			65,
+			70
+		],
+		"female": [
+			61,
+			68
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Beauceron",
+			"pt-PT": "Beauceron",
+			"gn-PY": "Beauceron",
+			"en-US": "Beauceron",
+			"es-ES": "Beauceron",
+			"fr-FR": "Beauceron"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

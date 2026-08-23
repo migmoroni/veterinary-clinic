@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "patagonian-sheepdog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"cl"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			18,
+			30
+		],
+		"female": [
+			16,
+			26
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			45,
+			60
+		],
+		"female": [
+			42,
+			56
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Ovelheiro Patagônico",
+			"pt-PT": "Ovelheiro Patagônico",
+			"gn-PY": "Ovejero patagónico",
+			"en-US": "Patagonian Sheepdog",
+			"es-ES": "Ovejero patagónico",
+			"fr-FR": "Berger de Patagonie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

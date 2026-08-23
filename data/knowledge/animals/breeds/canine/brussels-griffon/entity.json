@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "brussels-griffon",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"be"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			3,
+			5.5
+		],
+		"female": [
+			3,
+			5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			18,
+			28
+		],
+		"female": [
+			18,
+			26
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Griffon de Bruxelas",
+			"pt-PT": "Griffon de Bruxelas",
+			"gn-PY": "Grifón de Bruselas",
+			"en-US": "Brussels Griffon",
+			"es-ES": "Grifón de Bruselas",
+			"fr-FR": "Griffon bruxellois"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

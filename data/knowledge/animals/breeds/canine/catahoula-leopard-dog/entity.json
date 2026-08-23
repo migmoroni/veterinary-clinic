@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "catahoula-leopard-dog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			25,
+			43
+		],
+		"female": [
+			22,
+			36
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			56,
+			66
+		],
+		"female": [
+			51,
+			61
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Catahoula Leopard Dog",
+			"pt-PT": "Catahoula Leopard Dog",
+			"gn-PY": "Catahoula Leopard Dog",
+			"en-US": "Catahoula Leopard Dog",
+			"es-ES": "Catahoula Leopard Dog",
+			"fr-FR": "Chien léopard catahoula"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

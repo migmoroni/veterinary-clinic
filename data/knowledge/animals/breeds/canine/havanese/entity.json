@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "havanese",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"cu"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			4.5,
+			7.5
+		],
+		"female": [
+			4,
+			7
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			23,
+			29
+		],
+		"female": [
+			23,
+			28
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Havanês",
+			"pt-PT": "Havanês",
+			"gn-PY": "Bichón habanero",
+			"en-US": "Havanese",
+			"es-ES": "Bichón habanero",
+			"fr-FR": "Bichon havanais"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,47 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "1d6833fe-0137-4e7f-908e-4d59ae318e79",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"canine",
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Rabisin",
+			"pt-PT": "Rabisin",
+			"gn-PY": "Rabisin",
+			"en-US": "Rabisin",
+			"es-ES": "Rabisin",
+			"fr-FR": "Rabisin"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"disease.rabies"
+	]
+}

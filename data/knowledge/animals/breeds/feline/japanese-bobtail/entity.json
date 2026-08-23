@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "japanese-bobtail",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"jp"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			3.5,
+			5
+		],
+		"female": [
+			2.5,
+			4
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			22,
+			27
+		],
+		"female": [
+			20,
+			25
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Bobtail Japonês",
+			"pt-PT": "Bobtail japonês",
+			"gn-PY": "Bobtail japonés",
+			"en-US": "Japanese Bobtail",
+			"es-ES": "Bobtail japonés",
+			"fr-FR": "Bobtail japonais"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

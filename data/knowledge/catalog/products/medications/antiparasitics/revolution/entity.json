@@ -1,0 +1,46 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "4aaf41c6-144b-4f0d-a7dc-c20a5cbfa719",
+	"typeTermKey": "medication.antiparasitic.endectocide",
+	"classificationTermKeys": [
+		"origin.allopathic",
+		"therapeuticAction.control"
+	],
+	"species": [
+		"canine",
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
+	"activeIngredientIds": [
+		"5a36d7e3-34c8-4bb4-9a0c-111391ccf6fc"
+	],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Revolution",
+			"pt-PT": "Revolution",
+			"gn-PY": "Revolution",
+			"en-US": "Revolution",
+			"es-ES": "Revolution",
+			"fr-FR": "Revolution"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

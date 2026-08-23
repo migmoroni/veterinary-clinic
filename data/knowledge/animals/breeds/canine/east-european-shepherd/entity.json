@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "east-european-shepherd",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"ru"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			35,
+			50
+		],
+		"female": [
+			30,
+			45
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			67,
+			72
+		],
+		"female": [
+			62,
+			67
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Pastor do Leste Europeu",
+			"pt-PT": "Pastor do Leste Europeu",
+			"gn-PY": "Pastor de Europa Oriental",
+			"en-US": "East European Shepherd",
+			"es-ES": "Pastor de Europa Oriental",
+			"fr-FR": "Berger d'Europe de l'Est"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

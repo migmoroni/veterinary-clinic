@@ -1,0 +1,50 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "b52f5d2c-4954-4a8a-8ce1-58634c72b9a5",
+	"typeTermKey": "medication.antiparasitic.ectoparasiticide",
+	"classificationTermKeys": [
+		"origin.allopathic",
+		"therapeuticAction.control"
+	],
+	"species": [
+		"canine",
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "131b3da4-334e-42ee-a185-5e57df388a49",
+	"activeIngredientIds": [
+		"76a4b9e3-0a82-4ddd-8ce8-b0f5aeb5f558"
+	],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Fiprolex",
+			"pt-PT": "Fiprolex",
+			"gn-PY": "Fiprolex",
+			"en-US": "Fiprolex",
+			"es-ES": "Fiprolex",
+			"fr-FR": "Fiprolex"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"parasite.flea",
+		"parasite.tick"
+	]
+}

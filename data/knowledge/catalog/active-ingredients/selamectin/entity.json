@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"entityType": "active_ingredient",
+	"id": "5a36d7e3-34c8-4bb4-9a0c-111391ccf6fc",
+	"typeTermKey": "antiInfective.antiparasitic.macrocyclicLactones",
+	"classificationTermKeys": [],
+	"regions": [],
+	"nomenclature": {
+		"scientificName": null,
+		"casNumber": null,
+		"denominationStandards": []
+	},
+	"atcVetCode": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Selamectina",
+			"pt-PT": "Selamectina",
+			"gn-PY": "Selamectina",
+			"en-US": "Selamectin",
+			"es-ES": "Selamectina",
+			"fr-FR": "Sélamectine"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

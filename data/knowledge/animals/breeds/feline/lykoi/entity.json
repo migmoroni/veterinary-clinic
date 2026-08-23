@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "lykoi",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			3.5,
+			5.5
+		],
+		"female": [
+			2.5,
+			4.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			22,
+			27
+		],
+		"female": [
+			20,
+			25
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Lykoi",
+			"pt-PT": "Lykoi",
+			"gn-PY": "Lykoi",
+			"en-US": "Lykoi",
+			"es-ES": "Lykoi",
+			"fr-FR": "Lykoi"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

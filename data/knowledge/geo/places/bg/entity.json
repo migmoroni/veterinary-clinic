@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "bg",
+	"placeType": "country",
+	"countryCodes": [
+		"BG"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 42.7,
+		"longitude": 25.5
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Bulgária",
+			"pt-PT": "Bulgária",
+			"gn-PY": "Bulgaria",
+			"en-US": "Bulgaria",
+			"es-ES": "Bulgaria",
+			"fr-FR": "Bulgarie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

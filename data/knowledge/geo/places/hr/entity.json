@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "hr",
+	"placeType": "country",
+	"countryCodes": [
+		"HR"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 45.1,
+		"longitude": 15.2
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Croácia",
+			"pt-PT": "Croácia",
+			"gn-PY": "Croatia",
+			"en-US": "Croatia",
+			"es-ES": "Croacia",
+			"fr-FR": "Croatie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

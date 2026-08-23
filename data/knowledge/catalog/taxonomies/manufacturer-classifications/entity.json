@@ -1,0 +1,234 @@
+{
+	"schemaVersion": 1,
+	"entityType": "taxonomy",
+	"id": "manufacturer-classifications",
+	"domain": "manufacturer",
+	"purpose": "classification",
+	"terms": [
+		{
+			"key": "commercialFlow",
+			"parentKey": null,
+			"order": 0,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Fluxo comercial",
+					"pt-PT": "Fluxo comercial",
+					"gn-PY": "Fluxo comercial",
+					"en-US": "Commercial flow",
+					"es-ES": "Fluxo comercial",
+					"fr-FR": "Commercial flow"
+				}
+			}
+		},
+		{
+			"key": "commercialFlow.directSales",
+			"parentKey": "commercialFlow",
+			"order": 1,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Venda direta",
+					"pt-PT": "Venda direta",
+					"gn-PY": "Venda direta",
+					"en-US": "Direct sales",
+					"es-ES": "Venda direta",
+					"fr-FR": "Direct sales"
+				}
+			}
+		},
+		{
+			"key": "commercialFlow.distributorNetwork",
+			"parentKey": "commercialFlow",
+			"order": 2,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Rede de distribuidores",
+					"pt-PT": "Rede de distribuidores",
+					"gn-PY": "Rede de distribuidores",
+					"en-US": "Distributor network",
+					"es-ES": "Rede de distribuidores",
+					"fr-FR": "Distributor network"
+				}
+			}
+		},
+		{
+			"key": "commercialFlow.magistralPrescription",
+			"parentKey": "commercialFlow",
+			"order": 3,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Prescrição magistral",
+					"pt-PT": "Prescrição magistral",
+					"gn-PY": "Prescrição magistral",
+					"en-US": "Compounded prescription",
+					"es-ES": "Prescrição magistral",
+					"fr-FR": "Compounded prescription"
+				}
+			}
+		},
+		{
+			"key": "commercialFlow.specialImport",
+			"parentKey": "commercialFlow",
+			"order": 4,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Importação especial",
+					"pt-PT": "Importação especial",
+					"gn-PY": "Importação especial",
+					"en-US": "Special import",
+					"es-ES": "Importação especial",
+					"fr-FR": "Special import"
+				}
+			}
+		},
+		{
+			"key": "qualityStandard",
+			"parentKey": null,
+			"order": 5,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Padrão de qualidade",
+					"pt-PT": "Padrão de qualidade",
+					"gn-PY": "Padrão de qualidade",
+					"en-US": "Quality standard",
+					"es-ES": "Padrão de qualidade",
+					"fr-FR": "Quality standard"
+				}
+			}
+		},
+		{
+			"key": "qualityStandard.gmpCertified",
+			"parentKey": "qualityStandard",
+			"order": 6,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "BPF/GMP certificada",
+					"pt-PT": "BPF/GMP certificada",
+					"gn-PY": "BPF/GMP certificada",
+					"en-US": "GMP certified",
+					"es-ES": "BPF/GMP certificada",
+					"fr-FR": "GMP certified"
+				}
+			}
+		},
+		{
+			"key": "qualityStandard.magistralQuality",
+			"parentKey": "qualityStandard",
+			"order": 7,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Qualidade magistral",
+					"pt-PT": "Qualidade magistral",
+					"gn-PY": "Qualidade magistral",
+					"en-US": "Compounding quality",
+					"es-ES": "Qualidade magistral",
+					"fr-FR": "Compounding quality"
+				}
+			}
+		},
+		{
+			"key": "qualityStandard.nonApplicable",
+			"parentKey": "qualityStandard",
+			"order": 8,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Não aplicável",
+					"pt-PT": "Não aplicável",
+					"gn-PY": "Não aplicável",
+					"en-US": "Not applicable",
+					"es-ES": "Não aplicável",
+					"fr-FR": "Not applicable"
+				}
+			}
+		},
+		{
+			"key": "qualityStandard.standardIndustrial",
+			"parentKey": "qualityStandard",
+			"order": 9,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Padrão industrial",
+					"pt-PT": "Padrão industrial",
+					"gn-PY": "Padrão industrial",
+					"en-US": "Industrial standard",
+					"es-ES": "Padrão industrial",
+					"fr-FR": "Industrial standard"
+				}
+			}
+		},
+		{
+			"key": "regulatoryStatus",
+			"parentKey": null,
+			"order": 10,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Regulação",
+					"pt-PT": "Regulação",
+					"gn-PY": "Regulação",
+					"en-US": "Regulation",
+					"es-ES": "Regulação",
+					"fr-FR": "Regulation"
+				}
+			}
+		},
+		{
+			"key": "regulatoryStatus.humanIndustrial",
+			"parentKey": "regulatoryStatus",
+			"order": 11,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Indústria humana",
+					"pt-PT": "Indústria humana",
+					"gn-PY": "Indústria humana",
+					"en-US": "Human industry",
+					"es-ES": "Indústria humana",
+					"fr-FR": "Human industry"
+				}
+			}
+		},
+		{
+			"key": "regulatoryStatus.licensedCompounding",
+			"parentKey": "regulatoryStatus",
+			"order": 12,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Manipulação licenciada",
+					"pt-PT": "Manipulação licenciada",
+					"gn-PY": "Manipulação licenciada",
+					"en-US": "Licensed compounding",
+					"es-ES": "Manipulação licenciada",
+					"fr-FR": "Licensed compounding"
+				}
+			}
+		},
+		{
+			"key": "regulatoryStatus.simplifiedRegister",
+			"parentKey": "regulatoryStatus",
+			"order": 13,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Registro simplificado",
+					"pt-PT": "Registro simplificado",
+					"gn-PY": "Registro simplificado",
+					"en-US": "Simplified register",
+					"es-ES": "Registro simplificado",
+					"fr-FR": "Simplified register"
+				}
+			}
+		},
+		{
+			"key": "regulatoryStatus.veterinaryIndustrial",
+			"parentKey": "regulatoryStatus",
+			"order": 14,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Indústria veterinária",
+					"pt-PT": "Indústria veterinária",
+					"gn-PY": "Indústria veterinária",
+					"en-US": "Veterinary industry",
+					"es-ES": "Indústria veterinária",
+					"fr-FR": "Veterinary industry"
+				}
+			}
+		}
+	]
+}

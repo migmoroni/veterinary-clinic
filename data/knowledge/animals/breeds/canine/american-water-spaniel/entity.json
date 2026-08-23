@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "american-water-spaniel",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			14,
+			20
+		],
+		"female": [
+			11,
+			18
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			38,
+			46
+		],
+		"female": [
+			36,
+			43
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Spaniel de Água Americano",
+			"pt-PT": "Spaniel de Água Americano",
+			"gn-PY": "Perro de agua americano",
+			"en-US": "American Water Spaniel",
+			"es-ES": "Perro de agua americano",
+			"fr-FR": "Chien d'eau américain"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

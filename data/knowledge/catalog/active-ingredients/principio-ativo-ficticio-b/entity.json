@@ -1,0 +1,103 @@
+{
+	"schemaVersion": 1,
+	"entityType": "active_ingredient",
+	"id": "a8f032f0-a093-4680-9a69-16b7a32ee8f8",
+	"typeTermKey": "antiInfective.antibacterial.macrolides",
+	"classificationTermKeys": [
+		"regulatory.brazil.antimicrobialPrescriptionRetention",
+		"regulatory.unitedStates.prescriptionOnly",
+		"regulatory.europe.veterinaryPrescriptionOnly",
+		"veterinaryRestriction.clinicalUseOnly"
+	],
+	"regions": [
+		"BRA"
+	],
+	"nomenclature": {
+		"scientificName": "Substantia ficticia beta",
+		"casNumber": "7654-32-1",
+		"denominationStandards": [
+			"inn",
+			"dcb"
+		]
+	},
+	"atcVetCode": "QJ01XX99",
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Princípio Ativo Fictício B",
+			"pt-PT": "Princípio Ativo Fictício B",
+			"gn-PY": "Princípio Ativo Fictício B",
+			"en-US": "Princípio Ativo Fictício B",
+			"es-ES": "Princípio Ativo Fictício B",
+			"fr-FR": "Princípio Ativo Fictício B"
+		},
+		"aliases": {
+			"pt-BR": [
+				"ativo ficticio b",
+				"lorem active b"
+			],
+			"pt-PT": [
+				"ativo ficticio b",
+				"lorem active b"
+			],
+			"gn-PY": [
+				"ativo ficticio b",
+				"lorem active b"
+			],
+			"en-US": [
+				"ativo ficticio b",
+				"lorem active b"
+			],
+			"es-ES": [
+				"ativo ficticio b",
+				"lorem active b"
+			],
+			"fr-FR": [
+				"ativo ficticio b",
+				"lorem active b"
+			]
+		},
+		"atcVetSystem": {
+			"pt-BR": "Antiinfecciosos para uso sistêmico",
+			"pt-PT": "Antiinfecciosos para uso sistémico",
+			"gn-PY": "Antiinfecciosos para uso sistêmico",
+			"en-US": "Antiinfectives for systemic use",
+			"es-ES": "Antiinfecciosos para uso sistémico",
+			"fr-FR": "Anti-infectieux à usage systémique"
+		},
+		"denomination_inn": {
+			"pt-BR": "Fictirolida",
+			"pt-PT": "Fictirolida",
+			"gn-PY": "Fictirolida",
+			"en-US": "Fictirolide",
+			"es-ES": "Fictirolida",
+			"fr-FR": "Fictirolide"
+		},
+		"denomination_dcb": {
+			"pt-BR": "Fictirolida",
+			"pt-PT": "Fictirolida",
+			"gn-PY": "Fictirolida",
+			"en-US": "Fictirolida",
+			"es-ES": "Fictirolida",
+			"fr-FR": "Fictirolida"
+		}
+	},
+	"sections": [
+		{
+			"sectionKey": "about",
+			"sectionNumber": 1
+		},
+		{
+			"sectionKey": "uses",
+			"sectionNumber": 2
+		},
+		{
+			"sectionKey": "safety",
+			"sectionNumber": 3
+		},
+		{
+			"sectionKey": "references",
+			"sectionNumber": 4
+		}
+	],
+	"contentPath": "./content"
+}

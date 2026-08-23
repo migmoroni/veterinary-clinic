@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "dk",
+	"placeType": "country",
+	"countryCodes": [
+		"DK"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 56.3,
+		"longitude": 9.5
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Dinamarca",
+			"pt-PT": "Dinamarca",
+			"gn-PY": "Denmark",
+			"en-US": "Denmark",
+			"es-ES": "Dinamarca",
+			"fr-FR": "Danemark"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

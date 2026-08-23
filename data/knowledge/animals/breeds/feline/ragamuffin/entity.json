@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "ragamuffin",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "giant",
+	"averageWeightKg": {
+		"male": [
+			6,
+			9
+		],
+		"female": [
+			4,
+			7
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			28,
+			35
+		],
+		"female": [
+			25,
+			33
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Ragamuffin",
+			"pt-PT": "Ragamuffin",
+			"gn-PY": "Ragamuffin",
+			"en-US": "Ragamuffin",
+			"es-ES": "Ragamuffin",
+			"fr-FR": "Ragamuffin"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

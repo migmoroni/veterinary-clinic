@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "uy",
+	"placeType": "country",
+	"countryCodes": [
+		"UY"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": -32.5,
+		"longitude": -55.8
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Uruguai",
+			"pt-PT": "Uruguai",
+			"gn-PY": "Uruguay",
+			"en-US": "Uruguay",
+			"es-ES": "Uruguay",
+			"fr-FR": "Uruguay"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "peruvian-inca-orchid",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"pe"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			8,
+			25
+		],
+		"female": [
+			7,
+			22
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			40,
+			65
+		],
+		"female": [
+			38,
+			60
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Pelado Peruano",
+			"pt-PT": "Pelado Peruano",
+			"gn-PY": "Perro sin pelo del Perú",
+			"en-US": "Peruvian Inca Orchid",
+			"es-ES": "Perro sin pelo del Perú",
+			"fr-FR": "Chien nu du Pérou"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

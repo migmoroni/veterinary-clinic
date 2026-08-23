@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "cirneco-dell-etna",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"it"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			10,
+			12
+		],
+		"female": [
+			8,
+			10
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			50
+		],
+		"female": [
+			42,
+			46
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cirneco do Etna",
+			"pt-PT": "Cirneco do Etna",
+			"gn-PY": "Cirneco del Etna",
+			"en-US": "Cirneco dell'Etna",
+			"es-ES": "Cirneco del Etna",
+			"fr-FR": "Cirneco de l'Etna"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

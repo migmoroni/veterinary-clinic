@@ -1,0 +1,82 @@
+{
+	"schemaVersion": 1,
+	"entityType": "condition",
+	"id": "bd38c772-1063-4c45-bf34-7c2a35dac1b6",
+	"typeTermKey": "disease.infectiousAndParasitic.viral",
+	"classificationTermKeys": [
+		"zoonoticRisk.moderate",
+		"notificationRequirement.compulsory"
+	],
+	"regions": [
+		"BRA"
+	],
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Condição Fictícia",
+			"pt-PT": "Condição Fictícia",
+			"gn-PY": "Condição Fictícia",
+			"en-US": "Condição Fictícia",
+			"es-ES": "Condição Fictícia",
+			"fr-FR": "Condição Fictícia"
+		},
+		"aliases": {
+			"pt-BR": [
+				"doenca ficticia",
+				"sindrome demonstrativa",
+				"lesao exemplo"
+			],
+			"pt-PT": [
+				"doenca ficticia",
+				"sindrome demonstrativa",
+				"lesao exemplo"
+			],
+			"gn-PY": [
+				"doenca ficticia",
+				"sindrome demonstrativa",
+				"lesao exemplo"
+			],
+			"en-US": [
+				"doenca ficticia",
+				"sindrome demonstrativa",
+				"lesao exemplo"
+			],
+			"es-ES": [
+				"doenca ficticia",
+				"sindrome demonstrativa",
+				"lesao exemplo"
+			],
+			"fr-FR": [
+				"doenca ficticia",
+				"sindrome demonstrativa",
+				"lesao exemplo"
+			]
+		}
+	},
+	"sections": [
+		{
+			"sectionKey": "about",
+			"sectionNumber": 1
+		},
+		{
+			"sectionKey": "clinicalSigns",
+			"sectionNumber": 2
+		},
+		{
+			"sectionKey": "diagnosis",
+			"sectionNumber": 3
+		},
+		{
+			"sectionKey": "management",
+			"sectionNumber": 4
+		},
+		{
+			"sectionKey": "prevention",
+			"sectionNumber": 5
+		},
+		{
+			"sectionKey": "references",
+			"sectionNumber": 6
+		}
+	],
+	"contentPath": "./content"
+}

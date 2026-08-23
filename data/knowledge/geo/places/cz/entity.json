@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "cz",
+	"placeType": "country",
+	"countryCodes": [
+		"CZ"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 49.8,
+		"longitude": 15.5
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Tchéquia",
+			"pt-PT": "Chéquia",
+			"gn-PY": "Czechia",
+			"en-US": "Czechia",
+			"es-ES": "Chequia",
+			"fr-FR": "Tchéquie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

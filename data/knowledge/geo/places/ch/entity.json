@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "ch",
+	"placeType": "country",
+	"countryCodes": [
+		"CH"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 46.8,
+		"longitude": 8.2
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Suíça",
+			"pt-PT": "Suíça",
+			"gn-PY": "Switzerland",
+			"en-US": "Switzerland",
+			"es-ES": "Suiza",
+			"fr-FR": "Suisse"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

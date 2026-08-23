@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "silky-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"au"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			3.5,
+			5
+		],
+		"female": [
+			3,
+			4.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			23,
+			26
+		],
+		"female": [
+			21,
+			25
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Silky Terrier",
+			"pt-PT": "Silky Terrier",
+			"gn-PY": "Silky Terrier",
+			"en-US": "Silky Terrier",
+			"es-ES": "Silky Terrier",
+			"fr-FR": "Silky Terrier"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

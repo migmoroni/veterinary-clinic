@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "danish-swedish-farmdog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"dk"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			7,
+			12
+		],
+		"female": [
+			6,
+			10
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			34,
+			37
+		],
+		"female": [
+			32,
+			35
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Farmdog Dinamarquês-Sueco",
+			"pt-PT": "Farmdog Dinamarquês-Sueco",
+			"gn-PY": "Perro de granja danés-sueco",
+			"en-US": "Danish-Swedish Farmdog",
+			"es-ES": "Perro de granja danés-sueco",
+			"fr-FR": "Chien de ferme dano-suédois"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

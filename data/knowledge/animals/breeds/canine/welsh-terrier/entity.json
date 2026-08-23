@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "welsh-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"wales"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			9,
+			10
+		],
+		"female": [
+			8,
+			9
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			38,
+			39
+		],
+		"female": [
+			36,
+			38
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Welsh Terrier",
+			"pt-PT": "Welsh Terrier",
+			"gn-PY": "Welsh Terrier",
+			"en-US": "Welsh Terrier",
+			"es-ES": "Welsh Terrier",
+			"fr-FR": "Welsh Terrier"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

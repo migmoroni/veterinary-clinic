@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "lhasa-apso",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"tibet"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			6,
+			8
+		],
+		"female": [
+			5,
+			7
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			28
+		],
+		"female": [
+			23,
+			27
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Lhasa Apso",
+			"pt-PT": "Lhasa Apso",
+			"gn-PY": "Lhasa Apso",
+			"en-US": "Lhasa Apso",
+			"es-ES": "Lhasa Apso",
+			"fr-FR": "Lhassa Apso"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

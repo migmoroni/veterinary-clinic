@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "english-shepherd",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			20,
+			27
+		],
+		"female": [
+			18,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			48,
+			58
+		],
+		"female": [
+			46,
+			56
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Pastor Inglês",
+			"pt-PT": "Pastor Inglês",
+			"gn-PY": "Pastor inglés",
+			"en-US": "English Shepherd",
+			"es-ES": "Pastor inglés",
+			"fr-FR": "Berger anglais"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

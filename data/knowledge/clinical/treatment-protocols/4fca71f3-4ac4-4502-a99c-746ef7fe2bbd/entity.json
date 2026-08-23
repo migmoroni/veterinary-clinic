@@ -1,0 +1,61 @@
+{
+	"schemaVersion": 1,
+	"entityType": "treatment_protocol",
+	"id": "4fca71f3-4ac4-4502-a99c-746ef7fe2bbd",
+	"kind": "vaccine",
+	"species": [
+		"canine"
+	],
+	"productIds": [
+		"a25157b1-925c-4f61-aa2f-c3c3db3213de",
+		"e63d3560-a77e-41ed-9f40-632ebcecc7f4",
+		"7e01becd-732d-43b2-bf2d-e3334fb252da",
+		"38ed9a17-eea6-43f0-a26c-9bdd34f3446e",
+		"19e28b02-007a-4c09-82a3-4a33f1c54d1d",
+		"38402bf9-fd60-438e-a726-b49375e5abbf",
+		"3313a2c6-a578-4c32-bc65-932fcc87777a",
+		"a70da13c-524b-4a06-b4a4-630b9fd34edc"
+	],
+	"doses": [
+		{
+			"id": "dose-1",
+			"validityValue": 21,
+			"validityUnit": "days",
+			"localizedContent": {
+				"label": {
+					"pt-BR": "1ª",
+					"pt-PT": "1ª",
+					"gn-PY": "1ª",
+					"en-US": "1ª",
+					"es-ES": "1ª",
+					"fr-FR": "1ª"
+				}
+			}
+		},
+		{
+			"id": "dose-2",
+			"validityValue": 1,
+			"validityUnit": "years",
+			"localizedContent": {
+				"label": {
+					"pt-BR": "2ª",
+					"pt-PT": "2ª",
+					"gn-PY": "2ª",
+					"en-US": "2ª",
+					"es-ES": "2ª",
+					"fr-FR": "2ª"
+				}
+			}
+		}
+	],
+	"localizedContent": {
+		"name": {
+			"pt-BR": "2 doses",
+			"pt-PT": "2 doses",
+			"gn-PY": "2 doses",
+			"en-US": "2 doses",
+			"es-ES": "2 doses",
+			"fr-FR": "2 doses"
+		}
+	}
+}

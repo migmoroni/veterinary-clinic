@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "kai-ken",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"jp"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			16,
+			25
+		],
+		"female": [
+			14,
+			20
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			56
+		],
+		"female": [
+			43,
+			51
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Kai Ken",
+			"pt-PT": "Kai Ken",
+			"gn-PY": "Kai Ken",
+			"en-US": "Kai Ken",
+			"es-ES": "Kai Ken",
+			"fr-FR": "Kai Ken"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

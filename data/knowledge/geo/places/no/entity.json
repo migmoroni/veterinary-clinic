@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "no",
+	"placeType": "country",
+	"countryCodes": [
+		"NO"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 60.5,
+		"longitude": 8.5
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Noruega",
+			"pt-PT": "Noruega",
+			"gn-PY": "Norway",
+			"en-US": "Norway",
+			"es-ES": "Noruega",
+			"fr-FR": "Norvège"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

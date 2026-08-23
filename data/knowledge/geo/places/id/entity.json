@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "id",
+	"placeType": "country",
+	"countryCodes": [
+		"ID"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": -2.5,
+		"longitude": 118
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Indonésia",
+			"pt-PT": "Indonésia",
+			"gn-PY": "Indonesia",
+			"en-US": "Indonesia",
+			"es-ES": "Indonesia",
+			"fr-FR": "Indonésie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

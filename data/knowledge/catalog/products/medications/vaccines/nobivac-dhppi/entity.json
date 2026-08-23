@@ -1,0 +1,65 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "38ed9a17-eea6-43f0-a26c-9bdd34f3446e",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"ZAF"
+	],
+	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Nobivac DHPPi",
+			"pt-PT": "Nobivac DHPPi",
+			"gn-PY": "Nobivac DHPPi",
+			"en-US": "Nobivac DHPPi",
+			"es-ES": "Nobivac DHPPi",
+			"fr-FR": "Nobivac DHPPi"
+		},
+		"aliases": {
+			"pt-BR": [
+				"DHPPi"
+			],
+			"pt-PT": [
+				"DHPPi"
+			],
+			"gn-PY": [
+				"DHPPi"
+			],
+			"en-US": [
+				"DHPPi"
+			],
+			"es-ES": [
+				"DHPPi"
+			],
+			"fr-FR": [
+				"DHPPi"
+			]
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"disease.canineDistemper",
+		"disease.infectiousCanineHepatitis",
+		"disease.canineParainfluenza",
+		"disease.canineParvovirosis",
+		"pathogen.canineParvovirus"
+	],
+	"vaccineProfileTermKeys": [
+		"canine.multivalent"
+	]
+}

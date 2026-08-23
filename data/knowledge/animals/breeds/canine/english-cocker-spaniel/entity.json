@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "english-cocker-spaniel",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"england"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			13,
+			16
+		],
+		"female": [
+			12,
+			15
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			39,
+			43
+		],
+		"female": [
+			38,
+			41
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cocker Spaniel Inglês",
+			"pt-PT": "Cocker Spaniel inglês",
+			"gn-PY": "Cocker Spaniel inglés",
+			"en-US": "English Cocker Spaniel",
+			"es-ES": "Cocker Spaniel inglés",
+			"fr-FR": "Cocker Spaniel anglais"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

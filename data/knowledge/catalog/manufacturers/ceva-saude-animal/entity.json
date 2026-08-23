@@ -1,0 +1,52 @@
+{
+	"schemaVersion": 1,
+	"entityType": "manufacturer",
+	"id": "131b3da4-334e-42ee-a185-5e57df388a49",
+	"typeTermKey": "veterinaryIndustrial.veterinaryIndustrialLaboratory",
+	"classificationTermKeys": [
+		"regulatoryStatus.veterinaryIndustrial",
+		"commercialFlow.distributorNetwork",
+		"qualityStandard.gmpCertified"
+	],
+	"regions": [
+		"BRA"
+	],
+	"website": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Ceva Saúde Animal",
+			"pt-PT": "Ceva Saúde Animal",
+			"gn-PY": "Ceva Saúde Animal",
+			"en-US": "Ceva Saúde Animal",
+			"es-ES": "Ceva Saúde Animal",
+			"fr-FR": "Ceva Saúde Animal"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [
+		{
+			"sectionKey": "about",
+			"sectionNumber": 1
+		},
+		{
+			"sectionKey": "portfolio",
+			"sectionNumber": 2
+		},
+		{
+			"sectionKey": "support",
+			"sectionNumber": 3
+		},
+		{
+			"sectionKey": "references",
+			"sectionNumber": 4
+		}
+	],
+	"contentPath": "./content"
+}

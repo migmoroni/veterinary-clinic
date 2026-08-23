@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "bengal",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			5,
+			7.5
+		],
+		"female": [
+			4,
+			6
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			26,
+			32
+		],
+		"female": [
+			24,
+			30
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Bengal",
+			"pt-PT": "Bengal",
+			"gn-PY": "Bengalí",
+			"en-US": "Bengal",
+			"es-ES": "Bengalí",
+			"fr-FR": "Bengal"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

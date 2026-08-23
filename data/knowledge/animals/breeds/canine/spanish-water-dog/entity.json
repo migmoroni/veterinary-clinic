@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "spanish-water-dog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"es"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			18,
+			22
+		],
+		"female": [
+			14,
+			18
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			44,
+			50
+		],
+		"female": [
+			40,
+			46
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cão de Água Espanhol",
+			"pt-PT": "Cão de Água Espanhol",
+			"gn-PY": "Perro de agua español",
+			"en-US": "Spanish Water Dog",
+			"es-ES": "Perro de agua español",
+			"fr-FR": "Chien d'eau espagnol"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

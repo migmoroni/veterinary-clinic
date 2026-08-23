@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "aphrodite",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"cy"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			6.8,
+			8.2
+		],
+		"female": [
+			4.5,
+			6.4
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			28,
+			35
+		],
+		"female": [
+			25,
+			32
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Aphrodite",
+			"pt-PT": "Aphrodite",
+			"gn-PY": "Aphrodite",
+			"en-US": "Aphrodite",
+			"es-ES": "Aphrodite",
+			"fr-FR": "Aphrodite"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

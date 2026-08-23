@@ -1,0 +1,60 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "3530dac4-8212-4383-81c5-138f4bda81b7",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Nobivac KC",
+			"pt-PT": "Nobivac KC",
+			"gn-PY": "Nobivac KC",
+			"en-US": "Nobivac KC",
+			"es-ES": "Nobivac KC",
+			"fr-FR": "Nobivac KC"
+		},
+		"aliases": {
+			"pt-BR": [
+				"KC"
+			],
+			"pt-PT": [
+				"KC"
+			],
+			"gn-PY": [
+				"KC"
+			],
+			"en-US": [
+				"KC"
+			],
+			"es-ES": [
+				"KC"
+			],
+			"fr-FR": [
+				"KC"
+			]
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"disease.canineInfectiousTracheobronchitis",
+		"pathogen.bordetellaBronchiseptica",
+		"disease.canineParainfluenza"
+	]
+}

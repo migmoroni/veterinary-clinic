@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "chippiparai",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"in"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			20,
+			28
+		],
+		"female": [
+			16,
+			24
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			60,
+			66
+		],
+		"female": [
+			55,
+			62
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Chippiparai",
+			"pt-PT": "Chippiparai",
+			"gn-PY": "Chippiparai",
+			"en-US": "Chippiparai",
+			"es-ES": "Chippiparai",
+			"fr-FR": "Chippiparai"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

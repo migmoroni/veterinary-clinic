@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "us",
+	"placeType": "country",
+	"countryCodes": [
+		"US"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 39.8,
+		"longitude": -98.6
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Estados Unidos",
+			"pt-PT": "Estados Unidos",
+			"gn-PY": "United States",
+			"en-US": "United States",
+			"es-ES": "Estados Unidos",
+			"fr-FR": "États-Unis"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

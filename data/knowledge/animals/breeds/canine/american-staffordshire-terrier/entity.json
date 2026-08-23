@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "american-staffordshire-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			25,
+			32
+		],
+		"female": [
+			18,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			48
+		],
+		"female": [
+			43,
+			46
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "American Staffordshire Terrier",
+			"pt-PT": "American Staffordshire Terrier",
+			"gn-PY": "American Staffordshire Terrier",
+			"en-US": "American Staffordshire Terrier",
+			"es-ES": "American Staffordshire Terrier",
+			"fr-FR": "American Staffordshire Terrier"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

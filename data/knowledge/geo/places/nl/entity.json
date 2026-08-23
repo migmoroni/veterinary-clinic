@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "nl",
+	"placeType": "country",
+	"countryCodes": [
+		"NL"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 52.1,
+		"longitude": 5.3
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Países Baixos",
+			"pt-PT": "Países Baixos",
+			"gn-PY": "Netherlands",
+			"en-US": "Netherlands",
+			"es-ES": "Países Bajos",
+			"fr-FR": "Pays-Bas"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

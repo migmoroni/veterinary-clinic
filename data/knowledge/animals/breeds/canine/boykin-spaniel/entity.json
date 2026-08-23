@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "boykin-spaniel",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			14,
+			18
+		],
+		"female": [
+			11,
+			16
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			39,
+			46
+		],
+		"female": [
+			36,
+			42
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Boykin Spaniel",
+			"pt-PT": "Boykin Spaniel",
+			"gn-PY": "Boykin Spaniel",
+			"en-US": "Boykin Spaniel",
+			"es-ES": "Boykin Spaniel",
+			"fr-FR": "Boykin Spaniel"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

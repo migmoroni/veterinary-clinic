@@ -1,0 +1,50 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "10ebef6d-019c-49f2-b045-5ca347e89741",
+	"typeTermKey": "medication.antiparasitic.endoparasiticide",
+	"classificationTermKeys": [
+		"origin.allopathic",
+		"therapeuticAction.control"
+	],
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"activeIngredientIds": [
+		"e552d865-eb96-40f6-835c-5ced63404da3"
+	],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Panacur 10%",
+			"pt-PT": "Panacur 10%",
+			"gn-PY": "Panacur 10%",
+			"en-US": "Panacur 10%",
+			"es-ES": "Panacur 10%",
+			"fr-FR": "Panacur 10%"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"parasite.endoparasite",
+		"parasite.giardia",
+		"parasite.nematode"
+	]
+}

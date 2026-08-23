@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "gl",
+	"placeType": "country",
+	"countryCodes": [
+		"GL"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 72,
+		"longitude": -40
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Groenlândia",
+			"pt-PT": "Gronelândia",
+			"gn-PY": "Greenland",
+			"en-US": "Greenland",
+			"es-ES": "Groenlandia",
+			"fr-FR": "Groenland"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

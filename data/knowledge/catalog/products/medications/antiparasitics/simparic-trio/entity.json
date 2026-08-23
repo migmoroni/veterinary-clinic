@@ -1,0 +1,47 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "5ac62e14-f4b9-465a-8451-2b98bca77269",
+	"typeTermKey": "medication.antiparasitic.endectocide",
+	"classificationTermKeys": [
+		"origin.allopathic",
+		"therapeuticAction.control"
+	],
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
+	"activeIngredientIds": [
+		"7cce2524-d9ac-4d6e-97e2-18f7e488ee16",
+		"9aba4d14-23bb-4f25-bae1-6f0a6f3e37c5",
+		"1abdddb0-c611-4ef5-aabd-1c5026a286c6"
+	],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Simparic Trio",
+			"pt-PT": "Simparic Trio",
+			"gn-PY": "Simparic Trio",
+			"en-US": "Simparic Trio",
+			"es-ES": "Simparic Trio",
+			"fr-FR": "Simparic Trio"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

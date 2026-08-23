@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "jack-russell-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"england"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			6,
+			8
+		],
+		"female": [
+			5,
+			7
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			30
+		],
+		"female": [
+			23,
+			29
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Jack Russell Terrier",
+			"pt-PT": "Jack Russell Terrier",
+			"gn-PY": "Jack Russell Terrier",
+			"en-US": "Jack Russell Terrier",
+			"es-ES": "Jack Russell Terrier",
+			"fr-FR": "Jack Russell Terrier"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

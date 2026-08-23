@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "komondor",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"hu"
+	],
+	"sizeTermKey": "giant",
+	"averageWeightKg": {
+		"male": [
+			45,
+			61
+		],
+		"female": [
+			36,
+			50
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			71,
+			76
+		],
+		"female": [
+			64,
+			69
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Komondor",
+			"pt-PT": "Komondor",
+			"gn-PY": "Komondor",
+			"en-US": "Komondor",
+			"es-ES": "Komondor",
+			"fr-FR": "Komondor"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

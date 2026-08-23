@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"entityType": "active_ingredient",
+	"id": "0a86ea8d-df19-4b1f-884e-2439685db3a8",
+	"typeTermKey": "antiInfective.antiparasitic.neonicotinoids",
+	"classificationTermKeys": [],
+	"regions": [],
+	"nomenclature": {
+		"scientificName": null,
+		"casNumber": null,
+		"denominationStandards": []
+	},
+	"atcVetCode": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Nitenpiram",
+			"pt-PT": "Nitenpiram",
+			"gn-PY": "Nitenpiram",
+			"en-US": "Nitenpyram",
+			"es-ES": "Nitenpiram",
+			"fr-FR": "Nitenpyram"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

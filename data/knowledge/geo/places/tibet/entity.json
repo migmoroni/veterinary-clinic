@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "tibet",
+	"placeType": "region",
+	"countryCodes": [],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 31,
+		"longitude": 88
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Tibete",
+			"pt-PT": "Tibete",
+			"gn-PY": "Tíbet",
+			"en-US": "Tibet",
+			"es-ES": "Tíbet",
+			"fr-FR": "Tibet"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

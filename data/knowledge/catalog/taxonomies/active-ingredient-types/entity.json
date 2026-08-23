@@ -1,0 +1,3159 @@
+{
+	"schemaVersion": 1,
+	"entityType": "taxonomy",
+	"id": "active-ingredient-types",
+	"domain": "active_ingredient",
+	"purpose": "type",
+	"terms": [
+		{
+			"key": "antiInfective",
+			"parentKey": null,
+			"order": 0,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Antiinfeccioso",
+					"pt-PT": "Antiinfeccioso",
+					"gn-PY": "Antiinfeccioso",
+					"en-US": "Antiinfective",
+					"es-ES": "Antiinfeccioso",
+					"fr-FR": "Anti-infectieux"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antibacterial",
+			"parentKey": "antiInfective",
+			"order": 1,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Antibacteriano",
+					"pt-PT": "Antibacteriano",
+					"gn-PY": "Antibacteriano",
+					"en-US": "Antibacterial",
+					"es-ES": "Antibacteriano",
+					"fr-FR": "Antibactérien"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antibacterial.aminoglycosides",
+			"parentKey": "antiInfective.antibacterial",
+			"order": 2,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Aminoglycosides",
+					"pt-PT": "Aminoglycosides",
+					"gn-PY": "Aminoglycosides",
+					"en-US": "Aminoglycosides",
+					"es-ES": "Aminoglycosides",
+					"fr-FR": "Aminoglycosides"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antibacterial.amphenicols",
+			"parentKey": "antiInfective.antibacterial",
+			"order": 3,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Amphenicols",
+					"pt-PT": "Amphenicols",
+					"gn-PY": "Amphenicols",
+					"en-US": "Amphenicols",
+					"es-ES": "Amphenicols",
+					"fr-FR": "Amphenicols"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antibacterial.betaLactams",
+			"parentKey": "antiInfective.antibacterial",
+			"order": 4,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Beta Lactams",
+					"pt-PT": "Beta Lactams",
+					"gn-PY": "Beta Lactams",
+					"en-US": "Beta Lactams",
+					"es-ES": "Beta Lactams",
+					"fr-FR": "Beta Lactams"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antibacterial.diaminopyrimidines",
+			"parentKey": "antiInfective.antibacterial",
+			"order": 5,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Diaminopyrimidines",
+					"pt-PT": "Diaminopyrimidines",
+					"gn-PY": "Diaminopyrimidines",
+					"en-US": "Diaminopyrimidines",
+					"es-ES": "Diaminopyrimidines",
+					"fr-FR": "Diaminopyrimidines"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antibacterial.fluoroquinolones",
+			"parentKey": "antiInfective.antibacterial",
+			"order": 6,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Fluoroquinolones",
+					"pt-PT": "Fluoroquinolones",
+					"gn-PY": "Fluoroquinolones",
+					"en-US": "Fluoroquinolones",
+					"es-ES": "Fluoroquinolones",
+					"fr-FR": "Fluoroquinolones"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antibacterial.lincosamides",
+			"parentKey": "antiInfective.antibacterial",
+			"order": 7,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Lincosamides",
+					"pt-PT": "Lincosamides",
+					"gn-PY": "Lincosamides",
+					"en-US": "Lincosamides",
+					"es-ES": "Lincosamides",
+					"fr-FR": "Lincosamides"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antibacterial.macrolides",
+			"parentKey": "antiInfective.antibacterial",
+			"order": 8,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Macrolídeos",
+					"pt-PT": "Macrólidos",
+					"gn-PY": "Macrolídeos",
+					"en-US": "Macrolides",
+					"es-ES": "Macrólidos",
+					"fr-FR": "Macrolides"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antibacterial.nitroimidazoles",
+			"parentKey": "antiInfective.antibacterial",
+			"order": 9,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Nitroimidazoles",
+					"pt-PT": "Nitroimidazoles",
+					"gn-PY": "Nitroimidazoles",
+					"en-US": "Nitroimidazoles",
+					"es-ES": "Nitroimidazoles",
+					"fr-FR": "Nitroimidazoles"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antibacterial.polypeptides",
+			"parentKey": "antiInfective.antibacterial",
+			"order": 10,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Polypeptides",
+					"pt-PT": "Polypeptides",
+					"gn-PY": "Polypeptides",
+					"en-US": "Polypeptides",
+					"es-ES": "Polypeptides",
+					"fr-FR": "Polypeptides"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antibacterial.sulfonamides",
+			"parentKey": "antiInfective.antibacterial",
+			"order": 11,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Sulfonamides",
+					"pt-PT": "Sulfonamides",
+					"gn-PY": "Sulfonamides",
+					"en-US": "Sulfonamides",
+					"es-ES": "Sulfonamides",
+					"fr-FR": "Sulfonamides"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antibacterial.tetracyclines",
+			"parentKey": "antiInfective.antibacterial",
+			"order": 12,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Tetracyclines",
+					"pt-PT": "Tetracyclines",
+					"gn-PY": "Tetracyclines",
+					"en-US": "Tetracyclines",
+					"es-ES": "Tetracyclines",
+					"fr-FR": "Tetracyclines"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antifungal",
+			"parentKey": "antiInfective",
+			"order": 13,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Antifungal",
+					"pt-PT": "Antifungal",
+					"gn-PY": "Antifungal",
+					"en-US": "Antifungal",
+					"es-ES": "Antifungal",
+					"fr-FR": "Antifungal"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antifungal.allylamines",
+			"parentKey": "antiInfective.antifungal",
+			"order": 14,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Allylamines",
+					"pt-PT": "Allylamines",
+					"gn-PY": "Allylamines",
+					"en-US": "Allylamines",
+					"es-ES": "Allylamines",
+					"fr-FR": "Allylamines"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antifungal.azoles",
+			"parentKey": "antiInfective.antifungal",
+			"order": 15,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Azoles",
+					"pt-PT": "Azoles",
+					"gn-PY": "Azoles",
+					"en-US": "Azoles",
+					"es-ES": "Azoles",
+					"fr-FR": "Azoles"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antifungal.echinocandins",
+			"parentKey": "antiInfective.antifungal",
+			"order": 16,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Echinocandins",
+					"pt-PT": "Echinocandins",
+					"gn-PY": "Echinocandins",
+					"en-US": "Echinocandins",
+					"es-ES": "Echinocandins",
+					"fr-FR": "Echinocandins"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antifungal.griseofulvin",
+			"parentKey": "antiInfective.antifungal",
+			"order": 17,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Griseofulvin",
+					"pt-PT": "Griseofulvin",
+					"gn-PY": "Griseofulvin",
+					"en-US": "Griseofulvin",
+					"es-ES": "Griseofulvin",
+					"fr-FR": "Griseofulvin"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antifungal.polyenes",
+			"parentKey": "antiInfective.antifungal",
+			"order": 18,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Polyenes",
+					"pt-PT": "Polyenes",
+					"gn-PY": "Polyenes",
+					"en-US": "Polyenes",
+					"es-ES": "Polyenes",
+					"fr-FR": "Polyenes"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antiparasitic",
+			"parentKey": "antiInfective",
+			"order": 19,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Antiparasitário",
+					"pt-PT": "Antiparasitário",
+					"gn-PY": "Antiparasitário",
+					"en-US": "Antiparasitic",
+					"es-ES": "Antiparasitario",
+					"fr-FR": "Antiparasitaire"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antiparasitic.benzimidazoles",
+			"parentKey": "antiInfective.antiparasitic",
+			"order": 20,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Benzimidazoles",
+					"pt-PT": "Benzimidazoles",
+					"gn-PY": "Benzimidazoles",
+					"en-US": "Benzimidazoles",
+					"es-ES": "Benzimidazoles",
+					"fr-FR": "Benzimidazoles"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antiparasitic.cyclooctadepsipeptides",
+			"parentKey": "antiInfective.antiparasitic",
+			"order": 21,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Ciclooctadepsipeptídeos",
+					"pt-PT": "Ciclooctadepsipeptídeos",
+					"gn-PY": "Ciclooctadepsipeptídeos",
+					"en-US": "Cyclooctadepsipeptides",
+					"es-ES": "Ciclooctadepsipéptidos",
+					"fr-FR": "Cyclooctadepsipeptides"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antiparasitic.formamidines",
+			"parentKey": "antiInfective.antiparasitic",
+			"order": 22,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Formamidines",
+					"pt-PT": "Formamidines",
+					"gn-PY": "Formamidines",
+					"en-US": "Formamidines",
+					"es-ES": "Formamidines",
+					"fr-FR": "Formamidines"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antiparasitic.imidazothiazoles",
+			"parentKey": "antiInfective.antiparasitic",
+			"order": 23,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Imidazothiazoles",
+					"pt-PT": "Imidazothiazoles",
+					"gn-PY": "Imidazothiazoles",
+					"en-US": "Imidazothiazoles",
+					"es-ES": "Imidazothiazoles",
+					"fr-FR": "Imidazothiazoles"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antiparasitic.isoquinolones",
+			"parentKey": "antiInfective.antiparasitic",
+			"order": 24,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Isoquinolones",
+					"pt-PT": "Isoquinolones",
+					"gn-PY": "Isoquinolones",
+					"en-US": "Isoquinolones",
+					"es-ES": "Isoquinolones",
+					"fr-FR": "Isoquinolones"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antiparasitic.isoxazolines",
+			"parentKey": "antiInfective.antiparasitic",
+			"order": 25,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Isoxazolines",
+					"pt-PT": "Isoxazolines",
+					"gn-PY": "Isoxazolines",
+					"en-US": "Isoxazolines",
+					"es-ES": "Isoxazolines",
+					"fr-FR": "Isoxazolines"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antiparasitic.macrocyclicLactones",
+			"parentKey": "antiInfective.antiparasitic",
+			"order": 26,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Lactonas macrocíclicas",
+					"pt-PT": "Lactonas macrocíclicas",
+					"gn-PY": "Lactonas macrocíclicas",
+					"en-US": "Macrocyclic lactones",
+					"es-ES": "Lactonas macrocíclicas",
+					"fr-FR": "Lactones macrocycliques"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antiparasitic.neonicotinoids",
+			"parentKey": "antiInfective.antiparasitic",
+			"order": 27,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Neonicotinoids",
+					"pt-PT": "Neonicotinoids",
+					"gn-PY": "Neonicotinoids",
+					"en-US": "Neonicotinoids",
+					"es-ES": "Neonicotinoids",
+					"fr-FR": "Neonicotinoids"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antiparasitic.phenylpyrazoles",
+			"parentKey": "antiInfective.antiparasitic",
+			"order": 28,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Phenylpyrazoles",
+					"pt-PT": "Phenylpyrazoles",
+					"gn-PY": "Phenylpyrazoles",
+					"en-US": "Phenylpyrazoles",
+					"es-ES": "Phenylpyrazoles",
+					"fr-FR": "Phenylpyrazoles"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antiparasitic.piroplasmides",
+			"parentKey": "antiInfective.antiparasitic",
+			"order": 29,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Piroplasmides",
+					"pt-PT": "Piroplasmides",
+					"gn-PY": "Piroplasmides",
+					"en-US": "Piroplasmides",
+					"es-ES": "Piroplasmides",
+					"fr-FR": "Piroplasmides"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antiparasitic.pyrethroids",
+			"parentKey": "antiInfective.antiparasitic",
+			"order": 30,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Pyrethroids",
+					"pt-PT": "Pyrethroids",
+					"gn-PY": "Pyrethroids",
+					"en-US": "Pyrethroids",
+					"es-ES": "Pyrethroids",
+					"fr-FR": "Pyrethroids"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antiparasitic.tetrahydropyrimidines",
+			"parentKey": "antiInfective.antiparasitic",
+			"order": 31,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Tetrahydropyrimidines",
+					"pt-PT": "Tetrahydropyrimidines",
+					"gn-PY": "Tetrahydropyrimidines",
+					"en-US": "Tetrahydropyrimidines",
+					"es-ES": "Tetrahydropyrimidines",
+					"fr-FR": "Tetrahydropyrimidines"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antiparasitic.triazines",
+			"parentKey": "antiInfective.antiparasitic",
+			"order": 32,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Triazines",
+					"pt-PT": "Triazines",
+					"gn-PY": "Triazines",
+					"en-US": "Triazines",
+					"es-ES": "Triazines",
+					"fr-FR": "Triazines"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antiviral",
+			"parentKey": "antiInfective",
+			"order": 33,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Antiviral",
+					"pt-PT": "Antiviral",
+					"gn-PY": "Antiviral",
+					"en-US": "Antiviral",
+					"es-ES": "Antiviral",
+					"fr-FR": "Antiviral"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antiviral.neuraminidaseInhibitors",
+			"parentKey": "antiInfective.antiviral",
+			"order": 34,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Neuraminidase Inhibitors",
+					"pt-PT": "Neuraminidase Inhibitors",
+					"gn-PY": "Neuraminidase Inhibitors",
+					"en-US": "Neuraminidase Inhibitors",
+					"es-ES": "Neuraminidase Inhibitors",
+					"fr-FR": "Neuraminidase Inhibitors"
+				}
+			}
+		},
+		{
+			"key": "antiInfective.antiviral.nucleosideAnalogs",
+			"parentKey": "antiInfective.antiviral",
+			"order": 35,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Nucleoside Analogs",
+					"pt-PT": "Nucleoside Analogs",
+					"gn-PY": "Nucleoside Analogs",
+					"en-US": "Nucleoside Analogs",
+					"es-ES": "Nucleoside Analogs",
+					"fr-FR": "Nucleoside Analogs"
+				}
+			}
+		},
+		{
+			"key": "biological",
+			"parentKey": null,
+			"order": 36,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Biológico",
+					"pt-PT": "Biológico",
+					"gn-PY": "Biológico",
+					"en-US": "Biological",
+					"es-ES": "Biológico",
+					"fr-FR": "Biologique"
+				}
+			}
+		},
+		{
+			"key": "biological.monoclonalAntibody",
+			"parentKey": "biological",
+			"order": 37,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Monoclonal Antibody",
+					"pt-PT": "Monoclonal Antibody",
+					"gn-PY": "Monoclonal Antibody",
+					"en-US": "Monoclonal Antibody",
+					"es-ES": "Monoclonal Antibody",
+					"fr-FR": "Monoclonal Antibody"
+				}
+			}
+		},
+		{
+			"key": "biological.monoclonalAntibody.interleukinInhibitorMab",
+			"parentKey": "biological.monoclonalAntibody",
+			"order": 38,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Interleukin Inhibitor Mab",
+					"pt-PT": "Interleukin Inhibitor Mab",
+					"gn-PY": "Interleukin Inhibitor Mab",
+					"en-US": "Interleukin Inhibitor Mab",
+					"es-ES": "Interleukin Inhibitor Mab",
+					"fr-FR": "Interleukin Inhibitor Mab"
+				}
+			}
+		},
+		{
+			"key": "biological.monoclonalAntibody.ngfInhibitorMab",
+			"parentKey": "biological.monoclonalAntibody",
+			"order": 39,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Ngf Inhibitor Mab",
+					"pt-PT": "Ngf Inhibitor Mab",
+					"gn-PY": "Ngf Inhibitor Mab",
+					"en-US": "Ngf Inhibitor Mab",
+					"es-ES": "Ngf Inhibitor Mab",
+					"fr-FR": "Ngf Inhibitor Mab"
+				}
+			}
+		},
+		{
+			"key": "biological.monoclonalAntibody.viralNeutralizingMab",
+			"parentKey": "biological.monoclonalAntibody",
+			"order": 40,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Viral Neutralizing Mab",
+					"pt-PT": "Viral Neutralizing Mab",
+					"gn-PY": "Viral Neutralizing Mab",
+					"en-US": "Viral Neutralizing Mab",
+					"es-ES": "Viral Neutralizing Mab",
+					"fr-FR": "Viral Neutralizing Mab"
+				}
+			}
+		},
+		{
+			"key": "biological.therapeuticEnzyme",
+			"parentKey": "biological",
+			"order": 41,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Therapeutic Enzyme",
+					"pt-PT": "Therapeutic Enzyme",
+					"gn-PY": "Therapeutic Enzyme",
+					"en-US": "Therapeutic Enzyme",
+					"es-ES": "Therapeutic Enzyme",
+					"fr-FR": "Therapeutic Enzyme"
+				}
+			}
+		},
+		{
+			"key": "biological.therapeuticEnzyme.aminoAcidDepletingEnzyme",
+			"parentKey": "biological.therapeuticEnzyme",
+			"order": 42,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Amino Acid Depleting Enzyme",
+					"pt-PT": "Amino Acid Depleting Enzyme",
+					"gn-PY": "Amino Acid Depleting Enzyme",
+					"en-US": "Amino Acid Depleting Enzyme",
+					"es-ES": "Amino Acid Depleting Enzyme",
+					"fr-FR": "Amino Acid Depleting Enzyme"
+				}
+			}
+		},
+		{
+			"key": "biological.therapeuticEnzyme.thrombolyticEnzyme",
+			"parentKey": "biological.therapeuticEnzyme",
+			"order": 43,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Thrombolytic Enzyme",
+					"pt-PT": "Thrombolytic Enzyme",
+					"gn-PY": "Thrombolytic Enzyme",
+					"en-US": "Thrombolytic Enzyme",
+					"es-ES": "Thrombolytic Enzyme",
+					"fr-FR": "Thrombolytic Enzyme"
+				}
+			}
+		},
+		{
+			"key": "cellularTherapy",
+			"parentKey": null,
+			"order": 44,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Terapia celular",
+					"pt-PT": "Terapia celular",
+					"gn-PY": "Terapia celular",
+					"en-US": "Cellular therapy",
+					"es-ES": "Terapia celular",
+					"fr-FR": "Thérapie cellulaire"
+				}
+			}
+		},
+		{
+			"key": "cellularTherapy.bloodAndPlateletFraction",
+			"parentKey": "cellularTherapy",
+			"order": 45,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Blood And Platelet Fraction",
+					"pt-PT": "Blood And Platelet Fraction",
+					"gn-PY": "Blood And Platelet Fraction",
+					"en-US": "Blood And Platelet Fraction",
+					"es-ES": "Blood And Platelet Fraction",
+					"fr-FR": "Blood And Platelet Fraction"
+				}
+			}
+		},
+		{
+			"key": "cellularTherapy.bloodAndPlateletFraction.cryoprecipitate",
+			"parentKey": "cellularTherapy.bloodAndPlateletFraction",
+			"order": 46,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Cryoprecipitate",
+					"pt-PT": "Cryoprecipitate",
+					"gn-PY": "Cryoprecipitate",
+					"en-US": "Cryoprecipitate",
+					"es-ES": "Cryoprecipitate",
+					"fr-FR": "Cryoprecipitate"
+				}
+			}
+		},
+		{
+			"key": "cellularTherapy.bloodAndPlateletFraction.freshFrozenPlasma",
+			"parentKey": "cellularTherapy.bloodAndPlateletFraction",
+			"order": 47,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Fresh Frozen Plasma",
+					"pt-PT": "Fresh Frozen Plasma",
+					"gn-PY": "Fresh Frozen Plasma",
+					"en-US": "Fresh Frozen Plasma",
+					"es-ES": "Fresh Frozen Plasma",
+					"fr-FR": "Fresh Frozen Plasma"
+				}
+			}
+		},
+		{
+			"key": "cellularTherapy.bloodAndPlateletFraction.packedRedBloodCell",
+			"parentKey": "cellularTherapy.bloodAndPlateletFraction",
+			"order": 48,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Packed Red Blood Cell",
+					"pt-PT": "Packed Red Blood Cell",
+					"gn-PY": "Packed Red Blood Cell",
+					"en-US": "Packed Red Blood Cell",
+					"es-ES": "Packed Red Blood Cell",
+					"fr-FR": "Packed Red Blood Cell"
+				}
+			}
+		},
+		{
+			"key": "cellularTherapy.bloodAndPlateletFraction.plateletRichPlasma",
+			"parentKey": "cellularTherapy.bloodAndPlateletFraction",
+			"order": 49,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Platelet Rich Plasma",
+					"pt-PT": "Platelet Rich Plasma",
+					"gn-PY": "Platelet Rich Plasma",
+					"en-US": "Platelet Rich Plasma",
+					"es-ES": "Platelet Rich Plasma",
+					"fr-FR": "Platelet Rich Plasma"
+				}
+			}
+		},
+		{
+			"key": "cellularTherapy.bloodAndPlateletFraction.wholeBlood",
+			"parentKey": "cellularTherapy.bloodAndPlateletFraction",
+			"order": 50,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Whole Blood",
+					"pt-PT": "Whole Blood",
+					"gn-PY": "Whole Blood",
+					"en-US": "Whole Blood",
+					"es-ES": "Whole Blood",
+					"fr-FR": "Whole Blood"
+				}
+			}
+		},
+		{
+			"key": "cellularTherapy.stemAndProgenitorCell",
+			"parentKey": "cellularTherapy",
+			"order": 51,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Stem And Progenitor Cell",
+					"pt-PT": "Stem And Progenitor Cell",
+					"gn-PY": "Stem And Progenitor Cell",
+					"en-US": "Stem And Progenitor Cell",
+					"es-ES": "Stem And Progenitor Cell",
+					"fr-FR": "Stem And Progenitor Cell"
+				}
+			}
+		},
+		{
+			"key": "cellularTherapy.stemAndProgenitorCell.dendriticCell",
+			"parentKey": "cellularTherapy.stemAndProgenitorCell",
+			"order": 52,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Dendritic Cell",
+					"pt-PT": "Dendritic Cell",
+					"gn-PY": "Dendritic Cell",
+					"en-US": "Dendritic Cell",
+					"es-ES": "Dendritic Cell",
+					"fr-FR": "Dendritic Cell"
+				}
+			}
+		},
+		{
+			"key": "cellularTherapy.stemAndProgenitorCell.hematopoieticStemCell",
+			"parentKey": "cellularTherapy.stemAndProgenitorCell",
+			"order": 53,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Hematopoietic Stem Cell",
+					"pt-PT": "Hematopoietic Stem Cell",
+					"gn-PY": "Hematopoietic Stem Cell",
+					"en-US": "Hematopoietic Stem Cell",
+					"es-ES": "Hematopoietic Stem Cell",
+					"fr-FR": "Hematopoietic Stem Cell"
+				}
+			}
+		},
+		{
+			"key": "cellularTherapy.stemAndProgenitorCell.mesenchymalStemCell",
+			"parentKey": "cellularTherapy.stemAndProgenitorCell",
+			"order": 54,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Mesenchymal Stem Cell",
+					"pt-PT": "Mesenchymal Stem Cell",
+					"gn-PY": "Mesenchymal Stem Cell",
+					"en-US": "Mesenchymal Stem Cell",
+					"es-ES": "Mesenchymal Stem Cell",
+					"fr-FR": "Mesenchymal Stem Cell"
+				}
+			}
+		},
+		{
+			"key": "chelatingAgent",
+			"parentKey": null,
+			"order": 55,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Agente quelante",
+					"pt-PT": "Agente quelante",
+					"gn-PY": "Agente quelante",
+					"en-US": "Chelating agent",
+					"es-ES": "Agente quelante",
+					"fr-FR": "Agent chélateur"
+				}
+			}
+		},
+		{
+			"key": "chelatingAgent.heavyMetalChelator",
+			"parentKey": "chelatingAgent",
+			"order": 56,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Heavy Metal Chelator",
+					"pt-PT": "Heavy Metal Chelator",
+					"gn-PY": "Heavy Metal Chelator",
+					"en-US": "Heavy Metal Chelator",
+					"es-ES": "Heavy Metal Chelator",
+					"fr-FR": "Heavy Metal Chelator"
+				}
+			}
+		},
+		{
+			"key": "chelatingAgent.heavyMetalChelator.edetateDerivative",
+			"parentKey": "chelatingAgent.heavyMetalChelator",
+			"order": 57,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Edetate Derivative",
+					"pt-PT": "Edetate Derivative",
+					"gn-PY": "Edetate Derivative",
+					"en-US": "Edetate Derivative",
+					"es-ES": "Edetate Derivative",
+					"fr-FR": "Edetate Derivative"
+				}
+			}
+		},
+		{
+			"key": "chelatingAgent.heavyMetalChelator.ironChelator",
+			"parentKey": "chelatingAgent.heavyMetalChelator",
+			"order": 58,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Iron Chelator",
+					"pt-PT": "Iron Chelator",
+					"gn-PY": "Iron Chelator",
+					"en-US": "Iron Chelator",
+					"es-ES": "Iron Chelator",
+					"fr-FR": "Iron Chelator"
+				}
+			}
+		},
+		{
+			"key": "chelatingAgent.heavyMetalChelator.thiolDerivative",
+			"parentKey": "chelatingAgent.heavyMetalChelator",
+			"order": 59,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Thiol Derivative",
+					"pt-PT": "Thiol Derivative",
+					"gn-PY": "Thiol Derivative",
+					"en-US": "Thiol Derivative",
+					"es-ES": "Thiol Derivative",
+					"fr-FR": "Thiol Derivative"
+				}
+			}
+		},
+		{
+			"key": "chelatingAgent.ionBinderAndExchangeResin",
+			"parentKey": "chelatingAgent",
+			"order": 60,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Ion Binder And Exchange Resin",
+					"pt-PT": "Ion Binder And Exchange Resin",
+					"gn-PY": "Ion Binder And Exchange Resin",
+					"en-US": "Ion Binder And Exchange Resin",
+					"es-ES": "Ion Binder And Exchange Resin",
+					"fr-FR": "Ion Binder And Exchange Resin"
+				}
+			}
+		},
+		{
+			"key": "chelatingAgent.ionBinderAndExchangeResin.cationExchangeResin",
+			"parentKey": "chelatingAgent.ionBinderAndExchangeResin",
+			"order": 61,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Cation Exchange Resin",
+					"pt-PT": "Cation Exchange Resin",
+					"gn-PY": "Cation Exchange Resin",
+					"en-US": "Cation Exchange Resin",
+					"es-ES": "Cation Exchange Resin",
+					"fr-FR": "Cation Exchange Resin"
+				}
+			}
+		},
+		{
+			"key": "chelatingAgent.ionBinderAndExchangeResin.phosphateBinder",
+			"parentKey": "chelatingAgent.ionBinderAndExchangeResin",
+			"order": 62,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Phosphate Binder",
+					"pt-PT": "Phosphate Binder",
+					"gn-PY": "Phosphate Binder",
+					"en-US": "Phosphate Binder",
+					"es-ES": "Phosphate Binder",
+					"fr-FR": "Phosphate Binder"
+				}
+			}
+		},
+		{
+			"key": "cytotoxic",
+			"parentKey": null,
+			"order": 63,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Citotóxico",
+					"pt-PT": "Citotóxico",
+					"gn-PY": "Citotóxico",
+					"en-US": "Cytotoxic",
+					"es-ES": "Citotóxico",
+					"fr-FR": "Cytotoxique"
+				}
+			}
+		},
+		{
+			"key": "cytotoxic.cytoskeletalDisruptor",
+			"parentKey": "cytotoxic",
+			"order": 64,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Cytoskeletal Disruptor",
+					"pt-PT": "Cytoskeletal Disruptor",
+					"gn-PY": "Cytoskeletal Disruptor",
+					"en-US": "Cytoskeletal Disruptor",
+					"es-ES": "Cytoskeletal Disruptor",
+					"fr-FR": "Cytoskeletal Disruptor"
+				}
+			}
+		},
+		{
+			"key": "cytotoxic.cytoskeletalDisruptor.taxane",
+			"parentKey": "cytotoxic.cytoskeletalDisruptor",
+			"order": 65,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Taxane",
+					"pt-PT": "Taxane",
+					"gn-PY": "Taxane",
+					"en-US": "Taxane",
+					"es-ES": "Taxane",
+					"fr-FR": "Taxane"
+				}
+			}
+		},
+		{
+			"key": "cytotoxic.cytoskeletalDisruptor.vincaAlkaloid",
+			"parentKey": "cytotoxic.cytoskeletalDisruptor",
+			"order": 66,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Vinca Alkaloid",
+					"pt-PT": "Vinca Alkaloid",
+					"gn-PY": "Vinca Alkaloid",
+					"en-US": "Vinca Alkaloid",
+					"es-ES": "Vinca Alkaloid",
+					"fr-FR": "Vinca Alkaloid"
+				}
+			}
+		},
+		{
+			"key": "cytotoxic.nucleicAcidDamager",
+			"parentKey": "cytotoxic",
+			"order": 67,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Nucleic Acid Damager",
+					"pt-PT": "Nucleic Acid Damager",
+					"gn-PY": "Nucleic Acid Damager",
+					"en-US": "Nucleic Acid Damager",
+					"es-ES": "Nucleic Acid Damager",
+					"fr-FR": "Nucleic Acid Damager"
+				}
+			}
+		},
+		{
+			"key": "cytotoxic.nucleicAcidDamager.alkylatingAgent",
+			"parentKey": "cytotoxic.nucleicAcidDamager",
+			"order": 68,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Alkylating Agent",
+					"pt-PT": "Alkylating Agent",
+					"gn-PY": "Alkylating Agent",
+					"en-US": "Alkylating Agent",
+					"es-ES": "Alkylating Agent",
+					"fr-FR": "Alkylating Agent"
+				}
+			}
+		},
+		{
+			"key": "cytotoxic.nucleicAcidDamager.anthracycline",
+			"parentKey": "cytotoxic.nucleicAcidDamager",
+			"order": 69,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Anthracycline",
+					"pt-PT": "Anthracycline",
+					"gn-PY": "Anthracycline",
+					"en-US": "Anthracycline",
+					"es-ES": "Anthracycline",
+					"fr-FR": "Anthracycline"
+				}
+			}
+		},
+		{
+			"key": "cytotoxic.nucleicAcidDamager.antimetabolite",
+			"parentKey": "cytotoxic.nucleicAcidDamager",
+			"order": 70,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Antimetabolite",
+					"pt-PT": "Antimetabolite",
+					"gn-PY": "Antimetabolite",
+					"en-US": "Antimetabolite",
+					"es-ES": "Antimetabolite",
+					"fr-FR": "Antimetabolite"
+				}
+			}
+		},
+		{
+			"key": "cytotoxic.nucleicAcidDamager.platinumCompound",
+			"parentKey": "cytotoxic.nucleicAcidDamager",
+			"order": 71,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Platinum Compound",
+					"pt-PT": "Platinum Compound",
+					"gn-PY": "Platinum Compound",
+					"en-US": "Platinum Compound",
+					"es-ES": "Platinum Compound",
+					"fr-FR": "Platinum Compound"
+				}
+			}
+		},
+		{
+			"key": "diagnosticAgent",
+			"parentKey": null,
+			"order": 72,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Agente diagnóstico",
+					"pt-PT": "Agente diagnóstico",
+					"gn-PY": "Agente diagnóstico",
+					"en-US": "Diagnostic agent",
+					"es-ES": "Agente diagnóstico",
+					"fr-FR": "Agent diagnostique"
+				}
+			}
+		},
+		{
+			"key": "diagnosticAgent.diagnosticStain",
+			"parentKey": "diagnosticAgent",
+			"order": 73,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Diagnostic Stain",
+					"pt-PT": "Diagnostic Stain",
+					"gn-PY": "Diagnostic Stain",
+					"en-US": "Diagnostic Stain",
+					"es-ES": "Diagnostic Stain",
+					"fr-FR": "Diagnostic Stain"
+				}
+			}
+		},
+		{
+			"key": "diagnosticAgent.diagnosticStain.fluoresceinDerivative",
+			"parentKey": "diagnosticAgent.diagnosticStain",
+			"order": 74,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Fluorescein Derivative",
+					"pt-PT": "Fluorescein Derivative",
+					"gn-PY": "Fluorescein Derivative",
+					"en-US": "Fluorescein Derivative",
+					"es-ES": "Fluorescein Derivative",
+					"fr-FR": "Fluorescein Derivative"
+				}
+			}
+		},
+		{
+			"key": "diagnosticAgent.diagnosticStain.vitalDye",
+			"parentKey": "diagnosticAgent.diagnosticStain",
+			"order": 75,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Vital Dye",
+					"pt-PT": "Vital Dye",
+					"gn-PY": "Vital Dye",
+					"en-US": "Vital Dye",
+					"es-ES": "Vital Dye",
+					"fr-FR": "Vital Dye"
+				}
+			}
+		},
+		{
+			"key": "diagnosticAgent.radiocontrastMedia",
+			"parentKey": "diagnosticAgent",
+			"order": 76,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Radiocontrast Media",
+					"pt-PT": "Radiocontrast Media",
+					"gn-PY": "Radiocontrast Media",
+					"en-US": "Radiocontrast Media",
+					"es-ES": "Radiocontrast Media",
+					"fr-FR": "Radiocontrast Media"
+				}
+			}
+		},
+		{
+			"key": "diagnosticAgent.radiocontrastMedia.bariumSulfate",
+			"parentKey": "diagnosticAgent.radiocontrastMedia",
+			"order": 77,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Barium Sulfate",
+					"pt-PT": "Barium Sulfate",
+					"gn-PY": "Barium Sulfate",
+					"en-US": "Barium Sulfate",
+					"es-ES": "Barium Sulfate",
+					"fr-FR": "Barium Sulfate"
+				}
+			}
+		},
+		{
+			"key": "diagnosticAgent.radiocontrastMedia.gadoliniumChelate",
+			"parentKey": "diagnosticAgent.radiocontrastMedia",
+			"order": 78,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Gadolinium Chelate",
+					"pt-PT": "Gadolinium Chelate",
+					"gn-PY": "Gadolinium Chelate",
+					"en-US": "Gadolinium Chelate",
+					"es-ES": "Gadolinium Chelate",
+					"fr-FR": "Gadolinium Chelate"
+				}
+			}
+		},
+		{
+			"key": "diagnosticAgent.radiocontrastMedia.iodinatedContrast",
+			"parentKey": "diagnosticAgent.radiocontrastMedia",
+			"order": 79,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Iodinated Contrast",
+					"pt-PT": "Iodinated Contrast",
+					"gn-PY": "Iodinated Contrast",
+					"en-US": "Iodinated Contrast",
+					"es-ES": "Iodinated Contrast",
+					"fr-FR": "Iodinated Contrast"
+				}
+			}
+		},
+		{
+			"key": "diagnosticAgent.radiopharmaceutical",
+			"parentKey": "diagnosticAgent",
+			"order": 80,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Radiopharmaceutical",
+					"pt-PT": "Radiopharmaceutical",
+					"gn-PY": "Radiopharmaceutical",
+					"en-US": "Radiopharmaceutical",
+					"es-ES": "Radiopharmaceutical",
+					"fr-FR": "Radiopharmaceutical"
+				}
+			}
+		},
+		{
+			"key": "diagnosticAgent.radiopharmaceutical.radioiodine",
+			"parentKey": "diagnosticAgent.radiopharmaceutical",
+			"order": 81,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Radioiodine",
+					"pt-PT": "Radioiodine",
+					"gn-PY": "Radioiodine",
+					"en-US": "Radioiodine",
+					"es-ES": "Radioiodine",
+					"fr-FR": "Radioiodine"
+				}
+			}
+		},
+		{
+			"key": "diagnosticAgent.radiopharmaceutical.technetiumIsotope",
+			"parentKey": "diagnosticAgent.radiopharmaceutical",
+			"order": 82,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Technetium Isotope",
+					"pt-PT": "Technetium Isotope",
+					"gn-PY": "Technetium Isotope",
+					"en-US": "Technetium Isotope",
+					"es-ES": "Technetium Isotope",
+					"fr-FR": "Technetium Isotope"
+				}
+			}
+		},
+		{
+			"key": "enzymeModulator",
+			"parentKey": null,
+			"order": 83,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Modulador enzimático",
+					"pt-PT": "Modulador enzimático",
+					"gn-PY": "Modulador enzimático",
+					"en-US": "Enzyme modulator",
+					"es-ES": "Modulador enzimático",
+					"fr-FR": "Modulateur enzymatique"
+				}
+			}
+		},
+		{
+			"key": "enzymeModulator.enzymeActivator",
+			"parentKey": "enzymeModulator",
+			"order": 84,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Enzyme Activator",
+					"pt-PT": "Enzyme Activator",
+					"gn-PY": "Enzyme Activator",
+					"en-US": "Enzyme Activator",
+					"es-ES": "Enzyme Activator",
+					"fr-FR": "Enzyme Activator"
+				}
+			}
+		},
+		{
+			"key": "enzymeModulator.enzymeActivator.adenylateCyclaseActivator",
+			"parentKey": "enzymeModulator.enzymeActivator",
+			"order": 85,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Adenylate Cyclase Activator",
+					"pt-PT": "Adenylate Cyclase Activator",
+					"gn-PY": "Adenylate Cyclase Activator",
+					"en-US": "Adenylate Cyclase Activator",
+					"es-ES": "Adenylate Cyclase Activator",
+					"fr-FR": "Adenylate Cyclase Activator"
+				}
+			}
+		},
+		{
+			"key": "enzymeModulator.enzymeActivator.guanylateCyclaseActivator",
+			"parentKey": "enzymeModulator.enzymeActivator",
+			"order": 86,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Guanylate Cyclase Activator",
+					"pt-PT": "Guanylate Cyclase Activator",
+					"gn-PY": "Guanylate Cyclase Activator",
+					"en-US": "Guanylate Cyclase Activator",
+					"es-ES": "Guanylate Cyclase Activator",
+					"fr-FR": "Guanylate Cyclase Activator"
+				}
+			}
+		},
+		{
+			"key": "enzymeModulator.enzymeInhibitor",
+			"parentKey": "enzymeModulator",
+			"order": 87,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Enzyme Inhibitor",
+					"pt-PT": "Enzyme Inhibitor",
+					"gn-PY": "Enzyme Inhibitor",
+					"en-US": "Enzyme Inhibitor",
+					"es-ES": "Enzyme Inhibitor",
+					"fr-FR": "Enzyme Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "enzymeModulator.enzymeInhibitor.angiotensinConvertingEnzymeInhibitor",
+			"parentKey": "enzymeModulator.enzymeInhibitor",
+			"order": 88,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Angiotensin Converting Enzyme Inhibitor",
+					"pt-PT": "Angiotensin Converting Enzyme Inhibitor",
+					"gn-PY": "Angiotensin Converting Enzyme Inhibitor",
+					"en-US": "Angiotensin Converting Enzyme Inhibitor",
+					"es-ES": "Angiotensin Converting Enzyme Inhibitor",
+					"fr-FR": "Angiotensin Converting Enzyme Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "enzymeModulator.enzymeInhibitor.carbonicAnhydraseInhibitor",
+			"parentKey": "enzymeModulator.enzymeInhibitor",
+			"order": 89,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Carbonic Anhydrase Inhibitor",
+					"pt-PT": "Carbonic Anhydrase Inhibitor",
+					"gn-PY": "Carbonic Anhydrase Inhibitor",
+					"en-US": "Carbonic Anhydrase Inhibitor",
+					"es-ES": "Carbonic Anhydrase Inhibitor",
+					"fr-FR": "Carbonic Anhydrase Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "enzymeModulator.enzymeInhibitor.cholinesteraseInhibitor",
+			"parentKey": "enzymeModulator.enzymeInhibitor",
+			"order": 90,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Cholinesterase Inhibitor",
+					"pt-PT": "Cholinesterase Inhibitor",
+					"gn-PY": "Cholinesterase Inhibitor",
+					"en-US": "Cholinesterase Inhibitor",
+					"es-ES": "Cholinesterase Inhibitor",
+					"fr-FR": "Cholinesterase Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "enzymeModulator.enzymeInhibitor.cyclooxygenaseInhibitor",
+			"parentKey": "enzymeModulator.enzymeInhibitor",
+			"order": 91,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Cyclooxygenase Inhibitor",
+					"pt-PT": "Cyclooxygenase Inhibitor",
+					"gn-PY": "Cyclooxygenase Inhibitor",
+					"en-US": "Cyclooxygenase Inhibitor",
+					"es-ES": "Cyclooxygenase Inhibitor",
+					"fr-FR": "Cyclooxygenase Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "enzymeModulator.enzymeInhibitor.monoamineOxidaseInhibitor",
+			"parentKey": "enzymeModulator.enzymeInhibitor",
+			"order": 92,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Monoamine Oxidase Inhibitor",
+					"pt-PT": "Monoamine Oxidase Inhibitor",
+					"gn-PY": "Monoamine Oxidase Inhibitor",
+					"en-US": "Monoamine Oxidase Inhibitor",
+					"es-ES": "Monoamine Oxidase Inhibitor",
+					"fr-FR": "Monoamine Oxidase Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "enzymeModulator.enzymeInhibitor.phosphodiesteraseInhibitor",
+			"parentKey": "enzymeModulator.enzymeInhibitor",
+			"order": 93,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Phosphodiesterase Inhibitor",
+					"pt-PT": "Phosphodiesterase Inhibitor",
+					"gn-PY": "Phosphodiesterase Inhibitor",
+					"en-US": "Phosphodiesterase Inhibitor",
+					"es-ES": "Phosphodiesterase Inhibitor",
+					"fr-FR": "Phosphodiesterase Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "enzymeModulator.enzymeInhibitor.steroidogenesisInhibitor",
+			"parentKey": "enzymeModulator.enzymeInhibitor",
+			"order": 94,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Steroidogenesis Inhibitor",
+					"pt-PT": "Steroidogenesis Inhibitor",
+					"gn-PY": "Steroidogenesis Inhibitor",
+					"en-US": "Steroidogenesis Inhibitor",
+					"es-ES": "Steroidogenesis Inhibitor",
+					"fr-FR": "Steroidogenesis Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "enzymeModulator.enzymeInhibitor.tyrosineKinaseInhibitor",
+			"parentKey": "enzymeModulator.enzymeInhibitor",
+			"order": 95,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Tyrosine Kinase Inhibitor",
+					"pt-PT": "Tyrosine Kinase Inhibitor",
+					"gn-PY": "Tyrosine Kinase Inhibitor",
+					"en-US": "Tyrosine Kinase Inhibitor",
+					"es-ES": "Tyrosine Kinase Inhibitor",
+					"fr-FR": "Tyrosine Kinase Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "enzymeModulator.enzymeInhibitor.xanthineOxidaseInhibitor",
+			"parentKey": "enzymeModulator.enzymeInhibitor",
+			"order": 96,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Xanthine Oxidase Inhibitor",
+					"pt-PT": "Xanthine Oxidase Inhibitor",
+					"gn-PY": "Xanthine Oxidase Inhibitor",
+					"en-US": "Xanthine Oxidase Inhibitor",
+					"es-ES": "Xanthine Oxidase Inhibitor",
+					"fr-FR": "Xanthine Oxidase Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "enzymeModulator.enzymeReactivator",
+			"parentKey": "enzymeModulator",
+			"order": 97,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Enzyme Reactivator",
+					"pt-PT": "Enzyme Reactivator",
+					"gn-PY": "Enzyme Reactivator",
+					"en-US": "Enzyme Reactivator",
+					"es-ES": "Enzyme Reactivator",
+					"fr-FR": "Enzyme Reactivator"
+				}
+			}
+		},
+		{
+			"key": "enzymeModulator.enzymeReactivator.cholinesteraseReactivator",
+			"parentKey": "enzymeModulator.enzymeReactivator",
+			"order": 98,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Cholinesterase Reactivator",
+					"pt-PT": "Cholinesterase Reactivator",
+					"gn-PY": "Cholinesterase Reactivator",
+					"en-US": "Cholinesterase Reactivator",
+					"es-ES": "Cholinesterase Reactivator",
+					"fr-FR": "Cholinesterase Reactivator"
+				}
+			}
+		},
+		{
+			"key": "hormone",
+			"parentKey": null,
+			"order": 99,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Hormônio",
+					"pt-PT": "Hormônio",
+					"gn-PY": "Hormônio",
+					"en-US": "Hormone",
+					"es-ES": "Hormona",
+					"fr-FR": "Hormone"
+				}
+			}
+		},
+		{
+			"key": "hormone.amineDerivativeHormone",
+			"parentKey": "hormone",
+			"order": 100,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Amine Derivative Hormone",
+					"pt-PT": "Amine Derivative Hormone",
+					"gn-PY": "Amine Derivative Hormone",
+					"en-US": "Amine Derivative Hormone",
+					"es-ES": "Amine Derivative Hormone",
+					"fr-FR": "Amine Derivative Hormone"
+				}
+			}
+		},
+		{
+			"key": "hormone.amineDerivativeHormone.indoleamineHormone",
+			"parentKey": "hormone.amineDerivativeHormone",
+			"order": 101,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Indoleamine Hormone",
+					"pt-PT": "Indoleamine Hormone",
+					"gn-PY": "Indoleamine Hormone",
+					"en-US": "Indoleamine Hormone",
+					"es-ES": "Indoleamine Hormone",
+					"fr-FR": "Indoleamine Hormone"
+				}
+			}
+		},
+		{
+			"key": "hormone.amineDerivativeHormone.thyroidHormone",
+			"parentKey": "hormone.amineDerivativeHormone",
+			"order": 102,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Thyroid Hormone",
+					"pt-PT": "Thyroid Hormone",
+					"gn-PY": "Thyroid Hormone",
+					"en-US": "Thyroid Hormone",
+					"es-ES": "Thyroid Hormone",
+					"fr-FR": "Thyroid Hormone"
+				}
+			}
+		},
+		{
+			"key": "hormone.peptideAndProteinHormone",
+			"parentKey": "hormone",
+			"order": 103,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Peptide And Protein Hormone",
+					"pt-PT": "Peptide And Protein Hormone",
+					"gn-PY": "Peptide And Protein Hormone",
+					"en-US": "Peptide And Protein Hormone",
+					"es-ES": "Peptide And Protein Hormone",
+					"fr-FR": "Peptide And Protein Hormone"
+				}
+			}
+		},
+		{
+			"key": "hormone.peptideAndProteinHormone.glycoproteinHormone",
+			"parentKey": "hormone.peptideAndProteinHormone",
+			"order": 104,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Glycoprotein Hormone",
+					"pt-PT": "Glycoprotein Hormone",
+					"gn-PY": "Glycoprotein Hormone",
+					"en-US": "Glycoprotein Hormone",
+					"es-ES": "Glycoprotein Hormone",
+					"fr-FR": "Glycoprotein Hormone"
+				}
+			}
+		},
+		{
+			"key": "hormone.peptideAndProteinHormone.hypothalamicReleasingHormone",
+			"parentKey": "hormone.peptideAndProteinHormone",
+			"order": 105,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Hypothalamic Releasing Hormone",
+					"pt-PT": "Hypothalamic Releasing Hormone",
+					"gn-PY": "Hypothalamic Releasing Hormone",
+					"en-US": "Hypothalamic Releasing Hormone",
+					"es-ES": "Hypothalamic Releasing Hormone",
+					"fr-FR": "Hypothalamic Releasing Hormone"
+				}
+			}
+		},
+		{
+			"key": "hormone.peptideAndProteinHormone.insulinAndAnalog",
+			"parentKey": "hormone.peptideAndProteinHormone",
+			"order": 106,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Insulin And Analog",
+					"pt-PT": "Insulin And Analog",
+					"gn-PY": "Insulin And Analog",
+					"en-US": "Insulin And Analog",
+					"es-ES": "Insulin And Analog",
+					"fr-FR": "Insulin And Analog"
+				}
+			}
+		},
+		{
+			"key": "hormone.peptideAndProteinHormone.posteriorPituitaryHormone",
+			"parentKey": "hormone.peptideAndProteinHormone",
+			"order": 107,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Posterior Pituitary Hormone",
+					"pt-PT": "Posterior Pituitary Hormone",
+					"gn-PY": "Posterior Pituitary Hormone",
+					"en-US": "Posterior Pituitary Hormone",
+					"es-ES": "Posterior Pituitary Hormone",
+					"fr-FR": "Posterior Pituitary Hormone"
+				}
+			}
+		},
+		{
+			"key": "hormone.steroidHormone",
+			"parentKey": "hormone",
+			"order": 108,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Steroid Hormone",
+					"pt-PT": "Steroid Hormone",
+					"gn-PY": "Steroid Hormone",
+					"en-US": "Steroid Hormone",
+					"es-ES": "Steroid Hormone",
+					"fr-FR": "Steroid Hormone"
+				}
+			}
+		},
+		{
+			"key": "hormone.steroidHormone.androgen",
+			"parentKey": "hormone.steroidHormone",
+			"order": 109,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Androgen",
+					"pt-PT": "Androgen",
+					"gn-PY": "Androgen",
+					"en-US": "Androgen",
+					"es-ES": "Androgen",
+					"fr-FR": "Androgen"
+				}
+			}
+		},
+		{
+			"key": "hormone.steroidHormone.estrogen",
+			"parentKey": "hormone.steroidHormone",
+			"order": 110,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Estrogen",
+					"pt-PT": "Estrogen",
+					"gn-PY": "Estrogen",
+					"en-US": "Estrogen",
+					"es-ES": "Estrogen",
+					"fr-FR": "Estrogen"
+				}
+			}
+		},
+		{
+			"key": "hormone.steroidHormone.glucocorticoid",
+			"parentKey": "hormone.steroidHormone",
+			"order": 111,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Glucocorticoid",
+					"pt-PT": "Glucocorticoid",
+					"gn-PY": "Glucocorticoid",
+					"en-US": "Glucocorticoid",
+					"es-ES": "Glucocorticoid",
+					"fr-FR": "Glucocorticoid"
+				}
+			}
+		},
+		{
+			"key": "hormone.steroidHormone.mineralocorticoid",
+			"parentKey": "hormone.steroidHormone",
+			"order": 112,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Mineralocorticoid",
+					"pt-PT": "Mineralocorticoid",
+					"gn-PY": "Mineralocorticoid",
+					"en-US": "Mineralocorticoid",
+					"es-ES": "Mineralocorticoid",
+					"fr-FR": "Mineralocorticoid"
+				}
+			}
+		},
+		{
+			"key": "hormone.steroidHormone.progestogen",
+			"parentKey": "hormone.steroidHormone",
+			"order": 113,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Progestogen",
+					"pt-PT": "Progestogen",
+					"gn-PY": "Progestogen",
+					"en-US": "Progestogen",
+					"es-ES": "Progestogen",
+					"fr-FR": "Progestogen"
+				}
+			}
+		},
+		{
+			"key": "immunobiological",
+			"parentKey": null,
+			"order": 114,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Imunobiológico",
+					"pt-PT": "Imunobiológico",
+					"gn-PY": "Imunobiológico",
+					"en-US": "Immunobiological",
+					"es-ES": "Inmunobiológico",
+					"fr-FR": "Immunobiologique"
+				}
+			}
+		},
+		{
+			"key": "immunobiological.activeImmunogen",
+			"parentKey": "immunobiological",
+			"order": 115,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Active Immunogen",
+					"pt-PT": "Active Immunogen",
+					"gn-PY": "Active Immunogen",
+					"en-US": "Active Immunogen",
+					"es-ES": "Active Immunogen",
+					"fr-FR": "Active Immunogen"
+				}
+			}
+		},
+		{
+			"key": "immunobiological.activeImmunogen.inactivatedVaccine",
+			"parentKey": "immunobiological.activeImmunogen",
+			"order": 116,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Inactivated Vaccine",
+					"pt-PT": "Inactivated Vaccine",
+					"gn-PY": "Inactivated Vaccine",
+					"en-US": "Inactivated Vaccine",
+					"es-ES": "Inactivated Vaccine",
+					"fr-FR": "Inactivated Vaccine"
+				}
+			}
+		},
+		{
+			"key": "immunobiological.activeImmunogen.liveAttenuatedVaccine",
+			"parentKey": "immunobiological.activeImmunogen",
+			"order": 117,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Live Attenuated Vaccine",
+					"pt-PT": "Live Attenuated Vaccine",
+					"gn-PY": "Live Attenuated Vaccine",
+					"en-US": "Live Attenuated Vaccine",
+					"es-ES": "Live Attenuated Vaccine",
+					"fr-FR": "Live Attenuated Vaccine"
+				}
+			}
+		},
+		{
+			"key": "immunobiological.activeImmunogen.recombinantSubunit",
+			"parentKey": "immunobiological.activeImmunogen",
+			"order": 118,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Recombinant Subunit",
+					"pt-PT": "Recombinant Subunit",
+					"gn-PY": "Recombinant Subunit",
+					"en-US": "Recombinant Subunit",
+					"es-ES": "Recombinant Subunit",
+					"fr-FR": "Recombinant Subunit"
+				}
+			}
+		},
+		{
+			"key": "immunobiological.activeImmunogen.toxoid",
+			"parentKey": "immunobiological.activeImmunogen",
+			"order": 119,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Toxoid",
+					"pt-PT": "Toxoid",
+					"gn-PY": "Toxoid",
+					"en-US": "Toxoid",
+					"es-ES": "Toxoid",
+					"fr-FR": "Toxoid"
+				}
+			}
+		},
+		{
+			"key": "immunobiological.passiveImmunogen",
+			"parentKey": "immunobiological",
+			"order": 120,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Passive Immunogen",
+					"pt-PT": "Passive Immunogen",
+					"gn-PY": "Passive Immunogen",
+					"en-US": "Passive Immunogen",
+					"es-ES": "Passive Immunogen",
+					"fr-FR": "Passive Immunogen"
+				}
+			}
+		},
+		{
+			"key": "immunobiological.passiveImmunogen.polyclonalAntiserum",
+			"parentKey": "immunobiological.passiveImmunogen",
+			"order": 121,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Polyclonal Antiserum",
+					"pt-PT": "Polyclonal Antiserum",
+					"gn-PY": "Polyclonal Antiserum",
+					"en-US": "Polyclonal Antiserum",
+					"es-ES": "Polyclonal Antiserum",
+					"fr-FR": "Polyclonal Antiserum"
+				}
+			}
+		},
+		{
+			"key": "immunobiological.passiveImmunogen.purifiedImmunoglobulin",
+			"parentKey": "immunobiological.passiveImmunogen",
+			"order": 122,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Purified Immunoglobulin",
+					"pt-PT": "Purified Immunoglobulin",
+					"gn-PY": "Purified Immunoglobulin",
+					"en-US": "Purified Immunoglobulin",
+					"es-ES": "Purified Immunoglobulin",
+					"fr-FR": "Purified Immunoglobulin"
+				}
+			}
+		},
+		{
+			"key": "immunobiological.tolerogen",
+			"parentKey": "immunobiological",
+			"order": 123,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Tolerogen",
+					"pt-PT": "Tolerogen",
+					"gn-PY": "Tolerogen",
+					"en-US": "Tolerogen",
+					"es-ES": "Tolerogen",
+					"fr-FR": "Tolerogen"
+				}
+			}
+		},
+		{
+			"key": "immunobiological.tolerogen.allergenExtract",
+			"parentKey": "immunobiological.tolerogen",
+			"order": 124,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Allergen Extract",
+					"pt-PT": "Allergen Extract",
+					"gn-PY": "Allergen Extract",
+					"en-US": "Allergen Extract",
+					"es-ES": "Allergen Extract",
+					"fr-FR": "Allergen Extract"
+				}
+			}
+		},
+		{
+			"key": "ionChannelModulator",
+			"parentKey": null,
+			"order": 125,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Modulador de canal iônico",
+					"pt-PT": "Modulador de canal iônico",
+					"gn-PY": "Modulador de canal iônico",
+					"en-US": "Ion channel modulator",
+					"es-ES": "Modulador de canal iónico",
+					"fr-FR": "Modulateur de canal ionique"
+				}
+			}
+		},
+		{
+			"key": "ionChannelModulator.ionChannelBlocker",
+			"parentKey": "ionChannelModulator",
+			"order": 126,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Ion Channel Blocker",
+					"pt-PT": "Ion Channel Blocker",
+					"gn-PY": "Ion Channel Blocker",
+					"en-US": "Ion Channel Blocker",
+					"es-ES": "Ion Channel Blocker",
+					"fr-FR": "Ion Channel Blocker"
+				}
+			}
+		},
+		{
+			"key": "ionChannelModulator.ionChannelBlocker.voltageGatedCalciumChannelBlocker",
+			"parentKey": "ionChannelModulator.ionChannelBlocker",
+			"order": 127,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Voltage Gated Calcium Channel Blocker",
+					"pt-PT": "Voltage Gated Calcium Channel Blocker",
+					"gn-PY": "Voltage Gated Calcium Channel Blocker",
+					"en-US": "Voltage Gated Calcium Channel Blocker",
+					"es-ES": "Voltage Gated Calcium Channel Blocker",
+					"fr-FR": "Voltage Gated Calcium Channel Blocker"
+				}
+			}
+		},
+		{
+			"key": "ionChannelModulator.ionChannelBlocker.voltageGatedPotassiumChannelBlocker",
+			"parentKey": "ionChannelModulator.ionChannelBlocker",
+			"order": 128,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Voltage Gated Potassium Channel Blocker",
+					"pt-PT": "Voltage Gated Potassium Channel Blocker",
+					"gn-PY": "Voltage Gated Potassium Channel Blocker",
+					"en-US": "Voltage Gated Potassium Channel Blocker",
+					"es-ES": "Voltage Gated Potassium Channel Blocker",
+					"fr-FR": "Voltage Gated Potassium Channel Blocker"
+				}
+			}
+		},
+		{
+			"key": "ionChannelModulator.ionChannelBlocker.voltageGatedSodiumChannelBlocker",
+			"parentKey": "ionChannelModulator.ionChannelBlocker",
+			"order": 129,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Voltage Gated Sodium Channel Blocker",
+					"pt-PT": "Voltage Gated Sodium Channel Blocker",
+					"gn-PY": "Voltage Gated Sodium Channel Blocker",
+					"en-US": "Voltage Gated Sodium Channel Blocker",
+					"es-ES": "Voltage Gated Sodium Channel Blocker",
+					"fr-FR": "Voltage Gated Sodium Channel Blocker"
+				}
+			}
+		},
+		{
+			"key": "ionChannelModulator.ionChannelOpener",
+			"parentKey": "ionChannelModulator",
+			"order": 130,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Ion Channel Opener",
+					"pt-PT": "Ion Channel Opener",
+					"gn-PY": "Ion Channel Opener",
+					"en-US": "Ion Channel Opener",
+					"es-ES": "Ion Channel Opener",
+					"fr-FR": "Ion Channel Opener"
+				}
+			}
+		},
+		{
+			"key": "ionChannelModulator.ionChannelOpener.atpSensitivePotassiumChannelOpener",
+			"parentKey": "ionChannelModulator.ionChannelOpener",
+			"order": 131,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Atp Sensitive Potassium Channel Opener",
+					"pt-PT": "Atp Sensitive Potassium Channel Opener",
+					"gn-PY": "Atp Sensitive Potassium Channel Opener",
+					"en-US": "Atp Sensitive Potassium Channel Opener",
+					"es-ES": "Atp Sensitive Potassium Channel Opener",
+					"fr-FR": "Atp Sensitive Potassium Channel Opener"
+				}
+			}
+		},
+		{
+			"key": "metabolicSubstrate",
+			"parentKey": null,
+			"order": 132,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Substrato metabólico",
+					"pt-PT": "Substrato metabólico",
+					"gn-PY": "Substrato metabólico",
+					"en-US": "Metabolic substrate",
+					"es-ES": "Sustrato metabólico",
+					"fr-FR": "Substrat métabolique"
+				}
+			}
+		},
+		{
+			"key": "metabolicSubstrate.macronutrientAndEnergy",
+			"parentKey": "metabolicSubstrate",
+			"order": 133,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Macronutrient And Energy",
+					"pt-PT": "Macronutrient And Energy",
+					"gn-PY": "Macronutrient And Energy",
+					"en-US": "Macronutrient And Energy",
+					"es-ES": "Macronutrient And Energy",
+					"fr-FR": "Macronutrient And Energy"
+				}
+			}
+		},
+		{
+			"key": "metabolicSubstrate.macronutrientAndEnergy.aminoAcidSolution",
+			"parentKey": "metabolicSubstrate.macronutrientAndEnergy",
+			"order": 134,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Amino Acid Solution",
+					"pt-PT": "Amino Acid Solution",
+					"gn-PY": "Amino Acid Solution",
+					"en-US": "Amino Acid Solution",
+					"es-ES": "Amino Acid Solution",
+					"fr-FR": "Amino Acid Solution"
+				}
+			}
+		},
+		{
+			"key": "metabolicSubstrate.macronutrientAndEnergy.carbohydrateSubstrate",
+			"parentKey": "metabolicSubstrate.macronutrientAndEnergy",
+			"order": 135,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Carbohydrate Substrate",
+					"pt-PT": "Carbohydrate Substrate",
+					"gn-PY": "Carbohydrate Substrate",
+					"en-US": "Carbohydrate Substrate",
+					"es-ES": "Carbohydrate Substrate",
+					"fr-FR": "Carbohydrate Substrate"
+				}
+			}
+		},
+		{
+			"key": "metabolicSubstrate.macronutrientAndEnergy.lipidEmulsion",
+			"parentKey": "metabolicSubstrate.macronutrientAndEnergy",
+			"order": 136,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Lipid Emulsion",
+					"pt-PT": "Lipid Emulsion",
+					"gn-PY": "Lipid Emulsion",
+					"en-US": "Lipid Emulsion",
+					"es-ES": "Lipid Emulsion",
+					"fr-FR": "Lipid Emulsion"
+				}
+			}
+		},
+		{
+			"key": "metabolicSubstrate.mineralAndElectrolyte",
+			"parentKey": "metabolicSubstrate",
+			"order": 137,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Mineral And Electrolyte",
+					"pt-PT": "Mineral And Electrolyte",
+					"gn-PY": "Mineral And Electrolyte",
+					"en-US": "Mineral And Electrolyte",
+					"es-ES": "Mineral And Electrolyte",
+					"fr-FR": "Mineral And Electrolyte"
+				}
+			}
+		},
+		{
+			"key": "metabolicSubstrate.mineralAndElectrolyte.macromineralSalt",
+			"parentKey": "metabolicSubstrate.mineralAndElectrolyte",
+			"order": 138,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Macromineral Salt",
+					"pt-PT": "Macromineral Salt",
+					"gn-PY": "Macromineral Salt",
+					"en-US": "Macromineral Salt",
+					"es-ES": "Macromineral Salt",
+					"fr-FR": "Macromineral Salt"
+				}
+			}
+		},
+		{
+			"key": "metabolicSubstrate.mineralAndElectrolyte.traceMineral",
+			"parentKey": "metabolicSubstrate.mineralAndElectrolyte",
+			"order": 139,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Trace Mineral",
+					"pt-PT": "Trace Mineral",
+					"gn-PY": "Trace Mineral",
+					"en-US": "Trace Mineral",
+					"es-ES": "Trace Mineral",
+					"fr-FR": "Trace Mineral"
+				}
+			}
+		},
+		{
+			"key": "metabolicSubstrate.structuralPrecursor",
+			"parentKey": "metabolicSubstrate",
+			"order": 140,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Structural Precursor",
+					"pt-PT": "Structural Precursor",
+					"gn-PY": "Structural Precursor",
+					"en-US": "Structural Precursor",
+					"es-ES": "Structural Precursor",
+					"fr-FR": "Structural Precursor"
+				}
+			}
+		},
+		{
+			"key": "metabolicSubstrate.structuralPrecursor.essentialFattyAcid",
+			"parentKey": "metabolicSubstrate.structuralPrecursor",
+			"order": 141,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Essential Fatty Acid",
+					"pt-PT": "Essential Fatty Acid",
+					"gn-PY": "Essential Fatty Acid",
+					"en-US": "Essential Fatty Acid",
+					"es-ES": "Essential Fatty Acid",
+					"fr-FR": "Essential Fatty Acid"
+				}
+			}
+		},
+		{
+			"key": "metabolicSubstrate.structuralPrecursor.glycosaminoglycanAndAminosugar",
+			"parentKey": "metabolicSubstrate.structuralPrecursor",
+			"order": 142,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Glycosaminoglycan And Aminosugar",
+					"pt-PT": "Glycosaminoglycan And Aminosugar",
+					"gn-PY": "Glycosaminoglycan And Aminosugar",
+					"en-US": "Glycosaminoglycan And Aminosugar",
+					"es-ES": "Glycosaminoglycan And Aminosugar",
+					"fr-FR": "Glycosaminoglycan And Aminosugar"
+				}
+			}
+		},
+		{
+			"key": "metabolicSubstrate.vitaminAndCofactor",
+			"parentKey": "metabolicSubstrate",
+			"order": 143,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Vitamin And Cofactor",
+					"pt-PT": "Vitamin And Cofactor",
+					"gn-PY": "Vitamin And Cofactor",
+					"en-US": "Vitamin And Cofactor",
+					"es-ES": "Vitamin And Cofactor",
+					"fr-FR": "Vitamin And Cofactor"
+				}
+			}
+		},
+		{
+			"key": "metabolicSubstrate.vitaminAndCofactor.fatSolubleVitamin",
+			"parentKey": "metabolicSubstrate.vitaminAndCofactor",
+			"order": 144,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Fat Soluble Vitamin",
+					"pt-PT": "Fat Soluble Vitamin",
+					"gn-PY": "Fat Soluble Vitamin",
+					"en-US": "Fat Soluble Vitamin",
+					"es-ES": "Fat Soluble Vitamin",
+					"fr-FR": "Fat Soluble Vitamin"
+				}
+			}
+		},
+		{
+			"key": "metabolicSubstrate.vitaminAndCofactor.nonVitaminCofactor",
+			"parentKey": "metabolicSubstrate.vitaminAndCofactor",
+			"order": 145,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Non Vitamin Cofactor",
+					"pt-PT": "Non Vitamin Cofactor",
+					"gn-PY": "Non Vitamin Cofactor",
+					"en-US": "Non Vitamin Cofactor",
+					"es-ES": "Non Vitamin Cofactor",
+					"fr-FR": "Non Vitamin Cofactor"
+				}
+			}
+		},
+		{
+			"key": "metabolicSubstrate.vitaminAndCofactor.waterSolubleVitamin",
+			"parentKey": "metabolicSubstrate.vitaminAndCofactor",
+			"order": 146,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Water Soluble Vitamin",
+					"pt-PT": "Water Soluble Vitamin",
+					"gn-PY": "Water Soluble Vitamin",
+					"en-US": "Water Soluble Vitamin",
+					"es-ES": "Water Soluble Vitamin",
+					"fr-FR": "Water Soluble Vitamin"
+				}
+			}
+		},
+		{
+			"key": "nucleicAcidTherapy",
+			"parentKey": null,
+			"order": 147,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Terapia de ácido nucleico",
+					"pt-PT": "Terapia de ácido nucleico",
+					"gn-PY": "Terapia de ácido nucleico",
+					"en-US": "Nucleic acid therapy",
+					"es-ES": "Terapia de ácido nucleico",
+					"fr-FR": "Thérapie par acide nucléique"
+				}
+			}
+		},
+		{
+			"key": "nucleicAcidTherapy.mrnaTranscript",
+			"parentKey": "nucleicAcidTherapy",
+			"order": 148,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Mrna Transcript",
+					"pt-PT": "Mrna Transcript",
+					"gn-PY": "Mrna Transcript",
+					"en-US": "Mrna Transcript",
+					"es-ES": "Mrna Transcript",
+					"fr-FR": "Mrna Transcript"
+				}
+			}
+		},
+		{
+			"key": "nucleicAcidTherapy.mrnaTranscript.selfAmplifyingMrna",
+			"parentKey": "nucleicAcidTherapy.mrnaTranscript",
+			"order": 149,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Self Amplifying mRNA",
+					"pt-PT": "Self Amplifying mRNA",
+					"gn-PY": "Self Amplifying mRNA",
+					"en-US": "Self Amplifying mRNA",
+					"es-ES": "Self Amplifying mRNA",
+					"fr-FR": "Self Amplifying mRNA"
+				}
+			}
+		},
+		{
+			"key": "nucleicAcidTherapy.mrnaTranscript.syntheticMrnaTranscript",
+			"parentKey": "nucleicAcidTherapy.mrnaTranscript",
+			"order": 150,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Synthetic mRNA Transcript",
+					"pt-PT": "Synthetic mRNA Transcript",
+					"gn-PY": "Synthetic mRNA Transcript",
+					"en-US": "Synthetic mRNA Transcript",
+					"es-ES": "Synthetic mRNA Transcript",
+					"fr-FR": "Synthetic mRNA Transcript"
+				}
+			}
+		},
+		{
+			"key": "nucleicAcidTherapy.oligonucleotideSilencer",
+			"parentKey": "nucleicAcidTherapy",
+			"order": 151,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Oligonucleotide Silencer",
+					"pt-PT": "Oligonucleotide Silencer",
+					"gn-PY": "Oligonucleotide Silencer",
+					"en-US": "Oligonucleotide Silencer",
+					"es-ES": "Oligonucleotide Silencer",
+					"fr-FR": "Oligonucleotide Silencer"
+				}
+			}
+		},
+		{
+			"key": "nucleicAcidTherapy.oligonucleotideSilencer.antisenseOligonucleotide",
+			"parentKey": "nucleicAcidTherapy.oligonucleotideSilencer",
+			"order": 152,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Antisense Oligonucleotide",
+					"pt-PT": "Antisense Oligonucleotide",
+					"gn-PY": "Antisense Oligonucleotide",
+					"en-US": "Antisense Oligonucleotide",
+					"es-ES": "Antisense Oligonucleotide",
+					"fr-FR": "Antisense Oligonucleotide"
+				}
+			}
+		},
+		{
+			"key": "nucleicAcidTherapy.oligonucleotideSilencer.smallInterferingRna",
+			"parentKey": "nucleicAcidTherapy.oligonucleotideSilencer",
+			"order": 153,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Small Interfering RNA",
+					"pt-PT": "Small Interfering RNA",
+					"gn-PY": "Small Interfering RNA",
+					"en-US": "Small Interfering RNA",
+					"es-ES": "Small Interfering RNA",
+					"fr-FR": "Small Interfering RNA"
+				}
+			}
+		},
+		{
+			"key": "nucleicAcidTherapy.recombinantVector",
+			"parentKey": "nucleicAcidTherapy",
+			"order": 154,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Recombinant Vector",
+					"pt-PT": "Recombinant Vector",
+					"gn-PY": "Recombinant Vector",
+					"en-US": "Recombinant Vector",
+					"es-ES": "Recombinant Vector",
+					"fr-FR": "Recombinant Vector"
+				}
+			}
+		},
+		{
+			"key": "nucleicAcidTherapy.recombinantVector.plasmidDnaVector",
+			"parentKey": "nucleicAcidTherapy.recombinantVector",
+			"order": 155,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Plasmid DNA Vector",
+					"pt-PT": "Plasmid DNA Vector",
+					"gn-PY": "Plasmid DNA Vector",
+					"en-US": "Plasmid DNA Vector",
+					"es-ES": "Plasmid DNA Vector",
+					"fr-FR": "Plasmid DNA Vector"
+				}
+			}
+		},
+		{
+			"key": "nucleicAcidTherapy.recombinantVector.viralVector",
+			"parentKey": "nucleicAcidTherapy.recombinantVector",
+			"order": 156,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Viral Vector",
+					"pt-PT": "Viral Vector",
+					"gn-PY": "Viral Vector",
+					"en-US": "Viral Vector",
+					"es-ES": "Viral Vector",
+					"fr-FR": "Viral Vector"
+				}
+			}
+		},
+		{
+			"key": "physicochemicalAgent",
+			"parentKey": null,
+			"order": 157,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Agente físico-químico",
+					"pt-PT": "Agente físico-químico",
+					"gn-PY": "Agente físico-químico",
+					"en-US": "Physicochemical agent",
+					"es-ES": "Agente fisicoquímico",
+					"fr-FR": "Agent physicochimique"
+				}
+			}
+		},
+		{
+			"key": "physicochemicalAgent.acidBaseModifier",
+			"parentKey": "physicochemicalAgent",
+			"order": 158,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Acid Base Modifier",
+					"pt-PT": "Acid Base Modifier",
+					"gn-PY": "Acid Base Modifier",
+					"en-US": "Acid Base Modifier",
+					"es-ES": "Acid Base Modifier",
+					"fr-FR": "Acid Base Modifier"
+				}
+			}
+		},
+		{
+			"key": "physicochemicalAgent.acidBaseModifier.localNeutralizingAntacid",
+			"parentKey": "physicochemicalAgent.acidBaseModifier",
+			"order": 159,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Local Neutralizing Antacid",
+					"pt-PT": "Local Neutralizing Antacid",
+					"gn-PY": "Local Neutralizing Antacid",
+					"en-US": "Local Neutralizing Antacid",
+					"es-ES": "Local Neutralizing Antacid",
+					"fr-FR": "Local Neutralizing Antacid"
+				}
+			}
+		},
+		{
+			"key": "physicochemicalAgent.acidBaseModifier.systemicAcidifier",
+			"parentKey": "physicochemicalAgent.acidBaseModifier",
+			"order": 160,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Systemic Acidifier",
+					"pt-PT": "Systemic Acidifier",
+					"gn-PY": "Systemic Acidifier",
+					"en-US": "Systemic Acidifier",
+					"es-ES": "Systemic Acidifier",
+					"fr-FR": "Systemic Acidifier"
+				}
+			}
+		},
+		{
+			"key": "physicochemicalAgent.acidBaseModifier.systemicAlkalinizer",
+			"parentKey": "physicochemicalAgent.acidBaseModifier",
+			"order": 161,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Systemic Alkalinizer",
+					"pt-PT": "Systemic Alkalinizer",
+					"gn-PY": "Systemic Alkalinizer",
+					"en-US": "Systemic Alkalinizer",
+					"es-ES": "Systemic Alkalinizer",
+					"fr-FR": "Systemic Alkalinizer"
+				}
+			}
+		},
+		{
+			"key": "physicochemicalAgent.osmoticAgent",
+			"parentKey": "physicochemicalAgent",
+			"order": 162,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Osmotic Agent",
+					"pt-PT": "Osmotic Agent",
+					"gn-PY": "Osmotic Agent",
+					"en-US": "Osmotic Agent",
+					"es-ES": "Osmotic Agent",
+					"fr-FR": "Osmotic Agent"
+				}
+			}
+		},
+		{
+			"key": "physicochemicalAgent.osmoticAgent.osmoticCathartic",
+			"parentKey": "physicochemicalAgent.osmoticAgent",
+			"order": 163,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Osmotic Cathartic",
+					"pt-PT": "Osmotic Cathartic",
+					"gn-PY": "Osmotic Cathartic",
+					"en-US": "Osmotic Cathartic",
+					"es-ES": "Osmotic Cathartic",
+					"fr-FR": "Osmotic Cathartic"
+				}
+			}
+		},
+		{
+			"key": "physicochemicalAgent.osmoticAgent.osmoticDiuretic",
+			"parentKey": "physicochemicalAgent.osmoticAgent",
+			"order": 164,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Osmotic Diuretic",
+					"pt-PT": "Osmotic Diuretic",
+					"gn-PY": "Osmotic Diuretic",
+					"en-US": "Osmotic Diuretic",
+					"es-ES": "Osmotic Diuretic",
+					"fr-FR": "Osmotic Diuretic"
+				}
+			}
+		},
+		{
+			"key": "physicochemicalAgent.physicalAdsorbentAndProtectant",
+			"parentKey": "physicochemicalAgent",
+			"order": 165,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Physical Adsorbent And Protectant",
+					"pt-PT": "Physical Adsorbent And Protectant",
+					"gn-PY": "Physical Adsorbent And Protectant",
+					"en-US": "Physical Adsorbent And Protectant",
+					"es-ES": "Physical Adsorbent And Protectant",
+					"fr-FR": "Physical Adsorbent And Protectant"
+				}
+			}
+		},
+		{
+			"key": "physicochemicalAgent.physicalAdsorbentAndProtectant.gastrointestinalAdsorbent",
+			"parentKey": "physicochemicalAgent.physicalAdsorbentAndProtectant",
+			"order": 166,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Gastrointestinal Adsorbent",
+					"pt-PT": "Gastrointestinal Adsorbent",
+					"gn-PY": "Gastrointestinal Adsorbent",
+					"en-US": "Gastrointestinal Adsorbent",
+					"es-ES": "Gastrointestinal Adsorbent",
+					"fr-FR": "Gastrointestinal Adsorbent"
+				}
+			}
+		},
+		{
+			"key": "physicochemicalAgent.physicalAdsorbentAndProtectant.mucosalProtectant",
+			"parentKey": "physicochemicalAgent.physicalAdsorbentAndProtectant",
+			"order": 167,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Mucosal Protectant",
+					"pt-PT": "Mucosal Protectant",
+					"gn-PY": "Mucosal Protectant",
+					"en-US": "Mucosal Protectant",
+					"es-ES": "Mucosal Protectant",
+					"fr-FR": "Mucosal Protectant"
+				}
+			}
+		},
+		{
+			"key": "physicochemicalAgent.physicalAdsorbentAndProtectant.topicalBarrier",
+			"parentKey": "physicochemicalAgent.physicalAdsorbentAndProtectant",
+			"order": 168,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Topical Barrier",
+					"pt-PT": "Topical Barrier",
+					"gn-PY": "Topical Barrier",
+					"en-US": "Topical Barrier",
+					"es-ES": "Topical Barrier",
+					"fr-FR": "Topical Barrier"
+				}
+			}
+		},
+		{
+			"key": "physicochemicalAgent.surfactant",
+			"parentKey": "physicochemicalAgent",
+			"order": 169,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Surfactant",
+					"pt-PT": "Surfactant",
+					"gn-PY": "Surfactant",
+					"en-US": "Surfactant",
+					"es-ES": "Surfactant",
+					"fr-FR": "Surfactant"
+				}
+			}
+		},
+		{
+			"key": "physicochemicalAgent.surfactant.antifoamingAgent",
+			"parentKey": "physicochemicalAgent.surfactant",
+			"order": 170,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Antifoaming Agent",
+					"pt-PT": "Antifoaming Agent",
+					"gn-PY": "Antifoaming Agent",
+					"en-US": "Antifoaming Agent",
+					"es-ES": "Antifoaming Agent",
+					"fr-FR": "Antifoaming Agent"
+				}
+			}
+		},
+		{
+			"key": "physicochemicalAgent.surfactant.stoolSurfactant",
+			"parentKey": "physicochemicalAgent.surfactant",
+			"order": 171,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Stool Surfactant",
+					"pt-PT": "Stool Surfactant",
+					"gn-PY": "Stool Surfactant",
+					"en-US": "Stool Surfactant",
+					"es-ES": "Stool Surfactant",
+					"fr-FR": "Stool Surfactant"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator",
+			"parentKey": null,
+			"order": 172,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Modulador de receptor",
+					"pt-PT": "Modulador de receptor",
+					"gn-PY": "Modulador de receptor",
+					"en-US": "Receptor modulator",
+					"es-ES": "Modulador de receptor",
+					"fr-FR": "Modulateur de récepteur"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.allostericModulator",
+			"parentKey": "receptorModulator",
+			"order": 173,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Allosteric Modulator",
+					"pt-PT": "Allosteric Modulator",
+					"gn-PY": "Allosteric Modulator",
+					"en-US": "Allosteric Modulator",
+					"es-ES": "Allosteric Modulator",
+					"fr-FR": "Allosteric Modulator"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.allostericModulator.calciumSensingReceptorModulator",
+			"parentKey": "receptorModulator.allostericModulator",
+			"order": 174,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Calcium Sensing Receptor Modulator",
+					"pt-PT": "Calcium Sensing Receptor Modulator",
+					"gn-PY": "Calcium Sensing Receptor Modulator",
+					"en-US": "Calcium Sensing Receptor Modulator",
+					"es-ES": "Calcium Sensing Receptor Modulator",
+					"fr-FR": "Calcium Sensing Receptor Modulator"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.allostericModulator.gabaPositiveAllosteric",
+			"parentKey": "receptorModulator.allostericModulator",
+			"order": 175,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Gaba Positive Allosteric",
+					"pt-PT": "Gaba Positive Allosteric",
+					"gn-PY": "Gaba Positive Allosteric",
+					"en-US": "Gaba Positive Allosteric",
+					"es-ES": "Gaba Positive Allosteric",
+					"fr-FR": "Gaba Positive Allosteric"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.antagonist",
+			"parentKey": "receptorModulator",
+			"order": 176,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Antagonist",
+					"pt-PT": "Antagonist",
+					"gn-PY": "Antagonist",
+					"en-US": "Antagonist",
+					"es-ES": "Antagonist",
+					"fr-FR": "Antagonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.antagonist.alphaAdrenergicAntagonist",
+			"parentKey": "receptorModulator.antagonist",
+			"order": 177,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Alpha Adrenergic Antagonist",
+					"pt-PT": "Alpha Adrenergic Antagonist",
+					"gn-PY": "Alpha Adrenergic Antagonist",
+					"en-US": "Alpha Adrenergic Antagonist",
+					"es-ES": "Alpha Adrenergic Antagonist",
+					"fr-FR": "Alpha Adrenergic Antagonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.antagonist.angiotensinReceptorBlocker",
+			"parentKey": "receptorModulator.antagonist",
+			"order": 178,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Angiotensin Receptor Blocker",
+					"pt-PT": "Angiotensin Receptor Blocker",
+					"gn-PY": "Angiotensin Receptor Blocker",
+					"en-US": "Angiotensin Receptor Blocker",
+					"es-ES": "Angiotensin Receptor Blocker",
+					"fr-FR": "Angiotensin Receptor Blocker"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.antagonist.betaAdrenergicAntagonist",
+			"parentKey": "receptorModulator.antagonist",
+			"order": 179,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Beta Adrenergic Antagonist",
+					"pt-PT": "Beta Adrenergic Antagonist",
+					"gn-PY": "Beta Adrenergic Antagonist",
+					"en-US": "Beta Adrenergic Antagonist",
+					"es-ES": "Beta Adrenergic Antagonist",
+					"fr-FR": "Beta Adrenergic Antagonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.antagonist.dopaminergicAntagonist",
+			"parentKey": "receptorModulator.antagonist",
+			"order": 180,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Dopaminergic Antagonist",
+					"pt-PT": "Dopaminergic Antagonist",
+					"gn-PY": "Dopaminergic Antagonist",
+					"en-US": "Dopaminergic Antagonist",
+					"es-ES": "Dopaminergic Antagonist",
+					"fr-FR": "Dopaminergic Antagonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.antagonist.histamineH1Antagonist",
+			"parentKey": "receptorModulator.antagonist",
+			"order": 181,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Histamine H 1 Antagonist",
+					"pt-PT": "Histamine H 1 Antagonist",
+					"gn-PY": "Histamine H 1 Antagonist",
+					"en-US": "Histamine H 1 Antagonist",
+					"es-ES": "Histamine H 1 Antagonist",
+					"fr-FR": "Histamine H 1 Antagonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.antagonist.histamineH2Antagonist",
+			"parentKey": "receptorModulator.antagonist",
+			"order": 182,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Histamine H 2 Antagonist",
+					"pt-PT": "Histamine H 2 Antagonist",
+					"gn-PY": "Histamine H 2 Antagonist",
+					"en-US": "Histamine H 2 Antagonist",
+					"es-ES": "Histamine H 2 Antagonist",
+					"fr-FR": "Histamine H 2 Antagonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.antagonist.muscarinicAntagonist",
+			"parentKey": "receptorModulator.antagonist",
+			"order": 183,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Muscarinic Antagonist",
+					"pt-PT": "Muscarinic Antagonist",
+					"gn-PY": "Muscarinic Antagonist",
+					"en-US": "Muscarinic Antagonist",
+					"es-ES": "Muscarinic Antagonist",
+					"fr-FR": "Muscarinic Antagonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.antagonist.nk1ReceptorAntagonist",
+			"parentKey": "receptorModulator.antagonist",
+			"order": 184,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Nk 1 Receptor Antagonist",
+					"pt-PT": "Nk 1 Receptor Antagonist",
+					"gn-PY": "Nk 1 Receptor Antagonist",
+					"en-US": "Nk 1 Receptor Antagonist",
+					"es-ES": "Nk 1 Receptor Antagonist",
+					"fr-FR": "Nk 1 Receptor Antagonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.antagonist.nmdaReceptorAntagonist",
+			"parentKey": "receptorModulator.antagonist",
+			"order": 185,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Nmda Receptor Antagonist",
+					"pt-PT": "Nmda Receptor Antagonist",
+					"gn-PY": "Nmda Receptor Antagonist",
+					"en-US": "Nmda Receptor Antagonist",
+					"es-ES": "Nmda Receptor Antagonist",
+					"fr-FR": "Nmda Receptor Antagonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.antagonist.opioidAntagonist",
+			"parentKey": "receptorModulator.antagonist",
+			"order": 186,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Opioid Antagonist",
+					"pt-PT": "Opioid Antagonist",
+					"gn-PY": "Opioid Antagonist",
+					"en-US": "Opioid Antagonist",
+					"es-ES": "Opioid Antagonist",
+					"fr-FR": "Opioid Antagonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.antagonist.serotonergicAntagonist",
+			"parentKey": "receptorModulator.antagonist",
+			"order": 187,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Serotonergic Antagonist",
+					"pt-PT": "Serotonergic Antagonist",
+					"gn-PY": "Serotonergic Antagonist",
+					"en-US": "Serotonergic Antagonist",
+					"es-ES": "Serotonergic Antagonist",
+					"fr-FR": "Serotonergic Antagonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.fullAgonist",
+			"parentKey": "receptorModulator",
+			"order": 188,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Full Agonist",
+					"pt-PT": "Full Agonist",
+					"gn-PY": "Full Agonist",
+					"en-US": "Full Agonist",
+					"es-ES": "Full Agonist",
+					"fr-FR": "Full Agonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.fullAgonist.alphaAdrenergicAgonist",
+			"parentKey": "receptorModulator.fullAgonist",
+			"order": 189,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Alpha Adrenergic Agonist",
+					"pt-PT": "Alpha Adrenergic Agonist",
+					"gn-PY": "Alpha Adrenergic Agonist",
+					"en-US": "Alpha Adrenergic Agonist",
+					"es-ES": "Alpha Adrenergic Agonist",
+					"fr-FR": "Alpha Adrenergic Agonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.fullAgonist.betaAdrenergicAgonist",
+			"parentKey": "receptorModulator.fullAgonist",
+			"order": 190,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Beta Adrenergic Agonist",
+					"pt-PT": "Beta Adrenergic Agonist",
+					"gn-PY": "Beta Adrenergic Agonist",
+					"en-US": "Beta Adrenergic Agonist",
+					"es-ES": "Beta Adrenergic Agonist",
+					"fr-FR": "Beta Adrenergic Agonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.fullAgonist.cholinergicMuscarinicAgonist",
+			"parentKey": "receptorModulator.fullAgonist",
+			"order": 191,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Cholinergic Muscarinic Agonist",
+					"pt-PT": "Cholinergic Muscarinic Agonist",
+					"gn-PY": "Cholinergic Muscarinic Agonist",
+					"en-US": "Cholinergic Muscarinic Agonist",
+					"es-ES": "Cholinergic Muscarinic Agonist",
+					"fr-FR": "Cholinergic Muscarinic Agonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.fullAgonist.dopaminergicAgonist",
+			"parentKey": "receptorModulator.fullAgonist",
+			"order": 192,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Dopaminergic Agonist",
+					"pt-PT": "Dopaminergic Agonist",
+					"gn-PY": "Dopaminergic Agonist",
+					"en-US": "Dopaminergic Agonist",
+					"es-ES": "Dopaminergic Agonist",
+					"fr-FR": "Dopaminergic Agonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.fullAgonist.opioidMuAgonist",
+			"parentKey": "receptorModulator.fullAgonist",
+			"order": 193,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Opioid Mu Agonist",
+					"pt-PT": "Opioid Mu Agonist",
+					"gn-PY": "Opioid Mu Agonist",
+					"en-US": "Opioid Mu Agonist",
+					"es-ES": "Opioid Mu Agonist",
+					"fr-FR": "Opioid Mu Agonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.partialAgonist",
+			"parentKey": "receptorModulator",
+			"order": 194,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Partial Agonist",
+					"pt-PT": "Partial Agonist",
+					"gn-PY": "Partial Agonist",
+					"en-US": "Partial Agonist",
+					"es-ES": "Partial Agonist",
+					"fr-FR": "Partial Agonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.partialAgonist.mixedOpioidAgonistAntagonist",
+			"parentKey": "receptorModulator.partialAgonist",
+			"order": 195,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Mixed Opioid Agonist Antagonist",
+					"pt-PT": "Mixed Opioid Agonist Antagonist",
+					"gn-PY": "Mixed Opioid Agonist Antagonist",
+					"en-US": "Mixed Opioid Agonist Antagonist",
+					"es-ES": "Mixed Opioid Agonist Antagonist",
+					"fr-FR": "Mixed Opioid Agonist Antagonist"
+				}
+			}
+		},
+		{
+			"key": "receptorModulator.partialAgonist.opioidPartialAgonist",
+			"parentKey": "receptorModulator.partialAgonist",
+			"order": 196,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Opioid Partial Agonist",
+					"pt-PT": "Opioid Partial Agonist",
+					"gn-PY": "Opioid Partial Agonist",
+					"en-US": "Opioid Partial Agonist",
+					"es-ES": "Opioid Partial Agonist",
+					"fr-FR": "Opioid Partial Agonist"
+				}
+			}
+		},
+		{
+			"key": "transporterModulator",
+			"parentKey": null,
+			"order": 197,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Modulador de transportador",
+					"pt-PT": "Modulador de transportador",
+					"gn-PY": "Modulador de transportador",
+					"en-US": "Transporter modulator",
+					"es-ES": "Modulador de transportador",
+					"fr-FR": "Modulateur de transporteur"
+				}
+			}
+		},
+		{
+			"key": "transporterModulator.ionPumpInhibitor",
+			"parentKey": "transporterModulator",
+			"order": 198,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Ion Pump Inhibitor",
+					"pt-PT": "Ion Pump Inhibitor",
+					"gn-PY": "Ion Pump Inhibitor",
+					"en-US": "Ion Pump Inhibitor",
+					"es-ES": "Ion Pump Inhibitor",
+					"fr-FR": "Ion Pump Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "transporterModulator.ionPumpInhibitor.protonPumpInhibitor",
+			"parentKey": "transporterModulator.ionPumpInhibitor",
+			"order": 199,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Proton Pump Inhibitor",
+					"pt-PT": "Proton Pump Inhibitor",
+					"gn-PY": "Proton Pump Inhibitor",
+					"en-US": "Proton Pump Inhibitor",
+					"es-ES": "Proton Pump Inhibitor",
+					"fr-FR": "Proton Pump Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "transporterModulator.ionPumpInhibitor.sodiumPotassiumATPaseInhibitor",
+			"parentKey": "transporterModulator.ionPumpInhibitor",
+			"order": 200,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Sodium Potassium ATPase Inhibitor",
+					"pt-PT": "Sodium Potassium ATPase Inhibitor",
+					"gn-PY": "Sodium Potassium ATPase Inhibitor",
+					"en-US": "Sodium Potassium ATPase Inhibitor",
+					"es-ES": "Sodium Potassium ATPase Inhibitor",
+					"fr-FR": "Sodium Potassium ATPase Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "transporterModulator.reuptakeInhibitor",
+			"parentKey": "transporterModulator",
+			"order": 201,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Reuptake Inhibitor",
+					"pt-PT": "Reuptake Inhibitor",
+					"gn-PY": "Reuptake Inhibitor",
+					"en-US": "Reuptake Inhibitor",
+					"es-ES": "Reuptake Inhibitor",
+					"fr-FR": "Reuptake Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "transporterModulator.reuptakeInhibitor.dopamineReuptakeInhibitor",
+			"parentKey": "transporterModulator.reuptakeInhibitor",
+			"order": 202,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Dopamine Reuptake Inhibitor",
+					"pt-PT": "Dopamine Reuptake Inhibitor",
+					"gn-PY": "Dopamine Reuptake Inhibitor",
+					"en-US": "Dopamine Reuptake Inhibitor",
+					"es-ES": "Dopamine Reuptake Inhibitor",
+					"fr-FR": "Dopamine Reuptake Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "transporterModulator.reuptakeInhibitor.mixedMonoamineReuptakeInhibitor",
+			"parentKey": "transporterModulator.reuptakeInhibitor",
+			"order": 203,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Mixed Monoamine Reuptake Inhibitor",
+					"pt-PT": "Mixed Monoamine Reuptake Inhibitor",
+					"gn-PY": "Mixed Monoamine Reuptake Inhibitor",
+					"en-US": "Mixed Monoamine Reuptake Inhibitor",
+					"es-ES": "Mixed Monoamine Reuptake Inhibitor",
+					"fr-FR": "Mixed Monoamine Reuptake Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "transporterModulator.reuptakeInhibitor.selectiveSerotoninReuptakeInhibitor",
+			"parentKey": "transporterModulator.reuptakeInhibitor",
+			"order": 204,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Selective Serotonin Reuptake Inhibitor",
+					"pt-PT": "Selective Serotonin Reuptake Inhibitor",
+					"gn-PY": "Selective Serotonin Reuptake Inhibitor",
+					"en-US": "Selective Serotonin Reuptake Inhibitor",
+					"es-ES": "Selective Serotonin Reuptake Inhibitor",
+					"fr-FR": "Selective Serotonin Reuptake Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "transporterModulator.reuptakeInhibitor.serotoninNorepinephrineReuptakeInhibitor",
+			"parentKey": "transporterModulator.reuptakeInhibitor",
+			"order": 205,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Serotonin Norepinephrine Reuptake Inhibitor",
+					"pt-PT": "Serotonin Norepinephrine Reuptake Inhibitor",
+					"gn-PY": "Serotonin Norepinephrine Reuptake Inhibitor",
+					"en-US": "Serotonin Norepinephrine Reuptake Inhibitor",
+					"es-ES": "Serotonin Norepinephrine Reuptake Inhibitor",
+					"fr-FR": "Serotonin Norepinephrine Reuptake Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "transporterModulator.symporterAndAntiporterInhibitor",
+			"parentKey": "transporterModulator",
+			"order": 206,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Symporter And Antiporter Inhibitor",
+					"pt-PT": "Symporter And Antiporter Inhibitor",
+					"gn-PY": "Symporter And Antiporter Inhibitor",
+					"en-US": "Symporter And Antiporter Inhibitor",
+					"es-ES": "Symporter And Antiporter Inhibitor",
+					"fr-FR": "Symporter And Antiporter Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "transporterModulator.symporterAndAntiporterInhibitor.naClSymporterInhibitor",
+			"parentKey": "transporterModulator.symporterAndAntiporterInhibitor",
+			"order": 207,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Na Cl Symporter Inhibitor",
+					"pt-PT": "Na Cl Symporter Inhibitor",
+					"gn-PY": "Na Cl Symporter Inhibitor",
+					"en-US": "Na Cl Symporter Inhibitor",
+					"es-ES": "Na Cl Symporter Inhibitor",
+					"fr-FR": "Na Cl Symporter Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "transporterModulator.symporterAndAntiporterInhibitor.naK2ClSymporterInhibitor",
+			"parentKey": "transporterModulator.symporterAndAntiporterInhibitor",
+			"order": 208,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Na K 2 Cl Symporter Inhibitor",
+					"pt-PT": "Na K 2 Cl Symporter Inhibitor",
+					"gn-PY": "Na K 2 Cl Symporter Inhibitor",
+					"en-US": "Na K 2 Cl Symporter Inhibitor",
+					"es-ES": "Na K 2 Cl Symporter Inhibitor",
+					"fr-FR": "Na K 2 Cl Symporter Inhibitor"
+				}
+			}
+		},
+		{
+			"key": "transporterModulator.symporterAndAntiporterInhibitor.sglt2Inhibitor",
+			"parentKey": "transporterModulator.symporterAndAntiporterInhibitor",
+			"order": 209,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "SGLT2 Inhibitor",
+					"pt-PT": "SGLT2 Inhibitor",
+					"gn-PY": "SGLT2 Inhibitor",
+					"en-US": "SGLT2 Inhibitor",
+					"es-ES": "SGLT2 Inhibitor",
+					"fr-FR": "SGLT2 Inhibitor"
+				}
+			}
+		}
+	]
+}

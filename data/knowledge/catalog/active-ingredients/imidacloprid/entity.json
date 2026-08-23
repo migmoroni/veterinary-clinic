@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"entityType": "active_ingredient",
+	"id": "611f7516-b4da-4de8-ae4c-56dd407cb8da",
+	"typeTermKey": "antiInfective.antiparasitic.neonicotinoids",
+	"classificationTermKeys": [],
+	"regions": [],
+	"nomenclature": {
+		"scientificName": null,
+		"casNumber": null,
+		"denominationStandards": []
+	},
+	"atcVetCode": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Imidacloprida",
+			"pt-PT": "Imidaclopride",
+			"gn-PY": "Imidacloprida",
+			"en-US": "Imidacloprid",
+			"es-ES": "Imidacloprida",
+			"fr-FR": "Imidaclopride"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "kishu",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"jp"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			18,
+			27
+		],
+		"female": [
+			14,
+			23
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			49,
+			55
+		],
+		"female": [
+			43,
+			49
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Kishu",
+			"pt-PT": "Kishu",
+			"gn-PY": "Kishu",
+			"en-US": "Kishu",
+			"es-ES": "Kishu",
+			"fr-FR": "Kishu"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

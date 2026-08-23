@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "campeiro-bulldog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"br"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			36,
+			45
+		],
+		"female": [
+			31,
+			40
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			50,
+			58
+		],
+		"female": [
+			48,
+			56
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Buldogue Campeiro",
+			"pt-PT": "Buldogue Campeiro",
+			"gn-PY": "Bulldog campeiro",
+			"en-US": "Campeiro Bulldog",
+			"es-ES": "Bulldog campeiro",
+			"fr-FR": "Bouledogue Campeiro"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

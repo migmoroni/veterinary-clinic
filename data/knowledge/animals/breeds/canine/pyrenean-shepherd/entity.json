@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "pyrenean-shepherd",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"fr"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			8,
+			15
+		],
+		"female": [
+			7,
+			14
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			40,
+			48
+		],
+		"female": [
+			38,
+			46
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Pastor dos Pireneus",
+			"pt-PT": "Pastor dos Pireneus",
+			"gn-PY": "Pastor de los Pirineos",
+			"en-US": "Pyrenean Shepherd",
+			"es-ES": "Pastor de los Pirineos",
+			"fr-FR": "Berger des Pyrénées"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

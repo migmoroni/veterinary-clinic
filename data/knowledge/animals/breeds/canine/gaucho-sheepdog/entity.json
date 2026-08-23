@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "gaucho-sheepdog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"br"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			24,
+			35
+		],
+		"female": [
+			20,
+			30
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			58,
+			65
+		],
+		"female": [
+			55,
+			62
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Ovelheiro Gaúcho",
+			"pt-PT": "Ovelheiro Gaúcho",
+			"gn-PY": "Ovejero gaucho",
+			"en-US": "Gaucho Sheepdog",
+			"es-ES": "Ovejero gaucho",
+			"fr-FR": "Berger gaucho"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

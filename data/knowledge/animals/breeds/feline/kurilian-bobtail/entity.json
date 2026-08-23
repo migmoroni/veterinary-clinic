@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "kurilian-bobtail",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"ru"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			5,
+			7
+		],
+		"female": [
+			3.5,
+			5.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			32
+		],
+		"female": [
+			23,
+			30
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Bobtail Kuriliano",
+			"pt-PT": "Bobtail Kuriliano",
+			"gn-PY": "Bobtail kuriliano",
+			"en-US": "Kurilian Bobtail",
+			"es-ES": "Bobtail kuriliano",
+			"fr-FR": "Bobtail des Kouriles"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

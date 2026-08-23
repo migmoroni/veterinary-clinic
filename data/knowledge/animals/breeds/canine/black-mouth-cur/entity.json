@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "black-mouth-cur",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			18,
+			45
+		],
+		"female": [
+			16,
+			40
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			64
+		],
+		"female": [
+			41,
+			60
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Black Mouth Cur",
+			"pt-PT": "Black Mouth Cur",
+			"gn-PY": "Black Mouth Cur",
+			"en-US": "Black Mouth Cur",
+			"es-ES": "Black Mouth Cur",
+			"fr-FR": "Black Mouth Cur"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

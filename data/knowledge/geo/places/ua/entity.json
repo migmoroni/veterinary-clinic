@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "ua",
+	"placeType": "country",
+	"countryCodes": [
+		"UA"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 48.4,
+		"longitude": 31.2
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Ucrânia",
+			"pt-PT": "Ucrânia",
+			"gn-PY": "Ukraine",
+			"en-US": "Ukraine",
+			"es-ES": "Ucrania",
+			"fr-FR": "Ukraine"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

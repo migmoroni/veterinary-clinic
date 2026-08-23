@@ -1,0 +1,63 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "eac581fc-0dfa-40d6-b521-96586233ed23",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Nobivac Feline 1-HCP",
+			"pt-PT": "Nobivac Feline 1-HCP",
+			"gn-PY": "Nobivac Feline 1-HCP",
+			"en-US": "Nobivac Feline 1-HCP",
+			"es-ES": "Nobivac Feline 1-HCP",
+			"fr-FR": "Nobivac Feline 1-HCP"
+		},
+		"aliases": {
+			"pt-BR": [
+				"HCP"
+			],
+			"pt-PT": [
+				"HCP"
+			],
+			"gn-PY": [
+				"HCP"
+			],
+			"en-US": [
+				"HCP"
+			],
+			"es-ES": [
+				"HCP"
+			],
+			"fr-FR": [
+				"HCP"
+			]
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"disease.felineRhinotracheitis",
+		"disease.felineCalicivirosis",
+		"disease.felinePanleukopenia"
+	],
+	"vaccineProfileTermKeys": [
+		"feline.trivalent"
+	]
+}

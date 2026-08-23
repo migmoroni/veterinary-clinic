@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "border-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"england"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			5.9,
+			7.1
+		],
+		"female": [
+			5.1,
+			6.4
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			33,
+			40
+		],
+		"female": [
+			30,
+			36
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Border Terrier",
+			"pt-PT": "Border Terrier",
+			"gn-PY": "Border Terrier",
+			"en-US": "Border Terrier",
+			"es-ES": "Border Terrier",
+			"fr-FR": "Border Terrier"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

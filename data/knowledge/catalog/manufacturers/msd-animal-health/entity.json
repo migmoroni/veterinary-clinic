@@ -1,0 +1,52 @@
+{
+	"schemaVersion": 1,
+	"entityType": "manufacturer",
+	"id": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"typeTermKey": "veterinaryIndustrial.veterinaryIndustrialLaboratory",
+	"classificationTermKeys": [
+		"regulatoryStatus.veterinaryIndustrial",
+		"commercialFlow.distributorNetwork",
+		"qualityStandard.gmpCertified"
+	],
+	"regions": [
+		"BRA"
+	],
+	"website": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "MSD Animal Health",
+			"pt-PT": "MSD Animal Health",
+			"gn-PY": "MSD Animal Health",
+			"en-US": "MSD Animal Health",
+			"es-ES": "MSD Animal Health",
+			"fr-FR": "MSD Animal Health"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [
+		{
+			"sectionKey": "about",
+			"sectionNumber": 1
+		},
+		{
+			"sectionKey": "portfolio",
+			"sectionNumber": 2
+		},
+		{
+			"sectionKey": "support",
+			"sectionNumber": 3
+		},
+		{
+			"sectionKey": "references",
+			"sectionNumber": 4
+		}
+	],
+	"contentPath": "./content"
+}

@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "beagle",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"england"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			10,
+			14
+		],
+		"female": [
+			9,
+			13
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			36,
+			41
+		],
+		"female": [
+			33,
+			38
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Beagle",
+			"pt-PT": "Beagle",
+			"gn-PY": "Beagle",
+			"en-US": "Beagle",
+			"es-ES": "Beagle",
+			"fr-FR": "Beagle"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

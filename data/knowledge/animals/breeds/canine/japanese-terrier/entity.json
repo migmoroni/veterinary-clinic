@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "japanese-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"jp"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			2.3,
+			4
+		],
+		"female": [
+			2,
+			3.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			30,
+			33
+		],
+		"female": [
+			28,
+			32
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Terrier Japonês",
+			"pt-PT": "Terrier Japonês",
+			"gn-PY": "Terrier japonés",
+			"en-US": "Japanese Terrier",
+			"es-ES": "Terrier japonés",
+			"fr-FR": "Terrier japonais"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "labradoodle",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"au"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			12,
+			30
+		],
+		"female": [
+			10,
+			27
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			43,
+			63
+		],
+		"female": [
+			40,
+			58
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Labradoodle",
+			"pt-PT": "Labradoodle",
+			"gn-PY": "Labradoodle",
+			"en-US": "Labradoodle",
+			"es-ES": "Labradoodle",
+			"fr-FR": "Labradoodle"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

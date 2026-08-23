@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "scotland",
+	"placeType": "region",
+	"countryCodes": [],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 56.5,
+		"longitude": -4.2
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Escócia",
+			"pt-PT": "Escócia",
+			"gn-PY": "Escocia",
+			"en-US": "Scotland",
+			"es-ES": "Escocia",
+			"fr-FR": "Écosse"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

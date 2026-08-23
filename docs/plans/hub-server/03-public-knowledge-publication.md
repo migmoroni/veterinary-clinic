@@ -65,27 +65,24 @@ Todo diretório de entidade segue o mesmo envelope físico:
 ```text
 <entity>/
 ├── entity.json
-├── localized/
-│   └── <campo-arbitrario>/
-│       ├── pt-BR.md
-│       ├── pt-PT.md
-│       ├── gn-PY.md
-│       ├── en-US.md
-│       ├── es-ES.md
-│       └── fr-FR.md
-├── sections/
-│   └── <diretorio-arbitrario>/
-│       └── <locale>.md
+├── content/
+│   ├── pt-BR.md
+│   ├── pt-PT.md
+│   ├── gn-PY.md
+│   ├── en-US.md
+│   ├── es-ES.md
+│   └── fr-FR.md
 └── media/
     └── <arquivo-editorial>.<extensão>
 ```
 
 Os campos `entityType` e `id` formam a identidade usada pelos bancos e relações.
-O `entity.json` associa explicitamente cada diretório de conteúdo a um campo ou
-`sectionKey`; o builder não infere semântica pelo nome das pastas.
+O `entity.json` declara um único `contentPath` e associa cada `sectionNumber` a
+uma `sectionKey`; o builder não infere semântica pelo rótulo editorial do heading
+nem pelo nome das pastas.
 
-`entity.json` contém os campos estruturais compartilhados, as relações e a
-composição do conteúdo localizado:
+`entity.json` contém os campos estruturais compartilhados, as relações, os
+valores localizados simples e a composição do conteúdo Markdown:
 
 ```json
 {
@@ -95,39 +92,70 @@ composição do conteúdo localizado:
   "species": ["canine"],
   "originPlaceIds": ["england"],
   "regions": ["BRA", "PRT"],
-  "classification": {},
+  "sizeTermKey": "medium",
   "relations": {},
   "localizedContent": {
-    "name": "./localized/display",
-    "aliases": "./localized/search-names"
+    "name": {
+      "pt-BR": "Beagle",
+      "pt-PT": "Beagle",
+      "gn-PY": "Beagle",
+      "en-US": "Beagle",
+      "es-ES": "Beagle",
+      "fr-FR": "Beagle"
+    },
+    "aliases": {
+      "pt-BR": ["Beagle inglês"],
+      "pt-PT": ["Beagle inglês"],
+      "gn-PY": [],
+      "en-US": ["English Beagle"],
+      "es-ES": [],
+      "fr-FR": []
+    }
   },
+  "contentPath": "./content",
   "sections": [
     {
-      "sectionKey": "overview",
-      "contentPath": "./sections/content-a"
+      "sectionKey": "about",
+      "sectionNumber": 1
     }
   ],
   "cover": "./media/cover.webp"
 }
 ```
 
-Cada arquivo Markdown contém somente o valor ou o corpo do locale, sem front
-matter. Um fragmento de seção usa o perfil Markdown canônico e pode conter
-referências relativas de mídia:
+Cada arquivo Markdown contém todas as seções editoriais do locale, sem front
+matter. Headings de nível `#` começam por `# <sectionNumber>` e delimitam as
+seções declaradas no manifesto. Um ponto e texto editorial depois do número são
+opcionais e descartados integralmente. Headings inferiores permanecem no corpo
+da seção corrente:
 
 ```markdown
+# 1. Visão geral
+
 Conteúdo localizado da seção.
 
-![Texto alternativo](../../media/detail.webp "Legenda opcional")
+## Características
+
+![Texto alternativo](../media/detail.webp "Legenda opcional")
 ```
 
 Cada domínio possui um schema estrito de `entity.json`, formatos esperados para
-os campos localizados e um conjunto fechado de `sectionKey`. Todo nome, alias,
-descrição e conteúdo apresentável fica no fragmento Markdown correspondente,
-mesmo quando o texto coincide nos seis locales. Identificadores científicos e
-regulatórios permanecem estruturais. Relações usam IDs estáveis e nunca nomes
-localizados. Títulos e subtítulos padronizados formam uma hierarquia explícita
-por `parentSectionKey`, sem depender de headings ou nomes de diretório.
+os campos localizados e um conjunto fechado de `sectionKey`. Nomes, aliases,
+descrições simples e outros valores localizados ficam diretamente em
+`localizedContent`, sempre no JSON do objeto proprietário. Labels e aliases
+gerais de tipos, classificações e portes pertencem ao `localizedContent` do termo
+taxonômico; as entidades relacionadas armazenam somente suas chaves canônicas
+completas. Identificadores científicos e regulatórios permanecem estruturais.
+Relações usam IDs estáveis e nunca nomes localizados. Conteúdo editorial rico
+fica nos documentos Markdown. O builder usa somente o número do heading e
+descarta o delimitador inteiro. A UI resolve o título pelo i18n da `sectionKey`.
+As seções formam uma lista plana; headings inferiores organizam somente o corpo
+Markdown da seção corrente.
+
+Produtos referenciam princípios ativos por IDs de entidades
+`active_ingredient`. Alvos, perfis vacinais, estágios de vida e escopos
+terapêuticos usam taxonomias próprias. A busca deriva seus termos dessas relações
+e não publica conceitos genéricos de busca como classificações de produto.
 
 O builder resolve caminhos relativos dentro da entidade, analisa Markdown por
 AST, aplica a allowlist, normaliza o AST deterministicamente e constrói o modelo
@@ -137,11 +165,12 @@ semântico canônico. Em seguida calcula SHA-256, deriva uma `media_key` de
 compilado seguro recebe referências `knowledge-media://asset/<media-key>`; a
 fonte de autoria nunca contém essa URI.
 
-Para cada entidade e locale, o builder compõe todas as seções em um único
-`content_json` versionado. A ordem dos arrays representa a ordem da página,
-`children` representa a hierarquia e cada nó contém seu `sectionKey` e o Markdown
-normalizado. Pacotes publicados transportam esse documento dentro do banco
-`system`; não são criadas tabelas, linhas ou artefatos independentes por seção.
+Para cada entidade e locale, o builder separa o documento pelos headings
+numerados e compõe todas as seções em um único `content_json` versionado. A ordem
+do array `sections` representa a ordem da página, e cada item contém `sectionKey`
+e o Markdown normalizado. Pacotes publicados
+transportam esse documento dentro do banco `system`; não são criadas tabelas,
+linhas ou artefatos independentes por seção.
 
 Alterar os bytes preservando o caminho editorial mantém a `media_key` e produz
 outro objeto CAS imutável. Renomear a mídia exige atualizar as referências e
@@ -152,13 +181,17 @@ Na saída física do builder, cada objeto usa a disposição
 do build e pelo resolvedor de hash; ele não deduz a identidade a partir da pasta
 editorial da mídia.
 
-A validação exige os seis arquivos Markdown para cada campo ou seção obrigatória.
-O processo recusa ID duplicado, referência inexistente, locale desconhecido,
-front matter, arquivo não declarado, `sectionKey` inválida, AST incompatível,
-HTML bruto, nó fora da allowlist, protocolo não permitido, caminho absoluto,
-remoto ou que resolva fora da entidade e mídia não referenciada. A projeção de
-cada locale combina o manifesto com seus fragmentos e produz o mesmo conjunto de
-IDs e relações não localizáveis nos seis bancos.
+A validação exige exatamente os seis locales em cada campo de
+`localizedContent`, inclusive nos termos taxonômicos, e um documento Markdown por
+locale em cada entidade com seções. O processo recusa ID duplicado, referência
+inexistente, chave taxonômica parcial ou de outro domínio, locale desconhecido,
+mapa localizado incompleto, front matter, arquivo não declarado, `sectionKey`
+inválida, `sectionNumber` ausente, repetido, descontínuo ou fora de ordem, seção
+ausente ou adicional, conteúdo antes da primeira seção, AST incompatível, HTML
+bruto, nó fora da allowlist, protocolo não permitido, caminho absoluto, remoto
+ou que resolva fora da entidade e mídia não referenciada. A projeção de cada
+locale combina o manifesto com seu documento e produz o mesmo conjunto de IDs e
+relações não localizáveis nos seis bancos.
 
 ## Fronteira Com A Preparação Local
 
@@ -874,14 +907,24 @@ Cobrir:
 - ausência de catálogos publicados em `packages/types`;
 - preparação do layout local pelo mesmo builder Rust em um workspace limpo;
 - inicialização do app com os artefatos exportados durante esta parte;
-- validação dos schemas de `entity.json` e dos contratos Markdown de cada
-  domínio;
+- validação dos schemas de `entity.json`, dos mapas localizados JSON e dos
+  contratos Markdown de cada domínio;
 - um diretório de entidade por ID e integridade de todas as referências
   estruturais;
-- presença dos seis Markdown em cada campo ou seção obrigatória;
-- associação de cada diretório a um campo ou `sectionKey` no manifesto;
+- presença exata dos seis locales em cada campo de `localizedContent`;
+- conteúdo simples projetado diretamente do JSON, sem diretório `localized/`;
+- resolução de toda referência taxonômica por chave canônica completa;
+- ausência de labels e aliases taxonômicos duplicados nas entidades;
+- resolução integral das relações entre produtos e princípios ativos;
+- decomposição de combinações farmacológicas em relações individuais;
+- ausência de chaves ou termos `searchConcept.*`;
+- presença de um Markdown por locale em cada entidade com seções;
+- associação de cada `sectionNumber` a uma `sectionKey` no manifesto;
+- delimitação das seções por headings iniciados por `# <n>`, analisados via AST;
+- descarte do heading delimitador e ausência de `sectionNumber` e texto editorial
+  na saída;
 - composição determinística de um `content_json` localizado por entidade, com
-  ordem, hierarquia e Markdown compilado;
+  lista plana ordenada e Markdown compilado;
 - recusa de front matter, AST inválido e conteúdo não declarado;
 - projeção isolada de cada locale sem alterar campos estruturais;
 - projeção de `geo_place` como domínio compartilhado e resolução de todos os
@@ -944,8 +987,9 @@ Cobrir:
 - O Hub consegue usar o builder para materializar a saída local necessária ao app
   até a Parte 4.
 - Os dados fonte são organizados por domínio e diretório de entidade, com
-  `entity.json`, fragmentos Markdown por locale e mídias referenciadas por
-  caminhos relativos.
+  `localizedContent` inline no `entity.json`, referências taxonômicas por chaves
+  canônicas completas, um documento Markdown por locale e mídias referenciadas
+  por caminhos relativos.
 - Toda versão coordena os seis pares de bancos e o `CAS/system` compartilhado.
 - A versão usa geração e revisão inteiras.
 - Os doze bancos registram a mesma versão global e seus respectivos locales.

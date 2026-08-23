@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "chesapeake-bay-retriever",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			30,
+			36
+		],
+		"female": [
+			25,
+			32
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			58,
+			66
+		],
+		"female": [
+			53,
+			61
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Chesapeake Bay Retriever",
+			"pt-PT": "Chesapeake Bay Retriever",
+			"gn-PY": "Chesapeake Bay Retriever",
+			"en-US": "Chesapeake Bay Retriever",
+			"es-ES": "Chesapeake Bay Retriever",
+			"fr-FR": "Chesapeake Bay Retriever"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

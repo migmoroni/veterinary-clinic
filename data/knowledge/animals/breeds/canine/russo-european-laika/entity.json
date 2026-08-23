@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "russo-european-laika",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"ru"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			18,
+			23
+		],
+		"female": [
+			16,
+			21
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			54,
+			60
+		],
+		"female": [
+			52,
+			58
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Laika Russo-Europeu",
+			"pt-PT": "Laika Russo-Europeu",
+			"gn-PY": "Laika ruso-europeo",
+			"en-US": "Russo-European Laika",
+			"es-ES": "Laika ruso-europeo",
+			"fr-FR": "Laïka russo-européen"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

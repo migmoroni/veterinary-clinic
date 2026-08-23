@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "ke",
+	"placeType": "country",
+	"countryCodes": [
+		"KE"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 0,
+		"longitude": 37.9
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Quênia",
+			"pt-PT": "Quénia",
+			"gn-PY": "Kenya",
+			"en-US": "Kenya",
+			"es-ES": "Kenia",
+			"fr-FR": "Kenya"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

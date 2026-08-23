@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "staffordshire-bull-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"england"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			13,
+			17
+		],
+		"female": [
+			11,
+			15
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			36,
+			41
+		],
+		"female": [
+			33,
+			38
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Staffordshire Bull Terrier",
+			"pt-PT": "Staffordshire Bull Terrier",
+			"gn-PY": "Staffordshire Bull Terrier",
+			"en-US": "Staffordshire Bull Terrier",
+			"es-ES": "Staffordshire Bull Terrier",
+			"fr-FR": "Staffordshire Bull Terrier"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

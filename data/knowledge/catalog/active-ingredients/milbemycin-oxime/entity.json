@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"entityType": "active_ingredient",
+	"id": "afda30e9-4ab0-4b35-a186-0e4891bd412d",
+	"typeTermKey": "antiInfective.antiparasitic.macrocyclicLactones",
+	"classificationTermKeys": [],
+	"regions": [],
+	"nomenclature": {
+		"scientificName": null,
+		"casNumber": null,
+		"denominationStandards": []
+	},
+	"atcVetCode": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Milbemicina oxima",
+			"pt-PT": "Milbemicina oxima",
+			"gn-PY": "Milbemicina oxima",
+			"en-US": "Milbemycin oxime",
+			"es-ES": "Milbemicina oxima",
+			"fr-FR": "Oxime de milbémycine"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

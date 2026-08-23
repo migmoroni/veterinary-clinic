@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "sg",
+	"placeType": "country",
+	"countryCodes": [
+		"SG"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 1.35,
+		"longitude": 103.8
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Singapura",
+			"pt-PT": "Singapura",
+			"gn-PY": "Singapore",
+			"en-US": "Singapore",
+			"es-ES": "Singapur",
+			"fr-FR": "Singapour"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "shetland-sheepdog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"scotland"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			7,
+			12
+		],
+		"female": [
+			6,
+			10
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			35,
+			41
+		],
+		"female": [
+			33,
+			39
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Pastor de Shetland",
+			"pt-PT": "Pastor de Shetland",
+			"gn-PY": "Pastor de Shetland",
+			"en-US": "Shetland Sheepdog",
+			"es-ES": "Pastor de Shetland",
+			"fr-FR": "Berger des Shetland"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "schipperke",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"be"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			5,
+			8
+		],
+		"female": [
+			4,
+			7
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			28,
+			33
+		],
+		"female": [
+			25,
+			31
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Schipperke",
+			"pt-PT": "Schipperke",
+			"gn-PY": "Schipperke",
+			"en-US": "Schipperke",
+			"es-ES": "Schipperke",
+			"fr-FR": "Schipperke"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

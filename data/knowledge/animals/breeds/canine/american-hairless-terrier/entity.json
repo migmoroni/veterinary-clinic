@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "american-hairless-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			5.5,
+			13
+		],
+		"female": [
+			5.5,
+			12.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			30,
+			41
+		],
+		"female": [
+			30,
+			41
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Terrier Americano sem Pelo",
+			"pt-PT": "Terrier Americano sem Pelo",
+			"gn-PY": "Terrier americano sin pelo",
+			"en-US": "American Hairless Terrier",
+			"es-ES": "Terrier americano sin pelo",
+			"fr-FR": "Terrier nu américain"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

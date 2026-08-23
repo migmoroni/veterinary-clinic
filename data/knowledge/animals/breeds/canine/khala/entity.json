@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "khala",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"bo"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			8,
+			25
+		],
+		"female": [
+			7,
+			22
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			36,
+			53
+		],
+		"female": [
+			34,
+			50
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Khala",
+			"pt-PT": "Khala",
+			"gn-PY": "Khala",
+			"en-US": "Khala",
+			"es-ES": "Khala",
+			"fr-FR": "Khala"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

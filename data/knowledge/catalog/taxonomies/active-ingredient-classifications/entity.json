@@ -1,0 +1,609 @@
+{
+	"schemaVersion": 1,
+	"entityType": "taxonomy",
+	"id": "active-ingredient-classifications",
+	"domain": "active_ingredient",
+	"purpose": "classification",
+	"terms": [
+		{
+			"key": "atcVetCode",
+			"parentKey": null,
+			"order": 0,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Código ATCvet",
+					"pt-PT": "Código ATCvet",
+					"gn-PY": "Código ATCvet",
+					"en-US": "ATCvet code",
+					"es-ES": "Código ATCvet",
+					"fr-FR": "Code ATCvet"
+				}
+			}
+		},
+		{
+			"key": "atcVetSystem",
+			"parentKey": null,
+			"order": 1,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Sistema ATCvet",
+					"pt-PT": "Sistema ATCvet",
+					"gn-PY": "Sistema ATCvet",
+					"en-US": "ATCvet system",
+					"es-ES": "Sistema ATCvet",
+					"fr-FR": "Système ATCvet"
+				}
+			}
+		},
+		{
+			"key": "casNumber",
+			"parentKey": null,
+			"order": 2,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Número CAS",
+					"pt-PT": "Número CAS",
+					"gn-PY": "Número CAS",
+					"en-US": "CAS number",
+					"es-ES": "Número CAS",
+					"fr-FR": "Numéro CAS"
+				}
+			}
+		},
+		{
+			"key": "dcb",
+			"parentKey": null,
+			"order": 3,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "DCB",
+					"pt-PT": "DCB",
+					"gn-PY": "DCB",
+					"en-US": "DCB",
+					"es-ES": "DCB",
+					"fr-FR": "DCB"
+				}
+			}
+		},
+		{
+			"key": "dcbDescription",
+			"parentKey": null,
+			"order": 4,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Denominação Comum Brasileira",
+					"pt-PT": "Denominação Comum Brasileira",
+					"gn-PY": "Denominação Comum Brasileira",
+					"en-US": "Brazilian Common Denomination",
+					"es-ES": "Denominación Común Brasileña",
+					"fr-FR": "Dénomination commune brésilienne"
+				}
+			}
+		},
+		{
+			"key": "identification",
+			"parentKey": null,
+			"order": 5,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Identificação",
+					"pt-PT": "Identificação",
+					"gn-PY": "Identificação",
+					"en-US": "Identification",
+					"es-ES": "Identificación",
+					"fr-FR": "Identification"
+				}
+			}
+		},
+		{
+			"key": "inn",
+			"parentKey": null,
+			"order": 6,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "INN",
+					"pt-PT": "INN",
+					"gn-PY": "INN",
+					"en-US": "INN",
+					"es-ES": "INN",
+					"fr-FR": "INN"
+				}
+			}
+		},
+		{
+			"key": "innDescription",
+			"parentKey": null,
+			"order": 7,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "International Nonproprietary Name",
+					"pt-PT": "International Nonproprietary Name",
+					"gn-PY": "International Nonproprietary Name",
+					"en-US": "International Nonproprietary Name",
+					"es-ES": "International Nonproprietary Name",
+					"fr-FR": "International Nonproprietary Name"
+				}
+			}
+		},
+		{
+			"key": "nomenclature",
+			"parentKey": null,
+			"order": 8,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Nomenclatura",
+					"pt-PT": "Nomenclatura",
+					"gn-PY": "Nomenclatura",
+					"en-US": "Nomenclature",
+					"es-ES": "Nomenclatura",
+					"fr-FR": "Nomenclature"
+				}
+			}
+		},
+		{
+			"key": "regulationAndRestriction",
+			"parentKey": null,
+			"order": 9,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Regulação e restrição",
+					"pt-PT": "Regulação e restrição",
+					"gn-PY": "Regulação e restrição",
+					"en-US": "Regulation and restriction",
+					"es-ES": "Regulación y restricción",
+					"fr-FR": "Réglementation et restriction"
+				}
+			}
+		},
+		{
+			"key": "regulatory.brazil.antimicrobialPrescriptionRetention",
+			"parentKey": null,
+			"order": 10,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Antimicrobiano com retenção de receita",
+					"pt-PT": "Antimicrobiano com retenção de receita",
+					"gn-PY": "Antimicrobiano com retenção de receita",
+					"en-US": "Antimicrobial with prescription retention",
+					"es-ES": "Antimicrobiano con retención de receta",
+					"fr-FR": "Antimicrobien avec conservation de l'ordonnance"
+				}
+			}
+		},
+		{
+			"key": "regulatory.brazil.controlledNotification",
+			"parentKey": null,
+			"order": 11,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Controlado, exige notificação de receita",
+					"pt-PT": "Controlado, exige notificação de receita",
+					"gn-PY": "Controlado, exige notificação de receita",
+					"en-US": "Controlled, requires prescription notification",
+					"es-ES": "Controlado, exige notificación de receta",
+					"fr-FR": "Contrôlé, notification d'ordonnance requise"
+				}
+			}
+		},
+		{
+			"key": "regulatory.brazil.controlledSpecialPrescription",
+			"parentKey": null,
+			"order": 12,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Controlado, exige receita especial",
+					"pt-PT": "Controlado, exige receita especial",
+					"gn-PY": "Controlado, exige receita especial",
+					"en-US": "Controlled, requires special prescription",
+					"es-ES": "Controlado, exige receta especial",
+					"fr-FR": "Contrôlé, ordonnance spéciale requise"
+				}
+			}
+		},
+		{
+			"key": "regulatory.brazil.mapaAnvisaControlled",
+			"parentKey": null,
+			"order": 13,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Controlado MAPA/ANVISA",
+					"pt-PT": "Controlado MAPA/ANVISA",
+					"gn-PY": "Controlado MAPA/ANVISA",
+					"en-US": "MAPA/ANVISA controlled",
+					"es-ES": "Controlado MAPA/ANVISA",
+					"fr-FR": "Contrôlé MAPA/ANVISA"
+				}
+			}
+		},
+		{
+			"key": "regulatory.brazil.notControlled",
+			"parentKey": null,
+			"order": 14,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Não controlado",
+					"pt-PT": "Não controlado",
+					"gn-PY": "Não controlado",
+					"en-US": "Not controlled",
+					"es-ES": "No controlado",
+					"fr-FR": "Non contrôlé"
+				}
+			}
+		},
+		{
+			"key": "regulatory.brazil.prescriptionOnly",
+			"parentKey": null,
+			"order": 15,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Venda sob prescrição",
+					"pt-PT": "Venda sob prescrição",
+					"gn-PY": "Venda sob prescrição",
+					"en-US": "Prescription only",
+					"es-ES": "Venta bajo prescripción",
+					"fr-FR": "Sur ordonnance"
+				}
+			}
+		},
+		{
+			"key": "regulatory.europe.controlledSubstance",
+			"parentKey": null,
+			"order": 16,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Substância controlada",
+					"pt-PT": "Substância controlada",
+					"gn-PY": "Substância controlada",
+					"en-US": "Controlled substance",
+					"es-ES": "Sustancia controlada",
+					"fr-FR": "Substance contrôlée"
+				}
+			}
+		},
+		{
+			"key": "regulatory.europe.notControlled",
+			"parentKey": null,
+			"order": 17,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Não controlado",
+					"pt-PT": "Não controlado",
+					"gn-PY": "Não controlado",
+					"en-US": "Not controlled",
+					"es-ES": "No controlado",
+					"fr-FR": "Non contrôlé"
+				}
+			}
+		},
+		{
+			"key": "regulatory.europe.prescriptionOnly",
+			"parentKey": null,
+			"order": 18,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Venda sob prescrição",
+					"pt-PT": "Venda sob prescrição",
+					"gn-PY": "Venda sob prescrição",
+					"en-US": "Prescription only",
+					"es-ES": "Venta bajo prescripción",
+					"fr-FR": "Sur ordonnance"
+				}
+			}
+		},
+		{
+			"key": "regulatory.europe.veterinaryPrescriptionOnly",
+			"parentKey": null,
+			"order": 19,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Prescrição veterinária obrigatória",
+					"pt-PT": "Prescrição veterinária obrigatória",
+					"gn-PY": "Prescrição veterinária obrigatória",
+					"en-US": "Veterinary prescription only",
+					"es-ES": "Prescripción veterinaria obligatoria",
+					"fr-FR": "Ordonnance vétérinaire obligatoire"
+				}
+			}
+		},
+		{
+			"key": "regulatory.notInformed",
+			"parentKey": null,
+			"order": 20,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Não informado",
+					"pt-PT": "Não informado",
+					"gn-PY": "Não informado",
+					"en-US": "Not informed",
+					"es-ES": "No informado",
+					"fr-FR": "Non renseigné"
+				}
+			}
+		},
+		{
+			"key": "regulatory.unitedStates.notControlled",
+			"parentKey": null,
+			"order": 21,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Não controlado",
+					"pt-PT": "Não controlado",
+					"gn-PY": "Não controlado",
+					"en-US": "Not controlled",
+					"es-ES": "No controlado",
+					"fr-FR": "Non contrôlé"
+				}
+			}
+		},
+		{
+			"key": "regulatory.unitedStates.otc",
+			"parentKey": null,
+			"order": 22,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Over the counter",
+					"pt-PT": "Over the counter",
+					"gn-PY": "Over the counter",
+					"en-US": "Over the counter",
+					"es-ES": "Venta libre",
+					"fr-FR": "En vente libre"
+				}
+			}
+		},
+		{
+			"key": "regulatory.unitedStates.prescriptionOnly",
+			"parentKey": null,
+			"order": 23,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Prescription only",
+					"pt-PT": "Prescription only",
+					"gn-PY": "Prescription only",
+					"en-US": "Prescription only",
+					"es-ES": "Solo con prescripción",
+					"fr-FR": "Sur ordonnance"
+				}
+			}
+		},
+		{
+			"key": "regulatory.unitedStates.scheduleI",
+			"parentKey": null,
+			"order": 24,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Schedule I controlled substance",
+					"pt-PT": "Schedule I controlled substance",
+					"gn-PY": "Schedule I controlled substance",
+					"en-US": "Schedule I controlled substance",
+					"es-ES": "Sustancia controlada Schedule I",
+					"fr-FR": "Substance contrôlée Schedule I"
+				}
+			}
+		},
+		{
+			"key": "regulatory.unitedStates.scheduleII",
+			"parentKey": null,
+			"order": 25,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Schedule II controlled substance",
+					"pt-PT": "Schedule II controlled substance",
+					"gn-PY": "Schedule II controlled substance",
+					"en-US": "Schedule II controlled substance",
+					"es-ES": "Sustancia controlada Schedule II",
+					"fr-FR": "Substance contrôlée Schedule II"
+				}
+			}
+		},
+		{
+			"key": "regulatory.unitedStates.scheduleIII",
+			"parentKey": null,
+			"order": 26,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Schedule III controlled substance",
+					"pt-PT": "Schedule III controlled substance",
+					"gn-PY": "Schedule III controlled substance",
+					"en-US": "Schedule III controlled substance",
+					"es-ES": "Sustancia controlada Schedule III",
+					"fr-FR": "Substance contrôlée Schedule III"
+				}
+			}
+		},
+		{
+			"key": "regulatory.unitedStates.scheduleIV",
+			"parentKey": null,
+			"order": 27,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Schedule IV controlled substance",
+					"pt-PT": "Schedule IV controlled substance",
+					"gn-PY": "Schedule IV controlled substance",
+					"en-US": "Schedule IV controlled substance",
+					"es-ES": "Sustancia controlada Schedule IV",
+					"fr-FR": "Substance contrôlée Schedule IV"
+				}
+			}
+		},
+		{
+			"key": "regulatory.unitedStates.scheduleV",
+			"parentKey": null,
+			"order": 28,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Schedule V controlled substance",
+					"pt-PT": "Schedule V controlled substance",
+					"gn-PY": "Schedule V controlled substance",
+					"en-US": "Schedule V controlled substance",
+					"es-ES": "Sustancia controlada Schedule V",
+					"fr-FR": "Substance contrôlée Schedule V"
+				}
+			}
+		},
+		{
+			"key": "regulatoryBrazil",
+			"parentKey": null,
+			"order": 29,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Regulação (Brasil)",
+					"pt-PT": "Regulação (Brasil)",
+					"gn-PY": "Regulação (Brasil)",
+					"en-US": "Regulation (Brazil)",
+					"es-ES": "Regulación (Brasil)",
+					"fr-FR": "Réglementation (Brésil)"
+				}
+			}
+		},
+		{
+			"key": "regulatoryEurope",
+			"parentKey": null,
+			"order": 30,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Regulação (Europa)",
+					"pt-PT": "Regulação (Europa)",
+					"gn-PY": "Regulação (Europa)",
+					"en-US": "Regulation (Europe)",
+					"es-ES": "Regulación (Europa)",
+					"fr-FR": "Réglementation (Europe)"
+				}
+			}
+		},
+		{
+			"key": "regulatoryUnitedStates",
+			"parentKey": null,
+			"order": 31,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Regulação (EUA)",
+					"pt-PT": "Regulação (EUA)",
+					"gn-PY": "Regulação (EUA)",
+					"en-US": "Regulation (US)",
+					"es-ES": "Regulación (EE. UU.)",
+					"fr-FR": "Réglementation (États-Unis)"
+				}
+			}
+		},
+		{
+			"key": "scientificName",
+			"parentKey": null,
+			"order": 32,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Nome científico",
+					"pt-PT": "Nome científico",
+					"gn-PY": "Nome científico",
+					"en-US": "Scientific name",
+					"es-ES": "Nombre científico",
+					"fr-FR": "Nom scientifique"
+				}
+			}
+		},
+		{
+			"key": "veterinaryRestriction",
+			"parentKey": null,
+			"order": 33,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Restrição veterinária",
+					"pt-PT": "Restrição veterinária",
+					"gn-PY": "Restrição veterinária",
+					"en-US": "Veterinary restriction",
+					"es-ES": "Restricción veterinaria",
+					"fr-FR": "Restriction vétérinaire"
+				}
+			}
+		},
+		{
+			"key": "veterinaryRestriction.clinicalUseOnly",
+			"parentKey": "veterinaryRestriction",
+			"order": 34,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Uso restrito a clínicas",
+					"pt-PT": "Uso restrito a clínicas",
+					"gn-PY": "Uso restrito a clínicas",
+					"en-US": "Clinical use only",
+					"es-ES": "Uso restringido a clínicas",
+					"fr-FR": "Usage réservé aux cliniques"
+				}
+			}
+		},
+		{
+			"key": "veterinaryRestriction.hospitalUseOnly",
+			"parentKey": "veterinaryRestriction",
+			"order": 35,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Uso restrito a hospitais",
+					"pt-PT": "Uso restrito a hospitais",
+					"gn-PY": "Uso restrito a hospitais",
+					"en-US": "Hospital use only",
+					"es-ES": "Uso restringido a hospitales",
+					"fr-FR": "Usage réservé aux hôpitaux"
+				}
+			}
+		},
+		{
+			"key": "veterinaryRestriction.none",
+			"parentKey": "veterinaryRestriction",
+			"order": 36,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Sem restrição específica",
+					"pt-PT": "Sem restrição específica",
+					"gn-PY": "Sem restrição específica",
+					"en-US": "No specific restriction",
+					"es-ES": "Sin restricción específica",
+					"fr-FR": "Aucune restriction spécifique"
+				}
+			}
+		},
+		{
+			"key": "veterinaryRestriction.prescriptionOnly",
+			"parentKey": "veterinaryRestriction",
+			"order": 37,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Uso sob prescrição veterinária",
+					"pt-PT": "Uso sob prescrição veterinária",
+					"gn-PY": "Uso sob prescrição veterinária",
+					"en-US": "Veterinary prescription use",
+					"es-ES": "Uso con prescripción veterinaria",
+					"fr-FR": "Usage sur prescription vétérinaire"
+				}
+			}
+		},
+		{
+			"key": "veterinaryRestriction.productionAnimalRestricted",
+			"parentKey": "veterinaryRestriction",
+			"order": 38,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Restrição para animais de produção",
+					"pt-PT": "Restrição para animais de produção",
+					"gn-PY": "Restrição para animais de produção",
+					"en-US": "Production animal restriction",
+					"es-ES": "Restricción para animales de producción",
+					"fr-FR": "Restriction pour animaux de production"
+				}
+			}
+		},
+		{
+			"key": "veterinaryRestriction.prohibitedDirectTutorSale",
+			"parentKey": "veterinaryRestriction",
+			"order": 39,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Venda direta ao tutor proibida",
+					"pt-PT": "Venda directa ao tutor proibida",
+					"gn-PY": "Venda direta ao tutor proibida",
+					"en-US": "Direct sale to tutor prohibited",
+					"es-ES": "Venta directa al tutor prohibida",
+					"fr-FR": "Vente directe au tuteur interdite"
+				}
+			}
+		}
+	]
+}

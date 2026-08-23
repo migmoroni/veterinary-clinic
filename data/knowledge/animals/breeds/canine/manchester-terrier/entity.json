@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "manchester-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"england"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			5.5,
+			10
+		],
+		"female": [
+			5,
+			8
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			38,
+			41
+		],
+		"female": [
+			35,
+			39
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Manchester Terrier",
+			"pt-PT": "Manchester Terrier",
+			"gn-PY": "Manchester Terrier",
+			"en-US": "Manchester Terrier",
+			"es-ES": "Manchester Terrier",
+			"fr-FR": "Manchester Terrier"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

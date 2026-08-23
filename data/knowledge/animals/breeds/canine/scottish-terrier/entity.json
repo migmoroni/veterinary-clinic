@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "scottish-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"scotland"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			8.5,
+			10.5
+		],
+		"female": [
+			8,
+			9.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			28
+		],
+		"female": [
+			24,
+			27
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Scottish Terrier",
+			"pt-PT": "Scottish Terrier",
+			"gn-PY": "Scottish Terrier",
+			"en-US": "Scottish Terrier",
+			"es-ES": "Scottish Terrier",
+			"fr-FR": "Terrier écossais"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

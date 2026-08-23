@@ -1,0 +1,52 @@
+{
+	"schemaVersion": 1,
+	"entityType": "manufacturer",
+	"id": "a984d879-4d68-4282-a746-0b7961903b28",
+	"typeTermKey": "veterinaryIndustrial.veterinaryIndustrialLaboratory",
+	"classificationTermKeys": [
+		"regulatoryStatus.veterinaryIndustrial",
+		"commercialFlow.distributorNetwork",
+		"qualityStandard.gmpCertified"
+	],
+	"regions": [
+		"BRA"
+	],
+	"website": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Virbac",
+			"pt-PT": "Virbac",
+			"gn-PY": "Virbac",
+			"en-US": "Virbac",
+			"es-ES": "Virbac",
+			"fr-FR": "Virbac"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [
+		{
+			"sectionKey": "about",
+			"sectionNumber": 1
+		},
+		{
+			"sectionKey": "portfolio",
+			"sectionNumber": 2
+		},
+		{
+			"sectionKey": "support",
+			"sectionNumber": 3
+		},
+		{
+			"sectionKey": "references",
+			"sectionNumber": 4
+		}
+	],
+	"contentPath": "./content"
+}

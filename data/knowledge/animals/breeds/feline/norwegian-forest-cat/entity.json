@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "norwegian-forest-cat",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"no"
+	],
+	"sizeTermKey": "giant",
+	"averageWeightKg": {
+		"male": [
+			5.5,
+			9
+		],
+		"female": [
+			4,
+			6
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			30,
+			40
+		],
+		"female": [
+			28,
+			36
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Gato Norueguês da Floresta",
+			"pt-PT": "Gato norueguês da floresta",
+			"gn-PY": "Bosque de Noruega",
+			"en-US": "Norwegian Forest Cat",
+			"es-ES": "Bosque de Noruega",
+			"fr-FR": "Chat des forêts norvégiennes"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

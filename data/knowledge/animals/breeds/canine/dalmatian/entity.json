@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "dalmatian",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"hr"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			27,
+			32
+		],
+		"female": [
+			24,
+			29
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			58,
+			61
+		],
+		"female": [
+			56,
+			58
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Dálmata",
+			"pt-PT": "Dálmata",
+			"gn-PY": "Dálmata",
+			"en-US": "Dalmatian",
+			"es-ES": "Dálmata",
+			"fr-FR": "Dalmatien"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

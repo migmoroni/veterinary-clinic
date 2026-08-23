@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "se",
+	"placeType": "country",
+	"countryCodes": [
+		"SE"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 60.1,
+		"longitude": 18.6
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Suécia",
+			"pt-PT": "Suécia",
+			"gn-PY": "Sweden",
+			"en-US": "Sweden",
+			"es-ES": "Suecia",
+			"fr-FR": "Suède"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

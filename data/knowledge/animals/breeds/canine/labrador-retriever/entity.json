@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "labrador-retriever",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"ca"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			29,
+			36
+		],
+		"female": [
+			25,
+			32
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			57,
+			62
+		],
+		"female": [
+			54,
+			60
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Labrador Retriever",
+			"pt-PT": "Labrador Retriever",
+			"gn-PY": "Labrador Retriever",
+			"en-US": "Labrador Retriever",
+			"es-ES": "Labrador Retriever",
+			"fr-FR": "Labrador Retriever"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

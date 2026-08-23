@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "cardigan-welsh-corgi",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"wales"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			14,
+			17
+		],
+		"female": [
+			11,
+			15
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			27,
+			33
+		],
+		"female": [
+			25,
+			31
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Welsh Corgi Cardigan",
+			"pt-PT": "Welsh Corgi Cardigan",
+			"gn-PY": "Welsh Corgi Cardigan",
+			"en-US": "Cardigan Welsh Corgi",
+			"es-ES": "Welsh Corgi Cardigan",
+			"fr-FR": "Welsh Corgi Cardigan"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "pinscher",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"de"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			3.5,
+			6
+		],
+		"female": [
+			3.5,
+			5.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			30
+		],
+		"female": [
+			25,
+			29
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Pinscher",
+			"pt-PT": "Pinscher",
+			"gn-PY": "Pinscher",
+			"en-US": "Pinscher",
+			"es-ES": "Pinscher",
+			"fr-FR": "Pinscher"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

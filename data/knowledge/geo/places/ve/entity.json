@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "ve",
+	"placeType": "country",
+	"countryCodes": [
+		"VE"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 6.4,
+		"longitude": -66.6
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Venezuela",
+			"pt-PT": "Venezuela",
+			"gn-PY": "Venezuela",
+			"en-US": "Venezuela",
+			"es-ES": "Venezuela",
+			"fr-FR": "Venezuela"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

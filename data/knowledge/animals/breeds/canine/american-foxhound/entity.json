@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "american-foxhound",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			29,
+			34
+		],
+		"female": [
+			25,
+			32
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			56,
+			64
+		],
+		"female": [
+			53,
+			61
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Foxhound Americano",
+			"pt-PT": "Foxhound americano",
+			"gn-PY": "Foxhound americano",
+			"en-US": "American Foxhound",
+			"es-ES": "Foxhound americano",
+			"fr-FR": "Foxhound américain"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

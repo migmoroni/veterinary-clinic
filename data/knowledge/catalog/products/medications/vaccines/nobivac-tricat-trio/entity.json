@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "7a886b26-3683-4e5a-8807-46979cf65fdf",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Nobivac Tricat Trio",
+			"pt-PT": "Nobivac Tricat Trio",
+			"gn-PY": "Nobivac Tricat Trio",
+			"en-US": "Nobivac Tricat Trio",
+			"es-ES": "Nobivac Tricat Trio",
+			"fr-FR": "Nobivac Tricat Trio"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"disease.felineRhinotracheitis",
+		"disease.felineCalicivirosis",
+		"disease.felinePanleukopenia"
+	],
+	"vaccineProfileTermKeys": [
+		"feline.trivalent"
+	]
+}

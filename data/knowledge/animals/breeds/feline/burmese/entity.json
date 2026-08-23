@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "burmese",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"mm"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			6
+		],
+		"female": [
+			3,
+			5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			22,
+			27
+		],
+		"female": [
+			20,
+			25
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Burmês",
+			"pt-PT": "Burmês",
+			"gn-PY": "Burmés",
+			"en-US": "Burmese",
+			"es-ES": "Burmés",
+			"fr-FR": "Burmese"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

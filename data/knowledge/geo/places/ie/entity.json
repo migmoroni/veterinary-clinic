@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "ie",
+	"placeType": "country",
+	"countryCodes": [
+		"IE"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 53.4,
+		"longitude": -8.2
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Irlanda",
+			"pt-PT": "Irlanda",
+			"gn-PY": "Ireland",
+			"en-US": "Ireland",
+			"es-ES": "Irlanda",
+			"fr-FR": "Irlande"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

@@ -1,0 +1,52 @@
+{
+	"schemaVersion": 1,
+	"entityType": "manufacturer",
+	"id": "db13c7b3-7263-49a5-91c3-4cdc45ddb6b0",
+	"typeTermKey": "veterinaryIndustrial.veterinaryIndustrialLaboratory",
+	"classificationTermKeys": [
+		"regulatoryStatus.veterinaryIndustrial",
+		"commercialFlow.distributorNetwork",
+		"qualityStandard.gmpCertified"
+	],
+	"regions": [
+		"BRA"
+	],
+	"website": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Ourofino Saúde Animal",
+			"pt-PT": "Ourofino Saúde Animal",
+			"gn-PY": "Ourofino Saúde Animal",
+			"en-US": "Ourofino Saúde Animal",
+			"es-ES": "Ourofino Saúde Animal",
+			"fr-FR": "Ourofino Saúde Animal"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [
+		{
+			"sectionKey": "about",
+			"sectionNumber": 1
+		},
+		{
+			"sectionKey": "portfolio",
+			"sectionNumber": 2
+		},
+		{
+			"sectionKey": "support",
+			"sectionNumber": 3
+		},
+		{
+			"sectionKey": "references",
+			"sectionNumber": 4
+		}
+	],
+	"contentPath": "./content"
+}

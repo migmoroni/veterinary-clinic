@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "cesky-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"cz"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			6,
+			10
+		],
+		"female": [
+			5.5,
+			9
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			32
+		],
+		"female": [
+			25,
+			30
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cesky Terrier",
+			"pt-PT": "Cesky Terrier",
+			"gn-PY": "Cesky Terrier",
+			"en-US": "Cesky Terrier",
+			"es-ES": "Cesky Terrier",
+			"fr-FR": "Terrier tchèque"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

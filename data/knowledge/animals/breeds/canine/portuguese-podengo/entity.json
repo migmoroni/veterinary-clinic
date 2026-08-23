@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "portuguese-podengo",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"pt"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			30
+		],
+		"female": [
+			4,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			20,
+			70
+		],
+		"female": [
+			20,
+			65
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Podengo Português",
+			"pt-PT": "Podengo Português",
+			"gn-PY": "Podengo portugués",
+			"en-US": "Portuguese Podengo",
+			"es-ES": "Podengo portugués",
+			"fr-FR": "Podengo portugais"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

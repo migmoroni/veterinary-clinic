@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "au",
+	"placeType": "country",
+	"countryCodes": [
+		"AU"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": -25.3,
+		"longitude": 133.8
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Austrália",
+			"pt-PT": "Austrália",
+			"gn-PY": "Australia",
+			"en-US": "Australia",
+			"es-ES": "Australia",
+			"fr-FR": "Australie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "egyptian-mau",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"eg"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			6
+		],
+		"female": [
+			3,
+			5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			23,
+			28
+		],
+		"female": [
+			21,
+			26
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Mau Egípcio",
+			"pt-PT": "Mau egípcio",
+			"gn-PY": "Mau egipcio",
+			"en-US": "Egyptian Mau",
+			"es-ES": "Mau egipcio",
+			"fr-FR": "Mau égyptien"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

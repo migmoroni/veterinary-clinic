@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "spanish-mastiff",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"es"
+	],
+	"sizeTermKey": "giant",
+	"averageWeightKg": {
+		"male": [
+			60,
+			90
+		],
+		"female": [
+			50,
+			75
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			77,
+			88
+		],
+		"female": [
+			72,
+			80
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Mastim Espanhol",
+			"pt-PT": "Mastim Espanhol",
+			"gn-PY": "Mastín español",
+			"en-US": "Spanish Mastiff",
+			"es-ES": "Mastín español",
+			"fr-FR": "Mâtin espagnol"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

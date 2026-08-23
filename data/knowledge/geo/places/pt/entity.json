@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "pt",
+	"placeType": "country",
+	"countryCodes": [
+		"PT"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 39.4,
+		"longitude": -8.2
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Portugal",
+			"pt-PT": "Portugal",
+			"gn-PY": "Portugal",
+			"en-US": "Portugal",
+			"es-ES": "Portugal",
+			"fr-FR": "Portugal"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

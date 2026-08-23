@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "jp",
+	"placeType": "country",
+	"countryCodes": [
+		"JP"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 36.2,
+		"longitude": 138.3
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Japão",
+			"pt-PT": "Japão",
+			"gn-PY": "Japan",
+			"en-US": "Japan",
+			"es-ES": "Japón",
+			"fr-FR": "Japon"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

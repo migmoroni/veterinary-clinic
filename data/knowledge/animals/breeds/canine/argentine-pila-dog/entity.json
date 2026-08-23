@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "argentine-pila-dog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"ar"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			8,
+			25
+		],
+		"female": [
+			7,
+			22
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			35,
+			55
+		],
+		"female": [
+			33,
+			52
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cão Pila Argentino",
+			"pt-PT": "Cão Pila Argentino",
+			"gn-PY": "Perro pila argentino",
+			"en-US": "Argentine Pila Dog",
+			"es-ES": "Perro pila argentino",
+			"fr-FR": "Chien Pila argentin"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

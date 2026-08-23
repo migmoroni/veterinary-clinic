@@ -1,0 +1,49 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "4b398223-b658-4ae8-9d71-ec272f07ab00",
+	"typeTermKey": "medication.antiparasitic.ectoparasiticide",
+	"classificationTermKeys": [
+		"origin.allopathic",
+		"therapeuticAction.control"
+	],
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
+	"activeIngredientIds": [
+		"7cce2524-d9ac-4d6e-97e2-18f7e488ee16"
+	],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Simparic",
+			"pt-PT": "Simparic",
+			"gn-PY": "Simparic",
+			"en-US": "Simparic",
+			"es-ES": "Simparic",
+			"fr-FR": "Simparic"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"parasite.flea",
+		"parasite.tick"
+	]
+}

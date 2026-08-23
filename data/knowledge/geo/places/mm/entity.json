@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "mm",
+	"placeType": "country",
+	"countryCodes": [
+		"MM"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 21.9,
+		"longitude": 95.9
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Mianmar (Birmânia)",
+			"pt-PT": "Mianmar (Birmânia)",
+			"gn-PY": "Myanmar (Burma)",
+			"en-US": "Myanmar (Burma)",
+			"es-ES": "Myanmar (Birmania)",
+			"fr-FR": "Myanmar (Birmanie)"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

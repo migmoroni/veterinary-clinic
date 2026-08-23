@@ -1,0 +1,57 @@
+{
+	"schemaVersion": 1,
+	"status": "PASS",
+	"entitiesByType": {
+		"active_ingredient": 17,
+		"breed": 408,
+		"condition": 1,
+		"geo_place": 84,
+		"manufacturer": 12,
+		"product": 62,
+		"taxonomy": 13,
+		"treatment_protocol": 3
+	},
+	"entityCount": 600,
+	"localizedJson": {
+		"fields": 1789,
+		"scalarLocaleValues": 7134,
+		"listItems": 298,
+		"entityAliasValues": 168,
+		"taxonomyLabelValues": 3510,
+		"taxonomyAliasValues": 124
+	},
+	"taxonomy": {
+		"terms": 585,
+		"typeReferences": 92,
+		"classificationReferences": 175,
+		"sizeReferences": 408,
+		"semanticReferences": {
+			"target": 132,
+			"vaccine_profile": 23,
+			"life_stage": 1,
+			"therapeutic_scope": 9
+		},
+		"genericSearchTerms": 0
+	},
+	"activeIngredients": {
+		"entities": 17,
+		"productRelations": 46
+	},
+	"editorial": {
+		"entities": 17,
+		"documents": 102,
+		"sections": 77
+	},
+	"searchProjectionValues": {
+		"product": 492,
+		"manufacturer": 372,
+		"activeIngredients": 358,
+		"targets": 968,
+		"vaccineProfiles": 372,
+		"lifeStages": 6,
+		"therapeuticScopes": 54,
+		"typesAndClassifications": 1242
+	},
+	"mediaFiles": 0,
+	"failures": []
+}

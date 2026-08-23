@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "irish-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"ie"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			12,
+			13
+		],
+		"female": [
+			11,
+			12
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			45,
+			48
+		],
+		"female": [
+			43,
+			46
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Terrier Irlandês",
+			"pt-PT": "Terrier Irlandês",
+			"gn-PY": "Terrier irlandés",
+			"en-US": "Irish Terrier",
+			"es-ES": "Terrier irlandés",
+			"fr-FR": "Terrier irlandais"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

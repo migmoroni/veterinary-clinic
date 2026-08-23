@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "fuegian-dog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"tierra-del-fuego"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			8,
+			14
+		],
+		"female": [
+			7,
+			12
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			35,
+			45
+		],
+		"female": [
+			33,
+			42
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cão Fueguino",
+			"pt-PT": "Cão Fueguino",
+			"gn-PY": "Perro fueguino",
+			"en-US": "Fuegian Dog",
+			"es-ES": "Perro fueguino",
+			"fr-FR": "Chien fuégien"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "vn",
+	"placeType": "country",
+	"countryCodes": [
+		"VN"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 14.1,
+		"longitude": 108.3
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Vietnã",
+			"pt-PT": "Vietname",
+			"gn-PY": "Vietnam",
+			"en-US": "Vietnam",
+			"es-ES": "Vietnam",
+			"fr-FR": "Viêt Nam"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

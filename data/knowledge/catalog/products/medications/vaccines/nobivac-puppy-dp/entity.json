@@ -1,0 +1,63 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "0b3e7a19-616b-4840-a245-ee07fb508814",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Nobivac Puppy DP",
+			"pt-PT": "Nobivac Puppy DP",
+			"gn-PY": "Nobivac Puppy DP",
+			"en-US": "Nobivac Puppy DP",
+			"es-ES": "Nobivac Puppy DP",
+			"fr-FR": "Nobivac Puppy DP"
+		},
+		"aliases": {
+			"pt-BR": [
+				"DP"
+			],
+			"pt-PT": [
+				"DP"
+			],
+			"gn-PY": [
+				"DP"
+			],
+			"en-US": [
+				"DP"
+			],
+			"es-ES": [
+				"DP"
+			],
+			"fr-FR": [
+				"DP"
+			]
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"disease.canineDistemper",
+		"disease.canineParvovirosis",
+		"pathogen.canineParvovirus"
+	],
+	"lifeStageTermKeys": [
+		"puppy"
+	]
+}

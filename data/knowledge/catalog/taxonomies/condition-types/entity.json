@@ -1,0 +1,939 @@
+{
+	"schemaVersion": 1,
+	"entityType": "taxonomy",
+	"id": "condition-types",
+	"domain": "condition",
+	"purpose": "type",
+	"terms": [
+		{
+			"key": "disease",
+			"parentKey": null,
+			"order": 0,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Doença",
+					"pt-PT": "Doença",
+					"gn-PY": "Mba’asy",
+					"en-US": "Disease",
+					"es-ES": "Enfermedad",
+					"fr-FR": "Maladie"
+				}
+			}
+		},
+		{
+			"key": "disease.geneticAndDevelopmental",
+			"parentKey": "disease",
+			"order": 1,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Genética e do desenvolvimento",
+					"pt-PT": "Genética e do desenvolvimento",
+					"gn-PY": "Genética e do desenvolvimento",
+					"en-US": "Genetic and developmental",
+					"es-ES": "Genética y del desarrollo",
+					"fr-FR": "Génétique et développementale"
+				}
+			}
+		},
+		{
+			"key": "disease.geneticAndDevelopmental.congenitalMalformation",
+			"parentKey": "disease.geneticAndDevelopmental",
+			"order": 2,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Congenital Malformation",
+					"pt-PT": "Congenital Malformation",
+					"gn-PY": "Congenital Malformation",
+					"en-US": "Congenital Malformation",
+					"es-ES": "Congenital Malformation",
+					"fr-FR": "Congenital Malformation"
+				}
+			}
+		},
+		{
+			"key": "disease.geneticAndDevelopmental.hereditaryDisorder",
+			"parentKey": "disease.geneticAndDevelopmental",
+			"order": 3,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Hereditary Disorder",
+					"pt-PT": "Hereditary Disorder",
+					"gn-PY": "Hereditary Disorder",
+					"en-US": "Hereditary Disorder",
+					"es-ES": "Hereditary Disorder",
+					"fr-FR": "Hereditary Disorder"
+				}
+			}
+		},
+		{
+			"key": "disease.immuneAndInflammatory",
+			"parentKey": "disease",
+			"order": 4,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Imune e inflamatória",
+					"pt-PT": "Imune e inflamatória",
+					"gn-PY": "Imune e inflamatória",
+					"en-US": "Immune and inflammatory",
+					"es-ES": "Inmune e inflamatoria",
+					"fr-FR": "Immunitaire et inflammatoire"
+				}
+			}
+		},
+		{
+			"key": "disease.immuneAndInflammatory.allergic",
+			"parentKey": "disease.immuneAndInflammatory",
+			"order": 5,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Allergic",
+					"pt-PT": "Allergic",
+					"gn-PY": "Allergic",
+					"en-US": "Allergic",
+					"es-ES": "Allergic",
+					"fr-FR": "Allergic"
+				}
+			}
+		},
+		{
+			"key": "disease.immuneAndInflammatory.autoimmune",
+			"parentKey": "disease.immuneAndInflammatory",
+			"order": 6,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Autoimmune",
+					"pt-PT": "Autoimmune",
+					"gn-PY": "Autoimmune",
+					"en-US": "Autoimmune",
+					"es-ES": "Autoimmune",
+					"fr-FR": "Autoimmune"
+				}
+			}
+		},
+		{
+			"key": "disease.immuneAndInflammatory.immunodeficiency",
+			"parentKey": "disease.immuneAndInflammatory",
+			"order": 7,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Immunodeficiency",
+					"pt-PT": "Immunodeficiency",
+					"gn-PY": "Immunodeficiency",
+					"en-US": "Immunodeficiency",
+					"es-ES": "Immunodeficiency",
+					"fr-FR": "Immunodeficiency"
+				}
+			}
+		},
+		{
+			"key": "disease.immuneAndInflammatory.sterileInflammatory",
+			"parentKey": "disease.immuneAndInflammatory",
+			"order": 8,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Sterile Inflammatory",
+					"pt-PT": "Sterile Inflammatory",
+					"gn-PY": "Sterile Inflammatory",
+					"en-US": "Sterile Inflammatory",
+					"es-ES": "Sterile Inflammatory",
+					"fr-FR": "Sterile Inflammatory"
+				}
+			}
+		},
+		{
+			"key": "disease.infectiousAndParasitic",
+			"parentKey": "disease",
+			"order": 9,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Infecciosa e parasitária",
+					"pt-PT": "Infecciosa e parasitária",
+					"gn-PY": "Infecciosa e parasitária",
+					"en-US": "Infectious and parasitic",
+					"es-ES": "Infecciosa y parasitaria",
+					"fr-FR": "Infectieuse et parasitaire"
+				}
+			}
+		},
+		{
+			"key": "disease.infectiousAndParasitic.bacterial",
+			"parentKey": "disease.infectiousAndParasitic",
+			"order": 10,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Bacterial",
+					"pt-PT": "Bacterial",
+					"gn-PY": "Bacterial",
+					"en-US": "Bacterial",
+					"es-ES": "Bacterial",
+					"fr-FR": "Bacterial"
+				}
+			}
+		},
+		{
+			"key": "disease.infectiousAndParasitic.fungal",
+			"parentKey": "disease.infectiousAndParasitic",
+			"order": 11,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Fungal",
+					"pt-PT": "Fungal",
+					"gn-PY": "Fungal",
+					"en-US": "Fungal",
+					"es-ES": "Fungal",
+					"fr-FR": "Fungal"
+				}
+			}
+		},
+		{
+			"key": "disease.infectiousAndParasitic.parasitic",
+			"parentKey": "disease.infectiousAndParasitic",
+			"order": 12,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Parasitic",
+					"pt-PT": "Parasitic",
+					"gn-PY": "Parasitic",
+					"en-US": "Parasitic",
+					"es-ES": "Parasitic",
+					"fr-FR": "Parasitic"
+				}
+			}
+		},
+		{
+			"key": "disease.infectiousAndParasitic.prionic",
+			"parentKey": "disease.infectiousAndParasitic",
+			"order": 13,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Prionic",
+					"pt-PT": "Prionic",
+					"gn-PY": "Prionic",
+					"en-US": "Prionic",
+					"es-ES": "Prionic",
+					"fr-FR": "Prionic"
+				}
+			}
+		},
+		{
+			"key": "disease.infectiousAndParasitic.viral",
+			"parentKey": "disease.infectiousAndParasitic",
+			"order": 14,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Viral",
+					"pt-PT": "Viral",
+					"gn-PY": "Viral",
+					"en-US": "Viral",
+					"es-ES": "Viral",
+					"fr-FR": "Virale"
+				}
+			}
+		},
+		{
+			"key": "disease.neoplastic",
+			"parentKey": "disease",
+			"order": 15,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Neoplásica",
+					"pt-PT": "Neoplásica",
+					"gn-PY": "Neoplásica",
+					"en-US": "Neoplastic",
+					"es-ES": "Neoplásica",
+					"fr-FR": "Néoplasique"
+				}
+			}
+		},
+		{
+			"key": "disease.neoplastic.benign",
+			"parentKey": "disease.neoplastic",
+			"order": 16,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Benign",
+					"pt-PT": "Benign",
+					"gn-PY": "Benign",
+					"en-US": "Benign",
+					"es-ES": "Benign",
+					"fr-FR": "Benign"
+				}
+			}
+		},
+		{
+			"key": "disease.neoplastic.malignant",
+			"parentKey": "disease.neoplastic",
+			"order": 17,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Malignant",
+					"pt-PT": "Malignant",
+					"gn-PY": "Malignant",
+					"en-US": "Malignant",
+					"es-ES": "Malignant",
+					"fr-FR": "Malignant"
+				}
+			}
+		},
+		{
+			"key": "disease.systemicAndMetabolic",
+			"parentKey": "disease",
+			"order": 18,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Sistêmica e metabólica",
+					"pt-PT": "Sistêmica e metabólica",
+					"gn-PY": "Sistêmica e metabólica",
+					"en-US": "Systemic and metabolic",
+					"es-ES": "Sistémica y metabólica",
+					"fr-FR": "Systémique et métabolique"
+				}
+			}
+		},
+		{
+			"key": "disease.systemicAndMetabolic.degenerativeAndInsufficiency",
+			"parentKey": "disease.systemicAndMetabolic",
+			"order": 19,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Degenerative And Insufficiency",
+					"pt-PT": "Degenerative And Insufficiency",
+					"gn-PY": "Degenerative And Insufficiency",
+					"en-US": "Degenerative And Insufficiency",
+					"es-ES": "Degenerative And Insufficiency",
+					"fr-FR": "Degenerative And Insufficiency"
+				}
+			}
+		},
+		{
+			"key": "disease.systemicAndMetabolic.hemodynamicAndCirculatory",
+			"parentKey": "disease.systemicAndMetabolic",
+			"order": 20,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Hemodynamic And Circulatory",
+					"pt-PT": "Hemodynamic And Circulatory",
+					"gn-PY": "Hemodynamic And Circulatory",
+					"en-US": "Hemodynamic And Circulatory",
+					"es-ES": "Hemodynamic And Circulatory",
+					"fr-FR": "Hemodynamic And Circulatory"
+				}
+			}
+		},
+		{
+			"key": "disease.systemicAndMetabolic.metabolicAndEndocrine",
+			"parentKey": "disease.systemicAndMetabolic",
+			"order": 21,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Metabolic And Endocrine",
+					"pt-PT": "Metabolic And Endocrine",
+					"gn-PY": "Metabolic And Endocrine",
+					"en-US": "Metabolic And Endocrine",
+					"es-ES": "Metabolic And Endocrine",
+					"fr-FR": "Metabolic And Endocrine"
+				}
+			}
+		},
+		{
+			"key": "disorder",
+			"parentKey": null,
+			"order": 22,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Distúrbio",
+					"pt-PT": "Perturbação",
+					"gn-PY": "Disturbio",
+					"en-US": "Disorder",
+					"es-ES": "Trastorno",
+					"fr-FR": "Trouble"
+				}
+			}
+		},
+		{
+			"key": "disorder.behavioralAndCognitive",
+			"parentKey": "disorder",
+			"order": 23,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Behavioral And Cognitive",
+					"pt-PT": "Behavioral And Cognitive",
+					"gn-PY": "Behavioral And Cognitive",
+					"en-US": "Behavioral And Cognitive",
+					"es-ES": "Behavioral And Cognitive",
+					"fr-FR": "Behavioral And Cognitive"
+				}
+			}
+		},
+		{
+			"key": "disorder.behavioralAndCognitive.anxietyAndPhobia",
+			"parentKey": "disorder.behavioralAndCognitive",
+			"order": 24,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Anxiety And Phobia",
+					"pt-PT": "Anxiety And Phobia",
+					"gn-PY": "Anxiety And Phobia",
+					"en-US": "Anxiety And Phobia",
+					"es-ES": "Anxiety And Phobia",
+					"fr-FR": "Anxiety And Phobia"
+				}
+			}
+		},
+		{
+			"key": "disorder.behavioralAndCognitive.behavioralDisorder",
+			"parentKey": "disorder.behavioralAndCognitive",
+			"order": 25,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Behavioral Disorder",
+					"pt-PT": "Behavioral Disorder",
+					"gn-PY": "Behavioral Disorder",
+					"en-US": "Behavioral Disorder",
+					"es-ES": "Behavioral Disorder",
+					"fr-FR": "Behavioral Disorder"
+				}
+			}
+		},
+		{
+			"key": "disorder.behavioralAndCognitive.cognitiveDecay",
+			"parentKey": "disorder.behavioralAndCognitive",
+			"order": 26,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Cognitive Decay",
+					"pt-PT": "Cognitive Decay",
+					"gn-PY": "Cognitive Decay",
+					"en-US": "Cognitive Decay",
+					"es-ES": "Cognitive Decay",
+					"fr-FR": "Cognitive Decay"
+				}
+			}
+		},
+		{
+			"key": "disorder.behavioralAndCognitive.stereotypyAndCompulsion",
+			"parentKey": "disorder.behavioralAndCognitive",
+			"order": 27,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Stereotypy And Compulsion",
+					"pt-PT": "Stereotypy And Compulsion",
+					"gn-PY": "Stereotypy And Compulsion",
+					"en-US": "Stereotypy And Compulsion",
+					"es-ES": "Stereotypy And Compulsion",
+					"fr-FR": "Stereotypy And Compulsion"
+				}
+			}
+		},
+		{
+			"key": "disorder.sensoryAndNeurological",
+			"parentKey": "disorder",
+			"order": 28,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Sensory And Neurological",
+					"pt-PT": "Sensory And Neurological",
+					"gn-PY": "Sensory And Neurological",
+					"en-US": "Sensory And Neurological",
+					"es-ES": "Sensory And Neurological",
+					"fr-FR": "Sensory And Neurological"
+				}
+			}
+		},
+		{
+			"key": "disorder.sensoryAndNeurological.functionalEpilepsy",
+			"parentKey": "disorder.sensoryAndNeurological",
+			"order": 29,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Functional Epilepsy",
+					"pt-PT": "Functional Epilepsy",
+					"gn-PY": "Functional Epilepsy",
+					"en-US": "Functional Epilepsy",
+					"es-ES": "Functional Epilepsy",
+					"fr-FR": "Functional Epilepsy"
+				}
+			}
+		},
+		{
+			"key": "disorder.sensoryAndNeurological.sensoryLoss",
+			"parentKey": "disorder.sensoryAndNeurological",
+			"order": 30,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Sensory Loss",
+					"pt-PT": "Sensory Loss",
+					"gn-PY": "Sensory Loss",
+					"en-US": "Sensory Loss",
+					"es-ES": "Sensory Loss",
+					"fr-FR": "Sensory Loss"
+				}
+			}
+		},
+		{
+			"key": "disorder.sensoryAndNeurological.sleepDisorder",
+			"parentKey": "disorder.sensoryAndNeurological",
+			"order": 31,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Sleep Disorder",
+					"pt-PT": "Sleep Disorder",
+					"gn-PY": "Sleep Disorder",
+					"en-US": "Sleep Disorder",
+					"es-ES": "Sleep Disorder",
+					"fr-FR": "Sleep Disorder"
+				}
+			}
+		},
+		{
+			"key": "disorder.structuralAndDegenerative",
+			"parentKey": "disorder",
+			"order": 32,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Structural And Degenerative",
+					"pt-PT": "Structural And Degenerative",
+					"gn-PY": "Structural And Degenerative",
+					"en-US": "Structural And Degenerative",
+					"es-ES": "Structural And Degenerative",
+					"fr-FR": "Structural And Degenerative"
+				}
+			}
+		},
+		{
+			"key": "disorder.structuralAndDegenerative.growthDisplacement",
+			"parentKey": "disorder.structuralAndDegenerative",
+			"order": 33,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Growth Displacement",
+					"pt-PT": "Growth Displacement",
+					"gn-PY": "Growth Displacement",
+					"en-US": "Growth Displacement",
+					"es-ES": "Growth Displacement",
+					"fr-FR": "Growth Displacement"
+				}
+			}
+		},
+		{
+			"key": "disorder.structuralAndDegenerative.jointDegeneration",
+			"parentKey": "disorder.structuralAndDegenerative",
+			"order": 34,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Joint Degeneration",
+					"pt-PT": "Joint Degeneration",
+					"gn-PY": "Joint Degeneration",
+					"en-US": "Joint Degeneration",
+					"es-ES": "Joint Degeneration",
+					"fr-FR": "Joint Degeneration"
+				}
+			}
+		},
+		{
+			"key": "disorder.structuralAndDegenerative.muscleDegeneration",
+			"parentKey": "disorder.structuralAndDegenerative",
+			"order": 35,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Muscle Degeneration",
+					"pt-PT": "Muscle Degeneration",
+					"gn-PY": "Muscle Degeneration",
+					"en-US": "Muscle Degeneration",
+					"es-ES": "Muscle Degeneration",
+					"fr-FR": "Muscle Degeneration"
+				}
+			}
+		},
+		{
+			"key": "disorder.structuralAndDegenerative.neuromuscularDisorder",
+			"parentKey": "disorder.structuralAndDegenerative",
+			"order": 36,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Neuromuscular Disorder",
+					"pt-PT": "Neuromuscular Disorder",
+					"gn-PY": "Neuromuscular Disorder",
+					"en-US": "Neuromuscular Disorder",
+					"es-ES": "Neuromuscular Disorder",
+					"fr-FR": "Neuromuscular Disorder"
+				}
+			}
+		},
+		{
+			"key": "injury",
+			"parentKey": null,
+			"order": 37,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Lesão",
+					"pt-PT": "Lesão",
+					"gn-PY": "Lesión",
+					"en-US": "Injury",
+					"es-ES": "Lesión",
+					"fr-FR": "Lésion"
+				}
+			}
+		},
+		{
+			"key": "injury.environmentalAndPhysical",
+			"parentKey": "injury",
+			"order": 38,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Environmental And Physical",
+					"pt-PT": "Environmental And Physical",
+					"gn-PY": "Environmental And Physical",
+					"en-US": "Environmental And Physical",
+					"es-ES": "Environmental And Physical",
+					"fr-FR": "Environmental And Physical"
+				}
+			}
+		},
+		{
+			"key": "injury.environmentalAndPhysical.radiationAndElectric",
+			"parentKey": "injury.environmentalAndPhysical",
+			"order": 39,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Radiation And Electric",
+					"pt-PT": "Radiation And Electric",
+					"gn-PY": "Radiation And Electric",
+					"en-US": "Radiation And Electric",
+					"es-ES": "Radiation And Electric",
+					"fr-FR": "Radiation And Electric"
+				}
+			}
+		},
+		{
+			"key": "injury.environmentalAndPhysical.thermalInjury",
+			"parentKey": "injury.environmentalAndPhysical",
+			"order": 40,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Thermal Injury",
+					"pt-PT": "Thermal Injury",
+					"gn-PY": "Thermal Injury",
+					"en-US": "Thermal Injury",
+					"es-ES": "Thermal Injury",
+					"fr-FR": "Thermal Injury"
+				}
+			}
+		},
+		{
+			"key": "injury.iatrogenicAndSurgical",
+			"parentKey": "injury",
+			"order": 41,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Iatrogenic And Surgical",
+					"pt-PT": "Iatrogenic And Surgical",
+					"gn-PY": "Iatrogenic And Surgical",
+					"en-US": "Iatrogenic And Surgical",
+					"es-ES": "Iatrogenic And Surgical",
+					"fr-FR": "Iatrogenic And Surgical"
+				}
+			}
+		},
+		{
+			"key": "injury.iatrogenicAndSurgical.postOperativeComplication",
+			"parentKey": "injury.iatrogenicAndSurgical",
+			"order": 42,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Post Operative Complication",
+					"pt-PT": "Post Operative Complication",
+					"gn-PY": "Post Operative Complication",
+					"en-US": "Post Operative Complication",
+					"es-ES": "Post Operative Complication",
+					"fr-FR": "Post Operative Complication"
+				}
+			}
+		},
+		{
+			"key": "injury.iatrogenicAndSurgical.woundDehiscence",
+			"parentKey": "injury.iatrogenicAndSurgical",
+			"order": 43,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Wound Dehiscence",
+					"pt-PT": "Wound Dehiscence",
+					"gn-PY": "Wound Dehiscence",
+					"en-US": "Wound Dehiscence",
+					"es-ES": "Wound Dehiscence",
+					"fr-FR": "Wound Dehiscence"
+				}
+			}
+		},
+		{
+			"key": "injury.mechanicalAndTraumatic",
+			"parentKey": "injury",
+			"order": 44,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Mechanical And Traumatic",
+					"pt-PT": "Mechanical And Traumatic",
+					"gn-PY": "Mechanical And Traumatic",
+					"en-US": "Mechanical And Traumatic",
+					"es-ES": "Mechanical And Traumatic",
+					"fr-FR": "Mechanical And Traumatic"
+				}
+			}
+		},
+		{
+			"key": "injury.mechanicalAndTraumatic.boneAndJointTrauma",
+			"parentKey": "injury.mechanicalAndTraumatic",
+			"order": 45,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Bone And Joint Trauma",
+					"pt-PT": "Bone And Joint Trauma",
+					"gn-PY": "Bone And Joint Trauma",
+					"en-US": "Bone And Joint Trauma",
+					"es-ES": "Bone And Joint Trauma",
+					"fr-FR": "Bone And Joint Trauma"
+				}
+			}
+		},
+		{
+			"key": "injury.mechanicalAndTraumatic.softTissueTrauma",
+			"parentKey": "injury.mechanicalAndTraumatic",
+			"order": 46,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Soft Tissue Trauma",
+					"pt-PT": "Soft Tissue Trauma",
+					"gn-PY": "Soft Tissue Trauma",
+					"en-US": "Soft Tissue Trauma",
+					"es-ES": "Soft Tissue Trauma",
+					"fr-FR": "Soft Tissue Trauma"
+				}
+			}
+		},
+		{
+			"key": "injury.mechanicalAndTraumatic.visceralAndInternalTrauma",
+			"parentKey": "injury.mechanicalAndTraumatic",
+			"order": 47,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Visceral And Internal Trauma",
+					"pt-PT": "Visceral And Internal Trauma",
+					"gn-PY": "Visceral And Internal Trauma",
+					"en-US": "Visceral And Internal Trauma",
+					"es-ES": "Visceral And Internal Trauma",
+					"fr-FR": "Visceral And Internal Trauma"
+				}
+			}
+		},
+		{
+			"key": "injury.toxicAndEnvenomation",
+			"parentKey": "injury",
+			"order": 48,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Toxic And Envenomation",
+					"pt-PT": "Toxic And Envenomation",
+					"gn-PY": "Toxic And Envenomation",
+					"en-US": "Toxic And Envenomation",
+					"es-ES": "Toxic And Envenomation",
+					"fr-FR": "Toxic And Envenomation"
+				}
+			}
+		},
+		{
+			"key": "injury.toxicAndEnvenomation.animalEnvenomation",
+			"parentKey": "injury.toxicAndEnvenomation",
+			"order": 49,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Animal Envenomation",
+					"pt-PT": "Animal Envenomation",
+					"gn-PY": "Animal Envenomation",
+					"en-US": "Animal Envenomation",
+					"es-ES": "Animal Envenomation",
+					"fr-FR": "Animal Envenomation"
+				}
+			}
+		},
+		{
+			"key": "injury.toxicAndEnvenomation.chemicalPoisoning",
+			"parentKey": "injury.toxicAndEnvenomation",
+			"order": 50,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Chemical Poisoning",
+					"pt-PT": "Chemical Poisoning",
+					"gn-PY": "Chemical Poisoning",
+					"en-US": "Chemical Poisoning",
+					"es-ES": "Chemical Poisoning",
+					"fr-FR": "Chemical Poisoning"
+				}
+			}
+		},
+		{
+			"key": "syndrome",
+			"parentKey": null,
+			"order": 51,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Síndrome",
+					"pt-PT": "Síndrome",
+					"gn-PY": "Síndrome",
+					"en-US": "Syndrome",
+					"es-ES": "Síndrome",
+					"fr-FR": "Syndrome"
+				}
+			}
+		},
+		{
+			"key": "syndrome.acuteEmergency",
+			"parentKey": "syndrome",
+			"order": 52,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Acute Emergency",
+					"pt-PT": "Acute Emergency",
+					"gn-PY": "Acute Emergency",
+					"en-US": "Acute Emergency",
+					"es-ES": "Acute Emergency",
+					"fr-FR": "Acute Emergency"
+				}
+			}
+		},
+		{
+			"key": "syndrome.acuteEmergency.acuteRespiratoryDistress",
+			"parentKey": "syndrome.acuteEmergency",
+			"order": 53,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Acute Respiratory Distress",
+					"pt-PT": "Acute Respiratory Distress",
+					"gn-PY": "Acute Respiratory Distress",
+					"en-US": "Acute Respiratory Distress",
+					"es-ES": "Acute Respiratory Distress",
+					"fr-FR": "Acute Respiratory Distress"
+				}
+			}
+		},
+		{
+			"key": "syndrome.acuteEmergency.circulatoryShock",
+			"parentKey": "syndrome.acuteEmergency",
+			"order": 54,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Circulatory Shock",
+					"pt-PT": "Circulatory Shock",
+					"gn-PY": "Circulatory Shock",
+					"en-US": "Circulatory Shock",
+					"es-ES": "Circulatory Shock",
+					"fr-FR": "Circulatory Shock"
+				}
+			}
+		},
+		{
+			"key": "syndrome.acuteEmergency.systemicInflammatoryResponse",
+			"parentKey": "syndrome.acuteEmergency",
+			"order": 55,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Systemic Inflammatory Response",
+					"pt-PT": "Systemic Inflammatory Response",
+					"gn-PY": "Systemic Inflammatory Response",
+					"en-US": "Systemic Inflammatory Response",
+					"es-ES": "Systemic Inflammatory Response",
+					"fr-FR": "Systemic Inflammatory Response"
+				}
+			}
+		},
+		{
+			"key": "syndrome.neuroEndocrine",
+			"parentKey": "syndrome",
+			"order": 56,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Neuro Endocrine",
+					"pt-PT": "Neuro Endocrine",
+					"gn-PY": "Neuro Endocrine",
+					"en-US": "Neuro Endocrine",
+					"es-ES": "Neuro Endocrine",
+					"fr-FR": "Neuro Endocrine"
+				}
+			}
+		},
+		{
+			"key": "syndrome.neuroEndocrine.hormonalDysregulation",
+			"parentKey": "syndrome.neuroEndocrine",
+			"order": 57,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Hormonal Dysregulation",
+					"pt-PT": "Hormonal Dysregulation",
+					"gn-PY": "Hormonal Dysregulation",
+					"en-US": "Hormonal Dysregulation",
+					"es-ES": "Hormonal Dysregulation",
+					"fr-FR": "Hormonal Dysregulation"
+				}
+			}
+		},
+		{
+			"key": "syndrome.neuroEndocrine.vestibularAndNeuromuscular",
+			"parentKey": "syndrome.neuroEndocrine",
+			"order": 58,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Vestibular And Neuromuscular",
+					"pt-PT": "Vestibular And Neuromuscular",
+					"gn-PY": "Vestibular And Neuromuscular",
+					"en-US": "Vestibular And Neuromuscular",
+					"es-ES": "Vestibular And Neuromuscular",
+					"fr-FR": "Vestibular And Neuromuscular"
+				}
+			}
+		},
+		{
+			"key": "syndrome.obstructiveAndMechanical",
+			"parentKey": "syndrome",
+			"order": 59,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Obstructive And Mechanical",
+					"pt-PT": "Obstructive And Mechanical",
+					"gn-PY": "Obstructive And Mechanical",
+					"en-US": "Obstructive And Mechanical",
+					"es-ES": "Obstructive And Mechanical",
+					"fr-FR": "Obstructive And Mechanical"
+				}
+			}
+		},
+		{
+			"key": "syndrome.obstructiveAndMechanical.cavityObstruction",
+			"parentKey": "syndrome.obstructiveAndMechanical",
+			"order": 60,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Cavity Obstruction",
+					"pt-PT": "Cavity Obstruction",
+					"gn-PY": "Cavity Obstruction",
+					"en-US": "Cavity Obstruction",
+					"es-ES": "Cavity Obstruction",
+					"fr-FR": "Cavity Obstruction"
+				}
+			}
+		},
+		{
+			"key": "syndrome.obstructiveAndMechanical.torsionAndDilation",
+			"parentKey": "syndrome.obstructiveAndMechanical",
+			"order": 61,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Torsion And Dilation",
+					"pt-PT": "Torsion And Dilation",
+					"gn-PY": "Torsion And Dilation",
+					"en-US": "Torsion And Dilation",
+					"es-ES": "Torsion And Dilation",
+					"fr-FR": "Torsion And Dilation"
+				}
+			}
+		}
+	]
+}

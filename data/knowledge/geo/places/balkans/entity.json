@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "balkans",
+	"placeType": "region",
+	"countryCodes": [],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 42.7,
+		"longitude": 21.5
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Bálcãs",
+			"pt-PT": "Bálcãs",
+			"gn-PY": "Balcán-kuéra",
+			"en-US": "Balkans",
+			"es-ES": "Balcanes",
+			"fr-FR": "Balkans"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

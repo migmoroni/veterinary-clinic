@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "central-asia",
+	"placeType": "region",
+	"countryCodes": [],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 43,
+		"longitude": 64
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Ásia Central",
+			"pt-PT": "Ásia Central",
+			"gn-PY": "Asia mbyte",
+			"en-US": "Central Asia",
+			"es-ES": "Asia central",
+			"fr-FR": "Asie centrale"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

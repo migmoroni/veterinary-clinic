@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "sk",
+	"placeType": "country",
+	"countryCodes": [
+		"SK"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 48.7,
+		"longitude": 19.7
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Eslováquia",
+			"pt-PT": "Eslováquia",
+			"gn-PY": "Slovakia",
+			"en-US": "Slovakia",
+			"es-ES": "Eslovaquia",
+			"fr-FR": "Slovaquie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

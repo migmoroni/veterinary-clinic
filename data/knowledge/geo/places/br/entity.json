@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "br",
+	"placeType": "country",
+	"countryCodes": [
+		"BR"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": -14.2,
+		"longitude": -51.9
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Brasil",
+			"pt-PT": "Brasil",
+			"gn-PY": "Brazil",
+			"en-US": "Brazil",
+			"es-ES": "Brasil",
+			"fr-FR": "Brésil"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

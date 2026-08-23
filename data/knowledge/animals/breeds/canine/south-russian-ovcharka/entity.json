@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "south-russian-ovcharka",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"ru"
+	],
+	"sizeTermKey": "giant",
+	"averageWeightKg": {
+		"male": [
+			35,
+			55
+		],
+		"female": [
+			30,
+			45
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			66,
+			75
+		],
+		"female": [
+			62,
+			70
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Ovcharka do Sul da Rússia",
+			"pt-PT": "Ovcharka do Sul da Rússia",
+			"gn-PY": "Ovcharka del sur de Rusia",
+			"en-US": "South Russian Ovcharka",
+			"es-ES": "Ovcharka del sur de Rusia",
+			"fr-FR": "Berger d'Ukraine"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

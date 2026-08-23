@@ -1,0 +1,49 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "a7d7d7f0-ac43-4c53-a656-ccd0fec67dd3",
+	"typeTermKey": "medication.antiparasitic.endoparasiticide",
+	"classificationTermKeys": [
+		"origin.allopathic",
+		"therapeuticAction.control"
+	],
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "db13c7b3-7263-49a5-91c3-4cdc45ddb6b0",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Top Dog",
+			"pt-PT": "Top Dog",
+			"gn-PY": "Top Dog",
+			"en-US": "Top Dog",
+			"es-ES": "Top Dog",
+			"fr-FR": "Top Dog"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"parasite.endoparasite"
+	],
+	"therapeuticScopeTermKeys": [
+		"broadSpectrum"
+	]
+}

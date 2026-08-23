@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "shikoku",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"jp"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			16,
+			25
+		],
+		"female": [
+			14,
+			20
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			49,
+			55
+		],
+		"female": [
+			46,
+			52
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Shikoku",
+			"pt-PT": "Shikoku",
+			"gn-PY": "Shikoku",
+			"en-US": "Shikoku",
+			"es-ES": "Shikoku",
+			"fr-FR": "Shikoku"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

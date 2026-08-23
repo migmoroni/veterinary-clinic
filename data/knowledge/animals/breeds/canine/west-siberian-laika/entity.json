@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "west-siberian-laika",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"ru"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			18,
+			25
+		],
+		"female": [
+			16,
+			22
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			56,
+			61
+		],
+		"female": [
+			51,
+			58
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Laika da Sibéria Ocidental",
+			"pt-PT": "Laika da Sibéria Ocidental",
+			"gn-PY": "Laika de Siberia Occidental",
+			"en-US": "West Siberian Laika",
+			"es-ES": "Laika de Siberia Occidental",
+			"fr-FR": "Laïka de Sibérie occidentale"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

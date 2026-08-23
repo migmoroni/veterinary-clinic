@@ -1,0 +1,610 @@
+{
+	"schemaVersion": 1,
+	"entityType": "taxonomy",
+	"id": "product-targets",
+	"domain": "product",
+	"purpose": "target",
+	"terms": [
+		{
+			"key": "disease",
+			"parentKey": null,
+			"order": 0,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Doença",
+					"pt-PT": "Doença",
+					"gn-PY": "Mba'asy",
+					"en-US": "Disease",
+					"es-ES": "Enfermedad",
+					"fr-FR": "Maladie"
+				}
+			}
+		},
+		{
+			"key": "disease.canineDistemper",
+			"parentKey": "disease",
+			"order": 1,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "cinomose canina",
+					"pt-PT": "esgana canina",
+					"gn-PY": "moquillo canino",
+					"en-US": "canine distemper",
+					"es-ES": "moquillo canino",
+					"fr-FR": "maladie de Carré"
+				}
+			}
+		},
+		{
+			"key": "disease.infectiousCanineHepatitis",
+			"parentKey": "disease",
+			"order": 2,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "hepatite infecciosa canina",
+					"pt-PT": "hepatite infecciosa canina",
+					"gn-PY": "hepatitis infecciosa canina",
+					"en-US": "infectious canine hepatitis",
+					"es-ES": "hepatitis infecciosa canina",
+					"fr-FR": "hépatite contagieuse canine"
+				}
+			}
+		},
+		{
+			"key": "disease.canineCoronavirusInfection",
+			"parentKey": "disease",
+			"order": 3,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Coronavirose canina",
+					"pt-PT": "Coronavirose canina",
+					"gn-PY": "Coronavirose canina",
+					"en-US": "Canine coronavirus infection",
+					"es-ES": "Infección por coronavirus canino",
+					"fr-FR": "Infection à coronavirus canin"
+				}
+			}
+		},
+		{
+			"key": "disease.canineParainfluenza",
+			"parentKey": "disease",
+			"order": 4,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "parainfluenza canina",
+					"pt-PT": "parainfluenza canina",
+					"gn-PY": "parainfluenza canina",
+					"en-US": "canine parainfluenza",
+					"es-ES": "parainfluenza canina",
+					"fr-FR": "parainfluenza canin"
+				}
+			}
+		},
+		{
+			"key": "disease.canineParvovirosis",
+			"parentKey": "disease",
+			"order": 5,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Parvovirose canina",
+					"pt-PT": "Parvovirose canina",
+					"gn-PY": "Parvovirosis canina",
+					"en-US": "Canine parvovirosis",
+					"es-ES": "Parvovirosis canina",
+					"fr-FR": "Parvovirose canine"
+				}
+			}
+		},
+		{
+			"key": "disease.canineLeptospirosis",
+			"parentKey": "disease",
+			"order": 6,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "leptospirose canina",
+					"pt-PT": "leptospirose canina",
+					"gn-PY": "leptospirosis canina",
+					"en-US": "canine leptospirosis",
+					"es-ES": "leptospirosis canina",
+					"fr-FR": "leptospirose canine"
+				}
+			}
+		},
+		{
+			"key": "disease.canineInfectiousTracheobronchitis",
+			"parentKey": "disease",
+			"order": 7,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "traqueobronquite infecciosa canina",
+					"pt-PT": "traqueobronquite infeciosa canina",
+					"gn-PY": "traqueobronquitis infecciosa canina",
+					"en-US": "canine infectious tracheobronchitis",
+					"es-ES": "traqueobronquitis infecciosa canina",
+					"fr-FR": "trachéobronchite infectieuse canine"
+				},
+				"aliases": {
+					"pt-BR": [
+						"tosse dos canis"
+					],
+					"pt-PT": [
+						"tosse do canil"
+					],
+					"gn-PY": [
+						"tos de las perreras"
+					],
+					"en-US": [
+						"kennel cough"
+					],
+					"es-ES": [
+						"tos de las perreras"
+					],
+					"fr-FR": [
+						"toux de chenil"
+					]
+				}
+			}
+		},
+		{
+			"key": "disease.giardiasis",
+			"parentKey": "disease",
+			"order": 8,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "giardíase",
+					"pt-PT": "giardíase",
+					"gn-PY": "giardiasis",
+					"en-US": "giardiasis",
+					"es-ES": "giardiasis",
+					"fr-FR": "giardiose"
+				}
+			}
+		},
+		{
+			"key": "disease.leishmaniasis",
+			"parentKey": "disease",
+			"order": 9,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "leishmaniose",
+					"pt-PT": "leishmaniose",
+					"gn-PY": "leishmaniosis",
+					"en-US": "leishmaniasis",
+					"es-ES": "leishmaniosis",
+					"fr-FR": "leishmaniose"
+				},
+				"aliases": {
+					"pt-BR": [
+						"calazar"
+					],
+					"pt-PT": [
+						"calazar"
+					],
+					"gn-PY": [
+						"kala-azar"
+					],
+					"en-US": [
+						"kala-azar"
+					],
+					"es-ES": [
+						"kala-azar"
+					],
+					"fr-FR": [
+						"kala-azar"
+					]
+				}
+			}
+		},
+		{
+			"key": "disease.rabies",
+			"parentKey": "disease",
+			"order": 10,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "raiva",
+					"pt-PT": "raiva",
+					"gn-PY": "rabia",
+					"en-US": "rabies",
+					"es-ES": "rabia",
+					"fr-FR": "rage"
+				},
+				"aliases": {
+					"pt-BR": [
+						"antirrábica"
+					],
+					"pt-PT": [
+						"antirrábica"
+					],
+					"gn-PY": [
+						"antirrábica"
+					],
+					"en-US": [],
+					"es-ES": [
+						"antirrábica"
+					],
+					"fr-FR": []
+				}
+			}
+		},
+		{
+			"key": "disease.felineRhinotracheitis",
+			"parentKey": "disease",
+			"order": 11,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "rinotraqueíte felina",
+					"pt-PT": "rinotraqueíte felina",
+					"gn-PY": "rinotraqueítis felina",
+					"en-US": "feline rhinotracheitis",
+					"es-ES": "rinotraqueítis felina",
+					"fr-FR": "rhinotrachéite féline"
+				}
+			}
+		},
+		{
+			"key": "disease.felineCalicivirosis",
+			"parentKey": "disease",
+			"order": 12,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "calicivirose felina",
+					"pt-PT": "calicivirose felina",
+					"gn-PY": "calicivirosis felina",
+					"en-US": "feline calicivirosis",
+					"es-ES": "calicivirosis felina",
+					"fr-FR": "calicivirose féline"
+				}
+			}
+		},
+		{
+			"key": "disease.felinePanleukopenia",
+			"parentKey": "disease",
+			"order": 13,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "panleucopenia felina",
+					"pt-PT": "panleucopenia felina",
+					"gn-PY": "panleucopenia felina",
+					"en-US": "feline panleukopenia",
+					"es-ES": "panleucopenia felina",
+					"fr-FR": "panleucopénie féline"
+				}
+			}
+		},
+		{
+			"key": "disease.felineChlamydiosis",
+			"parentKey": "disease",
+			"order": 14,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "clamidiose felina",
+					"pt-PT": "clamidiose felina",
+					"gn-PY": "clamidiosis felina",
+					"en-US": "feline chlamydiosis",
+					"es-ES": "clamidiosis felina",
+					"fr-FR": "chlamydiose féline"
+				}
+			}
+		},
+		{
+			"key": "disease.felineLeukemia",
+			"parentKey": "disease",
+			"order": 15,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "leucemia felina",
+					"pt-PT": "leucemia felina",
+					"gn-PY": "leucemia felina",
+					"en-US": "feline leukemia",
+					"es-ES": "leucemia felina",
+					"fr-FR": "leucose féline"
+				}
+			}
+		},
+		{
+			"key": "pathogen",
+			"parentKey": null,
+			"order": 16,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Agente patogênico",
+					"pt-PT": "Agente patogénico",
+					"gn-PY": "Agente patógeno",
+					"en-US": "Pathogen",
+					"es-ES": "Agente patógeno",
+					"fr-FR": "Agent pathogène"
+				}
+			}
+		},
+		{
+			"key": "pathogen.canineAdenovirusType2",
+			"parentKey": "pathogen",
+			"order": 17,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "adenovírus canino tipo 2",
+					"pt-PT": "adenovírus canino tipo 2",
+					"gn-PY": "adenovirus canino tipo 2",
+					"en-US": "canine adenovirus type 2",
+					"es-ES": "adenovirus canino tipo 2",
+					"fr-FR": "adénovirus canin de type 2"
+				}
+			}
+		},
+		{
+			"key": "pathogen.canineCoronavirus",
+			"parentKey": "pathogen",
+			"order": 18,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Coronavírus canino",
+					"pt-PT": "Coronavírus canino",
+					"gn-PY": "Coronavirus canino",
+					"en-US": "Canine coronavirus",
+					"es-ES": "Coronavirus canino",
+					"fr-FR": "Coronavirus canin"
+				}
+			}
+		},
+		{
+			"key": "pathogen.canineParvovirus",
+			"parentKey": "pathogen",
+			"order": 19,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Parvovírus canino",
+					"pt-PT": "Parvovírus canino",
+					"gn-PY": "Parvovirus canino",
+					"en-US": "Canine parvovirus",
+					"es-ES": "Parvovirus canino",
+					"fr-FR": "Parvovirus canin"
+				}
+			}
+		},
+		{
+			"key": "pathogen.canineHerpesvirus",
+			"parentKey": "pathogen",
+			"order": 20,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "herpesvírus canino",
+					"pt-PT": "herpesvírus canino",
+					"gn-PY": "herpesvirus canino",
+					"en-US": "canine herpesvirus",
+					"es-ES": "herpesvirus canino",
+					"fr-FR": "herpèsvirus canin"
+				}
+			}
+		},
+		{
+			"key": "pathogen.bordetellaBronchiseptica",
+			"parentKey": "pathogen",
+			"order": 21,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Bordetella bronchiseptica",
+					"pt-PT": "Bordetella bronchiseptica",
+					"gn-PY": "Bordetella bronchiseptica",
+					"en-US": "Bordetella bronchiseptica",
+					"es-ES": "Bordetella bronchiseptica",
+					"fr-FR": "Bordetella bronchiseptica"
+				}
+			}
+		},
+		{
+			"key": "pathogen.felineLeukemiaVirus",
+			"parentKey": "pathogen",
+			"order": 22,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Vírus da leucemia felina",
+					"pt-PT": "Vírus da leucemia felina",
+					"gn-PY": "Virus da leucemia felina",
+					"en-US": "Feline leukemia virus",
+					"es-ES": "Virus de la leucemia felina",
+					"fr-FR": "Virus leucémogène félin"
+				},
+				"aliases": {
+					"pt-BR": [
+						"FeLV"
+					],
+					"pt-PT": [
+						"FeLV"
+					],
+					"gn-PY": [
+						"FeLV"
+					],
+					"en-US": [
+						"FeLV"
+					],
+					"es-ES": [
+						"FeLV"
+					],
+					"fr-FR": [
+						"FeLV"
+					]
+				}
+			}
+		},
+		{
+			"key": "parasite",
+			"parentKey": null,
+			"order": 23,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Parasita",
+					"pt-PT": "Parasita",
+					"gn-PY": "Parasito",
+					"en-US": "Parasite",
+					"es-ES": "Parásito",
+					"fr-FR": "Parasite"
+				}
+			}
+		},
+		{
+			"key": "parasite.giardia",
+			"parentKey": "parasite",
+			"order": 24,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "giárdia",
+					"pt-PT": "giárdia",
+					"gn-PY": "giardia",
+					"en-US": "giardia",
+					"es-ES": "giardia",
+					"fr-FR": "giardia"
+				}
+			}
+		},
+		{
+			"key": "parasite.endoparasite",
+			"parentKey": "parasite",
+			"order": 25,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "endoparasitas",
+					"pt-PT": "endoparasitas",
+					"gn-PY": "endoparásitos",
+					"en-US": "endoparasites",
+					"es-ES": "endoparásitos",
+					"fr-FR": "endoparasites"
+				}
+			}
+		},
+		{
+			"key": "parasite.nematode",
+			"parentKey": "parasite",
+			"order": 26,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "nematódeos",
+					"pt-PT": "nemátodes",
+					"gn-PY": "nematodos",
+					"en-US": "nematodes",
+					"es-ES": "nematodos",
+					"fr-FR": "nématodes"
+				}
+			}
+		},
+		{
+			"key": "parasite.roundworm",
+			"parentKey": "parasite",
+			"order": 27,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "verme redondo",
+					"pt-PT": "verme redondo",
+					"gn-PY": "gusano redondo",
+					"en-US": "roundworm",
+					"es-ES": "gusano redondo",
+					"fr-FR": "ascaris"
+				}
+			}
+		},
+		{
+			"key": "parasite.tapeworm",
+			"parentKey": "parasite",
+			"order": 28,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Tênia",
+					"pt-PT": "Ténia",
+					"gn-PY": "Tenia",
+					"en-US": "Tapeworm",
+					"es-ES": "Tenia",
+					"fr-FR": "Ténia"
+				},
+				"aliases": {
+					"pt-BR": [
+						"tenicida"
+					],
+					"pt-PT": [
+						"tenicida"
+					],
+					"gn-PY": [
+						"tenicida"
+					],
+					"en-US": [
+						"tapeworm treatment"
+					],
+					"es-ES": [
+						"tenicida"
+					],
+					"fr-FR": [
+						"traitement contre le ténia"
+					]
+				}
+			}
+		},
+		{
+			"key": "parasite.flea",
+			"parentKey": "parasite",
+			"order": 29,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Pulga",
+					"pt-PT": "Pulga",
+					"gn-PY": "Pulga",
+					"en-US": "Flea",
+					"es-ES": "Pulga",
+					"fr-FR": "Puce"
+				},
+				"aliases": {
+					"pt-BR": [
+						"antipulgas"
+					],
+					"pt-PT": [
+						"antipulgas"
+					],
+					"gn-PY": [
+						"antipulgas"
+					],
+					"en-US": [
+						"flea treatment"
+					],
+					"es-ES": [
+						"antipulgas"
+					],
+					"fr-FR": [
+						"traitement contre les puces"
+					]
+				}
+			}
+		},
+		{
+			"key": "parasite.tick",
+			"parentKey": "parasite",
+			"order": 30,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Carrapato",
+					"pt-PT": "Carraça",
+					"gn-PY": "Carrapato",
+					"en-US": "Tick",
+					"es-ES": "Garrapata",
+					"fr-FR": "Tique"
+				},
+				"aliases": {
+					"pt-BR": [
+						"carrapaticida"
+					],
+					"pt-PT": [
+						"tratamento contra carraças"
+					],
+					"gn-PY": [
+						"tratamiento contra garrapatas"
+					],
+					"en-US": [
+						"tick treatment"
+					],
+					"es-ES": [
+						"tratamiento contra garrapatas"
+					],
+					"fr-FR": [
+						"traitement contre les tiques"
+					]
+				}
+			}
+		}
+	]
+}

@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "olde-english-bulldogge",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			27,
+			36
+		],
+		"female": [
+			23,
+			32
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			51
+		],
+		"female": [
+			43,
+			48
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Olde English Bulldogge",
+			"pt-PT": "Olde English Bulldogge",
+			"gn-PY": "Olde English Bulldogge",
+			"en-US": "Olde English Bulldogge",
+			"es-ES": "Olde English Bulldogge",
+			"fr-FR": "Olde English Bulldogge"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

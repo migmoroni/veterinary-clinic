@@ -32,7 +32,9 @@ não depende do gerenciador usado para instalá-los.
 flowchart LR
     CURRENT["Workspace modular"] --> PNPM["Pré-fase 0<br/>pnpm"]
     PNPM --> DATA["Parte 1A<br/>data/knowledge"]
-    DATA --> BUILDER["Parte 1B<br/>knowledge-builder Rust"]
+    DATA --> LOCALIZED["Parte 1A.1<br/>conteúdo inline + chaves taxonômicas"]
+    LOCALIZED --> RELATIONS["Parte 1A.2<br/>relações + documentos editoriais"]
+    RELATIONS --> BUILDER["Parte 1B<br/>knowledge-builder Rust"]
     BUILDER --> HUB["Partes 2 e 3<br/>hub-server"]
     HUB --> APPS["Partes 4 e 5<br/>consumo e updater"]
     APPS --> CI["Parte 6<br/>GitHub e CI/CD"]

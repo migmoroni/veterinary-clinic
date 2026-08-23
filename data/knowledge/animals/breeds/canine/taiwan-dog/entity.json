@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "taiwan-dog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"tw"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			14,
+			18
+		],
+		"female": [
+			12,
+			16
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			48,
+			52
+		],
+		"female": [
+			43,
+			47
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cão de Taiwan",
+			"pt-PT": "Cão de Taiwan",
+			"gn-PY": "Perro de Taiwán",
+			"en-US": "Taiwan Dog",
+			"es-ES": "Perro de Taiwán",
+			"fr-FR": "Chien de Taïwan"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

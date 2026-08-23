@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "am",
+	"placeType": "country",
+	"countryCodes": [
+		"AM"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 40.1,
+		"longitude": 45
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Armênia",
+			"pt-PT": "Arménia",
+			"gn-PY": "Armenia",
+			"en-US": "Armenia",
+			"es-ES": "Armenia",
+			"fr-FR": "Arménie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

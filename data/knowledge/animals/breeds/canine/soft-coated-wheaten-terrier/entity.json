@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "soft-coated-wheaten-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"ie"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			16,
+			20
+		],
+		"female": [
+			14,
+			18
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			49
+		],
+		"female": [
+			43,
+			46
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Soft Coated Wheaten Terrier",
+			"pt-PT": "Soft Coated Wheaten Terrier",
+			"gn-PY": "Soft Coated Wheaten Terrier",
+			"en-US": "Soft Coated Wheaten Terrier",
+			"es-ES": "Soft Coated Wheaten Terrier",
+			"fr-FR": "Irish Soft Coated Wheaten Terrier"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

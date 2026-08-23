@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "american-leopard-hound",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			20,
+			34
+		],
+		"female": [
+			16,
+			29
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			56,
+			69
+		],
+		"female": [
+			53,
+			64
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "American Leopard Hound",
+			"pt-PT": "American Leopard Hound",
+			"gn-PY": "American Leopard Hound",
+			"en-US": "American Leopard Hound",
+			"es-ES": "American Leopard Hound",
+			"fr-FR": "American Leopard Hound"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

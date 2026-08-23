@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "ee",
+	"placeType": "country",
+	"countryCodes": [
+		"EE"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 58.6,
+		"longitude": 25
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Estônia",
+			"pt-PT": "Estónia",
+			"gn-PY": "Estonia",
+			"en-US": "Estonia",
+			"es-ES": "Estonia",
+			"fr-FR": "Estonie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

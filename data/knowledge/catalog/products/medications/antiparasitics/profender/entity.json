@@ -1,0 +1,50 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "661d17b4-632a-4a7d-be9a-92c25758bdd4",
+	"typeTermKey": "medication.antiparasitic.endoparasiticide",
+	"classificationTermKeys": [
+		"origin.allopathic",
+		"therapeuticAction.control",
+		"administrationRoute.topical"
+	],
+	"species": [
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
+	"activeIngredientIds": [
+		"af5091cf-1fb6-4104-83fb-e65fd5c4d72f",
+		"43e22778-1801-4c2a-ad8d-434de9654eaa"
+	],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Profender",
+			"pt-PT": "Profender",
+			"gn-PY": "Profender",
+			"en-US": "Profender",
+			"es-ES": "Profender",
+			"fr-FR": "Profender"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"parasite.endoparasite"
+	]
+}

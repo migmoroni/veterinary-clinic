@@ -1,0 +1,47 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "97ec09ac-4f38-4707-97df-e91ce7e3a266",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Purevax FeLV",
+			"pt-PT": "Purevax FeLV",
+			"gn-PY": "Purevax FeLV",
+			"en-US": "Purevax FeLV",
+			"es-ES": "Purevax FeLV",
+			"fr-FR": "Purevax FeLV"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"disease.felineLeukemia",
+		"pathogen.felineLeukemiaVirus"
+	]
+}

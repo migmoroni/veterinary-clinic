@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "miniature-pinscher",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"de"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			4,
+			5
+		],
+		"female": [
+			3.5,
+			4.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			32
+		],
+		"female": [
+			25,
+			30
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Pinscher Miniatura",
+			"pt-PT": "Pinscher miniatura",
+			"gn-PY": "Pinscher miniatura",
+			"en-US": "Miniature Pinscher",
+			"es-ES": "Pinscher miniatura",
+			"fr-FR": "Pinscher nain"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

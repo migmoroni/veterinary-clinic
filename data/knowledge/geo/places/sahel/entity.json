@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "sahel",
+	"placeType": "region",
+	"countryCodes": [],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 15.6,
+		"longitude": -1.5
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Sahel",
+			"pt-PT": "Sahel",
+			"gn-PY": "Sahel",
+			"en-US": "Sahel",
+			"es-ES": "Sahel",
+			"fr-FR": "Sahel"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

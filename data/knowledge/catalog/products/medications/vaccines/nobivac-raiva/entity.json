@@ -1,0 +1,47 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "ae407967-8756-49a6-8946-21d53bc3a159",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"canine",
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Nobivac Raiva",
+			"pt-PT": "Nobivac Raiva",
+			"gn-PY": "Nobivac Raiva",
+			"en-US": "Nobivac Raiva",
+			"es-ES": "Nobivac Raiva",
+			"fr-FR": "Nobivac Raiva"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"disease.rabies"
+	]
+}

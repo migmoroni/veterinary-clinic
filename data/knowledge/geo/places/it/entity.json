@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "it",
+	"placeType": "country",
+	"countryCodes": [
+		"IT"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 41.9,
+		"longitude": 12.6
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Itália",
+			"pt-PT": "Itália",
+			"gn-PY": "Italy",
+			"en-US": "Italy",
+			"es-ES": "Italia",
+			"fr-FR": "Italie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

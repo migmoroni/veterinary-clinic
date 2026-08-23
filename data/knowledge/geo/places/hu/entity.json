@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "hu",
+	"placeType": "country",
+	"countryCodes": [
+		"HU"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 47.2,
+		"longitude": 19.5
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Hungria",
+			"pt-PT": "Hungria",
+			"gn-PY": "Hungary",
+			"en-US": "Hungary",
+			"es-ES": "Hungría",
+			"fr-FR": "Hongrie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

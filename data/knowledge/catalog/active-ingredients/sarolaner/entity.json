@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"entityType": "active_ingredient",
+	"id": "7cce2524-d9ac-4d6e-97e2-18f7e488ee16",
+	"typeTermKey": "antiInfective.antiparasitic.isoxazolines",
+	"classificationTermKeys": [],
+	"regions": [],
+	"nomenclature": {
+		"scientificName": null,
+		"casNumber": null,
+		"denominationStandards": []
+	},
+	"atcVetCode": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Sarolaner",
+			"pt-PT": "Sarolaner",
+			"gn-PY": "Sarolaner",
+			"en-US": "Sarolaner",
+			"es-ES": "Sarolaner",
+			"fr-FR": "Sarolaner"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,50 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "f6f32821-74e7-4e1a-8eb6-515bc26a1e67",
+	"typeTermKey": "medication.antiparasitic.endoparasiticide",
+	"classificationTermKeys": [
+		"origin.allopathic",
+		"therapeuticAction.control"
+	],
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "131b3da4-334e-42ee-a185-5e57df388a49",
+	"activeIngredientIds": [
+		"43e22778-1801-4c2a-ad8d-434de9654eaa",
+		"1abdddb0-c611-4ef5-aabd-1c5026a286c6",
+		"dfc38256-ecf1-4f1e-8571-6647b678c3be"
+	],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Canex Premium",
+			"pt-PT": "Canex Premium",
+			"gn-PY": "Canex Premium",
+			"en-US": "Canex Premium",
+			"es-ES": "Canex Premium",
+			"fr-FR": "Canex Premium"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [],
+	"therapeuticScopeTermKeys": [
+		"broadSpectrum"
+	]
+}

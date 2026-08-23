@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "varied",
+	"placeType": "variable_origin",
+	"countryCodes": [],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": null,
+		"longitude": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Variada",
+			"pt-PT": "Variada",
+			"gn-PY": "Hetaichagua",
+			"en-US": "Varied",
+			"es-ES": "Variado",
+			"fr-FR": "Variée"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

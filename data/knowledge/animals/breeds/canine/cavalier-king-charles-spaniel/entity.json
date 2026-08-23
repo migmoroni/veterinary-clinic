@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "cavalier-king-charles-spaniel",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"england"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			5.5,
+			8.2
+		],
+		"female": [
+			5.4,
+			7.8
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			30,
+			33
+		],
+		"female": [
+			29,
+			32
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cavalier King Charles Spaniel",
+			"pt-PT": "Cavalier King Charles Spaniel",
+			"gn-PY": "Cavalier King Charles Spaniel",
+			"en-US": "Cavalier King Charles Spaniel",
+			"es-ES": "Cavalier King Charles Spaniel",
+			"fr-FR": "Cavalier King Charles Spaniel"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

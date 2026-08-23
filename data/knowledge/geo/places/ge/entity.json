@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "ge",
+	"placeType": "country",
+	"countryCodes": [
+		"GE"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 42.3,
+		"longitude": 43.4
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Geórgia",
+			"pt-PT": "Geórgia",
+			"gn-PY": "Georgia",
+			"en-US": "Georgia",
+			"es-ES": "Georgia",
+			"fr-FR": "Géorgie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

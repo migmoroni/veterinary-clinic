@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "blue-lacy",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			16,
+			25
+		],
+		"female": [
+			11,
+			20
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			56
+		],
+		"female": [
+			43,
+			53
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Blue Lacy",
+			"pt-PT": "Blue Lacy",
+			"gn-PY": "Blue Lacy",
+			"en-US": "Blue Lacy",
+			"es-ES": "Blue Lacy",
+			"fr-FR": "Blue Lacy"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

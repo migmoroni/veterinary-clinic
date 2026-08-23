@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "maine-coon",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "giant",
+	"averageWeightKg": {
+		"male": [
+			6,
+			11
+		],
+		"female": [
+			4,
+			7
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			30,
+			40
+		],
+		"female": [
+			28,
+			36
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Maine Coon",
+			"pt-PT": "Maine Coon",
+			"gn-PY": "Maine Coon",
+			"en-US": "Maine Coon",
+			"es-ES": "Maine Coon",
+			"fr-FR": "Maine Coon"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

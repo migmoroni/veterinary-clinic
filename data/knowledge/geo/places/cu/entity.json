@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "cu",
+	"placeType": "country",
+	"countryCodes": [
+		"CU"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 21.5,
+		"longitude": -78.9
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cuba",
+			"pt-PT": "Cuba",
+			"gn-PY": "Cuba",
+			"en-US": "Cuba",
+			"es-ES": "Cuba",
+			"fr-FR": "Cuba"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

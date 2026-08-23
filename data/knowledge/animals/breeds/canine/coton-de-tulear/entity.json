@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "coton-de-tulear",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"mg"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			4,
+			6
+		],
+		"female": [
+			3.5,
+			5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			26,
+			30
+		],
+		"female": [
+			23,
+			28
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Coton de Tulear",
+			"pt-PT": "Coton de Tulear",
+			"gn-PY": "Coton de Tulear",
+			"en-US": "Coton de Tulear",
+			"es-ES": "Coton de Tulear",
+			"fr-FR": "Coton de Tuléar"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

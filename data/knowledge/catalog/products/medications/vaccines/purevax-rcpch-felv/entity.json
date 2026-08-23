@@ -1,0 +1,66 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "9bdc1261-89fe-4549-87ea-f5d9a8c24cb9",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Purevax RCPCh FeLV",
+			"pt-PT": "Purevax RCPCh FeLV",
+			"gn-PY": "Purevax RCPCh FeLV",
+			"en-US": "Purevax RCPCh FeLV",
+			"es-ES": "Purevax RCPCh FeLV",
+			"fr-FR": "Purevax RCPCh FeLV"
+		},
+		"aliases": {
+			"pt-BR": [
+				"RCPCh FeLV"
+			],
+			"pt-PT": [
+				"RCPCh FeLV"
+			],
+			"gn-PY": [
+				"RCPCh FeLV"
+			],
+			"en-US": [
+				"RCPCh FeLV"
+			],
+			"es-ES": [
+				"RCPCh FeLV"
+			],
+			"fr-FR": [
+				"RCPCh FeLV"
+			]
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"disease.felineLeukemia",
+		"pathogen.felineLeukemiaVirus",
+		"disease.felineRhinotracheitis",
+		"disease.felineCalicivirosis",
+		"disease.felinePanleukopenia",
+		"disease.felineChlamydiosis"
+	],
+	"vaccineProfileTermKeys": [
+		"feline.pentavalent"
+	]
+}

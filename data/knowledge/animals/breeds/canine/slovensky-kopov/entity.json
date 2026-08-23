@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "slovensky-kopov",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"sk"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			15,
+			20
+		],
+		"female": [
+			13,
+			18
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			45,
+			50
+		],
+		"female": [
+			40,
+			45
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Slovensky Kopov",
+			"pt-PT": "Slovensky Kopov",
+			"gn-PY": "Slovensky Kopov",
+			"en-US": "Slovensky Kopov",
+			"es-ES": "Slovensky Kopov",
+			"fr-FR": "Slovensky Kopov"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "cn",
+	"placeType": "country",
+	"countryCodes": [
+		"CN"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 35.9,
+		"longitude": 104.2
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "China",
+			"pt-PT": "China",
+			"gn-PY": "China",
+			"en-US": "China",
+			"es-ES": "China",
+			"fr-FR": "Chine"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

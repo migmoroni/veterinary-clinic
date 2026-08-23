@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "field-spaniel",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"england"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			18,
+			25
+		],
+		"female": [
+			16,
+			23
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			43,
+			46
+		],
+		"female": [
+			41,
+			44
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Field Spaniel",
+			"pt-PT": "Field Spaniel",
+			"gn-PY": "Field Spaniel",
+			"en-US": "Field Spaniel",
+			"es-ES": "Field Spaniel",
+			"fr-FR": "Field Spaniel"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

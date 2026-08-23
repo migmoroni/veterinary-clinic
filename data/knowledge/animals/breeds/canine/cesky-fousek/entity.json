@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "cesky-fousek",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"cz"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			28,
+			34
+		],
+		"female": [
+			22,
+			28
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			60,
+			66
+		],
+		"female": [
+			58,
+			62
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cesky Fousek",
+			"pt-PT": "Cesky Fousek",
+			"gn-PY": "Cesky Fousek",
+			"en-US": "Cesky Fousek",
+			"es-ES": "Cesky Fousek",
+			"fr-FR": "Cesky Fousek"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

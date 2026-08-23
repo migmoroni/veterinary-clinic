@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "exotic-shorthair",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			6.5
+		],
+		"female": [
+			3,
+			5.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			23,
+			28
+		],
+		"female": [
+			21,
+			27
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Exótico de Pelo Curto",
+			"pt-PT": "Exótico de pelo curto",
+			"gn-PY": "Exótico de pelo corto",
+			"en-US": "Exotic Shorthair",
+			"es-ES": "Exótico de pelo corto",
+			"fr-FR": "Exotic Shorthair"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

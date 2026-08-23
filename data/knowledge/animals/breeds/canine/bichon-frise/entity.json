@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "bichon-frise",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"fr"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			5,
+			8
+		],
+		"female": [
+			4.5,
+			7
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			30
+		],
+		"female": [
+			23,
+			28
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Bichon Frisé",
+			"pt-PT": "Bichon Frisé",
+			"gn-PY": "Bichón frisé",
+			"en-US": "Bichon Frise",
+			"es-ES": "Bichón frisé",
+			"fr-FR": "Bichon frisé"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

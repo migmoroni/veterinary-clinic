@@ -31,6 +31,10 @@ A [Parte 1B](./01b-knowledge-builder.md) está concluída e gera uma
 - instalar objetos CAS em `vault/system` pela disposição fragmentada vigente;
 - abrir sempre `system` e `system_media` do mesmo locale e da mesma versão;
 - adaptar contratos, repositories e serviços aos campos localizados dos bancos;
+- preservar a resolução N:N entre produtos e princípios ativos e os links para
+  as entidades farmacológicas relacionadas;
+- consumir alvos, perfis vacinais, estágios de vida e escopos terapêuticos pelas
+  relações N:N tipadas do produto;
 - fazer buscas usarem nomes e aliases armazenados em `system`;
 - retirar chaves de i18n dos modelos de conhecimento;
 - retirar conteúdo de conhecimento dos arquivos de i18n do app;
@@ -378,16 +382,15 @@ conhecimento. Relações de origem expõem `geo_place` por ID e conteúdo locali
 sem reconstruir localizações no módulo de raças. Códigos técnicos continuam
 disponíveis em campos próprios quando possuem significado de domínio.
 
-Cada item de `sections` expõe `sectionKey`, `compiledMarkdown` e seus `children`.
+Cada item de `sections` expõe somente `sectionKey` e `compiledMarkdown`.
 `sectionKey` é um enum semântico do domínio, não uma chave de conteúdo. A camada
-de interface fornece o título padronizado da seção no locale ativo, enquanto
-nomes, aliases e corpos permanecem integralmente resolvidos pelo banco.
+de interface resolve o título padronizado pelo i18n associado à `sectionKey`,
+enquanto o corpo vem integralmente resolvido pelo banco ativo.
 
 O repository lê o `content_json` da entidade, valida a `schemaVersion` suportada
-e desserializa o documento para um DTO tipado. A página percorre `sections` e
-`children` na ordem recebida para montar sua estrutura; ela não ordena, procura
-pais nem interpreta caminhos de autoria. Cada nó entrega seu
-`compiledMarkdown` diretamente ao renderer seguro.
+e desserializa o documento para um DTO tipado. A página percorre o array plano
+`sections` na ordem recebida; ela não reordena nem interpreta caminhos de
+autoria. Cada item entrega seu `compiledMarkdown` diretamente ao renderer seguro.
 
 Repositories não chamam `translate()` para montar uma entidade. O locale é
 determinado pelo banco ativo, e o retorno já contém o conteúdo correto.
@@ -451,6 +454,10 @@ As APIs de busca utilizam:
 - nomes localizados de relações relevantes;
 - termos de taxonomia localizados;
 - campos estruturais pesquisáveis definidos pelo domínio.
+
+Para produtos, os nomes e aliases de princípios ativos, alvos, perfis vacinais,
+estágios de vida e escopos terapêuticos entram pela projeção derivada pelo
+builder. A busca não lê classificações genéricas ou campos `searchConcept`.
 
 Quando o corpo das seções participar de uma busca, o repository usa o texto ou o
 índice FTS derivado pelo builder. A busca não interpreta nem percorre
@@ -615,7 +622,8 @@ APIs de consulta de conhecimento nem o formato físico do CAS local.
 7. Adaptar a leitura de `system_media` de `blobs` para `media_assets` por
    `mediaKey`.
 8. Adaptar repositories e DTOs aos campos resolvidos.
-9. Adaptar módulos, buscas e consumidores.
+9. Adaptar módulos, buscas, filtros e consumidores às relações tipadas de
+   produtos.
 10. Implementar a troca recuperável de locale e invalidação de caches.
 11. Remover o conteúdo de conhecimento do i18n.
 12. Remover defaults, agregadores, seeds e produção de sistema substituídos em
@@ -654,8 +662,17 @@ Cobrir:
 - recusa de schema ou locale incompatível;
 - abertura dos doze bancos pelas APIs de leitura;
 - nomes, aliases, descrições e taxonomias corretos por locale;
-- desserialização de `content_json` para a árvore tipada de seções;
-- montagem da página na ordem dos arrays `sections` e `children`;
+- produtos resolvendo seus princípios ativos pela relação N:N, na ordem
+  declarada;
+- produtos resolvendo alvos, perfis vacinais, estágios de vida e escopos
+  terapêuticos exclusivamente por suas quatro relações N:N;
+- recusa de associação com termo pertencente a outro vocabulário de produto;
+- navegação do produto para cada página de princípio ativo relacionado;
+- busca de produto pelos nomes e aliases localizados de seus princípios ativos;
+- ausência de `searchConcept` nos DTOs, repositories e índices consumidos;
+- desserialização de `content_json` para a lista tipada de seções;
+- resolução do título de cada seção pelo i18n da `sectionKey`;
+- montagem da página na ordem do array `sections`;
 - entrega exclusiva de `compiledMarkdown` normalizado ao renderer;
 - recusa de `schemaVersion` de conteúdo não suportada ou documento malformado;
 - ausência de consultas JSON ad hoc para montar páginas ou pesquisar seções;
@@ -714,11 +731,14 @@ Cobrir:
   ativos.
 - `knowledge_build_metadata` prova a identidade comum do par antes da abertura.
 - Os contratos retornam conteúdo localizado, sem chaves de tradução.
-- As páginas são compostas pela árvore tipada de `content_json`, sem consultas ou
+- As páginas são compostas pela lista tipada de `content_json`, sem consultas ou
   tabelas independentes por seção.
+- Cada item da lista fornece a `sectionKey`, e a UI resolve seu título pelo i18n.
 - Busca, catálogo, raças e protocolos usam nomes e aliases dos bancos.
-- O i18n contém somente textos pertencentes à interface e a outras
-  responsabilidades locais legítimas.
+- Produtos exibem e vinculam princípios ativos carregados pelas relações
+  canônicas do banco.
+- O i18n contém textos pertencentes à interface, incluindo os títulos
+  padronizados das seções.
 - Não permanecem fontes paralelas nem fallbacks de conhecimento.
 - O par do locale é validado e aberto como unidade indivisível.
 - Entidades e Markdown compilado referenciam mídia por `mediaKey`; somente a

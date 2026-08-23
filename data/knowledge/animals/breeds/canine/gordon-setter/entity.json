@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "gordon-setter",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"scotland"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			27,
+			36
+		],
+		"female": [
+			20,
+			32
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			61,
+			69
+		],
+		"female": [
+			58,
+			66
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Setter Gordon",
+			"pt-PT": "Setter Gordon",
+			"gn-PY": "Setter Gordon",
+			"en-US": "Gordon Setter",
+			"es-ES": "Setter Gordon",
+			"fr-FR": "Setter Gordon"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

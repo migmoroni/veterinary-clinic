@@ -1,0 +1,64 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "06acc655-a202-48fc-b153-ebec8833ab4c",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"feline"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Purevax RCPCh",
+			"pt-PT": "Purevax RCPCh",
+			"gn-PY": "Purevax RCPCh",
+			"en-US": "Purevax RCPCh",
+			"es-ES": "Purevax RCPCh",
+			"fr-FR": "Purevax RCPCh"
+		},
+		"aliases": {
+			"pt-BR": [
+				"RCPCh"
+			],
+			"pt-PT": [
+				"RCPCh"
+			],
+			"gn-PY": [
+				"RCPCh"
+			],
+			"en-US": [
+				"RCPCh"
+			],
+			"es-ES": [
+				"RCPCh"
+			],
+			"fr-FR": [
+				"RCPCh"
+			]
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"disease.felineRhinotracheitis",
+		"disease.felineCalicivirosis",
+		"disease.felinePanleukopenia",
+		"disease.felineChlamydiosis"
+	],
+	"vaccineProfileTermKeys": [
+		"feline.tetravalent"
+	]
+}

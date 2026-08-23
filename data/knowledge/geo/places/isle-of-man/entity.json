@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "isle-of-man",
+	"placeType": "region",
+	"countryCodes": [],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 54.2,
+		"longitude": -4.5
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Ilha de Man",
+			"pt-PT": "Ilha de Man",
+			"gn-PY": "Isla de Man",
+			"en-US": "Isle of Man",
+			"es-ES": "Isla de Man",
+			"fr-FR": "Île de Man"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

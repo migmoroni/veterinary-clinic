@@ -1,0 +1,52 @@
+{
+	"schemaVersion": 1,
+	"entityType": "manufacturer",
+	"id": "3e8a6566-b26d-4d9c-9700-9e86e1f671bf",
+	"typeTermKey": "veterinaryIndustrial.veterinaryIndustrialLaboratory",
+	"classificationTermKeys": [
+		"regulatoryStatus.veterinaryIndustrial",
+		"commercialFlow.distributorNetwork",
+		"qualityStandard.gmpCertified"
+	],
+	"regions": [
+		"BRA"
+	],
+	"website": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Vaxxinova",
+			"pt-PT": "Vaxxinova",
+			"gn-PY": "Vaxxinova",
+			"en-US": "Vaxxinova",
+			"es-ES": "Vaxxinova",
+			"fr-FR": "Vaxxinova"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [
+		{
+			"sectionKey": "about",
+			"sectionNumber": 1
+		},
+		{
+			"sectionKey": "portfolio",
+			"sectionNumber": 2
+		},
+		{
+			"sectionKey": "support",
+			"sectionNumber": 3
+		},
+		{
+			"sectionKey": "references",
+			"sectionNumber": 4
+		}
+	],
+	"contentPath": "./content"
+}

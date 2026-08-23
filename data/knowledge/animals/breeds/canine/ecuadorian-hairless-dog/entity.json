@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "ecuadorian-hairless-dog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"ec"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			8,
+			16
+		],
+		"female": [
+			7,
+			14
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			35,
+			45
+		],
+		"female": [
+			33,
+			43
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cão Pelado Equatoriano",
+			"pt-PT": "Cão Pelado Equatoriano",
+			"gn-PY": "Perro sin pelo ecuatoriano",
+			"en-US": "Ecuadorian Hairless Dog",
+			"es-ES": "Perro sin pelo ecuatoriano",
+			"fr-FR": "Chien nu de l'Équateur"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

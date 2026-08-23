@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "maremma-sheepdog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"it"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			35,
+			45
+		],
+		"female": [
+			30,
+			40
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			65,
+			73
+		],
+		"female": [
+			60,
+			68
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Pastor Maremano Abruzês",
+			"pt-PT": "Pastor Maremano Abruzês",
+			"gn-PY": "Pastor de Maremma",
+			"en-US": "Maremma Sheepdog",
+			"es-ES": "Pastor de Maremma",
+			"fr-FR": "Berger de Maremme et Abruzzes"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

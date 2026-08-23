@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "cairn-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"scotland"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			6,
+			7.5
+		],
+		"female": [
+			5.5,
+			7
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			33
+		],
+		"female": [
+			23,
+			30
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cairn Terrier",
+			"pt-PT": "Cairn Terrier",
+			"gn-PY": "Cairn Terrier",
+			"en-US": "Cairn Terrier",
+			"es-ES": "Cairn Terrier",
+			"fr-FR": "Cairn Terrier"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

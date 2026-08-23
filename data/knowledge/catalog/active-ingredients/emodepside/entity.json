@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"entityType": "active_ingredient",
+	"id": "af5091cf-1fb6-4104-83fb-e65fd5c4d72f",
+	"typeTermKey": "antiInfective.antiparasitic.cyclooctadepsipeptides",
+	"classificationTermKeys": [],
+	"regions": [],
+	"nomenclature": {
+		"scientificName": null,
+		"casNumber": null,
+		"denominationStandards": []
+	},
+	"atcVetCode": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Emodepsida",
+			"pt-PT": "Emodepsida",
+			"gn-PY": "Emodepsida",
+			"en-US": "Emodepside",
+			"es-ES": "Emodepsida",
+			"fr-FR": "Émodepside"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "ro",
+	"placeType": "country",
+	"countryCodes": [
+		"RO"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 45.9,
+		"longitude": 24.9
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Romênia",
+			"pt-PT": "Roménia",
+			"gn-PY": "Romania",
+			"en-US": "Romania",
+			"es-ES": "Rumanía",
+			"fr-FR": "Roumanie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

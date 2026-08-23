@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "toyger",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			4.5,
+			7
+		],
+		"female": [
+			3.5,
+			5.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			32
+		],
+		"female": [
+			23,
+			30
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Toyger",
+			"pt-PT": "Toyger",
+			"gn-PY": "Toyger",
+			"en-US": "Toyger",
+			"es-ES": "Toyger",
+			"fr-FR": "Toyger"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

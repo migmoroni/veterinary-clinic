@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "sarplaninac",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"balkans"
+	],
+	"sizeTermKey": "giant",
+	"averageWeightKg": {
+		"male": [
+			35,
+			45
+		],
+		"female": [
+			30,
+			40
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			62,
+			70
+		],
+		"female": [
+			58,
+			65
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Šarplaninac",
+			"pt-PT": "Šarplaninac",
+			"gn-PY": "Šarplaninac",
+			"en-US": "Sarplaninac",
+			"es-ES": "Šarplaninac",
+			"fr-FR": "Charplaninatz"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

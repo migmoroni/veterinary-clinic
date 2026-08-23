@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "mt",
+	"placeType": "country",
+	"countryCodes": [
+		"MT"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 35.9,
+		"longitude": 14.4
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Malta",
+			"pt-PT": "Malta",
+			"gn-PY": "Malta",
+			"en-US": "Malta",
+			"es-ES": "Malta",
+			"fr-FR": "Malte"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

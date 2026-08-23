@@ -1,0 +1,159 @@
+{
+	"schemaVersion": 1,
+	"entityType": "taxonomy",
+	"id": "condition-classifications",
+	"domain": "condition",
+	"purpose": "classification",
+	"terms": [
+		{
+			"key": "notificationRequirement",
+			"parentKey": null,
+			"order": 0,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Notificação",
+					"pt-PT": "Notificação",
+					"gn-PY": "Notificação",
+					"en-US": "Notification",
+					"es-ES": "Notificação",
+					"fr-FR": "Notification"
+				}
+			}
+		},
+		{
+			"key": "notificationRequirement.compulsory",
+			"parentKey": "notificationRequirement",
+			"order": 1,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Compulsória",
+					"pt-PT": "Compulsória",
+					"gn-PY": "Compulsória",
+					"en-US": "Compulsory",
+					"es-ES": "Compulsória",
+					"fr-FR": "Compulsory"
+				}
+			}
+		},
+		{
+			"key": "notificationRequirement.immediate",
+			"parentKey": "notificationRequirement",
+			"order": 2,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Imediata",
+					"pt-PT": "Imediata",
+					"gn-PY": "Imediata",
+					"en-US": "Immediate",
+					"es-ES": "Imediata",
+					"fr-FR": "Immediate"
+				}
+			}
+		},
+		{
+			"key": "notificationRequirement.none",
+			"parentKey": "notificationRequirement",
+			"order": 3,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Não exige notificação",
+					"pt-PT": "Não exige notificação",
+					"gn-PY": "Não exige notificação",
+					"en-US": "No notification required",
+					"es-ES": "Não exige notificação",
+					"fr-FR": "No notification required"
+				}
+			}
+		},
+		{
+			"key": "notificationRequirement.periodic",
+			"parentKey": "notificationRequirement",
+			"order": 4,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Periódica",
+					"pt-PT": "Periódica",
+					"gn-PY": "Periódica",
+					"en-US": "Periodic",
+					"es-ES": "Periódica",
+					"fr-FR": "Periodic"
+				}
+			}
+		},
+		{
+			"key": "zoonoticRisk",
+			"parentKey": null,
+			"order": 5,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Risco zoonótico",
+					"pt-PT": "Risco zoonótico",
+					"gn-PY": "Risco zoonótico",
+					"en-US": "Zoonotic risk",
+					"es-ES": "Risco zoonótico",
+					"fr-FR": "Zoonotic risk"
+				}
+			}
+		},
+		{
+			"key": "zoonoticRisk.high",
+			"parentKey": "zoonoticRisk",
+			"order": 6,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Alto",
+					"pt-PT": "Alto",
+					"gn-PY": "Alto",
+					"en-US": "High",
+					"es-ES": "Alto",
+					"fr-FR": "High"
+				}
+			}
+		},
+		{
+			"key": "zoonoticRisk.low",
+			"parentKey": "zoonoticRisk",
+			"order": 7,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Baixo",
+					"pt-PT": "Baixo",
+					"gn-PY": "Baixo",
+					"en-US": "Low",
+					"es-ES": "Baixo",
+					"fr-FR": "Low"
+				}
+			}
+		},
+		{
+			"key": "zoonoticRisk.moderate",
+			"parentKey": "zoonoticRisk",
+			"order": 8,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Moderado",
+					"pt-PT": "Moderado",
+					"gn-PY": "Moderado",
+					"en-US": "Moderate",
+					"es-ES": "Moderado",
+					"fr-FR": "Moderate"
+				}
+			}
+		},
+		{
+			"key": "zoonoticRisk.none",
+			"parentKey": "zoonoticRisk",
+			"order": 9,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Sem risco conhecido",
+					"pt-PT": "Sem risco conhecido",
+					"gn-PY": "Sem risco conhecido",
+					"en-US": "No known risk",
+					"es-ES": "Sem risco conhecido",
+					"fr-FR": "No known risk"
+				}
+			}
+		}
+	]
+}

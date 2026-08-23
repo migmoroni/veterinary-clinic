@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "dachshund",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"de"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			5,
+			14
+		],
+		"female": [
+			4,
+			12
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			20,
+			27
+		],
+		"female": [
+			18,
+			25
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Dachshund (Teckel)",
+			"pt-PT": "Dachshund (Teckel)",
+			"gn-PY": "Dachshund",
+			"en-US": "Dachshund",
+			"es-ES": "Dachshund",
+			"fr-FR": "Teckel"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

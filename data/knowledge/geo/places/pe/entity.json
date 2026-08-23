@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "pe",
+	"placeType": "country",
+	"countryCodes": [
+		"PE"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": -9.2,
+		"longitude": -75
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Peru",
+			"pt-PT": "Peru",
+			"gn-PY": "Peru",
+			"en-US": "Peru",
+			"es-ES": "Perú",
+			"fr-FR": "Pérou"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

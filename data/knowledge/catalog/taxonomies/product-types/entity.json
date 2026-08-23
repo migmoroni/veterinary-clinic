@@ -1,0 +1,2089 @@
+{
+	"schemaVersion": 1,
+	"entityType": "taxonomy",
+	"id": "product-types",
+	"domain": "product",
+	"purpose": "type",
+	"terms": [
+		{
+			"key": "accessoryAndEnrichment",
+			"parentKey": null,
+			"order": 0,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Acessório e enriquecimento",
+					"pt-PT": "Acessório e enriquecimento",
+					"gn-PY": "Acessório e enriquecimento",
+					"en-US": "Accessory and enrichment",
+					"es-ES": "Accesorio y enriquecimiento",
+					"fr-FR": "Accessoire et enrichissement"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.clothingAndWearable",
+			"parentKey": "accessoryAndEnrichment",
+			"order": 1,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Clothing And Wearable",
+					"pt-PT": "Clothing And Wearable",
+					"gn-PY": "Clothing And Wearable",
+					"en-US": "Clothing And Wearable",
+					"es-ES": "Clothing And Wearable",
+					"fr-FR": "Clothing And Wearable"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.clothingAndWearable.bandanaAndBow",
+			"parentKey": "accessoryAndEnrichment.clothingAndWearable",
+			"order": 2,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Bandana And Bow",
+					"pt-PT": "Bandana And Bow",
+					"gn-PY": "Bandana And Bow",
+					"en-US": "Bandana And Bow",
+					"es-ES": "Bandana And Bow",
+					"fr-FR": "Bandana And Bow"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.clothingAndWearable.clothes",
+			"parentKey": "accessoryAndEnrichment.clothingAndWearable",
+			"order": 3,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Clothes",
+					"pt-PT": "Clothes",
+					"gn-PY": "Clothes",
+					"en-US": "Clothes",
+					"es-ES": "Clothes",
+					"fr-FR": "Clothes"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.clothingAndWearable.shoesAndSocks",
+			"parentKey": "accessoryAndEnrichment.clothingAndWearable",
+			"order": 4,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Shoes And Socks",
+					"pt-PT": "Shoes And Socks",
+					"gn-PY": "Shoes And Socks",
+					"en-US": "Shoes And Socks",
+					"es-ES": "Shoes And Socks",
+					"fr-FR": "Shoes And Socks"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.feedingUtensil",
+			"parentKey": "accessoryAndEnrichment",
+			"order": 5,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Feeding Utensil",
+					"pt-PT": "Feeding Utensil",
+					"gn-PY": "Feeding Utensil",
+					"en-US": "Feeding Utensil",
+					"es-ES": "Feeding Utensil",
+					"fr-FR": "Feeding Utensil"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.feedingUtensil.bowlAndFeeder",
+			"parentKey": "accessoryAndEnrichment.feedingUtensil",
+			"order": 6,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Bowl And Feeder",
+					"pt-PT": "Bowl And Feeder",
+					"gn-PY": "Bowl And Feeder",
+					"en-US": "Bowl And Feeder",
+					"es-ES": "Bowl And Feeder",
+					"fr-FR": "Bowl And Feeder"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.feedingUtensil.slowFeeder",
+			"parentKey": "accessoryAndEnrichment.feedingUtensil",
+			"order": 7,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Slow Feeder",
+					"pt-PT": "Slow Feeder",
+					"gn-PY": "Slow Feeder",
+					"en-US": "Slow Feeder",
+					"es-ES": "Slow Feeder",
+					"fr-FR": "Slow Feeder"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.feedingUtensil.waterFountain",
+			"parentKey": "accessoryAndEnrichment.feedingUtensil",
+			"order": 8,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Water Fountain",
+					"pt-PT": "Water Fountain",
+					"gn-PY": "Water Fountain",
+					"en-US": "Water Fountain",
+					"es-ES": "Water Fountain",
+					"fr-FR": "Water Fountain"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.habitatAndTransport",
+			"parentKey": "accessoryAndEnrichment",
+			"order": 9,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Habitat And Transport",
+					"pt-PT": "Habitat And Transport",
+					"gn-PY": "Habitat And Transport",
+					"en-US": "Habitat And Transport",
+					"es-ES": "Habitat And Transport",
+					"fr-FR": "Habitat And Transport"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.habitatAndTransport.bedAndMat",
+			"parentKey": "accessoryAndEnrichment.habitatAndTransport",
+			"order": 10,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Bed And Mat",
+					"pt-PT": "Bed And Mat",
+					"gn-PY": "Bed And Mat",
+					"en-US": "Bed And Mat",
+					"es-ES": "Bed And Mat",
+					"fr-FR": "Bed And Mat"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.habitatAndTransport.cageAndTerrarium",
+			"parentKey": "accessoryAndEnrichment.habitatAndTransport",
+			"order": 11,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Cage And Terrarium",
+					"pt-PT": "Cage And Terrarium",
+					"gn-PY": "Cage And Terrarium",
+					"en-US": "Cage And Terrarium",
+					"es-ES": "Cage And Terrarium",
+					"fr-FR": "Cage And Terrarium"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.habitatAndTransport.carrierBox",
+			"parentKey": "accessoryAndEnrichment.habitatAndTransport",
+			"order": 12,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Carrier Box",
+					"pt-PT": "Carrier Box",
+					"gn-PY": "Carrier Box",
+					"en-US": "Carrier Box",
+					"es-ES": "Carrier Box",
+					"fr-FR": "Carrier Box"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.postSurgicalAndRehab",
+			"parentKey": "accessoryAndEnrichment",
+			"order": 13,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Post Surgical And Rehab",
+					"pt-PT": "Post Surgical And Rehab",
+					"gn-PY": "Post Surgical And Rehab",
+					"en-US": "Post Surgical And Rehab",
+					"es-ES": "Post Surgical And Rehab",
+					"fr-FR": "Post Surgical And Rehab"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.postSurgicalAndRehab.diaperAndPad",
+			"parentKey": "accessoryAndEnrichment.postSurgicalAndRehab",
+			"order": 14,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Diaper And Pad",
+					"pt-PT": "Diaper And Pad",
+					"gn-PY": "Diaper And Pad",
+					"en-US": "Diaper And Pad",
+					"es-ES": "Diaper And Pad",
+					"fr-FR": "Diaper And Pad"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.postSurgicalAndRehab.elizabethanCollar",
+			"parentKey": "accessoryAndEnrichment.postSurgicalAndRehab",
+			"order": 15,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Elizabethan Collar",
+					"pt-PT": "Elizabethan Collar",
+					"gn-PY": "Elizabethan Collar",
+					"en-US": "Elizabethan Collar",
+					"es-ES": "Elizabethan Collar",
+					"fr-FR": "Elizabethan Collar"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.postSurgicalAndRehab.recoverySuit",
+			"parentKey": "accessoryAndEnrichment.postSurgicalAndRehab",
+			"order": 16,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Recovery Suit",
+					"pt-PT": "Recovery Suit",
+					"gn-PY": "Recovery Suit",
+					"en-US": "Recovery Suit",
+					"es-ES": "Recovery Suit",
+					"fr-FR": "Recovery Suit"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.postSurgicalAndRehab.wheelchairAndHarness",
+			"parentKey": "accessoryAndEnrichment.postSurgicalAndRehab",
+			"order": 17,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Wheelchair And Harness",
+					"pt-PT": "Wheelchair And Harness",
+					"gn-PY": "Wheelchair And Harness",
+					"en-US": "Wheelchair And Harness",
+					"es-ES": "Wheelchair And Harness",
+					"fr-FR": "Wheelchair And Harness"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.toyAndEnrichment",
+			"parentKey": "accessoryAndEnrichment",
+			"order": 18,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Toy And Enrichment",
+					"pt-PT": "Toy And Enrichment",
+					"gn-PY": "Toy And Enrichment",
+					"en-US": "Toy And Enrichment",
+					"es-ES": "Toy And Enrichment",
+					"fr-FR": "Toy And Enrichment"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.toyAndEnrichment.chewToy",
+			"parentKey": "accessoryAndEnrichment.toyAndEnrichment",
+			"order": 19,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Chew Toy",
+					"pt-PT": "Chew Toy",
+					"gn-PY": "Chew Toy",
+					"en-US": "Chew Toy",
+					"es-ES": "Chew Toy",
+					"fr-FR": "Chew Toy"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.toyAndEnrichment.interactiveToy",
+			"parentKey": "accessoryAndEnrichment.toyAndEnrichment",
+			"order": 20,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Interactive Toy",
+					"pt-PT": "Interactive Toy",
+					"gn-PY": "Interactive Toy",
+					"en-US": "Interactive Toy",
+					"es-ES": "Interactive Toy",
+					"fr-FR": "Interactive Toy"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.toyAndEnrichment.plushToy",
+			"parentKey": "accessoryAndEnrichment.toyAndEnrichment",
+			"order": 21,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Plush Toy",
+					"pt-PT": "Plush Toy",
+					"gn-PY": "Plush Toy",
+					"en-US": "Plush Toy",
+					"es-ES": "Plush Toy",
+					"fr-FR": "Plush Toy"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.toyAndEnrichment.scratchingPost",
+			"parentKey": "accessoryAndEnrichment.toyAndEnrichment",
+			"order": 22,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Scratching Post",
+					"pt-PT": "Scratching Post",
+					"gn-PY": "Scratching Post",
+					"en-US": "Scratching Post",
+					"es-ES": "Scratching Post",
+					"fr-FR": "Scratching Post"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.walkingAndRestraint",
+			"parentKey": "accessoryAndEnrichment",
+			"order": 23,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Walking And Restraint",
+					"pt-PT": "Walking And Restraint",
+					"gn-PY": "Walking And Restraint",
+					"en-US": "Walking And Restraint",
+					"es-ES": "Walking And Restraint",
+					"fr-FR": "Walking And Restraint"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.walkingAndRestraint.collarAndHarness",
+			"parentKey": "accessoryAndEnrichment.walkingAndRestraint",
+			"order": 24,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Collar And Harness",
+					"pt-PT": "Collar And Harness",
+					"gn-PY": "Collar And Harness",
+					"en-US": "Collar And Harness",
+					"es-ES": "Collar And Harness",
+					"fr-FR": "Collar And Harness"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.walkingAndRestraint.leash",
+			"parentKey": "accessoryAndEnrichment.walkingAndRestraint",
+			"order": 25,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Leash",
+					"pt-PT": "Leash",
+					"gn-PY": "Leash",
+					"en-US": "Leash",
+					"es-ES": "Leash",
+					"fr-FR": "Leash"
+				}
+			}
+		},
+		{
+			"key": "accessoryAndEnrichment.walkingAndRestraint.muzzle",
+			"parentKey": "accessoryAndEnrichment.walkingAndRestraint",
+			"order": 26,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Muzzle",
+					"pt-PT": "Muzzle",
+					"gn-PY": "Muzzle",
+					"en-US": "Muzzle",
+					"es-ES": "Muzzle",
+					"fr-FR": "Muzzle"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable",
+			"parentKey": null,
+			"order": 27,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Insumo clínico",
+					"pt-PT": "Insumo clínico",
+					"gn-PY": "Insumo clínico",
+					"en-US": "Clinical consumable",
+					"es-ES": "Insumo clínico",
+					"fr-FR": "Consommable clinique"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable.diagnosticConsumable",
+			"parentKey": "clinicalConsumable",
+			"order": 28,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Diagnóstico",
+					"pt-PT": "Diagnóstico",
+					"gn-PY": "Diagnóstico",
+					"en-US": "Diagnostics",
+					"es-ES": "Diagnóstico",
+					"fr-FR": "Diagnostic"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable.diagnosticConsumable.collectionTube",
+			"parentKey": "clinicalConsumable.diagnosticConsumable",
+			"order": 29,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Collection Tube",
+					"pt-PT": "Collection Tube",
+					"gn-PY": "Collection Tube",
+					"en-US": "Collection Tube",
+					"es-ES": "Collection Tube",
+					"fr-FR": "Collection Tube"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable.diagnosticConsumable.microscopeSlide",
+			"parentKey": "clinicalConsumable.diagnosticConsumable",
+			"order": 30,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Microscope Slide",
+					"pt-PT": "Microscope Slide",
+					"gn-PY": "Microscope Slide",
+					"en-US": "Microscope Slide",
+					"es-ES": "Microscope Slide",
+					"fr-FR": "Microscope Slide"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable.diagnosticConsumable.rapidTest",
+			"parentKey": "clinicalConsumable.diagnosticConsumable",
+			"order": 31,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Rapid Test",
+					"pt-PT": "Rapid Test",
+					"gn-PY": "Rapid Test",
+					"en-US": "Rapid Test",
+					"es-ES": "Rapid Test",
+					"fr-FR": "Rapid Test"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable.diagnosticConsumable.urineStrip",
+			"parentKey": "clinicalConsumable.diagnosticConsumable",
+			"order": 32,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Urine Strip",
+					"pt-PT": "Urine Strip",
+					"gn-PY": "Urine Strip",
+					"en-US": "Urine Strip",
+					"es-ES": "Urine Strip",
+					"fr-FR": "Urine Strip"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable.injectionAndInfusion",
+			"parentKey": "clinicalConsumable",
+			"order": 33,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Injeção e infusão",
+					"pt-PT": "Injeção e infusão",
+					"gn-PY": "Injeção e infusão",
+					"en-US": "Injection and infusion",
+					"es-ES": "Inyección e infusión",
+					"fr-FR": "Injection et perfusion"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable.injectionAndInfusion.catheterAndScalp",
+			"parentKey": "clinicalConsumable.injectionAndInfusion",
+			"order": 34,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Catheter And Scalp",
+					"pt-PT": "Catheter And Scalp",
+					"gn-PY": "Catheter And Scalp",
+					"en-US": "Catheter And Scalp",
+					"es-ES": "Catheter And Scalp",
+					"fr-FR": "Catheter And Scalp"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable.injectionAndInfusion.ivTubingAndStopcock",
+			"parentKey": "clinicalConsumable.injectionAndInfusion",
+			"order": 35,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Iv Tubing And Stopcock",
+					"pt-PT": "Iv Tubing And Stopcock",
+					"gn-PY": "Iv Tubing And Stopcock",
+					"en-US": "Iv Tubing And Stopcock",
+					"es-ES": "Iv Tubing And Stopcock",
+					"fr-FR": "Iv Tubing And Stopcock"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable.injectionAndInfusion.syringeAndNeedle",
+			"parentKey": "clinicalConsumable.injectionAndInfusion",
+			"order": 36,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Syringe And Needle",
+					"pt-PT": "Syringe And Needle",
+					"gn-PY": "Syringe And Needle",
+					"en-US": "Syringe And Needle",
+					"es-ES": "Syringe And Needle",
+					"fr-FR": "Syringe And Needle"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable.ppeAndSafety",
+			"parentKey": "clinicalConsumable",
+			"order": 37,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Proteção e segurança",
+					"pt-PT": "Proteção e segurança",
+					"gn-PY": "Proteção e segurança",
+					"en-US": "PPE and safety",
+					"es-ES": "Protección y seguridad",
+					"fr-FR": "Protection et sécurité"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable.ppeAndSafety.glove",
+			"parentKey": "clinicalConsumable.ppeAndSafety",
+			"order": 38,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Glove",
+					"pt-PT": "Glove",
+					"gn-PY": "Glove",
+					"en-US": "Glove",
+					"es-ES": "Glove",
+					"fr-FR": "Glove"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable.ppeAndSafety.maskAndCap",
+			"parentKey": "clinicalConsumable.ppeAndSafety",
+			"order": 39,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Mask And Cap",
+					"pt-PT": "Mask And Cap",
+					"gn-PY": "Mask And Cap",
+					"en-US": "Mask And Cap",
+					"es-ES": "Mask And Cap",
+					"fr-FR": "Mask And Cap"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable.ppeAndSafety.surgicalGown",
+			"parentKey": "clinicalConsumable.ppeAndSafety",
+			"order": 40,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Surgical Gown",
+					"pt-PT": "Surgical Gown",
+					"gn-PY": "Surgical Gown",
+					"en-US": "Surgical Gown",
+					"es-ES": "Surgical Gown",
+					"fr-FR": "Surgical Gown"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable.woundAndSurgicalCare",
+			"parentKey": "clinicalConsumable",
+			"order": 41,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Feridas e cirurgia",
+					"pt-PT": "Feridas e cirurgia",
+					"gn-PY": "Feridas e cirurgia",
+					"en-US": "Wound and surgical care",
+					"es-ES": "Heridas y cirugía",
+					"fr-FR": "Plaies et chirurgie"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable.woundAndSurgicalCare.bandageAndGauze",
+			"parentKey": "clinicalConsumable.woundAndSurgicalCare",
+			"order": 42,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Bandage And Gauze",
+					"pt-PT": "Bandage And Gauze",
+					"gn-PY": "Bandage And Gauze",
+					"en-US": "Bandage And Gauze",
+					"es-ES": "Bandage And Gauze",
+					"fr-FR": "Bandage And Gauze"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable.woundAndSurgicalCare.surgicalBlade",
+			"parentKey": "clinicalConsumable.woundAndSurgicalCare",
+			"order": 43,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Surgical Blade",
+					"pt-PT": "Surgical Blade",
+					"gn-PY": "Surgical Blade",
+					"en-US": "Surgical Blade",
+					"es-ES": "Surgical Blade",
+					"fr-FR": "Surgical Blade"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable.woundAndSurgicalCare.surgicalDrape",
+			"parentKey": "clinicalConsumable.woundAndSurgicalCare",
+			"order": 44,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Surgical Drape",
+					"pt-PT": "Surgical Drape",
+					"gn-PY": "Surgical Drape",
+					"en-US": "Surgical Drape",
+					"es-ES": "Surgical Drape",
+					"fr-FR": "Surgical Drape"
+				}
+			}
+		},
+		{
+			"key": "clinicalConsumable.woundAndSurgicalCare.sutureMaterial",
+			"parentKey": "clinicalConsumable.woundAndSurgicalCare",
+			"order": 45,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Suture Material",
+					"pt-PT": "Suture Material",
+					"gn-PY": "Suture Material",
+					"en-US": "Suture Material",
+					"es-ES": "Suture Material",
+					"fr-FR": "Suture Material"
+				}
+			}
+		},
+		{
+			"key": "environmentAndSanitation",
+			"parentKey": null,
+			"order": 46,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Ambiente e saneamento",
+					"pt-PT": "Ambiente e saneamento",
+					"gn-PY": "Ambiente e saneamento",
+					"en-US": "Environment and sanitation",
+					"es-ES": "Ambiente y saneamiento",
+					"fr-FR": "Environnement et assainissement"
+				}
+			}
+		},
+		{
+			"key": "environmentAndSanitation.environmentalPestControl",
+			"parentKey": "environmentAndSanitation",
+			"order": 47,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Controle ambiental de pragas",
+					"pt-PT": "Controlo ambiental de pragas",
+					"gn-PY": "Controle ambiental de pragas",
+					"en-US": "Environmental pest control",
+					"es-ES": "Control ambiental de plagas",
+					"fr-FR": "Contrôle environnemental des nuisibles"
+				}
+			}
+		},
+		{
+			"key": "environmentAndSanitation.environmentalPestControl.environmentalInsecticide",
+			"parentKey": "environmentAndSanitation.environmentalPestControl",
+			"order": 48,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Environmental Insecticide",
+					"pt-PT": "Environmental Insecticide",
+					"gn-PY": "Environmental Insecticide",
+					"en-US": "Environmental Insecticide",
+					"es-ES": "Environmental Insecticide",
+					"fr-FR": "Environmental Insecticide"
+				}
+			}
+		},
+		{
+			"key": "environmentAndSanitation.environmentalPestControl.repellent",
+			"parentKey": "environmentAndSanitation.environmentalPestControl",
+			"order": 49,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Repellent",
+					"pt-PT": "Repellent",
+					"gn-PY": "Repellent",
+					"en-US": "Repellent",
+					"es-ES": "Repellent",
+					"fr-FR": "Repellent"
+				}
+			}
+		},
+		{
+			"key": "environmentAndSanitation.facilitySanitizer",
+			"parentKey": "environmentAndSanitation",
+			"order": 50,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Saneantes da clínica",
+					"pt-PT": "Saneantes da clínica",
+					"gn-PY": "Saneantes da clínica",
+					"en-US": "Facility sanitizers",
+					"es-ES": "Saneantes de la clínica",
+					"fr-FR": "Désinfectants de clinique"
+				}
+			}
+		},
+		{
+			"key": "environmentAndSanitation.facilitySanitizer.chemicalSterilant",
+			"parentKey": "environmentAndSanitation.facilitySanitizer",
+			"order": 51,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Chemical Sterilant",
+					"pt-PT": "Chemical Sterilant",
+					"gn-PY": "Chemical Sterilant",
+					"en-US": "Chemical Sterilant",
+					"es-ES": "Chemical Sterilant",
+					"fr-FR": "Chemical Sterilant"
+				}
+			}
+		},
+		{
+			"key": "environmentAndSanitation.facilitySanitizer.enzymaticCleaner",
+			"parentKey": "environmentAndSanitation.facilitySanitizer",
+			"order": 52,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Enzymatic Cleaner",
+					"pt-PT": "Enzymatic Cleaner",
+					"gn-PY": "Enzymatic Cleaner",
+					"en-US": "Enzymatic Cleaner",
+					"es-ES": "Enzymatic Cleaner",
+					"fr-FR": "Enzymatic Cleaner"
+				}
+			}
+		},
+		{
+			"key": "environmentAndSanitation.facilitySanitizer.hospitalDisinfectant",
+			"parentKey": "environmentAndSanitation.facilitySanitizer",
+			"order": 53,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Hospital Disinfectant",
+					"pt-PT": "Hospital Disinfectant",
+					"gn-PY": "Hospital Disinfectant",
+					"en-US": "Hospital Disinfectant",
+					"es-ES": "Hospital Disinfectant",
+					"fr-FR": "Hospital Disinfectant"
+				}
+			}
+		},
+		{
+			"key": "environmentAndSanitation.wasteManagement",
+			"parentKey": "environmentAndSanitation",
+			"order": 54,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Manejo de resíduos",
+					"pt-PT": "Gestão de resíduos",
+					"gn-PY": "Manejo de resíduos",
+					"en-US": "Waste management",
+					"es-ES": "Gestión de residuos",
+					"fr-FR": "Gestion des déchets"
+				}
+			}
+		},
+		{
+			"key": "environmentAndSanitation.wasteManagement.catLitter",
+			"parentKey": "environmentAndSanitation.wasteManagement",
+			"order": 55,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Cat Litter",
+					"pt-PT": "Cat Litter",
+					"gn-PY": "Cat Litter",
+					"en-US": "Cat Litter",
+					"es-ES": "Cat Litter",
+					"fr-FR": "Cat Litter"
+				}
+			}
+		},
+		{
+			"key": "environmentAndSanitation.wasteManagement.odorNeutralizer",
+			"parentKey": "environmentAndSanitation.wasteManagement",
+			"order": 56,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Odor Neutralizer",
+					"pt-PT": "Odor Neutralizer",
+					"gn-PY": "Odor Neutralizer",
+					"en-US": "Odor Neutralizer",
+					"es-ES": "Odor Neutralizer",
+					"fr-FR": "Odor Neutralizer"
+				}
+			}
+		},
+		{
+			"key": "environmentAndSanitation.wasteManagement.trainingPad",
+			"parentKey": "environmentAndSanitation.wasteManagement",
+			"order": 57,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Training Pad",
+					"pt-PT": "Training Pad",
+					"gn-PY": "Training Pad",
+					"en-US": "Training Pad",
+					"es-ES": "Training Pad",
+					"fr-FR": "Training Pad"
+				}
+			}
+		},
+		{
+			"key": "environmentAndSanitation.wasteManagement.wasteBag",
+			"parentKey": "environmentAndSanitation.wasteManagement",
+			"order": 58,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Waste Bag",
+					"pt-PT": "Waste Bag",
+					"gn-PY": "Waste Bag",
+					"en-US": "Waste Bag",
+					"es-ES": "Waste Bag",
+					"fr-FR": "Waste Bag"
+				}
+			}
+		},
+		{
+			"key": "equipmentAndInstrument",
+			"parentKey": null,
+			"order": 59,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Equipamento e instrumental",
+					"pt-PT": "Equipamento e instrumental",
+					"gn-PY": "Equipamento e instrumental",
+					"en-US": "Equipment and instrument",
+					"es-ES": "Equipo e instrumental",
+					"fr-FR": "Équipement et instrument"
+				}
+			}
+		},
+		{
+			"key": "equipmentAndInstrument.diagnosticDevice",
+			"parentKey": "equipmentAndInstrument",
+			"order": 60,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Diagnostic Device",
+					"pt-PT": "Diagnostic Device",
+					"gn-PY": "Diagnostic Device",
+					"en-US": "Diagnostic Device",
+					"es-ES": "Diagnostic Device",
+					"fr-FR": "Diagnostic Device"
+				}
+			}
+		},
+		{
+			"key": "equipmentAndInstrument.diagnosticDevice.glucometer",
+			"parentKey": "equipmentAndInstrument.diagnosticDevice",
+			"order": 61,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Glucometer",
+					"pt-PT": "Glucometer",
+					"gn-PY": "Glucometer",
+					"en-US": "Glucometer",
+					"es-ES": "Glucometer",
+					"fr-FR": "Glucometer"
+				}
+			}
+		},
+		{
+			"key": "equipmentAndInstrument.diagnosticDevice.otoscopeAndOphthalmoscope",
+			"parentKey": "equipmentAndInstrument.diagnosticDevice",
+			"order": 62,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Otoscope And Ophthalmoscope",
+					"pt-PT": "Otoscope And Ophthalmoscope",
+					"gn-PY": "Otoscope And Ophthalmoscope",
+					"en-US": "Otoscope And Ophthalmoscope",
+					"es-ES": "Otoscope And Ophthalmoscope",
+					"fr-FR": "Otoscope And Ophthalmoscope"
+				}
+			}
+		},
+		{
+			"key": "equipmentAndInstrument.diagnosticDevice.stethoscope",
+			"parentKey": "equipmentAndInstrument.diagnosticDevice",
+			"order": 63,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Stethoscope",
+					"pt-PT": "Stethoscope",
+					"gn-PY": "Stethoscope",
+					"en-US": "Stethoscope",
+					"es-ES": "Stethoscope",
+					"fr-FR": "Stethoscope"
+				}
+			}
+		},
+		{
+			"key": "equipmentAndInstrument.diagnosticDevice.thermometer",
+			"parentKey": "equipmentAndInstrument.diagnosticDevice",
+			"order": 64,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Thermometer",
+					"pt-PT": "Thermometer",
+					"gn-PY": "Thermometer",
+					"en-US": "Thermometer",
+					"es-ES": "Thermometer",
+					"fr-FR": "Thermometer"
+				}
+			}
+		},
+		{
+			"key": "equipmentAndInstrument.surgicalInstrument",
+			"parentKey": "equipmentAndInstrument",
+			"order": 65,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Surgical Instrument",
+					"pt-PT": "Surgical Instrument",
+					"gn-PY": "Surgical Instrument",
+					"en-US": "Surgical Instrument",
+					"es-ES": "Surgical Instrument",
+					"fr-FR": "Surgical Instrument"
+				}
+			}
+		},
+		{
+			"key": "equipmentAndInstrument.surgicalInstrument.forcepsAndScissor",
+			"parentKey": "equipmentAndInstrument.surgicalInstrument",
+			"order": 66,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Forceps And Scissor",
+					"pt-PT": "Forceps And Scissor",
+					"gn-PY": "Forceps And Scissor",
+					"en-US": "Forceps And Scissor",
+					"es-ES": "Forceps And Scissor",
+					"fr-FR": "Forceps And Scissor"
+				}
+			}
+		},
+		{
+			"key": "equipmentAndInstrument.surgicalInstrument.needleHolder",
+			"parentKey": "equipmentAndInstrument.surgicalInstrument",
+			"order": 67,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Needle Holder",
+					"pt-PT": "Needle Holder",
+					"gn-PY": "Needle Holder",
+					"en-US": "Needle Holder",
+					"es-ES": "Needle Holder",
+					"fr-FR": "Needle Holder"
+				}
+			}
+		},
+		{
+			"key": "equipmentAndInstrument.surgicalInstrument.retractor",
+			"parentKey": "equipmentAndInstrument.surgicalInstrument",
+			"order": 68,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Retractor",
+					"pt-PT": "Retractor",
+					"gn-PY": "Retractor",
+					"en-US": "Retractor",
+					"es-ES": "Retractor",
+					"fr-FR": "Retractor"
+				}
+			}
+		},
+		{
+			"key": "hygieneAndAesthetics",
+			"parentKey": null,
+			"order": 69,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Higiene e estética",
+					"pt-PT": "Higiene e estética",
+					"gn-PY": "Higiene e estética",
+					"en-US": "Hygiene and aesthetics",
+					"es-ES": "Higiene y estética",
+					"fr-FR": "Hygiène et esthétique"
+				}
+			}
+		},
+		{
+			"key": "hygieneAndAesthetics.coatAndSkin",
+			"parentKey": "hygieneAndAesthetics",
+			"order": 70,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Pele e pelagem",
+					"pt-PT": "Pele e pelagem",
+					"gn-PY": "Pele e pelagem",
+					"en-US": "Coat and skin",
+					"es-ES": "Piel y pelaje",
+					"fr-FR": "Peau et pelage"
+				}
+			}
+		},
+		{
+			"key": "hygieneAndAesthetics.coatAndSkin.detanglerAndFinisher",
+			"parentKey": "hygieneAndAesthetics.coatAndSkin",
+			"order": 71,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Detangler And Finisher",
+					"pt-PT": "Detangler And Finisher",
+					"gn-PY": "Detangler And Finisher",
+					"en-US": "Detangler And Finisher",
+					"es-ES": "Detangler And Finisher",
+					"fr-FR": "Detangler And Finisher"
+				}
+			}
+		},
+		{
+			"key": "hygieneAndAesthetics.coatAndSkin.medicatedShampoo",
+			"parentKey": "hygieneAndAesthetics.coatAndSkin",
+			"order": 72,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Medicated Shampoo",
+					"pt-PT": "Medicated Shampoo",
+					"gn-PY": "Medicated Shampoo",
+					"en-US": "Medicated Shampoo",
+					"es-ES": "Medicated Shampoo",
+					"fr-FR": "Medicated Shampoo"
+				}
+			}
+		},
+		{
+			"key": "hygieneAndAesthetics.coatAndSkin.perfumeAndCologne",
+			"parentKey": "hygieneAndAesthetics.coatAndSkin",
+			"order": 73,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Perfume And Cologne",
+					"pt-PT": "Perfume And Cologne",
+					"gn-PY": "Perfume And Cologne",
+					"en-US": "Perfume And Cologne",
+					"es-ES": "Perfume And Cologne",
+					"fr-FR": "Perfume And Cologne"
+				}
+			}
+		},
+		{
+			"key": "hygieneAndAesthetics.coatAndSkin.shampooAndConditioner",
+			"parentKey": "hygieneAndAesthetics.coatAndSkin",
+			"order": 74,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Shampoo And Conditioner",
+					"pt-PT": "Shampoo And Conditioner",
+					"gn-PY": "Shampoo And Conditioner",
+					"en-US": "Shampoo And Conditioner",
+					"es-ES": "Shampoo And Conditioner",
+					"fr-FR": "Shampoo And Conditioner"
+				}
+			}
+		},
+		{
+			"key": "hygieneAndAesthetics.specificCare",
+			"parentKey": "hygieneAndAesthetics",
+			"order": 75,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Cuidados específicos",
+					"pt-PT": "Cuidados específicos",
+					"gn-PY": "Cuidados específicos",
+					"en-US": "Specific care",
+					"es-ES": "Cuidados específicos",
+					"fr-FR": "Soins spécifiques"
+				}
+			}
+		},
+		{
+			"key": "hygieneAndAesthetics.specificCare.dentalCare",
+			"parentKey": "hygieneAndAesthetics.specificCare",
+			"order": 76,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Dental Care",
+					"pt-PT": "Dental Care",
+					"gn-PY": "Dental Care",
+					"en-US": "Dental Care",
+					"es-ES": "Dental Care",
+					"fr-FR": "Dental Care"
+				}
+			}
+		},
+		{
+			"key": "hygieneAndAesthetics.specificCare.earCleanser",
+			"parentKey": "hygieneAndAesthetics.specificCare",
+			"order": 77,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Ear Cleanser",
+					"pt-PT": "Ear Cleanser",
+					"gn-PY": "Ear Cleanser",
+					"en-US": "Ear Cleanser",
+					"es-ES": "Ear Cleanser",
+					"fr-FR": "Ear Cleanser"
+				}
+			}
+		},
+		{
+			"key": "hygieneAndAesthetics.specificCare.eyeCleanser",
+			"parentKey": "hygieneAndAesthetics.specificCare",
+			"order": 78,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Eye Cleanser",
+					"pt-PT": "Eye Cleanser",
+					"gn-PY": "Eye Cleanser",
+					"en-US": "Eye Cleanser",
+					"es-ES": "Eye Cleanser",
+					"fr-FR": "Eye Cleanser"
+				}
+			}
+		},
+		{
+			"key": "hygieneAndAesthetics.specificCare.pawBalm",
+			"parentKey": "hygieneAndAesthetics.specificCare",
+			"order": 79,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Paw Balm",
+					"pt-PT": "Paw Balm",
+					"gn-PY": "Paw Balm",
+					"en-US": "Paw Balm",
+					"es-ES": "Paw Balm",
+					"fr-FR": "Paw Balm"
+				}
+			}
+		},
+		{
+			"key": "medication",
+			"parentKey": null,
+			"order": 80,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Medicamento",
+					"pt-PT": "Medicamento",
+					"gn-PY": "Medicamento",
+					"en-US": "Medication",
+					"es-ES": "Medicamento",
+					"fr-FR": "Médicament"
+				}
+			}
+		},
+		{
+			"key": "medication.anestheticAndControlled",
+			"parentKey": "medication",
+			"order": 81,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Anestésico e controlado",
+					"pt-PT": "Anestésico e controlado",
+					"gn-PY": "Anestésico e controlado",
+					"en-US": "Anesthetic and controlled",
+					"es-ES": "Anestésico y controlado",
+					"fr-FR": "Anesthésique et contrôlé"
+				}
+			}
+		},
+		{
+			"key": "medication.anestheticAndControlled.euthanasiaSolution",
+			"parentKey": "medication.anestheticAndControlled",
+			"order": 82,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Euthanasia Solution",
+					"pt-PT": "Euthanasia Solution",
+					"gn-PY": "Euthanasia Solution",
+					"en-US": "Euthanasia Solution",
+					"es-ES": "Euthanasia Solution",
+					"fr-FR": "Euthanasia Solution"
+				}
+			}
+		},
+		{
+			"key": "medication.anestheticAndControlled.generalAnesthetic",
+			"parentKey": "medication.anestheticAndControlled",
+			"order": 83,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "General Anesthetic",
+					"pt-PT": "General Anesthetic",
+					"gn-PY": "General Anesthetic",
+					"en-US": "General Anesthetic",
+					"es-ES": "General Anesthetic",
+					"fr-FR": "General Anesthetic"
+				}
+			}
+		},
+		{
+			"key": "medication.anestheticAndControlled.localAnesthetic",
+			"parentKey": "medication.anestheticAndControlled",
+			"order": 84,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Local Anesthetic",
+					"pt-PT": "Local Anesthetic",
+					"gn-PY": "Local Anesthetic",
+					"en-US": "Local Anesthetic",
+					"es-ES": "Local Anesthetic",
+					"fr-FR": "Local Anesthetic"
+				}
+			}
+		},
+		{
+			"key": "medication.anestheticAndControlled.sedativeAndTranquilizer",
+			"parentKey": "medication.anestheticAndControlled",
+			"order": 85,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Sedative And Tranquilizer",
+					"pt-PT": "Sedative And Tranquilizer",
+					"gn-PY": "Sedative And Tranquilizer",
+					"en-US": "Sedative And Tranquilizer",
+					"es-ES": "Sedative And Tranquilizer",
+					"fr-FR": "Sedative And Tranquilizer"
+				}
+			}
+		},
+		{
+			"key": "medication.antimicrobial",
+			"parentKey": "medication",
+			"order": 86,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Antimicrobiano",
+					"pt-PT": "Antimicrobiano",
+					"gn-PY": "Antimicrobiano",
+					"en-US": "Antimicrobial",
+					"es-ES": "Antimicrobiano",
+					"fr-FR": "Antimicrobien"
+				}
+			}
+		},
+		{
+			"key": "medication.antimicrobial.antibiotic",
+			"parentKey": "medication.antimicrobial",
+			"order": 87,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Antibiotic",
+					"pt-PT": "Antibiotic",
+					"gn-PY": "Antibiotic",
+					"en-US": "Antibiotic",
+					"es-ES": "Antibiotic",
+					"fr-FR": "Antibiotic"
+				}
+			}
+		},
+		{
+			"key": "medication.antimicrobial.antifungal",
+			"parentKey": "medication.antimicrobial",
+			"order": 88,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Antifungal",
+					"pt-PT": "Antifungal",
+					"gn-PY": "Antifungal",
+					"en-US": "Antifungal",
+					"es-ES": "Antifungal",
+					"fr-FR": "Antifungal"
+				}
+			}
+		},
+		{
+			"key": "medication.antimicrobial.antiviral",
+			"parentKey": "medication.antimicrobial",
+			"order": 89,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Antiviral",
+					"pt-PT": "Antiviral",
+					"gn-PY": "Antiviral",
+					"en-US": "Antiviral",
+					"es-ES": "Antiviral",
+					"fr-FR": "Antiviral"
+				}
+			}
+		},
+		{
+			"key": "medication.antiparasitic",
+			"parentKey": "medication",
+			"order": 90,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Antiparasitário",
+					"pt-PT": "Antiparasitário",
+					"gn-PY": "Antiparasitário",
+					"en-US": "Antiparasitic",
+					"es-ES": "Antiparasitario",
+					"fr-FR": "Antiparasitaire"
+				}
+			}
+		},
+		{
+			"key": "medication.antiparasitic.ectoparasiticide",
+			"parentKey": "medication.antiparasitic",
+			"order": 91,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Ectoparasiticida",
+					"pt-PT": "Ectoparasiticida",
+					"gn-PY": "Ectoparasiticida",
+					"en-US": "Ectoparasiticide",
+					"es-ES": "Ectoparasiticida",
+					"fr-FR": "Ectoparasiticide"
+				},
+				"aliases": {
+					"pt-BR": [
+						"ectoparasiticida"
+					],
+					"pt-PT": [
+						"ectoparasiticida"
+					],
+					"gn-PY": [
+						"ectoparasiticida"
+					],
+					"en-US": [
+						"ectoparasiticide"
+					],
+					"es-ES": [
+						"ectoparasiticida"
+					],
+					"fr-FR": [
+						"ectoparasiticide"
+					]
+				}
+			}
+		},
+		{
+			"key": "medication.antiparasitic.endectocide",
+			"parentKey": "medication.antiparasitic",
+			"order": 92,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Endectocida",
+					"pt-PT": "Endectocida",
+					"gn-PY": "Endectocida",
+					"en-US": "Endectocide",
+					"es-ES": "Endectocida",
+					"fr-FR": "Endectocide"
+				},
+				"aliases": {
+					"pt-BR": [
+						"endectocida"
+					],
+					"pt-PT": [
+						"endectocida"
+					],
+					"gn-PY": [
+						"endectocida"
+					],
+					"en-US": [
+						"endectocide"
+					],
+					"es-ES": [
+						"endectocida"
+					],
+					"fr-FR": [
+						"endectocide"
+					]
+				}
+			}
+		},
+		{
+			"key": "medication.antiparasitic.endoparasiticide",
+			"parentKey": "medication.antiparasitic",
+			"order": 93,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Endoparasiticida",
+					"pt-PT": "Endoparasiticida",
+					"gn-PY": "Endoparasiticida",
+					"en-US": "Endoparasiticide",
+					"es-ES": "Endoparasiticida",
+					"fr-FR": "Endoparasiticide"
+				}
+			}
+		},
+		{
+			"key": "medication.biologicalAndImmunological",
+			"parentKey": "medication",
+			"order": 94,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Biológico e imunológico",
+					"pt-PT": "Biológico e imunológico",
+					"gn-PY": "Biológico e imunológico",
+					"en-US": "Biological and immunological",
+					"es-ES": "Biológico e inmunológico",
+					"fr-FR": "Biologique et immunologique"
+				}
+			}
+		},
+		{
+			"key": "medication.biologicalAndImmunological.allergenExtract",
+			"parentKey": "medication.biologicalAndImmunological",
+			"order": 95,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Allergen Extract",
+					"pt-PT": "Allergen Extract",
+					"gn-PY": "Allergen Extract",
+					"en-US": "Allergen Extract",
+					"es-ES": "Allergen Extract",
+					"fr-FR": "Allergen Extract"
+				}
+			}
+		},
+		{
+			"key": "medication.biologicalAndImmunological.hyperimmuneSerum",
+			"parentKey": "medication.biologicalAndImmunological",
+			"order": 96,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Hyperimmune Serum",
+					"pt-PT": "Hyperimmune Serum",
+					"gn-PY": "Hyperimmune Serum",
+					"en-US": "Hyperimmune Serum",
+					"es-ES": "Hyperimmune Serum",
+					"fr-FR": "Hyperimmune Serum"
+				}
+			}
+		},
+		{
+			"key": "medication.biologicalAndImmunological.monoclonalAntibody",
+			"parentKey": "medication.biologicalAndImmunological",
+			"order": 97,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Monoclonal Antibody",
+					"pt-PT": "Monoclonal Antibody",
+					"gn-PY": "Monoclonal Antibody",
+					"en-US": "Monoclonal Antibody",
+					"es-ES": "Monoclonal Antibody",
+					"fr-FR": "Monoclonal Antibody"
+				}
+			}
+		},
+		{
+			"key": "medication.biologicalAndImmunological.vaccine",
+			"parentKey": "medication.biologicalAndImmunological",
+			"order": 98,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Vacina",
+					"pt-PT": "Vacina",
+					"gn-PY": "Vacina",
+					"en-US": "Vaccine",
+					"es-ES": "Vacuna",
+					"fr-FR": "Vaccin"
+				}
+			}
+		},
+		{
+			"key": "medication.fluidTherapy",
+			"parentKey": "medication",
+			"order": 99,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Fluid Therapy",
+					"pt-PT": "Fluid Therapy",
+					"gn-PY": "Fluid Therapy",
+					"en-US": "Fluid Therapy",
+					"es-ES": "Fluid Therapy",
+					"fr-FR": "Fluid Therapy"
+				}
+			}
+		},
+		{
+			"key": "medication.fluidTherapy.bloodBag",
+			"parentKey": "medication.fluidTherapy",
+			"order": 100,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Blood Bag",
+					"pt-PT": "Blood Bag",
+					"gn-PY": "Blood Bag",
+					"en-US": "Blood Bag",
+					"es-ES": "Blood Bag",
+					"fr-FR": "Blood Bag"
+				}
+			}
+		},
+		{
+			"key": "medication.fluidTherapy.colloidSolution",
+			"parentKey": "medication.fluidTherapy",
+			"order": 101,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Colloid Solution",
+					"pt-PT": "Colloid Solution",
+					"gn-PY": "Colloid Solution",
+					"en-US": "Colloid Solution",
+					"es-ES": "Colloid Solution",
+					"fr-FR": "Colloid Solution"
+				}
+			}
+		},
+		{
+			"key": "medication.fluidTherapy.crystalloidSolution",
+			"parentKey": "medication.fluidTherapy",
+			"order": 102,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Crystalloid Solution",
+					"pt-PT": "Crystalloid Solution",
+					"gn-PY": "Crystalloid Solution",
+					"en-US": "Crystalloid Solution",
+					"es-ES": "Crystalloid Solution",
+					"fr-FR": "Crystalloid Solution"
+				}
+			}
+		},
+		{
+			"key": "medication.internalMedicine",
+			"parentKey": "medication",
+			"order": 103,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Clínica médica",
+					"pt-PT": "Clínica médica",
+					"gn-PY": "Clínica médica",
+					"en-US": "Internal medicine",
+					"es-ES": "Medicina interna",
+					"fr-FR": "Médecine interne"
+				}
+			}
+		},
+		{
+			"key": "medication.internalMedicine.cardiorespiratory",
+			"parentKey": "medication.internalMedicine",
+			"order": 104,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Cardiorespiratory",
+					"pt-PT": "Cardiorespiratory",
+					"gn-PY": "Cardiorespiratory",
+					"en-US": "Cardiorespiratory",
+					"es-ES": "Cardiorespiratory",
+					"fr-FR": "Cardiorespiratory"
+				}
+			}
+		},
+		{
+			"key": "medication.internalMedicine.endocrinological",
+			"parentKey": "medication.internalMedicine",
+			"order": 105,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Endocrinological",
+					"pt-PT": "Endocrinological",
+					"gn-PY": "Endocrinological",
+					"en-US": "Endocrinological",
+					"es-ES": "Endocrinological",
+					"fr-FR": "Endocrinological"
+				}
+			}
+		},
+		{
+			"key": "medication.internalMedicine.gastrointestinal",
+			"parentKey": "medication.internalMedicine",
+			"order": 106,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Gastrointestinal",
+					"pt-PT": "Gastrointestinal",
+					"gn-PY": "Gastrointestinal",
+					"en-US": "Gastrointestinal",
+					"es-ES": "Gastrointestinal",
+					"fr-FR": "Gastrointestinal"
+				}
+			}
+		},
+		{
+			"key": "medication.internalMedicine.neurological",
+			"parentKey": "medication.internalMedicine",
+			"order": 107,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Neurological",
+					"pt-PT": "Neurological",
+					"gn-PY": "Neurological",
+					"en-US": "Neurological",
+					"es-ES": "Neurological",
+					"fr-FR": "Neurological"
+				}
+			}
+		},
+		{
+			"key": "medication.internalMedicine.ophthalmic",
+			"parentKey": "medication.internalMedicine",
+			"order": 108,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Ophthalmic",
+					"pt-PT": "Ophthalmic",
+					"gn-PY": "Ophthalmic",
+					"en-US": "Ophthalmic",
+					"es-ES": "Ophthalmic",
+					"fr-FR": "Ophthalmic"
+				}
+			}
+		},
+		{
+			"key": "medication.internalMedicine.otic",
+			"parentKey": "medication.internalMedicine",
+			"order": 109,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Otic",
+					"pt-PT": "Otic",
+					"gn-PY": "Otic",
+					"en-US": "Otic",
+					"es-ES": "Otic",
+					"fr-FR": "Otic"
+				}
+			}
+		},
+		{
+			"key": "medication.oncological",
+			"parentKey": "medication",
+			"order": 110,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Oncological",
+					"pt-PT": "Oncological",
+					"gn-PY": "Oncological",
+					"en-US": "Oncological",
+					"es-ES": "Oncological",
+					"fr-FR": "Oncological"
+				}
+			}
+		},
+		{
+			"key": "medication.oncological.chemotherapy",
+			"parentKey": "medication.oncological",
+			"order": 111,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Chemotherapy",
+					"pt-PT": "Chemotherapy",
+					"gn-PY": "Chemotherapy",
+					"en-US": "Chemotherapy",
+					"es-ES": "Chemotherapy",
+					"fr-FR": "Chemotherapy"
+				}
+			}
+		},
+		{
+			"key": "medication.oncological.targetedTherapy",
+			"parentKey": "medication.oncological",
+			"order": 112,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Targeted Therapy",
+					"pt-PT": "Targeted Therapy",
+					"gn-PY": "Targeted Therapy",
+					"en-US": "Targeted Therapy",
+					"es-ES": "Targeted Therapy",
+					"fr-FR": "Targeted Therapy"
+				}
+			}
+		},
+		{
+			"key": "medication.painAndInflammation",
+			"parentKey": "medication",
+			"order": 113,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Dor e inflamação",
+					"pt-PT": "Dor e inflamação",
+					"gn-PY": "Dor e inflamação",
+					"en-US": "Pain and inflammation",
+					"es-ES": "Dolor e inflamación",
+					"fr-FR": "Douleur et inflammation"
+				}
+			}
+		},
+		{
+			"key": "medication.painAndInflammation.analgesic",
+			"parentKey": "medication.painAndInflammation",
+			"order": 114,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Analgesic",
+					"pt-PT": "Analgesic",
+					"gn-PY": "Analgesic",
+					"en-US": "Analgesic",
+					"es-ES": "Analgesic",
+					"fr-FR": "Analgesic"
+				}
+			}
+		},
+		{
+			"key": "medication.painAndInflammation.antiInflammatory",
+			"parentKey": "medication.painAndInflammation",
+			"order": 115,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Anti Inflammatory",
+					"pt-PT": "Anti Inflammatory",
+					"gn-PY": "Anti Inflammatory",
+					"en-US": "Anti Inflammatory",
+					"es-ES": "Anti Inflammatory",
+					"fr-FR": "Anti Inflammatory"
+				}
+			}
+		},
+		{
+			"key": "nutrition",
+			"parentKey": null,
+			"order": 116,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Nutrição",
+					"pt-PT": "Nutrição",
+					"gn-PY": "Nutrição",
+					"en-US": "Nutrition",
+					"es-ES": "Nutrición",
+					"fr-FR": "Nutrition"
+				}
+			}
+		},
+		{
+			"key": "nutrition.completeDiet",
+			"parentKey": "nutrition",
+			"order": 117,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Dieta completa",
+					"pt-PT": "Dieta completa",
+					"gn-PY": "Dieta completa",
+					"en-US": "Complete diet",
+					"es-ES": "Dieta completa",
+					"fr-FR": "Alimentation complète"
+				}
+			}
+		},
+		{
+			"key": "nutrition.completeDiet.dryFood",
+			"parentKey": "nutrition.completeDiet",
+			"order": 118,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Dry Food",
+					"pt-PT": "Dry Food",
+					"gn-PY": "Dry Food",
+					"en-US": "Dry Food",
+					"es-ES": "Dry Food",
+					"fr-FR": "Dry Food"
+				}
+			}
+		},
+		{
+			"key": "nutrition.completeDiet.naturalDiet",
+			"parentKey": "nutrition.completeDiet",
+			"order": 119,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Natural Diet",
+					"pt-PT": "Natural Diet",
+					"gn-PY": "Natural Diet",
+					"en-US": "Natural Diet",
+					"es-ES": "Natural Diet",
+					"fr-FR": "Natural Diet"
+				}
+			}
+		},
+		{
+			"key": "nutrition.completeDiet.wetFood",
+			"parentKey": "nutrition.completeDiet",
+			"order": 120,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Wet Food",
+					"pt-PT": "Wet Food",
+					"gn-PY": "Wet Food",
+					"en-US": "Wet Food",
+					"es-ES": "Wet Food",
+					"fr-FR": "Wet Food"
+				}
+			}
+		},
+		{
+			"key": "nutrition.milkReplacer",
+			"parentKey": "nutrition",
+			"order": 121,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Milk Replacer",
+					"pt-PT": "Milk Replacer",
+					"gn-PY": "Milk Replacer",
+					"en-US": "Milk Replacer",
+					"es-ES": "Milk Replacer",
+					"fr-FR": "Milk Replacer"
+				}
+			}
+		},
+		{
+			"key": "nutrition.milkReplacer.puppyAndKittenFormula",
+			"parentKey": "nutrition.milkReplacer",
+			"order": 122,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Puppy And Kitten Formula",
+					"pt-PT": "Puppy And Kitten Formula",
+					"gn-PY": "Puppy And Kitten Formula",
+					"en-US": "Puppy And Kitten Formula",
+					"es-ES": "Puppy And Kitten Formula",
+					"fr-FR": "Puppy And Kitten Formula"
+				}
+			}
+		},
+		{
+			"key": "nutrition.prescriptionDiet",
+			"parentKey": "nutrition",
+			"order": 123,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Dieta terapêutica",
+					"pt-PT": "Dieta terapêutica",
+					"gn-PY": "Dieta terapêutica",
+					"en-US": "Prescription diet",
+					"es-ES": "Dieta terapéutica",
+					"fr-FR": "Alimentation thérapeutique"
+				}
+			}
+		},
+		{
+			"key": "nutrition.prescriptionDiet.enteralAndParenteral",
+			"parentKey": "nutrition.prescriptionDiet",
+			"order": 124,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Enteral And Parenteral",
+					"pt-PT": "Enteral And Parenteral",
+					"gn-PY": "Enteral And Parenteral",
+					"en-US": "Enteral And Parenteral",
+					"es-ES": "Enteral And Parenteral",
+					"fr-FR": "Enteral And Parenteral"
+				}
+			}
+		},
+		{
+			"key": "nutrition.prescriptionDiet.therapeuticDry",
+			"parentKey": "nutrition.prescriptionDiet",
+			"order": 125,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Therapeutic Dry",
+					"pt-PT": "Therapeutic Dry",
+					"gn-PY": "Therapeutic Dry",
+					"en-US": "Therapeutic Dry",
+					"es-ES": "Therapeutic Dry",
+					"fr-FR": "Therapeutic Dry"
+				}
+			}
+		},
+		{
+			"key": "nutrition.prescriptionDiet.therapeuticWet",
+			"parentKey": "nutrition.prescriptionDiet",
+			"order": 126,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Therapeutic Wet",
+					"pt-PT": "Therapeutic Wet",
+					"gn-PY": "Therapeutic Wet",
+					"en-US": "Therapeutic Wet",
+					"es-ES": "Therapeutic Wet",
+					"fr-FR": "Therapeutic Wet"
+				}
+			}
+		},
+		{
+			"key": "nutrition.supplementAndNutraceutical",
+			"parentKey": "nutrition",
+			"order": 127,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Suplemento e nutracêutico",
+					"pt-PT": "Suplemento e nutracêutico",
+					"gn-PY": "Suplemento e nutracêutico",
+					"en-US": "Supplement and nutraceutical",
+					"es-ES": "Suplemento y nutracéutico",
+					"fr-FR": "Supplément et nutraceutique"
+				}
+			}
+		},
+		{
+			"key": "nutrition.supplementAndNutraceutical.jointSupport",
+			"parentKey": "nutrition.supplementAndNutraceutical",
+			"order": 128,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Joint Support",
+					"pt-PT": "Joint Support",
+					"gn-PY": "Joint Support",
+					"en-US": "Joint Support",
+					"es-ES": "Joint Support",
+					"fr-FR": "Joint Support"
+				}
+			}
+		},
+		{
+			"key": "nutrition.supplementAndNutraceutical.omegaFattyAcids",
+			"parentKey": "nutrition.supplementAndNutraceutical",
+			"order": 129,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Omega Fatty Acids",
+					"pt-PT": "Omega Fatty Acids",
+					"gn-PY": "Omega Fatty Acids",
+					"en-US": "Omega Fatty Acids",
+					"es-ES": "Omega Fatty Acids",
+					"fr-FR": "Omega Fatty Acids"
+				}
+			}
+		},
+		{
+			"key": "nutrition.supplementAndNutraceutical.probioticAndPrebiotic",
+			"parentKey": "nutrition.supplementAndNutraceutical",
+			"order": 130,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Probiotic And Prebiotic",
+					"pt-PT": "Probiotic And Prebiotic",
+					"gn-PY": "Probiotic And Prebiotic",
+					"en-US": "Probiotic And Prebiotic",
+					"es-ES": "Probiotic And Prebiotic",
+					"fr-FR": "Probiotic And Prebiotic"
+				}
+			}
+		},
+		{
+			"key": "nutrition.supplementAndNutraceutical.vitaminAndMineral",
+			"parentKey": "nutrition.supplementAndNutraceutical",
+			"order": 131,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Vitamin And Mineral",
+					"pt-PT": "Vitamin And Mineral",
+					"gn-PY": "Vitamin And Mineral",
+					"en-US": "Vitamin And Mineral",
+					"es-ES": "Vitamin And Mineral",
+					"fr-FR": "Vitamin And Mineral"
+				}
+			}
+		},
+		{
+			"key": "nutrition.treatAndSnack",
+			"parentKey": "nutrition",
+			"order": 132,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Treat And Snack",
+					"pt-PT": "Treat And Snack",
+					"gn-PY": "Treat And Snack",
+					"en-US": "Treat And Snack",
+					"es-ES": "Treat And Snack",
+					"fr-FR": "Treat And Snack"
+				}
+			}
+		},
+		{
+			"key": "nutrition.treatAndSnack.biscuitAndCookie",
+			"parentKey": "nutrition.treatAndSnack",
+			"order": 133,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Biscuit And Cookie",
+					"pt-PT": "Biscuit And Cookie",
+					"gn-PY": "Biscuit And Cookie",
+					"en-US": "Biscuit And Cookie",
+					"es-ES": "Biscuit And Cookie",
+					"fr-FR": "Biscuit And Cookie"
+				}
+			}
+		},
+		{
+			"key": "nutrition.treatAndSnack.chewAndBone",
+			"parentKey": "nutrition.treatAndSnack",
+			"order": 134,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Chew And Bone",
+					"pt-PT": "Chew And Bone",
+					"gn-PY": "Chew And Bone",
+					"en-US": "Chew And Bone",
+					"es-ES": "Chew And Bone",
+					"fr-FR": "Chew And Bone"
+				}
+			}
+		},
+		{
+			"key": "nutrition.treatAndSnack.functionalTreat",
+			"parentKey": "nutrition.treatAndSnack",
+			"order": 135,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Functional Treat",
+					"pt-PT": "Functional Treat",
+					"gn-PY": "Functional Treat",
+					"en-US": "Functional Treat",
+					"es-ES": "Functional Treat",
+					"fr-FR": "Functional Treat"
+				}
+			}
+		}
+	]
+}

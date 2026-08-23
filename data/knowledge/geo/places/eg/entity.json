@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "eg",
+	"placeType": "country",
+	"countryCodes": [
+		"EG"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 26.8,
+		"longitude": 30.8
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Egito",
+			"pt-PT": "Egito",
+			"gn-PY": "Egypt",
+			"en-US": "Egypt",
+			"es-ES": "Egipto",
+			"fr-FR": "Égypte"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

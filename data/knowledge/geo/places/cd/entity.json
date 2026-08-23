@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "cd",
+	"placeType": "country",
+	"countryCodes": [
+		"CD"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": -4,
+		"longitude": 21.8
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Congo - Kinshasa",
+			"pt-PT": "Congo-Kinshasa",
+			"gn-PY": "Congo - Kinshasa",
+			"en-US": "Congo - Kinshasa",
+			"es-ES": "República Democrática del Congo",
+			"fr-FR": "Congo-Kinshasa"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

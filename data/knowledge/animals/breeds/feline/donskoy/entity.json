@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "donskoy",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"ru"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			3.5,
+			6
+		],
+		"female": [
+			3,
+			5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			22,
+			28
+		],
+		"female": [
+			20,
+			26
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Donskoy",
+			"pt-PT": "Donskoy",
+			"gn-PY": "Donskoy",
+			"en-US": "Donskoy",
+			"es-ES": "Donskoy",
+			"fr-FR": "Donskoy"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

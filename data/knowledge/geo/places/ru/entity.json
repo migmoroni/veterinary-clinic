@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "ru",
+	"placeType": "country",
+	"countryCodes": [
+		"RU"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 61.5,
+		"longitude": 105.3
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Rússia",
+			"pt-PT": "Rússia",
+			"gn-PY": "Russia",
+			"en-US": "Russia",
+			"es-ES": "Rusia",
+			"fr-FR": "Russie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

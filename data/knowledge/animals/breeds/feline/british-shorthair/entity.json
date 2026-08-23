@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "british-shorthair",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"england"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			5,
+			8
+		],
+		"female": [
+			4,
+			6
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			25,
+			33
+		],
+		"female": [
+			24,
+			30
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "British Shorthair",
+			"pt-PT": "British Shorthair",
+			"gn-PY": "British Shorthair",
+			"en-US": "British Shorthair",
+			"es-ES": "British Shorthair",
+			"fr-FR": "British Shorthair"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "persian",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"ir"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			6.5
+		],
+		"female": [
+			3,
+			5.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			23,
+			28
+		],
+		"female": [
+			21,
+			27
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Persa",
+			"pt-PT": "Persa",
+			"gn-PY": "Persa",
+			"en-US": "Persian",
+			"es-ES": "Persa",
+			"fr-FR": "Persan"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

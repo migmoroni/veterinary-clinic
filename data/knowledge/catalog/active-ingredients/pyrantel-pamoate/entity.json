@@ -1,0 +1,45 @@
+{
+	"schemaVersion": 1,
+	"entityType": "active_ingredient",
+	"id": "1abdddb0-c611-4ef5-aabd-1c5026a286c6",
+	"typeTermKey": "antiInfective.antiparasitic.tetrahydropyrimidines",
+	"classificationTermKeys": [],
+	"regions": [],
+	"nomenclature": {
+		"scientificName": null,
+		"casNumber": null,
+		"denominationStandards": []
+	},
+	"atcVetCode": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Pamoato de pirantel",
+			"pt-PT": "Pamoato de pirantel",
+			"gn-PY": "Pamoato de pirantel",
+			"en-US": "Pyrantel pamoate",
+			"es-ES": "Pamoato de pirantel",
+			"fr-FR": "Pamoate de pyrantel"
+		},
+		"aliases": {
+			"pt-BR": [
+				"Pirantel"
+			],
+			"pt-PT": [
+				"Pirantel"
+			],
+			"gn-PY": [
+				"Pirantel"
+			],
+			"en-US": [
+				"Pyrantel"
+			],
+			"es-ES": [
+				"Pirantel"
+			],
+			"fr-FR": [
+				"Pyrantel"
+			]
+		}
+	},
+	"sections": []
+}

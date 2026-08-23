@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "southern-africa",
+	"placeType": "region",
+	"countryCodes": [],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": -22,
+		"longitude": 24
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "África Austral",
+			"pt-PT": "África Austral",
+			"gn-PY": "África ñemby",
+			"en-US": "Southern Africa",
+			"es-ES": "África austral",
+			"fr-FR": "Afrique australe"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "belgian-malinois",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"be"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			25,
+			30
+		],
+		"female": [
+			20,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			60,
+			66
+		],
+		"female": [
+			56,
+			62
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Pastor Belga Malinois",
+			"pt-PT": "Pastor belga Malinois",
+			"gn-PY": "Pastor belga Malinois",
+			"en-US": "Belgian Malinois",
+			"es-ES": "Pastor belga Malinois",
+			"fr-FR": "Berger belge Malinois"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

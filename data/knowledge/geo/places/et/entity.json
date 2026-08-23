@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "et",
+	"placeType": "country",
+	"countryCodes": [
+		"ET"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 9.1,
+		"longitude": 40.5
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Etiópia",
+			"pt-PT": "Etiópia",
+			"gn-PY": "Ethiopia",
+			"en-US": "Ethiopia",
+			"es-ES": "Etiopía",
+			"fr-FR": "Éthiopie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

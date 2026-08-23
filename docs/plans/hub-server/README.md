@@ -14,16 +14,19 @@ pertencem a outro servidor.
 
 0. [Migração do workspace para pnpm](./00-pnpm-workspace-migration.md)
 1. [Parte 1A: dados canônicos de conhecimento](./01a-canonical-knowledge-data.md)
-2. [Parte 1B: `knowledge-builder` e artefatos locais](./01b-knowledge-builder.md)
-3. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
-4. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
-5. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
-6. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
-7. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
-8. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
+2. [Parte 1A.1: consolidação JSON e referências taxonômicas](./01a1-localized-json-consolidation.md)
+3. [Parte 1A.2: relações semânticas e documentos editoriais](./01a2-semantic-product-relations.md)
+4. [Parte 1B: `knowledge-builder` e artefatos locais](./01b-knowledge-builder.md)
+5. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
+6. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
+7. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
+8. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
+9. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
+10. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
 
-A pré-fase, as subpartes 1A, 1B e 1C e as partes seguintes são executadas em
-ordem. Cada documento termina com testes e critérios de aceite próprios.
+A pré-fase, as subpartes 1A, 1A.1, 1A.2, 1B e 1C e as partes seguintes são
+executadas em ordem. Cada documento termina com testes e critérios de aceite
+próprios.
 
 ## Evolução Do Fluxo
 
@@ -31,6 +34,8 @@ ordem. Cada documento termina com testes e critérios de aceite próprios.
 flowchart LR
     P0["Pré-fase 0<br/>workspace pnpm"]
     P1A["Parte 1A<br/>fonte canônica"]
+    P1A1["Parte 1A.1<br/>conteúdo inline + chaves taxonômicas"]
+    P1A2["Parte 1A.2<br/>relações + documentos editoriais"]
     P1B["Parte 1B<br/>builder Rust"]
     P1C["Parte 1C<br/>consumo local"]
     P2["Parte 2<br/>base Rails + contratos"]
@@ -39,14 +44,14 @@ flowchart LR
     P5["Parte 5<br/>updater Tauri local"]
     P6["Parte 6<br/>GitHub + CI/CD"]
 
-    P0 --> P1A --> P1B --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
+    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
 ```
 
 As mudanças de origem dos artefatos são deliberadas:
 
 ```mermaid
 flowchart TB
-    subgraph S1["Partes 1A, 1B e 1C"]
+    subgraph S1["Partes 1A, 1A.1, 1A.2, 1B e 1C"]
         D1["data/knowledge<br/>fonte canônica"] --> G1["knowledge-builder Rust"]
         G1 --> B1["build/knowledge-artifacts"]
         B1 --> A1["Apps em desenvolvimento e build"]
@@ -69,8 +74,12 @@ flowchart TB
 ```
 
 A Pré-fase 0 estabelece pnpm como único gerenciador do workspace JavaScript. A
-Parte 1A estabelece `data/knowledge` como fonte canônica, a Parte 1B implementa o
-`knowledge-builder` definitivo em Rust e a Parte 1C faz os apps consumirem os
+Parte 1A estabelece `data/knowledge` como fonte canônica, e a Parte 1A.1
+consolida o conteúdo localizado simples no JSON e normaliza as referências
+taxonômicas. A Parte 1A.2 atribui princípios ativos e demais conceitos de produto
+a entidades, relações e taxonomias com significado de domínio e consolida cada
+entidade em um documento Markdown por locale. A Parte 1B implementa o
+`knowledge-builder` definitivo em Rust, e a Parte 1C faz os apps consumirem os
 artefatos locais. A Parte 3 faz o `hub-server` invocar a mesma ferramenta e
 assumir releases, assinatura e publicação. A Parte 4 substitui a aquisição local
 pelo contrato de distribuição do Hub. A Parte 6 acrescenta o GitHub como provider
@@ -111,21 +120,40 @@ externo.
 - Cloudflare R2, GitLab e IPFS ficam previstos no contrato e desativados até suas
   fases próprias.
 - Os dados fonte de conhecimento são organizados por domínio e entidade. Cada
-  entidade possui `entity.json` para estrutura e composição, fragmentos
-  Markdown por locale e um diretório `media/` com os bytes editoriais.
-- `entity.json` associa explicitamente cada diretório de conteúdo a um campo ou
-  `sectionKey` padronizado. O builder não deduz semântica do nome das pastas.
+  entidade possui `entity.json` para estrutura, composição, relações e todo
+  conteúdo localizado simples, um documento Markdown por locale para as seções
+  editoriais e um diretório `media/` com os bytes editoriais.
+- `localizedContent` contém diretamente mapas dos seis locales. Ele não contém
+  caminhos de arquivos; campos escalares e listas possuem tipos definidos pelo
+  schema do objeto proprietário.
+- Entidades referenciam tipos, classificações e portes somente por chaves
+  taxonômicas completas. Labels e aliases gerais pertencem ao termo da taxonomia
+  e não são repetidos nas entidades relacionadas.
+- Produtos referenciam princípios ativos por IDs de entidades
+  `active_ingredient`. Combinações farmacológicas preservam uma relação por
+  substância, e a navegação do catálogo usa essas entidades relacionadas.
+- Alvos, perfis vacinais, estágios de vida e escopos terapêuticos possuem
+  taxonomias próprias. `classificationTermKeys` não recebe conceitos criados
+  apenas para busca.
+- A busca de produtos deriva termos das entidades, relações e taxonomias
+  canônicas. O contrato de conhecimento não contém `searchConcept.*`.
+- `entity.json` declara um único `contentPath` e associa cada `sectionNumber` a
+  uma `sectionKey` padronizada. Headings iniciados por `# <n>` delimitam as
+  seções no documento localizado. Qualquer texto editorial depois do número é
+  descartado, e o builder não deduz semântica dele ou do nome das pastas.
 - Os JSONs não contêm nomes de tabelas ou colunas. `entityType` seleciona um Data
   Mapper explícito, e o DDL do builder é a fonte de verdade da projeção
   relacional.
 - Cada build registra cobertura de entidades e relações e fingerprints dos
   schemas efetivamente materializados.
-- Nomes, aliases, descrições e seções de conhecimento ficam em Markdown puro,
-  sem front matter, e são projetados diretamente no banco do locale; o app não
-  usa i18n como fonte paralela de conhecimento.
+- Nomes, aliases, labels, denominações e outros valores simples vêm dos mapas JSON
+  por locale. Seções de conhecimento ficam em Markdown puro, sem front matter.
+  Todos são projetados diretamente no banco correspondente; o app não usa i18n
+  como fonte paralela de conhecimento.
 - As seções de cada item são compiladas em um único `content_json` versionado. A
-  árvore ordenada organiza a página, e cada nó contém seu Markdown normalizado;
-  não existem tabelas independentes por seção.
+  lista plana e ordenada organiza a página, e cada item contém `sectionKey` e
+  Markdown normalizado; não existem tabelas independentes por seção. A UI resolve
+  o título da seção pelo i18n associado à `sectionKey`.
 - O builder interpreta Markdown por AST, aplica uma allowlist fechada, normaliza
   o resultado deterministicamente e projeta somente a representação compilada
   segura. O digest da fonte usa o modelo semântico canônico, sem depender de
@@ -760,14 +788,16 @@ descobrir uma revisão incrementando URLs que não estejam declaradas.
 
 1. Implementar e validar a Pré-fase 0.
 2. Implementar e validar a Parte 1A.
-3. Implementar e validar a Parte 1B.
-4. Implementar e validar a Parte 1C.
-5. Implementar e validar a Parte 2.
-6. Implementar e validar a Parte 3.
-7. Implementar e validar a Parte 4.
-8. Implementar e validar a Parte 5.
-9. Mover o projeto para o repositório dedicado.
-10. Implementar e validar a Parte 6.
+3. Implementar e validar a Parte 1A.1.
+4. Implementar e validar a Parte 1A.2.
+5. Implementar e validar a Parte 1B.
+6. Implementar e validar a Parte 1C.
+7. Implementar e validar a Parte 2.
+8. Implementar e validar a Parte 3.
+9. Implementar e validar a Parte 4.
+10. Implementar e validar a Parte 5.
+11. Mover o projeto para o repositório dedicado.
+12. Implementar e validar a Parte 6.
 
 ## Expansões Previstas
 

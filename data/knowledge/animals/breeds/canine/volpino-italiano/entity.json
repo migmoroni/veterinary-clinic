@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "volpino-italiano",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"it"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			4,
+			5.5
+		],
+		"female": [
+			3.5,
+			5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			27,
+			30
+		],
+		"female": [
+			25,
+			28
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Volpino Italiano",
+			"pt-PT": "Volpino Italiano",
+			"gn-PY": "Volpino italiano",
+			"en-US": "Volpino Italiano",
+			"es-ES": "Volpino italiano",
+			"fr-FR": "Volpino italien"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

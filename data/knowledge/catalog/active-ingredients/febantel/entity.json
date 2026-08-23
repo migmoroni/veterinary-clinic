@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"entityType": "active_ingredient",
+	"id": "dfc38256-ecf1-4f1e-8571-6647b678c3be",
+	"typeTermKey": "antiInfective.antiparasitic.benzimidazoles",
+	"classificationTermKeys": [],
+	"regions": [],
+	"nomenclature": {
+		"scientificName": null,
+		"casNumber": null,
+		"denominationStandards": []
+	},
+	"atcVetCode": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Febantel",
+			"pt-PT": "Febantel",
+			"gn-PY": "Febantel",
+			"en-US": "Febantel",
+			"es-ES": "Febantel",
+			"fr-FR": "Fébantel"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

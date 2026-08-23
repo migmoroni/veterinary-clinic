@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "th",
+	"placeType": "country",
+	"countryCodes": [
+		"TH"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 15.9,
+		"longitude": 100.9
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Tailândia",
+			"pt-PT": "Tailândia",
+			"gn-PY": "Thailand",
+			"en-US": "Thailand",
+			"es-ES": "Tailandia",
+			"fr-FR": "Thaïlande"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

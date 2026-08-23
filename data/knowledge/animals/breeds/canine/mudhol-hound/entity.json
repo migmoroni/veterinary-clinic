@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "mudhol-hound",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"in"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			22,
+			28
+		],
+		"female": [
+			18,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			68,
+			72
+		],
+		"female": [
+			64,
+			68
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Mudhol Hound",
+			"pt-PT": "Mudhol Hound",
+			"gn-PY": "Mudhol Hound",
+			"en-US": "Mudhol Hound",
+			"es-ES": "Mudhol Hound",
+			"fr-FR": "Mudhol Hound"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

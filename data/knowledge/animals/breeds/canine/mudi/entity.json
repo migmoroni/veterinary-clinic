@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "mudi",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"hu"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			8,
+			13
+		],
+		"female": [
+			7,
+			11
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			41,
+			47
+		],
+		"female": [
+			38,
+			44
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Mudi",
+			"pt-PT": "Mudi",
+			"gn-PY": "Mudi",
+			"en-US": "Mudi",
+			"es-ES": "Mudi",
+			"fr-FR": "Mudi"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "be",
+	"placeType": "country",
+	"countryCodes": [
+		"BE"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 50.5,
+		"longitude": 4.5
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Bélgica",
+			"pt-PT": "Bélgica",
+			"gn-PY": "Belgium",
+			"en-US": "Belgium",
+			"es-ES": "Bélgica",
+			"fr-FR": "Belgique"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

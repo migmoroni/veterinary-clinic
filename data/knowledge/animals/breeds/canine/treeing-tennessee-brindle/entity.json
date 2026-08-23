@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "treeing-tennessee-brindle",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			16,
+			23
+		],
+		"female": [
+			14,
+			18
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			61
+		],
+		"female": [
+			41,
+			56
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Treeing Tennessee Brindle",
+			"pt-PT": "Treeing Tennessee Brindle",
+			"gn-PY": "Treeing Tennessee Brindle",
+			"en-US": "Treeing Tennessee Brindle",
+			"es-ES": "Treeing Tennessee Brindle",
+			"fr-FR": "Treeing Tennessee Brindle"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

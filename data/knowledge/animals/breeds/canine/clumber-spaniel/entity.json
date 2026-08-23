@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "clumber-spaniel",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"england"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			32,
+			39
+		],
+		"female": [
+			25,
+			32
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			51
+		],
+		"female": [
+			43,
+			48
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Clumber Spaniel",
+			"pt-PT": "Clumber Spaniel",
+			"gn-PY": "Clumber Spaniel",
+			"en-US": "Clumber Spaniel",
+			"es-ES": "Clumber Spaniel",
+			"fr-FR": "Clumber Spaniel"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

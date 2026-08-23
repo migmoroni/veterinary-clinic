@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "chausie",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "giant",
+	"averageWeightKg": {
+		"male": [
+			6,
+			11
+		],
+		"female": [
+			5,
+			8
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			30,
+			43
+		],
+		"female": [
+			28,
+			38
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Chausie",
+			"pt-PT": "Chausie",
+			"gn-PY": "Chausie",
+			"en-US": "Chausie",
+			"es-ES": "Chausie",
+			"fr-FR": "Chausie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

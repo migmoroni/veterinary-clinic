@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "belgian-shepherd",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"be"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			25,
+			30
+		],
+		"female": [
+			20,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			60,
+			66
+		],
+		"female": [
+			56,
+			62
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Pastor Belga",
+			"pt-PT": "Pastor belga",
+			"gn-PY": "Pastor belga",
+			"en-US": "Belgian Shepherd",
+			"es-ES": "Pastor belga",
+			"fr-FR": "Berger belge"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

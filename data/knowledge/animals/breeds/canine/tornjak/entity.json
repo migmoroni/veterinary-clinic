@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "tornjak",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"ba"
+	],
+	"sizeTermKey": "giant",
+	"averageWeightKg": {
+		"male": [
+			35,
+			50
+		],
+		"female": [
+			28,
+			42
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			65,
+			70
+		],
+		"female": [
+			60,
+			65
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Tornjak",
+			"pt-PT": "Tornjak",
+			"gn-PY": "Tornjak",
+			"en-US": "Tornjak",
+			"es-ES": "Tornjak",
+			"fr-FR": "Tornjak"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

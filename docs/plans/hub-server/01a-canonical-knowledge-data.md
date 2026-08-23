@@ -4,13 +4,16 @@
 
 Materializar em `data/knowledge/` a fonte canônica completa dos dados públicos
 que compõem `system`, `system_media` e `CAS/system`, com autoria baseada em
-manifestos JSON, conteúdo localizado em Markdown e mídias organizadas junto às
-entidades.
+manifestos JSON, valores localizados simples no próprio manifesto, conteúdo
+editorial localizado em Markdown e mídias organizadas junto às entidades.
 
 Esta parte organiza somente os dados e seus contratos de autoria. O app continua
-usando seu fluxo de dados vigente durante a execução desta parte. A compilação
-dos artefatos pertence à [Parte 1B](./01b-knowledge-builder.md), e a troca do
-consumidor pertence à [Parte 1C](./01c-app-system-consumption.md).
+usando seu fluxo de dados vigente durante a execução desta parte. A
+[Parte 1A.1](./01a1-localized-json-consolidation.md) consolida os valores JSON, a
+[Parte 1A.2](./01a2-semantic-product-relations.md) normaliza as relações de
+produto e consolida os documentos editoriais, a
+[Parte 1B](./01b-knowledge-builder.md) compila os artefatos e a
+[Parte 1C](./01c-app-system-consumption.md) troca o consumidor.
 
 ## Pré-requisito
 
@@ -24,9 +27,9 @@ arquivos de autoria.
 
 Cada entidade combina três elementos:
 
-- `entity.json`: identidade, campos estruturais, relações e composição do
-  conteúdo;
-- arquivos `.md`: somente textos localizados;
+- `entity.json`: identidade, campos estruturais, relações, conteúdo localizado
+  simples e composição das seções;
+- arquivos `.md`: somente seções editoriais localizadas declaradas por caminho;
 - `media/`: bytes originais referenciados por caminhos relativos.
 
 O builder interpreta essa fonte como um compilador. O app não lê
@@ -64,30 +67,23 @@ mídias segue este formato:
 ```text
 <diretório-organizacional>/<entidade>/
 ├── entity.json
-├── localized/
-│   ├── display/
-│   │   ├── pt-BR.md
-│   │   ├── pt-PT.md
-│   │   ├── gn-PY.md
-│   │   ├── en-US.md
-│   │   ├── es-ES.md
-│   │   └── fr-FR.md
-│   └── search-names/
-│       └── <locale>.md
-├── sections/
-│   ├── content-a/
-│   │   └── <locale>.md
-│   └── content-b/
-│       └── <locale>.md
+├── content/
+│   ├── pt-BR.md
+│   ├── pt-PT.md
+│   ├── gn-PY.md
+│   ├── en-US.md
+│   ├── es-ES.md
+│   └── fr-FR.md
 └── media/
     ├── cover.webp
     └── detail.webp
 ```
 
-Os nomes `display`, `search-names`, `content-a` e `content-b` não possuem
-semântica de domínio. O `entity.json` declara qual campo ou seção padronizada
-cada diretório fornece. As pastas servem para organização editorial e podem ser
-renomeadas junto com a atualização de seus caminhos no manifesto.
+O nome `content` não possui semântica de domínio. O `entity.json` declara o
+diretório editorial e associa cada marcador numérico do Markdown à sua
+`sectionKey`. A pasta pode ser renomeada junto com a atualização de `contentPath`.
+Conteúdo localizado simples não possui diretórios próprios no contrato da
+[Parte 1A.1](./01a1-localized-json-consolidation.md).
 
 ## Fontes Incluídas
 
@@ -137,31 +133,28 @@ desta conversão.
 
 ## Fronteira Com I18n
 
-Todo texto que descreve conhecimento fica nos arquivos Markdown canônicos:
-
-- nome e aliases de entidade;
-- descrição e conteúdo de referência;
-- nomes e aliases geográficos;
-- rótulos e descrições de taxonomias;
-- nomes e observações de protocolos;
-- conteúdo das seções de produtos e raças;
-- texto alternativo e legenda declarados pela sintaxe Markdown.
+Todo texto que descreve conhecimento fica na fonte canônica, incluindo nomes,
+aliases, descrições, labels taxonômicos, protocolos, conteúdo editorial, texto
+alternativo e legendas. A Parte 1A.1 fecha a representação JSON de todo conteúdo
+localizado simples e das referências taxonômicas; Markdown permanece como
+representação das seções editoriais declaradas por caminho.
 
 Textos de interface permanecem em `@vet/core-local/i18n`, incluindo comandos,
 mensagens de erro, estados vazios, rótulos de controles e títulos padronizados
 das seções identificadas por `sectionKey`.
 
 Por exemplo, o conteúdo da seção `indications` pertence ao Markdown do produto.
-O título apresentado como “Indicações” é o rótulo de interface da seção
-padronizada. Um subtítulo específico do conteúdo permanece no próprio Markdown.
+O título apresentado como “Indicações” é resolvido pela UI por meio do i18n da
+`sectionKey`. Um eventual texto após o número do heading serve somente para
+legibilidade editorial e não é consumido.
 
 Nenhum dado canônico usa `labelKey`, `translationKey` ou outra chave para buscar
 conteúdo de conhecimento no i18n do app.
 
 ## Manifesto `entity.json`
 
-`entity.json` contém somente estrutura não localizável e referências aos
-diretórios de conteúdo. O envelope mínimo é:
+`entity.json` contém estrutura, valores localizados simples e referências às
+seções Markdown. O envelope mínimo é:
 
 ```json
 {
@@ -171,17 +164,33 @@ diretórios de conteúdo. O envelope mínimo é:
   "species": ["canine"],
   "relations": {},
   "localizedContent": {
-    "name": "./localized/display",
-    "aliases": "./localized/search-names"
+    "name": {
+      "pt-BR": "Beagle",
+      "pt-PT": "Beagle",
+      "gn-PY": "Beagle",
+      "en-US": "Beagle",
+      "es-ES": "Beagle",
+      "fr-FR": "Beagle"
+    },
+    "aliases": {
+      "pt-BR": ["Beagle inglês"],
+      "pt-PT": ["Beagle inglês"],
+      "gn-PY": [],
+      "en-US": ["English Beagle"],
+      "es-ES": [],
+      "fr-FR": []
+    }
   },
+  "sizeTermKey": "medium",
+  "contentPath": "./content",
   "sections": [
     {
       "sectionKey": "overview",
-      "contentPath": "./sections/content-a"
+      "sectionNumber": 1
     },
     {
       "sectionKey": "physical_characteristics",
-      "contentPath": "./sections/content-b"
+      "sectionNumber": 2
     }
   ],
   "cover": "./media/cover.webp"
@@ -192,52 +201,49 @@ O schema selecionado por `entityType` define:
 
 - campos estruturais permitidos;
 - relações aceitas;
-- chaves de `localizedContent` e o formato esperado de cada fragmento;
+- chaves de `localizedContent` e o tipo de seus mapas por locale;
+- mapas localizados simples permitidos e seus tipos por locale;
+- campos de referência taxonômica e taxonomias proprietárias;
 - `sectionKey` permitidas;
+- `sectionNumber` positivos, contíguos e únicos;
 - cardinalidade e obrigatoriedade de conteúdo por locale;
 - referências de mídia estruturais, como `cover`.
 
-O caminho não define o significado do conteúdo. Por exemplo, mesmo que o
-diretório se chame `content-a`, o fragmento pertence à seção `overview` porque
-essa associação está declarada no manifesto.
+O caminho e o rótulo editorial do heading não definem o significado do conteúdo.
+A seção `overview` existe porque o manifesto associa essa `sectionKey` ao
+`sectionNumber` correspondente.
 
 `entity.json` não contém nomes de tabelas, colunas, SQL, hashes, caminhos CAS ou
 IDs técnicos de linhas derivadas. Toda entidade com identidade própria possui
 um `id` estável na fonte. O builder não cria identidades de domínio aleatórias.
 
-## Conteúdo Localizado Em Markdown
+## Conteúdo Localizado
 
-Cada caminho declarado em `localizedContent` ou `sections[].contentPath` aponta
-para um diretório com um arquivo `<locale>.md`. Os Markdown não possuem front
-matter. Eles contêm somente o valor ou o corpo localizado daquele campo.
+Cada campo de `localizedContent` contém diretamente um mapa dos seis locales. O
+schema do objeto proprietário define se seus valores são strings ou arrays de
+strings. Nomes, aliases, denominações, observações, labels taxonômicos e labels de
+doses usam esse contrato e não passam pelo parser Markdown.
 
-Exemplo de nome em `localized/display/pt-BR.md`:
+`contentPath` aponta para um diretório com exatamente um arquivo `<locale>.md`
+para cada locale obrigatório. Esses arquivos não possuem front matter e contêm
+todas as seções editoriais localizadas da entidade.
 
-```markdown
-Beagle
-```
-
-Exemplo de aliases em `localized/search-names/pt-BR.md`:
-
-```markdown
-- English Beagle
-- Beagle inglês
-```
-
-Exemplo de seção em `sections/content-a/pt-BR.md`:
+Exemplo em `content/pt-BR.md`:
 
 ```markdown
+# 1. Visão geral
+
 O Beagle é uma raça canina de porte médio, ativa e sociável.
 
-![Beagle adulto](../../media/detail.webp "Exemplar adulto")
+# 2. Características físicas
+
+## Pelagem
+
+![Beagle adulto](../media/detail.webp "Exemplar adulto")
 ```
 
-O schema da chave localizada determina como o AST é validado e projetado:
-
-- `name`: texto simples sem bloco estrutural adicional;
-- `aliases`: lista Markdown de textos simples;
-- seção: corpo Markdown dentro do perfil canônico permitido;
-- outros campos localizados: contrato tipado próprio do `entityType`.
+O schema de `localizedContent` valida os mapas JSON tipados. O schema da seção
+determina como seu AST Markdown é validado e projetado.
 
 ### Perfil Markdown Canônico
 
@@ -258,48 +264,49 @@ O perfil recusa:
 - AST acima dos limites definidos para tamanho, profundidade e quantidade de
   nós.
 
-Os contratos de `name`, `aliases` e outros campos simples aplicam subconjuntos
-mais restritos dessa allowlist. O perfil faz parte dos schemas de autoria e da
-representação compilada; uma alteração que exija comportamento novo do runtime
-também eleva a versão do schema de `system`.
+O perfil faz parte dos schemas de autoria e da representação compilada; uma
+alteração que exija comportamento novo do runtime também eleva a versão do schema
+de `system`.
 
-O título principal de uma seção não precisa aparecer no fragmento. Subtítulos
-internos são permitidos e permanecem localizados; o builder normaliza sua
-hierarquia para inserção sob o título de `sectionKey`.
+Cada heading `# <sectionNumber>` ou
+`# <sectionNumber>. <editorialLabel>` inicia uma seção. O builder consome somente
+o número e descarta o heading delimitador inteiro. O rótulo editorial é opcional,
+serve apenas para leitura do arquivo e não integra bancos, DTOs, digest ou UI.
+Headings de `##` a `######` permanecem internos à seção corrente.
 
-A ordem do array `sections` define a ordem editorial. Nomes de diretórios,
-ordem de descoberta no filesystem e títulos escritos no Markdown não definem a
-seção nem sua posição.
+A ordem do array `sections` e os números contíguos definem a ordem editorial.
+Nomes de diretórios, ordem de descoberta no filesystem e os rótulos editoriais
+opcionais dos headings não definem a identidade da seção.
 
-Títulos e subtítulos padronizados usam o mesmo contrato. Uma seção pode declarar
-`parentSectionKey` para compor a hierarquia sem depender do nome da pasta nem de
-um heading dentro do Markdown:
+Uma seção pode declarar `parentSectionKey` para compor a hierarquia sem depender
+do nome da pasta nem do nível dos headings internos:
 
 ```json
 {
   "sections": [
     {
       "sectionKey": "composition",
-      "contentPath": "./sections/content-a"
+      "sectionNumber": 1
     },
     {
       "sectionKey": "active_ingredients",
       "parentSectionKey": "composition",
-      "contentPath": "./sections/content-b"
+      "sectionNumber": 2
     }
   ]
 }
 ```
 
-Cada `sectionKey` é única na entidade. O schema do `entityType` valida pais
-permitidos, profundidade máxima e se uma seção exige conteúdo próprio. O builder
-recusa pais inexistentes e ciclos.
+Cada `sectionKey` e cada `sectionNumber` são únicos na entidade. O schema do
+`entityType` valida pais permitidos, profundidade máxima e se uma seção exige
+conteúdo próprio. O builder recusa pais inexistentes, ciclos, números ausentes,
+repetidos, descontínuos ou fora de ordem.
 
 O array de autoria descreve a composição da página. Na Parte 1B, ele é compilado
 para um único documento de conteúdo localizado por item: a hierarquia declarada
-por `parentSectionKey` vira uma árvore ordenada, e cada fragmento Markdown vira o
-corpo normalizado de sua seção. Os arquivos canônicos não incluem nomes de
-colunas, formato de persistência ou estrutura física desse documento.
+por `parentSectionKey` vira uma árvore ordenada, e cada trecho delimitado vira um
+nó com `sectionKey` e corpo normalizado. Os arquivos canônicos não incluem nomes
+de colunas, formato de persistência ou estrutura física desse documento.
 
 ## Identidade E Descoberta
 
@@ -312,16 +319,18 @@ colunas, formato de persistência ou estrutura física desse documento.
 - `species`, classificações, regiões e relações são declaradas no JSON;
 - o builder descobre recursivamente diretórios que contenham `entity.json`;
 - duas entidades que reivindiquem a mesma identidade invalidam o conjunto;
-- conteúdo localizado é identificado pelo campo ou `sectionKey` declarado no
-  manifesto e pelo locale do nome do arquivo;
+- conteúdo simples localizado é identificado pelo campo de `localizedContent` e
+  pela chave de locale do mapa correspondente;
+- conteúdo Markdown localizado é identificado pelo locale do arquivo e pela
+  associação `sectionNumber -> sectionKey` declarada no manifesto;
 - nomes de pastas nunca são inferidos como tipos, seções ou relacionamentos;
 - a ordenação canônica usa identidade, campo, `sectionKey` e locale, não a ordem
   retornada pelo filesystem.
 
 Um nome científico ou código regulatório pode permanecer estrutural quando for
-um identificador de domínio. Valores apresentados como nome, descrição ou alias
-ao usuário pertencem aos fragmentos localizados, mesmo quando o texto coincide
-nos seis locales.
+um identificador de domínio. Valores simples apresentados ao usuário pertencem
+a `localizedContent`, mesmo quando o texto coincide nos seis locales. Corpos
+editoriais pertencem às seções Markdown.
 
 ## Taxonomias E Classificações
 
@@ -335,10 +344,30 @@ catalog/taxonomies/product-classifications/
 animals/taxonomies/breed-sizes/
 ```
 
-`entity.json` contém os IDs estruturais dos termos e mapeia cada conjunto de
-rótulos, descrições e aliases para diretórios de Markdown localizados. Não é
-necessário criar um diretório de entidade para cada termo quando o schema da
-taxonomia define um agregado.
+`entity.json` contém os IDs estruturais dos termos e seu conteúdo localizado:
+
+```json
+{
+  "key": "small",
+  "parentKey": null,
+  "order": 0,
+  "localizedContent": {
+    "label": {
+      "pt-BR": "Pequeno",
+      "pt-PT": "Pequeno",
+      "gn-PY": "Michĩ",
+      "en-US": "Small",
+      "es-ES": "Pequeño",
+      "fr-FR": "Petit"
+    }
+  }
+}
+```
+
+Aliases gerais do conceito também pertencem ao `localizedContent` do termo
+quando existirem. Entidades referenciam somente as chaves canônicas completas e
+não repetem labels, aliases nem caminhos de ancestrais. Não é necessário criar
+um diretório de entidade para cada termo quando o schema define um agregado.
 
 ## Domínio Geográfico
 
@@ -347,8 +376,8 @@ Localizações reutilizáveis ficam em:
 ```text
 data/knowledge/geo/places/<place>/
 ├── entity.json
-├── localized/
-└── sections/
+├── content/
+└── media/
 ```
 
 Uma localização usa `entityType: "geo_place"`. Sua estrutura pode conter tipo
@@ -367,8 +396,22 @@ de lugar, códigos de país, relação hierárquica e centroide:
     "longitude": -1.5
   },
   "localizedContent": {
-    "name": "./localized/display",
-    "aliases": "./localized/search-names"
+    "name": {
+      "pt-BR": "Inglaterra",
+      "pt-PT": "Inglaterra",
+      "gn-PY": "Inglaterra",
+      "en-US": "England",
+      "es-ES": "Inglaterra",
+      "fr-FR": "Angleterre"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
   }
 }
 ```
@@ -459,10 +502,11 @@ caminho CAS, base64 ou referência interna já compilada.
 
 1. Definir o manifesto comum e os campos de cada `entityType`.
 2. Definir relações entre entidades.
-3. Definir chaves de `localizedContent` e seus formatos Markdown.
-4. Definir `sectionKey` padronizadas por domínio.
-5. Definir regras de caminhos relativos e mídias.
-6. Documentar o contrato em `data/knowledge/README.md`.
+3. Definir chaves de `localizedContent` e seus mapas JSON tipados.
+4. Definir referências taxonômicas por chaves canônicas completas.
+5. Definir `sectionKey` e o perfil Markdown padronizados por domínio.
+6. Definir regras de caminhos relativos e mídias.
+7. Documentar o contrato em `data/knowledge/README.md`.
 
 ### Atividade 3: Conversão Estrutural
 
@@ -470,16 +514,18 @@ caminho CAS, base64 ou referência interna já compilada.
    localização geográfica, taxonomia e protocolo.
 2. Preservar IDs e declarar relações explicitamente.
 3. Transportar campos estruturais para `entity.json`.
-4. Declarar no manifesto os diretórios de campos e seções localizados.
-5. Copiar mídias com nomes editoriais para o diretório `media/` da entidade.
+4. Declarar valores taxonômicos somente por suas chaves completas.
+5. Declarar no manifesto o `contentPath` e a numeração das seções localizadas.
+6. Copiar mídias com nomes editoriais para o diretório `media/` da entidade.
 
 ### Atividade 4: Conversão Do Conteúdo Localizado
 
-1. Criar os seis Markdown exigidos em cada diretório localizado.
-2. Transportar nomes e aliases para fragmentos tipados.
-3. Transportar descrições e seções para o perfil Markdown canônico.
-4. Converter referências de mídia em links relativos comuns.
-5. Distribuir aliases por locale.
+1. Transportar todo conteúdo simples para `localizedContent` no JSON do objeto
+   proprietário.
+2. Manter nos aliases de entidade somente formas alternativas próprias.
+3. Centralizar labels e aliases gerais nos termos taxonômicos.
+4. Criar um Markdown por locale com todas as seções editoriais declaradas.
+5. Converter referências de mídia em links relativos comuns.
 6. Manter no i18n somente textos de interface e rótulos padronizados.
 
 ### Atividade 5: Auditoria De Paridade
@@ -487,7 +533,7 @@ caminho CAS, base64 ou referência interna já compilada.
 1. Comparar quantidades por tipo de entidade.
 2. Comparar conjuntos de IDs e relações.
 3. Comparar campos estruturais normalizados.
-4. Confirmar cobertura dos seis locales por campo e seção obrigatórios.
+4. Confirmar cobertura dos seis locales por campo, mapa e seção obrigatórios.
 5. Confirmar que todo conteúdo de conhecimento possui destino canônico.
 6. Confirmar que nenhuma regra de domínio depende do nome das pastas.
 
@@ -498,8 +544,10 @@ caminho CAS, base64 ou referência interna já compilada.
 - Repositories, rotas e componentes não usam os novos arquivos.
 - `data/knowledge` não oferece fallback ao runtime.
 - Os arquivos Markdown não possuem front matter.
-- O significado de um fragmento vem exclusivamente do `entity.json`.
-- O builder da Parte 1B é o único consumidor da fonte canônica.
+- O significado de cada seção vem da associação entre `sectionNumber` e
+  `sectionKey` declarada no `entity.json`.
+- O builder da Parte 1B é o único compilador da fonte canônica; a auditoria
+  apenas valida sua cobertura e paridade.
 
 ## Auditoria De Cobertura E Paridade
 
@@ -510,14 +558,17 @@ inventário reproduzível que confirma:
 - presença de uma entidade canônica para cada item público inventariado;
 - preservação dos IDs de domínio e declaração das relações identificadas;
 - destino canônico para cada campo estrutural e conteúdo localizado da fonte;
-- matriz dos seis arquivos por locale para cada campo ou seção obrigatória
-  documentada;
+- matriz de um documento Markdown por locale para cada entidade com seções;
+- cobertura exata dos seis locales em cada mapa JSON localizado;
+- resolução de toda chave taxonômica contra a taxonomia proprietária;
+- ausência de traduções taxonômicas duplicadas nas entidades;
 - correspondência de nomes, aliases, descrições e seções com as fontes
   inventariadas;
 - correspondência entre mídias inventariadas, arquivos copiados e referências
   editoriais declaradas;
-- independência entre o significado de campo ou `sectionKey` e o nome do
-  diretório;
+- correspondência exata entre headings numerados e `sectionKey` declaradas;
+- independência entre o significado da `sectionKey`, o rótulo editorial opcional
+  e o nome do diretório editorial;
 - cobertura de todos os domínios públicos de conhecimento;
 - ausência de alteração no runtime, nos bancos ativos e no ramo `user`.
 
@@ -532,7 +583,9 @@ artefatos.
 - `data/knowledge/README.md` com o contrato de autoria;
 - `entity.json` para cada entidade pública, conforme o contrato de autoria
   documentado;
-- seis fragmentos Markdown por conteúdo localizado obrigatório;
+- conteúdo localizado simples completo em `localizedContent`;
+- seis documentos Markdown por entidade com conteúdo editorial;
+- referências taxonômicas completas e resolvíveis;
 - seções associadas explicitamente a `sectionKey`;
 - taxonomias e localizações geográficas reutilizáveis;
 - relações explícitas por ID;
@@ -544,10 +597,15 @@ artefatos.
 - Todo dado público que compõe os bancos de sistema possui representação em
   `data/knowledge`.
 - Campos estruturais e relações ficam em `entity.json`.
-- Textos de conhecimento ficam em Markdown por locale, sem front matter e
+- Todo conteúdo localizado simples fica em `localizedContent`, com os seis
+  locales e sem caminhos de arquivo.
+- Somente seções editoriais ficam em Markdown por locale, sem front matter e
   dentro do perfil canônico permitido.
-- O manifesto define a finalidade de cada diretório de conteúdo.
-- Títulos de seções padronizadas não precisam ser repetidos nos Markdown.
+- Entidades referenciam taxonomias por chaves canônicas completas e não repetem
+  seus labels ou aliases gerais.
+- O manifesto associa cada `sectionNumber` à sua `sectionKey`.
+- Títulos apresentados pela UI são resolvidos pelo i18n da `sectionKey`; rótulos
+  editoriais opcionais dos headings não são consumidos.
 - Nenhuma entidade canônica depende do i18n para obter conteúdo de conhecimento.
 - O inventário de paridade registra cobertura dos seis locales conforme o
   contrato documentado do domínio.
@@ -562,4 +620,4 @@ artefatos.
 ## Próxima Parte
 
 Após cumprir os critérios, seguir para a
-[Parte 1B: `knowledge-builder` e artefatos locais](./01b-knowledge-builder.md).
+[Parte 1A.1: consolidação JSON e referências taxonômicas](./01a1-localized-json-consolidation.md).

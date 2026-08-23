@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "german-shorthaired-pointer",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"de"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			25,
+			32
+		],
+		"female": [
+			20,
+			27
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			58,
+			64
+		],
+		"female": [
+			53,
+			59
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Pointer Alemão de Pelo Curto",
+			"pt-PT": "Pointer Alemão de Pelo Curto",
+			"gn-PY": "Braco alemán de pelo corto",
+			"en-US": "German Shorthaired Pointer",
+			"es-ES": "Braco alemán de pelo corto",
+			"fr-FR": "Braque allemand à poil court"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

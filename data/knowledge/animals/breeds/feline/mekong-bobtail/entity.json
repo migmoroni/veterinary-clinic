@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "mekong-bobtail",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"ru"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			3.5,
+			5
+		],
+		"female": [
+			2.5,
+			4
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			22,
+			27
+		],
+		"female": [
+			20,
+			25
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Bobtail do Mekong",
+			"pt-PT": "Bobtail do Mekong",
+			"gn-PY": "Bobtail del Mekong",
+			"en-US": "Mekong Bobtail",
+			"es-ES": "Bobtail del Mekong",
+			"fr-FR": "Bobtail du Mékong"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

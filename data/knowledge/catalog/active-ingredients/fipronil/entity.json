@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"entityType": "active_ingredient",
+	"id": "76a4b9e3-0a82-4ddd-8ce8-b0f5aeb5f558",
+	"typeTermKey": "antiInfective.antiparasitic.phenylpyrazoles",
+	"classificationTermKeys": [],
+	"regions": [],
+	"nomenclature": {
+		"scientificName": null,
+		"casNumber": null,
+		"denominationStandards": []
+	},
+	"atcVetCode": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Fipronil",
+			"pt-PT": "Fipronil",
+			"gn-PY": "Fipronil",
+			"en-US": "Fipronil",
+			"es-ES": "Fipronil",
+			"fr-FR": "Fipronil"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

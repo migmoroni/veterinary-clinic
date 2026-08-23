@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "golden-retriever",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"scotland"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			29,
+			34
+		],
+		"female": [
+			25,
+			29
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			56,
+			61
+		],
+		"female": [
+			51,
+			56
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Golden Retriever",
+			"pt-PT": "Golden Retriever",
+			"gn-PY": "Golden Retriever",
+			"en-US": "Golden Retriever",
+			"es-ES": "Golden Retriever",
+			"fr-FR": "Golden Retriever"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

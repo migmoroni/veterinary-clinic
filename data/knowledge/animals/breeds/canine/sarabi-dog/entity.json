@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "sarabi-dog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"ir"
+	],
+	"sizeTermKey": "giant",
+	"averageWeightKg": {
+		"male": [
+			60,
+			90
+		],
+		"female": [
+			50,
+			75
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			75,
+			90
+		],
+		"female": [
+			70,
+			82
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Sarabi",
+			"pt-PT": "Sarabi",
+			"gn-PY": "Sarabi",
+			"en-US": "Sarabi Dog",
+			"es-ES": "Sarabi",
+			"fr-FR": "Chien Sarabi"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

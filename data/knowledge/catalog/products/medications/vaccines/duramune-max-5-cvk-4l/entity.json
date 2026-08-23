@@ -1,0 +1,69 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "3313a2c6-a578-4c32-bc65-932fcc87777a",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Duramune Max 5-CvK/4L",
+			"pt-PT": "Duramune Max 5-CvK/4L",
+			"gn-PY": "Duramune Max 5-CvK/4L",
+			"en-US": "Duramune Max 5-CvK/4L",
+			"es-ES": "Duramune Max 5-CvK/4L",
+			"fr-FR": "Duramune Max 5-CvK/4L"
+		},
+		"aliases": {
+			"pt-BR": [
+				"DAPPi+CV+L4"
+			],
+			"pt-PT": [
+				"DAPPi+CV+L4"
+			],
+			"gn-PY": [
+				"DAPPi+CV+L4"
+			],
+			"en-US": [
+				"DAPPi+CV+L4"
+			],
+			"es-ES": [
+				"DAPPi+CV+L4"
+			],
+			"fr-FR": [
+				"DAPPi+CV+L4"
+			]
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"disease.canineDistemper",
+		"pathogen.canineAdenovirusType2",
+		"disease.canineCoronavirusInfection",
+		"pathogen.canineCoronavirus",
+		"disease.canineParainfluenza",
+		"disease.canineParvovirosis",
+		"pathogen.canineParvovirus",
+		"disease.canineLeptospirosis"
+	],
+	"vaccineProfileTermKeys": [
+		"canine.v10",
+		"canine.multivalent"
+	]
+}

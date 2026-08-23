@@ -1,0 +1,864 @@
+{
+	"schemaVersion": 1,
+	"entityType": "taxonomy",
+	"id": "product-classifications",
+	"domain": "product",
+	"purpose": "classification",
+	"terms": [
+		{
+			"key": "administrationRoute.epidural",
+			"parentKey": null,
+			"order": 0,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Epidural",
+					"pt-PT": "Epidural",
+					"gn-PY": "Epidural",
+					"en-US": "Epidural",
+					"es-ES": "Epidural",
+					"fr-FR": "Épidurale"
+				}
+			}
+		},
+		{
+			"key": "administrationRoute.inhaled",
+			"parentKey": null,
+			"order": 1,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Inalatória",
+					"pt-PT": "Inalatória",
+					"gn-PY": "Inalatória",
+					"en-US": "Inhaled",
+					"es-ES": "Inhalatoria",
+					"fr-FR": "Inhalée"
+				}
+			}
+		},
+		{
+			"key": "administrationRoute.intraarticular",
+			"parentKey": null,
+			"order": 2,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Intra-articular",
+					"pt-PT": "Intra-articular",
+					"gn-PY": "Intra-articular",
+					"en-US": "Intra-articular",
+					"es-ES": "Intraarticular",
+					"fr-FR": "Intra-articulaire"
+				}
+			}
+		},
+		{
+			"key": "administrationRoute.intramuscular",
+			"parentKey": null,
+			"order": 3,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Intramuscular",
+					"pt-PT": "Intramuscular",
+					"gn-PY": "Intramuscular",
+					"en-US": "Intramuscular",
+					"es-ES": "Intramuscular",
+					"fr-FR": "Intramusculaire"
+				}
+			}
+		},
+		{
+			"key": "administrationRoute.intranasal",
+			"parentKey": null,
+			"order": 4,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Intranasal",
+					"pt-PT": "Intranasal",
+					"gn-PY": "Intranasal",
+					"en-US": "Intranasal",
+					"es-ES": "Intranasal",
+					"fr-FR": "Intranasale"
+				}
+			}
+		},
+		{
+			"key": "administrationRoute.intravenous",
+			"parentKey": null,
+			"order": 5,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Intravenosa",
+					"pt-PT": "Intravenosa",
+					"gn-PY": "Intravenosa",
+					"en-US": "Intravenous",
+					"es-ES": "Intravenosa",
+					"fr-FR": "Intraveineuse"
+				}
+			}
+		},
+		{
+			"key": "administrationRoute.nonApplicable",
+			"parentKey": null,
+			"order": 6,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Não aplicável",
+					"pt-PT": "Não aplicável",
+					"gn-PY": "Não aplicável",
+					"en-US": "Not applicable",
+					"es-ES": "No aplicable",
+					"fr-FR": "Non applicable"
+				}
+			}
+		},
+		{
+			"key": "administrationRoute.ophthalmic",
+			"parentKey": null,
+			"order": 7,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Oftálmica",
+					"pt-PT": "Oftálmica",
+					"gn-PY": "Oftálmica",
+					"en-US": "Ophthalmic",
+					"es-ES": "Oftálmica",
+					"fr-FR": "Ophtalmique"
+				}
+			}
+		},
+		{
+			"key": "administrationRoute.oral",
+			"parentKey": null,
+			"order": 8,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Oral",
+					"pt-PT": "Oral",
+					"gn-PY": "Oral",
+					"en-US": "Oral",
+					"es-ES": "Oral",
+					"fr-FR": "Orale"
+				}
+			}
+		},
+		{
+			"key": "administrationRoute.otic",
+			"parentKey": null,
+			"order": 9,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Otológica",
+					"pt-PT": "Otológica",
+					"gn-PY": "Otológica",
+					"en-US": "Otic",
+					"es-ES": "Ótica",
+					"fr-FR": "Auriculaire"
+				}
+			}
+		},
+		{
+			"key": "administrationRoute.rectal",
+			"parentKey": null,
+			"order": 10,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Retal",
+					"pt-PT": "Retal",
+					"gn-PY": "Retal",
+					"en-US": "Rectal",
+					"es-ES": "Rectal",
+					"fr-FR": "Rectale"
+				}
+			}
+		},
+		{
+			"key": "administrationRoute.subcutaneous",
+			"parentKey": null,
+			"order": 11,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Subcutânea",
+					"pt-PT": "Subcutânea",
+					"gn-PY": "Subcutânea",
+					"en-US": "Subcutaneous",
+					"es-ES": "Subcutánea",
+					"fr-FR": "Sous-cutanée"
+				}
+			}
+		},
+		{
+			"key": "administrationRoute.topical",
+			"parentKey": null,
+			"order": 12,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Tópica",
+					"pt-PT": "Tópica",
+					"gn-PY": "Tópica",
+					"en-US": "Topical",
+					"es-ES": "Tópica",
+					"fr-FR": "Topique"
+				}
+			}
+		},
+		{
+			"key": "administrationRoutes",
+			"parentKey": null,
+			"order": 13,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Vias de administração",
+					"pt-PT": "Vias de administração",
+					"gn-PY": "Vias de administração",
+					"en-US": "Administration routes",
+					"es-ES": "Vías de administración",
+					"fr-FR": "Voies d’administration"
+				}
+			}
+		},
+		{
+			"key": "baseGroup",
+			"parentKey": null,
+			"order": 14,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Classificação comercial e terapêutica",
+					"pt-PT": "Classificação comercial e terapêutica",
+					"gn-PY": "Classificação comercial e terapêutica",
+					"en-US": "Commercial and therapeutic classification",
+					"es-ES": "Clasificación comercial y terapéutica",
+					"fr-FR": "Classification commerciale et thérapeutique"
+				}
+			}
+		},
+		{
+			"key": "brazilMapa",
+			"parentKey": null,
+			"order": 15,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Registro MAPA",
+					"pt-PT": "Registo MAPA",
+					"gn-PY": "Registro MAPA",
+					"en-US": "MAPA registration",
+					"es-ES": "Registro MAPA",
+					"fr-FR": "Enregistrement MAPA"
+				}
+			}
+		},
+		{
+			"key": "commercial",
+			"parentKey": null,
+			"order": 16,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Comercial",
+					"pt-PT": "Comercial",
+					"gn-PY": "Comercial",
+					"en-US": "Commercial",
+					"es-ES": "Comercial",
+					"fr-FR": "Commerciale"
+				}
+			}
+		},
+		{
+			"key": "commercial.compounded",
+			"parentKey": "commercial",
+			"order": 17,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Manipulado",
+					"pt-PT": "Manipulado",
+					"gn-PY": "Manipulado",
+					"en-US": "Compounded",
+					"es-ES": "Formulado",
+					"fr-FR": "Préparé"
+				}
+			}
+		},
+		{
+			"key": "commercial.generic",
+			"parentKey": "commercial",
+			"order": 18,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Genérico",
+					"pt-PT": "Genérico",
+					"gn-PY": "Genérico",
+					"en-US": "Generic",
+					"es-ES": "Genérico",
+					"fr-FR": "Générique"
+				}
+			}
+		},
+		{
+			"key": "commercial.nonApplicable",
+			"parentKey": "commercial",
+			"order": 19,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Não aplicável",
+					"pt-PT": "Não aplicável",
+					"gn-PY": "Não aplicável",
+					"en-US": "Not applicable",
+					"es-ES": "No aplicable",
+					"fr-FR": "Non applicable"
+				}
+			}
+		},
+		{
+			"key": "commercial.reference",
+			"parentKey": "commercial",
+			"order": 20,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Referência",
+					"pt-PT": "Referência",
+					"gn-PY": "Referência",
+					"en-US": "Reference",
+					"es-ES": "Referencia",
+					"fr-FR": "Référence"
+				}
+			}
+		},
+		{
+			"key": "commercial.similar",
+			"parentKey": "commercial",
+			"order": 21,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Similar",
+					"pt-PT": "Similar",
+					"gn-PY": "Similar",
+					"en-US": "Similar",
+					"es-ES": "Similar",
+					"fr-FR": "Similaire"
+				}
+			}
+		},
+		{
+			"key": "formAndAdministration",
+			"parentKey": null,
+			"order": 22,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Forma e administração",
+					"pt-PT": "Forma e administração",
+					"gn-PY": "Forma e administração",
+					"en-US": "Form and administration",
+					"es-ES": "Forma y administración",
+					"fr-FR": "Forme et administration"
+				}
+			}
+		},
+		{
+			"key": "gtinEan",
+			"parentKey": null,
+			"order": 23,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "GTIN/EAN",
+					"pt-PT": "GTIN/EAN",
+					"gn-PY": "GTIN/EAN",
+					"en-US": "GTIN/EAN",
+					"es-ES": "GTIN/EAN",
+					"fr-FR": "GTIN/EAN"
+				}
+			}
+		},
+		{
+			"key": "origin",
+			"parentKey": null,
+			"order": 24,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Origem",
+					"pt-PT": "Origem",
+					"gn-PY": "Origem",
+					"en-US": "Origin",
+					"es-ES": "Origen",
+					"fr-FR": "Origine"
+				}
+			}
+		},
+		{
+			"key": "origin.allopathic",
+			"parentKey": "origin",
+			"order": 25,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Alopático",
+					"pt-PT": "Alopático",
+					"gn-PY": "Alopático",
+					"en-US": "Allopathic",
+					"es-ES": "Alopático",
+					"fr-FR": "Allopathique"
+				}
+			}
+		},
+		{
+			"key": "origin.biological",
+			"parentKey": "origin",
+			"order": 26,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Biológico",
+					"pt-PT": "Biológico",
+					"gn-PY": "Biológico",
+					"en-US": "Biological",
+					"es-ES": "Biológico",
+					"fr-FR": "Biologique"
+				}
+			}
+		},
+		{
+			"key": "origin.homeopathic",
+			"parentKey": "origin",
+			"order": 27,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Homeopático",
+					"pt-PT": "Homeopático",
+					"gn-PY": "Homeopático",
+					"en-US": "Homeopathic",
+					"es-ES": "Homeopático",
+					"fr-FR": "Homéopathique"
+				}
+			}
+		},
+		{
+			"key": "origin.phytotherapeutic",
+			"parentKey": "origin",
+			"order": 28,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Fitoterápico",
+					"pt-PT": "Fitoterápico",
+					"gn-PY": "Fitoterápico",
+					"en-US": "Phytotherapeutic",
+					"es-ES": "Fitoterápico",
+					"fr-FR": "Phytothérapeutique"
+				}
+			}
+		},
+		{
+			"key": "pharmaceuticalForm",
+			"parentKey": null,
+			"order": 29,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Forma farmacêutica",
+					"pt-PT": "Forma farmacêutica",
+					"gn-PY": "Forma farmacêutica",
+					"en-US": "Pharmaceutical form",
+					"es-ES": "Forma farmacéutica",
+					"fr-FR": "Forme pharmaceutique"
+				}
+			}
+		},
+		{
+			"key": "pharmaceuticalForm.capsule",
+			"parentKey": "pharmaceuticalForm",
+			"order": 30,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Cápsula",
+					"pt-PT": "Cápsula",
+					"gn-PY": "Cápsula",
+					"en-US": "Capsule",
+					"es-ES": "Cápsula",
+					"fr-FR": "Gélule"
+				}
+			}
+		},
+		{
+			"key": "pharmaceuticalForm.collar",
+			"parentKey": "pharmaceuticalForm",
+			"order": 31,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Coleira",
+					"pt-PT": "Coleira",
+					"gn-PY": "Coleira",
+					"en-US": "Collar",
+					"es-ES": "Collar",
+					"fr-FR": "Collier"
+				}
+			}
+		},
+		{
+			"key": "pharmaceuticalForm.deviceOrConsumable",
+			"parentKey": "pharmaceuticalForm",
+			"order": 32,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Dispositivo ou consumível",
+					"pt-PT": "Dispositivo ou consumível",
+					"gn-PY": "Dispositivo ou consumível",
+					"en-US": "Device or consumable",
+					"es-ES": "Dispositivo o consumible",
+					"fr-FR": "Dispositif ou consommable"
+				}
+			}
+		},
+		{
+			"key": "pharmaceuticalForm.feedOrKibble",
+			"parentKey": "pharmaceuticalForm",
+			"order": 33,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Alimento ou ração",
+					"pt-PT": "Alimento ou ração",
+					"gn-PY": "Alimento ou ração",
+					"en-US": "Feed or kibble",
+					"es-ES": "Alimento o pienso",
+					"fr-FR": "Aliment ou croquettes"
+				}
+			}
+		},
+		{
+			"key": "pharmaceuticalForm.injectableSolution",
+			"parentKey": "pharmaceuticalForm",
+			"order": 34,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Solução injetável",
+					"pt-PT": "Solução injetável",
+					"gn-PY": "Solução injetável",
+					"en-US": "Injectable solution",
+					"es-ES": "Solución inyectable",
+					"fr-FR": "Solution injectable"
+				}
+			}
+		},
+		{
+			"key": "pharmaceuticalForm.nonApplicable",
+			"parentKey": "pharmaceuticalForm",
+			"order": 35,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Não aplicável",
+					"pt-PT": "Não aplicável",
+					"gn-PY": "Não aplicável",
+					"en-US": "Not applicable",
+					"es-ES": "No aplicable",
+					"fr-FR": "Non applicable"
+				}
+			}
+		},
+		{
+			"key": "pharmaceuticalForm.ointmentOrCream",
+			"parentKey": "pharmaceuticalForm",
+			"order": 36,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Pomada, creme, pasta ou gel",
+					"pt-PT": "Pomada, creme, pasta ou gel",
+					"gn-PY": "Pomada, creme, pasta ou gel",
+					"en-US": "Ointment, cream, paste or gel",
+					"es-ES": "Pomada, crema, pasta o gel",
+					"fr-FR": "Pommade, crème, pâte ou gel"
+				}
+			}
+		},
+		{
+			"key": "pharmaceuticalForm.oralSuspension",
+			"parentKey": "pharmaceuticalForm",
+			"order": 37,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Suspensão oral",
+					"pt-PT": "Suspensão oral",
+					"gn-PY": "Suspensão oral",
+					"en-US": "Oral suspension",
+					"es-ES": "Suspensión oral",
+					"fr-FR": "Suspension orale"
+				}
+			}
+		},
+		{
+			"key": "pharmaceuticalForm.palatableTablet",
+			"parentKey": "pharmaceuticalForm",
+			"order": 38,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Comprimido palatável",
+					"pt-PT": "Comprimido palatável",
+					"gn-PY": "Comprimido palatável",
+					"en-US": "Palatable tablet",
+					"es-ES": "Comprimido palatable",
+					"fr-FR": "Comprimé appétent"
+				}
+			}
+		},
+		{
+			"key": "pharmaceuticalForm.pourOn",
+			"parentKey": "pharmaceuticalForm",
+			"order": 39,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Pour-on",
+					"pt-PT": "Pour-on",
+					"gn-PY": "Pour-on",
+					"en-US": "Pour-on",
+					"es-ES": "Pour-on",
+					"fr-FR": "Pour-on"
+				}
+			}
+		},
+		{
+			"key": "pharmaceuticalForm.powder",
+			"parentKey": "pharmaceuticalForm",
+			"order": 40,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Pó, grânulos ou sachês",
+					"pt-PT": "Pó, grânulos ou saquetas",
+					"gn-PY": "Pó, grânulos ou sachês",
+					"en-US": "Powder, granules or sachets",
+					"es-ES": "Polvo, gránulos o sobres",
+					"fr-FR": "Poudre, granulés ou sachets"
+				}
+			}
+		},
+		{
+			"key": "pharmaceuticalForm.shampoo",
+			"parentKey": "pharmaceuticalForm",
+			"order": 41,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Shampoo",
+					"pt-PT": "Champô",
+					"gn-PY": "Shampoo",
+					"en-US": "Shampoo",
+					"es-ES": "Champú",
+					"fr-FR": "Shampooing"
+				}
+			}
+		},
+		{
+			"key": "pharmaceuticalForm.soapOrBar",
+			"parentKey": "pharmaceuticalForm",
+			"order": 42,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Sabonete ou barra",
+					"pt-PT": "Sabonete ou barra",
+					"gn-PY": "Sabonete ou barra",
+					"en-US": "Soap or bar",
+					"es-ES": "Jabón o barra",
+					"fr-FR": "Savon ou pain"
+				}
+			}
+		},
+		{
+			"key": "pharmaceuticalForm.solution",
+			"parentKey": "pharmaceuticalForm",
+			"order": 43,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Solução de uso geral",
+					"pt-PT": "Solução de uso geral",
+					"gn-PY": "Solução de uso geral",
+					"en-US": "General-use solution",
+					"es-ES": "Solución de uso general",
+					"fr-FR": "Solution à usage général"
+				}
+			}
+		},
+		{
+			"key": "pharmaceuticalForm.spotOn",
+			"parentKey": "pharmaceuticalForm",
+			"order": 44,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Spot-on",
+					"pt-PT": "Spot-on",
+					"gn-PY": "Spot-on",
+					"en-US": "Spot-on",
+					"es-ES": "Spot-on",
+					"fr-FR": "Spot-on"
+				}
+			}
+		},
+		{
+			"key": "pharmaceuticalForm.tablet",
+			"parentKey": "pharmaceuticalForm",
+			"order": 45,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Comprimido",
+					"pt-PT": "Comprimido",
+					"gn-PY": "Comprimido",
+					"en-US": "Tablet",
+					"es-ES": "Comprimido",
+					"fr-FR": "Comprimé"
+				}
+			}
+		},
+		{
+			"key": "presentationDosage",
+			"parentKey": null,
+			"order": 46,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Apresentação/Dosagem",
+					"pt-PT": "Apresentação/Dosagem",
+					"gn-PY": "Apresentação/Dosagem",
+					"en-US": "Presentation/Dosage",
+					"es-ES": "Presentación/Dosificación",
+					"fr-FR": "Présentation/Dosage"
+				}
+			}
+		},
+		{
+			"key": "regulatoryIdentifiers",
+			"parentKey": null,
+			"order": 47,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Identificadores regulatórios",
+					"pt-PT": "Identificadores regulamentares",
+					"gn-PY": "Identificadores regulatórios",
+					"en-US": "Regulatory identifiers",
+					"es-ES": "Identificadores regulatorios",
+					"fr-FR": "Identifiants réglementaires"
+				}
+			}
+		},
+		{
+			"key": "targetSpecies",
+			"parentKey": null,
+			"order": 48,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Espécie-alvo",
+					"pt-PT": "Espécie-alvo",
+					"gn-PY": "Espécie-alvo",
+					"en-US": "Target species",
+					"es-ES": "Especie objetivo",
+					"fr-FR": "Espèce cible"
+				}
+			}
+		},
+		{
+			"key": "targetSpeciesWarnings",
+			"parentKey": null,
+			"order": 49,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Alertas por espécie",
+					"pt-PT": "Alertas por espécie",
+					"gn-PY": "Alertas por espécie",
+					"en-US": "Species warnings",
+					"es-ES": "Alertas por especie",
+					"fr-FR": "Alertes par espèce"
+				}
+			}
+		},
+		{
+			"key": "therapeuticAction",
+			"parentKey": null,
+			"order": 50,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Ação terapêutica",
+					"pt-PT": "Ação terapêutica",
+					"gn-PY": "Ação terapêutica",
+					"en-US": "Therapeutic action",
+					"es-ES": "Acción terapéutica",
+					"fr-FR": "Action thérapeutique"
+				}
+			}
+		},
+		{
+			"key": "therapeuticAction.control",
+			"parentKey": "therapeuticAction",
+			"order": 51,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Controle",
+					"pt-PT": "Controlo",
+					"gn-PY": "Controle",
+					"en-US": "Control",
+					"es-ES": "Control",
+					"fr-FR": "Contrôle"
+				}
+			}
+		},
+		{
+			"key": "therapeuticAction.curative",
+			"parentKey": "therapeuticAction",
+			"order": 52,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Curativa",
+					"pt-PT": "Curativa",
+					"gn-PY": "Curativa",
+					"en-US": "Curative",
+					"es-ES": "Curativa",
+					"fr-FR": "Curative"
+				}
+			}
+		},
+		{
+			"key": "therapeuticAction.palliative",
+			"parentKey": "therapeuticAction",
+			"order": 53,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Paliativa",
+					"pt-PT": "Paliativa",
+					"gn-PY": "Paliativa",
+					"en-US": "Palliative",
+					"es-ES": "Paliativa",
+					"fr-FR": "Palliative"
+				}
+			}
+		},
+		{
+			"key": "therapeuticAction.prophylactic",
+			"parentKey": "therapeuticAction",
+			"order": 54,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "Profilática",
+					"pt-PT": "Profilática",
+					"gn-PY": "Profilática",
+					"en-US": "Prophylactic",
+					"es-ES": "Profiláctica",
+					"fr-FR": "Prophylactique"
+				}
+			}
+		},
+		{
+			"key": "unitedStatesAnada",
+			"parentKey": null,
+			"order": 55,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "ANADA (FDA)",
+					"pt-PT": "ANADA (FDA)",
+					"gn-PY": "ANADA (FDA)",
+					"en-US": "ANADA (FDA)",
+					"es-ES": "ANADA (FDA)",
+					"fr-FR": "ANADA (FDA)"
+				}
+			}
+		},
+		{
+			"key": "unitedStatesNada",
+			"parentKey": null,
+			"order": 56,
+			"localizedContent": {
+				"label": {
+					"pt-BR": "NADA (FDA)",
+					"pt-PT": "NADA (FDA)",
+					"gn-PY": "NADA (FDA)",
+					"en-US": "NADA (FDA)",
+					"es-ES": "NADA (FDA)",
+					"fr-FR": "NADA (FDA)"
+				}
+			}
+		}
+	]
+}

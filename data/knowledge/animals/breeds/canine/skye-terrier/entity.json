@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "skye-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"scotland"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			16,
+			18
+		],
+		"female": [
+			12,
+			16
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			24,
+			26
+		],
+		"female": [
+			23,
+			25
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Skye Terrier",
+			"pt-PT": "Skye Terrier",
+			"gn-PY": "Skye Terrier",
+			"en-US": "Skye Terrier",
+			"es-ES": "Skye Terrier",
+			"fr-FR": "Skye Terrier"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

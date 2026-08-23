@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "welsh-springer-spaniel",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"wales"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			18,
+			25
+		],
+		"female": [
+			16,
+			23
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			48
+		],
+		"female": [
+			43,
+			46
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Welsh Springer Spaniel",
+			"pt-PT": "Welsh Springer Spaniel",
+			"gn-PY": "Welsh Springer Spaniel",
+			"en-US": "Welsh Springer Spaniel",
+			"es-ES": "Welsh Springer Spaniel",
+			"fr-FR": "Springer Spaniel gallois"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

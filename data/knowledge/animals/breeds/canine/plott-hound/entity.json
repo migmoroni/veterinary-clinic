@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "plott-hound",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			23,
+			27
+		],
+		"female": [
+			18,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			51,
+			64
+		],
+		"female": [
+			51,
+			58
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Plott Hound",
+			"pt-PT": "Plott Hound",
+			"gn-PY": "Plott Hound",
+			"en-US": "Plott Hound",
+			"es-ES": "Plott Hound",
+			"fr-FR": "Plott Hound"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

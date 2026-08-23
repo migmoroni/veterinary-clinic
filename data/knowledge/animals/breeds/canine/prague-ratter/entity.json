@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "prague-ratter",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"cz"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			2,
+			3.5
+		],
+		"female": [
+			1.8,
+			3
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			20,
+			23
+		],
+		"female": [
+			19,
+			22
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Ratonero de Praga",
+			"pt-PT": "Ratonero de Praga",
+			"gn-PY": "Ratonero de Praga",
+			"en-US": "Prague Ratter",
+			"es-ES": "Ratonero de Praga",
+			"fr-FR": "Ratier de Prague"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

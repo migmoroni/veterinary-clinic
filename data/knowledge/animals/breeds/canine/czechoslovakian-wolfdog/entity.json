@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "czechoslovakian-wolfdog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"cz"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			26,
+			32
+		],
+		"female": [
+			20,
+			26
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			65,
+			70
+		],
+		"female": [
+			60,
+			65
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cão-lobo Checoslovaco",
+			"pt-PT": "Cão-lobo Checoslovaco",
+			"gn-PY": "Perro lobo checoslovaco",
+			"en-US": "Czechoslovakian Wolfdog",
+			"es-ES": "Perro lobo checoslovaco",
+			"fr-FR": "Chien-loup tchécoslovaque"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

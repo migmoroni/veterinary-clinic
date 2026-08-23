@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "highlander",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			5,
+			9
+		],
+		"female": [
+			4,
+			7
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			26,
+			35
+		],
+		"female": [
+			24,
+			32
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Highlander",
+			"pt-PT": "Highlander",
+			"gn-PY": "Highlander",
+			"en-US": "Highlander",
+			"es-ES": "Highlander",
+			"fr-FR": "Highlander"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

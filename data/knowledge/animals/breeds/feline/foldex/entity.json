@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "foldex",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"ca"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			3.5,
+			6
+		],
+		"female": [
+			2.5,
+			5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			22,
+			28
+		],
+		"female": [
+			20,
+			26
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Foldex",
+			"pt-PT": "Foldex",
+			"gn-PY": "Foldex",
+			"en-US": "Foldex",
+			"es-ES": "Foldex",
+			"fr-FR": "Foldex"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

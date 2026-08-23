@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "bo",
+	"placeType": "country",
+	"countryCodes": [
+		"BO"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": -16.3,
+		"longitude": -63.6
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Bolívia",
+			"pt-PT": "Bolívia",
+			"gn-PY": "Bolivia",
+			"en-US": "Bolivia",
+			"es-ES": "Bolivia",
+			"fr-FR": "Bolivie"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

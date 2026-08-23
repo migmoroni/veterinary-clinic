@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "bullmastiff",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"england"
+	],
+	"sizeTermKey": "giant",
+	"averageWeightKg": {
+		"male": [
+			50,
+			59
+		],
+		"female": [
+			41,
+			50
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			64,
+			69
+		],
+		"female": [
+			61,
+			66
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Bullmastiff",
+			"pt-PT": "Bullmastiff",
+			"gn-PY": "Bullmastiff",
+			"en-US": "Bullmastiff",
+			"es-ES": "Bullmastiff",
+			"fr-FR": "Bullmastiff"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

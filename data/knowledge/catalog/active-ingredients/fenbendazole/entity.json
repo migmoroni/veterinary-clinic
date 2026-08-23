@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"entityType": "active_ingredient",
+	"id": "e552d865-eb96-40f6-835c-5ced63404da3",
+	"typeTermKey": "antiInfective.antiparasitic.benzimidazoles",
+	"classificationTermKeys": [],
+	"regions": [],
+	"nomenclature": {
+		"scientificName": null,
+		"casNumber": null,
+		"denominationStandards": []
+	},
+	"atcVetCode": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Fenbendazol",
+			"pt-PT": "Fenbendazol",
+			"gn-PY": "Fenbendazol",
+			"en-US": "Fenbendazole",
+			"es-ES": "Fenbendazol",
+			"fr-FR": "Fenbendazole"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

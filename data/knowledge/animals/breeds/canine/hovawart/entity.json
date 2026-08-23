@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "hovawart",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"de"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			30,
+			40
+		],
+		"female": [
+			25,
+			35
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			63,
+			70
+		],
+		"female": [
+			58,
+			65
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Hovawart",
+			"pt-PT": "Hovawart",
+			"gn-PY": "Hovawart",
+			"en-US": "Hovawart",
+			"es-ES": "Hovawart",
+			"fr-FR": "Hovawart"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "giant-schnauzer",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"de"
+	],
+	"sizeTermKey": "giant",
+	"averageWeightKg": {
+		"male": [
+			34,
+			48
+		],
+		"female": [
+			27,
+			38
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			65,
+			70
+		],
+		"female": [
+			60,
+			65
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Schnauzer Gigante",
+			"pt-PT": "Schnauzer Gigante",
+			"gn-PY": "Schnauzer gigante",
+			"en-US": "Giant Schnauzer",
+			"es-ES": "Schnauzer gigante",
+			"fr-FR": "Schnauzer géant"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

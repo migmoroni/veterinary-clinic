@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "basset-hound",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"fr"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			23,
+			29
+		],
+		"female": [
+			18,
+			25
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			30,
+			38
+		],
+		"female": [
+			28,
+			36
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Basset Hound",
+			"pt-PT": "Basset Hound",
+			"gn-PY": "Basset Hound",
+			"en-US": "Basset Hound",
+			"es-ES": "Basset Hound",
+			"fr-FR": "Basset Hound"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

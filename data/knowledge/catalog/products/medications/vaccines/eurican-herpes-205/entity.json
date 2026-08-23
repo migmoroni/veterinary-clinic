@@ -1,0 +1,46 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "4e091d82-2480-4d8e-812e-0ea2693a268d",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Eurican Herpes 205",
+			"pt-PT": "Eurican Herpes 205",
+			"gn-PY": "Eurican Herpes 205",
+			"en-US": "Eurican Herpes 205",
+			"es-ES": "Eurican Herpes 205",
+			"fr-FR": "Eurican Herpes 205"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [],
+	"targetTermKeys": [
+		"pathogen.canineHerpesvirus"
+	]
+}

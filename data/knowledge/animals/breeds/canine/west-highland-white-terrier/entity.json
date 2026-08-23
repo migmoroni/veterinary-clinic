@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "west-highland-white-terrier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"scotland"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			7,
+			10
+		],
+		"female": [
+			6,
+			9
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			26,
+			28
+		],
+		"female": [
+			25,
+			27
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "West Highland White Terrier",
+			"pt-PT": "West Highland White Terrier",
+			"gn-PY": "West Highland White Terrier",
+			"en-US": "West Highland White Terrier",
+			"es-ES": "West Highland White Terrier",
+			"fr-FR": "West Highland White Terrier"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

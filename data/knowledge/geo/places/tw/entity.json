@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "tw",
+	"placeType": "country",
+	"countryCodes": [
+		"TW"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 23.7,
+		"longitude": 121
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Taiwan",
+			"pt-PT": "Taiwan",
+			"gn-PY": "Taiwan",
+			"en-US": "Taiwan",
+			"es-ES": "Taiwán",
+			"fr-FR": "Taïwan"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

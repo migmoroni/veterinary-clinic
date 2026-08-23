@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "boerboel",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"za"
+	],
+	"sizeTermKey": "giant",
+	"averageWeightKg": {
+		"male": [
+			60,
+			90
+		],
+		"female": [
+			50,
+			75
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			60,
+			70
+		],
+		"female": [
+			55,
+			65
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Boerboel",
+			"pt-PT": "Boerboel",
+			"gn-PY": "Boerboel",
+			"en-US": "Boerboel",
+			"es-ES": "Boerboel",
+			"fr-FR": "Boerboel"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

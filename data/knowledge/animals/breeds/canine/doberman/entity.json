@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "doberman",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"de"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			40,
+			45
+		],
+		"female": [
+			32,
+			35
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			68,
+			72
+		],
+		"female": [
+			63,
+			68
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Doberman",
+			"pt-PT": "Doberman",
+			"gn-PY": "Doberman",
+			"en-US": "Doberman",
+			"es-ES": "Doberman",
+			"fr-FR": "Dobermann"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

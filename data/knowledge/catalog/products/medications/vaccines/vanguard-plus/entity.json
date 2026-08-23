@@ -1,0 +1,47 @@
+{
+	"schemaVersion": 1,
+	"entityType": "product",
+	"id": "a25157b1-925c-4f61-aa2f-c3c3db3213de",
+	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
+	"classificationTermKeys": [
+		"origin.biological",
+		"therapeuticAction.prophylactic"
+	],
+	"species": [
+		"canine"
+	],
+	"regions": [
+		"BRA"
+	],
+	"manufacturerId": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
+	"activeIngredientIds": [],
+	"regulatoryIdentifiers": {
+		"brazilMapa": null,
+		"unitedStatesNada": null,
+		"unitedStatesAnada": null,
+		"gtinEan": null
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Vanguard Plus",
+			"pt-PT": "Vanguard Plus",
+			"gn-PY": "Vanguard Plus",
+			"en-US": "Vanguard Plus",
+			"es-ES": "Vanguard Plus",
+			"fr-FR": "Vanguard Plus"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": [],
+	"vaccineProfileTermKeys": [
+		"canine.v10",
+		"canine.multivalent"
+	]
+}

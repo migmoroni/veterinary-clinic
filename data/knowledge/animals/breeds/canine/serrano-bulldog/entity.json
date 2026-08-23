@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "serrano-bulldog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"br"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			28,
+			40
+		],
+		"female": [
+			25,
+			35
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			48,
+			58
+		],
+		"female": [
+			45,
+			55
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Buldogue Serrano",
+			"pt-PT": "Buldogue Serrano",
+			"gn-PY": "Bulldog serrano",
+			"en-US": "Serrano Bulldog",
+			"es-ES": "Bulldog serrano",
+			"fr-FR": "Bouledogue Serrano"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

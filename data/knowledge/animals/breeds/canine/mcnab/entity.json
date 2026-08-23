@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "mcnab",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			16,
+			29
+		],
+		"female": [
+			14,
+			23
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			46,
+			64
+		],
+		"female": [
+			41,
+			53
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "McNab",
+			"pt-PT": "McNab",
+			"gn-PY": "McNab",
+			"en-US": "McNab",
+			"es-ES": "McNab",
+			"fr-FR": "McNab"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

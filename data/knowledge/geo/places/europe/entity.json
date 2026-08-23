@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "europe",
+	"placeType": "region",
+	"countryCodes": [],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 50,
+		"longitude": 10
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Europa",
+			"pt-PT": "Europa",
+			"gn-PY": "Europa",
+			"en-US": "Europe",
+			"es-ES": "Europa",
+			"fr-FR": "Europe"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

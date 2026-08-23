@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "havana-brown",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"england"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			3.5,
+			5.5
+		],
+		"female": [
+			2.5,
+			4.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			22,
+			27
+		],
+		"female": [
+			20,
+			25
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Havana Brown",
+			"pt-PT": "Havana Brown",
+			"gn-PY": "Havana Brown",
+			"en-US": "Havana Brown",
+			"es-ES": "Havana Brown",
+			"fr-FR": "Havana Brown"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "japanese-chin",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"jp"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			1.8,
+			5
+		],
+		"female": [
+			1.8,
+			4.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			20,
+			27
+		],
+		"female": [
+			20,
+			25
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Chin Japonês",
+			"pt-PT": "Chin Japonês",
+			"gn-PY": "Chin japonés",
+			"en-US": "Japanese Chin",
+			"es-ES": "Chin japonés",
+			"fr-FR": "Épagneul japonais (Chin)"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

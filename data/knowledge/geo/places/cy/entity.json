@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "cy",
+	"placeType": "country",
+	"countryCodes": [
+		"CY"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 35.1,
+		"longitude": 33.4
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Chipre",
+			"pt-PT": "Chipre",
+			"gn-PY": "Cyprus",
+			"en-US": "Cyprus",
+			"es-ES": "Chipre",
+			"fr-FR": "Chypre"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

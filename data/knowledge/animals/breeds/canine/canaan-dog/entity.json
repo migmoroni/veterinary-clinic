@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "canaan-dog",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"il"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			18,
+			25
+		],
+		"female": [
+			15,
+			22
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			50,
+			60
+		],
+		"female": [
+			45,
+			55
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cão de Canaã",
+			"pt-PT": "Cão de Canaã",
+			"gn-PY": "Perro de Canaán",
+			"en-US": "Canaan Dog",
+			"es-ES": "Perro de Canaán",
+			"fr-FR": "Chien de Canaan"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

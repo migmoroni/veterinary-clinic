@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "estonian-hound",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"ee"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			15,
+			20
+		],
+		"female": [
+			13,
+			18
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			45,
+			52
+		],
+		"female": [
+			42,
+			49
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Sabujo Estoniano",
+			"pt-PT": "Sabujo Estoniano",
+			"gn-PY": "Sabueso estonio",
+			"en-US": "Estonian Hound",
+			"es-ES": "Sabueso estonio",
+			"fr-FR": "Chien courant estonien"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "english-springer-spaniel",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"england"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			20,
+			25
+		],
+		"female": [
+			18,
+			23
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			48,
+			56
+		],
+		"female": [
+			46,
+			53
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Springer Spaniel Inglês",
+			"pt-PT": "Springer Spaniel inglês",
+			"gn-PY": "Springer Spaniel inglés",
+			"en-US": "English Springer Spaniel",
+			"es-ES": "Springer Spaniel inglés",
+			"fr-FR": "Springer Spaniel anglais"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "za",
+	"placeType": "country",
+	"countryCodes": [
+		"ZA"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": -30.6,
+		"longitude": 22.9
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "África do Sul",
+			"pt-PT": "África do Sul",
+			"gn-PY": "South Africa",
+			"en-US": "South Africa",
+			"es-ES": "Sudáfrica",
+			"fr-FR": "Afrique du Sud"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

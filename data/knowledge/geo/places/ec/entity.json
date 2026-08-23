@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "ec",
+	"placeType": "country",
+	"countryCodes": [
+		"EC"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": -1.8,
+		"longitude": -78.2
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Equador",
+			"pt-PT": "Equador",
+			"gn-PY": "Ecuador",
+			"en-US": "Ecuador",
+			"es-ES": "Ecuador",
+			"fr-FR": "Équateur"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

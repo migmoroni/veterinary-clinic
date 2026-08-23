@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "wales",
+	"placeType": "region",
+	"countryCodes": [],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 52.2,
+		"longitude": -3.8
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "País de Gales",
+			"pt-PT": "País de Gales",
+			"gn-PY": "Gales",
+			"en-US": "Wales",
+			"es-ES": "Gales",
+			"fr-FR": "Pays de Galles"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

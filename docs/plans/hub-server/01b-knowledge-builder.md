@@ -13,17 +13,46 @@ componentes, desenvolvimento ou builds dos apps. A integração pertence à
 
 ## Pré-requisito
 
-A [Parte 1A](./01a-canonical-knowledge-data.md) está concluída, com
-`data/knowledge/` completo e auditado quanto à cobertura e à paridade com as
-fontes inventariadas.
+A [Parte 1A](./01a-canonical-knowledge-data.md), a
+[Parte 1A.1](./01a1-localized-json-consolidation.md) e a
+[Parte 1A.2](./01a2-semantic-product-relations.md) estão concluídas, com
+`data/knowledge/` organizado segundo o contrato JSON dos valores localizados
+simples, das referências taxonômicas, das relações semânticas de produtos e dos
+documentos editoriais consolidados por locale.
+
+## Fonte Única De Conteúdo
+
+`data/knowledge/` é a única entrada de conteúdo do builder. Entidades, relações,
+textos, traduções, taxonomias e mídias são descobertos e validados exclusivamente
+a partir desse diretório.
+
+O builder:
+
+- não lê dados de catálogo, raças, protocolos, traduções ou aliases mantidos em
+  `apps/` ou `packages/`;
+- não compara `data/knowledge/` com fontes TypeScript, arquivos de i18n, seeds ou
+  defaults do programa;
+- não completa campos, entidades, relações ou locales a partir de outra fonte;
+- não exige IDs, termos, quantidades de entidades, contagens de relações ou
+  valores pertencentes ao conjunto de conteúdo presente durante a preparação;
+- valida schema, tipos, locales, referências, integridade relacional, Markdown,
+  caminhos e mídias de qualquer conjunto que cumpra o contrato canônico;
+- calcula inventários, contagens e relatórios como resultados da entrada
+  recebida, sem tratá-los como uma segunda fonte de verdade.
+
+O conteúdo presente em `data/knowledge/` pode ser ampliado, corrigido ou
+substituído sem alteração do builder enquanto conservar o mesmo contrato de
+autoria. Código existente no workspace serve somente como referência das
+garantias técnicas de DDL, SQLite, CAS e consumo que precisam ser preservadas;
+seus valores de domínio não participam da validação.
 
 ## Gate Inicial De Validação
 
-A primeira entrega executável desta parte implementa os schemas de fonte, o
-parser Markdown, a allowlist e o comando `validate`. Antes de iniciar DDL,
-projectors ou geração de artefatos, esse gate valida integralmente
-`data/knowledge` e produz diagnóstico por arquivo, entidade, campo, seção e
-locale.
+A primeira entrega executável desta parte implementa os schemas de fonte, a
+resolução taxonômica, o parser Markdown de seções, a allowlist e o comando
+`validate`. Antes de iniciar DDL, projectors ou geração de artefatos, esse gate
+valida integralmente `data/knowledge` e produz diagnóstico por arquivo, entidade,
+campo, seção e locale.
 
 Nenhuma build começa enquanto houver erro de schema, AST, relação, locale,
 caminho ou mídia. As correções são feitas na fonte canônica; não existe
@@ -34,8 +63,9 @@ normalização tolerante, fallback de conteúdo ou ferramenta provisória parale
 - criar `tools/knowledge-builder/` como binário e biblioteca Rust no Cargo
   Workspace;
 - implementar schemas executáveis para todos os `entityType` canônicos;
-- validar manifestos JSON, Markdown, relações, taxonomias e mídias;
-- analisar Markdown por AST e compilar fragmentos localizados;
+- validar manifestos JSON, mapas localizados, Markdown, relações, taxonomias e
+  mídias;
+- analisar por AST somente o Markdown das seções editoriais;
 - projetar conteúdo localizado diretamente nos bancos de cada locale;
 - criar e versionar o DDL de `system` e `system_media` no builder;
 - gerar seis bancos `system` completos;
@@ -85,8 +115,9 @@ packages/engine/src/storage/cas.rs
 O levantamento identifica DDL, constraints, índices, normalização, projeção de
 catálogos, composição de coleções de mídia, geração de thumbnails, SHA-256 e
 disposição física do CAS. Os schemas preservam as garantias válidas desse
-processo e aplicam o contrato canônico de `entity.json`, fragmentos Markdown,
-locales e caminhos relativos definido na Parte 1A.
+processo e aplicam o contrato canônico de `entity.json`, `localizedContent`,
+referências taxonômicas, seções Markdown, locales e caminhos relativos definido
+nas Partes 1A, 1A.1 e 1A.2.
 
 A referência de comportamento está dividida por responsabilidade: `core-local`
 descreve e preenche `system`, enquanto o Rust cria `system_media`, calcula hashes
@@ -95,8 +126,10 @@ compilação offline própria e produz sua saída em `build/knowledge-artifacts`
 
 `knowledge-builder` implementa esse processo dentro do próprio crate. Ele não
 importa código TypeScript, não invoca comandos Tauri, não abre IPC com o app e não
-usa `@vet/engine` como serviço de geração. A paridade é comprovada por fixtures,
-inventário de tabelas, campos, relações e resultados semânticos.
+usa `@vet/engine` como serviço de geração. A equivalência técnica é comprovada
+por fixtures do builder e pelo inventário de tabelas, campos, constraints,
+relações e resultados projetados a partir da própria entrada canônica. Ela não
+compara conteúdo com dados mantidos em outro ponto do workspace.
 
 Essa transferência contempla somente `system`, `system_media` e `CAS/system`.
 Schemas, migrations, escrita de mídia, sincronização, replicação e CAS do ramo
@@ -106,7 +139,9 @@ Schemas, migrations, escrita de mídia, sincronização, replicação e CAS do r
 
 ```mermaid
 flowchart LR
-    DATA["entity.json + Markdown + mídias"] --> PATHS["Resolver caminhos<br/>editoriais"]
+    DATA["entity.json + Markdown por locale + mídias"] --> JSON["Validar localizedContent<br/>e chaves taxonômicas"]
+    JSON --> TAXONOMY["Resolver taxonomias<br/>e relações"]
+    TAXONOMY --> PATHS["Resolver caminhos<br/>editoriais"]
     PATHS --> PARSE["Parser Markdown<br/>por AST"]
     PARSE --> ALLOWLIST["Validar allowlist"]
     ALLOWLIST --> NORMALIZE["Normalizar AST"]
@@ -124,10 +159,12 @@ flowchart LR
 O pipeline normativo é:
 
 ```text
-entity.json + Markdown + mídias
+entity.json + documentos Markdown por locale + mídias
 -> validação estrutural do entity.json
+-> validação dos mapas de localizedContent por locale
+-> resolução das chaves taxonômicas completas
 -> resolução segura dos caminhos editoriais
--> parser Markdown por AST
+-> parser Markdown das seções por AST
 -> validação por allowlist
 -> normalização determinística do AST
 -> resolução das mídias para mediaKey e contentHash
@@ -184,31 +221,47 @@ O carregamento segue esta ordem lógica:
 ```text
 entityType
 -> id
--> campo localizado ou sectionKey
--> locale
+-> campo localizado ou locale editorial
+-> sectionNumber
+-> sectionKey
 ```
 
 O builder:
 
 - seleciona o schema por `entityType`;
 - desserializa `entity.json` de forma estrita;
-- resolve os caminhos de `localizedContent`, `sections` e mídias em relação ao
-  diretório da entidade;
-- lê os arquivos `<locale>.md` declarados pelo manifesto;
+- valida cada campo de `localizedContent` como mapa tipado com exatamente os seis
+  locales;
+- resolve `typeTermKey`, `classificationTermKeys`, `sizeTermKey`,
+  `targetTermKeys`, `vaccineProfileTermKeys`, `lifeStageTermKeys`,
+  `therapeuticScopeTermKeys` e outras referências taxonômicas admitidas pelo
+  schema;
+- resolve `activeIngredientIds` exclusivamente como relações com entidades
+  `active_ingredient`;
+- resolve o `contentPath` único e os caminhos de mídia em relação ao diretório da
+  entidade;
+- lê um arquivo `<locale>.md` por entidade com conteúdo editorial;
 - analisa Markdown por parser estruturado, sem expressões regulares sobre o
   texto-fonte;
-- valida campos simples, listas e seções conforme o schema do domínio e a
-  allowlist Markdown;
+- separa as seções somente pelos headings AST de nível `#` iniciados por
+  `# <sectionNumber>`;
+- associa cada `sectionNumber` à `sectionKey` declarada no manifesto;
+- descarta o heading delimitador inteiro, incluindo qualquer texto editorial
+  opcional depois do número;
+- valida as seções Markdown conforme o schema do domínio e a allowlist;
+- valida nomes, aliases, labels, denominações e demais valores simples diretamente
+  nos mapas JSON, sem encaminhá-los ao parser Markdown;
 - normaliza deterministicamente os ASTs aceitos;
 - resolve as mídias e converte estrutura, AST normalizado e descritores de mídia
   em um modelo semântico canônico Rust;
 - seleciona um projector registrado para o tipo canônico;
 - recusa identidade duplicada;
-- recusa arquivo localizado ausente, duplicado ou desconhecido;
+- recusa documento localizado ausente, duplicado ou desconhecido;
+- recusa seção ausente, adicional, repetida, descontínua ou fora de ordem;
 - resolve referências por IDs;
 - não infere significado pelo nome dos diretórios;
-- produz o mesmo conteúdo lógico quando uma entidade ou um diretório de texto é
-  movido com o manifesto atualizado e sem mudança de conteúdo ou identidade;
+- produz o mesmo conteúdo lógico quando uma entidade ou seu diretório editorial
+  é movido com o manifesto atualizado e sem mudança de conteúdo ou identidade;
 - trata o caminho relativo da mídia dentro da entidade como parte de sua
   referência editorial estável.
 
@@ -226,10 +279,11 @@ ele:
 6. reescreve imagens relativas para `knowledge-media://asset/<media-key>`;
 7. serializa o AST aceito em Markdown canônico determinístico.
 
-Campos simples são projetados como valores tipados, aliases como coleções
-tipadas e corpos de seção como Markdown canônico compilado. A saída não contém
-HTML bruto, caminhos editoriais, imagens remotas ou URI com protocolo não
-permitido. A ordem semântica de parágrafos, listas, tabelas e seções é preservada.
+Valores de `localizedContent` são projetados diretamente como escalares ou
+coleções tipadas. Corpos de seção são projetados como Markdown canônico
+compilado. A saída não contém HTML bruto, caminhos editoriais, imagens remotas ou
+URI com protocolo não permitido. A ordem semântica de parágrafos, listas,
+tabelas e seções é preservada.
 
 O renderer não precisa interpretar a fonte de autoria. O perfil da representação
 compilada integra o contrato do schema de `system`; qualquer ampliação que exija
@@ -238,11 +292,13 @@ suporte novo no consumidor eleva essa versão.
 ## Padrão De Projeção Relacional
 
 O builder segue uma arquitetura schema-first com Data Mappers explícitos. O DDL
-é a fonte de verdade da estrutura SQL; `entity.json`, os fragmentos Markdown e
-as mídias são a fonte de verdade do conteúdo de domínio.
+é a fonte de verdade da estrutura SQL; `entity.json`, as seções Markdown e as
+mídias são a fonte de verdade do conteúdo de domínio. Valores simples vêm
+exclusivamente de `localizedContent`; conceitos compartilhados vêm dos termos
+referenciados por chave.
 
 ```text
-entity.json + Markdown + mídias
+entity.json + documentos Markdown por locale + mídias
 -> validação e compilação canônica da fonte
 -> modelo canônico Rust
 -> projector do entityType
@@ -271,7 +327,7 @@ modelo e projector correspondentes. Cada projector:
 - recebe uma entidade canônica e o conteúdo compilado do locale selecionado;
 - grava em uma transação;
 - pode preencher uma ou várias tabelas;
-- resolve relações somente por IDs;
+- resolve relações de entidades por IDs e vocabulários por chaves taxonômicas;
 - registra entidades e relações consumidas;
 - falha diante de dado sem destino relacional;
 - não infere comportamento pelo caminho da fonte.
@@ -281,6 +337,151 @@ as tabelas de aliases, relações com `geo_place`, coleções de mídia e seu do
 de conteúdo localizado. O projector geográfico materializa lugares, hierarquias
 e seus textos localizados. Essas decisões pertencem aos projectors e ao DDL, não
 aos diretórios nem aos JSONs de autoria.
+
+O projector de produto materializa `product_active_ingredients` com uma linha
+ordenada por substância e foreign keys para as entidades farmacológicas. Alvos,
+perfis vacinais, estágios de vida e escopos terapêuticos possuem tabelas próprias
+de termos e tabelas N:N próprias. Essa separação torna impossível referenciar um
+termo de outra taxonomia por uma foreign key válida. A projeção não transforma
+esses vínculos em aliases nem serializa relações usadas por busca e filtros
+dentro de `content_json`.
+
+### DDL Dos Vocabulários De Produto
+
+Cada banco `system` contém os termos já localizados para seu locale. As quatro
+taxonomias usam tabelas distintas, sem tabela genérica EAV:
+
+```sql
+CREATE TABLE product_target_terms (
+    term_key TEXT PRIMARY KEY CHECK(length(trim(term_key)) > 0),
+    parent_term_key TEXT,
+    label TEXT NOT NULL CHECK(length(trim(label)) > 0),
+    normalized_label TEXT NOT NULL CHECK(length(trim(normalized_label)) > 0),
+    aliases_json TEXT NOT NULL DEFAULT '[]'
+        CHECK(CASE WHEN json_valid(aliases_json)
+              THEN json_type(aliases_json) = 'array' ELSE 0 END),
+    sort_order INTEGER NOT NULL CHECK(sort_order >= 0),
+    FOREIGN KEY (parent_term_key) REFERENCES product_target_terms(term_key),
+    UNIQUE(sort_order)
+);
+
+CREATE TABLE product_vaccine_profile_terms (
+    term_key TEXT PRIMARY KEY CHECK(length(trim(term_key)) > 0),
+    parent_term_key TEXT,
+    label TEXT NOT NULL CHECK(length(trim(label)) > 0),
+    normalized_label TEXT NOT NULL CHECK(length(trim(normalized_label)) > 0),
+    aliases_json TEXT NOT NULL DEFAULT '[]'
+        CHECK(CASE WHEN json_valid(aliases_json)
+              THEN json_type(aliases_json) = 'array' ELSE 0 END),
+    sort_order INTEGER NOT NULL CHECK(sort_order >= 0),
+    FOREIGN KEY (parent_term_key)
+        REFERENCES product_vaccine_profile_terms(term_key),
+    UNIQUE(sort_order)
+);
+
+CREATE TABLE product_life_stage_terms (
+    term_key TEXT PRIMARY KEY CHECK(length(trim(term_key)) > 0),
+    parent_term_key TEXT,
+    label TEXT NOT NULL CHECK(length(trim(label)) > 0),
+    normalized_label TEXT NOT NULL CHECK(length(trim(normalized_label)) > 0),
+    aliases_json TEXT NOT NULL DEFAULT '[]'
+        CHECK(CASE WHEN json_valid(aliases_json)
+              THEN json_type(aliases_json) = 'array' ELSE 0 END),
+    sort_order INTEGER NOT NULL CHECK(sort_order >= 0),
+    FOREIGN KEY (parent_term_key) REFERENCES product_life_stage_terms(term_key),
+    UNIQUE(sort_order)
+);
+
+CREATE TABLE product_therapeutic_scope_terms (
+    term_key TEXT PRIMARY KEY CHECK(length(trim(term_key)) > 0),
+    parent_term_key TEXT,
+    label TEXT NOT NULL CHECK(length(trim(label)) > 0),
+    normalized_label TEXT NOT NULL CHECK(length(trim(normalized_label)) > 0),
+    aliases_json TEXT NOT NULL DEFAULT '[]'
+        CHECK(CASE WHEN json_valid(aliases_json)
+              THEN json_type(aliases_json) = 'array' ELSE 0 END),
+    sort_order INTEGER NOT NULL CHECK(sort_order >= 0),
+    FOREIGN KEY (parent_term_key)
+        REFERENCES product_therapeutic_scope_terms(term_key),
+    UNIQUE(sort_order)
+);
+```
+
+`term_key`, `parent_term_key` e `sort_order` são estruturais e idênticos nos seis
+bancos. `label`, `normalized_label` e `aliases_json` são projetados para o locale
+do banco. O builder valida a hierarquia interna de cada taxonomia antes dos
+inserts e insere pais antes de filhos.
+
+### DDL Das Relações De Produto
+
+Os quatro arrays do manifesto são projetados em tabelas N:N diferentes. A chave
+primária impede termos repetidos e `UNIQUE(product_id, sort_order)` preserva uma
+ordem determinística por produto:
+
+```sql
+CREATE TABLE product_targets (
+    product_id TEXT NOT NULL,
+    term_key TEXT NOT NULL,
+    sort_order INTEGER NOT NULL CHECK(sort_order >= 0),
+    PRIMARY KEY (product_id, term_key),
+    UNIQUE (product_id, sort_order),
+    FOREIGN KEY (product_id) REFERENCES product_catalog_items(id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (term_key) REFERENCES product_target_terms(term_key)
+        ON DELETE RESTRICT
+);
+
+CREATE TABLE product_vaccine_profiles (
+    product_id TEXT NOT NULL,
+    term_key TEXT NOT NULL,
+    sort_order INTEGER NOT NULL CHECK(sort_order >= 0),
+    PRIMARY KEY (product_id, term_key),
+    UNIQUE (product_id, sort_order),
+    FOREIGN KEY (product_id) REFERENCES product_catalog_items(id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (term_key) REFERENCES product_vaccine_profile_terms(term_key)
+        ON DELETE RESTRICT
+);
+
+CREATE TABLE product_life_stages (
+    product_id TEXT NOT NULL,
+    term_key TEXT NOT NULL,
+    sort_order INTEGER NOT NULL CHECK(sort_order >= 0),
+    PRIMARY KEY (product_id, term_key),
+    UNIQUE (product_id, sort_order),
+    FOREIGN KEY (product_id) REFERENCES product_catalog_items(id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (term_key) REFERENCES product_life_stage_terms(term_key)
+        ON DELETE RESTRICT
+);
+
+CREATE TABLE product_therapeutic_scopes (
+    product_id TEXT NOT NULL,
+    term_key TEXT NOT NULL,
+    sort_order INTEGER NOT NULL CHECK(sort_order >= 0),
+    PRIMARY KEY (product_id, term_key),
+    UNIQUE (product_id, sort_order),
+    FOREIGN KEY (product_id) REFERENCES product_catalog_items(id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (term_key) REFERENCES product_therapeutic_scope_terms(term_key)
+        ON DELETE RESTRICT
+);
+
+CREATE INDEX idx_product_targets_term_key
+    ON product_targets(term_key, product_id);
+CREATE INDEX idx_product_vaccine_profiles_term_key
+    ON product_vaccine_profiles(term_key, product_id);
+CREATE INDEX idx_product_life_stages_term_key
+    ON product_life_stages(term_key, product_id);
+CREATE INDEX idx_product_therapeutic_scopes_term_key
+    ON product_therapeutic_scopes(term_key, product_id);
+```
+
+`targetTermKeys`, `vaccineProfileTermKeys`, `lifeStageTermKeys` e
+`therapeuticScopeTermKeys` alimentam, respectivamente, `product_targets`,
+`product_vaccine_profiles`, `product_life_stages` e
+`product_therapeutic_scopes`. Nenhum projector escolhe a tabela pelo conteúdo da
+chave; o campo tipado do modelo canônico determina a relação de destino.
 
 Não existe regra “um JSON corresponde a uma tabela”. Também não se usa uma
 tabela genérica EAV para evitar a modelagem do domínio. Dados consultáveis,
@@ -299,25 +500,23 @@ Markdown já normalizado:
   "schemaVersion": 1,
   "sections": [
     {
-      "sectionKey": "composition",
-      "compiledMarkdown": "Conteúdo compilado da seção.",
-      "children": [
-        {
-          "sectionKey": "active_ingredients",
-          "compiledMarkdown": "Conteúdo compilado da subseção.",
-          "children": []
-        }
-      ]
+      "sectionKey": "about",
+      "compiledMarkdown": "Conteúdo compilado da seção."
+    },
+    {
+      "sectionKey": "presentations",
+      "compiledMarkdown": "Conteúdo compilado da seção."
     }
   ]
 }
 ```
 
-A ordem dos arrays é a ordem canônica de apresentação. O documento não armazena
-`sortOrder`, `parentSectionKey`, IDs técnicos de seção, caminhos editoriais ou
-ASTs. `parentSectionKey` serve à validação e à compilação da fonte; no resultado,
-a posição em `children` representa a hierarquia. Quando o schema permitir uma
-seção estrutural sem corpo, `compiledMarkdown` usa a string canônica vazia.
+A ordem do array `sections` é a ordem canônica de apresentação. O documento não
+armazena `sectionNumber`, texto editorial do heading delimitador, `sortOrder`,
+IDs técnicos de seção, caminhos editoriais ou ASTs. As seções são sempre planas;
+headings de `##` a `######` preservados em `compiledMarkdown` estruturam somente
+o conteúdo interno. Quando o schema permitir uma seção sem corpo,
+`compiledMarkdown` usa a string canônica vazia.
 
 Cada tabela principal de entidade que possui conteúdo editorial oferece uma
 coluna equivalente a:
@@ -330,11 +529,11 @@ Entidades sem seções usam o documento válido
 `{"schemaVersion":1,"sections":[]}` quando o contrato do domínio exigir a
 coluna. Não são criadas tabelas ou linhas independentes para seções.
 
-O builder valida chaves permitidas e únicas, pais, ciclos, profundidade, ordem,
-perfil Markdown e referências de mídia antes de montar a árvore. Em seguida,
-serializa o documento deterministicamente em UTF-8. Alterar a forma desse
-documento eleva sua `schemaVersion` e, quando exigir comportamento novo do
-consumidor, também a versão do schema `system`.
+O builder valida chaves permitidas e únicas, números contíguos, ordem, perfil
+Markdown e referências de mídia antes de montar a lista. Em seguida, serializa o
+documento deterministicamente em UTF-8. Alterar a forma desse documento eleva
+sua `schemaVersion` e, quando exigir comportamento novo do consumidor, também a
+versão do schema `system`.
 
 Campos usados por relações, filtros, ordenação ou busca permanecem em colunas,
 tabelas ou índices próprios. Quando um domínio precisar pesquisar o corpo das
@@ -350,11 +549,17 @@ As projeções armazenam, conforme o domínio:
 
 - `name` localizado;
 - aliases do locale;
-- descrição localizada e `content_json` com a árvore de seções do locale;
+- descrição localizada e `content_json` com a lista ordenada de seções do locale;
 - rótulos localizados de taxonomias e classificações;
 - nomes e observações localizados de protocolos;
 - campos normalizados usados por busca;
 - campos estruturais e relações idênticos entre locales.
+
+Os campos pesquisáveis derivados podem combinar o nome e os aliases próprios da
+entidade com labels e aliases dos termos taxonômicos referenciados e, quando o
+schema permitir, com nomes de entidades relacionadas. Essa expansão ocorre na
+projeção localizada e registra sua proveniência; os aliases autorais da entidade
+não recebem cópias desses valores compartilhados.
 
 Não existem colunas ou payloads `label_key`, `translation_key` ou equivalentes
 para conteúdo de conhecimento. IDs técnicos, códigos científicos, códigos
@@ -486,8 +691,8 @@ mídia do usuário.
 
 Cada `system_media` contém somente as `media_key` exigidas pelo locale. Capas e
 outras referências estruturais aparecem em todos os bancos aplicáveis; imagens
-referenciadas por um fragmento Markdown aparecem nos locales que usam esse
-fragmento. Na mesma build, uma `media_key` resolve obrigatoriamente para o mesmo
+referenciadas por um trecho Markdown aparecem nos locales que usam esse trecho.
+Na mesma build, uma `media_key` resolve obrigatoriamente para o mesmo
 `contentHash` em todos os bancos que a incluem.
 
 Durante a compilação, links relativos de Markdown são reescritos para o contrato
@@ -707,8 +912,8 @@ Uma saída somente é válida quando:
 - cada identidade de origem foi consumida exatamente uma vez por locale pelo
   projector do seu tipo;
 - todas as relações foram resolvidas em cada locale;
-- cada fragmento Markdown declarado foi consumido exatamente uma vez no locale
-  correspondente;
+- cada campo de `localizedContent`, documento Markdown e seção delimitada foram
+  consumidos exatamente uma vez no locale correspondente;
 - as contagens por entidade e por tabela são coerentes;
 - `unconsumedEntities`, `unconsumedLocalizedFragments`, `unresolvedRelations`,
   `missingSourcePaths` e `unreferencedSourcePaths` estão vazios;
@@ -794,16 +999,17 @@ O digest cobre:
 - campos estruturais e relações do `entity.json`, após validação e conversão para
   o modelo tipado;
 - campos e seções localizados, identificados por chave semântica e locale;
+- chaves taxonômicas resolvidas e conteúdo dos termos efetivamente projetados;
 - conteúdo lógico dos ASTs Markdown normalizados;
 - fingerprints canônicos dos schemas de autoria efetivamente usados;
 - `mediaKey`, `contentHash` e metadados de mídia com significado no resultado.
 
 O digest não usa os bytes do JSON ou Markdown original. `contentPath`, nomes dos
 diretórios de conteúdo, caminhos absolutos, posição organizacional da entidade,
-BOM, estilo de quebra de linha e diferenças sintáticas eliminadas pela
-normalização não entram na identidade. O caminho relativo normalizado da mídia
-participa por meio da `mediaKey`, e seus bytes participam por meio de
-`contentHash`.
+BOM, estilo de quebra de linha, rótulos editoriais opcionais dos headings e
+diferenças sintáticas eliminadas pela normalização não entram na identidade. O
+caminho relativo normalizado da mídia participa por meio da `mediaKey`, e seus
+bytes participam por meio de `contentHash`.
 
 A serialização usada pelo digest é versionada pelo contrato do builder e
 determinística: UTF-8 NFC, chaves de mapas em ordem lexicográfica, conjuntos sem
@@ -851,18 +1057,26 @@ O builder recusa:
 - locale ausente, duplicado ou desconhecido;
 - caminho de conteúdo ausente, absoluto, remoto ou que escape da entidade;
 - front matter em arquivo Markdown;
-- AST incompatível com o campo localizado declarado;
+- documento editorial com conteúdo antes da primeira seção;
+- heading de nível `#` que não comece por `# <sectionNumber>`;
+- `sectionNumber` ausente, repetido, descontínuo, fora de ordem ou sem
+  `sectionKey` correspondente;
+- seção declarada ausente ou seção adicional em qualquer locale;
+- AST incompatível com a seção declarada;
 - HTML bruto, nó fora da allowlist ou AST acima dos limites definidos;
 - link com protocolo não permitido ou imagem que não use mídia relativa da
   própria entidade;
 - `sectionKey` desconhecida ou repetida;
-- `parentSectionKey` inexistente, proibida ou cíclica;
 - conteúdo localizado sem associação no `entity.json`;
 - `labelKey` ou `translationKey` em conteúdo de conhecimento;
 - ID técnico criado somente para mídia ou projeção na fonte canônica;
 - hash, base64, caminho físico de CAS ou outro detalhe de materialização em JSON
   ou Markdown;
 - divergência estrutural entre locales;
+- campo de `localizedContent` contendo caminho, locale incompleto ou tipo
+  incompatível;
+- chave taxonômica inexistente, incompleta ou pertencente a outro domínio;
+- label taxonômico duplicado como conteúdo autoral da entidade;
 - caminho de mídia ausente, absoluto, remoto ou que resolva fora da entidade;
 - colisão de `media_key` entre referências editoriais distintas;
 - referência de JSON ou Markdown sem arquivo de mídia correspondente;
@@ -884,26 +1098,29 @@ relações, cobertura, hashes e relatórios.
 ## Sequência De Implementação
 
 1. Criar o crate e integrar ao Cargo Workspace.
-2. Implementar modelos estritos e schemas de `entity.json`.
+2. Implementar modelos estritos e schemas de `entity.json`, incluindo todos os
+   mapas de `localizedContent` e as referências taxonômicas.
 3. Implementar descoberta recursiva e ordenação lógica.
-4. Implementar parser Markdown, validação de AST e normalização de fragmentos.
-5. Implementar resolução segura de caminhos, validação de mídia, derivação de
+4. Implementar resolução taxonômica e composição dos valores pesquisáveis
+   derivados.
+5. Implementar parser Markdown, validação de AST e normalização das seções.
+6. Implementar resolução segura de caminhos, validação de mídia, derivação de
    `media_key` e o modelo semântico canônico da fonte.
-6. Entregar o subcomando `validate` com diagnósticos por arquivo, entidade, campo,
+7. Entregar o subcomando `validate` com diagnósticos por arquivo, entidade, campo,
    seção e locale.
-7. Executar o gate sobre todos os seis locales e corrigir integralmente os erros
+8. Executar o gate sobre todos os seis locales e corrigir integralmente os erros
    encontrados em `data/knowledge`.
-8. Definir DDL, constraints, índices e versões dos dois bancos, incluindo o
+9. Definir DDL, constraints, índices e versões dos dois bancos, incluindo o
    contrato canônico de `content_json`.
-9. Definir os modelos de projeção e o registro exaustivo de projectors.
-10. Implementar os Data Mappers e a projeção localizada.
-11. Implementar `knowledge_build_metadata` e os metadados opcionais de release.
-12. Implementar a auditoria de cobertura e os fingerprints dos schemas.
-13. Implementar `system_media`, thumbnails e o CAS incremental fragmentado.
-14. Implementar staging, checksums e finalização atômica.
-15. Entregar o subcomando `build`, `projection-report.json` e
+10. Definir os modelos de projeção e o registro exaustivo de projectors.
+11. Implementar os Data Mappers e a projeção localizada.
+12. Implementar `knowledge_build_metadata` e os metadados opcionais de release.
+13. Implementar a auditoria de cobertura e os fingerprints dos schemas.
+14. Implementar `system_media`, thumbnails e o CAS incremental fragmentado.
+15. Implementar staging, checksums e finalização atômica.
+16. Entregar o subcomando `build`, `projection-report.json` e
     `build-result.json`.
-16. Validar fixtures, determinismo, paridade semântica e os seis locales.
+17. Validar fixtures, determinismo, paridade semântica e os seis locales.
 
 ## Testes
 
@@ -914,15 +1131,50 @@ Cobrir:
 - execução a partir de diretórios de trabalho diferentes;
 - descoberta independente da árvore organizacional;
 - mesmo digest e mesma saída após mover uma entidade;
-- mesmo digest após renomear diretório de texto e atualizar seu caminho no
+- mesmo digest após renomear o diretório editorial e atualizar `contentPath` no
   manifesto;
 - seleção do projector exclusivamente por `entityType`;
 - enum canônico e dispatch exaustivos para todos os tipos suportados;
 - uma entidade projetada em múltiplas tabelas conforme o DDL;
 - recusa de entidade sem projector ou sem destino relacional;
-- combinação do manifesto com cada conjunto de fragmentos dos seis locales;
+- combinação do manifesto inline com o documento editorial de cada um dos seis
+  locales;
+- cobertura exata dos seis locales em todo campo de `localizedContent`;
+- recusa de locale ausente ou adicional, tipo incorreto, string obrigatória vazia
+  e item de lista duplicado no mesmo locale;
+- listas vazias representadas por `[]` sem leitura de arquivo correspondente;
+- projeção de todo conteúdo simples exclusivamente a partir de `entity.json`;
+- ausência de caminho de arquivo em `localizedContent` e ausência do diretório
+  `localized/`;
+- resolução de `typeTermKey`, `classificationTermKeys`, `sizeTermKey`,
+  `targetTermKeys`, `vaccineProfileTermKeys`, `lifeStageTermKeys` e
+  `therapeuticScopeTermKeys` por taxonomia e domínio;
+- recusa de chave parcial, inexistente ou pertencente a outra taxonomia;
+- projeção dos quatro vocabulários de produto em suas tabelas de termos
+  localizados;
+- projeção de `targetTermKeys`, `vaccineProfileTermKeys`, `lifeStageTermKeys` e
+  `therapeuticScopeTermKeys` nas quatro tabelas N:N correspondentes;
+- recusa por foreign key de termo pertencente a outro vocabulário;
+- unicidade de termo e de `sort_order` por produto em cada relação N:N;
+- ausência de caminhos taxonômicos e traduções de termos nas entidades;
+- separação entre aliases próprios, aliases de termos e nomes de relações;
+- composição pesquisável derivada usando entidades e termos relacionados sem
+  duplicação na fonte;
+- resolução de `activeIngredientIds` e projeção ordenada em
+  `product_active_ingredients`;
+- recusa de princípio ativo ausente, repetido ou com `entityType` incorreto;
+- busca de produto derivada dos nomes e aliases dos princípios ativos
+  relacionados;
+- ausência de qualquer chave ou termo `searchConcept.*` na entrada e na saída;
 - parser Markdown baseado em AST;
-- validação de texto simples, listas e seções pelo perfil canônico;
+- separação de seções por headings de nível `#` numerados;
+- associação exata de `sectionNumber` a `sectionKey`;
+- descarte do heading delimitador e de qualquer texto editorial opcional;
+- recusa de número ausente, repetido, descontínuo ou fora de ordem;
+- recusa de seção ausente ou adicional em qualquer locale;
+- recusa de conteúdo antes do primeiro heading delimitador;
+- headings de `##` a `######` preservados no corpo da seção corrente;
+- validação exclusiva das seções pelo perfil Markdown canônico;
 - recusa de HTML bruto, nós fora da allowlist, imagens remotas e protocolos
   `javascript:`, `data:`, `file:` ou desconhecidos;
 - limites de tamanho, profundidade e quantidade de nós do AST;
@@ -930,17 +1182,14 @@ Cobrir:
   semanticamente equivalentes;
 - mesma representação compilada e mesmo digest para fontes que resultem no mesmo
   AST semântico;
-- recusa de front matter e conteúdo incompatível com o campo declarado;
-- associação de diretório arbitrário à `sectionKey` definida no manifesto;
-- composição determinística da hierarquia de seções por `parentSectionKey`;
+- recusa de front matter e conteúdo incompatível com a seção declarada;
 - geração de um único `content_json` por entidade e locale;
-- serialização determinística de `schemaVersion`, `sections`, `sectionKey`,
-  `compiledMarkdown` e `children`;
-- preservação da ordem editorial nos arrays raiz e `children`;
-- ausência de `sortOrder`, `parentSectionKey`, IDs técnicos, caminhos editoriais
-  e ASTs no documento compilado;
-- recusa de `sectionKey` duplicada, pai inexistente e hierarquia cíclica ou acima
-  da profundidade permitida;
+- serialização determinística de `schemaVersion`, `sections`, `sectionKey` e
+  `compiledMarkdown`;
+- preservação da ordem editorial no array plano `sections`;
+- ausência de `sectionNumber`, `sortOrder`, texto editorial do delimitador, IDs
+  técnicos, caminhos editoriais e ASTs no documento compilado;
+- recusa de `sectionKey` duplicada;
 - `content_json` válido segundo o schema do documento e `json_valid` do SQLite;
 - normalização da hierarquia de subtítulos internos;
 - campos localizados corretos em cada banco;
@@ -974,7 +1223,8 @@ Cobrir:
 - fingerprint do schema igual entre bancos do mesmo tipo;
 - detecção de divergência entre projector e DDL;
 - relatório com cobertura integral de entidades e relações;
-- recusa de entidade, fragmento Markdown não consumido ou relação não resolvida;
+- recusa de entidade, valor JSON localizado, documento Markdown ou seção não
+  consumida e relação não resolvida;
 - validação do locale registrado em cada par;
 - SHA-256 dos bancos e objetos;
 - objeto CAS ausente ou corrompido;
@@ -994,8 +1244,8 @@ Cobrir:
 
 - `tools/knowledge-builder/`;
 - schemas de fonte, `system` e `system_media`;
-- fixtures e relatório de paridade com o processo de produção de sistema
-  inventariado na Parte 1A;
+- fixtures e relatório de cobertura integral da entrada, equivalência técnica
+  da projeção e integridade dos artefatos produzidos;
 - seis `veterinary_clinic_system.db`;
 - seis `veterinary_clinic_system_media.db`;
 - `CAS/system` único e incremental;
@@ -1009,20 +1259,37 @@ Cobrir:
 - O crate pertence ao Cargo Workspace e passa em build, lint e testes.
 - A CLI funciona sem Node, Rails, rede ou dependência do diretório de trabalho.
 - A única entrada de conteúdo é `data/knowledge`.
+- Nenhum dado em `apps/`, `packages/`, seeds, defaults ou arquivos de i18n é
+  consultado para validar, completar ou comparar o conteúdo canônico.
+- Inventários e relatórios são derivados da entrada e não impõem IDs, valores ou
+  contagens específicas ao conjunto de conhecimento.
 - A identidade da entidade e o digest não dependem de sua posição editorial nem
   do nome dos diretórios de texto. O caminho relativo da mídia dentro da entidade
   participa de sua `media_key`.
 - `entityType` seleciona um projector explícito, sem nomes de tabelas nos dados
   canônicos.
 - O DDL é a fonte de verdade da disposição relacional.
+- Cada entidade com seções fornece um documento Markdown por locale, delimitado
+  por headings numerados associados às `sectionKey` do manifesto.
 - As seções de cada entidade são armazenadas juntas em um `content_json`
-  canônico, versionado, ordenado e composto somente por Markdown compilado.
+  canônico, versionado e ordenado, com Markdown compilado em cada nó.
+- Títulos de seção não são compilados; a UI os resolve pelo i18n da
+  `sectionKey`.
 - Nenhuma tabela ou linha independente é criada para seções.
 - Toda entidade e relação possui cobertura comprovada no relatório de projeção.
 - Os seis pares de bancos são produzidos na mesma execução.
 - Cada par possui `knowledge_build_metadata` coerente e verificável mesmo sem
   identidade pública de release.
 - Cada banco contém nomes, aliases, descrições e termos do locale projetado.
+- Todo conteúdo simples é lido somente dos mapas tipados de `localizedContent` e
+  nunca passa pelo parser Markdown.
+- Labels e aliases taxonômicos vêm dos termos relacionados por chaves canônicas;
+  aliases próprios permanecem distintos dos valores derivados para busca.
+- Produtos e princípios ativos mantêm relações explícitas e navegáveis por ID;
+  composições não são representadas como classificações textuais.
+- Alvos, perfis vacinais, estágios de vida e escopos terapêuticos são projetados
+  por suas taxonomias proprietárias e relações N:N tipadas, sem conceitos
+  genéricos de busca no modelo canônico.
 - Nenhum banco exige i18n do app para resolver conteúdo de conhecimento.
 - IDs e relações estruturais são iguais nos seis locales.
 - Toda `media_key` compilada resolve em `system_media` para um hash com objeto

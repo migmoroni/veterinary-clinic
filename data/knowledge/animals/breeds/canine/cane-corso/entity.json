@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "cane-corso",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"it"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			45,
+			50
+		],
+		"female": [
+			40,
+			45
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			64,
+			68
+		],
+		"female": [
+			60,
+			64
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cane Corso",
+			"pt-PT": "Cane Corso",
+			"gn-PY": "Cane Corso",
+			"en-US": "Cane Corso",
+			"es-ES": "Cane Corso",
+			"fr-FR": "Cane Corso"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

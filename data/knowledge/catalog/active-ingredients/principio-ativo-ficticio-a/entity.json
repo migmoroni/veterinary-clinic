@@ -1,0 +1,104 @@
+{
+	"schemaVersion": 1,
+	"entityType": "active_ingredient",
+	"id": "b173a72a-5666-4df0-8ef9-3ed4fc5cae0f",
+	"typeTermKey": "antiInfective.antiparasitic.macrocyclicLactones",
+	"classificationTermKeys": [
+		"regulatory.brazil.prescriptionOnly",
+		"regulatory.unitedStates.prescriptionOnly",
+		"regulatory.europe.veterinaryPrescriptionOnly",
+		"veterinaryRestriction.prescriptionOnly"
+	],
+	"regions": [
+		"BRA",
+		"PRT"
+	],
+	"nomenclature": {
+		"scientificName": "Substantia ficticia alfa",
+		"casNumber": "1234-56-7",
+		"denominationStandards": [
+			"inn",
+			"dcb"
+		]
+	},
+	"atcVetCode": "QP54AA99",
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Princípio Ativo Fictício A",
+			"pt-PT": "Princípio Ativo Fictício A",
+			"gn-PY": "Princípio Ativo Fictício A",
+			"en-US": "Princípio Ativo Fictício A",
+			"es-ES": "Princípio Ativo Fictício A",
+			"fr-FR": "Princípio Ativo Fictício A"
+		},
+		"aliases": {
+			"pt-BR": [
+				"ativo ficticio a",
+				"lorem active a"
+			],
+			"pt-PT": [
+				"ativo ficticio a",
+				"lorem active a"
+			],
+			"gn-PY": [
+				"ativo ficticio a",
+				"lorem active a"
+			],
+			"en-US": [
+				"ativo ficticio a",
+				"lorem active a"
+			],
+			"es-ES": [
+				"ativo ficticio a",
+				"lorem active a"
+			],
+			"fr-FR": [
+				"ativo ficticio a",
+				"lorem active a"
+			]
+		},
+		"atcVetSystem": {
+			"pt-BR": "Antiparasitários, inseticidas e repelentes",
+			"pt-PT": "Antiparasitários, insecticidas e repelentes",
+			"gn-PY": "Antiparasitários, inseticidas e repelentes",
+			"en-US": "Antiparasitic products, insecticides and repellents",
+			"es-ES": "Antiparasitarios, insecticidas y repelentes",
+			"fr-FR": "Antiparasitaires, insecticides et répulsifs"
+		},
+		"denomination_inn": {
+			"pt-BR": "Fictioxamina",
+			"pt-PT": "Fictioxamina",
+			"gn-PY": "Fictioxamina",
+			"en-US": "Fictioxamine",
+			"es-ES": "Fictioxamina",
+			"fr-FR": "Fictioxamine"
+		},
+		"denomination_dcb": {
+			"pt-BR": "Fictioxamina",
+			"pt-PT": "Fictioxamina",
+			"gn-PY": "Fictioxamina",
+			"en-US": "Fictioxamina",
+			"es-ES": "Fictioxamina",
+			"fr-FR": "Fictioxamina"
+		}
+	},
+	"sections": [
+		{
+			"sectionKey": "about",
+			"sectionNumber": 1
+		},
+		{
+			"sectionKey": "uses",
+			"sectionNumber": 2
+		},
+		{
+			"sectionKey": "safety",
+			"sectionNumber": 3
+		},
+		{
+			"sectionKey": "references",
+			"sectionNumber": 4
+		}
+	],
+	"contentPath": "./content"
+}

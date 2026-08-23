@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "bolognese",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"it"
+	],
+	"sizeTermKey": "small",
+	"averageWeightKg": {
+		"male": [
+			2.5,
+			4
+		],
+		"female": [
+			2.5,
+			3.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			27,
+			30
+		],
+		"female": [
+			25,
+			28
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Bolognese",
+			"pt-PT": "Bolognese",
+			"gn-PY": "Bolognese",
+			"en-US": "Bolognese",
+			"es-ES": "Bolognese",
+			"fr-FR": "Bichon bolonais"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

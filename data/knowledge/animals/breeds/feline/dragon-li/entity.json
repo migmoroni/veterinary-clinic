@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "dragon-li",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"cn"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			4,
+			6
+		],
+		"female": [
+			3,
+			5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			23,
+			28
+		],
+		"female": [
+			21,
+			26
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Dragon Li",
+			"pt-PT": "Dragon Li",
+			"gn-PY": "Dragon Li",
+			"en-US": "Dragon Li",
+			"es-ES": "Dragon Li",
+			"fr-FR": "Dragon Li"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

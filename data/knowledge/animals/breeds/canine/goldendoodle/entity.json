@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "goldendoodle",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"us"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			15,
+			40
+		],
+		"female": [
+			14,
+			34
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			45,
+			66
+		],
+		"female": [
+			43,
+			61
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Goldendoodle",
+			"pt-PT": "Goldendoodle",
+			"gn-PY": "Goldendoodle",
+			"en-US": "Goldendoodle",
+			"es-ES": "Goldendoodle",
+			"fr-FR": "Goldendoodle"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "ca",
+	"placeType": "country",
+	"countryCodes": [
+		"CA"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 56.1,
+		"longitude": -106.3
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Canadá",
+			"pt-PT": "Canadá",
+			"gn-PY": "Canada",
+			"en-US": "Canada",
+			"es-ES": "Canadá",
+			"fr-FR": "Canada"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

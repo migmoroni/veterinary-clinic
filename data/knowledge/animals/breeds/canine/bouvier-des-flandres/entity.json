@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "bouvier-des-flandres",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"be"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			35,
+			54
+		],
+		"female": [
+			27,
+			45
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			62,
+			68
+		],
+		"female": [
+			59,
+			65
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Bouvier des Flandres",
+			"pt-PT": "Bouvier des Flandres",
+			"gn-PY": "Bouvier des Flandres",
+			"en-US": "Bouvier des Flandres",
+			"es-ES": "Bouvier des Flandres",
+			"fr-FR": "Bouvier des Flandres"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

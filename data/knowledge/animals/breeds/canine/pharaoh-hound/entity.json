@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "pharaoh-hound",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"mt"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			23,
+			25
+		],
+		"female": [
+			20,
+			23
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			56,
+			63
+		],
+		"female": [
+			53,
+			61
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Pharaoh Hound",
+			"pt-PT": "Pharaoh Hound",
+			"gn-PY": "Pharaoh Hound",
+			"en-US": "Pharaoh Hound",
+			"es-ES": "Pharaoh Hound",
+			"fr-FR": "Chien du Pharaon"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

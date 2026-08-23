@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"entityType": "active_ingredient",
+	"id": "43e22778-1801-4c2a-ad8d-434de9654eaa",
+	"typeTermKey": "antiInfective.antiparasitic.isoquinolones",
+	"classificationTermKeys": [],
+	"regions": [],
+	"nomenclature": {
+		"scientificName": null,
+		"casNumber": null,
+		"denominationStandards": []
+	},
+	"atcVetCode": null,
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Praziquantel",
+			"pt-PT": "Praziquantel",
+			"gn-PY": "Praziquantel",
+			"en-US": "Praziquantel",
+			"es-ES": "Praziquantel",
+			"fr-FR": "Praziquantel"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

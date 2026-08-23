@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "slovak-cuvac",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"sk"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			31,
+			44
+		],
+		"female": [
+			30,
+			37
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			62,
+			70
+		],
+		"female": [
+			59,
+			65
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Cuvac Eslovaco",
+			"pt-PT": "Cuvac Eslovaco",
+			"gn-PY": "Cuvac eslovaco",
+			"en-US": "Slovak Cuvac",
+			"es-ES": "Cuvac eslovaco",
+			"fr-FR": "Cuvac slovaque"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "azawakh",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"sahel"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			20,
+			25
+		],
+		"female": [
+			15,
+			20
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			64,
+			74
+		],
+		"female": [
+			60,
+			70
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Azawakh",
+			"pt-PT": "Azawakh",
+			"gn-PY": "Azawakh",
+			"en-US": "Azawakh",
+			"es-ES": "Azawakh",
+			"fr-FR": "Azawakh"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "norwegian-elkhound",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"no"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			22,
+			25
+		],
+		"female": [
+			18,
+			22
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			50,
+			52
+		],
+		"female": [
+			47,
+			50
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Elkhound Norueguês",
+			"pt-PT": "Elkhound Norueguês",
+			"gn-PY": "Elkhound noruego",
+			"en-US": "Norwegian Elkhound",
+			"es-ES": "Elkhound noruego",
+			"fr-FR": "Chien d'élan norvégien"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

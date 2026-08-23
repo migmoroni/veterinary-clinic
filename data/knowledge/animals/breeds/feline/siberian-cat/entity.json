@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "siberian-cat",
+	"species": [
+		"feline"
+	],
+	"originPlaceIds": [
+		"ru"
+	],
+	"sizeTermKey": "giant",
+	"averageWeightKg": {
+		"male": [
+			5,
+			9
+		],
+		"female": [
+			4,
+			6.5
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			28,
+			38
+		],
+		"female": [
+			26,
+			34
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Siberiano",
+			"pt-PT": "Siberiano",
+			"gn-PY": "Siberiano",
+			"en-US": "Siberian",
+			"es-ES": "Siberiano",
+			"fr-FR": "Sibérien"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "mx",
+	"placeType": "country",
+	"countryCodes": [
+		"MX"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 23.6,
+		"longitude": -102.6
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "México",
+			"pt-PT": "México",
+			"gn-PY": "Mexico",
+			"en-US": "Mexico",
+			"es-ES": "México",
+			"fr-FR": "Mexique"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

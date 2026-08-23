@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"entityType": "geo_place",
+	"id": "kr",
+	"placeType": "country",
+	"countryCodes": [
+		"KR"
+	],
+	"parentPlaceId": null,
+	"centroid": {
+		"latitude": 36.5,
+		"longitude": 127.9
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Coreia do Sul",
+			"pt-PT": "Coreia do Sul",
+			"gn-PY": "South Korea",
+			"en-US": "South Korea",
+			"es-ES": "Corea del Sur",
+			"fr-FR": "Corée du Sud"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	}
+}

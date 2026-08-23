@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "eurasier",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"de"
+	],
+	"sizeTermKey": "medium",
+	"averageWeightKg": {
+		"male": [
+			23,
+			32
+		],
+		"female": [
+			18,
+			26
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			52,
+			60
+		],
+		"female": [
+			48,
+			56
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Eurasier",
+			"pt-PT": "Eurasier",
+			"gn-PY": "Eurasier",
+			"en-US": "Eurasier",
+			"es-ES": "Eurasier",
+			"fr-FR": "Eurasier"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}

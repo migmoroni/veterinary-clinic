@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"entityType": "breed",
+	"id": "spinone-italiano",
+	"species": [
+		"canine"
+	],
+	"originPlaceIds": [
+		"it"
+	],
+	"sizeTermKey": "large",
+	"averageWeightKg": {
+		"male": [
+			34,
+			39
+		],
+		"female": [
+			29,
+			34
+		]
+	},
+	"averageHeightCm": {
+		"male": [
+			60,
+			70
+		],
+		"female": [
+			58,
+			65
+		]
+	},
+	"localizedContent": {
+		"name": {
+			"pt-BR": "Spinone Italiano",
+			"pt-PT": "Spinone Italiano",
+			"gn-PY": "Spinone Italiano",
+			"en-US": "Spinone Italiano",
+			"es-ES": "Spinone Italiano",
+			"fr-FR": "Spinone italien"
+		},
+		"aliases": {
+			"pt-BR": [],
+			"pt-PT": [],
+			"gn-PY": [],
+			"en-US": [],
+			"es-ES": [],
+			"fr-FR": []
+		}
+	},
+	"sections": []
+}
