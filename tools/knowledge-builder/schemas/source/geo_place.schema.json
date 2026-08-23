@@ -1,0 +1,5 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "title": "Canonical geographic place", "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "entityType", "id", "placeType", "countryCodes", "parentPlaceId", "centroid", "localizedContent"],
+  "properties": { "schemaVersion": { "const": 1 }, "entityType": { "const": "geo_place" }, "id": { "type": "string", "minLength": 1 }, "placeType": { "type": "string" }, "countryCodes": { "type": "array", "uniqueItems": true }, "parentPlaceId": { "type": ["string", "null"] }, "centroid": { "type": "object" }, "localizedContent": { "type": "object" } }
+}

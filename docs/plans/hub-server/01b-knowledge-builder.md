@@ -1308,4 +1308,4 @@ Cobrir:
 ## Próxima Parte
 
 Após cumprir todos os critérios, seguir para a
-[Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md).
+[Parte 1B.1: consolidação dos contratos do `knowledge-builder`](./01b1-knowledge-builder-contract-consolidation.md).

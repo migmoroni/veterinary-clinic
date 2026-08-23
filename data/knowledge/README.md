@@ -301,5 +301,15 @@ pesquisável, caminhos, mídias, IDs e contagens do
 [`inventory.json`](./inventory.json). Use `--write-report` para atualizar
 `audit-report.json`; a execução padrão é somente leitura.
 
-A auditoria não gera bancos, CAS ou integração de runtime. Essas tarefas
-pertencem às partes seguintes do plano.
+A auditoria não gera bancos nem CAS. A validação executável e a compilação
+offline pertencem ao crate `tools/knowledge-builder`:
+
+```bash
+pnpm knowledge:validate
+pnpm knowledge:build
+```
+
+Uma build válida projeta os seis locales, gera os doze bancos em
+`build/knowledge-artifacts`, verifica integridade e foreign keys e finaliza
+checksums, relatório de cobertura e `build-result.json`. A integração desses
+artefatos no runtime permanece fora deste contrato.

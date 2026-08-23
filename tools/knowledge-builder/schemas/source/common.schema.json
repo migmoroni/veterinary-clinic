@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "localizedText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pt-BR", "pt-PT", "gn-PY", "en-US", "es-ES", "fr-FR"],
+      "properties": {
+        "pt-BR": { "type": "string", "minLength": 1 },
+        "pt-PT": { "type": "string", "minLength": 1 },
+        "gn-PY": { "type": "string", "minLength": 1 },
+        "en-US": { "type": "string", "minLength": 1 },
+        "es-ES": { "type": "string", "minLength": 1 },
+        "fr-FR": { "type": "string", "minLength": 1 }
+      }
+    },
+    "localizedList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pt-BR", "pt-PT", "gn-PY", "en-US", "es-ES", "fr-FR"],
+      "properties": {
+        "pt-BR": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "pt-PT": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "gn-PY": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "en-US": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "es-ES": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "fr-FR": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sectionKey", "sectionNumber"],
+      "properties": {
+        "sectionKey": { "type": "string", "minLength": 1 },
+        "sectionNumber": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

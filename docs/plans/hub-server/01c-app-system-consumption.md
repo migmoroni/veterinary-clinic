@@ -21,8 +21,9 @@ saída preparada.
 
 ## Pré-requisito
 
-A [Parte 1B](./01b-knowledge-builder.md) está concluída e gera uma
-`build_version` válida com os seis pares de bancos e o CAS compartilhado.
+A [Parte 1B.1](./01b1-knowledge-builder-contract-consolidation.md) está concluída
+e gera uma `build_version` válida com os seis pares de bancos, o CAS
+compartilhado e a auditoria integral da projeção.
 
 ## Escopo
 

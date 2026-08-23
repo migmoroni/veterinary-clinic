@@ -17,6 +17,8 @@
 		"test": "pnpm --filter vet-app run test",
 		"test:run": "pnpm --filter vet-app run test:run",
 		"knowledge:audit": "node scripts/audit-knowledge.mjs",
+		"knowledge:validate": "cargo run -p knowledge-builder -- validate --source data/knowledge",
+		"knowledge:build": "cargo run -p knowledge-builder -- build --source data/knowledge --output build/knowledge-artifacts --context tools/knowledge-builder/fixtures/local-context.json",
 		"adopt:version": "pnpm --filter @vet/legacy-to-sqlite run adopt:version",
 		"version:bump": "node scripts/bump-version/index.mjs",
 		"tauri": "pnpm --filter vet-app run tauri",
