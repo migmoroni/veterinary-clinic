@@ -21,6 +21,7 @@ pub struct ReleaseContext {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct DatabaseArtifact {
     pub path: String,
     #[serde(rename = "sizeBytes")]
@@ -32,6 +33,7 @@ pub struct DatabaseArtifact {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct LocaleArtifacts {
     pub system: DatabaseArtifact,
     #[serde(rename = "systemMedia")]
@@ -41,6 +43,7 @@ pub struct LocaleArtifacts {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct CasResult {
     pub algorithm: String,
     #[serde(rename = "hashEncoding")]
@@ -56,6 +59,7 @@ pub struct CasResult {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct ProjectionResult {
     #[serde(rename = "reportPath")]
     pub report_path: String,
@@ -64,6 +68,7 @@ pub struct ProjectionResult {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct BuildResult {
     #[serde(rename = "schemaVersion")]
     pub schema_version: u32,
@@ -85,16 +90,26 @@ pub struct BuildResult {
     pub checksum_file: String,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct ProjectionReport {
     #[serde(rename = "schemaVersion")]
     pub schema_version: u32,
+    #[serde(rename = "sourceDigestSha256")]
+    pub source_digest_sha256: String,
+    #[serde(rename = "buildVersion")]
+    pub build_version: u64,
+    #[serde(rename = "systemSchemaVersion")]
+    pub system_schema_version: u32,
+    #[serde(rename = "systemMediaSchemaVersion")]
+    pub system_media_schema_version: u32,
     pub source: ProjectionSource,
     pub locales: BTreeMap<String, LocaleProjection>,
     pub media: MediaProjection,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct ProjectionSource {
     #[serde(rename = "entitiesByType")]
     pub entities_by_type: BTreeMap<String, usize>,
@@ -106,30 +121,37 @@ pub struct ProjectionSource {
     pub source_files: usize,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct LocaleProjection {
     #[serde(rename = "projectedByType")]
     pub projected_by_type: BTreeMap<String, TypeProjection>,
+    #[serde(rename = "rowsByDatabase")]
+    pub rows_by_database: BTreeMap<String, BTreeMap<String, usize>>,
+    #[serde(rename = "expectedObligationCount")]
+    pub expected_obligation_count: usize,
+    #[serde(rename = "completedObligationCount")]
+    pub completed_obligation_count: usize,
+    #[serde(rename = "rowEventCount")]
+    pub row_event_count: usize,
     #[serde(rename = "resolvedRelationCount")]
     pub resolved_relation_count: usize,
     #[serde(rename = "consumedLocalizedFragments")]
     pub consumed_localized_fragments: usize,
-    #[serde(rename = "unconsumedEntities")]
-    pub unconsumed_entities: Vec<String>,
-    #[serde(rename = "unconsumedLocalizedFragments")]
-    pub unconsumed_localized_fragments: Vec<String>,
-    #[serde(rename = "unresolvedRelations")]
-    pub unresolved_relations: Vec<String>,
+    #[serde(rename = "evidenceDigestSha256")]
+    pub evidence_digest_sha256: String,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct TypeProjection {
     pub entities: usize,
     #[serde(rename = "rowsByTable")]
     pub rows_by_table: BTreeMap<String, usize>,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct MediaProjection {
     #[serde(rename = "sourceFiles")]
     pub source_files: usize,
@@ -137,10 +159,6 @@ pub struct MediaProjection {
     pub referenced_media_keys: usize,
     #[serde(rename = "uniqueContentHashes")]
     pub unique_content_hashes: usize,
-    #[serde(rename = "missingSourcePaths")]
-    pub missing_source_paths: Vec<String>,
-    #[serde(rename = "unreferencedSourcePaths")]
-    pub unreferenced_source_paths: Vec<String>,
 }
 
 pub fn read_context(path: &Path) -> Result<BuildContext, String> {

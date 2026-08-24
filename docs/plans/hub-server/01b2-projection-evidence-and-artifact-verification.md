@@ -671,4 +671,4 @@ do avanço para a seguinte.
 ## Próxima Parte
 
 Após cumprir todos os critérios, seguir para a
-[Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md).
+[Parte 1B.3: evidência explícita e equivalência semântica](./01b3-explicit-evidence-and-semantic-equivalence.md).

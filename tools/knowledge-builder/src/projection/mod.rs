@@ -1,6 +1,10 @@
 use crate::{
+    artifact_verifier::ArtifactVerifier,
     databases::{self, DatabaseKind, SYSTEM_MEDIA_SCHEMA_VERSION, SYSTEM_SCHEMA_VERSION},
-    ledger::{CompletedLedger, ConsumptionDestination, ProjectionLedger},
+    ledger::{
+        search_candidates, CompletedLedger, EntityIdentity, ProjectionJournal, ProjectionLedger,
+        ProjectionTarget, SystemTable,
+    },
     markdown::CompiledDocument,
     media::{cas_relative_path, decode_hex, sha256_hex},
     normalization::{normalize_identity_key, normalize_search_text},
@@ -22,7 +26,6 @@ use std::{
     io::Write,
     path::{Path, PathBuf},
 };
-
 type RowsByType = BTreeMap<String, BTreeMap<String, usize>>;
 
 pub fn build_artifacts(
@@ -85,7 +88,6 @@ fn build_in_staging(
 ) -> Result<BuildResult, String> {
     let source_digest = decode_hex(&source.source_digest_sha256)?;
     let mut locale_artifacts = BTreeMap::new();
-    let mut locale_rows = BTreeMap::new();
     let mut locale_ledgers = BTreeMap::new();
     let mut checksum_entries = BTreeMap::new();
     let mut system_fingerprint = None;
@@ -93,7 +95,7 @@ fn build_in_staging(
     let mut all_cas_hashes = BTreeSet::new();
 
     for locale in LOCALES {
-        let mut ledger = ProjectionLedger::expected(source, locale)?;
+        let mut ledger = ProjectionLedger::expected(source, locale, context.release.is_some())?;
         let locale_directory = staging_version.join("locales").join(locale.as_str());
         fs::create_dir_all(&locale_directory)
             .map_err(|error| format!("cannot create locale directory {locale}: {error}"))?;
@@ -102,9 +104,8 @@ fn build_in_staging(
 
         let mut system = databases::create(&system_path, DatabaseKind::System)?;
         databases::insert_metadata(&system, context, locale, &source_digest)?;
-        let rows = project_system(&mut system, source, locale)?;
-        ledger.consume_destination(ConsumptionDestination::System)?;
-        ledger.consume_destination(ConsumptionDestination::CompiledContent)?;
+        publish_metadata_evidence(&system, &mut ledger, context, locale, DatabaseKind::System)?;
+        project_system(&mut system, source, locale, &mut ledger)?;
         let current_system_fingerprint = databases::finalize(system, &system_path)?;
         assert_shared_fingerprint(
             &mut system_fingerprint,
@@ -115,9 +116,14 @@ fn build_in_staging(
 
         let mut system_media = databases::create(&system_media_path, DatabaseKind::SystemMedia)?;
         databases::insert_metadata(&system_media, context, locale, &source_digest)?;
-        ledger.consume_destination(ConsumptionDestination::BuildMetadata)?;
-        let locale_hashes = project_system_media(&mut system_media, source, locale)?;
-        ledger.consume_destination(ConsumptionDestination::SystemMedia)?;
+        publish_metadata_evidence(
+            &system_media,
+            &mut ledger,
+            context,
+            locale,
+            DatabaseKind::SystemMedia,
+        )?;
+        let locale_hashes = project_system_media(&mut system_media, source, locale, &mut ledger)?;
         let current_media_fingerprint = databases::finalize(system_media, &system_media_path)?;
         assert_shared_fingerprint(
             &mut media_fingerprint,
@@ -157,14 +163,33 @@ fn build_in_staging(
                 cas_set_digest_sha256: locale_cas_digest,
             },
         );
-        locale_rows.insert(locale, rows);
         locale_ledgers.insert(locale, ledger);
     }
 
     stage_cas_objects(source, staging_cas, &all_cas_hashes)?;
     let mut completed_ledgers = BTreeMap::new();
     for (locale, mut ledger) in locale_ledgers {
-        ledger.consume_destination(ConsumptionDestination::Cas)?;
+        let mut journal = ledger.journal();
+        let locale_hashes = source
+            .media_keys_by_locale
+            .get(&locale)
+            .into_iter()
+            .flatten()
+            .map(|key| {
+                source
+                    .media
+                    .get(key)
+                    .map(|asset| asset.content_hash_sha256.clone())
+                    .ok_or_else(|| format!("media key has no source asset: {key}"))
+            })
+            .collect::<Result<BTreeSet<_>, _>>()?;
+        for content_hash in locale_hashes {
+            journal.record_target(ProjectionTarget::CasObject {
+                locale,
+                content_hash,
+            });
+        }
+        ledger.commit(journal)?;
         completed_ledgers.insert(locale, ledger.finish()?);
     }
     for hash in &all_cas_hashes {
@@ -175,7 +200,7 @@ fn build_in_staging(
         checksum_entries.insert(relative, hash.clone());
     }
 
-    let projection_report = projection_report(source, &locale_rows, &completed_ledgers);
+    let projection_report = projection_report(source, context, &completed_ledgers);
     schemas::validate_projection_report(&projection_report)?;
     let projection_path = staging_version.join("projection-report.json");
     let projection_bytes = report::write_json(&projection_path, &projection_report)?;
@@ -217,7 +242,7 @@ fn build_in_staging(
     };
     schemas::validate_build_result(&result)?;
     report::write_json(&staging_version.join("build-result.json"), &result)?;
-    verify_staging(staging_version, staging_cas, &result)?;
+    ArtifactVerifier::new(source, context, staging_version, staging_cas, &result).verify()?;
     Ok(result)
 }
 
@@ -225,24 +250,64 @@ fn project_system(
     connection: &mut Connection,
     source: &ValidatedSource,
     locale: KnowledgeLocale,
-) -> Result<RowsByType, String> {
+    ledger: &mut ProjectionLedger,
+) -> Result<(), String> {
     let transaction = connection
         .transaction()
         .map_err(|error| format!("cannot begin system projection: {error}"))?;
     let mut rows = initial_rows_by_type(source);
-    project_taxonomies(&transaction, source, locale, &mut rows)?;
-    project_geo_places(&transaction, source, locale, &mut rows)?;
-    project_named_entities(&transaction, source, locale, &mut rows)?;
-    project_breeds(&transaction, source, locale, &mut rows)?;
-    project_products(&transaction, source, locale, &mut rows)?;
-    project_protocols(&transaction, source, locale, &mut rows)?;
-    project_entity_media_references(&transaction, source, &mut rows)?;
-    project_search(&transaction, source, locale, &mut rows)?;
+    let mut journal = ledger.journal();
+    project_taxonomies(&transaction, source, locale, &mut rows, &mut journal)?;
+    project_geo_places(&transaction, source, locale, &mut rows, &mut journal)?;
+    project_named_entities(&transaction, source, locale, &mut rows, &mut journal)?;
+    project_breeds(&transaction, source, locale, &mut rows, &mut journal)?;
+    project_products(&transaction, source, locale, &mut rows, &mut journal)?;
+    project_protocols(&transaction, source, locale, &mut rows, &mut journal)?;
+    project_entity_media_references(&transaction, source, &mut rows, &mut journal)?;
+    project_search(&transaction, source, locale, &mut rows, &mut journal)?;
     transaction
         .commit()
         .map_err(|error| format!("cannot commit system projection: {error}"))?;
     verify_rows_by_table(connection, &rows)?;
-    Ok(rows)
+    ledger.commit(journal)?;
+    Ok(())
+}
+
+fn publish_metadata_evidence(
+    connection: &Connection,
+    ledger: &mut ProjectionLedger,
+    context: &BuildContext,
+    locale: KnowledgeLocale,
+    database: DatabaseKind,
+) -> Result<(), String> {
+    let build_rows: usize = connection
+        .query_row("SELECT COUNT(*) FROM knowledge_build_metadata", [], |row| {
+            row.get(0)
+        })
+        .map_err(|error| format!("cannot verify build metadata cardinality: {error}"))?;
+    if build_rows != 1 {
+        return Err(format!(
+            "knowledge_build_metadata has {build_rows} rows instead of 1"
+        ));
+    }
+    let release_rows: usize = connection
+        .query_row(
+            "SELECT COUNT(*) FROM knowledge_release_metadata",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|error| format!("cannot verify release metadata cardinality: {error}"))?;
+    if release_rows != usize::from(context.release.is_some()) {
+        return Err(
+            "knowledge_release_metadata cardinality differs from build context".to_string(),
+        );
+    }
+    let mut journal = ledger.journal();
+    journal.record_metadata(database, locale, false);
+    if context.release.is_some() {
+        journal.record_metadata(database, locale, true);
+    }
+    ledger.commit(journal)
 }
 
 fn verify_rows_by_table(connection: &Connection, rows: &RowsByType) -> Result<(), String> {
@@ -277,6 +342,7 @@ fn project_entity_media_references(
     transaction: &Transaction<'_>,
     source: &ValidatedSource,
     rows: &mut RowsByType,
+    journal: &mut ProjectionJournal,
 ) -> Result<(), String> {
     for entry in &source.entities {
         let entity_type = entry.source.entity.entity_type();
@@ -294,7 +360,20 @@ fn project_entity_media_references(
                 "INSERT INTO entity_media_references (entity_type, entity_id, role, media_key, sort_order) VALUES (?1, ?2, ?3, ?4, ?5)",
                 params![entity_type, entry.source.entity.id(), reference.role, reference.media_key, reference.sort_order],
             ).map_err(|error| format!("cannot project media reference {}:{}: {error}", entry.source.entity.id(), reference.media_key))?;
-            add_row(rows, entity_type, "entity_media_references", 1);
+            record_system_row(
+                transaction,
+                rows,
+                journal,
+                entity_type,
+                "entity_media_references",
+                format!(
+                    "{}/{}/{}/{}",
+                    entity_type,
+                    entry.source.entity.id(),
+                    reference.role,
+                    reference.sort_order
+                ),
+            )?;
         }
     }
     Ok(())
@@ -305,6 +384,7 @@ fn project_taxonomies(
     source: &ValidatedSource,
     locale: KnowledgeLocale,
     rows: &mut RowsByType,
+    journal: &mut ProjectionJournal,
 ) -> Result<(), String> {
     for entity in &source.entities {
         let CanonicalEntity::Taxonomy(taxonomy) = &entity.source.entity else {
@@ -316,7 +396,14 @@ fn project_taxonomies(
                 params![taxonomy.id, taxonomy.domain, taxonomy.purpose],
             )
             .map_err(|error| format!("cannot project taxonomy {}: {error}", taxonomy.id))?;
-        add_row(rows, "taxonomy", "taxonomy_registry", 1);
+        record_system_row(
+            transaction,
+            rows,
+            journal,
+            "taxonomy",
+            "taxonomy_registry",
+            taxonomy.id.clone(),
+        )?;
         let semantic_table = semantic_term_table(&taxonomy.purpose);
         for term in &taxonomy.terms {
             let label = localized_text(&term.localized_content, "label", locale)?;
@@ -343,13 +430,27 @@ fn project_taxonomies(
                             taxonomy.id, term.key
                         )
                     })?;
-                add_row(rows, "taxonomy", table, 1);
+                record_system_row(
+                    transaction,
+                    rows,
+                    journal,
+                    "taxonomy",
+                    table,
+                    format!("{}/{}", taxonomy.id, term.key),
+                )?;
             } else {
                 transaction.execute(
                     "INSERT INTO taxonomy_terms (taxonomy_id, term_key, parent_term_key, label, normalized_label, aliases_json, sort_order) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
                     params![taxonomy.id, term.key, term.parent_key, label, normalize_search_text(label), aliases_json, term.order],
                 ).map_err(|error| format!("cannot project taxonomy term {}:{}: {error}", taxonomy.id, term.key))?;
-                add_row(rows, "taxonomy", "taxonomy_terms", 1);
+                record_system_row(
+                    transaction,
+                    rows,
+                    journal,
+                    "taxonomy",
+                    "taxonomy_terms",
+                    format!("{}/{}", taxonomy.id, term.key),
+                )?;
             }
         }
     }
@@ -361,6 +462,7 @@ fn project_geo_places(
     source: &ValidatedSource,
     locale: KnowledgeLocale,
     rows: &mut RowsByType,
+    journal: &mut ProjectionJournal,
 ) -> Result<(), String> {
     let mut remaining = source
         .entities
@@ -391,7 +493,14 @@ fn project_geo_places(
                 params![value.id, value.place_type, value.parent_place_id, json(&value.country_codes)?, value.centroid.latitude, value.centroid.longitude, name, normalize_identity_key(name), json(&aliases)?],
             ).map_err(|error| format!("cannot project geo_place {}: {error}", value.id))?;
             inserted.insert(value.id.clone());
-            add_row(rows, "geo_place", "geo_places", 1);
+            record_system_row(
+                transaction,
+                rows,
+                journal,
+                "geo_place",
+                "geo_places",
+                value.id.clone(),
+            )?;
         }
         if next.len() == before {
             return Err("geo_place hierarchy could not be topologically projected".to_string());
@@ -406,6 +515,7 @@ fn project_named_entities(
     source: &ValidatedSource,
     locale: KnowledgeLocale,
     rows: &mut RowsByType,
+    journal: &mut ProjectionJournal,
 ) -> Result<(), String> {
     for entry in &source.entities {
         match &entry.source.entity {
@@ -415,7 +525,15 @@ fn project_named_entities(
                     "INSERT INTO manufacturer_catalog_items (id, type_term_key, name, normalized_name, aliases_json, regions_json, website, content_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
                     params![value.id, value.type_term_key, name, normalize_identity_key(name), json(&localized_list(&value.localized_content, "aliases", locale).unwrap_or_default())?, json(&value.regions)?, value.website, content_json(entry, locale)?],
                 ).map_err(|error| format!("cannot project manufacturer {}: {error}", value.id))?;
-                add_row(rows, "manufacturer", "manufacturer_catalog_items", 1);
+                record_system_row(
+                    transaction,
+                    rows,
+                    journal,
+                    "manufacturer",
+                    "manufacturer_catalog_items",
+                    value.id.clone(),
+                )?;
+                record_compiled_content(journal, entry, locale);
                 project_taxonomy_relations(
                     transaction,
                     source,
@@ -427,6 +545,7 @@ fn project_named_entities(
                         size_key: None,
                     },
                     rows,
+                    journal,
                 )?;
             }
             CanonicalEntity::ActiveIngredient(value) => {
@@ -448,12 +567,15 @@ fn project_named_entities(
                     "INSERT INTO active_ingredient_catalog_items (id, type_term_key, name, normalized_name, aliases_json, regions_json, nomenclature_json, atc_vet_code, atc_vet_system, denominations_json, content_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
                     params![value.id, value.type_term_key, name, normalize_identity_key(name), json(&localized_list(&value.localized_content, "aliases", locale).unwrap_or_default())?, json(&value.regions)?, json(&value.nomenclature)?, value.atc_vet_code, optional_localized_text(&value.localized_content, "atcVetSystem", locale), json(&denominations)?, content_json(entry, locale)?],
                 ).map_err(|error| format!("cannot project active ingredient {}: {error}", value.id))?;
-                add_row(
+                record_system_row(
+                    transaction,
                     rows,
+                    journal,
                     "active_ingredient",
                     "active_ingredient_catalog_items",
-                    1,
-                );
+                    value.id.clone(),
+                )?;
+                record_compiled_content(journal, entry, locale);
                 project_taxonomy_relations(
                     transaction,
                     source,
@@ -465,6 +587,7 @@ fn project_named_entities(
                         size_key: None,
                     },
                     rows,
+                    journal,
                 )?;
             }
             CanonicalEntity::Condition(value) => {
@@ -473,7 +596,15 @@ fn project_named_entities(
                     "INSERT INTO condition_catalog_items (id, type_term_key, name, normalized_name, aliases_json, regions_json, content_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
                     params![value.id, value.type_term_key, name, normalize_identity_key(name), json(&localized_list(&value.localized_content, "aliases", locale).unwrap_or_default())?, json(&value.regions)?, content_json(entry, locale)?],
                 ).map_err(|error| format!("cannot project condition {}: {error}", value.id))?;
-                add_row(rows, "condition", "condition_catalog_items", 1);
+                record_system_row(
+                    transaction,
+                    rows,
+                    journal,
+                    "condition",
+                    "condition_catalog_items",
+                    value.id.clone(),
+                )?;
+                record_compiled_content(journal, entry, locale);
                 project_taxonomy_relations(
                     transaction,
                     source,
@@ -485,6 +616,7 @@ fn project_named_entities(
                         size_key: None,
                     },
                     rows,
+                    journal,
                 )?;
             }
             _ => {}
@@ -498,6 +630,7 @@ fn project_breeds(
     source: &ValidatedSource,
     locale: KnowledgeLocale,
     rows: &mut RowsByType,
+    journal: &mut ProjectionJournal,
 ) -> Result<(), String> {
     for entry in &source.entities {
         let CanonicalEntity::Breed(value) = &entry.source.entity else {
@@ -508,11 +641,26 @@ fn project_breeds(
             "INSERT INTO breed_reference_items (id, species_json, name, normalized_name, aliases_json, size_term_key, average_weight_kg_json, average_height_cm_json, content_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
             params![value.id, json(&value.species)?, name, normalize_identity_key(name), json(&localized_list(&value.localized_content, "aliases", locale).unwrap_or_default())?, value.size_term_key, json(&value.average_weight_kg)?, json(&value.average_height_cm)?, content_json(entry, locale)?],
         ).map_err(|error| format!("cannot project breed {}: {error}", value.id))?;
-        add_row(rows, "breed", "breed_reference_items", 1);
+        record_system_row(
+            transaction,
+            rows,
+            journal,
+            "breed",
+            "breed_reference_items",
+            value.id.clone(),
+        )?;
+        record_compiled_content(journal, entry, locale);
         for (order, place_id) in value.origin_place_ids.iter().enumerate() {
             transaction.execute("INSERT INTO breed_origin_places (breed_id, place_id, sort_order) VALUES (?1, ?2, ?3)", params![value.id, place_id, order])
                 .map_err(|error| format!("cannot project breed origin {} -> {}: {error}", value.id, place_id))?;
-            add_row(rows, "breed", "breed_origin_places", 1);
+            record_system_row(
+                transaction,
+                rows,
+                journal,
+                "breed",
+                "breed_origin_places",
+                format!("{}/{place_id}", value.id),
+            )?;
         }
         project_taxonomy_relations(
             transaction,
@@ -525,6 +673,7 @@ fn project_breeds(
                 size_key: Some(&value.size_term_key),
             },
             rows,
+            journal,
         )?;
     }
     Ok(())
@@ -535,6 +684,7 @@ fn project_products(
     source: &ValidatedSource,
     locale: KnowledgeLocale,
     rows: &mut RowsByType,
+    journal: &mut ProjectionJournal,
 ) -> Result<(), String> {
     for entry in &source.entities {
         let CanonicalEntity::Product(value) = &entry.source.entity else {
@@ -545,7 +695,15 @@ fn project_products(
             "INSERT INTO product_catalog_items (id, type_term_key, name, normalized_name, species_json, aliases_json, manufacturer_id, regions_json, regulatory_identifiers_json, commercial_line, presentation_dosage, target_species_warnings_json, content_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
             params![value.id, value.type_term_key, name, normalize_identity_key(name), json(&value.species)?, json(&localized_list(&value.localized_content, "aliases", locale).unwrap_or_default())?, value.manufacturer_id, json(&value.regions)?, json(&value.regulatory_identifiers)?, optional_localized_text(&value.localized_content, "commercialLine", locale), optional_localized_text(&value.localized_content, "presentationDosage", locale), json(&localized_list(&value.localized_content, "targetSpeciesWarnings", locale).unwrap_or_default())?, content_json(entry, locale)?],
         ).map_err(|error| format!("cannot project product {}: {error}", value.id))?;
-        add_row(rows, "product", "product_catalog_items", 1);
+        record_system_row(
+            transaction,
+            rows,
+            journal,
+            "product",
+            "product_catalog_items",
+            value.id.clone(),
+        )?;
+        record_compiled_content(journal, entry, locale);
         project_taxonomy_relations(
             transaction,
             source,
@@ -557,11 +715,19 @@ fn project_products(
                 size_key: None,
             },
             rows,
+            journal,
         )?;
         for (order, ingredient_id) in value.active_ingredient_ids.iter().enumerate() {
             transaction.execute("INSERT INTO product_active_ingredients (product_id, active_ingredient_id, sort_order) VALUES (?1, ?2, ?3)", params![value.id, ingredient_id, order])
                 .map_err(|error| format!("cannot project product ingredient {} -> {}: {error}", value.id, ingredient_id))?;
-            add_row(rows, "product", "product_active_ingredients", 1);
+            record_system_row(
+                transaction,
+                rows,
+                journal,
+                "product",
+                "product_active_ingredients",
+                format!("{}/{ingredient_id}", value.id),
+            )?;
         }
         for (table, values) in [
             ("product_targets", value.target_term_keys.as_deref()),
@@ -584,7 +750,14 @@ fn project_products(
                     .map_err(|error| {
                         format!("cannot project {table} {} -> {}: {error}", value.id, term)
                     })?;
-                add_row(rows, "product", table, 1);
+                record_system_row(
+                    transaction,
+                    rows,
+                    journal,
+                    "product",
+                    table,
+                    format!("{}/{term}", value.id),
+                )?;
             }
         }
     }
@@ -596,6 +769,7 @@ fn project_protocols(
     source: &ValidatedSource,
     locale: KnowledgeLocale,
     rows: &mut RowsByType,
+    journal: &mut ProjectionJournal,
 ) -> Result<(), String> {
     for entry in &source.entities {
         let CanonicalEntity::TreatmentProtocol(value) = &entry.source.entity else {
@@ -606,16 +780,37 @@ fn project_protocols(
             "INSERT INTO treatment_protocols (id, kind, name, normalized_name, species_json, observation) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
             params![value.id, value.kind, name, normalize_identity_key(name), json(&value.species)?, optional_localized_text(&value.localized_content, "observation", locale)],
         ).map_err(|error| format!("cannot project protocol {}: {error}", value.id))?;
-        add_row(rows, "treatment_protocol", "treatment_protocols", 1);
+        record_system_row(
+            transaction,
+            rows,
+            journal,
+            "treatment_protocol",
+            "treatment_protocols",
+            value.id.clone(),
+        )?;
         for (order, product_id) in value.product_ids.iter().enumerate() {
             transaction.execute("INSERT INTO treatment_protocol_items (protocol_id, product_id, sort_order) VALUES (?1, ?2, ?3)", params![value.id, product_id, order])
                 .map_err(|error| format!("cannot project protocol item {} -> {}: {error}", value.id, product_id))?;
-            add_row(rows, "treatment_protocol", "treatment_protocol_items", 1);
+            record_system_row(
+                transaction,
+                rows,
+                journal,
+                "treatment_protocol",
+                "treatment_protocol_items",
+                format!("{}/{product_id}", value.id),
+            )?;
         }
         for (order, dose) in value.doses.iter().enumerate() {
             transaction.execute("INSERT INTO treatment_protocol_doses (protocol_id, dose_id, label, validity_value, validity_unit, sort_order) VALUES (?1, ?2, ?3, ?4, ?5, ?6)", params![value.id, dose.id, localized_text(&dose.localized_content, "label", locale)?, dose.validity_value, dose.validity_unit, order])
                 .map_err(|error| format!("cannot project protocol dose {} -> {}: {error}", value.id, dose.id))?;
-            add_row(rows, "treatment_protocol", "treatment_protocol_doses", 1);
+            record_system_row(
+                transaction,
+                rows,
+                journal,
+                "treatment_protocol",
+                "treatment_protocol_doses",
+                format!("{}/{}", value.id, dose.id),
+            )?;
         }
     }
     Ok(())
@@ -634,6 +829,7 @@ fn project_taxonomy_relations(
     entity_id: &str,
     relations: TaxonomyRelations<'_>,
     rows: &mut RowsByType,
+    journal: &mut ProjectionJournal,
 ) -> Result<(), String> {
     if let Some(type_key) = relations.type_key {
         let taxonomy = taxonomy_for(source, entity_type, "type")?;
@@ -646,7 +842,14 @@ fn project_taxonomy_relations(
             "type",
             0,
         )?;
-        add_row(rows, entity_type, "entity_taxonomy_terms", 1);
+        record_system_row(
+            transaction,
+            rows,
+            journal,
+            entity_type,
+            "entity_taxonomy_terms",
+            format!("{entity_type}/{entity_id}/type/{type_key}"),
+        )?;
     }
     if !relations.classifications.is_empty() {
         let taxonomy = taxonomy_for(source, entity_type, "classification")?;
@@ -660,7 +863,14 @@ fn project_taxonomy_relations(
                 "classification",
                 order,
             )?;
-            add_row(rows, entity_type, "entity_taxonomy_terms", 1);
+            record_system_row(
+                transaction,
+                rows,
+                journal,
+                entity_type,
+                "entity_taxonomy_terms",
+                format!("{entity_type}/{entity_id}/classification/{term}"),
+            )?;
         }
     }
     if let Some(size_key) = relations.size_key {
@@ -674,7 +884,14 @@ fn project_taxonomy_relations(
             "size",
             0,
         )?;
-        add_row(rows, entity_type, "entity_taxonomy_terms", 1);
+        record_system_row(
+            transaction,
+            rows,
+            journal,
+            entity_type,
+            "entity_taxonomy_terms",
+            format!("{entity_type}/{entity_id}/size/{size_key}"),
+        )?;
     }
     Ok(())
 }
@@ -699,241 +916,57 @@ fn project_search(
     source: &ValidatedSource,
     locale: KnowledgeLocale,
     rows: &mut RowsByType,
+    journal: &mut ProjectionJournal,
 ) -> Result<(), String> {
-    let by_identity = source
-        .entities
-        .iter()
-        .map(|entry| {
-            (
-                (entry.source.entity.entity_type(), entry.source.entity.id()),
-                entry,
-            )
-        })
-        .collect::<BTreeMap<_, _>>();
-    for entry in &source.entities {
-        let Some(content) = entry.source.entity.localized_content() else {
-            continue;
-        };
-        let mut values = Vec::<(String, String)>::new();
-        if let Some(name) = optional_localized_text(content, "name", locale) {
-            values.push((name.to_string(), "entity.name".to_string()));
-        }
-        for alias in localized_list(content, "aliases", locale).unwrap_or_default() {
-            values.push((alias, "entity.alias".to_string()));
-        }
-        match &entry.source.entity {
-            CanonicalEntity::Product(product) => {
-                if let Some(manufacturer) =
-                    by_identity.get(&("manufacturer", product.manufacturer_id.as_str()))
-                {
-                    append_named_relation(
-                        &mut values,
-                        &manufacturer.source.entity,
-                        locale,
-                        "manufacturer",
-                    )?;
-                }
-                for id in &product.active_ingredient_ids {
-                    if let Some(ingredient) = by_identity.get(&("active_ingredient", id.as_str())) {
-                        append_named_relation(
-                            &mut values,
-                            &ingredient.source.entity,
-                            locale,
-                            "activeIngredient",
-                        )?;
-                        if let CanonicalEntity::ActiveIngredient(ingredient) =
-                            &ingredient.source.entity
-                        {
-                            for standard in &ingredient.nomenclature.denomination_standards {
-                                if let Some(value) = optional_localized_text(
-                                    &ingredient.localized_content,
-                                    &format!("denomination_{standard}"),
-                                    locale,
-                                ) {
-                                    values.push((
-                                        value.to_string(),
-                                        format!("activeIngredient.denomination.{standard}"),
-                                    ));
-                                }
-                            }
-                        }
-                    }
-                }
-                append_taxonomy_values(
-                    &mut values,
-                    taxonomy_for(source, "product", "type")?,
-                    std::slice::from_ref(&product.type_term_key),
-                    locale,
-                    "type",
-                )?;
-                append_taxonomy_values(
-                    &mut values,
-                    taxonomy_for(source, "product", "classification")?,
-                    &product.classification_term_keys,
-                    locale,
-                    "classification",
-                )?;
-                for (purpose, keys, provenance) in [
-                    ("target", product.target_term_keys.as_deref(), "target"),
-                    (
-                        "vaccine_profile",
-                        product.vaccine_profile_term_keys.as_deref(),
-                        "vaccineProfile",
-                    ),
-                    (
-                        "life_stage",
-                        product.life_stage_term_keys.as_deref(),
-                        "lifeStage",
-                    ),
-                    (
-                        "therapeutic_scope",
-                        product.therapeutic_scope_term_keys.as_deref(),
-                        "therapeuticScope",
-                    ),
-                ] {
-                    append_taxonomy_values(
-                        &mut values,
-                        taxonomy_for(source, "product", purpose)?,
-                        keys.unwrap_or(&[]),
-                        locale,
-                        provenance,
-                    )?;
-                }
-            }
-            CanonicalEntity::Manufacturer(value) => {
-                append_taxonomy_values(
-                    &mut values,
-                    taxonomy_for(source, "manufacturer", "type")?,
-                    std::slice::from_ref(&value.type_term_key),
-                    locale,
-                    "type",
-                )?;
-                append_taxonomy_values(
-                    &mut values,
-                    taxonomy_for(source, "manufacturer", "classification")?,
-                    &value.classification_term_keys,
-                    locale,
-                    "classification",
-                )?;
-            }
-            CanonicalEntity::ActiveIngredient(value) => {
-                append_taxonomy_values(
-                    &mut values,
-                    taxonomy_for(source, "active_ingredient", "type")?,
-                    std::slice::from_ref(&value.type_term_key),
-                    locale,
-                    "type",
-                )?;
-                append_taxonomy_values(
-                    &mut values,
-                    taxonomy_for(source, "active_ingredient", "classification")?,
-                    &value.classification_term_keys,
-                    locale,
-                    "classification",
-                )?;
-            }
-            CanonicalEntity::Condition(value) => {
-                append_taxonomy_values(
-                    &mut values,
-                    taxonomy_for(source, "condition", "type")?,
-                    std::slice::from_ref(&value.type_term_key),
-                    locale,
-                    "type",
-                )?;
-                append_taxonomy_values(
-                    &mut values,
-                    taxonomy_for(source, "condition", "classification")?,
-                    &value.classification_term_keys,
-                    locale,
-                    "classification",
-                )?;
-            }
-            CanonicalEntity::Breed(value) => append_taxonomy_values(
-                &mut values,
-                taxonomy_for(source, "breed", "size")?,
-                std::slice::from_ref(&value.size_term_key),
-                locale,
-                "size",
-            )?,
-            CanonicalEntity::GeoPlace(_) | CanonicalEntity::TreatmentProtocol(_) => {}
-            CanonicalEntity::Taxonomy(_) => unreachable!(),
-        }
-        let mut seen = BTreeSet::new();
-        let mut order = 0;
-        for (value, provenance) in values {
-            let normalized = normalize_search_text(&value);
-            if !seen.insert((provenance.clone(), normalized.clone())) {
-                continue;
-            }
-            transaction.execute(
+    for candidate in search_candidates(source, locale)? {
+        let normalized = normalize_search_text(&candidate.value);
+        let affected = transaction
+            .execute(
                 "INSERT INTO entity_search_terms (entity_type, entity_id, value, normalized_value, provenance, sort_order) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-                params![entry.source.entity.entity_type(), entry.source.entity.id(), value, normalized, provenance, order],
-            ).map_err(|error| format!("cannot project search value for {}:{}: {error}", entry.source.entity.entity_type(), entry.source.entity.id()))?;
-            add_row(
-                rows,
-                entry.source.entity.entity_type(),
-                "entity_search_terms",
-                1,
-            );
-            order += 1;
-        }
+                params![
+                    candidate.entity.entity_type,
+                    candidate.entity.id,
+                    candidate.value,
+                    normalized,
+                    candidate.provenance,
+                    candidate.occurrence
+                ],
+            )
+            .map_err(|error| {
+                format!(
+                    "cannot project search value for {}: {error}",
+                    candidate.entity
+                )
+            })?;
+        add_row(
+            rows,
+            &candidate.entity.entity_type,
+            "entity_search_terms",
+            affected,
+        );
+        journal.record_search(
+            affected,
+            candidate.entity,
+            locale,
+            candidate.provenance,
+            candidate.occurrence,
+        )?;
     }
     Ok(())
 }
 
-fn append_named_relation(
-    values: &mut Vec<(String, String)>,
-    entity: &CanonicalEntity,
-    locale: KnowledgeLocale,
-    prefix: &str,
-) -> Result<(), String> {
-    let content = entity
-        .localized_content()
-        .ok_or_else(|| "related entity has no localized content".to_string())?;
-    values.push((
-        localized_text(content, "name", locale)?.to_string(),
-        format!("{prefix}.name"),
-    ));
-    for alias in localized_list(content, "aliases", locale).unwrap_or_default() {
-        values.push((alias, format!("{prefix}.alias")));
-    }
-    Ok(())
-}
-
-fn append_taxonomy_values(
-    values: &mut Vec<(String, String)>,
-    taxonomy: &TaxonomyEntity,
-    keys: &[String],
-    locale: KnowledgeLocale,
-    prefix: &str,
-) -> Result<(), String> {
-    for key in keys {
-        let term = taxonomy
-            .terms
-            .iter()
-            .find(|term| &term.key == key)
-            .ok_or_else(|| format!("unresolved taxonomy term {key}"))?;
-        values.push((
-            localized_text(&term.localized_content, "label", locale)?.to_string(),
-            format!("{prefix}.label:{key}"),
-        ));
-        for alias in localized_list(&term.localized_content, "aliases", locale).unwrap_or_default()
-        {
-            values.push((alias, format!("{prefix}.alias:{key}")));
-        }
-    }
-    Ok(())
-}
-
+#[allow(dead_code)]
 fn project_system_media(
     connection: &mut Connection,
     source: &ValidatedSource,
     locale: KnowledgeLocale,
+    ledger: &mut ProjectionLedger,
 ) -> Result<BTreeSet<String>, String> {
     let transaction = connection
         .transaction()
         .map_err(|error| format!("cannot begin system_media projection: {error}"))?;
     let mut hashes = BTreeSet::new();
+    let mut journal = ledger.journal();
     for key in source
         .media_keys_by_locale
         .get(&locale)
@@ -945,21 +978,23 @@ fn project_system_media(
             .get(key)
             .ok_or_else(|| format!("media key has no source asset: {key}"))?;
         let hash = decode_hex(&asset.content_hash_sha256)?;
-        transaction.execute(
+        let affected = transaction.execute(
             "INSERT INTO media_assets (media_key, content_hash, thumbnail, thumbnail_mime_type, thumbnail_width, thumbnail_height, mime_type, size_bytes, width, height) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
             params![asset.media_key, hash, asset.thumbnail, asset.thumbnail_mime_type, asset.thumbnail_width, asset.thumbnail_height, asset.mime_type, asset.size_bytes, asset.width, asset.height],
         ).map_err(|error| format!("cannot project media asset {}: {error}", asset.media_key))?;
+        journal.record_media_asset(affected, locale, asset.media_key.clone())?;
         hashes.insert(asset.content_hash_sha256.clone());
     }
     transaction
         .commit()
         .map_err(|error| format!("cannot commit system_media projection: {error}"))?;
+    ledger.commit(journal)?;
     Ok(hashes)
 }
 
 fn projection_report(
     source: &ValidatedSource,
-    locale_rows: &BTreeMap<KnowledgeLocale, RowsByType>,
+    context: &BuildContext,
     ledgers: &BTreeMap<KnowledgeLocale, CompletedLedger>,
 ) -> ProjectionReport {
     let entities_by_type = source
@@ -976,12 +1011,12 @@ fn projection_report(
         .iter()
         .map(|(locale, count)| (locale.to_string(), *count))
         .collect::<BTreeMap<_, _>>();
-    let locales = locale_rows
+    let locales = ledgers
         .iter()
-        .map(|(locale, rows)| {
-            let ledger = ledgers.get(locale).expect("all locale ledgers completed");
+        .map(|(locale, ledger)| {
             debug_assert_eq!(ledger.locale, *locale);
             let consumed_entities = ledger.entities_by_type();
+            let rows = ledger.rows_by_type();
             let projected_by_type = entities_by_type
                 .keys()
                 .map(|entity_type| {
@@ -998,11 +1033,13 @@ fn projection_report(
                 *locale,
                 LocaleProjection {
                     projected_by_type,
+                    rows_by_database: ledger.rows_by_database(),
+                    expected_obligation_count: ledger.expected_count(),
+                    completed_obligation_count: ledger.completed_count(),
+                    row_event_count: ledger.row_event_count(),
                     resolved_relation_count: ledger.relation_count(),
                     consumed_localized_fragments: ledger.localized_fragment_count(),
-                    unconsumed_entities: Vec::new(),
-                    unconsumed_localized_fragments: Vec::new(),
-                    unresolved_relations: Vec::new(),
+                    evidence_digest_sha256: ledger.evidence_digest(),
                 },
             )
         })
@@ -1015,7 +1052,11 @@ fn projection_report(
         .collect::<BTreeSet<_>>()
         .len();
     ProjectionReport {
-        schema_version: 1,
+        schema_version: 2,
+        source_digest_sha256: source.source_digest_sha256.clone(),
+        build_version: context.build_version,
+        system_schema_version: SYSTEM_SCHEMA_VERSION,
+        system_media_schema_version: SYSTEM_MEDIA_SCHEMA_VERSION,
         source: ProjectionSource {
             entities_by_type,
             relation_count: source.relation_count,
@@ -1032,8 +1073,6 @@ fn projection_report(
                 .len(),
             referenced_media_keys: source.media.len(),
             unique_content_hashes: unique_hashes,
-            missing_source_paths: Vec::new(),
-            unreferenced_source_paths: Vec::new(),
         },
     }
 }
@@ -1075,6 +1114,15 @@ fn stage_cas_objects(
             .map_err(|error| format!("cannot write CAS staging object: {error}"))?;
         file.sync_all()
             .map_err(|error| format!("cannot sync CAS staging object: {error}"))?;
+        drop(file);
+        let persisted = fs::read(&path)
+            .map_err(|error| format!("cannot reread CAS staging object: {error}"))?;
+        if sha256_hex(&persisted) != *hash {
+            return Err(format!(
+                "CAS staging object failed post-write verification: {}",
+                path.display()
+            ));
+        }
     }
     Ok(())
 }
@@ -1115,222 +1163,6 @@ fn commit_cas(staging: &Path, final_root: &Path) -> Result<(), String> {
     Ok(())
 }
 
-fn verify_staging(
-    staging_version: &Path,
-    staging_cas: &Path,
-    result: &BuildResult,
-) -> Result<(), String> {
-    schemas::validate_build_result(result)?;
-    let context = BuildContext {
-        schema_version: 1,
-        build_version: result.build_version,
-        release: result.release.clone(),
-    };
-    let source_digest = decode_hex(&result.source_digest_sha256)?;
-    for locale in LOCALES {
-        let artifacts = result
-            .locales
-            .get(locale.as_str())
-            .ok_or_else(|| format!("build result misses locale {locale}"))?;
-        verify_staged_artifact(
-            staging_version,
-            &artifacts.system,
-            result.build_version,
-            DatabaseKind::System,
-            &context,
-            locale,
-            &source_digest,
-        )?;
-        verify_staged_media_links(
-            staging_version,
-            &artifacts.system,
-            &artifacts.system_media,
-            result.build_version,
-            staging_cas,
-        )?;
-        verify_staged_artifact(
-            staging_version,
-            &artifacts.system_media,
-            result.build_version,
-            DatabaseKind::SystemMedia,
-            &context,
-            locale,
-            &source_digest,
-        )?;
-    }
-    let staged_hashes = result.cas_hashes_from_staging(staging_cas)?;
-    let staged_hash_set = staged_hashes.iter().cloned().collect::<BTreeSet<_>>();
-    if staged_hash_set.len() != result.cas.object_count
-        || set_digest(&staged_hash_set) != result.cas.set_digest_sha256
-    {
-        return Err("staged CAS set does not match build-result.json".to_string());
-    }
-    for hash in staged_hashes {
-        let path = staging_cas.join(cas_relative_path(&hash)?);
-        let bytes =
-            fs::read(&path).map_err(|error| format!("cannot verify staged CAS object: {error}"))?;
-        if sha256_hex(&bytes) != hash {
-            return Err(format!("staged CAS checksum mismatch: {}", path.display()));
-        }
-    }
-    let projection = fs::read(staging_version.join("projection-report.json"))
-        .map_err(|error| format!("cannot verify projection report: {error}"))?;
-    if sha256_hex(&projection) != result.projection.checksum_sha256 {
-        return Err("projection report checksum mismatch".to_string());
-    }
-    let projection_value: serde_json::Value = serde_json::from_slice(&projection)
-        .map_err(|error| format!("projection report is invalid JSON: {error}"))?;
-    schemas::validate_projection_report(&projection_value)?;
-    let result_bytes = fs::read(staging_version.join("build-result.json"))
-        .map_err(|error| format!("cannot verify build-result.json: {error}"))?;
-    let result_value: serde_json::Value = serde_json::from_slice(&result_bytes)
-        .map_err(|error| format!("build-result.json is invalid JSON: {error}"))?;
-    schemas::validate_build_result(&result_value)?;
-    let checksum_entries = read_checksum_entries(&staging_version.join("checksums.sha256"))?;
-    if checksum_entries.len() != 13 + result.cas.object_count {
-        return Err("checksums.sha256 does not cover exactly the twelve databases, projection report and referenced CAS objects".to_string());
-    }
-    for (relative, checksum) in checksum_entries {
-        let path = if let Some(suffix) =
-            relative.strip_prefix(&format!("versions/{}/", result.build_version))
-        {
-            staging_version.join(suffix)
-        } else if let Some(suffix) = relative.strip_prefix("CAS/system/") {
-            staging_cas.join(suffix)
-        } else {
-            return Err(format!("unexpected path in checksums.sha256: {relative}"));
-        };
-        verify_file_checksum(&path, &checksum)?;
-    }
-    let actual_files = recursive_files(staging_version)?
-        .into_iter()
-        .map(|path| {
-            path.strip_prefix(staging_version)
-                .map_err(|_| "invalid staged version path".to_string())
-                .and_then(report::normalized_relative_path)
-        })
-        .collect::<Result<BTreeSet<_>, _>>()?;
-    let mut expected_files = BTreeSet::from([
-        "build-result.json".to_string(),
-        "checksums.sha256".to_string(),
-        "projection-report.json".to_string(),
-    ]);
-    for locale in LOCALES {
-        expected_files.insert(format!("locales/{locale}/veterinary_clinic_system.db"));
-        expected_files.insert(format!(
-            "locales/{locale}/veterinary_clinic_system_media.db"
-        ));
-    }
-    if actual_files != expected_files {
-        return Err("staged version contains missing or additional files".to_string());
-    }
-    Ok(())
-}
-
-fn verify_staged_media_links(
-    staging_version: &Path,
-    system_artifact: &DatabaseArtifact,
-    media_artifact: &DatabaseArtifact,
-    build_version: u64,
-    staging_cas: &Path,
-) -> Result<(), String> {
-    let prefix = format!("versions/{build_version}/");
-    let system_path = staging_version.join(
-        system_artifact
-            .path
-            .strip_prefix(&prefix)
-            .ok_or_else(|| "system artifact path is outside version".to_string())?,
-    );
-    let media_path = staging_version.join(
-        media_artifact
-            .path
-            .strip_prefix(&prefix)
-            .ok_or_else(|| "media artifact path is outside version".to_string())?,
-    );
-    let system =
-        Connection::open_with_flags(&system_path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
-            .map_err(|error| format!("cannot open staged system database: {error}"))?;
-    let media =
-        Connection::open_with_flags(&media_path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
-            .map_err(|error| format!("cannot open staged system_media database: {error}"))?;
-    let mut assets = BTreeMap::new();
-    let mut statement = media
-        .prepare("SELECT media_key, lower(hex(content_hash)) FROM media_assets ORDER BY media_key")
-        .map_err(|error| format!("cannot inspect staged media assets: {error}"))?;
-    for row in statement
-        .query_map([], |row| {
-            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
-        })
-        .map_err(|error| error.to_string())?
-    {
-        let (media_key, hash) = row.map_err(|error| error.to_string())?;
-        let cas_path = staging_cas.join(cas_relative_path(&hash)?);
-        verify_file_checksum(&cas_path, &hash)?;
-        assets.insert(media_key, hash);
-    }
-    let mut statement = system
-        .prepare("SELECT media_key FROM entity_media_references ORDER BY media_key")
-        .map_err(|error| format!("cannot inspect structural media references: {error}"))?;
-    for row in statement
-        .query_map([], |row| row.get::<_, String>(0))
-        .map_err(|error| error.to_string())?
-    {
-        let media_key = row.map_err(|error| error.to_string())?;
-        if !assets.contains_key(&media_key) {
-            return Err(format!(
-                "structural media reference has no system_media asset: {media_key}"
-            ));
-        }
-    }
-    Ok(())
-}
-
-trait StagedCasHashes {
-    fn cas_hashes_from_staging(&self, staging: &Path) -> Result<Vec<String>, String>;
-}
-
-impl StagedCasHashes for BuildResult {
-    fn cas_hashes_from_staging(&self, staging: &Path) -> Result<Vec<String>, String> {
-        recursive_files(staging)?
-            .into_iter()
-            .map(|path| {
-                path.file_stem()
-                    .and_then(|value| value.to_str())
-                    .map(str::to_string)
-                    .ok_or_else(|| "invalid staged CAS filename".to_string())
-            })
-            .collect()
-    }
-}
-
-fn verify_staged_artifact(
-    staging_version: &Path,
-    artifact: &DatabaseArtifact,
-    build_version: u64,
-    kind: DatabaseKind,
-    context: &BuildContext,
-    locale: KnowledgeLocale,
-    source_digest: &[u8],
-) -> Result<(), String> {
-    let prefix = format!("versions/{build_version}/");
-    let suffix = artifact
-        .path
-        .strip_prefix(&prefix)
-        .ok_or_else(|| format!("artifact path is outside version: {}", artifact.path))?;
-    let path = staging_version.join(suffix);
-    verify_file_checksum(&path, &artifact.checksum_sha256)?;
-    let connection = Connection::open_with_flags(&path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
-        .map_err(|error| format!("cannot open staged database {}: {error}", path.display()))?;
-    databases::verify_contract(&connection, &path, kind, context, locale, source_digest)?;
-    if databases::schema_fingerprint(&connection)? != artifact.schema_fingerprint_sha256 {
-        return Err(format!(
-            "schema fingerprint mismatch for {}",
-            path.display()
-        ));
-    }
-    Ok(())
-}
-
 fn reuse_or_reject_existing(
     source: &ValidatedSource,
     output: &Path,
@@ -1361,169 +1193,15 @@ fn reuse_or_reject_existing(
             context.build_version
         ));
     }
-    verify_result(output, &result)?;
-    Ok(result)
-}
-
-fn verify_result(output: &Path, result: &BuildResult) -> Result<(), String> {
-    schemas::validate_build_result(result)?;
-    let context = BuildContext {
-        schema_version: 1,
-        build_version: result.build_version,
-        release: result.release.clone(),
-    };
-    let source_digest = decode_hex(&result.source_digest_sha256)?;
-    for locale in LOCALES {
-        let artifacts = result
-            .locales
-            .get(locale.as_str())
-            .ok_or_else(|| format!("build result misses locale {locale}"))?;
-        verify_final_artifact(
-            output,
-            &artifacts.system,
-            DatabaseKind::System,
-            &context,
-            locale,
-            &source_digest,
-        )?;
-        verify_final_artifact(
-            output,
-            &artifacts.system_media,
-            DatabaseKind::SystemMedia,
-            &context,
-            locale,
-            &source_digest,
-        )?;
-    }
-    let projection_path = safe_artifact_path(output, &result.projection.report_path)?;
-    verify_file_checksum(&projection_path, &result.projection.checksum_sha256)?;
-    let projection_value: serde_json::Value = serde_json::from_slice(
-        &fs::read(&projection_path)
-            .map_err(|error| format!("cannot read projection report: {error}"))?,
+    ArtifactVerifier::new(
+        source,
+        context,
+        final_version,
+        &output.join("CAS/system"),
+        &result,
     )
-    .map_err(|error| format!("projection report is invalid JSON: {error}"))?;
-    schemas::validate_projection_report(&projection_value)?;
-    let checksum_path = safe_artifact_path(output, &result.checksum_file)?;
-    let checksum_entries = read_checksum_entries(&checksum_path)?;
-    if checksum_entries.len() != 13 + result.cas.object_count {
-        return Err("checksums.sha256 coverage differs from build-result.json".to_string());
-    }
-    let mut cas_hashes = BTreeSet::new();
-    for (relative, checksum) in checksum_entries {
-        let path = safe_artifact_path(output, &relative)?;
-        verify_file_checksum(&path, &checksum)?;
-        if let Some(cas_path) = relative.strip_prefix("CAS/system/") {
-            let expected_path = report::normalized_relative_path(&cas_relative_path(&checksum)?)?;
-            if cas_path != expected_path {
-                return Err(format!(
-                    "CAS path does not match its content hash: {relative}"
-                ));
-            }
-            cas_hashes.insert(checksum);
-        }
-    }
-    if cas_hashes.len() != result.cas.object_count
-        || set_digest(&cas_hashes) != result.cas.set_digest_sha256
-    {
-        return Err("CAS set does not match build-result.json".to_string());
-    }
-    let version_root = output
-        .join("versions")
-        .join(result.build_version.to_string());
-    let actual_files = recursive_files(&version_root)?
-        .into_iter()
-        .map(|path| {
-            path.strip_prefix(&version_root)
-                .map_err(|_| "invalid finalized version path".to_string())
-                .and_then(report::normalized_relative_path)
-        })
-        .collect::<Result<BTreeSet<_>, _>>()?;
-    let mut expected_files = BTreeSet::from([
-        "build-result.json".to_string(),
-        "checksums.sha256".to_string(),
-        "projection-report.json".to_string(),
-    ]);
-    for locale in LOCALES {
-        expected_files.insert(format!("locales/{locale}/veterinary_clinic_system.db"));
-        expected_files.insert(format!(
-            "locales/{locale}/veterinary_clinic_system_media.db"
-        ));
-    }
-    if actual_files != expected_files {
-        return Err("finalized version contains missing or additional files".to_string());
-    }
-    Ok(())
-}
-
-fn read_checksum_entries(path: &Path) -> Result<BTreeMap<String, String>, String> {
-    let contents = fs::read_to_string(path)
-        .map_err(|error| format!("cannot read checksum file {}: {error}", path.display()))?;
-    let mut result = BTreeMap::new();
-    for (index, line) in contents.lines().enumerate() {
-        let (checksum, relative) = line
-            .split_once("  ")
-            .ok_or_else(|| format!("{}:{}: invalid checksum line", path.display(), index + 1))?;
-        decode_hex(checksum)?;
-        if report::normalized_relative_path(Path::new(relative))? != relative {
-            return Err(format!(
-                "{}:{}: non-canonical artifact path",
-                path.display(),
-                index + 1
-            ));
-        }
-        if result
-            .insert(relative.to_string(), checksum.to_string())
-            .is_some()
-        {
-            return Err(format!(
-                "{}:{}: duplicate checksum path",
-                path.display(),
-                index + 1
-            ));
-        }
-    }
+    .verify()?;
     Ok(result)
-}
-
-fn verify_final_artifact(
-    output: &Path,
-    artifact: &DatabaseArtifact,
-    kind: DatabaseKind,
-    context: &BuildContext,
-    locale: KnowledgeLocale,
-    source_digest: &[u8],
-) -> Result<(), String> {
-    let path = safe_artifact_path(output, &artifact.path)?;
-    verify_file_checksum(&path, &artifact.checksum_sha256)?;
-    let connection = Connection::open_with_flags(&path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
-        .map_err(|error| format!("cannot open finalized database {}: {error}", path.display()))?;
-    databases::verify_contract(&connection, &path, kind, context, locale, source_digest)?;
-    let fingerprint = databases::schema_fingerprint(&connection)?;
-    if fingerprint != artifact.schema_fingerprint_sha256 {
-        return Err(format!(
-            "schema fingerprint mismatch for {}",
-            path.display()
-        ));
-    }
-    Ok(())
-}
-
-fn safe_artifact_path(output: &Path, relative: &str) -> Result<PathBuf, String> {
-    let path = Path::new(relative);
-    if report::normalized_relative_path(path)? != relative {
-        return Err(format!("artifact path is not canonical: {relative}"));
-    }
-    Ok(output.join(path))
-}
-
-fn verify_file_checksum(path: &Path, expected: &str) -> Result<(), String> {
-    let bytes = fs::read(path)
-        .map_err(|error| format!("cannot read artifact {}: {error}", path.display()))?;
-    let actual = sha256_hex(&bytes);
-    if actual != expected {
-        return Err(format!("artifact checksum mismatch for {}", path.display()));
-    }
-    Ok(())
 }
 
 fn database_artifact(
@@ -1634,6 +1312,55 @@ fn add_row(rows: &mut RowsByType, entity_type: &str, table: &str, count: usize) 
         .or_default()
         .entry(table.to_string())
         .or_insert(0) += count;
+}
+
+fn record_system_row(
+    transaction: &Transaction<'_>,
+    rows: &mut RowsByType,
+    journal: &mut ProjectionJournal,
+    entity_type: &str,
+    table: &str,
+    row: String,
+) -> Result<(), String> {
+    let affected = usize::try_from(transaction.changes())
+        .map_err(|_| format!("{table} affected row count exceeds usize"))?;
+    add_row(rows, entity_type, table, affected);
+    let entity_id = if matches!(table, "entity_media_references" | "entity_taxonomy_terms") {
+        row.split('/').nth(1)
+    } else {
+        row.split('/').next()
+    }
+    .unwrap_or_default()
+    .to_string();
+    journal.record_row(
+        affected,
+        DatabaseKind::System,
+        SystemTable::parse(table)?,
+        row,
+        Some(EntityIdentity::new(entity_type, entity_id)),
+    )
+}
+
+fn record_compiled_content(
+    journal: &mut ProjectionJournal,
+    entry: &ValidatedEntity,
+    locale: KnowledgeLocale,
+) {
+    let Some(document) = entry.editorial.get(&locale) else {
+        return;
+    };
+    let entity = EntityIdentity::new(entry.source.entity.entity_type(), entry.source.entity.id());
+    journal.record_target(ProjectionTarget::CompiledDocument {
+        entity: entity.clone(),
+        locale,
+    });
+    for section in &document.sections {
+        journal.record_target(ProjectionTarget::CompiledSection {
+            entity: entity.clone(),
+            locale,
+            section_key: section.section_key.clone(),
+        });
+    }
 }
 
 fn taxonomy_for<'a>(

@@ -341,6 +341,10 @@ pnpm knowledge:build
 ```
 
 Uma build válida projeta os seis locales, gera os doze bancos em
-`build/knowledge-artifacts`, verifica integridade e foreign keys e finaliza
-checksums, ledger de cobertura e `build-result.json`. A integração desses
-artefatos no runtime permanece fora deste contrato.
+`build/knowledge-artifacts` e conclui obrigações tipadas a partir dos eventos
+reais dos projectors. O `projection-report.json` v2 deriva dessas evidências. Um
+único verificador recalcula contagens, metadados, tamanhos, hashes, fingerprints,
+integridade, foreign keys, referências entre `system`, `system_media` e CAS,
+thumbnails JPEG, digests e cobertura de `checksums.sha256` tanto no staging
+quanto antes de reutilizar uma versão existente. A integração desses artefatos
+no runtime permanece fora deste contrato.

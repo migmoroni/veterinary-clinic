@@ -236,7 +236,7 @@ fn has_uri_scheme(value: &str) -> bool {
         })
 }
 
-fn decode_image(bytes: &[u8], path: &Path) -> Result<DynamicImage, String> {
+pub(crate) fn decode_image(bytes: &[u8], path: &Path) -> Result<DynamicImage, String> {
     let format = image::guess_format(bytes)
         .map_err(|error| format!("unsupported or invalid image {}: {error}", path.display()))?;
     let mime_type = mime_for_format(format)?;
@@ -289,7 +289,7 @@ fn decode_image(bytes: &[u8], path: &Path) -> Result<DynamicImage, String> {
     Ok(image)
 }
 
-fn mime_for_format(format: ImageFormat) -> Result<&'static str, String> {
+pub(crate) fn mime_for_format(format: ImageFormat) -> Result<&'static str, String> {
     match format {
         ImageFormat::Png => Ok("image/png"),
         ImageFormat::Jpeg => Ok("image/jpeg"),
@@ -330,6 +330,7 @@ fn encode_jpeg_on_white(image: &DynamicImage) -> Result<Vec<u8>, String> {
 mod tests {
     use super::*;
     use image::{ImageBuffer, Rgba};
+    use std::fs::File;
     use std::sync::atomic::{AtomicU64, Ordering};
 
     static TEST_COUNTER: AtomicU64 = AtomicU64::new(0);
@@ -364,6 +365,14 @@ mod tests {
         result.extend_from_slice(&exif);
         result.extend(jpeg);
         result
+    }
+
+    fn test_root(label: &str) -> PathBuf {
+        std::env::temp_dir().join(format!(
+            "knowledge-builder-media-{label}-{}-{}",
+            std::process::id(),
+            TEST_COUNTER.fetch_add(1, Ordering::Relaxed)
+        ))
     }
 
     #[test]
@@ -446,5 +455,54 @@ mod tests {
         let bytes = with_orientation_six(encoded(ImageFormat::Jpeg, 4, 2));
         let image = decode_image(&bytes, Path::new("oriented.jpg")).unwrap();
         assert_eq!(image.dimensions(), (2, 4));
+    }
+
+    #[test]
+    fn thumbnail_composes_transparency_on_white_without_upscaling() {
+        let root = test_root("transparent");
+        fs::create_dir_all(&root).unwrap();
+        let source = root.join("transparent.png");
+        fs::write(&source, encoded(ImageFormat::Png, 1, 1)).unwrap();
+
+        let asset = resolve_media(&root, "product", "entity", &source).unwrap();
+        let thumbnail = image::load_from_memory_with_format(&asset.thumbnail, ImageFormat::Jpeg)
+            .unwrap()
+            .to_rgb8();
+        assert_eq!((asset.thumbnail_width, asset.thumbnail_height), (1, 1));
+        assert!(thumbnail
+            .get_pixel(0, 0)
+            .0
+            .iter()
+            .all(|channel| *channel >= 250));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn rejects_oversized_files_and_extension_signature_mismatches() {
+        let root = test_root("limits");
+        fs::create_dir_all(&root).unwrap();
+        let oversized = root.join("oversized.png");
+        File::create(&oversized)
+            .unwrap()
+            .set_len(MAX_SOURCE_BYTES + 1)
+            .unwrap();
+        assert!(resolve_media(&root, "product", "entity", &oversized)
+            .unwrap_err()
+            .contains("25 MiB"));
+
+        let mismatch = root.join("mismatch.jpg");
+        fs::write(&mismatch, encoded(ImageFormat::Png, 1, 1)).unwrap();
+        assert!(resolve_media(&root, "product", "entity", &mismatch)
+            .unwrap_err()
+            .contains("extension does not match"));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn rejects_dimensions_outside_the_media_profile() {
+        let bytes = encoded(ImageFormat::Png, MAX_DIMENSION + 1, 1);
+        assert!(decode_image(&bytes, Path::new("too-wide.png")).is_err());
     }
 }

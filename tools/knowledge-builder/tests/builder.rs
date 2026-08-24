@@ -1,5 +1,6 @@
 use knowledge_builder::{build, validate, BuildContext, BuildOptions, LOCALES};
 use rusqlite::Connection;
+use sha2::{Digest, Sha256};
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -184,6 +185,138 @@ fn minimal_fixture_builds_and_tampered_version_is_not_reused() {
     })
     .unwrap_err();
     assert!(error.contains("additional files"));
+}
+
+#[test]
+fn artifact_verifier_recalculates_manifest_report_and_database_facts() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
+
+    let run_case = |label: &str, mutate: &dyn Fn(&Path, &knowledge_builder::BuildResult)| {
+        let output = TestDirectory::new(label);
+        let options = BuildOptions {
+            source: fixture.clone(),
+            output: output.path().to_path_buf(),
+            context: context_path(),
+        };
+        let result = build(&options).unwrap();
+        mutate(output.path(), &result);
+        build(&options).unwrap_err()
+    };
+
+    let error = run_case("tampered-size", &|output, result| {
+        update_build_result(output, result, |manifest| {
+            manifest["locales"]["pt-BR"]["system"]["sizeBytes"] = serde_json::json!(
+                manifest["locales"]["pt-BR"]["system"]["sizeBytes"]
+                    .as_u64()
+                    .unwrap()
+                    + 1
+            );
+        });
+    });
+    assert!(error.contains("sizeBytes mismatch"));
+
+    let error = run_case("tampered-checksum", &|output, result| {
+        update_build_result(output, result, |manifest| {
+            manifest["locales"]["pt-BR"]["system"]["checksumSha256"] =
+                serde_json::Value::String("0".repeat(64));
+        });
+    });
+    assert!(error.contains("checksum mismatch"));
+
+    let error = run_case("tampered-locale-cas", &|output, result| {
+        update_build_result(output, result, |manifest| {
+            manifest["locales"]["pt-BR"]["casSetDigestSha256"] =
+                serde_json::Value::String("0".repeat(64));
+        });
+    });
+    assert!(error.contains("locale CAS set digest mismatch"));
+
+    let error = run_case("tampered-global-cas", &|output, result| {
+        update_build_result(output, result, |manifest| {
+            manifest["cas"]["setDigestSha256"] = serde_json::Value::String("0".repeat(64));
+        });
+    });
+    assert!(error.contains("global CAS set differs"));
+
+    let error = run_case("tampered-report", &|output, result| {
+        let report_path = output.join(&result.projection.report_path);
+        let mut report: serde_json::Value =
+            serde_json::from_slice(&fs::read(&report_path).unwrap()).unwrap();
+        report["locales"]["pt-BR"]["expectedObligationCount"] = serde_json::json!(
+            report["locales"]["pt-BR"]["expectedObligationCount"]
+                .as_u64()
+                .unwrap()
+                + 1
+        );
+        fs::write(&report_path, serde_json::to_vec_pretty(&report).unwrap()).unwrap();
+        refresh_projection_declarations(output, result);
+    });
+    assert!(error.contains("projection evidence mismatch"));
+
+    let error = run_case("tampered-metadata", &|output, result| {
+        let path = output.join(&result.locales["pt-BR"].system.path);
+        let database = Connection::open(&path).unwrap();
+        database
+            .execute("UPDATE knowledge_build_metadata SET build_version = 99", [])
+            .unwrap();
+        drop(database);
+        refresh_database_declarations(output, result, "pt-BR", "system");
+    });
+    assert!(error.contains("knowledge_build_metadata mismatch"));
+
+    let error = run_case("tampered-fingerprint", &|output, result| {
+        let path = output.join(&result.locales["pt-BR"].system.path);
+        let database = Connection::open(&path).unwrap();
+        database
+            .execute("CREATE INDEX tampered_index ON geo_places(name)", [])
+            .unwrap();
+        drop(database);
+        refresh_database_declarations(output, result, "pt-BR", "system");
+    });
+    assert!(error.contains("schema fingerprint mismatch"));
+
+    let error = run_case("tampered-report-schema", &|output, result| {
+        let report_path = output.join(&result.projection.report_path);
+        let mut report: serde_json::Value =
+            serde_json::from_slice(&fs::read(&report_path).unwrap()).unwrap();
+        report["unexpectedField"] = serde_json::Value::Bool(true);
+        fs::write(&report_path, serde_json::to_vec_pretty(&report).unwrap()).unwrap();
+        refresh_projection_declarations(output, result);
+    });
+    assert!(error.contains("schema violation"));
+
+    let error = run_case("missing-locale", &|output, _result| {
+        fs::rename(
+            output.join("versions/1/locales/fr-FR"),
+            output.join("removed-fr-FR"),
+        )
+        .unwrap();
+    });
+    assert!(error.contains("missing or additional"));
+
+    let error = run_case("incomplete-checksums", &|output, result| {
+        let path = output.join(&result.checksum_file);
+        let contents = fs::read_to_string(&path).unwrap();
+        fs::write(
+            &path,
+            contents.lines().skip(1).collect::<Vec<_>>().join("\n") + "\n",
+        )
+        .unwrap();
+    });
+    assert!(error.contains("coverage differs"));
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::symlink;
+        let error = run_case("artifact-symlink", &|output, _result| {
+            symlink(
+                "projection-report.json",
+                output.join("versions/1/unexpected-link"),
+            )
+            .unwrap();
+        });
+        assert!(error.contains("symlink is forbidden"));
+    }
 }
 
 #[test]
@@ -394,6 +527,92 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
         )
         .unwrap();
     assert!(content.contains("knowledge-media://asset/condition/"));
+    drop(pt_database);
+
+    let result_path = output.path().join("versions/1/build-result.json");
+    let checksum_path = output.path().join(&result.checksum_file);
+    let system_path = output.path().join(&result.locales["pt-BR"].system.path);
+    let media_path = output
+        .path()
+        .join(&result.locales["pt-BR"].system_media.path);
+    let canonical_result = fs::read(&result_path).unwrap();
+    let canonical_checksums = fs::read(&checksum_path).unwrap();
+    let canonical_system = fs::read(&system_path).unwrap();
+    let canonical_media = fs::read(&media_path).unwrap();
+
+    let media_database = Connection::open(&media_path).unwrap();
+    media_database
+        .execute("UPDATE media_assets SET thumbnail = x'00'", [])
+        .unwrap();
+    drop(media_database);
+    refresh_database_declarations(output.path(), &result, "pt-BR", "systemMedia");
+    let error = build(&BuildOptions {
+        source: source.path().to_path_buf(),
+        output: output.path().to_path_buf(),
+        context: context_path(),
+    })
+    .unwrap_err();
+    assert!(error.contains("thumbnail"));
+
+    fs::write(&result_path, &canonical_result).unwrap();
+    fs::write(&checksum_path, &canonical_checksums).unwrap();
+    fs::write(&media_path, &canonical_media).unwrap();
+    let media_database = Connection::open(&media_path).unwrap();
+    media_database
+        .execute(
+            "DELETE FROM media_assets WHERE media_key = (SELECT media_key FROM media_assets ORDER BY media_key LIMIT 1)",
+            [],
+        )
+        .unwrap();
+    drop(media_database);
+    refresh_database_declarations(output.path(), &result, "pt-BR", "systemMedia");
+    let error = build(&BuildOptions {
+        source: source.path().to_path_buf(),
+        output: output.path().to_path_buf(),
+        context: context_path(),
+    })
+    .unwrap_err();
+    assert!(error.contains("row count mismatch"));
+
+    fs::write(&result_path, &canonical_result).unwrap();
+    fs::write(&checksum_path, &canonical_checksums).unwrap();
+    fs::write(&media_path, &canonical_media).unwrap();
+    fs::write(&system_path, &canonical_system).unwrap();
+    let system_database = Connection::open(&system_path).unwrap();
+    system_database
+        .execute(
+            "DELETE FROM entity_media_references WHERE rowid = (SELECT rowid FROM entity_media_references LIMIT 1)",
+            [],
+        )
+        .unwrap();
+    drop(system_database);
+    refresh_database_declarations(output.path(), &result, "pt-BR", "system");
+    let error = build(&BuildOptions {
+        source: source.path().to_path_buf(),
+        output: output.path().to_path_buf(),
+        context: context_path(),
+    })
+    .unwrap_err();
+    assert!(error.contains("row count mismatch"));
+
+    fs::write(&result_path, &canonical_result).unwrap();
+    fs::write(&checksum_path, &canonical_checksums).unwrap();
+    fs::write(&system_path, &canonical_system).unwrap();
+
+    let checksum_contents = fs::read_to_string(output.path().join(&result.checksum_file)).unwrap();
+    let cas_relative = checksum_contents
+        .lines()
+        .filter_map(|line| line.split_once("  ").map(|(_, path)| path))
+        .find(|path| path.starts_with("CAS/system/"))
+        .unwrap();
+    fs::write(output.path().join(cas_relative), b"tampered CAS object").unwrap();
+    let error = build(&BuildOptions {
+        source: source.path().to_path_buf(),
+        output: output.path().to_path_buf(),
+        context: context_path(),
+    })
+    .unwrap_err();
+    assert!(error.contains("checksum mismatch"));
 }
 
 #[test]
@@ -456,6 +675,82 @@ fn divergent_context_cannot_overwrite_finalized_version() {
             );
         }
     }
+}
+
+fn update_build_result(
+    output: &Path,
+    result: &knowledge_builder::BuildResult,
+    update: impl FnOnce(&mut serde_json::Value),
+) {
+    let path = output.join("versions/1/build-result.json");
+    let mut manifest: serde_json::Value =
+        serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    update(&mut manifest);
+    let mut bytes = serde_json::to_vec_pretty(&manifest).unwrap();
+    bytes.push(b'\n');
+    fs::write(path, bytes).unwrap();
+    assert_eq!(result.build_version, 1);
+}
+
+fn refresh_projection_declarations(output: &Path, result: &knowledge_builder::BuildResult) {
+    let report_path = output.join(&result.projection.report_path);
+    let checksum = sha256(&fs::read(&report_path).unwrap());
+    update_build_result(output, result, |manifest| {
+        manifest["projection"]["checksumSha256"] = serde_json::Value::String(checksum.clone());
+    });
+    replace_checksum_entry(
+        &output.join(&result.checksum_file),
+        &result.projection.report_path,
+        &checksum,
+    );
+}
+
+fn refresh_database_declarations(
+    output: &Path,
+    result: &knowledge_builder::BuildResult,
+    locale: &str,
+    database: &str,
+) {
+    let artifact = if database == "system" {
+        &result.locales[locale].system
+    } else {
+        &result.locales[locale].system_media
+    };
+    let bytes = fs::read(output.join(&artifact.path)).unwrap();
+    let checksum = sha256(&bytes);
+    update_build_result(output, result, |manifest| {
+        manifest["locales"][locale][database]["sizeBytes"] = serde_json::json!(bytes.len());
+        manifest["locales"][locale][database]["checksumSha256"] =
+            serde_json::Value::String(checksum.clone());
+    });
+    replace_checksum_entry(
+        &output.join(&result.checksum_file),
+        &artifact.path,
+        &checksum,
+    );
+}
+
+fn replace_checksum_entry(path: &Path, artifact: &str, checksum: &str) {
+    let contents = fs::read_to_string(path).unwrap();
+    let rewritten = contents
+        .lines()
+        .map(|line| {
+            let (_, relative) = line.split_once("  ").unwrap();
+            if relative == artifact {
+                format!("{checksum}  {relative}\n")
+            } else {
+                format!("{line}\n")
+            }
+        })
+        .collect::<String>();
+    fs::write(path, rewritten).unwrap();
+}
+
+fn sha256(bytes: &[u8]) -> String {
+    Sha256::digest(bytes)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
 }
 
 fn copy_tree(source: &Path, destination: &Path) {

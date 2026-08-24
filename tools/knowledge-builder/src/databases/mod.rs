@@ -7,7 +7,7 @@ pub const SYSTEM_MEDIA_SCHEMA_VERSION: u32 = 2;
 pub const SYSTEM_DDL: &str = include_str!("../../schemas/system/system.sql");
 pub const SYSTEM_MEDIA_DDL: &str = include_str!("../../schemas/system_media/system_media.sql");
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum DatabaseKind {
     System,
     SystemMedia,

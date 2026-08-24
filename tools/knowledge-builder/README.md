@@ -28,13 +28,21 @@ cargo run -p knowledge-builder -- build \
 - Mídias PNG, JPEG, GIF e WebP preservam os bytes originais no CAS. A orientação
   é aplicada antes de produzir thumbnail JPEG, qualidade 72, lado máximo 200,
   filtro Lanczos3 e transparência sobre branco.
-- O `ProjectionLedger` exige consumo único de entidades, folhas estruturais,
-  relações, fragmentos localizados, documentos, seções e mídias. O relatório é
-  criado a partir dos eventos concluídos e as contagens de tabelas são
-  comparadas com o SQLite.
-- Schemas, metadados, fingerprints, integridade, foreign keys, referências de
-  mídia, CAS, checksums e conjunto exato de arquivos são verificados em staging.
-  O rename de `versions/<build_version>` é a publicação final.
+- O `ProjectionLedger` cria obrigações tipadas por valor e destino. Cada
+  projector registra no `ProjectionJournal` somente a linha, termo de busca,
+  documento, seção, ativo ou objeto CAS que materializou; evidências SQLite só
+  são publicadas no ledger depois do `commit`.
+- O `projection-report.json` v2 deriva exclusivamente do `CompletedLedger`. Ele
+  contém as contagens esperada e concluída, eventos por banco e tabela,
+  relações resolvidas, fragmentos localizados consumidos e o digest canônico
+  das evidências de cada locale.
+- Um único `ArtifactVerifier` recalcula schemas, metadados, tamanhos, hashes,
+  fingerprints, integridade, foreign keys, contagens, referências de mídia,
+  thumbnails, CAS, relatório, checksums e o conjunto exato de arquivos. O mesmo
+  núcleo verifica o staging e uma versão existente antes da reutilização.
+- Todas as fixtures estão declaradas em `fixtures/registry.json`; o teste de
+  cobertura recusa diretórios sem caso ou casos sem uma asserção executada.
+  O rename de `versions/<build_version>` continua sendo a publicação final.
 
 O binário não consulta rede, apps, packages, i18n, seeds nem o ramo `user`. Uma
 versão existente só é reutilizada após a mesma verificação integral.

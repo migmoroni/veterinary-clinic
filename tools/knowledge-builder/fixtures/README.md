@@ -14,3 +14,10 @@ catálogo canônico:
 Os testes que precisam de bytes PNG, JPEG com orientação EXIF, GIF e WebP os
 geram deterministicamente em diretórios temporários. Esses bytes são dados de
 teste, não uma segunda fonte de conhecimento.
+
+`registry.json` é o registro executável das fixtures. O teste de cobertura exige
+correspondência exata entre seus casos e os diretórios acima e executa uma
+asserção positiva ou negativa para cada caso. Limites de bytes e dimensões,
+assinatura/extensão, orientação, transparência, ausência de ampliação e
+adulterações de artefatos usam dados temporários para não manter binários
+redundantes no repositório.

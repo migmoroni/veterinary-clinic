@@ -1,5 +1,5 @@
 use crate::{
-    markdown::{compile_document, CompiledDocument},
+    markdown::{compile_document, CompiledDocument, CompiledMediaReference},
     media::{resolve_media, sha256_hex, MediaAsset},
     normalization::normalize_search_text,
     source::{
@@ -116,6 +116,7 @@ pub(crate) struct ValidatedEntity {
     pub source: SourceEntry,
     pub editorial: BTreeMap<KnowledgeLocale, CompiledDocument>,
     pub structural_media: Vec<ValidatedMediaReference>,
+    pub markdown_media: BTreeMap<KnowledgeLocale, Vec<CompiledMediaReference>>,
 }
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -235,6 +236,7 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
     let mut validated_entities = Vec::with_capacity(entries.len());
     for entry in entries {
         let mut editorial = BTreeMap::new();
+        let mut markdown_media = BTreeMap::new();
         let mut structural_media = Vec::new();
         if let Some(declaration) = entry.entity.structural_media() {
             let mut declared_paths = Vec::new();
@@ -317,6 +319,7 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
                                         }
                                     }
                                 }
+                                markdown_media.insert(locale, compiled.media_references);
                                 editorial.insert(locale, compiled.document);
                             }
                             Err(error) => diagnostics
@@ -331,6 +334,7 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
             source: entry,
             editorial,
             structural_media,
+            markdown_media,
         });
     }
     validate_file_coverage(

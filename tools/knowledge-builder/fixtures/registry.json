@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    { "id": "contexts", "fixture": "contexts", "expectation": "success" },
+    { "id": "invalid-markdown", "fixture": "invalid-markdown", "expectation": "failure" },
+    { "id": "invalid-media", "fixture": "invalid-media", "expectation": "failure" },
+    { "id": "invalid-schema", "fixture": "invalid-schema", "expectation": "failure" },
+    { "id": "valid-markdown", "fixture": "valid-markdown", "expectation": "success" },
+    { "id": "valid-media", "fixture": "valid-media", "expectation": "success" },
+    { "id": "valid-minimal", "fixture": "valid-minimal", "expectation": "success" }
+  ]
+}

@@ -8,14 +8,15 @@ use comrak::{
     nodes::{AstNode, NodeValue},
     parse_document, Arena, Options,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fs, path::Path};
 
 const MAX_DOCUMENT_BYTES: usize = 1_000_000;
 const MAX_NODES: usize = 50_000;
 const MAX_AST_DEPTH: usize = 64;
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct CompiledSection {
     #[serde(rename = "sectionKey")]
     pub section_key: String,
@@ -23,7 +24,8 @@ pub struct CompiledSection {
     pub compiled_markdown: String,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct CompiledDocument {
     #[serde(rename = "schemaVersion")]
     pub schema_version: u32,
@@ -34,6 +36,14 @@ pub struct CompiledDocument {
 pub struct CompiledEditorial {
     pub document: CompiledDocument,
     pub media: Vec<MediaAsset>,
+    pub media_references: Vec<CompiledMediaReference>,
+}
+
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct CompiledMediaReference {
+    pub section_key: String,
+    pub occurrence: usize,
+    pub media_key: String,
 }
 
 pub fn compile_document(
@@ -59,6 +69,61 @@ pub fn compile_document(
         declarations,
         &source,
     )
+}
+
+pub(crate) fn collect_compiled_media_keys(markdown: &str) -> Result<Vec<String>, String> {
+    let arena = Arena::new();
+    let mut options = Options::default();
+    options.extension.table = true;
+    let root = parse_document(&arena, markdown, &options);
+    let mut media_keys = Vec::new();
+    for node in root.descendants() {
+        let destination = {
+            let data = node.data.borrow();
+            match &data.value {
+                NodeValue::Image(image) => Some(image.url.clone()),
+                _ => None,
+            }
+        };
+        let Some(destination) = destination else {
+            continue;
+        };
+        let encoded = destination
+            .strip_prefix("knowledge-media://asset/")
+            .ok_or_else(|| format!("compiled image uses non-canonical URI: {destination}"))?;
+        let media_key = percent_decode_media_key(encoded)?;
+        if percent_encode_media_key(&media_key) != encoded {
+            return Err(format!(
+                "compiled image URI is not canonically encoded: {destination}"
+            ));
+        }
+        media_keys.push(media_key);
+    }
+    Ok(media_keys)
+}
+
+fn percent_decode_media_key(value: &str) -> Result<String, String> {
+    let bytes = value.as_bytes();
+    let mut decoded = Vec::with_capacity(bytes.len());
+    let mut index = 0;
+    while index < bytes.len() {
+        if bytes[index] == b'%' {
+            if index + 2 >= bytes.len() {
+                return Err("truncated percent escape in compiled media URI".to_string());
+            }
+            let hex = std::str::from_utf8(&bytes[index + 1..index + 3])
+                .map_err(|error| format!("invalid percent escape: {error}"))?;
+            decoded.push(
+                u8::from_str_radix(hex, 16)
+                    .map_err(|_| format!("invalid percent escape %{hex}"))?,
+            );
+            index += 3;
+        } else {
+            decoded.push(bytes[index]);
+            index += 1;
+        }
+    }
+    String::from_utf8(decoded).map_err(|error| format!("media key is not UTF-8: {error}"))
 }
 
 fn compile_source(
@@ -129,15 +194,17 @@ fn compile_source(
         .parent()
         .ok_or_else(|| format!("{}: Markdown path has no parent", path.display()))?;
     let mut all_media = BTreeMap::new();
+    let mut media_references = Vec::new();
     let mut compiled_sections = Vec::with_capacity(declarations.len());
     for (declaration, (_, section_root)) in declarations.iter().zip(sections) {
-        resolve_references(
+        let references = resolve_references(
             section_root,
             entity_directory,
             document_directory,
             entity_type,
             entity_id,
             &mut all_media,
+            &declaration.section_key,
         )
         .map_err(|error| {
             format!(
@@ -146,6 +213,7 @@ fn compile_source(
                 declaration.section_key
             )
         })?;
+        media_references.extend(references);
         let mut rendered = Vec::new();
         format_commonmark(section_root, &options, &mut rendered)
             .map_err(|error| format!("{}: cannot serialize CommonMark: {error}", path.display()))?;
@@ -163,6 +231,7 @@ fn compile_source(
             sections: compiled_sections,
         },
         media: all_media.into_values().collect(),
+        media_references,
     })
 }
 
@@ -250,7 +319,9 @@ fn resolve_references<'a>(
     entity_type: &str,
     entity_id: &str,
     media: &mut BTreeMap<String, MediaAsset>,
-) -> Result<(), String> {
+    section_key: &str,
+) -> Result<Vec<CompiledMediaReference>, String> {
+    let mut references = Vec::new();
     for node in root.descendants() {
         let destination = {
             let data = node.data.borrow();
@@ -281,8 +352,13 @@ fn resolve_references<'a>(
                 return Err(format!("media key collision: {}", asset.media_key));
             }
         }
+        references.push(CompiledMediaReference {
+            section_key: section_key.to_string(),
+            occurrence: references.len(),
+            media_key: asset.media_key,
+        });
     }
-    Ok(())
+    Ok(references)
 }
 
 fn plain_text<'a>(node: &'a AstNode<'a>) -> String {
