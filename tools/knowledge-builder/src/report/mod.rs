@@ -1,3 +1,6 @@
+//! Defines build contexts and public artifact reports together with canonical
+//! JSON serialization and normalized relative-path handling.
+
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fs, path::Path};
 

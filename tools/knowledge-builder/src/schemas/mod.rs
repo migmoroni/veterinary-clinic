@@ -1,3 +1,6 @@
+//! Embeds and applies the closed JSON Schema contracts for canonical source
+//! entities, compiled content, build results, and projection evidence.
+
 use jsonschema::{Draft, Validator};
 use serde::Serialize;
 use serde_json::Value;

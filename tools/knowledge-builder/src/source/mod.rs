@@ -1,3 +1,6 @@
+//! Defines the canonical authored data model, closed locale set, source discovery,
+//! schema selection, and normalized typed deserialization.
+
 use crate::normalization::normalize_json_strings;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
