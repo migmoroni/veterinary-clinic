@@ -263,6 +263,145 @@ Para uma versão `<buildVersion>`, `--output` recebe esta estrutura:
             └── fr-FR/
 ```
 
+### Mapa Completo Dos Bancos E Do CAS System
+
+Cada locale possui seu próprio par de bancos `system` e `system_media`. O
+`CAS/system` é global para a saída e pode ser compartilhado por todos os
+locales e versões que declarem o mesmo hash.
+
+```mermaid
+flowchart LR
+    subgraph LOCALE["Artefatos de um locale"]
+        direction LR
+
+        subgraph SYSTEM["veterinary_clinic_system.db — 26 tabelas"]
+            direction TB
+
+            subgraph SYSTEM_META["Identidade do artefato"]
+                KBM["knowledge_build_metadata<br/>PK singleton<br/>build_version · source_digest · locale"]
+                KRM["knowledge_release_metadata<br/>PK singleton<br/>release_id · generation · revision · locale"]
+            end
+
+            subgraph TAXONOMIES["Vocabulários e taxonomias"]
+                TR["taxonomy_registry<br/>PK id<br/>UQ domain + purpose"]
+                TT["taxonomy_terms<br/>PK taxonomy_id + term_key<br/>parent_term_key · label · aliases_json"]
+                PTT["product_target_terms<br/>PK term_key<br/>parent_term_key · label · aliases_json"]
+                PVPT["product_vaccine_profile_terms<br/>PK term_key<br/>parent_term_key · label · aliases_json"]
+                PLST["product_life_stage_terms<br/>PK term_key<br/>parent_term_key · label · aliases_json"]
+                PTST["product_therapeutic_scope_terms<br/>PK term_key<br/>parent_term_key · label · aliases_json"]
+            end
+
+            subgraph CATALOG["Entidades localizadas"]
+                GEO["geo_places<br/>PK id<br/>parent_place_id · name · coordinates"]
+                BREED["breed_reference_items<br/>PK id<br/>species_json · size_term_key · content_json"]
+                BOP["breed_origin_places<br/>PK breed_id + place_id<br/>sort_order"]
+                MFR["manufacturer_catalog_items<br/>PK id<br/>type_term_key · name · content_json"]
+                ING["active_ingredient_catalog_items<br/>PK id<br/>type_term_key · nomenclature · content_json"]
+                COND["condition_catalog_items<br/>PK id<br/>type_term_key · name · content_json"]
+                PROD["product_catalog_items<br/>PK id<br/>manufacturer_id · type_term_key · content_json"]
+            end
+
+            subgraph RELATIONS["Relações semânticas"]
+                ETT["entity_taxonomy_terms<br/>PK entity_type + entity_id + relation_kind + term_key<br/>taxonomy_id · sort_order"]
+                PAI["product_active_ingredients<br/>PK product_id + active_ingredient_id<br/>sort_order"]
+                PT["product_targets<br/>PK product_id + term_key<br/>sort_order"]
+                PVP["product_vaccine_profiles<br/>PK product_id + term_key<br/>sort_order"]
+                PLS["product_life_stages<br/>PK product_id + term_key<br/>sort_order"]
+                PTS["product_therapeutic_scopes<br/>PK product_id + term_key<br/>sort_order"]
+            end
+
+            subgraph PROTOCOLS["Protocolos de tratamento"]
+                TP["treatment_protocols<br/>PK id<br/>kind · name · species_json"]
+                TPI["treatment_protocol_items<br/>PK protocol_id + product_id<br/>sort_order"]
+                TPD["treatment_protocol_doses<br/>PK protocol_id + dose_id<br/>validity · sort_order"]
+            end
+
+            subgraph INDEXES["Índices lógicos e mídia"]
+                EST["entity_search_terms<br/>PK entity_type + entity_id + provenance + normalized_value<br/>value · sort_order"]
+                EMR["entity_media_references<br/>PK entity_type + entity_id + role + sort_order<br/>media_key"]
+            end
+
+            ENTITY_ID{{"Identidade polimórfica<br/>entity_type + entity_id"}}
+        end
+
+        subgraph SYSTEM_MEDIA["veterinary_clinic_system_media.db — 3 tabelas"]
+            direction TB
+            MKBM["knowledge_build_metadata<br/>PK singleton<br/>build_version · source_digest · locale"]
+            MKRM["knowledge_release_metadata<br/>PK singleton<br/>release_id · generation · revision · locale"]
+            MA["media_assets<br/>PK media_key<br/>content_hash · thumbnail JPEG<br/>mime_type · size · dimensions"]
+        end
+    end
+
+    subgraph SHARED["Armazenamento compartilhado"]
+        CAS["CAS/system/aa/bb/sha256.bin<br/>bytes originais imutáveis<br/>endereço = SHA-256 do conteúdo"]
+    end
+
+    TR -->|"FK taxonomy_id"| TT
+    TT -->|"FK parent term"| TT
+    PTT -->|"FK parent term"| PTT
+    PVPT -->|"FK parent term"| PVPT
+    PLST -->|"FK parent term"| PLST
+    PTST -->|"FK parent term"| PTST
+
+    GEO -->|"FK parent_place_id"| GEO
+    BREED -->|"FK breed_id"| BOP
+    GEO -->|"FK place_id"| BOP
+    MFR -->|"FK manufacturer_id"| PROD
+
+    TT -->|"FK taxonomy_id + term_key"| ETT
+    PROD -->|"FK product_id"| PAI
+    ING -->|"FK active_ingredient_id"| PAI
+    PROD -->|"FK product_id"| PT
+    PTT -->|"FK term_key"| PT
+    PROD -->|"FK product_id"| PVP
+    PVPT -->|"FK term_key"| PVP
+    PROD -->|"FK product_id"| PLS
+    PLST -->|"FK term_key"| PLS
+    PROD -->|"FK product_id"| PTS
+    PTST -->|"FK term_key"| PTS
+
+    TP -->|"FK protocol_id"| TPI
+    PROD -->|"FK product_id"| TPI
+    TP -->|"FK protocol_id"| TPD
+
+    BREED -.->|"identidade lógica"| ENTITY_ID
+    MFR -.->|"identidade lógica"| ENTITY_ID
+    ING -.->|"identidade lógica"| ENTITY_ID
+    COND -.->|"identidade lógica"| ENTITY_ID
+    PROD -.->|"identidade lógica"| ENTITY_ID
+    GEO -.->|"identidade lógica"| ENTITY_ID
+    TP -.->|"identidade lógica"| ENTITY_ID
+    ENTITY_ID -.->|"5 tipos taxonomizados; sem FK"| ETT
+    ENTITY_ID -.->|"entidades localizadas; sem FK"| EST
+    ENTITY_ID -.->|"5 tipos com mídia; sem FK"| EMR
+
+    KBM -.->|"mesmo build e locale"| MKBM
+    KRM -.->|"mesmo release e locale"| MKRM
+    EMR -.->|"media_key entre bancos"| MA
+    MA -.->|"content_hash"| CAS
+
+    classDef metadata fill:#e8eefc,stroke:#4566a9,color:#17233d;
+    classDef taxonomy fill:#eee8ff,stroke:#7052a3,color:#261a3d;
+    classDef catalog fill:#e6f5ec,stroke:#3d8057,color:#163323;
+    classDef relation fill:#fff3d9,stroke:#9a6b18,color:#3c2908;
+    classDef media fill:#fde8ef,stroke:#a34b6c,color:#3d1725;
+    classDef storage fill:#e4f6f7,stroke:#2c7d82,color:#123235;
+
+    class KBM,KRM,MKBM,MKRM metadata;
+    class TR,TT,PTT,PVPT,PLST,PTST taxonomy;
+    class GEO,BREED,MFR,ING,COND,PROD,TP catalog;
+    class BOP,ETT,PAI,PT,PVP,PLS,PTS,TPI,TPD,EST relation;
+    class EMR,MA media;
+    class CAS storage;
+```
+
+Setas contínuas representam `FOREIGN KEY` efetivamente aplicadas pelo SQLite.
+Setas tracejadas representam contratos lógicos verificados pelo builder e pelo
+`ArtifactVerifier`, mas que não podem ser expressos como FK por serem
+polimórficos, atravessarem bancos diferentes ou apontarem para arquivos CAS.
+Colunas `*_json` guardam atributos compostos do próprio registro; elas não
+representam tabelas ou relacionamentos ocultos.
+
 `build-result.json`
 
 Manifesto público da versão. Declara builder, contexto de release, digest da
