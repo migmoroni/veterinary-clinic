@@ -1,0 +1,785 @@
+//! Declares the closed obligation matrix for every canonical entity variant and
+//! routes repeated authoring patterns through shared ledger helpers.
+
+use super::{
+    obligation_helpers::*,
+    ownership::{ObligationOwnership, OperationDisposition},
+    CompilationOperationId, ObligationClass, ProjectionOperationId, ProjectionTarget, SourceToken,
+    SystemColumn, SystemTable,
+};
+use crate::{
+    databases::DatabaseKind,
+    source::{CanonicalEntity, KnowledgeLocale},
+    validation::ValidatedEntity,
+};
+
+pub(super) fn add_entity_obligations(
+    expected: &mut ObligationOwnership,
+    entry: &ValidatedEntity,
+    locale: KnowledgeLocale,
+) -> Result<(), String> {
+    let entity = identity(&entry.source.entity);
+    let main = main_row_target(&entry.source.entity);
+    insert_obligation(
+        expected,
+        main.clone(),
+        SourceToken::Entity(entity.clone()),
+        ObligationClass::Entity,
+    )?;
+    field(
+        expected,
+        &entity,
+        "entityType",
+        canonical_validation_target(&entity, locale, "entity_type"),
+        ObligationClass::Authoring,
+    )?;
+    match &entry.source.entity {
+        CanonicalEntity::Product(value) => {
+            let crate::source::ProductEntity {
+                schema_version,
+                id,
+                type_term_key,
+                classification_term_keys,
+                species,
+                regions,
+                manufacturer_id,
+                active_ingredient_ids,
+                regulatory_identifiers,
+                target_term_keys,
+                vaccine_profile_term_keys,
+                life_stage_term_keys,
+                therapeutic_scope_term_keys,
+                localized_content,
+                sections,
+                content_path,
+                media,
+            } = value;
+            let _ = (schema_version, id, manufacturer_id);
+            common_authoring(
+                expected,
+                &entity,
+                locale,
+                sections,
+                content_path.as_deref(),
+                &main,
+            )?;
+            field(
+                expected,
+                &entity,
+                "id",
+                main.column(SystemColumn::Id),
+                ObligationClass::Authoring,
+            )?;
+            field(
+                expected,
+                &entity,
+                "typeTermKey",
+                main.column(SystemColumn::TypeTermKey),
+                ObligationClass::Authoring,
+            )?;
+            relations(
+                expected,
+                &entity,
+                "typeTermKey",
+                std::slice::from_ref(type_term_key),
+                |_, key| taxonomy_row(&entity, "type", key),
+            )?;
+            relations(
+                expected,
+                &entity,
+                "classificationTermKeys",
+                classification_term_keys,
+                |_, key| taxonomy_row(&entity, "classification", key),
+            )?;
+            fields(
+                expected,
+                &entity,
+                "species",
+                species,
+                main.column(SystemColumn::SpeciesJson),
+            )?;
+            fields(
+                expected,
+                &entity,
+                "regions",
+                regions,
+                main.column(SystemColumn::RegionsJson),
+            )?;
+            field(
+                expected,
+                &entity,
+                "manufacturerId",
+                main.column(SystemColumn::ManufacturerId),
+                ObligationClass::Relation,
+            )?;
+            relations(
+                expected,
+                &entity,
+                "activeIngredientIds",
+                active_ingredient_ids,
+                |_, id| {
+                    table_row(
+                        DatabaseKind::System,
+                        SystemTable::ProductActiveIngredients,
+                        format!("{}/{id}", entity.id),
+                    )
+                },
+            )?;
+            optional_fields(
+                expected,
+                &entity,
+                "regulatoryIdentifiers.brazilMapa",
+                regulatory_identifiers.brazil_mapa.as_ref(),
+                main.column(SystemColumn::RegulatoryIdentifiersJson),
+            )?;
+            optional_fields(
+                expected,
+                &entity,
+                "regulatoryIdentifiers.unitedStatesNada",
+                regulatory_identifiers.united_states_nada.as_ref(),
+                main.column(SystemColumn::RegulatoryIdentifiersJson),
+            )?;
+            optional_fields(
+                expected,
+                &entity,
+                "regulatoryIdentifiers.unitedStatesAnada",
+                regulatory_identifiers.united_states_anada.as_ref(),
+                main.column(SystemColumn::RegulatoryIdentifiersJson),
+            )?;
+            optional_fields(
+                expected,
+                &entity,
+                "regulatoryIdentifiers.gtinEan",
+                regulatory_identifiers.gtin_ean.as_ref(),
+                main.column(SystemColumn::RegulatoryIdentifiersJson),
+            )?;
+            optional_relations(
+                expected,
+                &entity,
+                "targetTermKeys",
+                target_term_keys.as_deref(),
+                SystemTable::ProductTargets,
+            )?;
+            optional_relations(
+                expected,
+                &entity,
+                "vaccineProfileTermKeys",
+                vaccine_profile_term_keys.as_deref(),
+                SystemTable::ProductVaccineProfiles,
+            )?;
+            optional_relations(
+                expected,
+                &entity,
+                "lifeStageTermKeys",
+                life_stage_term_keys.as_deref(),
+                SystemTable::ProductLifeStages,
+            )?;
+            optional_relations(
+                expected,
+                &entity,
+                "therapeuticScopeTermKeys",
+                therapeutic_scope_term_keys.as_deref(),
+                SystemTable::ProductTherapeuticScopes,
+            )?;
+            localized(expected, &entity, localized_content, locale, main.clone())?;
+            structural_media(expected, entry, locale, media.as_ref())?;
+        }
+        CanonicalEntity::Manufacturer(value) => {
+            let crate::source::ManufacturerEntity {
+                schema_version,
+                id,
+                type_term_key,
+                classification_term_keys,
+                regions,
+                website,
+                localized_content,
+                sections,
+                content_path,
+                media,
+            } = value;
+            let _ = (schema_version, id);
+            common_authoring(
+                expected,
+                &entity,
+                locale,
+                sections,
+                content_path.as_deref(),
+                &main,
+            )?;
+            field(
+                expected,
+                &entity,
+                "id",
+                main.column(SystemColumn::Id),
+                ObligationClass::Authoring,
+            )?;
+            field(
+                expected,
+                &entity,
+                "typeTermKey",
+                main.column(SystemColumn::TypeTermKey),
+                ObligationClass::Authoring,
+            )?;
+            relations(
+                expected,
+                &entity,
+                "typeTermKey",
+                std::slice::from_ref(type_term_key),
+                |_, key| taxonomy_row(&entity, "type", key),
+            )?;
+            relations(
+                expected,
+                &entity,
+                "classificationTermKeys",
+                classification_term_keys,
+                |_, key| taxonomy_row(&entity, "classification", key),
+            )?;
+            fields(
+                expected,
+                &entity,
+                "regions",
+                regions,
+                main.column(SystemColumn::RegionsJson),
+            )?;
+            optional_fields(
+                expected,
+                &entity,
+                "website",
+                website.as_ref(),
+                main.column(SystemColumn::Website),
+            )?;
+            localized(expected, &entity, localized_content, locale, main.clone())?;
+            structural_media(expected, entry, locale, media.as_ref())?;
+        }
+        CanonicalEntity::ActiveIngredient(value) => {
+            let crate::source::ActiveIngredientEntity {
+                schema_version,
+                id,
+                type_term_key,
+                classification_term_keys,
+                regions,
+                nomenclature,
+                atc_vet_code,
+                localized_content,
+                sections,
+                content_path,
+                media,
+            } = value;
+            let _ = (schema_version, id);
+            common_authoring(
+                expected,
+                &entity,
+                locale,
+                sections,
+                content_path.as_deref(),
+                &main,
+            )?;
+            field(
+                expected,
+                &entity,
+                "id",
+                main.column(SystemColumn::Id),
+                ObligationClass::Authoring,
+            )?;
+            field(
+                expected,
+                &entity,
+                "typeTermKey",
+                main.column(SystemColumn::TypeTermKey),
+                ObligationClass::Authoring,
+            )?;
+            relations(
+                expected,
+                &entity,
+                "typeTermKey",
+                std::slice::from_ref(type_term_key),
+                |_, key| taxonomy_row(&entity, "type", key),
+            )?;
+            relations(
+                expected,
+                &entity,
+                "classificationTermKeys",
+                classification_term_keys,
+                |_, key| taxonomy_row(&entity, "classification", key),
+            )?;
+            fields(
+                expected,
+                &entity,
+                "regions",
+                regions,
+                main.column(SystemColumn::RegionsJson),
+            )?;
+            optional_fields(
+                expected,
+                &entity,
+                "nomenclature.scientificName",
+                nomenclature.scientific_name.as_ref(),
+                main.column(SystemColumn::NomenclatureJson),
+            )?;
+            optional_fields(
+                expected,
+                &entity,
+                "nomenclature.casNumber",
+                nomenclature.cas_number.as_ref(),
+                main.column(SystemColumn::NomenclatureJson),
+            )?;
+            fields(
+                expected,
+                &entity,
+                "nomenclature.denominationStandards",
+                &nomenclature.denomination_standards,
+                main.column(SystemColumn::NomenclatureJson),
+            )?;
+            optional_fields(
+                expected,
+                &entity,
+                "atcVetCode",
+                atc_vet_code.as_ref(),
+                main.column(SystemColumn::AtcVetCode),
+            )?;
+            localized(expected, &entity, localized_content, locale, main.clone())?;
+            structural_media(expected, entry, locale, media.as_ref())?;
+        }
+        CanonicalEntity::Condition(value) => {
+            let crate::source::ConditionEntity {
+                schema_version,
+                id,
+                type_term_key,
+                classification_term_keys,
+                regions,
+                localized_content,
+                sections,
+                content_path,
+                media,
+            } = value;
+            let _ = (schema_version, id);
+            common_authoring(
+                expected,
+                &entity,
+                locale,
+                sections,
+                content_path.as_deref(),
+                &main,
+            )?;
+            field(
+                expected,
+                &entity,
+                "id",
+                main.column(SystemColumn::Id),
+                ObligationClass::Authoring,
+            )?;
+            field(
+                expected,
+                &entity,
+                "typeTermKey",
+                main.column(SystemColumn::TypeTermKey),
+                ObligationClass::Authoring,
+            )?;
+            relations(
+                expected,
+                &entity,
+                "typeTermKey",
+                std::slice::from_ref(type_term_key),
+                |_, key| taxonomy_row(&entity, "type", key),
+            )?;
+            relations(
+                expected,
+                &entity,
+                "classificationTermKeys",
+                classification_term_keys,
+                |_, key| taxonomy_row(&entity, "classification", key),
+            )?;
+            fields(
+                expected,
+                &entity,
+                "regions",
+                regions,
+                main.column(SystemColumn::RegionsJson),
+            )?;
+            localized(expected, &entity, localized_content, locale, main.clone())?;
+            structural_media(expected, entry, locale, media.as_ref())?;
+        }
+        CanonicalEntity::Breed(value) => {
+            let crate::source::BreedEntity {
+                schema_version,
+                id,
+                species,
+                origin_place_ids,
+                size_term_key,
+                average_weight_kg,
+                average_height_cm,
+                localized_content,
+                sections,
+                content_path,
+                media,
+            } = value;
+            let _ = (schema_version, id);
+            common_authoring(
+                expected,
+                &entity,
+                locale,
+                sections,
+                content_path.as_deref(),
+                &main,
+            )?;
+            field(
+                expected,
+                &entity,
+                "id",
+                main.column(SystemColumn::Id),
+                ObligationClass::Authoring,
+            )?;
+            fields(
+                expected,
+                &entity,
+                "species",
+                species,
+                main.column(SystemColumn::SpeciesJson),
+            )?;
+            relations(
+                expected,
+                &entity,
+                "originPlaceIds",
+                origin_place_ids,
+                |_, id| {
+                    table_row(
+                        DatabaseKind::System,
+                        SystemTable::BreedOriginPlaces,
+                        format!("{}/{id}", entity.id),
+                    )
+                },
+            )?;
+            field(
+                expected,
+                &entity,
+                "sizeTermKey",
+                main.column(SystemColumn::SizeTermKey),
+                ObligationClass::Authoring,
+            )?;
+            relations(
+                expected,
+                &entity,
+                "sizeTermKey",
+                std::slice::from_ref(size_term_key),
+                |_, key| taxonomy_row(&entity, "size", key),
+            )?;
+            for (name, range) in [
+                ("averageWeightKg", average_weight_kg),
+                ("averageHeightCm", average_height_cm),
+            ] {
+                for (sex, values) in [("male", range.male), ("female", range.female)] {
+                    for index in 0..values.len() {
+                        field(
+                            expected,
+                            &entity,
+                            &format!("{name}.{sex}.{index}"),
+                            main.column(match name {
+                                "averageWeightKg" => SystemColumn::AverageWeightKgJson,
+                                "averageHeightCm" => SystemColumn::AverageHeightCmJson,
+                                _ => unreachable!(),
+                            }),
+                            ObligationClass::Authoring,
+                        )?;
+                    }
+                }
+            }
+            localized(expected, &entity, localized_content, locale, main.clone())?;
+            structural_media(expected, entry, locale, media.as_ref())?;
+        }
+        CanonicalEntity::GeoPlace(value) => {
+            let crate::source::GeoPlaceEntity {
+                schema_version,
+                id,
+                place_type,
+                country_codes,
+                parent_place_id,
+                centroid,
+                localized_content,
+            } = value;
+            let _ = (schema_version, id, place_type);
+            field(
+                expected,
+                &entity,
+                "schemaVersion",
+                canonical_validation_target(&entity, locale, "schema_version"),
+                ObligationClass::Authoring,
+            )?;
+            field(
+                expected,
+                &entity,
+                "id",
+                main.column(SystemColumn::Id),
+                ObligationClass::Authoring,
+            )?;
+            field(
+                expected,
+                &entity,
+                "placeType",
+                main.column(SystemColumn::PlaceType),
+                ObligationClass::Authoring,
+            )?;
+            fields(
+                expected,
+                &entity,
+                "countryCodes",
+                country_codes,
+                main.column(SystemColumn::CountryCodesJson),
+            )?;
+            if parent_place_id.is_some() {
+                field(
+                    expected,
+                    &entity,
+                    "parentPlaceId",
+                    main.column(SystemColumn::ParentPlaceId),
+                    ObligationClass::Relation,
+                )?;
+            }
+            optional_fields(
+                expected,
+                &entity,
+                "centroid.latitude",
+                centroid.latitude.as_ref(),
+                main.column(SystemColumn::Latitude),
+            )?;
+            optional_fields(
+                expected,
+                &entity,
+                "centroid.longitude",
+                centroid.longitude.as_ref(),
+                main.column(SystemColumn::Longitude),
+            )?;
+            localized(expected, &entity, localized_content, locale, main.clone())?;
+        }
+        CanonicalEntity::TreatmentProtocol(value) => {
+            let crate::source::TreatmentProtocolEntity {
+                schema_version,
+                id,
+                kind,
+                species,
+                product_ids,
+                doses,
+                localized_content,
+            } = value;
+            let _ = (schema_version, id, kind);
+            field(
+                expected,
+                &entity,
+                "schemaVersion",
+                canonical_validation_target(&entity, locale, "schema_version"),
+                ObligationClass::Authoring,
+            )?;
+            field(
+                expected,
+                &entity,
+                "id",
+                main.column(SystemColumn::Id),
+                ObligationClass::Authoring,
+            )?;
+            field(
+                expected,
+                &entity,
+                "kind",
+                main.column(SystemColumn::Kind),
+                ObligationClass::Authoring,
+            )?;
+            fields(
+                expected,
+                &entity,
+                "species",
+                species,
+                main.column(SystemColumn::SpeciesJson),
+            )?;
+            relations(expected, &entity, "productIds", product_ids, |_, id| {
+                table_row(
+                    DatabaseKind::System,
+                    SystemTable::TreatmentProtocolItems,
+                    format!("{}/{id}", entity.id),
+                )
+            })?;
+            for (position, dose) in doses.iter().enumerate() {
+                let row = table_row(
+                    DatabaseKind::System,
+                    SystemTable::TreatmentProtocolDoses,
+                    format!("{}/{}", entity.id, dose.id),
+                );
+                field(
+                    expected,
+                    &entity,
+                    &format!("doses.{position}.id"),
+                    row.column(SystemColumn::DoseId),
+                    ObligationClass::Authoring,
+                )?;
+                field(
+                    expected,
+                    &entity,
+                    &format!("doses.{position}.validityValue"),
+                    row.column(SystemColumn::ValidityValue),
+                    ObligationClass::Authoring,
+                )?;
+                field(
+                    expected,
+                    &entity,
+                    &format!("doses.{position}.validityUnit"),
+                    row.column(SystemColumn::ValidityUnit),
+                    ObligationClass::Authoring,
+                )?;
+                localized_with_prefix(
+                    expected,
+                    &entity,
+                    &dose.localized_content,
+                    locale,
+                    row,
+                    &format!("doses.{position}.localizedContent"),
+                )?;
+            }
+            localized(expected, &entity, localized_content, locale, main.clone())?;
+        }
+        CanonicalEntity::Taxonomy(value) => {
+            let crate::source::TaxonomyEntity {
+                schema_version,
+                id,
+                domain,
+                purpose,
+                terms,
+            } = value;
+            let _ = (schema_version, id, domain);
+            field(
+                expected,
+                &entity,
+                "schemaVersion",
+                canonical_validation_target(&entity, locale, "schema_version"),
+                ObligationClass::Authoring,
+            )?;
+            field(
+                expected,
+                &entity,
+                "id",
+                main.column(SystemColumn::Id),
+                ObligationClass::Authoring,
+            )?;
+            field(
+                expected,
+                &entity,
+                "domain",
+                main.column(SystemColumn::Domain),
+                ObligationClass::Authoring,
+            )?;
+            field(
+                expected,
+                &entity,
+                "purpose",
+                main.column(SystemColumn::Purpose),
+                ObligationClass::Authoring,
+            )?;
+            let table = semantic_term_table(purpose);
+            for (position, term) in terms.iter().enumerate() {
+                let row_id = if table == SystemTable::TaxonomyTerms {
+                    format!("{}/{}", entity.id, term.key)
+                } else {
+                    term.key.clone()
+                };
+                let row = table_row(DatabaseKind::System, table, row_id);
+                field(
+                    expected,
+                    &entity,
+                    &format!("terms.{position}.key"),
+                    row.column(SystemColumn::TermKey),
+                    ObligationClass::Authoring,
+                )?;
+                if term.parent_key.is_some() {
+                    field(
+                        expected,
+                        &entity,
+                        &format!("terms.{position}.parentKey"),
+                        row.column(SystemColumn::ParentTermKey),
+                        ObligationClass::Relation,
+                    )?;
+                }
+                field(
+                    expected,
+                    &entity,
+                    &format!("terms.{position}.order"),
+                    row.column(SystemColumn::SortOrder),
+                    ObligationClass::Authoring,
+                )?;
+                localized_with_prefix(
+                    expected,
+                    &entity,
+                    &term.localized_content,
+                    locale,
+                    row,
+                    &format!("terms.{position}.localizedContent"),
+                )?;
+            }
+        }
+    }
+    for (document_locale, document) in &entry.editorial {
+        if *document_locale != locale {
+            continue;
+        }
+        insert_obligation(
+            expected,
+            OperationDisposition {
+                owner: ProjectionOperationId::Compilation(CompilationOperationId::Document {
+                    entity: entity.clone(),
+                }),
+                target: ProjectionTarget::CompiledDocument {
+                    entity: entity.clone(),
+                    locale,
+                },
+            },
+            SourceToken::Document {
+                entity: entity.clone(),
+                locale,
+            },
+            ObligationClass::Authoring,
+        )?;
+        for section in &document.sections {
+            insert_obligation(
+                expected,
+                OperationDisposition {
+                    owner: ProjectionOperationId::Compilation(CompilationOperationId::Section {
+                        entity: entity.clone(),
+                        section_key: section.section_key.clone(),
+                    }),
+                    target: ProjectionTarget::CompiledSection {
+                        entity: entity.clone(),
+                        locale,
+                        section_key: section.section_key.clone(),
+                    },
+                },
+                SourceToken::Section {
+                    entity: entity.clone(),
+                    locale,
+                    section_key: section.section_key.clone(),
+                },
+                ObligationClass::LocalizedContent,
+            )?;
+        }
+    }
+    for reference in entry.markdown_media.get(&locale).into_iter().flatten() {
+        insert_obligation(
+            expected,
+            OperationDisposition {
+                owner: ProjectionOperationId::Compilation(CompilationOperationId::Section {
+                    entity: entity.clone(),
+                    section_key: reference.section_key.clone(),
+                }),
+                target: ProjectionTarget::CompiledSection {
+                    entity: entity.clone(),
+                    locale,
+                    section_key: reference.section_key.clone(),
+                },
+            },
+            SourceToken::MarkdownMediaReference {
+                entity: entity.clone(),
+                locale,
+                section_key: reference.section_key.clone(),
+                occurrence: reference.occurrence,
+                media_key: reference.media_key.clone(),
+            },
+            ObligationClass::Media,
+        )?;
+    }
+    Ok(())
+}
