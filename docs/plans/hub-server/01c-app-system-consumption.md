@@ -21,9 +21,10 @@ saída preparada.
 
 ## Pré-requisito
 
-A [Parte 1B.1](./01b1-knowledge-builder-contract-consolidation.md) está concluída
-e gera uma `build_version` válida com os seis pares de bancos, o CAS
-compartilhado e a auditoria integral da projeção.
+A [Parte 1B.2](./01b2-projection-evidence-and-artifact-verification.md) está
+concluída e gera uma `build_version` válida com os seis pares de bancos, o CAS
+compartilhado, evidências completas da projeção e verificação integral dos
+artefatos.
 
 ## Escopo
 

@@ -1,0 +1,4 @@
+{
+  "cover": "../outside.png",
+  "reason": "media paths must remain inside the owning entity"
+}

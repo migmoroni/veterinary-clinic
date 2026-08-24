@@ -1,5 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema", "title": "Canonical treatment protocol", "type": "object", "additionalProperties": false,
   "required": ["schemaVersion", "entityType", "id", "kind", "species", "productIds", "doses", "localizedContent"],
-  "properties": { "schemaVersion": { "const": 1 }, "entityType": { "const": "treatment_protocol" }, "id": { "type": "string", "format": "uuid" }, "kind": { "enum": ["vaccine", "antiparasitic"] }, "species": { "type": "array", "minItems": 1, "uniqueItems": true }, "productIds": { "type": "array", "minItems": 1, "uniqueItems": true }, "doses": { "type": "array", "items": { "type": "object" } }, "localizedContent": { "type": "object" } }
+  "properties": {
+    "schemaVersion": { "const": 1 }, "entityType": { "const": "treatment_protocol" }, "id": { "$ref": "common.schema.json#/$defs/uuidV4" }, "kind": { "enum": ["vaccine", "antiparasitic"] },
+    "species": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["canine", "feline"] } }, "productIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/uuidV4" } },
+    "doses": { "type": "array", "minItems": 1, "maxItems": 128, "items": { "type": "object", "additionalProperties": false, "required": ["id", "validityValue", "validityUnit", "localizedContent"], "properties": {
+      "id": { "$ref": "common.schema.json#/$defs/key" }, "validityValue": { "type": "integer", "minimum": 1 }, "validityUnit": { "enum": ["days", "months", "years"] }, "localizedContent": { "$ref": "common.schema.json#/$defs/localizedContent" }
+    } } },
+    "localizedContent": { "$ref": "common.schema.json#/$defs/localizedContent" }
+  }
 }

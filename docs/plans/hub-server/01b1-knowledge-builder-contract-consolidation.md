@@ -65,10 +65,9 @@ Workspace. O conjunto previsto é:
 - `unicode-normalization`, para NFC, NFD e identificação de combining marks;
 - `jsonschema`, para JSON Schema Draft 2020-12 com resolução local;
 - `image`, para decodificação, dimensões, orientação e redimensionamento;
-- um encoder WebP determinístico, para thumbnails no contrato já consumido pelo
-  app;
-- uma biblioteca EXIF quando a orientação não estiver coberta pelo decoder
-  escolhido.
+- o encoder JPEG da própria crate `image`, para thumbnails determinísticos;
+- nenhuma biblioteca EXIF adicional, pois o decoder escolhido expõe e aplica a
+  orientação necessária.
 
 As versões ficam fixadas por `Cargo.lock`. Nenhum schema usa referência remota em
 tempo de execução e nenhuma validação acessa a rede.
@@ -347,8 +346,8 @@ Para cada mídia:
 3. ler a orientação EXIF aplicável;
 4. preservar os bytes originais no CAS;
 5. registrar dimensões visuais considerando a orientação;
-6. gerar thumbnail WebP com maior lado de `200 px`, sem ampliação e qualidade
-   fixa `72`;
+6. gerar thumbnail JPEG com maior lado de `200 px`, sem ampliação, qualidade
+   fixa `72` e transparência composta sobre branco;
 7. usar encoder, filtro de resize e opções fixados;
 8. registrar o thumbnail real em `system_media`.
 
@@ -595,4 +594,4 @@ canônicas estáveis.
 ## Próxima Parte
 
 Após cumprir todos os critérios, seguir para a
-[Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md).
+[Parte 1B.2: evidência de projeção e verificação integral dos artefatos](./01b2-projection-evidence-and-artifact-verification.md).

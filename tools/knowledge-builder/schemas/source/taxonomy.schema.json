@@ -1,5 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema", "title": "Canonical taxonomy", "type": "object", "additionalProperties": false,
   "required": ["schemaVersion", "entityType", "id", "domain", "purpose", "terms"],
-  "properties": { "schemaVersion": { "const": 1 }, "entityType": { "const": "taxonomy" }, "id": { "type": "string", "minLength": 1 }, "domain": { "type": "string", "minLength": 1 }, "purpose": { "type": "string", "minLength": 1 }, "terms": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["key", "parentKey", "order", "localizedContent"], "properties": { "key": { "type": "string", "minLength": 1 }, "parentKey": { "type": ["string", "null"] }, "order": { "type": "integer", "minimum": 0 }, "localizedContent": { "type": "object" } } } } }
+  "properties": {
+    "schemaVersion": { "const": 1 }, "entityType": { "const": "taxonomy" }, "id": { "$ref": "common.schema.json#/$defs/nonEmptyText" },
+    "domain": { "$ref": "common.schema.json#/$defs/key" }, "purpose": { "$ref": "common.schema.json#/$defs/key" },
+    "terms": { "type": "array", "minItems": 1, "maxItems": 10000, "items": {
+      "type": "object", "additionalProperties": false, "required": ["key", "parentKey", "order", "localizedContent"],
+      "properties": { "key": { "$ref": "common.schema.json#/$defs/key" }, "parentKey": { "oneOf": [{ "$ref": "common.schema.json#/$defs/key" }, { "type": "null" }] }, "order": { "type": "integer", "minimum": 0 }, "localizedContent": { "$ref": "common.schema.json#/$defs/localizedContent" } }
+    } }
+  }
 }

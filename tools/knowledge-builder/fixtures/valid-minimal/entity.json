@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "entityType": "geo_place",
+  "id": "fixture-place",
+  "placeType": "country",
+  "countryCodes": ["BR"],
+  "parentPlaceId": null,
+  "centroid": { "latitude": null, "longitude": null },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Lugar", "pt-PT": "Lugar", "gn-PY": "Tenda",
+      "en-US": "Place", "es-ES": "Lugar", "fr-FR": "Lieu"
+    },
+    "aliases": {
+      "pt-BR": [], "pt-PT": [], "gn-PY": [],
+      "en-US": [], "es-ES": [], "fr-FR": []
+    }
+  }
+}

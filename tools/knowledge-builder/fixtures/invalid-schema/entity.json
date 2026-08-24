@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "entityType": "geo_place",
+  "id": "invalid",
+  "unexpectedField": true
+}

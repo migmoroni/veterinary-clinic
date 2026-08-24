@@ -18,6 +18,11 @@ Os defaults públicos atuais não contêm bytes de mídia. Por isso não há arq
 em `media/`; quando existirem, eles ficarão junto à entidade proprietária e serão
 referenciados por caminhos relativos.
 
+Toda string de autoria entra no modelo em Unicode NFC. Identidade exata e busca
+textual usam normalizações distintas: nomes canônicos removem separadores,
+enquanto consultas, labels e termos pesquisáveis preservam a separação por um
+único espaço.
+
 ## Organização
 
 ```text
@@ -279,6 +284,31 @@ como texto, tabelas e links externos `https`. HTML bruto, scripts, imagens
 remotas e protocolos inseguros são proibidos. Imagens locais, quando existirem,
 apontam para arquivos da própria entidade.
 
+O compilador interpreta esse perfil pelo AST CommonMark, não por linhas nem por
+scanner de links. A serialização canônica uniformiza marcadores equivalentes,
+preserva o significado dos nós e não interpreta referências escritas dentro de
+código.
+
+## Mídias Estruturais
+
+`breed`, `product`, `manufacturer`, `active_ingredient` e `condition` podem
+declarar capa e galeria:
+
+```json
+{
+  "media": {
+    "cover": "./media/cover.png",
+    "gallery": ["./media/lateral.jpg"]
+  }
+}
+```
+
+`cover` é única, `gallery` preserva a ordem e não repete a capa. Uma referência
+Markdown e uma referência estrutural ao mesmo arquivo compartilham a mesma
+`media_key`. O original permanece imutável no CAS; `system_media` recebe um
+thumbnail JPEG determinístico com qualidade 72, lado máximo de 200 pixels, sem
+ampliação e com transparência composta sobre branco.
+
 ## Busca Derivada
 
 A busca não possui taxonomia própria. A projeção localizada de um produto combina
@@ -301,8 +331,9 @@ pesquisável, caminhos, mídias, IDs e contagens do
 [`inventory.json`](./inventory.json). Use `--write-report` para atualizar
 `audit-report.json`; a execução padrão é somente leitura.
 
-A auditoria não gera bancos nem CAS. A validação executável e a compilação
-offline pertencem ao crate `tools/knowledge-builder`:
+A auditoria não gera bancos nem CAS. A validação executável por JSON Schema,
+AST e regras semânticas, além da compilação offline, pertence ao crate
+`tools/knowledge-builder`:
 
 ```bash
 pnpm knowledge:validate
@@ -311,5 +342,5 @@ pnpm knowledge:build
 
 Uma build válida projeta os seis locales, gera os doze bancos em
 `build/knowledge-artifacts`, verifica integridade e foreign keys e finaliza
-checksums, relatório de cobertura e `build-result.json`. A integração desses
+checksums, ledger de cobertura e `build-result.json`. A integração desses
 artefatos no runtime permanece fora deste contrato.

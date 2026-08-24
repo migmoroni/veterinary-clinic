@@ -1,5 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema", "title": "Canonical geographic place", "type": "object", "additionalProperties": false,
   "required": ["schemaVersion", "entityType", "id", "placeType", "countryCodes", "parentPlaceId", "centroid", "localizedContent"],
-  "properties": { "schemaVersion": { "const": 1 }, "entityType": { "const": "geo_place" }, "id": { "type": "string", "minLength": 1 }, "placeType": { "type": "string" }, "countryCodes": { "type": "array", "uniqueItems": true }, "parentPlaceId": { "type": ["string", "null"] }, "centroid": { "type": "object" }, "localizedContent": { "type": "object" } }
+  "properties": {
+    "schemaVersion": { "const": 1 }, "entityType": { "const": "geo_place" }, "id": { "$ref": "common.schema.json#/$defs/nonEmptyText" },
+    "placeType": { "$ref": "common.schema.json#/$defs/key" }, "countryCodes": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[A-Z]{2}$" } },
+    "parentPlaceId": { "oneOf": [{ "$ref": "common.schema.json#/$defs/nonEmptyText" }, { "type": "null" }] }, "centroid": { "$ref": "common.schema.json#/$defs/centroid" },
+    "localizedContent": { "$ref": "common.schema.json#/$defs/localizedContent" }
+  }
 }

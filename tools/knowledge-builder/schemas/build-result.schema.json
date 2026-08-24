@@ -1,20 +1,29 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Knowledge builder result",
-  "type": "object",
-  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "title": "Knowledge builder result", "type": "object", "additionalProperties": false,
   "required": ["schemaVersion", "builderVersion", "buildVersion", "release", "sourceDigestSha256", "systemSchemaVersion", "systemMediaSchemaVersion", "locales", "cas", "projection", "checksumFile"],
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "path": { "type": "string", "minLength": 1, "maxLength": 1024, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\\\u0000]+$" },
+    "database": { "type": "object", "additionalProperties": false, "required": ["path", "sizeBytes", "checksumSha256", "schemaFingerprintSha256"], "properties": {
+      "path": { "$ref": "#/$defs/path" }, "sizeBytes": { "type": "integer", "minimum": 1 }, "checksumSha256": { "$ref": "#/$defs/hash" }, "schemaFingerprintSha256": { "$ref": "#/$defs/hash" }
+    } },
+    "locale": { "type": "object", "additionalProperties": false, "required": ["system", "systemMedia", "casSetDigestSha256"], "properties": {
+      "system": { "$ref": "#/$defs/database" }, "systemMedia": { "$ref": "#/$defs/database" }, "casSetDigestSha256": { "$ref": "#/$defs/hash" }
+    } }
+  },
   "properties": {
-    "schemaVersion": { "const": 1 },
-    "builderVersion": { "type": "string", "minLength": 1 },
-    "buildVersion": { "type": "integer", "minimum": 1 },
-    "release": { "type": ["object", "null"] },
-    "sourceDigestSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-    "systemSchemaVersion": { "type": "integer", "minimum": 1 },
-    "systemMediaSchemaVersion": { "type": "integer", "minimum": 1 },
-    "locales": { "type": "object", "minProperties": 6, "maxProperties": 6 },
-    "cas": { "type": "object" },
-    "projection": { "type": "object" },
-    "checksumFile": { "type": "string", "minLength": 1 }
+    "schemaVersion": { "const": 1 }, "builderVersion": { "type": "string", "minLength": 1, "maxLength": 64 }, "buildVersion": { "type": "integer", "minimum": 1 },
+    "release": { "oneOf": [{ "type": "null" }, { "type": "object", "additionalProperties": false, "required": ["releaseId", "generation", "revision"], "properties": {
+      "releaseId": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" }, "generation": { "type": "integer", "minimum": 1 }, "revision": { "type": "integer", "minimum": 1 }
+    } }] },
+    "sourceDigestSha256": { "$ref": "#/$defs/hash" }, "systemSchemaVersion": { "type": "integer", "minimum": 1 }, "systemMediaSchemaVersion": { "type": "integer", "minimum": 1 },
+    "locales": { "type": "object", "additionalProperties": false, "required": ["pt-BR", "pt-PT", "gn-PY", "en-US", "es-ES", "fr-FR"], "properties": {
+      "pt-BR": { "$ref": "#/$defs/locale" }, "pt-PT": { "$ref": "#/$defs/locale" }, "gn-PY": { "$ref": "#/$defs/locale" }, "en-US": { "$ref": "#/$defs/locale" }, "es-ES": { "$ref": "#/$defs/locale" }, "fr-FR": { "$ref": "#/$defs/locale" }
+    } },
+    "cas": { "type": "object", "additionalProperties": false, "required": ["algorithm", "hashEncoding", "root", "layout", "pathPattern", "objectCount", "setDigestSha256"], "properties": {
+      "algorithm": { "const": "sha256" }, "hashEncoding": { "const": "lowercase_hex" }, "root": { "const": "CAS/system" }, "layout": { "const": "sha256_hex_2_2_bin" }, "pathPattern": { "const": "{hash[0..2]}/{hash[2..4]}/{hash}.bin" }, "objectCount": { "type": "integer", "minimum": 0 }, "setDigestSha256": { "$ref": "#/$defs/hash" }
+    } },
+    "projection": { "type": "object", "additionalProperties": false, "required": ["reportPath", "checksumSha256"], "properties": { "reportPath": { "$ref": "#/$defs/path" }, "checksumSha256": { "$ref": "#/$defs/hash" } } },
+    "checksumFile": { "$ref": "#/$defs/path" }
   }
 }

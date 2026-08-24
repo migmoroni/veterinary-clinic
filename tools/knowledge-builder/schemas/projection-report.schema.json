@@ -1,13 +1,30 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Knowledge projection coverage report",
-  "type": "object",
-  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "title": "Knowledge projection coverage report", "type": "object", "additionalProperties": false,
   "required": ["schemaVersion", "source", "locales", "media"],
+  "$defs": {
+    "count": { "type": "integer", "minimum": 0 }, "tokenList": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "entityCounts": { "type": "object", "additionalProperties": false, "minProperties": 1, "properties": {
+      "active_ingredient": { "$ref": "#/$defs/count" }, "breed": { "$ref": "#/$defs/count" }, "condition": { "$ref": "#/$defs/count" }, "geo_place": { "$ref": "#/$defs/count" }, "manufacturer": { "$ref": "#/$defs/count" }, "product": { "$ref": "#/$defs/count" }, "taxonomy": { "$ref": "#/$defs/count" }, "treatment_protocol": { "$ref": "#/$defs/count" }
+    } },
+    "rowsByTable": { "type": "object", "additionalProperties": false, "properties": {
+      "taxonomy_registry": { "$ref": "#/$defs/count" }, "taxonomy_terms": { "$ref": "#/$defs/count" }, "product_target_terms": { "$ref": "#/$defs/count" }, "product_vaccine_profile_terms": { "$ref": "#/$defs/count" }, "product_life_stage_terms": { "$ref": "#/$defs/count" }, "product_therapeutic_scope_terms": { "$ref": "#/$defs/count" },
+      "geo_places": { "$ref": "#/$defs/count" }, "breed_reference_items": { "$ref": "#/$defs/count" }, "breed_origin_places": { "$ref": "#/$defs/count" }, "manufacturer_catalog_items": { "$ref": "#/$defs/count" }, "active_ingredient_catalog_items": { "$ref": "#/$defs/count" }, "condition_catalog_items": { "$ref": "#/$defs/count" }, "product_catalog_items": { "$ref": "#/$defs/count" },
+      "entity_taxonomy_terms": { "$ref": "#/$defs/count" }, "product_active_ingredients": { "$ref": "#/$defs/count" }, "product_targets": { "$ref": "#/$defs/count" }, "product_vaccine_profiles": { "$ref": "#/$defs/count" }, "product_life_stages": { "$ref": "#/$defs/count" }, "product_therapeutic_scopes": { "$ref": "#/$defs/count" },
+      "treatment_protocols": { "$ref": "#/$defs/count" }, "treatment_protocol_items": { "$ref": "#/$defs/count" }, "treatment_protocol_doses": { "$ref": "#/$defs/count" }, "entity_search_terms": { "$ref": "#/$defs/count" }, "entity_media_references": { "$ref": "#/$defs/count" }
+    } },
+    "typeProjection": { "type": "object", "additionalProperties": false, "required": ["entities", "rowsByTable"], "properties": { "entities": { "$ref": "#/$defs/count" }, "rowsByTable": { "$ref": "#/$defs/rowsByTable" } } },
+    "projectedTypes": { "type": "object", "additionalProperties": false, "minProperties": 1, "properties": {
+      "active_ingredient": { "$ref": "#/$defs/typeProjection" }, "breed": { "$ref": "#/$defs/typeProjection" }, "condition": { "$ref": "#/$defs/typeProjection" }, "geo_place": { "$ref": "#/$defs/typeProjection" }, "manufacturer": { "$ref": "#/$defs/typeProjection" }, "product": { "$ref": "#/$defs/typeProjection" }, "taxonomy": { "$ref": "#/$defs/typeProjection" }, "treatment_protocol": { "$ref": "#/$defs/typeProjection" }
+    } },
+    "locale": { "type": "object", "additionalProperties": false, "required": ["projectedByType", "resolvedRelationCount", "consumedLocalizedFragments", "unconsumedEntities", "unconsumedLocalizedFragments", "unresolvedRelations"], "properties": {
+      "projectedByType": { "$ref": "#/$defs/projectedTypes" }, "resolvedRelationCount": { "$ref": "#/$defs/count" }, "consumedLocalizedFragments": { "$ref": "#/$defs/count" }, "unconsumedEntities": { "$ref": "#/$defs/tokenList" }, "unconsumedLocalizedFragments": { "$ref": "#/$defs/tokenList" }, "unresolvedRelations": { "$ref": "#/$defs/tokenList" }
+    } },
+    "localizedCounts": { "type": "object", "additionalProperties": false, "required": ["pt-BR", "pt-PT", "gn-PY", "en-US", "es-ES", "fr-FR"], "properties": { "pt-BR": { "$ref": "#/$defs/count" }, "pt-PT": { "$ref": "#/$defs/count" }, "gn-PY": { "$ref": "#/$defs/count" }, "en-US": { "$ref": "#/$defs/count" }, "es-ES": { "$ref": "#/$defs/count" }, "fr-FR": { "$ref": "#/$defs/count" } } }
+  },
   "properties": {
     "schemaVersion": { "const": 1 },
-    "source": { "type": "object" },
-    "locales": { "type": "object", "minProperties": 6, "maxProperties": 6 },
-    "media": { "type": "object" }
+    "source": { "type": "object", "additionalProperties": false, "required": ["entitiesByType", "relationCount", "localizedFragmentsByLocale", "sourceFiles"], "properties": { "entitiesByType": { "$ref": "#/$defs/entityCounts" }, "relationCount": { "$ref": "#/$defs/count" }, "localizedFragmentsByLocale": { "$ref": "#/$defs/localizedCounts" }, "sourceFiles": { "$ref": "#/$defs/count" } } },
+    "locales": { "type": "object", "additionalProperties": false, "required": ["pt-BR", "pt-PT", "gn-PY", "en-US", "es-ES", "fr-FR"], "properties": { "pt-BR": { "$ref": "#/$defs/locale" }, "pt-PT": { "$ref": "#/$defs/locale" }, "gn-PY": { "$ref": "#/$defs/locale" }, "en-US": { "$ref": "#/$defs/locale" }, "es-ES": { "$ref": "#/$defs/locale" }, "fr-FR": { "$ref": "#/$defs/locale" } } },
+    "media": { "type": "object", "additionalProperties": false, "required": ["sourceFiles", "referencedMediaKeys", "uniqueContentHashes", "missingSourcePaths", "unreferencedSourcePaths"], "properties": { "sourceFiles": { "$ref": "#/$defs/count" }, "referencedMediaKeys": { "$ref": "#/$defs/count" }, "uniqueContentHashes": { "$ref": "#/$defs/count" }, "missingSourcePaths": { "$ref": "#/$defs/tokenList" }, "unreferencedSourcePaths": { "$ref": "#/$defs/tokenList" } } }
   }
 }

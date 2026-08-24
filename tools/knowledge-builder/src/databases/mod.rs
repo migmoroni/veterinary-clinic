@@ -2,8 +2,8 @@ use crate::{media::sha256_hex, report::BuildContext, source::KnowledgeLocale};
 use rusqlite::{params, Connection};
 use std::{fs, path::Path};
 
-pub const SYSTEM_SCHEMA_VERSION: u32 = 1;
-pub const SYSTEM_MEDIA_SCHEMA_VERSION: u32 = 1;
+pub const SYSTEM_SCHEMA_VERSION: u32 = 2;
+pub const SYSTEM_MEDIA_SCHEMA_VERSION: u32 = 2;
 pub const SYSTEM_DDL: &str = include_str!("../../schemas/system/system.sql");
 pub const SYSTEM_MEDIA_DDL: &str = include_str!("../../schemas/system_media/system_media.sql");
 
@@ -130,6 +130,92 @@ pub fn verify(connection: &Connection, path: &Path) -> Result<(), String> {
             "foreign_key_check failed for {} with {foreign_key_failures} row(s)",
             path.display()
         ));
+    }
+    Ok(())
+}
+
+pub fn verify_contract(
+    connection: &Connection,
+    path: &Path,
+    kind: DatabaseKind,
+    context: &BuildContext,
+    locale: KnowledgeLocale,
+    source_digest: &[u8],
+) -> Result<(), String> {
+    verify(connection, path)?;
+    let application_id: u32 = connection
+        .query_row("PRAGMA application_id", [], |row| row.get(0))
+        .map_err(|error| {
+            format!(
+                "cannot read application_id from {}: {error}",
+                path.display()
+            )
+        })?;
+    let user_version: u32 = connection
+        .query_row("PRAGMA user_version", [], |row| row.get(0))
+        .map_err(|error| format!("cannot read user_version from {}: {error}", path.display()))?;
+    if application_id != kind.application_id() || user_version != kind.schema_version() {
+        return Err(format!(
+            "SQLite technical identity mismatch for {}",
+            path.display()
+        ));
+    }
+    let metadata = connection.query_row(
+        "SELECT build_version, builder_version, build_result_schema_version, source_digest_sha256, locale FROM knowledge_build_metadata",
+        [],
+        |row| Ok((row.get::<_, u64>(0)?, row.get::<_, String>(1)?, row.get::<_, u32>(2)?, row.get::<_, Vec<u8>>(3)?, row.get::<_, String>(4)?)),
+    ).map_err(|error| format!("cannot read build metadata from {}: {error}", path.display()))?;
+    if metadata.0 != context.build_version
+        || metadata.1 != env!("CARGO_PKG_VERSION")
+        || metadata.2 != 1
+        || metadata.3 != source_digest
+        || metadata.4 != locale.as_str()
+    {
+        return Err(format!(
+            "knowledge_build_metadata mismatch for {}",
+            path.display()
+        ));
+    }
+    let release_rows: u32 = connection
+        .query_row(
+            "SELECT count(*) FROM knowledge_release_metadata",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|error| {
+            format!(
+                "cannot count release metadata in {}: {error}",
+                path.display()
+            )
+        })?;
+    match &context.release {
+        None if release_rows == 0 => {}
+        Some(expected) if release_rows == 1 => {
+            let actual = connection.query_row(
+                "SELECT release_id, generation, revision, locale FROM knowledge_release_metadata",
+                [],
+                |row| Ok((row.get::<_, String>(0)?, row.get::<_, u64>(1)?, row.get::<_, u64>(2)?, row.get::<_, String>(3)?)),
+            ).map_err(|error| format!("cannot read release metadata from {}: {error}", path.display()))?;
+            if actual
+                != (
+                    expected.release_id.clone(),
+                    expected.generation,
+                    expected.revision,
+                    locale.to_string(),
+                )
+            {
+                return Err(format!(
+                    "knowledge_release_metadata mismatch for {}",
+                    path.display()
+                ));
+            }
+        }
+        _ => {
+            return Err(format!(
+                "release metadata cardinality mismatch for {}",
+                path.display()
+            ))
+        }
     }
     Ok(())
 }

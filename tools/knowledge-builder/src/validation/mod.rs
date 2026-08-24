@@ -1,6 +1,7 @@
 use crate::{
     markdown::{compile_document, CompiledDocument},
-    media::{sha256_hex, MediaAsset},
+    media::{resolve_media, sha256_hex, MediaAsset},
+    normalization::normalize_search_text,
     source::{
         deserialize_entity, source_schema_fingerprint_input, CanonicalEntity, KnowledgeLocale,
         LocalizedContent, LocalizedValue, SourceEntry, TaxonomyEntity, LOCALES,
@@ -114,6 +115,14 @@ impl std::error::Error for ValidationError {}
 pub(crate) struct ValidatedEntity {
     pub source: SourceEntry,
     pub editorial: BTreeMap<KnowledgeLocale, CompiledDocument>,
+    pub structural_media: Vec<ValidatedMediaReference>,
+}
+
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub(crate) struct ValidatedMediaReference {
+    pub role: &'static str,
+    pub sort_order: usize,
+    pub media_key: String,
 }
 
 #[derive(Clone, Debug)]
@@ -226,6 +235,54 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
     let mut validated_entities = Vec::with_capacity(entries.len());
     for entry in entries {
         let mut editorial = BTreeMap::new();
+        let mut structural_media = Vec::new();
+        if let Some(declaration) = entry.entity.structural_media() {
+            let mut declared_paths = Vec::new();
+            if let Some(cover) = &declaration.cover {
+                declared_paths.push(("cover", 0usize, cover));
+            }
+            for (index, gallery) in declaration.gallery.iter().enumerate() {
+                if declaration.cover.as_ref() == Some(gallery) {
+                    diagnostics.push(Diagnostic::entity(
+                        &entry,
+                        "media.gallery",
+                        "cover must not be repeated in gallery",
+                    ));
+                }
+                declared_paths.push(("gallery", index, gallery));
+            }
+            for (role, sort_order, relative_path) in declared_paths {
+                let source_path = entry.entity_directory.join(relative_path);
+                match resolve_media(
+                    &entry.entity_directory,
+                    entry.entity.entity_type(),
+                    entry.entity.id(),
+                    &source_path,
+                ) {
+                    Ok(asset) => {
+                        for keys in media_keys_by_locale.values_mut() {
+                            keys.insert(asset.media_key.clone());
+                        }
+                        structural_media.push(ValidatedMediaReference {
+                            role,
+                            sort_order,
+                            media_key: asset.media_key.clone(),
+                        });
+                        if let Some(previous) = media.insert(asset.media_key.clone(), asset.clone())
+                        {
+                            if previous.content_hash_sha256 != asset.content_hash_sha256 {
+                                diagnostics.push(Diagnostic::entity(
+                                    &entry,
+                                    "media",
+                                    format!("media key collision: {}", asset.media_key),
+                                ));
+                            }
+                        }
+                    }
+                    Err(error) => diagnostics.push(Diagnostic::entity(&entry, "media", error)),
+                }
+            }
+        }
         if !entry.entity.sections().is_empty() {
             let content_directory = resolve_content_directory(&entry);
             match content_directory.and_then(|directory| exact_content_files(&directory)) {
@@ -273,6 +330,7 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
         validated_entities.push(ValidatedEntity {
             source: entry,
             editorial,
+            structural_media,
         });
     }
     validate_file_coverage(
@@ -1155,7 +1213,7 @@ fn validate_alias_ownership(
                 continue;
             };
             for alias in aliases {
-                let normalized = normalize_search(alias);
+                let normalized = normalize_search_text(alias);
                 let identity = format!("{}:{}", entry.entity.entity_type(), entry.entity.id());
                 if let Some(previous) = owners.insert(normalized.clone(), identity.clone()) {
                     if previous != identity {
@@ -1176,7 +1234,7 @@ fn validate_alias_ownership(
                     .values()
                     .flat_map(move |value| value.values(locale))
             })
-            .map(normalize_search)
+            .map(normalize_search_text)
             .collect::<BTreeSet<_>>();
         for (alias, owner) in owners {
             if taxonomy_values.contains(&alias) {
@@ -1215,10 +1273,10 @@ fn validate_alias_ownership(
                     }
                     values
                 })
-                .map(|value| normalize_search(&value))
+                .map(|value| normalize_search_text(&value))
                 .collect::<BTreeSet<_>>();
             for alias in aliases {
-                if related.contains(&normalize_search(&alias)) {
+                if related.contains(&normalize_search_text(&alias)) {
                     diagnostics.push(Diagnostic::entity(
                         entry,
                         "localizedContent.aliases",
@@ -1554,14 +1612,6 @@ fn is_uuid_v4(value: &str) -> bool {
         })
         && bytes[14] == b'4'
         && matches!(bytes[19], b'8' | b'9' | b'a' | b'b')
-}
-
-pub(crate) fn normalize_search(value: &str) -> String {
-    value
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ")
-        .to_lowercase()
 }
 
 #[cfg(test)]

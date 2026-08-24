@@ -18,16 +18,17 @@ pertencem a outro servidor.
 3. [Parte 1A.2: relações semânticas e documentos editoriais](./01a2-semantic-product-relations.md)
 4. [Parte 1B: `knowledge-builder` e artefatos locais](./01b-knowledge-builder.md)
 5. [Parte 1B.1: consolidação dos contratos do `knowledge-builder`](./01b1-knowledge-builder-contract-consolidation.md)
-6. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
-7. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
-8. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
-9. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
-10. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
-11. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
+6. [Parte 1B.2: evidência de projeção e verificação integral](./01b2-projection-evidence-and-artifact-verification.md)
+7. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
+8. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
+9. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
+10. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
+11. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
+12. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
 
-A pré-fase, as subpartes 1A, 1A.1, 1A.2, 1B, 1B.1 e 1C e as partes seguintes
-são executadas em ordem. Cada documento termina com testes e critérios de
-aceite próprios.
+A pré-fase, as subpartes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2 e 1C e as partes
+seguintes são executadas em ordem. Cada documento termina com testes e critérios
+de aceite próprios.
 
 ## Evolução Do Fluxo
 
@@ -39,6 +40,7 @@ flowchart LR
     P1A2["Parte 1A.2<br/>relações + documentos editoriais"]
     P1B["Parte 1B<br/>builder Rust"]
     P1B1["Parte 1B.1<br/>contratos verificáveis"]
+    P1B2["Parte 1B.2<br/>evidência + verificação integral"]
     P1C["Parte 1C<br/>consumo local"]
     P2["Parte 2<br/>base Rails + contratos"]
     P3["Parte 3<br/>Rails orquestra builder + releases"]
@@ -46,14 +48,14 @@ flowchart LR
     P5["Parte 5<br/>updater Tauri local"]
     P6["Parte 6<br/>GitHub + CI/CD"]
 
-    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
+    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
 ```
 
 As mudanças de origem dos artefatos são deliberadas:
 
 ```mermaid
 flowchart TB
-    subgraph S1["Partes 1A, 1A.1, 1A.2, 1B, 1B.1 e 1C"]
+    subgraph S1["Partes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2 e 1C"]
         D1["data/knowledge<br/>fonte canônica"] --> G1["knowledge-builder Rust"]
         G1 --> B1["build/knowledge-artifacts"]
         B1 --> A1["Apps em desenvolvimento e build"]
@@ -82,11 +84,12 @@ taxonômicas. A Parte 1A.2 atribui princípios ativos e demais conceitos de prod
 a entidades, relações e taxonomias com significado de domínio e consolida cada
 entidade em um documento Markdown por locale. A Parte 1B implementa o
 `knowledge-builder` definitivo em Rust, a Parte 1B.1 consolida seus contratos
-executáveis e sua auditoria, e a Parte 1C faz os apps consumirem os artefatos
-locais. A Parte 3 faz o `hub-server` invocar a mesma ferramenta e assumir
-releases, assinatura e publicação. A Parte 4 substitui a aquisição local pelo
-contrato de distribuição do Hub. A Parte 6 acrescenta o GitHub como provider
-externo.
+executáveis, a Parte 1B.2 vincula a auditoria às operações reais e aplica a
+verificação integral dos artefatos, e a Parte 1C faz os apps consumirem os
+artefatos locais. A Parte 3 faz o `hub-server` invocar a mesma ferramenta e
+assumir releases, assinatura e publicação. A Parte 4 substitui a aquisição local
+pelo contrato de distribuição do Hub. A Parte 6 acrescenta o GitHub como
+provider externo.
 
 ## Decisões De Arquitetura
 
@@ -147,8 +150,12 @@ externo.
 - Os JSONs não contêm nomes de tabelas ou colunas. `entityType` seleciona um Data
   Mapper explícito, e o DDL do builder é a fonte de verdade da projeção
   relacional.
-- Cada build registra cobertura de entidades e relações e fingerprints dos
-  schemas efetivamente materializados.
+- Cada projector registra obrigações concluídas somente depois da operação que
+  materializa o dado. O relatório de cobertura deriva desses eventos e das
+  linhas efetivamente confirmadas.
+- Staging e versões locais reutilizadas passam pelo mesmo verificador integral
+  de bancos, relatório, mídias, CAS, checksums, tamanhos e digests por locale.
+- Cada build registra fingerprints dos schemas efetivamente materializados.
 - Nomes, aliases, labels, denominações e outros valores simples vêm dos mapas JSON
   por locale. Seções de conhecimento ficam em Markdown puro, sem front matter.
   Todos são projetados diretamente no banco correspondente; o app não usa i18n

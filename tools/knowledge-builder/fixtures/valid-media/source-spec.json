@@ -1,0 +1,7 @@
+{
+  "formats": ["png", "jpeg-exif-orientation", "gif", "webp"],
+  "thumbnail": {
+    "format": "jpeg", "quality": 72, "maxSide": 200,
+    "allowUpscale": false, "alphaBackground": "#ffffff", "resizeFilter": "Lanczos3"
+  }
+}

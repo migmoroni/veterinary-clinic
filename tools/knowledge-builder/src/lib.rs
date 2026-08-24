@@ -4,10 +4,13 @@
 //! schemas, system media indexes, CAS materialization and deterministic reports.
 
 mod databases;
+mod ledger;
 mod markdown;
 mod media;
+mod normalization;
 mod projection;
 mod report;
+mod schemas;
 mod source;
 mod validation;
 

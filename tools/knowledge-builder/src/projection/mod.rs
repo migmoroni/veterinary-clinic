@@ -1,16 +1,19 @@
 use crate::{
     databases::{self, DatabaseKind, SYSTEM_MEDIA_SCHEMA_VERSION, SYSTEM_SCHEMA_VERSION},
+    ledger::{CompletedLedger, ConsumptionDestination, ProjectionLedger},
     markdown::CompiledDocument,
     media::{cas_relative_path, decode_hex, sha256_hex},
+    normalization::{normalize_identity_key, normalize_search_text},
     report::{
         self, BuildContext, BuildResult, CasResult, DatabaseArtifact, LocaleArtifacts,
         LocaleProjection, MediaProjection, ProjectionReport, ProjectionResult, ProjectionSource,
         TypeProjection,
     },
+    schemas,
     source::{
         CanonicalEntity, KnowledgeLocale, LocalizedContent, LocalizedValue, TaxonomyEntity, LOCALES,
     },
-    validation::{normalize_search, ValidatedEntity, ValidatedSource},
+    validation::{ValidatedEntity, ValidatedSource},
 };
 use rusqlite::{params, Connection, Transaction};
 use std::{
@@ -50,21 +53,20 @@ pub fn build_artifacts(
     fs::create_dir_all(&staging_cas)
         .map_err(|error| format!("cannot create CAS staging directory: {error}"))?;
 
-    let result = build_in_staging(source, output, &staging_version, &staging_cas, context);
+    let result = build_in_staging(source, &staging_version, &staging_cas, context);
     match result {
         Ok(result) => {
             commit_cas(&staging_cas, &output.join("CAS/system"))?;
+            if staging_cas.exists() {
+                fs::remove_dir_all(&staging_cas)
+                    .map_err(|error| format!("cannot remove CAS staging directory: {error}"))?;
+            }
             fs::rename(&staging_version, &final_version).map_err(|error| {
                 format!(
                     "cannot atomically finalize version {}: {error}",
                     context.build_version
                 )
             })?;
-            if staging_cas.exists() {
-                fs::remove_dir_all(&staging_cas)
-                    .map_err(|error| format!("cannot remove CAS staging directory: {error}"))?;
-            }
-            verify_result(output, &result)?;
             Ok(result)
         }
         Err(error) => {
@@ -77,7 +79,6 @@ pub fn build_artifacts(
 
 fn build_in_staging(
     source: &ValidatedSource,
-    output: &Path,
     staging_version: &Path,
     staging_cas: &Path,
     context: &BuildContext,
@@ -85,12 +86,14 @@ fn build_in_staging(
     let source_digest = decode_hex(&source.source_digest_sha256)?;
     let mut locale_artifacts = BTreeMap::new();
     let mut locale_rows = BTreeMap::new();
+    let mut locale_ledgers = BTreeMap::new();
     let mut checksum_entries = BTreeMap::new();
     let mut system_fingerprint = None;
     let mut media_fingerprint = None;
     let mut all_cas_hashes = BTreeSet::new();
 
     for locale in LOCALES {
+        let mut ledger = ProjectionLedger::expected(source, locale)?;
         let locale_directory = staging_version.join("locales").join(locale.as_str());
         fs::create_dir_all(&locale_directory)
             .map_err(|error| format!("cannot create locale directory {locale}: {error}"))?;
@@ -100,6 +103,8 @@ fn build_in_staging(
         let mut system = databases::create(&system_path, DatabaseKind::System)?;
         databases::insert_metadata(&system, context, locale, &source_digest)?;
         let rows = project_system(&mut system, source, locale)?;
+        ledger.consume_destination(ConsumptionDestination::System)?;
+        ledger.consume_destination(ConsumptionDestination::CompiledContent)?;
         let current_system_fingerprint = databases::finalize(system, &system_path)?;
         assert_shared_fingerprint(
             &mut system_fingerprint,
@@ -110,7 +115,9 @@ fn build_in_staging(
 
         let mut system_media = databases::create(&system_media_path, DatabaseKind::SystemMedia)?;
         databases::insert_metadata(&system_media, context, locale, &source_digest)?;
+        ledger.consume_destination(ConsumptionDestination::BuildMetadata)?;
         let locale_hashes = project_system_media(&mut system_media, source, locale)?;
+        ledger.consume_destination(ConsumptionDestination::SystemMedia)?;
         let current_media_fingerprint = databases::finalize(system_media, &system_media_path)?;
         assert_shared_fingerprint(
             &mut media_fingerprint,
@@ -151,9 +158,15 @@ fn build_in_staging(
             },
         );
         locale_rows.insert(locale, rows);
+        locale_ledgers.insert(locale, ledger);
     }
 
     stage_cas_objects(source, staging_cas, &all_cas_hashes)?;
+    let mut completed_ledgers = BTreeMap::new();
+    for (locale, mut ledger) in locale_ledgers {
+        ledger.consume_destination(ConsumptionDestination::Cas)?;
+        completed_ledgers.insert(locale, ledger.finish()?);
+    }
     for hash in &all_cas_hashes {
         let relative = format!(
             "CAS/system/{}",
@@ -162,11 +175,13 @@ fn build_in_staging(
         checksum_entries.insert(relative, hash.clone());
     }
 
-    let projection_report = projection_report(source, &locale_rows);
+    let projection_report = projection_report(source, &locale_rows, &completed_ledgers);
+    schemas::validate_projection_report(&projection_report)?;
     let projection_path = staging_version.join("projection-report.json");
     let projection_bytes = report::write_json(&projection_path, &projection_report)?;
     let projection_checksum = sha256_hex(&projection_bytes);
     let projection_relative = format!("versions/{}/projection-report.json", context.build_version);
+    checksum_entries.insert(projection_relative.clone(), projection_checksum.clone());
 
     let checksum_path = staging_version.join("checksums.sha256");
     let checksum_contents = checksum_entries
@@ -200,8 +215,9 @@ fn build_in_staging(
         },
         checksum_file: format!("versions/{}/checksums.sha256", context.build_version),
     };
+    schemas::validate_build_result(&result)?;
     report::write_json(&staging_version.join("build-result.json"), &result)?;
-    verify_staging(output, staging_version, staging_cas, &result)?;
+    verify_staging(staging_version, staging_cas, &result)?;
     Ok(result)
 }
 
@@ -220,11 +236,68 @@ fn project_system(
     project_breeds(&transaction, source, locale, &mut rows)?;
     project_products(&transaction, source, locale, &mut rows)?;
     project_protocols(&transaction, source, locale, &mut rows)?;
+    project_entity_media_references(&transaction, source, &mut rows)?;
     project_search(&transaction, source, locale, &mut rows)?;
     transaction
         .commit()
         .map_err(|error| format!("cannot commit system projection: {error}"))?;
+    verify_rows_by_table(connection, &rows)?;
     Ok(rows)
+}
+
+fn verify_rows_by_table(connection: &Connection, rows: &RowsByType) -> Result<(), String> {
+    let mut expected = BTreeMap::<&str, usize>::new();
+    for tables in rows.values() {
+        for (table, count) in tables {
+            *expected.entry(table).or_default() += count;
+        }
+    }
+    for (table, count) in expected {
+        if !table
+            .bytes()
+            .all(|byte| byte.is_ascii_lowercase() || byte == b'_')
+        {
+            return Err(format!("invalid projected table identity {table}"));
+        }
+        let actual: i64 = connection
+            .query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |row| {
+                row.get(0)
+            })
+            .map_err(|error| format!("cannot count projected rows in {table}: {error}"))?;
+        if usize::try_from(actual).ok() != Some(count) {
+            return Err(format!(
+                "rowsByTable mismatch for {table}: recorded {count}, observed {actual}"
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn project_entity_media_references(
+    transaction: &Transaction<'_>,
+    source: &ValidatedSource,
+    rows: &mut RowsByType,
+) -> Result<(), String> {
+    for entry in &source.entities {
+        let entity_type = entry.source.entity.entity_type();
+        if !matches!(
+            entity_type,
+            "breed" | "product" | "manufacturer" | "active_ingredient" | "condition"
+        ) && !entry.structural_media.is_empty()
+        {
+            return Err(format!(
+                "entity type {entity_type} cannot own structural media"
+            ));
+        }
+        for reference in &entry.structural_media {
+            transaction.execute(
+                "INSERT INTO entity_media_references (entity_type, entity_id, role, media_key, sort_order) VALUES (?1, ?2, ?3, ?4, ?5)",
+                params![entity_type, entry.source.entity.id(), reference.role, reference.media_key, reference.sort_order],
+            ).map_err(|error| format!("cannot project media reference {}:{}: {error}", entry.source.entity.id(), reference.media_key))?;
+            add_row(rows, entity_type, "entity_media_references", 1);
+        }
+    }
+    Ok(())
 }
 
 fn project_taxonomies(
@@ -259,7 +332,7 @@ fn project_taxonomies(
                             term.key,
                             term.parent_key,
                             label,
-                            normalize_search(label),
+                            normalize_search_text(label),
                             aliases_json,
                             term.order
                         ],
@@ -274,7 +347,7 @@ fn project_taxonomies(
             } else {
                 transaction.execute(
                     "INSERT INTO taxonomy_terms (taxonomy_id, term_key, parent_term_key, label, normalized_label, aliases_json, sort_order) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-                    params![taxonomy.id, term.key, term.parent_key, label, normalize_search(label), aliases_json, term.order],
+                    params![taxonomy.id, term.key, term.parent_key, label, normalize_search_text(label), aliases_json, term.order],
                 ).map_err(|error| format!("cannot project taxonomy term {}:{}: {error}", taxonomy.id, term.key))?;
                 add_row(rows, "taxonomy", "taxonomy_terms", 1);
             }
@@ -315,7 +388,7 @@ fn project_geo_places(
                 localized_list(&value.localized_content, "aliases", locale).unwrap_or_default();
             transaction.execute(
                 "INSERT INTO geo_places (id, place_type, parent_place_id, country_codes_json, latitude, longitude, name, normalized_name, aliases_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-                params![value.id, value.place_type, value.parent_place_id, json(&value.country_codes)?, value.centroid.latitude, value.centroid.longitude, name, normalize_search(name), json(&aliases)?],
+                params![value.id, value.place_type, value.parent_place_id, json(&value.country_codes)?, value.centroid.latitude, value.centroid.longitude, name, normalize_identity_key(name), json(&aliases)?],
             ).map_err(|error| format!("cannot project geo_place {}: {error}", value.id))?;
             inserted.insert(value.id.clone());
             add_row(rows, "geo_place", "geo_places", 1);
@@ -340,7 +413,7 @@ fn project_named_entities(
                 let name = localized_text(&value.localized_content, "name", locale)?;
                 transaction.execute(
                     "INSERT INTO manufacturer_catalog_items (id, type_term_key, name, normalized_name, aliases_json, regions_json, website, content_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-                    params![value.id, value.type_term_key, name, normalize_search(name), json(&localized_list(&value.localized_content, "aliases", locale).unwrap_or_default())?, json(&value.regions)?, value.website, content_json(entry, locale)?],
+                    params![value.id, value.type_term_key, name, normalize_identity_key(name), json(&localized_list(&value.localized_content, "aliases", locale).unwrap_or_default())?, json(&value.regions)?, value.website, content_json(entry, locale)?],
                 ).map_err(|error| format!("cannot project manufacturer {}: {error}", value.id))?;
                 add_row(rows, "manufacturer", "manufacturer_catalog_items", 1);
                 project_taxonomy_relations(
@@ -373,7 +446,7 @@ fn project_named_entities(
                     .collect::<Result<BTreeMap<_, _>, _>>()?;
                 transaction.execute(
                     "INSERT INTO active_ingredient_catalog_items (id, type_term_key, name, normalized_name, aliases_json, regions_json, nomenclature_json, atc_vet_code, atc_vet_system, denominations_json, content_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
-                    params![value.id, value.type_term_key, name, normalize_search(name), json(&localized_list(&value.localized_content, "aliases", locale).unwrap_or_default())?, json(&value.regions)?, json(&value.nomenclature)?, value.atc_vet_code, optional_localized_text(&value.localized_content, "atcVetSystem", locale), json(&denominations)?, content_json(entry, locale)?],
+                    params![value.id, value.type_term_key, name, normalize_identity_key(name), json(&localized_list(&value.localized_content, "aliases", locale).unwrap_or_default())?, json(&value.regions)?, json(&value.nomenclature)?, value.atc_vet_code, optional_localized_text(&value.localized_content, "atcVetSystem", locale), json(&denominations)?, content_json(entry, locale)?],
                 ).map_err(|error| format!("cannot project active ingredient {}: {error}", value.id))?;
                 add_row(
                     rows,
@@ -398,7 +471,7 @@ fn project_named_entities(
                 let name = localized_text(&value.localized_content, "name", locale)?;
                 transaction.execute(
                     "INSERT INTO condition_catalog_items (id, type_term_key, name, normalized_name, aliases_json, regions_json, content_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-                    params![value.id, value.type_term_key, name, normalize_search(name), json(&localized_list(&value.localized_content, "aliases", locale).unwrap_or_default())?, json(&value.regions)?, content_json(entry, locale)?],
+                    params![value.id, value.type_term_key, name, normalize_identity_key(name), json(&localized_list(&value.localized_content, "aliases", locale).unwrap_or_default())?, json(&value.regions)?, content_json(entry, locale)?],
                 ).map_err(|error| format!("cannot project condition {}: {error}", value.id))?;
                 add_row(rows, "condition", "condition_catalog_items", 1);
                 project_taxonomy_relations(
@@ -433,7 +506,7 @@ fn project_breeds(
         let name = localized_text(&value.localized_content, "name", locale)?;
         transaction.execute(
             "INSERT INTO breed_reference_items (id, species_json, name, normalized_name, aliases_json, size_term_key, average_weight_kg_json, average_height_cm_json, content_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-            params![value.id, json(&value.species)?, name, normalize_search(name), json(&localized_list(&value.localized_content, "aliases", locale).unwrap_or_default())?, value.size_term_key, json(&value.average_weight_kg)?, json(&value.average_height_cm)?, content_json(entry, locale)?],
+            params![value.id, json(&value.species)?, name, normalize_identity_key(name), json(&localized_list(&value.localized_content, "aliases", locale).unwrap_or_default())?, value.size_term_key, json(&value.average_weight_kg)?, json(&value.average_height_cm)?, content_json(entry, locale)?],
         ).map_err(|error| format!("cannot project breed {}: {error}", value.id))?;
         add_row(rows, "breed", "breed_reference_items", 1);
         for (order, place_id) in value.origin_place_ids.iter().enumerate() {
@@ -470,7 +543,7 @@ fn project_products(
         let name = localized_text(&value.localized_content, "name", locale)?;
         transaction.execute(
             "INSERT INTO product_catalog_items (id, type_term_key, name, normalized_name, species_json, aliases_json, manufacturer_id, regions_json, regulatory_identifiers_json, commercial_line, presentation_dosage, target_species_warnings_json, content_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
-            params![value.id, value.type_term_key, name, normalize_search(name), json(&value.species)?, json(&localized_list(&value.localized_content, "aliases", locale).unwrap_or_default())?, value.manufacturer_id, json(&value.regions)?, json(&value.regulatory_identifiers)?, optional_localized_text(&value.localized_content, "commercialLine", locale), optional_localized_text(&value.localized_content, "presentationDosage", locale), json(&localized_list(&value.localized_content, "targetSpeciesWarnings", locale).unwrap_or_default())?, content_json(entry, locale)?],
+            params![value.id, value.type_term_key, name, normalize_identity_key(name), json(&value.species)?, json(&localized_list(&value.localized_content, "aliases", locale).unwrap_or_default())?, value.manufacturer_id, json(&value.regions)?, json(&value.regulatory_identifiers)?, optional_localized_text(&value.localized_content, "commercialLine", locale), optional_localized_text(&value.localized_content, "presentationDosage", locale), json(&localized_list(&value.localized_content, "targetSpeciesWarnings", locale).unwrap_or_default())?, content_json(entry, locale)?],
         ).map_err(|error| format!("cannot project product {}: {error}", value.id))?;
         add_row(rows, "product", "product_catalog_items", 1);
         project_taxonomy_relations(
@@ -531,7 +604,7 @@ fn project_protocols(
         let name = localized_text(&value.localized_content, "name", locale)?;
         transaction.execute(
             "INSERT INTO treatment_protocols (id, kind, name, normalized_name, species_json, observation) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-            params![value.id, value.kind, name, normalize_search(name), json(&value.species)?, optional_localized_text(&value.localized_content, "observation", locale)],
+            params![value.id, value.kind, name, normalize_identity_key(name), json(&value.species)?, optional_localized_text(&value.localized_content, "observation", locale)],
         ).map_err(|error| format!("cannot project protocol {}: {error}", value.id))?;
         add_row(rows, "treatment_protocol", "treatment_protocols", 1);
         for (order, product_id) in value.product_ids.iter().enumerate() {
@@ -788,7 +861,7 @@ fn project_search(
         let mut seen = BTreeSet::new();
         let mut order = 0;
         for (value, provenance) in values {
-            let normalized = normalize_search(&value);
+            let normalized = normalize_search_text(&value);
             if !seen.insert((provenance.clone(), normalized.clone())) {
                 continue;
             }
@@ -873,8 +946,8 @@ fn project_system_media(
             .ok_or_else(|| format!("media key has no source asset: {key}"))?;
         let hash = decode_hex(&asset.content_hash_sha256)?;
         transaction.execute(
-            "INSERT INTO media_assets (media_key, content_hash, thumbnail, mime_type, size_bytes, width, height) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-            params![asset.media_key, hash, asset.thumbnail, asset.mime_type, asset.size_bytes, asset.width, asset.height],
+            "INSERT INTO media_assets (media_key, content_hash, thumbnail, thumbnail_mime_type, thumbnail_width, thumbnail_height, mime_type, size_bytes, width, height) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+            params![asset.media_key, hash, asset.thumbnail, asset.thumbnail_mime_type, asset.thumbnail_width, asset.thumbnail_height, asset.mime_type, asset.size_bytes, asset.width, asset.height],
         ).map_err(|error| format!("cannot project media asset {}: {error}", asset.media_key))?;
         hashes.insert(asset.content_hash_sha256.clone());
     }
@@ -887,6 +960,7 @@ fn project_system_media(
 fn projection_report(
     source: &ValidatedSource,
     locale_rows: &BTreeMap<KnowledgeLocale, RowsByType>,
+    ledgers: &BTreeMap<KnowledgeLocale, CompletedLedger>,
 ) -> ProjectionReport {
     let entities_by_type = source
         .entities
@@ -905,13 +979,16 @@ fn projection_report(
     let locales = locale_rows
         .iter()
         .map(|(locale, rows)| {
+            let ledger = ledgers.get(locale).expect("all locale ledgers completed");
+            debug_assert_eq!(ledger.locale, *locale);
+            let consumed_entities = ledger.entities_by_type();
             let projected_by_type = entities_by_type
-                .iter()
-                .map(|(entity_type, entities)| {
+                .keys()
+                .map(|entity_type| {
                     (
                         entity_type.clone(),
                         TypeProjection {
-                            entities: *entities,
+                            entities: *consumed_entities.get(entity_type).unwrap_or(&0),
                             rows_by_table: rows.get(entity_type).cloned().unwrap_or_default(),
                         },
                     )
@@ -921,11 +998,8 @@ fn projection_report(
                 *locale,
                 LocaleProjection {
                     projected_by_type,
-                    resolved_relation_count: source.relation_count,
-                    consumed_localized_fragments: *source
-                        .localized_fragments_by_locale
-                        .get(locale)
-                        .unwrap_or(&0),
+                    resolved_relation_count: ledger.relation_count(),
+                    consumed_localized_fragments: ledger.localized_fragment_count(),
                     unconsumed_entities: Vec::new(),
                     unconsumed_localized_fragments: Vec::new(),
                     unresolved_relations: Vec::new(),
@@ -1042,16 +1116,56 @@ fn commit_cas(staging: &Path, final_root: &Path) -> Result<(), String> {
 }
 
 fn verify_staging(
-    _output: &Path,
     staging_version: &Path,
     staging_cas: &Path,
     result: &BuildResult,
 ) -> Result<(), String> {
-    for locale in result.locales.values() {
-        verify_staged_artifact(staging_version, &locale.system, result.build_version)?;
-        verify_staged_artifact(staging_version, &locale.system_media, result.build_version)?;
+    schemas::validate_build_result(result)?;
+    let context = BuildContext {
+        schema_version: 1,
+        build_version: result.build_version,
+        release: result.release.clone(),
+    };
+    let source_digest = decode_hex(&result.source_digest_sha256)?;
+    for locale in LOCALES {
+        let artifacts = result
+            .locales
+            .get(locale.as_str())
+            .ok_or_else(|| format!("build result misses locale {locale}"))?;
+        verify_staged_artifact(
+            staging_version,
+            &artifacts.system,
+            result.build_version,
+            DatabaseKind::System,
+            &context,
+            locale,
+            &source_digest,
+        )?;
+        verify_staged_media_links(
+            staging_version,
+            &artifacts.system,
+            &artifacts.system_media,
+            result.build_version,
+            staging_cas,
+        )?;
+        verify_staged_artifact(
+            staging_version,
+            &artifacts.system_media,
+            result.build_version,
+            DatabaseKind::SystemMedia,
+            &context,
+            locale,
+            &source_digest,
+        )?;
     }
-    for hash in result.cas_hashes_from_staging(staging_cas)? {
+    let staged_hashes = result.cas_hashes_from_staging(staging_cas)?;
+    let staged_hash_set = staged_hashes.iter().cloned().collect::<BTreeSet<_>>();
+    if staged_hash_set.len() != result.cas.object_count
+        || set_digest(&staged_hash_set) != result.cas.set_digest_sha256
+    {
+        return Err("staged CAS set does not match build-result.json".to_string());
+    }
+    for hash in staged_hashes {
         let path = staging_cas.join(cas_relative_path(&hash)?);
         let bytes =
             fs::read(&path).map_err(|error| format!("cannot verify staged CAS object: {error}"))?;
@@ -1064,9 +1178,17 @@ fn verify_staging(
     if sha256_hex(&projection) != result.projection.checksum_sha256 {
         return Err("projection report checksum mismatch".to_string());
     }
+    let projection_value: serde_json::Value = serde_json::from_slice(&projection)
+        .map_err(|error| format!("projection report is invalid JSON: {error}"))?;
+    schemas::validate_projection_report(&projection_value)?;
+    let result_bytes = fs::read(staging_version.join("build-result.json"))
+        .map_err(|error| format!("cannot verify build-result.json: {error}"))?;
+    let result_value: serde_json::Value = serde_json::from_slice(&result_bytes)
+        .map_err(|error| format!("build-result.json is invalid JSON: {error}"))?;
+    schemas::validate_build_result(&result_value)?;
     let checksum_entries = read_checksum_entries(&staging_version.join("checksums.sha256"))?;
-    if checksum_entries.len() != 12 + result.cas.object_count {
-        return Err("checksums.sha256 does not cover exactly the twelve databases and referenced CAS objects".to_string());
+    if checksum_entries.len() != 13 + result.cas.object_count {
+        return Err("checksums.sha256 does not cover exactly the twelve databases, projection report and referenced CAS objects".to_string());
     }
     for (relative, checksum) in checksum_entries {
         let path = if let Some(suffix) =
@@ -1079,6 +1201,86 @@ fn verify_staging(
             return Err(format!("unexpected path in checksums.sha256: {relative}"));
         };
         verify_file_checksum(&path, &checksum)?;
+    }
+    let actual_files = recursive_files(staging_version)?
+        .into_iter()
+        .map(|path| {
+            path.strip_prefix(staging_version)
+                .map_err(|_| "invalid staged version path".to_string())
+                .and_then(report::normalized_relative_path)
+        })
+        .collect::<Result<BTreeSet<_>, _>>()?;
+    let mut expected_files = BTreeSet::from([
+        "build-result.json".to_string(),
+        "checksums.sha256".to_string(),
+        "projection-report.json".to_string(),
+    ]);
+    for locale in LOCALES {
+        expected_files.insert(format!("locales/{locale}/veterinary_clinic_system.db"));
+        expected_files.insert(format!(
+            "locales/{locale}/veterinary_clinic_system_media.db"
+        ));
+    }
+    if actual_files != expected_files {
+        return Err("staged version contains missing or additional files".to_string());
+    }
+    Ok(())
+}
+
+fn verify_staged_media_links(
+    staging_version: &Path,
+    system_artifact: &DatabaseArtifact,
+    media_artifact: &DatabaseArtifact,
+    build_version: u64,
+    staging_cas: &Path,
+) -> Result<(), String> {
+    let prefix = format!("versions/{build_version}/");
+    let system_path = staging_version.join(
+        system_artifact
+            .path
+            .strip_prefix(&prefix)
+            .ok_or_else(|| "system artifact path is outside version".to_string())?,
+    );
+    let media_path = staging_version.join(
+        media_artifact
+            .path
+            .strip_prefix(&prefix)
+            .ok_or_else(|| "media artifact path is outside version".to_string())?,
+    );
+    let system =
+        Connection::open_with_flags(&system_path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
+            .map_err(|error| format!("cannot open staged system database: {error}"))?;
+    let media =
+        Connection::open_with_flags(&media_path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
+            .map_err(|error| format!("cannot open staged system_media database: {error}"))?;
+    let mut assets = BTreeMap::new();
+    let mut statement = media
+        .prepare("SELECT media_key, lower(hex(content_hash)) FROM media_assets ORDER BY media_key")
+        .map_err(|error| format!("cannot inspect staged media assets: {error}"))?;
+    for row in statement
+        .query_map([], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+        })
+        .map_err(|error| error.to_string())?
+    {
+        let (media_key, hash) = row.map_err(|error| error.to_string())?;
+        let cas_path = staging_cas.join(cas_relative_path(&hash)?);
+        verify_file_checksum(&cas_path, &hash)?;
+        assets.insert(media_key, hash);
+    }
+    let mut statement = system
+        .prepare("SELECT media_key FROM entity_media_references ORDER BY media_key")
+        .map_err(|error| format!("cannot inspect structural media references: {error}"))?;
+    for row in statement
+        .query_map([], |row| row.get::<_, String>(0))
+        .map_err(|error| error.to_string())?
+    {
+        let media_key = row.map_err(|error| error.to_string())?;
+        if !assets.contains_key(&media_key) {
+            return Err(format!(
+                "structural media reference has no system_media asset: {media_key}"
+            ));
+        }
     }
     Ok(())
 }
@@ -1105,6 +1307,10 @@ fn verify_staged_artifact(
     staging_version: &Path,
     artifact: &DatabaseArtifact,
     build_version: u64,
+    kind: DatabaseKind,
+    context: &BuildContext,
+    locale: KnowledgeLocale,
+    source_digest: &[u8],
 ) -> Result<(), String> {
     let prefix = format!("versions/{build_version}/");
     let suffix = artifact
@@ -1112,7 +1318,17 @@ fn verify_staged_artifact(
         .strip_prefix(&prefix)
         .ok_or_else(|| format!("artifact path is outside version: {}", artifact.path))?;
     let path = staging_version.join(suffix);
-    verify_file_checksum(&path, &artifact.checksum_sha256)
+    verify_file_checksum(&path, &artifact.checksum_sha256)?;
+    let connection = Connection::open_with_flags(&path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
+        .map_err(|error| format!("cannot open staged database {}: {error}", path.display()))?;
+    databases::verify_contract(&connection, &path, kind, context, locale, source_digest)?;
+    if databases::schema_fingerprint(&connection)? != artifact.schema_fingerprint_sha256 {
+        return Err(format!(
+            "schema fingerprint mismatch for {}",
+            path.display()
+        ));
+    }
+    Ok(())
 }
 
 fn reuse_or_reject_existing(
@@ -1128,11 +1344,17 @@ fn reuse_or_reject_existing(
             context.build_version
         )
     })?;
-    let result: BuildResult = serde_json::from_slice(&bytes)
+    let raw: serde_json::Value = serde_json::from_slice(&bytes)
+        .map_err(|error| format!("existing build-result.json is invalid: {error}"))?;
+    schemas::validate_build_result(&raw)?;
+    let result: BuildResult = serde_json::from_value(raw)
         .map_err(|error| format!("existing build-result.json is invalid: {error}"))?;
     if result.build_version != context.build_version
         || result.release != context.release
         || result.source_digest_sha256 != source.source_digest_sha256
+        || result.builder_version != env!("CARGO_PKG_VERSION")
+        || result.system_schema_version != SYSTEM_SCHEMA_VERSION
+        || result.system_media_schema_version != SYSTEM_MEDIA_SCHEMA_VERSION
     {
         return Err(format!(
             "build version {} already exists with divergent content or context",
@@ -1144,15 +1366,46 @@ fn reuse_or_reject_existing(
 }
 
 fn verify_result(output: &Path, result: &BuildResult) -> Result<(), String> {
-    for artifacts in result.locales.values() {
-        verify_final_artifact(output, &artifacts.system)?;
-        verify_final_artifact(output, &artifacts.system_media)?;
+    schemas::validate_build_result(result)?;
+    let context = BuildContext {
+        schema_version: 1,
+        build_version: result.build_version,
+        release: result.release.clone(),
+    };
+    let source_digest = decode_hex(&result.source_digest_sha256)?;
+    for locale in LOCALES {
+        let artifacts = result
+            .locales
+            .get(locale.as_str())
+            .ok_or_else(|| format!("build result misses locale {locale}"))?;
+        verify_final_artifact(
+            output,
+            &artifacts.system,
+            DatabaseKind::System,
+            &context,
+            locale,
+            &source_digest,
+        )?;
+        verify_final_artifact(
+            output,
+            &artifacts.system_media,
+            DatabaseKind::SystemMedia,
+            &context,
+            locale,
+            &source_digest,
+        )?;
     }
     let projection_path = safe_artifact_path(output, &result.projection.report_path)?;
     verify_file_checksum(&projection_path, &result.projection.checksum_sha256)?;
+    let projection_value: serde_json::Value = serde_json::from_slice(
+        &fs::read(&projection_path)
+            .map_err(|error| format!("cannot read projection report: {error}"))?,
+    )
+    .map_err(|error| format!("projection report is invalid JSON: {error}"))?;
+    schemas::validate_projection_report(&projection_value)?;
     let checksum_path = safe_artifact_path(output, &result.checksum_file)?;
     let checksum_entries = read_checksum_entries(&checksum_path)?;
-    if checksum_entries.len() != 12 + result.cas.object_count {
+    if checksum_entries.len() != 13 + result.cas.object_count {
         return Err("checksums.sha256 coverage differs from build-result.json".to_string());
     }
     let mut cas_hashes = BTreeSet::new();
@@ -1173,6 +1426,31 @@ fn verify_result(output: &Path, result: &BuildResult) -> Result<(), String> {
         || set_digest(&cas_hashes) != result.cas.set_digest_sha256
     {
         return Err("CAS set does not match build-result.json".to_string());
+    }
+    let version_root = output
+        .join("versions")
+        .join(result.build_version.to_string());
+    let actual_files = recursive_files(&version_root)?
+        .into_iter()
+        .map(|path| {
+            path.strip_prefix(&version_root)
+                .map_err(|_| "invalid finalized version path".to_string())
+                .and_then(report::normalized_relative_path)
+        })
+        .collect::<Result<BTreeSet<_>, _>>()?;
+    let mut expected_files = BTreeSet::from([
+        "build-result.json".to_string(),
+        "checksums.sha256".to_string(),
+        "projection-report.json".to_string(),
+    ]);
+    for locale in LOCALES {
+        expected_files.insert(format!("locales/{locale}/veterinary_clinic_system.db"));
+        expected_files.insert(format!(
+            "locales/{locale}/veterinary_clinic_system_media.db"
+        ));
+    }
+    if actual_files != expected_files {
+        return Err("finalized version contains missing or additional files".to_string());
     }
     Ok(())
 }
@@ -1207,12 +1485,19 @@ fn read_checksum_entries(path: &Path) -> Result<BTreeMap<String, String>, String
     Ok(result)
 }
 
-fn verify_final_artifact(output: &Path, artifact: &DatabaseArtifact) -> Result<(), String> {
+fn verify_final_artifact(
+    output: &Path,
+    artifact: &DatabaseArtifact,
+    kind: DatabaseKind,
+    context: &BuildContext,
+    locale: KnowledgeLocale,
+    source_digest: &[u8],
+) -> Result<(), String> {
     let path = safe_artifact_path(output, &artifact.path)?;
     verify_file_checksum(&path, &artifact.checksum_sha256)?;
     let connection = Connection::open_with_flags(&path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
         .map_err(|error| format!("cannot open finalized database {}: {error}", path.display()))?;
-    databases::verify(&connection, &path)?;
+    databases::verify_contract(&connection, &path, kind, context, locale, source_digest)?;
     let fingerprint = databases::schema_fingerprint(&connection)?;
     if fingerprint != artifact.schema_fingerprint_sha256 {
         return Err(format!(
@@ -1405,7 +1690,9 @@ fn content_json(entry: &ValidatedEntity, locale: KnowledgeLocale) -> Result<Stri
         schema_version: 1,
         sections: Vec::new(),
     };
-    json(entry.editorial.get(&locale).unwrap_or(&empty))
+    let content = entry.editorial.get(&locale).unwrap_or(&empty);
+    schemas::validate_content(content)?;
+    json(content)
 }
 
 fn json(value: &impl serde::Serialize) -> Result<String, String> {

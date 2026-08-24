@@ -245,6 +245,16 @@ CREATE TABLE entity_search_terms (
     UNIQUE(entity_type, entity_id, sort_order)
 );
 
+CREATE TABLE entity_media_references (
+    entity_type TEXT NOT NULL CHECK(entity_type IN ('breed','product','manufacturer','active_ingredient','condition')),
+    entity_id TEXT NOT NULL CHECK(length(trim(entity_id)) > 0),
+    role TEXT NOT NULL CHECK(role IN ('cover', 'gallery')),
+    media_key TEXT NOT NULL CHECK(length(trim(media_key)) > 0),
+    sort_order INTEGER NOT NULL CHECK(sort_order >= 0),
+    PRIMARY KEY(entity_type, entity_id, role, sort_order),
+    UNIQUE(entity_type, entity_id, role, media_key)
+);
+
 CREATE INDEX idx_taxonomy_terms_label ON taxonomy_terms(taxonomy_id, normalized_label);
 CREATE INDEX idx_geo_places_parent ON geo_places(parent_place_id);
 CREATE INDEX idx_breed_origin_place ON breed_origin_places(place_id, breed_id);
@@ -255,3 +265,4 @@ CREATE INDEX idx_product_vaccine_profiles_term_key ON product_vaccine_profiles(t
 CREATE INDEX idx_product_life_stages_term_key ON product_life_stages(term_key, product_id);
 CREATE INDEX idx_product_therapeutic_scopes_term_key ON product_therapeutic_scopes(term_key, product_id);
 CREATE INDEX idx_search_normalized ON entity_search_terms(normalized_value, entity_type, entity_id);
+CREATE INDEX idx_entity_media_key ON entity_media_references(media_key, entity_type, entity_id);

@@ -7,14 +7,14 @@
   "properties": {
     "schemaVersion": { "const": 1 },
     "sections": {
-      "type": "array",
+      "type": "array", "maxItems": 64,
       "items": {
         "type": "object",
         "additionalProperties": false,
         "required": ["sectionKey", "compiledMarkdown"],
         "properties": {
-          "sectionKey": { "type": "string", "minLength": 1 },
-          "compiledMarkdown": { "type": "string" }
+          "sectionKey": { "type": "string", "minLength": 1, "maxLength": 160, "pattern": "^[a-z0-9][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$" },
+          "compiledMarkdown": { "type": "string", "maxLength": 1000000 }
         }
       }
     }

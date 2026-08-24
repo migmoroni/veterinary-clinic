@@ -1,5 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema", "title": "Canonical manufacturer", "type": "object", "additionalProperties": false,
   "required": ["schemaVersion", "entityType", "id", "typeTermKey", "classificationTermKeys", "regions", "website", "localizedContent", "sections"],
-  "properties": { "schemaVersion": { "const": 1 }, "entityType": { "const": "manufacturer" }, "id": { "type": "string", "format": "uuid" }, "typeTermKey": { "type": "string" }, "classificationTermKeys": { "type": "array", "uniqueItems": true }, "regions": { "type": "array", "uniqueItems": true }, "website": { "type": ["string", "null"] }, "localizedContent": { "type": "object" }, "sections": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/section" } }, "contentPath": { "type": "string", "minLength": 1 } }
+  "properties": {
+    "schemaVersion": { "const": 1 }, "entityType": { "const": "manufacturer" }, "id": { "$ref": "common.schema.json#/$defs/uuidV4" },
+    "typeTermKey": { "$ref": "common.schema.json#/$defs/key" }, "classificationTermKeys": { "$ref": "common.schema.json#/$defs/stringArray" }, "regions": { "$ref": "common.schema.json#/$defs/stringArray" },
+    "website": { "oneOf": [{ "$ref": "common.schema.json#/$defs/httpsUrl" }, { "type": "null" }] }, "localizedContent": { "$ref": "common.schema.json#/$defs/localizedContent" },
+    "sections": { "$ref": "common.schema.json#/$defs/sections" }, "contentPath": { "$ref": "common.schema.json#/$defs/contentPath" }, "media": { "$ref": "common.schema.json#/$defs/media" }
+  }
 }

@@ -1,5 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema", "title": "Canonical active ingredient", "type": "object", "additionalProperties": false,
   "required": ["schemaVersion", "entityType", "id", "typeTermKey", "classificationTermKeys", "regions", "nomenclature", "atcVetCode", "localizedContent", "sections"],
-  "properties": { "schemaVersion": { "const": 1 }, "entityType": { "const": "active_ingredient" }, "id": { "type": "string", "format": "uuid" }, "typeTermKey": { "type": "string" }, "classificationTermKeys": { "type": "array", "uniqueItems": true }, "regions": { "type": "array", "uniqueItems": true }, "nomenclature": { "type": "object" }, "atcVetCode": { "type": ["string", "null"] }, "localizedContent": { "type": "object" }, "sections": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/section" } }, "contentPath": { "type": "string", "minLength": 1 } }
+  "properties": {
+    "schemaVersion": { "const": 1 }, "entityType": { "const": "active_ingredient" }, "id": { "$ref": "common.schema.json#/$defs/uuidV4" },
+    "typeTermKey": { "$ref": "common.schema.json#/$defs/key" }, "classificationTermKeys": { "$ref": "common.schema.json#/$defs/stringArray" }, "regions": { "$ref": "common.schema.json#/$defs/stringArray" },
+    "nomenclature": { "$ref": "common.schema.json#/$defs/nomenclature" }, "atcVetCode": { "oneOf": [{ "$ref": "common.schema.json#/$defs/nonEmptyText" }, { "type": "null" }] },
+    "localizedContent": { "$ref": "common.schema.json#/$defs/localizedContent" }, "sections": { "$ref": "common.schema.json#/$defs/sections" },
+    "contentPath": { "$ref": "common.schema.json#/$defs/contentPath" }, "media": { "$ref": "common.schema.json#/$defs/media" }
+  }
 }

@@ -1,8 +1,20 @@
+use crate::normalization::normalize_text;
+use image::{
+    codecs::jpeg::JpegEncoder, imageops::FilterType, ColorType, DynamicImage, GenericImageView,
+    ImageDecoder, ImageEncoder, ImageFormat, ImageReader, Limits, Rgb, RgbImage,
+};
 use sha2::{Digest, Sha256};
 use std::{
     fs,
+    io::Cursor,
     path::{Component, Path, PathBuf},
 };
+
+const MAX_SOURCE_BYTES: u64 = 25 * 1024 * 1024;
+const MAX_DIMENSION: u32 = 16_384;
+const MAX_PIXELS: u64 = 100_000_000;
+const THUMBNAIL_MAX_SIDE: u32 = 200;
+const THUMBNAIL_JPEG_QUALITY: u8 = 72;
 
 #[derive(Clone, Debug, serde::Serialize)]
 pub struct MediaAsset {
@@ -13,12 +25,15 @@ pub struct MediaAsset {
     pub content_hash_sha256: String,
     pub mime_type: String,
     pub size_bytes: u64,
-    pub width: Option<u32>,
-    pub height: Option<u32>,
+    pub width: u32,
+    pub height: u32,
     #[serde(skip)]
     pub bytes: Vec<u8>,
     #[serde(skip)]
-    pub thumbnail: Option<Vec<u8>>,
+    pub thumbnail: Vec<u8>,
+    pub thumbnail_mime_type: String,
+    pub thumbnail_width: u32,
+    pub thumbnail_height: u32,
 }
 
 pub fn resolve_markdown_image(
@@ -71,13 +86,31 @@ pub fn resolve_media(
             canonical.display()
         ));
     }
+    if metadata.len() > MAX_SOURCE_BYTES {
+        return Err(format!(
+            "media exceeds the 25 MiB source limit: {}",
+            canonical.display()
+        ));
+    }
     let relative = canonical
         .strip_prefix(&entity_root)
         .map_err(|_| "media path escapes entity directory".to_string())?;
     let relative_path = normalized_relative_path(relative)?;
     let bytes = fs::read(&canonical)
         .map_err(|error| format!("cannot read media {}: {error}", canonical.display()))?;
-    let (mime_type, width, height) = inspect_image(&bytes, &canonical)?;
+    let decoded = decode_image(&bytes, &canonical)?;
+    let (width, height) = decoded.dimensions();
+    let thumbnail_image = if width <= THUMBNAIL_MAX_SIDE && height <= THUMBNAIL_MAX_SIDE {
+        decoded
+    } else {
+        decoded.resize(THUMBNAIL_MAX_SIDE, THUMBNAIL_MAX_SIDE, FilterType::Lanczos3)
+    };
+    let (thumbnail_width, thumbnail_height) = thumbnail_image.dimensions();
+    let thumbnail = encode_jpeg_on_white(&thumbnail_image)?;
+    let mime_type = mime_for_format(
+        image::guess_format(&bytes)
+            .map_err(|error| format!("cannot identify media {}: {error}", canonical.display()))?,
+    )?;
     let content_hash_sha256 = sha256_hex(&bytes);
     let media_key = format!("{entity_type}/{entity_id}/{relative_path}");
 
@@ -90,10 +123,10 @@ pub fn resolve_media(
         size_bytes: metadata.len(),
         width,
         height,
-        // The v1 profile stores a deterministic preview. For already compact
-        // source images the byte-identical preview avoids a second codec and
-        // remains stable across platforms.
-        thumbnail: Some(bytes.clone()),
+        thumbnail,
+        thumbnail_mime_type: "image/jpeg".to_string(),
+        thumbnail_width,
+        thumbnail_height,
         bytes,
     })
 }
@@ -106,8 +139,12 @@ pub fn sha256_hex(bytes: &[u8]) -> String {
 }
 
 pub fn decode_hex(value: &str) -> Result<Vec<u8>, String> {
-    if value.len() != 64 || !value.bytes().all(|value| value.is_ascii_hexdigit()) {
-        return Err("SHA-256 must contain 64 hexadecimal characters".to_string());
+    if value.len() != 64
+        || !value
+            .bytes()
+            .all(|value| value.is_ascii_digit() || matches!(value, b'a'..=b'f'))
+    {
+        return Err("SHA-256 must contain 64 lowercase hexadecimal characters".to_string());
     }
     value
         .as_bytes()
@@ -142,12 +179,12 @@ fn normalized_relative_path(path: &Path) -> Result<String, String> {
     let mut segments = Vec::new();
     for component in path.components() {
         match component {
-            Component::Normal(value) => segments.push(
-                value
+            Component::Normal(value) => {
+                let value = value
                     .to_str()
-                    .ok_or_else(|| "media path is not valid UTF-8".to_string())?
-                    .to_string(),
-            ),
+                    .ok_or_else(|| "media path is not valid UTF-8".to_string())?;
+                segments.push(normalize_text(value));
+            }
             _ => return Err("media path is not a normalized relative path".to_string()),
         }
     }
@@ -199,125 +236,135 @@ fn has_uri_scheme(value: &str) -> bool {
         })
 }
 
-fn inspect_image(
-    bytes: &[u8],
-    path: &Path,
-) -> Result<(&'static str, Option<u32>, Option<u32>), String> {
+fn decode_image(bytes: &[u8], path: &Path) -> Result<DynamicImage, String> {
+    let format = image::guess_format(bytes)
+        .map_err(|error| format!("unsupported or invalid image {}: {error}", path.display()))?;
+    let mime_type = mime_for_format(format)?;
     let extension = path
         .extension()
         .and_then(|value| value.to_str())
         .unwrap_or_default()
         .to_ascii_lowercase();
-    let detected = if bytes.starts_with(b"\x89PNG\r\n\x1a\n") && bytes.len() >= 24 {
-        (
-            "image/png",
-            Some(be_u32(&bytes[16..20])),
-            Some(be_u32(&bytes[20..24])),
-            &["png"][..],
-        )
-    } else if (bytes.starts_with(b"GIF87a") || bytes.starts_with(b"GIF89a")) && bytes.len() >= 10 {
-        (
-            "image/gif",
-            Some(u32::from(u16::from_le_bytes([bytes[6], bytes[7]]))),
-            Some(u32::from(u16::from_le_bytes([bytes[8], bytes[9]]))),
-            &["gif"][..],
-        )
-    } else if bytes.starts_with(&[0xff, 0xd8, 0xff]) {
-        let (width, height) = jpeg_dimensions(bytes)?;
-        (
-            "image/jpeg",
-            Some(width),
-            Some(height),
-            &["jpg", "jpeg"][..],
-        )
-    } else if bytes.len() >= 16 && bytes.starts_with(b"RIFF") && &bytes[8..12] == b"WEBP" {
-        let (width, height) = webp_dimensions(bytes);
-        ("image/webp", width, height, &["webp"][..])
-    } else {
-        return Err(format!(
-            "unsupported or invalid image bytes: {}",
-            path.display()
-        ));
+    let extensions: &[&str] = match format {
+        ImageFormat::Png => &["png"],
+        ImageFormat::Jpeg => &["jpg", "jpeg"],
+        ImageFormat::Gif => &["gif"],
+        ImageFormat::WebP => &["webp"],
+        _ => return Err(format!("unsupported image format for {}", path.display())),
     };
-    if !detected.3.contains(&extension.as_str()) {
+    if !extensions.contains(&extension.as_str()) {
         return Err(format!(
-            "media extension does not match detected MIME type: {}",
+            "media extension does not match detected MIME type {mime_type}: {}",
             path.display()
         ));
     }
-    if matches!(detected.1, Some(0)) || matches!(detected.2, Some(0)) {
+    let mut reader = ImageReader::new(Cursor::new(bytes));
+    reader.set_format(format);
+    let mut limits = Limits::default();
+    limits.max_image_width = Some(MAX_DIMENSION);
+    limits.max_image_height = Some(MAX_DIMENSION);
+    limits.max_alloc = Some(MAX_PIXELS.saturating_mul(4));
+    reader.limits(limits);
+    let mut decoder = reader
+        .into_decoder()
+        .map_err(|error| format!("cannot create decoder for {}: {error}", path.display()))?;
+    let (encoded_width, encoded_height) = decoder.dimensions();
+    if encoded_width == 0
+        || encoded_height == 0
+        || encoded_width > MAX_DIMENSION
+        || encoded_height > MAX_DIMENSION
+        || u64::from(encoded_width) * u64::from(encoded_height) > MAX_PIXELS
+    {
         return Err(format!(
-            "image dimensions must be positive: {}",
+            "image dimensions exceed the media profile: {}",
             path.display()
         ));
     }
-    Ok((detected.0, detected.1, detected.2))
+    let orientation = decoder
+        .orientation()
+        .map_err(|error| format!("cannot read image orientation {}: {error}", path.display()))?;
+    let mut image = DynamicImage::from_decoder(decoder)
+        .map_err(|error| format!("cannot decode image {}: {error}", path.display()))?;
+    image.apply_orientation(orientation);
+    Ok(image)
 }
 
-fn be_u32(bytes: &[u8]) -> u32 {
-    u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]])
-}
-
-fn jpeg_dimensions(bytes: &[u8]) -> Result<(u32, u32), String> {
-    let mut index = 2;
-    while index + 9 < bytes.len() {
-        if bytes[index] != 0xff {
-            index += 1;
-            continue;
-        }
-        let marker = bytes[index + 1];
-        index += 2;
-        if matches!(marker, 0xd8 | 0xd9) {
-            continue;
-        }
-        if index + 2 > bytes.len() {
-            break;
-        }
-        let length = usize::from(u16::from_be_bytes([bytes[index], bytes[index + 1]]));
-        if length < 2 || index + length > bytes.len() {
-            break;
-        }
-        if matches!(
-            marker,
-            0xc0 | 0xc1
-                | 0xc2
-                | 0xc3
-                | 0xc5
-                | 0xc6
-                | 0xc7
-                | 0xc9
-                | 0xca
-                | 0xcb
-                | 0xcd
-                | 0xce
-                | 0xcf
-        ) && length >= 7
-        {
-            let height = u32::from(u16::from_be_bytes([bytes[index + 3], bytes[index + 4]]));
-            let width = u32::from(u16::from_be_bytes([bytes[index + 5], bytes[index + 6]]));
-            return Ok((width, height));
-        }
-        index += length;
+fn mime_for_format(format: ImageFormat) -> Result<&'static str, String> {
+    match format {
+        ImageFormat::Png => Ok("image/png"),
+        ImageFormat::Jpeg => Ok("image/jpeg"),
+        ImageFormat::Gif => Ok("image/gif"),
+        ImageFormat::WebP => Ok("image/webp"),
+        _ => Err("unsupported image format".to_string()),
     }
-    Err("JPEG dimensions could not be determined".to_string())
 }
 
-fn webp_dimensions(bytes: &[u8]) -> (Option<u32>, Option<u32>) {
-    if bytes.len() >= 30 && &bytes[12..16] == b"VP8X" {
-        let width = 1 + u32::from_le_bytes([bytes[24], bytes[25], bytes[26], 0]);
-        let height = 1 + u32::from_le_bytes([bytes[27], bytes[28], bytes[29], 0]);
-        (Some(width), Some(height))
-    } else {
-        (None, None)
+fn encode_jpeg_on_white(image: &DynamicImage) -> Result<Vec<u8>, String> {
+    let rgba = image.to_rgba8();
+    let mut rgb = RgbImage::new(rgba.width(), rgba.height());
+    for (x, y, pixel) in rgba.enumerate_pixels() {
+        let alpha = u16::from(pixel[3]);
+        let blend = |channel: u8| -> u8 {
+            let value = u16::from(channel) * alpha + 255 * (255 - alpha);
+            ((value + 127) / 255) as u8
+        };
+        rgb.put_pixel(
+            x,
+            y,
+            Rgb([blend(pixel[0]), blend(pixel[1]), blend(pixel[2])]),
+        );
     }
+    let mut bytes = Vec::new();
+    JpegEncoder::new_with_quality(&mut bytes, THUMBNAIL_JPEG_QUALITY)
+        .write_image(
+            rgb.as_raw(),
+            rgb.width(),
+            rgb.height(),
+            ColorType::Rgb8.into(),
+        )
+        .map_err(|error| format!("cannot encode deterministic JPEG thumbnail: {error}"))?;
+    Ok(bytes)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use image::{ImageBuffer, Rgba};
     use std::sync::atomic::{AtomicU64, Ordering};
 
     static TEST_COUNTER: AtomicU64 = AtomicU64::new(0);
+
+    fn encoded(format: ImageFormat, width: u32, height: u32) -> Vec<u8> {
+        let pixels = ImageBuffer::from_fn(width, height, |x, y| {
+            Rgba([
+                (x % 255) as u8,
+                (y % 255) as u8,
+                80,
+                if x == 0 { 0 } else { 255 },
+            ])
+        });
+        let image = DynamicImage::ImageRgba8(pixels);
+        let image = if format == ImageFormat::Jpeg {
+            DynamicImage::ImageRgb8(image.to_rgb8())
+        } else {
+            image
+        };
+        let mut bytes = Cursor::new(Vec::new());
+        image.write_to(&mut bytes, format).unwrap();
+        bytes.into_inner()
+    }
+
+    fn with_orientation_six(mut jpeg: Vec<u8>) -> Vec<u8> {
+        let exif = [
+            b'E', b'x', b'i', b'f', 0, 0, b'M', b'M', 0, 42, 0, 0, 0, 8, 0, 1, 1, 18, 0, 3, 0, 0,
+            0, 1, 0, 6, 0, 0, 0, 0, 0, 0,
+        ];
+        let mut result = jpeg.drain(..2).collect::<Vec<_>>();
+        result.extend_from_slice(&[0xff, 0xe1, 0, 34]);
+        result.extend_from_slice(&exif);
+        result.extend(jpeg);
+        result
+    }
 
     #[test]
     fn cas_layout_is_fragmented() {
@@ -326,6 +373,7 @@ mod tests {
             cas_relative_path(hash).unwrap(),
             PathBuf::from("01/23").join(format!("{hash}.bin"))
         );
+        assert!(decode_hex(&hash.to_ascii_uppercase()).is_err());
     }
 
     #[test]
@@ -347,11 +395,9 @@ mod tests {
         let media = root.join("media");
         fs::create_dir_all(&content).unwrap();
         fs::create_dir_all(&media).unwrap();
-        let mut png = b"\x89PNG\r\n\x1a\n".to_vec();
-        png.extend_from_slice(&[0, 0, 0, 13, b'I', b'H', b'D', b'R']);
-        png.extend_from_slice(&1_u32.to_be_bytes());
-        png.extend_from_slice(&1_u32.to_be_bytes());
-        fs::write(media.join("pixel.png"), &png).unwrap();
+        image::DynamicImage::new_rgba8(1, 1)
+            .save(media.join("pixel.png"))
+            .unwrap();
         let asset = resolve_markdown_image(
             &root,
             &content,
@@ -364,7 +410,41 @@ mod tests {
             asset.media_key,
             "product/37ef9309-c8fd-42ac-99a5-050b195d747f/media/pixel.png"
         );
-        assert_eq!((asset.width, asset.height), (Some(1), Some(1)));
+        assert_eq!((asset.width, asset.height), (1, 1));
+        assert_eq!(asset.thumbnail_mime_type, "image/jpeg");
+        assert_ne!(asset.thumbnail, asset.bytes);
         fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn decodes_all_source_formats_and_encodes_deterministic_jpeg_thumbnails() {
+        for (format, extension, mime) in [
+            (ImageFormat::Png, "png", "image/png"),
+            (ImageFormat::Jpeg, "jpg", "image/jpeg"),
+            (ImageFormat::Gif, "gif", "image/gif"),
+            (ImageFormat::WebP, "webp", "image/webp"),
+        ] {
+            let bytes = encoded(format, 400, 100);
+            let path = PathBuf::from(format!("source.{extension}"));
+            assert_eq!(
+                mime_for_format(image::guess_format(&bytes).unwrap()).unwrap(),
+                mime
+            );
+            let decoded = decode_image(&bytes, &path).unwrap();
+            let thumbnail = decoded.resize(200, 200, FilterType::Lanczos3);
+            let left = encode_jpeg_on_white(&thumbnail).unwrap();
+            let right = encode_jpeg_on_white(&thumbnail).unwrap();
+            assert_eq!(left, right);
+            assert!(left.starts_with(&[0xff, 0xd8, 0xff]));
+            assert_eq!(thumbnail.dimensions(), (200, 50));
+            assert_ne!(left, bytes);
+        }
+    }
+
+    #[test]
+    fn jpeg_exif_orientation_changes_visual_dimensions_before_thumbnailing() {
+        let bytes = with_orientation_six(encoded(ImageFormat::Jpeg, 4, 2));
+        let image = decode_image(&bytes, Path::new("oriented.jpg")).unwrap();
+        assert_eq!(image.dimensions(), (2, 4));
     }
 }

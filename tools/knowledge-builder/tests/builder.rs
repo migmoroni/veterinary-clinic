@@ -49,7 +49,7 @@ fn source_root() -> PathBuf {
 }
 
 fn context_path() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/local-context.json")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/contexts/local-context.json")
 }
 
 #[test]
@@ -149,6 +149,44 @@ fn validates_and_builds_all_locales_deterministically() {
 }
 
 #[test]
+fn minimal_fixture_builds_and_tampered_version_is_not_reused() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
+    let validated = validate(&fixture).expect("minimal fixture must validate");
+    assert_eq!(validated.entity_count(), 1);
+    let output = TestDirectory::new("minimal-fixture");
+    let result = build(&BuildOptions {
+        source: fixture.clone(),
+        output: output.path().to_path_buf(),
+        context: context_path(),
+    })
+    .expect("minimal fixture must build");
+    assert_eq!(result.locales.len(), 6);
+
+    let result_path = output.path().join("versions/1/build-result.json");
+    let canonical_result = fs::read(&result_path).unwrap();
+    let mut value: serde_json::Value = serde_json::from_slice(&canonical_result).unwrap();
+    value["unexpectedField"] = serde_json::Value::Bool(true);
+    fs::write(&result_path, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+    let error = build(&BuildOptions {
+        source: fixture.clone(),
+        output: output.path().to_path_buf(),
+        context: context_path(),
+    })
+    .unwrap_err();
+    assert!(error.contains("schema violation"));
+
+    fs::write(&result_path, canonical_result).unwrap();
+    fs::write(output.path().join("versions/1/unexpected.txt"), b"tampered").unwrap();
+    let error = build(&BuildOptions {
+        source: fixture,
+        output: output.path().to_path_buf(),
+        context: context_path(),
+    })
+    .unwrap_err();
+    assert!(error.contains("additional files"));
+}
+
+#[test]
 fn logical_digest_is_independent_of_editorial_directory() {
     let original = validate(source_root()).expect("canonical source must validate");
     let moved_copy = TestDirectory::new("moved-source");
@@ -186,6 +224,18 @@ fn logical_digest_is_independent_of_editorial_directory() {
         original.source_digest_sha256(),
         renamed.source_digest_sha256()
     );
+
+    let unicode_copy = TestDirectory::new("decomposed-unicode");
+    copy_tree(&source_root(), unicode_copy.path());
+    let manifest = find_manifest_containing(unicode_copy.path(), "é")
+        .expect("canonical source contains composed accented text");
+    let contents = fs::read_to_string(&manifest).unwrap();
+    fs::write(&manifest, contents.replacen('é', "e\u{301}", 1)).unwrap();
+    let decomposed = validate(unicode_copy.path()).expect("decomposed Unicode must validate");
+    assert_eq!(
+        original.source_digest_sha256(),
+        decomposed.source_digest_sha256()
+    );
 }
 
 #[test]
@@ -219,7 +269,7 @@ fn validation_rejects_schema_reference_locale_and_markdown_violations() {
     assert!(validate(copy.path())
         .unwrap_err()
         .to_string()
-        .contains("unexpected field"));
+        .contains("schema violation"));
 
     breed = serde_json::from_slice(&original_breed).unwrap();
     breed["localizedContent"]["name"]
@@ -259,7 +309,91 @@ fn validation_rejects_schema_reference_locale_and_markdown_violations() {
     assert!(validate(copy.path())
         .unwrap_err()
         .to_string()
-        .contains("raw HTML is forbidden"));
+        .contains("forbidden Markdown AST node"));
+}
+
+#[test]
+fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
+    let source = TestDirectory::new("media-source");
+    copy_tree(&source_root(), source.path());
+    let manifest = find_manifest_by_type(source.path(), "condition").unwrap();
+    let entity_directory = manifest.parent().unwrap();
+    let media_directory = entity_directory.join("media");
+    fs::create_dir_all(&media_directory).unwrap();
+    let pixels = image::ImageBuffer::from_fn(320, 80, |x, _| {
+        image::Rgba([20, (x % 255) as u8, 140, if x < 10 { 0 } else { 255 }])
+    });
+    image::DynamicImage::ImageRgba8(pixels)
+        .save(media_directory.join("cover.png"))
+        .unwrap();
+    fs::copy(
+        media_directory.join("cover.png"),
+        media_directory.join("lateral.png"),
+    )
+    .unwrap();
+
+    let mut entity: serde_json::Value =
+        serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
+    entity["media"] = serde_json::json!({
+        "cover": "./media/cover.png",
+        "gallery": ["./media/lateral.png"]
+    });
+    fs::write(&manifest, serde_json::to_vec_pretty(&entity).unwrap()).unwrap();
+    let pt_br = entity_directory
+        .join(entity["contentPath"].as_str().unwrap())
+        .join("pt-BR.md");
+    let markdown = fs::read_to_string(&pt_br).unwrap();
+    fs::write(
+        &pt_br,
+        format!("{markdown}\n\n![Capa](../media/cover.png)\n"),
+    )
+    .unwrap();
+
+    validate(source.path()).expect("structural and localized media must validate");
+    let output = TestDirectory::new("media-build");
+    let result = build(&BuildOptions {
+        source: source.path().to_path_buf(),
+        output: output.path().to_path_buf(),
+        context: context_path(),
+    })
+    .unwrap();
+    assert_eq!(result.cas.object_count, 1);
+    for locale in LOCALES {
+        let artifacts = result.locales.get(locale.as_str()).unwrap();
+        let system = Connection::open(output.path().join(&artifacts.system.path)).unwrap();
+        let references: i64 = system
+            .query_row("SELECT count(*) FROM entity_media_references", [], |row| {
+                row.get(0)
+            })
+            .unwrap();
+        assert_eq!(references, 2);
+        let media = Connection::open(output.path().join(&artifacts.system_media.path)).unwrap();
+        let thumbnail: (Vec<u8>, String, i64, i64, String) = media
+            .query_row(
+                "SELECT thumbnail, thumbnail_mime_type, thumbnail_width, thumbnail_height, mime_type FROM media_assets ORDER BY media_key LIMIT 1",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?)),
+            )
+            .unwrap();
+        assert!(thumbnail.0.starts_with(&[0xff, 0xd8, 0xff]));
+        assert_eq!(thumbnail.1, "image/jpeg");
+        assert_eq!((thumbnail.2, thumbnail.3), (200, 50));
+        assert_eq!(thumbnail.4, "image/png");
+        let asset_count: i64 = media
+            .query_row("SELECT count(*) FROM media_assets", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(asset_count, 2);
+    }
+    let pt_database =
+        Connection::open(output.path().join(&result.locales["pt-BR"].system.path)).unwrap();
+    let content: String = pt_database
+        .query_row(
+            "SELECT content_json FROM condition_catalog_items",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert!(content.contains("knowledge-media://asset/condition/"));
 }
 
 #[test]
@@ -398,6 +532,26 @@ fn find_manifest_by_type(root: &Path, entity_type: &str) -> Option<PathBuf> {
             if value.get("entityType").and_then(serde_json::Value::as_str) == Some(entity_type) {
                 return Some(entry.path());
             }
+        }
+    }
+    None
+}
+
+fn find_manifest_containing(root: &Path, needle: &str) -> Option<PathBuf> {
+    let mut entries = fs::read_dir(root)
+        .ok()?
+        .collect::<Result<Vec<_>, _>>()
+        .ok()?;
+    entries.sort_by_key(|entry| entry.file_name());
+    for entry in entries {
+        if entry.file_type().ok()?.is_dir() {
+            if let Some(path) = find_manifest_containing(&entry.path(), needle) {
+                return Some(path);
+            }
+        } else if entry.file_name() == "entity.json"
+            && fs::read_to_string(entry.path()).ok()?.contains(needle)
+        {
+            return Some(entry.path());
         }
     }
     None

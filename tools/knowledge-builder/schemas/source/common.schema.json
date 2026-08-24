@@ -1,39 +1,85 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$defs": {
+    "nonEmptyText": { "type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^\\S(?:[\\s\\S]*\\S)?$|^\\S$" },
+    "key": { "type": "string", "minLength": 1, "maxLength": 160, "pattern": "^[a-z0-9][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$" },
+    "uuidV4": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+    "httpsUrl": { "type": "string", "pattern": "^https://[^\\s]+$", "maxLength": 2048 },
+    "stringArray": { "type": "array", "uniqueItems": true, "maxItems": 256, "items": { "$ref": "#/$defs/nonEmptyText" } },
+    "nonEmptyStringArray": { "type": "array", "minItems": 1, "uniqueItems": true, "maxItems": 256, "items": { "$ref": "#/$defs/nonEmptyText" } },
     "localizedText": {
-      "type": "object",
-      "additionalProperties": false,
+      "type": "object", "additionalProperties": false,
       "required": ["pt-BR", "pt-PT", "gn-PY", "en-US", "es-ES", "fr-FR"],
       "properties": {
-        "pt-BR": { "type": "string", "minLength": 1 },
-        "pt-PT": { "type": "string", "minLength": 1 },
-        "gn-PY": { "type": "string", "minLength": 1 },
-        "en-US": { "type": "string", "minLength": 1 },
-        "es-ES": { "type": "string", "minLength": 1 },
-        "fr-FR": { "type": "string", "minLength": 1 }
+        "pt-BR": { "$ref": "#/$defs/nonEmptyText" }, "pt-PT": { "$ref": "#/$defs/nonEmptyText" },
+        "gn-PY": { "$ref": "#/$defs/nonEmptyText" }, "en-US": { "$ref": "#/$defs/nonEmptyText" },
+        "es-ES": { "$ref": "#/$defs/nonEmptyText" }, "fr-FR": { "$ref": "#/$defs/nonEmptyText" }
       }
     },
     "localizedList": {
-      "type": "object",
-      "additionalProperties": false,
+      "type": "object", "additionalProperties": false,
       "required": ["pt-BR", "pt-PT", "gn-PY", "en-US", "es-ES", "fr-FR"],
       "properties": {
-        "pt-BR": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
-        "pt-PT": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
-        "gn-PY": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
-        "en-US": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
-        "es-ES": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
-        "fr-FR": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+        "pt-BR": { "$ref": "#/$defs/stringArray" }, "pt-PT": { "$ref": "#/$defs/stringArray" },
+        "gn-PY": { "$ref": "#/$defs/stringArray" }, "en-US": { "$ref": "#/$defs/stringArray" },
+        "es-ES": { "$ref": "#/$defs/stringArray" }, "fr-FR": { "$ref": "#/$defs/stringArray" }
       }
     },
+    "localizedContent": {
+      "type": "object", "minProperties": 1, "maxProperties": 64,
+      "propertyNames": { "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
+      "additionalProperties": { "oneOf": [{ "$ref": "#/$defs/localizedText" }, { "$ref": "#/$defs/localizedList" }] }
+    },
     "section": {
-      "type": "object",
-      "additionalProperties": false,
+      "type": "object", "additionalProperties": false,
       "required": ["sectionKey", "sectionNumber"],
       "properties": {
-        "sectionKey": { "type": "string", "minLength": 1 },
-        "sectionNumber": { "type": "integer", "minimum": 1 }
+        "sectionKey": { "$ref": "#/$defs/key" },
+        "sectionNumber": { "type": "integer", "minimum": 1, "maximum": 999 }
+      }
+    },
+    "sections": { "type": "array", "uniqueItems": true, "maxItems": 64, "items": { "$ref": "#/$defs/section" } },
+    "contentPath": { "type": "string", "minLength": 1, "maxLength": 512, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000]+$" },
+    "range": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "prefixItems": [{ "type": "number", "minimum": 0 }, { "type": "number", "minimum": 0 }], "items": false
+    },
+    "measurementRange": {
+      "type": "object", "additionalProperties": false, "required": ["male", "female"],
+      "properties": { "male": { "$ref": "#/$defs/range" }, "female": { "$ref": "#/$defs/range" } }
+    },
+    "centroid": {
+      "type": "object", "additionalProperties": false, "required": ["latitude", "longitude"],
+      "properties": {
+        "latitude": { "type": ["number", "null"], "minimum": -90, "maximum": 90 },
+        "longitude": { "type": ["number", "null"], "minimum": -180, "maximum": 180 }
+      },
+      "allOf": [{ "if": { "properties": { "latitude": { "type": "null" } } }, "then": { "properties": { "longitude": { "type": "null" } } } }, { "if": { "properties": { "longitude": { "type": "null" } } }, "then": { "properties": { "latitude": { "type": "null" } } } }]
+    },
+    "nomenclature": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scientificName", "casNumber", "denominationStandards"],
+      "properties": {
+        "scientificName": { "oneOf": [{ "$ref": "#/$defs/nonEmptyText" }, { "type": "null" }] },
+        "casNumber": { "oneOf": [{ "$ref": "#/$defs/nonEmptyText" }, { "type": "null" }] },
+        "denominationStandards": { "$ref": "#/$defs/stringArray" }
+      }
+    },
+    "regulatoryIdentifiers": {
+      "type": "object", "additionalProperties": false,
+      "required": ["brazilMapa", "unitedStatesNada", "unitedStatesAnada", "gtinEan"],
+      "properties": {
+        "brazilMapa": { "oneOf": [{ "$ref": "#/$defs/nonEmptyText" }, { "type": "null" }] },
+        "unitedStatesNada": { "oneOf": [{ "$ref": "#/$defs/nonEmptyText" }, { "type": "null" }] },
+        "unitedStatesAnada": { "oneOf": [{ "$ref": "#/$defs/nonEmptyText" }, { "type": "null" }] },
+        "gtinEan": { "oneOf": [{ "$ref": "#/$defs/nonEmptyText" }, { "type": "null" }] }
+      }
+    },
+    "media": {
+      "type": "object", "additionalProperties": false, "minProperties": 1,
+      "properties": {
+        "cover": { "$ref": "#/$defs/contentPath" },
+        "gallery": { "type": "array", "uniqueItems": true, "maxItems": 32, "items": { "$ref": "#/$defs/contentPath" } }
       }
     }
   }

@@ -1,3 +1,4 @@
+use crate::normalization::normalize_json_strings;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{
@@ -162,6 +163,14 @@ pub struct RegulatoryIdentifiers {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
+pub struct StructuralMedia {
+    pub cover: Option<String>,
+    #[serde(default)]
+    pub gallery: Vec<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct ProductEntity {
     #[serde(rename = "schemaVersion")]
     pub schema_version: u32,
@@ -191,6 +200,7 @@ pub struct ProductEntity {
     pub sections: Vec<SectionDeclaration>,
     #[serde(rename = "contentPath")]
     pub content_path: Option<String>,
+    pub media: Option<StructuralMedia>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -210,6 +220,7 @@ pub struct ManufacturerEntity {
     pub sections: Vec<SectionDeclaration>,
     #[serde(rename = "contentPath")]
     pub content_path: Option<String>,
+    pub media: Option<StructuralMedia>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -231,6 +242,7 @@ pub struct ActiveIngredientEntity {
     pub sections: Vec<SectionDeclaration>,
     #[serde(rename = "contentPath")]
     pub content_path: Option<String>,
+    pub media: Option<StructuralMedia>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -249,6 +261,7 @@ pub struct ConditionEntity {
     pub sections: Vec<SectionDeclaration>,
     #[serde(rename = "contentPath")]
     pub content_path: Option<String>,
+    pub media: Option<StructuralMedia>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -271,6 +284,7 @@ pub struct BreedEntity {
     pub sections: Vec<SectionDeclaration>,
     #[serde(rename = "contentPath")]
     pub content_path: Option<String>,
+    pub media: Option<StructuralMedia>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -434,6 +448,17 @@ impl CanonicalEntity {
             Self::GeoPlace(_) | Self::Taxonomy(_) | Self::TreatmentProtocol(_) => None,
         }
     }
+
+    pub fn structural_media(&self) -> Option<&StructuralMedia> {
+        match self {
+            Self::Breed(value) => value.media.as_ref(),
+            Self::Product(value) => value.media.as_ref(),
+            Self::Manufacturer(value) => value.media.as_ref(),
+            Self::ActiveIngredient(value) => value.media.as_ref(),
+            Self::Condition(value) => value.media.as_ref(),
+            Self::GeoPlace(_) | Self::Taxonomy(_) | Self::TreatmentProtocol(_) => None,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -444,157 +469,12 @@ pub struct SourceEntry {
 }
 
 pub fn deserialize_entity(path: &Path, bytes: &[u8]) -> Result<CanonicalEntity, String> {
-    let raw: Value = serde_json::from_slice(bytes)
+    let mut raw: Value = serde_json::from_slice(bytes)
         .map_err(|error| format!("{}: invalid JSON: {error}", path.display()))?;
-    validate_top_level_keys(path, &raw)?;
+    crate::schemas::validate_source_value(path, &raw)?;
+    normalize_json_strings(&mut raw);
     serde_json::from_value(raw)
         .map_err(|error| format!("{}: schema violation: {error}", path.display()))
-}
-
-fn validate_top_level_keys(path: &Path, raw: &Value) -> Result<(), String> {
-    let object = raw
-        .as_object()
-        .ok_or_else(|| format!("{}: entity manifest must be an object", path.display()))?;
-    let entity_type = object
-        .get("entityType")
-        .and_then(Value::as_str)
-        .ok_or_else(|| format!("{}: entityType is required", path.display()))?;
-    let (required, optional): (&[&str], &[&str]) = match entity_type {
-        "product" => (
-            &[
-                "schemaVersion",
-                "entityType",
-                "id",
-                "typeTermKey",
-                "classificationTermKeys",
-                "species",
-                "regions",
-                "manufacturerId",
-                "activeIngredientIds",
-                "regulatoryIdentifiers",
-                "localizedContent",
-                "sections",
-            ],
-            &[
-                "contentPath",
-                "targetTermKeys",
-                "vaccineProfileTermKeys",
-                "lifeStageTermKeys",
-                "therapeuticScopeTermKeys",
-            ],
-        ),
-        "manufacturer" => (
-            &[
-                "schemaVersion",
-                "entityType",
-                "id",
-                "typeTermKey",
-                "classificationTermKeys",
-                "regions",
-                "website",
-                "localizedContent",
-                "sections",
-            ],
-            &["contentPath"],
-        ),
-        "active_ingredient" => (
-            &[
-                "schemaVersion",
-                "entityType",
-                "id",
-                "typeTermKey",
-                "classificationTermKeys",
-                "regions",
-                "nomenclature",
-                "atcVetCode",
-                "localizedContent",
-                "sections",
-            ],
-            &["contentPath"],
-        ),
-        "condition" => (
-            &[
-                "schemaVersion",
-                "entityType",
-                "id",
-                "typeTermKey",
-                "classificationTermKeys",
-                "regions",
-                "localizedContent",
-                "sections",
-            ],
-            &["contentPath"],
-        ),
-        "breed" => (
-            &[
-                "schemaVersion",
-                "entityType",
-                "id",
-                "species",
-                "originPlaceIds",
-                "sizeTermKey",
-                "averageWeightKg",
-                "averageHeightCm",
-                "localizedContent",
-                "sections",
-            ],
-            &["contentPath"],
-        ),
-        "geo_place" => (
-            &[
-                "schemaVersion",
-                "entityType",
-                "id",
-                "placeType",
-                "countryCodes",
-                "parentPlaceId",
-                "centroid",
-                "localizedContent",
-            ],
-            &[],
-        ),
-        "treatment_protocol" => (
-            &[
-                "schemaVersion",
-                "entityType",
-                "id",
-                "kind",
-                "species",
-                "productIds",
-                "doses",
-                "localizedContent",
-            ],
-            &[],
-        ),
-        "taxonomy" => (
-            &[
-                "schemaVersion",
-                "entityType",
-                "id",
-                "domain",
-                "purpose",
-                "terms",
-            ],
-            &[],
-        ),
-        _ => {
-            return Err(format!(
-                "{}: unsupported entityType {entity_type}",
-                path.display()
-            ))
-        }
-    };
-    for key in required {
-        if !object.contains_key(*key) {
-            return Err(format!("{}: missing required field {key}", path.display()));
-        }
-    }
-    for key in object.keys() {
-        if !required.contains(&key.as_str()) && !optional.contains(&key.as_str()) {
-            return Err(format!("{}: unexpected field {key}", path.display()));
-        }
-    }
-    Ok(())
 }
 
 pub fn source_schema_fingerprint_input() -> &'static [&'static str] {
