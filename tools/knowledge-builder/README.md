@@ -28,17 +28,35 @@ cargo run -p knowledge-builder -- build \
 - Mídias PNG, JPEG, GIF e WebP preservam os bytes originais no CAS. A orientação
   é aplicada antes de produzir thumbnail JPEG, qualidade 72, lado máximo 200,
   filtro Lanczos3 e transparência sobre branco.
-- O `ProjectionLedger` cria obrigações tipadas por valor e destino. Cada
-  projector registra no `ProjectionJournal` somente a linha, termo de busca,
-  documento, seção, ativo ou objeto CAS que materializou; evidências SQLite só
-  são publicadas no ledger depois do `commit`.
-- O `projection-report.json` v2 deriva exclusivamente do `CompletedLedger`. Ele
-  contém as contagens esperada e concluída, eventos por banco e tabela,
+- Cada locale possui um `ProjectionContract` puro, tipado e determinístico,
+  construído antes da abertura dos bancos. O contrato contém os valores finais
+  das colunas, relações ordenadas, busca, documentos compilados, mídia e CAS;
+  os writers apenas persistem essas operações.
+- Cada folha validada declara diretamente seu proprietário fechado por
+  `ProjectionOperationId`. Os lotes são finalizados somente por essa identidade:
+  não existe agrupamento ou descoberta de propriedade por target, banco, tabela,
+  linha ou coluna.
+- Colunas projetáveis usam o enum fechado `SystemColumn`. Cada variante de
+  `SystemRow` declara tabela, identidade lógica e o conjunto exato de colunas do
+  seu `INSERT`; o contrato recusa evento, target ou coluna incompatível com o
+  payload antes de abrir SQLite.
+- Os SQLs fixos dos writers possuem descritores fechados. Uma matriz estrutural
+  executável cobre todas as formas concretas de `INSERT`, incluindo cada destino
+  polimórfico, e exige igualdade exata entre tabela, colunas do comando,
+  `SystemRow::materialized_columns()` e todas as variantes de `SystemColumn`.
+- O `ProjectionJournal` recebe as obrigações concretas declaradas pela operação.
+  Não existe conclusão por destino nem expansão de um destino para outras
+  obrigações; evidências SQLite só são publicadas depois do `commit`.
+- O `projection-report.json` v3 deriva exclusivamente do contrato e do
+  `CompletedLedger`. Ele
+  contém as contagens esperada e concluída, operações, eventos por banco e tabela,
   relações resolvidas, fragmentos localizados consumidos e o digest canônico
-  das evidências de cada locale.
+  versionado das evidências de cada locale.
 - Um único `ArtifactVerifier` recalcula schemas, metadados, tamanhos, hashes,
-  fingerprints, integridade, foreign keys, contagens, referências de mídia,
-  thumbnails, CAS, relatório, checksums e o conjunto exato de arquivos. O mesmo
+  fingerprints, integridade, foreign keys e contagens e também relê todas as
+  linhas projetáveis em tipos fechados. Bancos, relações, ordenações, busca,
+  conteúdo compilado, referências estruturais, `system_media`, CAS, metadados e
+  relatório precisam ser integralmente iguais ao `ProjectionContract`. O mesmo
   núcleo verifica o staging e uma versão existente antes da reutilização.
 - Todas as fixtures estão declaradas em `fixtures/registry.json`; o teste de
   cobertura recusa diretórios sem caso ou casos sem uma asserção executada.

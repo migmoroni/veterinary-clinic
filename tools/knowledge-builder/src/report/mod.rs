@@ -134,6 +134,8 @@ pub struct LocaleProjection {
     pub completed_obligation_count: usize,
     #[serde(rename = "rowEventCount")]
     pub row_event_count: usize,
+    #[serde(rename = "operationCount")]
+    pub operation_count: usize,
     #[serde(rename = "resolvedRelationCount")]
     pub resolved_relation_count: usize,
     #[serde(rename = "consumedLocalizedFragments")]

@@ -532,6 +532,23 @@ fn validate_entity_shape(entry: &SourceEntry, diagnostics: &mut Vec<Diagnostic>)
                     ));
                 }
             }
+            for field in value.localized_content.keys().filter_map(|key| {
+                key.strip_prefix("denomination_")
+                    .map(|standard| (key, standard))
+            }) {
+                if !value
+                    .nomenclature
+                    .denomination_standards
+                    .iter()
+                    .any(|standard| standard == field.1)
+                {
+                    diagnostics.push(Diagnostic::entity(
+                        entry,
+                        format!("localizedContent.{}", field.0),
+                        "denomination has no declared nomenclature standard",
+                    ));
+                }
+            }
         }
         CanonicalEntity::Condition(value) => {
             validate_unique_texts(
@@ -675,21 +692,17 @@ fn validate_localized_schema(entry: &SourceEntry, diagnostics: &mut Vec<Diagnost
             "localizedContent",
             diagnostics,
         ),
-        CanonicalEntity::ActiveIngredient(_) => {
-            let dynamic = content
-                .keys()
-                .filter(|key| key.starts_with("denomination_"))
-                .map(String::as_str)
+        CanonicalEntity::ActiveIngredient(value) => {
+            let dynamic = value
+                .nomenclature
+                .denomination_standards
+                .iter()
+                .map(|standard| format!("denomination_{standard}"))
                 .collect::<Vec<_>>();
             let mut optional = vec!["atcVetSystem"];
-            optional.extend(dynamic);
+            optional.extend(dynamic.iter().map(String::as_str));
             let mut text = vec!["name", "atcVetSystem"];
-            text.extend(
-                content
-                    .keys()
-                    .filter(|key| key.starts_with("denomination_"))
-                    .map(String::as_str),
-            );
+            text.extend(dynamic.iter().map(String::as_str));
             validate_localized_content(
                 entry,
                 content,

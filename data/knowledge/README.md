@@ -117,6 +117,15 @@ denominações de princípios ativos; `name` e `observation` de protocolos; e
 `label` das doses. Termos taxonômicos usam o mesmo contrato para `label` e
 aliases gerais.
 
+Cada chave `denomination_<standard>` de princípio ativo corresponde exatamente
+a uma entrada de `nomenclature.denominationStandards`: não são aceitas
+denominações sem standard declarado nem standards sem o campo localizado.
+Chaves localizadas fora da política fechada do tipo da entidade são inválidas.
+
+Um fragmento localizado é um texto presente, cada item de uma lista e cada
+seção editorial compilada no locale. Uma lista `[]` possui zero fragmentos, mas
+sua forma vazia continua sendo parte estrutural da projeção.
+
 O diretório `localized/` não faz parte do contrato.
 
 ## Vocabulários Controlados

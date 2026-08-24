@@ -14,6 +14,7 @@ mod report;
 mod schemas;
 mod source;
 mod validation;
+mod verification;
 
 pub mod cli;
 

@@ -571,4 +571,4 @@ seguinte.
 ## Próxima Parte
 
 Após cumprir todos os critérios, seguir para a
-[Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md).
+[Parte 1B.4: propriedade explícita e disposição fechada](./01b4-explicit-operation-ownership.md).

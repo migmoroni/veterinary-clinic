@@ -7,6 +7,7 @@ use crate::{
     },
     validation::{ValidatedEntity, ValidatedSource},
 };
+use serde::Serialize;
 use std::{
     collections::{BTreeMap, BTreeSet},
     fmt,
@@ -62,6 +63,211 @@ pub(crate) enum SystemTable {
     EntitySearchTerms,
     EntityMediaReferences,
     MediaAssets,
+}
+
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub(crate) enum SystemColumn {
+    Id,
+    Domain,
+    Purpose,
+    TaxonomyId,
+    TermKey,
+    ParentTermKey,
+    Label,
+    NormalizedLabel,
+    AliasesJson,
+    SortOrder,
+    PlaceType,
+    ParentPlaceId,
+    CountryCodesJson,
+    Latitude,
+    Longitude,
+    Name,
+    NormalizedName,
+    SpeciesJson,
+    SizeTermKey,
+    AverageWeightKgJson,
+    AverageHeightCmJson,
+    ContentJson,
+    BreedId,
+    PlaceId,
+    TypeTermKey,
+    RegionsJson,
+    Website,
+    NomenclatureJson,
+    AtcVetCode,
+    AtcVetSystem,
+    DenominationsJson,
+    ManufacturerId,
+    RegulatoryIdentifiersJson,
+    CommercialLine,
+    PresentationDosage,
+    TargetSpeciesWarningsJson,
+    EntityType,
+    EntityId,
+    RelationKind,
+    ProductId,
+    ActiveIngredientId,
+    Kind,
+    Observation,
+    ProtocolId,
+    DoseId,
+    ValidityValue,
+    ValidityUnit,
+    Value,
+    NormalizedValue,
+    Provenance,
+    Role,
+    MediaKey,
+}
+
+impl SystemColumn {
+    #[cfg(test)]
+    pub(crate) const ALL: [Self; 52] = [
+        Self::Id,
+        Self::Domain,
+        Self::Purpose,
+        Self::TaxonomyId,
+        Self::TermKey,
+        Self::ParentTermKey,
+        Self::Label,
+        Self::NormalizedLabel,
+        Self::AliasesJson,
+        Self::SortOrder,
+        Self::PlaceType,
+        Self::ParentPlaceId,
+        Self::CountryCodesJson,
+        Self::Latitude,
+        Self::Longitude,
+        Self::Name,
+        Self::NormalizedName,
+        Self::SpeciesJson,
+        Self::SizeTermKey,
+        Self::AverageWeightKgJson,
+        Self::AverageHeightCmJson,
+        Self::ContentJson,
+        Self::BreedId,
+        Self::PlaceId,
+        Self::TypeTermKey,
+        Self::RegionsJson,
+        Self::Website,
+        Self::NomenclatureJson,
+        Self::AtcVetCode,
+        Self::AtcVetSystem,
+        Self::DenominationsJson,
+        Self::ManufacturerId,
+        Self::RegulatoryIdentifiersJson,
+        Self::CommercialLine,
+        Self::PresentationDosage,
+        Self::TargetSpeciesWarningsJson,
+        Self::EntityType,
+        Self::EntityId,
+        Self::RelationKind,
+        Self::ProductId,
+        Self::ActiveIngredientId,
+        Self::Kind,
+        Self::Observation,
+        Self::ProtocolId,
+        Self::DoseId,
+        Self::ValidityValue,
+        Self::ValidityUnit,
+        Self::Value,
+        Self::NormalizedValue,
+        Self::Provenance,
+        Self::Role,
+        Self::MediaKey,
+    ];
+
+    pub(crate) const fn as_str(self) -> &'static str {
+        match self {
+            Self::Id => "id",
+            Self::Domain => "domain",
+            Self::Purpose => "purpose",
+            Self::TaxonomyId => "taxonomy_id",
+            Self::TermKey => "term_key",
+            Self::ParentTermKey => "parent_term_key",
+            Self::Label => "label",
+            Self::NormalizedLabel => "normalized_label",
+            Self::AliasesJson => "aliases_json",
+            Self::SortOrder => "sort_order",
+            Self::PlaceType => "place_type",
+            Self::ParentPlaceId => "parent_place_id",
+            Self::CountryCodesJson => "country_codes_json",
+            Self::Latitude => "latitude",
+            Self::Longitude => "longitude",
+            Self::Name => "name",
+            Self::NormalizedName => "normalized_name",
+            Self::SpeciesJson => "species_json",
+            Self::SizeTermKey => "size_term_key",
+            Self::AverageWeightKgJson => "average_weight_kg_json",
+            Self::AverageHeightCmJson => "average_height_cm_json",
+            Self::ContentJson => "content_json",
+            Self::BreedId => "breed_id",
+            Self::PlaceId => "place_id",
+            Self::TypeTermKey => "type_term_key",
+            Self::RegionsJson => "regions_json",
+            Self::Website => "website",
+            Self::NomenclatureJson => "nomenclature_json",
+            Self::AtcVetCode => "atc_vet_code",
+            Self::AtcVetSystem => "atc_vet_system",
+            Self::DenominationsJson => "denominations_json",
+            Self::ManufacturerId => "manufacturer_id",
+            Self::RegulatoryIdentifiersJson => "regulatory_identifiers_json",
+            Self::CommercialLine => "commercial_line",
+            Self::PresentationDosage => "presentation_dosage",
+            Self::TargetSpeciesWarningsJson => "target_species_warnings_json",
+            Self::EntityType => "entity_type",
+            Self::EntityId => "entity_id",
+            Self::RelationKind => "relation_kind",
+            Self::ProductId => "product_id",
+            Self::ActiveIngredientId => "active_ingredient_id",
+            Self::Kind => "kind",
+            Self::Observation => "observation",
+            Self::ProtocolId => "protocol_id",
+            Self::DoseId => "dose_id",
+            Self::ValidityValue => "validity_value",
+            Self::ValidityUnit => "validity_unit",
+            Self::Value => "value",
+            Self::NormalizedValue => "normalized_value",
+            Self::Provenance => "provenance",
+            Self::Role => "role",
+            Self::MediaKey => "media_key",
+        }
+    }
+}
+
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub(crate) enum CompilationOperationId {
+    CanonicalValidation {
+        entity: EntityIdentity,
+        validation: &'static str,
+    },
+    Document {
+        entity: EntityIdentity,
+    },
+    Section {
+        entity: EntityIdentity,
+        section_key: String,
+    },
+}
+
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub(crate) enum ProjectionOperationId {
+    Compilation(CompilationOperationId),
+    Metadata {
+        database: DatabaseKind,
+        release: bool,
+    },
+    SystemRow {
+        table: SystemTable,
+        row: String,
+    },
+    SystemMediaAsset {
+        media_key: String,
+    },
+    CasObject {
+        content_hash: String,
+    },
 }
 
 impl SystemTable {
@@ -124,40 +330,6 @@ impl SystemTable {
             Self::EntityMediaReferences => "entity_media_references",
             Self::MediaAssets => "media_assets",
         }
-    }
-
-    pub(crate) fn parse(value: &str) -> Result<Self, String> {
-        let table = match value {
-            "knowledge_build_metadata" => Self::KnowledgeBuildMetadata,
-            "knowledge_release_metadata" => Self::KnowledgeReleaseMetadata,
-            "taxonomy_registry" => Self::TaxonomyRegistry,
-            "taxonomy_terms" => Self::TaxonomyTerms,
-            "product_target_terms" => Self::ProductTargetTerms,
-            "product_vaccine_profile_terms" => Self::ProductVaccineProfileTerms,
-            "product_life_stage_terms" => Self::ProductLifeStageTerms,
-            "product_therapeutic_scope_terms" => Self::ProductTherapeuticScopeTerms,
-            "geo_places" => Self::GeoPlaces,
-            "breed_reference_items" => Self::BreedReferenceItems,
-            "breed_origin_places" => Self::BreedOriginPlaces,
-            "manufacturer_catalog_items" => Self::ManufacturerCatalogItems,
-            "active_ingredient_catalog_items" => Self::ActiveIngredientCatalogItems,
-            "condition_catalog_items" => Self::ConditionCatalogItems,
-            "product_catalog_items" => Self::ProductCatalogItems,
-            "entity_taxonomy_terms" => Self::EntityTaxonomyTerms,
-            "product_active_ingredients" => Self::ProductActiveIngredients,
-            "product_targets" => Self::ProductTargets,
-            "product_vaccine_profiles" => Self::ProductVaccineProfiles,
-            "product_life_stages" => Self::ProductLifeStages,
-            "product_therapeutic_scopes" => Self::ProductTherapeuticScopes,
-            "treatment_protocols" => Self::TreatmentProtocols,
-            "treatment_protocol_items" => Self::TreatmentProtocolItems,
-            "treatment_protocol_doses" => Self::TreatmentProtocolDoses,
-            "entity_search_terms" => Self::EntitySearchTerms,
-            "entity_media_references" => Self::EntityMediaReferences,
-            "media_assets" => Self::MediaAssets,
-            _ => return Err(format!("unknown projected table {value}")),
-        };
-        Ok(table)
     }
 }
 
@@ -237,10 +409,21 @@ pub(crate) enum SourceToken {
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub(crate) enum ProjectionTarget {
+    CanonicalValidation {
+        entity: EntityIdentity,
+        locale: KnowledgeLocale,
+        validation: &'static str,
+    },
     TableRow {
         database: DatabaseKind,
         table: SystemTable,
         row: String,
+    },
+    TableColumn {
+        database: DatabaseKind,
+        table: SystemTable,
+        row: String,
+        column: SystemColumn,
     },
     SearchTerm {
         entity: EntityIdentity,
@@ -299,118 +482,30 @@ pub(crate) struct RowEvent {
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct ProjectionJournal {
-    targets: Vec<ProjectionTarget>,
+    completed: Vec<ProjectionObligation>,
     rows: Vec<RowEvent>,
 }
 
 impl ProjectionJournal {
-    pub(crate) fn record_row(
+    pub(crate) fn complete_operation(
         &mut self,
+        obligations: &BTreeSet<ProjectionObligation>,
         affected_rows: usize,
-        database: DatabaseKind,
-        table: SystemTable,
-        row: impl Into<String>,
-        entity: Option<EntityIdentity>,
+        event: RowEvent,
     ) -> Result<(), String> {
         if affected_rows != 1 {
             return Err(format!(
                 "{} insert affected {affected_rows} rows instead of 1",
-                table.as_str()
+                event.table.as_str()
             ));
         }
-        let row = row.into();
-        let target = ProjectionTarget::TableRow {
-            database,
-            table,
-            row: row.clone(),
-        };
-        self.targets.push(target);
-        self.rows.push(RowEvent {
-            database,
-            table,
-            row,
-            entity,
-        });
+        self.completed.extend(obligations.iter().cloned());
+        self.rows.push(event);
         Ok(())
     }
 
-    pub(crate) fn record_target(&mut self, target: ProjectionTarget) {
-        self.targets.push(target);
-    }
-
-    pub(crate) fn record_metadata(
-        &mut self,
-        database: DatabaseKind,
-        locale: KnowledgeLocale,
-        release: bool,
-    ) {
-        self.targets.push(ProjectionTarget::BuildMetadata {
-            database,
-            locale,
-            release,
-        });
-        self.rows.push(RowEvent {
-            database,
-            table: if release {
-                SystemTable::KnowledgeReleaseMetadata
-            } else {
-                SystemTable::KnowledgeBuildMetadata
-            },
-            row: "1".to_string(),
-            entity: None,
-        });
-    }
-
-    pub(crate) fn record_search(
-        &mut self,
-        affected_rows: usize,
-        entity: EntityIdentity,
-        locale: KnowledgeLocale,
-        provenance: String,
-        occurrence: usize,
-    ) -> Result<(), String> {
-        if affected_rows != 1 {
-            return Err(format!(
-                "entity_search_terms insert affected {affected_rows} rows instead of 1"
-            ));
-        }
-        self.targets.push(ProjectionTarget::SearchTerm {
-            entity: entity.clone(),
-            locale,
-            provenance,
-            occurrence,
-        });
-        self.rows.push(RowEvent {
-            database: DatabaseKind::System,
-            table: SystemTable::EntitySearchTerms,
-            row: format!("{entity}/{occurrence}"),
-            entity: Some(entity),
-        });
-        Ok(())
-    }
-
-    pub(crate) fn record_media_asset(
-        &mut self,
-        affected_rows: usize,
-        locale: KnowledgeLocale,
-        media_key: String,
-    ) -> Result<(), String> {
-        if affected_rows != 1 {
-            return Err(format!(
-                "media_assets insert affected {affected_rows} rows instead of 1"
-            ));
-        }
-        self.targets.push(ProjectionTarget::SystemMediaAsset {
-            locale,
-            media_key: media_key.clone(),
-        });
-        self.rows.push(RowEvent {
-            database: DatabaseKind::SystemMedia,
-            table: SystemTable::MediaAssets,
-            row: media_key,
-            entity: None,
-        });
-        Ok(())
+    pub(crate) fn complete(&mut self, obligation: ProjectionObligation) {
+        self.completed.push(obligation);
     }
 }
 
@@ -419,7 +514,6 @@ pub(crate) struct ProjectionLedger {
     locale: KnowledgeLocale,
     expected: BTreeSet<ProjectionObligation>,
     completed: BTreeSet<ProjectionObligation>,
-    completed_targets: BTreeSet<ProjectionTarget>,
     row_events: Vec<RowEvent>,
 }
 
@@ -441,158 +535,26 @@ pub(crate) struct SearchCandidate {
 }
 
 impl ProjectionLedger {
-    pub(crate) fn expected(
-        source: &ValidatedSource,
-        locale: KnowledgeLocale,
-        release: bool,
-    ) -> Result<Self, String> {
-        let mut expected = BTreeSet::new();
-        for database in [DatabaseKind::System, DatabaseKind::SystemMedia] {
-            insert_obligation(
-                &mut expected,
-                SourceToken::BuildMetadata {
-                    database,
-                    locale,
-                    release: false,
-                },
-                ProjectionTarget::BuildMetadata {
-                    database,
-                    locale,
-                    release: false,
-                },
-                ObligationClass::Metadata,
-            )?;
-            if release {
-                insert_obligation(
-                    &mut expected,
-                    SourceToken::BuildMetadata {
-                        database,
-                        locale,
-                        release: true,
-                    },
-                    ProjectionTarget::BuildMetadata {
-                        database,
-                        locale,
-                        release: true,
-                    },
-                    ObligationClass::Metadata,
-                )?;
-            }
-        }
-        for entry in &source.entities {
-            add_entity_obligations(&mut expected, entry, locale)?;
-        }
-        for candidate in search_candidates(source, locale)? {
-            insert_obligation(
-                &mut expected,
-                candidate.source,
-                ProjectionTarget::SearchTerm {
-                    entity: candidate.entity,
-                    locale,
-                    provenance: candidate.provenance,
-                    occurrence: candidate.occurrence,
-                },
-                ObligationClass::LocalizedContent,
-            )?;
-        }
-        let mut hashes = BTreeSet::new();
-        for media_key in source
-            .media_keys_by_locale
-            .get(&locale)
-            .into_iter()
-            .flatten()
-        {
-            insert_obligation(
-                &mut expected,
-                SourceToken::MediaAsset {
-                    locale,
-                    media_key: media_key.clone(),
-                },
-                ProjectionTarget::SystemMediaAsset {
-                    locale,
-                    media_key: media_key.clone(),
-                },
-                ObligationClass::Media,
-            )?;
-            let asset = source
-                .media
-                .get(media_key)
-                .ok_or_else(|| format!("media key has no asset: {media_key}"))?;
-            hashes.insert(asset.content_hash_sha256.clone());
-        }
-        for content_hash in hashes {
-            insert_obligation(
-                &mut expected,
-                SourceToken::CasObject {
-                    locale,
-                    content_hash: content_hash.clone(),
-                },
-                ProjectionTarget::CasObject {
-                    locale,
-                    content_hash,
-                },
-                ObligationClass::Cas,
-            )?;
-        }
-        Ok(Self {
+    pub(crate) fn new(locale: KnowledgeLocale, expected: BTreeSet<ProjectionObligation>) -> Self {
+        Self {
             locale,
             expected,
             completed: BTreeSet::new(),
-            completed_targets: BTreeSet::new(),
             row_events: Vec::new(),
-        })
-    }
-
-    pub(crate) fn journal(&self) -> ProjectionJournal {
-        ProjectionJournal::default()
-    }
-
-    pub(crate) fn expected_count(&self) -> usize {
-        self.expected.len()
-    }
-
-    pub(crate) fn expected_relation_count(&self) -> usize {
-        self.expected
-            .iter()
-            .filter(|obligation| obligation.class == ObligationClass::Relation)
-            .map(|obligation| &obligation.source)
-            .collect::<BTreeSet<_>>()
-            .len()
-    }
-
-    pub(crate) fn expected_localized_fragment_count(&self) -> usize {
-        self.expected
-            .iter()
-            .filter(|obligation| obligation.class == ObligationClass::LocalizedContent)
-            .map(|obligation| &obligation.source)
-            .collect::<BTreeSet<_>>()
-            .len()
-    }
-
-    pub(crate) fn expected_evidence_digest(&self) -> String {
-        evidence_digest(&self.expected)
+        }
     }
 
     pub(crate) fn commit(&mut self, journal: ProjectionJournal) -> Result<(), String> {
-        let mut completed_targets = self.completed_targets.clone();
         let mut completed = self.completed.clone();
-        let mut obligations = Vec::new();
-        for target in journal.targets {
-            if !completed_targets.insert(target.clone()) {
-                return Err(format!("duplicated projection target {target:?}"));
+        for obligation in journal.completed {
+            if !self.expected.contains(&obligation) {
+                return Err(format!("unexpected projection obligation {obligation}"));
             }
-            let matching = self
-                .expected
-                .iter()
-                .filter(|obligation| obligation.target == target)
-                .cloned()
-                .collect::<Vec<_>>();
-            if matching.is_empty() {
-                return Err(format!("unexpected projection target {target:?}"));
+            if obligation_locale(&obligation).is_some_and(|locale| locale != self.locale) {
+                return Err(format!(
+                    "projection obligation belongs to another locale: {obligation}"
+                ));
             }
-            obligations.extend(matching);
-        }
-        for obligation in obligations {
             if !completed.insert(obligation.clone()) {
                 return Err(format!("duplicated projection obligation {obligation}"));
             }
@@ -607,7 +569,6 @@ impl ProjectionLedger {
                 ));
             }
         }
-        self.completed_targets = completed_targets;
         self.completed = completed;
         self.row_events.extend(journal.rows);
         Ok(())
@@ -633,6 +594,254 @@ impl ProjectionLedger {
             completed: self.completed,
             row_events: self.row_events,
         })
+    }
+}
+
+#[derive(Clone, Debug)]
+struct OperationDisposition {
+    owner: ProjectionOperationId,
+    target: ProjectionTarget,
+}
+
+impl OperationDisposition {
+    fn column(&self, column: SystemColumn) -> Self {
+        let ProjectionTarget::TableRow {
+            database,
+            table,
+            row,
+        } = &self.target
+        else {
+            panic!("only a SQLite row disposition can select a column");
+        };
+        Self {
+            owner: self.owner.clone(),
+            target: ProjectionTarget::TableColumn {
+                database: *database,
+                table: *table,
+                row: row.clone(),
+                column,
+            },
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub(crate) struct ObligationOwnership {
+    by_owner: BTreeMap<ProjectionOperationId, BTreeSet<ProjectionObligation>>,
+    expected: BTreeSet<ProjectionObligation>,
+}
+
+impl ObligationOwnership {
+    pub(crate) fn claim(
+        &mut self,
+        owner: &ProjectionOperationId,
+    ) -> Result<BTreeSet<ProjectionObligation>, String> {
+        self.by_owner
+            .remove(owner)
+            .ok_or_else(|| format!("operation has no declared obligation owner: {owner:?}"))
+    }
+
+    pub(crate) fn expected(&self) -> BTreeSet<ProjectionObligation> {
+        self.expected.clone()
+    }
+
+    pub(crate) fn finish(self) -> Result<(), String> {
+        if self.by_owner.is_empty() {
+            Ok(())
+        } else {
+            Err(format!(
+                "{} projection owner(s) have no operation",
+                self.by_owner.len()
+            ))
+        }
+    }
+
+    fn insert(
+        &mut self,
+        disposition: OperationDisposition,
+        source: SourceToken,
+        class: ObligationClass,
+    ) -> Result<(), String> {
+        let obligation = ProjectionObligation {
+            source,
+            target: disposition.target,
+            class,
+        };
+        if !self.expected.insert(obligation.clone()) {
+            return Err(format!(
+                "projection obligation is declared more than once: {obligation}"
+            ));
+        }
+        self.by_owner
+            .entry(disposition.owner)
+            .or_default()
+            .insert(obligation);
+        Ok(())
+    }
+}
+
+pub(crate) fn owned_obligations(
+    source: &ValidatedSource,
+    locale: KnowledgeLocale,
+    release: bool,
+) -> Result<ObligationOwnership, String> {
+    let mut expected = ObligationOwnership::default();
+    for database in [DatabaseKind::System, DatabaseKind::SystemMedia] {
+        insert_obligation(
+            &mut expected,
+            OperationDisposition {
+                owner: ProjectionOperationId::Metadata {
+                    database,
+                    release: false,
+                },
+                target: ProjectionTarget::BuildMetadata {
+                    database,
+                    locale,
+                    release: false,
+                },
+            },
+            SourceToken::BuildMetadata {
+                database,
+                locale,
+                release: false,
+            },
+            ObligationClass::Metadata,
+        )?;
+        if release {
+            insert_obligation(
+                &mut expected,
+                OperationDisposition {
+                    owner: ProjectionOperationId::Metadata {
+                        database,
+                        release: true,
+                    },
+                    target: ProjectionTarget::BuildMetadata {
+                        database,
+                        locale,
+                        release: true,
+                    },
+                },
+                SourceToken::BuildMetadata {
+                    database,
+                    locale,
+                    release: true,
+                },
+                ObligationClass::Metadata,
+            )?;
+        }
+    }
+    for entry in &source.entities {
+        add_entity_obligations(&mut expected, entry, locale)?;
+    }
+    for candidate in search_candidates(source, locale)? {
+        let class = if matches!(candidate.source, SourceToken::LocalizedValue { .. }) {
+            ObligationClass::LocalizedContent
+        } else {
+            ObligationClass::Authoring
+        };
+        insert_obligation(
+            &mut expected,
+            operation_disposition(
+                ProjectionOperationId::SystemRow {
+                    table: SystemTable::EntitySearchTerms,
+                    row: format!("{}/{}", candidate.entity, candidate.occurrence),
+                },
+                ProjectionTarget::SearchTerm {
+                    entity: candidate.entity.clone(),
+                    locale,
+                    provenance: candidate.provenance.clone(),
+                    occurrence: candidate.occurrence,
+                },
+            ),
+            candidate.source,
+            class,
+        )?;
+    }
+    let mut hashes = BTreeSet::new();
+    for media_key in source
+        .media_keys_by_locale
+        .get(&locale)
+        .into_iter()
+        .flatten()
+    {
+        insert_obligation(
+            &mut expected,
+            OperationDisposition {
+                owner: ProjectionOperationId::SystemMediaAsset {
+                    media_key: media_key.clone(),
+                },
+                target: ProjectionTarget::SystemMediaAsset {
+                    locale,
+                    media_key: media_key.clone(),
+                },
+            },
+            SourceToken::MediaAsset {
+                locale,
+                media_key: media_key.clone(),
+            },
+            ObligationClass::Media,
+        )?;
+        let asset = source
+            .media
+            .get(media_key)
+            .ok_or_else(|| format!("media key has no asset: {media_key}"))?;
+        hashes.insert(asset.content_hash_sha256.clone());
+    }
+    for content_hash in hashes {
+        insert_obligation(
+            &mut expected,
+            OperationDisposition {
+                owner: ProjectionOperationId::CasObject {
+                    content_hash: content_hash.clone(),
+                },
+                target: ProjectionTarget::CasObject {
+                    locale,
+                    content_hash: content_hash.clone(),
+                },
+            },
+            SourceToken::CasObject {
+                locale,
+                content_hash: content_hash.clone(),
+            },
+            ObligationClass::Cas,
+        )?;
+    }
+    Ok(expected)
+}
+
+impl ProjectionLedger {
+    pub(crate) fn journal(&self) -> ProjectionJournal {
+        ProjectionJournal::default()
+    }
+}
+
+fn obligation_locale(obligation: &ProjectionObligation) -> Option<KnowledgeLocale> {
+    match &obligation.source {
+        SourceToken::LocalizedValue { locale, .. }
+        | SourceToken::Document { locale, .. }
+        | SourceToken::Section { locale, .. }
+        | SourceToken::StructuralMediaReference { locale, .. }
+        | SourceToken::MarkdownMediaReference { locale, .. }
+        | SourceToken::SearchValue { locale, .. }
+        | SourceToken::MediaAsset { locale, .. }
+        | SourceToken::CasObject { locale, .. }
+        | SourceToken::BuildMetadata { locale, .. } => Some(*locale),
+        SourceToken::Entity(_) | SourceToken::Field { .. } | SourceToken::Relation { .. } => {
+            projection_target_locale(&obligation.target)
+        }
+    }
+}
+
+fn projection_target_locale(target: &ProjectionTarget) -> Option<KnowledgeLocale> {
+    match target {
+        ProjectionTarget::CanonicalValidation { locale, .. }
+        | ProjectionTarget::SearchTerm { locale, .. }
+        | ProjectionTarget::CompiledDocument { locale, .. }
+        | ProjectionTarget::CompiledSection { locale, .. }
+        | ProjectionTarget::SystemMediaAsset { locale, .. }
+        | ProjectionTarget::CasObject { locale, .. }
+        | ProjectionTarget::BuildMetadata { locale, .. } => Some(*locale),
+        ProjectionTarget::TableRow { .. } | ProjectionTarget::TableColumn { .. } => None,
     }
 }
 
@@ -695,38 +904,383 @@ impl CompletedLedger {
         }
         rows
     }
-
-    pub(crate) fn rows_by_database(&self) -> BTreeMap<String, BTreeMap<String, usize>> {
-        let mut system = SystemTable::SYSTEM_PROJECTABLE
-            .into_iter()
-            .map(|table| (table.as_str().to_string(), 0usize))
-            .collect::<BTreeMap<_, _>>();
-        let mut media = SystemTable::SYSTEM_MEDIA_PROJECTABLE
-            .into_iter()
-            .map(|table| (table.as_str().to_string(), 0usize))
-            .collect::<BTreeMap<_, _>>();
-        for event in &self.row_events {
-            let destination = match event.database {
-                DatabaseKind::System => &mut system,
-                DatabaseKind::SystemMedia => &mut media,
-            };
-            if let Some(count) = destination.get_mut(event.table.as_str()) {
-                *count += 1;
-            }
-        }
-        BTreeMap::from([
-            ("system".to_string(), system),
-            ("systemMedia".to_string(), media),
-        ])
-    }
 }
 
 pub(crate) fn evidence_digest(obligations: &BTreeSet<ProjectionObligation>) -> String {
-    let bytes = obligations
-        .iter()
-        .flat_map(|obligation| [obligation.to_string().as_bytes(), b"\n"].concat())
-        .collect::<Vec<_>>();
+    let document = EvidenceDigestDocument {
+        schema_version: 1,
+        obligations: obligations.iter().map(EvidenceObligation::from).collect(),
+    };
+    let bytes =
+        serde_json::to_vec(&document).expect("closed projection evidence DTO must serialize");
     sha256_hex(&bytes)
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct EvidenceDigestDocument {
+    schema_version: u32,
+    obligations: Vec<EvidenceObligation>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct EvidenceObligation {
+    class: &'static str,
+    source: EvidenceSource,
+    target: EvidenceTarget,
+}
+
+#[derive(Serialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+enum EvidenceSource {
+    Entity {
+        entity_type: String,
+        id: String,
+    },
+    Field {
+        entity_type: String,
+        id: String,
+        path: String,
+    },
+    Relation {
+        entity_type: String,
+        id: String,
+        field: String,
+        position: usize,
+        related: String,
+    },
+    LocalizedValue {
+        entity_type: String,
+        id: String,
+        field: String,
+        locale: String,
+        position: usize,
+    },
+    Document {
+        entity_type: String,
+        id: String,
+        locale: String,
+    },
+    Section {
+        entity_type: String,
+        id: String,
+        locale: String,
+        section_key: String,
+    },
+    StructuralMediaReference {
+        entity_type: String,
+        id: String,
+        locale: String,
+        role: String,
+        sort_order: usize,
+        media_key: String,
+    },
+    MarkdownMediaReference {
+        entity_type: String,
+        id: String,
+        locale: String,
+        section_key: String,
+        occurrence: usize,
+        media_key: String,
+    },
+    SearchValue {
+        entity_type: String,
+        id: String,
+        locale: String,
+        provenance: String,
+        occurrence: usize,
+    },
+    MediaAsset {
+        locale: String,
+        media_key: String,
+    },
+    CasObject {
+        locale: String,
+        content_hash: String,
+    },
+    BuildMetadata {
+        database: &'static str,
+        locale: String,
+        release: bool,
+    },
+}
+
+#[derive(Serialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+enum EvidenceTarget {
+    CanonicalValidation {
+        entity_type: String,
+        id: String,
+        locale: String,
+        validation: &'static str,
+    },
+    TableRow {
+        database: &'static str,
+        table: &'static str,
+        row: String,
+    },
+    TableColumn {
+        database: &'static str,
+        table: &'static str,
+        row: String,
+        column: String,
+    },
+    SearchTerm {
+        entity_type: String,
+        id: String,
+        locale: String,
+        provenance: String,
+        occurrence: usize,
+    },
+    CompiledDocument {
+        entity_type: String,
+        id: String,
+        locale: String,
+    },
+    CompiledSection {
+        entity_type: String,
+        id: String,
+        locale: String,
+        section_key: String,
+    },
+    SystemMediaAsset {
+        locale: String,
+        media_key: String,
+    },
+    CasObject {
+        locale: String,
+        content_hash: String,
+    },
+    BuildMetadata {
+        database: &'static str,
+        locale: String,
+        release: bool,
+    },
+}
+
+impl From<&ProjectionObligation> for EvidenceObligation {
+    fn from(value: &ProjectionObligation) -> Self {
+        Self {
+            class: match value.class {
+                ObligationClass::Entity => "entity",
+                ObligationClass::Relation => "relation",
+                ObligationClass::LocalizedContent => "localized_content",
+                ObligationClass::Media => "media",
+                ObligationClass::Cas => "cas",
+                ObligationClass::Metadata => "metadata",
+                ObligationClass::Authoring => "authoring",
+            },
+            source: EvidenceSource::from(&value.source),
+            target: EvidenceTarget::from(&value.target),
+        }
+    }
+}
+
+fn database_name(database: DatabaseKind) -> &'static str {
+    match database {
+        DatabaseKind::System => "system",
+        DatabaseKind::SystemMedia => "system_media",
+    }
+}
+
+impl From<&SourceToken> for EvidenceSource {
+    fn from(value: &SourceToken) -> Self {
+        match value {
+            SourceToken::Entity(entity) => Self::Entity {
+                entity_type: entity.entity_type.clone(),
+                id: entity.id.clone(),
+            },
+            SourceToken::Field { entity, path } => Self::Field {
+                entity_type: entity.entity_type.clone(),
+                id: entity.id.clone(),
+                path: path.clone(),
+            },
+            SourceToken::Relation {
+                entity,
+                field,
+                position,
+                related,
+            } => Self::Relation {
+                entity_type: entity.entity_type.clone(),
+                id: entity.id.clone(),
+                field: field.clone(),
+                position: *position,
+                related: related.clone(),
+            },
+            SourceToken::LocalizedValue {
+                entity,
+                field,
+                locale,
+                position,
+            } => Self::LocalizedValue {
+                entity_type: entity.entity_type.clone(),
+                id: entity.id.clone(),
+                field: field.clone(),
+                locale: locale.to_string(),
+                position: *position,
+            },
+            SourceToken::Document { entity, locale } => Self::Document {
+                entity_type: entity.entity_type.clone(),
+                id: entity.id.clone(),
+                locale: locale.to_string(),
+            },
+            SourceToken::Section {
+                entity,
+                locale,
+                section_key,
+            } => Self::Section {
+                entity_type: entity.entity_type.clone(),
+                id: entity.id.clone(),
+                locale: locale.to_string(),
+                section_key: section_key.clone(),
+            },
+            SourceToken::StructuralMediaReference {
+                entity,
+                locale,
+                role,
+                sort_order,
+                media_key,
+            } => Self::StructuralMediaReference {
+                entity_type: entity.entity_type.clone(),
+                id: entity.id.clone(),
+                locale: locale.to_string(),
+                role: role.clone(),
+                sort_order: *sort_order,
+                media_key: media_key.clone(),
+            },
+            SourceToken::MarkdownMediaReference {
+                entity,
+                locale,
+                section_key,
+                occurrence,
+                media_key,
+            } => Self::MarkdownMediaReference {
+                entity_type: entity.entity_type.clone(),
+                id: entity.id.clone(),
+                locale: locale.to_string(),
+                section_key: section_key.clone(),
+                occurrence: *occurrence,
+                media_key: media_key.clone(),
+            },
+            SourceToken::SearchValue {
+                entity,
+                locale,
+                provenance,
+                occurrence,
+            } => Self::SearchValue {
+                entity_type: entity.entity_type.clone(),
+                id: entity.id.clone(),
+                locale: locale.to_string(),
+                provenance: provenance.clone(),
+                occurrence: *occurrence,
+            },
+            SourceToken::MediaAsset { locale, media_key } => Self::MediaAsset {
+                locale: locale.to_string(),
+                media_key: media_key.clone(),
+            },
+            SourceToken::CasObject {
+                locale,
+                content_hash,
+            } => Self::CasObject {
+                locale: locale.to_string(),
+                content_hash: content_hash.clone(),
+            },
+            SourceToken::BuildMetadata {
+                database,
+                locale,
+                release,
+            } => Self::BuildMetadata {
+                database: database_name(*database),
+                locale: locale.to_string(),
+                release: *release,
+            },
+        }
+    }
+}
+
+impl From<&ProjectionTarget> for EvidenceTarget {
+    fn from(value: &ProjectionTarget) -> Self {
+        match value {
+            ProjectionTarget::CanonicalValidation {
+                entity,
+                locale,
+                validation,
+            } => Self::CanonicalValidation {
+                entity_type: entity.entity_type.clone(),
+                id: entity.id.clone(),
+                locale: locale.to_string(),
+                validation,
+            },
+            ProjectionTarget::TableRow {
+                database,
+                table,
+                row,
+            } => Self::TableRow {
+                database: database_name(*database),
+                table: table.as_str(),
+                row: row.clone(),
+            },
+            ProjectionTarget::TableColumn {
+                database,
+                table,
+                row,
+                column,
+            } => Self::TableColumn {
+                database: database_name(*database),
+                table: table.as_str(),
+                row: row.clone(),
+                column: column.as_str().to_string(),
+            },
+            ProjectionTarget::SearchTerm {
+                entity,
+                locale,
+                provenance,
+                occurrence,
+            } => Self::SearchTerm {
+                entity_type: entity.entity_type.clone(),
+                id: entity.id.clone(),
+                locale: locale.to_string(),
+                provenance: provenance.clone(),
+                occurrence: *occurrence,
+            },
+            ProjectionTarget::CompiledDocument { entity, locale } => Self::CompiledDocument {
+                entity_type: entity.entity_type.clone(),
+                id: entity.id.clone(),
+                locale: locale.to_string(),
+            },
+            ProjectionTarget::CompiledSection {
+                entity,
+                locale,
+                section_key,
+            } => Self::CompiledSection {
+                entity_type: entity.entity_type.clone(),
+                id: entity.id.clone(),
+                locale: locale.to_string(),
+                section_key: section_key.clone(),
+            },
+            ProjectionTarget::SystemMediaAsset { locale, media_key } => Self::SystemMediaAsset {
+                locale: locale.to_string(),
+                media_key: media_key.clone(),
+            },
+            ProjectionTarget::CasObject {
+                locale,
+                content_hash,
+            } => Self::CasObject {
+                locale: locale.to_string(),
+                content_hash: content_hash.clone(),
+            },
+            ProjectionTarget::BuildMetadata {
+                database,
+                locale,
+                release,
+            } => Self::BuildMetadata {
+                database: database_name(*database),
+                locale: locale.to_string(),
+                release: *release,
+            },
+        }
+    }
 }
 
 pub(crate) fn search_candidates(
@@ -916,7 +1470,7 @@ pub(crate) fn search_candidates(
 }
 
 fn add_entity_obligations(
-    expected: &mut BTreeSet<ProjectionObligation>,
+    expected: &mut ObligationOwnership,
     entry: &ValidatedEntity,
     locale: KnowledgeLocale,
 ) -> Result<(), String> {
@@ -924,27 +1478,27 @@ fn add_entity_obligations(
     let main = main_row_target(&entry.source.entity);
     insert_obligation(
         expected,
-        SourceToken::Entity(entity.clone()),
         main.clone(),
+        SourceToken::Entity(entity.clone()),
         ObligationClass::Entity,
     )?;
     field(
         expected,
         &entity,
         "entityType",
-        metadata_target(locale),
+        canonical_validation_target(&entity, locale, "entity_type"),
         ObligationClass::Authoring,
     )?;
     match &entry.source.entity {
         CanonicalEntity::Product(value) => {
             let crate::source::ProductEntity {
-                schema_version: _,
-                id: _,
+                schema_version,
+                id,
                 type_term_key,
                 classification_term_keys,
                 species,
                 regions,
-                manufacturer_id: _,
+                manufacturer_id,
                 active_ingredient_ids,
                 regulatory_identifiers,
                 target_term_keys,
@@ -956,6 +1510,7 @@ fn add_entity_obligations(
                 content_path,
                 media,
             } = value;
+            let _ = (schema_version, id, manufacturer_id);
             common_authoring(
                 expected,
                 &entity,
@@ -968,14 +1523,14 @@ fn add_entity_obligations(
                 expected,
                 &entity,
                 "id",
-                main.clone(),
+                main.column(SystemColumn::Id),
                 ObligationClass::Authoring,
             )?;
             field(
                 expected,
                 &entity,
                 "typeTermKey",
-                main.clone(),
+                main.column(SystemColumn::TypeTermKey),
                 ObligationClass::Authoring,
             )?;
             relations(
@@ -992,13 +1547,25 @@ fn add_entity_obligations(
                 classification_term_keys,
                 |_, key| taxonomy_row(&entity, "classification", key),
             )?;
-            fields(expected, &entity, "species", species, main.clone())?;
-            fields(expected, &entity, "regions", regions, main.clone())?;
+            fields(
+                expected,
+                &entity,
+                "species",
+                species,
+                main.column(SystemColumn::SpeciesJson),
+            )?;
+            fields(
+                expected,
+                &entity,
+                "regions",
+                regions,
+                main.column(SystemColumn::RegionsJson),
+            )?;
             field(
                 expected,
                 &entity,
                 "manufacturerId",
-                main.clone(),
+                main.column(SystemColumn::ManufacturerId),
                 ObligationClass::Relation,
             )?;
             relations(
@@ -1019,28 +1586,28 @@ fn add_entity_obligations(
                 &entity,
                 "regulatoryIdentifiers.brazilMapa",
                 regulatory_identifiers.brazil_mapa.as_ref(),
-                main.clone(),
+                main.column(SystemColumn::RegulatoryIdentifiersJson),
             )?;
             optional_fields(
                 expected,
                 &entity,
                 "regulatoryIdentifiers.unitedStatesNada",
                 regulatory_identifiers.united_states_nada.as_ref(),
-                main.clone(),
+                main.column(SystemColumn::RegulatoryIdentifiersJson),
             )?;
             optional_fields(
                 expected,
                 &entity,
                 "regulatoryIdentifiers.unitedStatesAnada",
                 regulatory_identifiers.united_states_anada.as_ref(),
-                main.clone(),
+                main.column(SystemColumn::RegulatoryIdentifiersJson),
             )?;
             optional_fields(
                 expected,
                 &entity,
                 "regulatoryIdentifiers.gtinEan",
                 regulatory_identifiers.gtin_ean.as_ref(),
-                main.clone(),
+                main.column(SystemColumn::RegulatoryIdentifiersJson),
             )?;
             optional_relations(
                 expected,
@@ -1075,8 +1642,8 @@ fn add_entity_obligations(
         }
         CanonicalEntity::Manufacturer(value) => {
             let crate::source::ManufacturerEntity {
-                schema_version: _,
-                id: _,
+                schema_version,
+                id,
                 type_term_key,
                 classification_term_keys,
                 regions,
@@ -1086,6 +1653,7 @@ fn add_entity_obligations(
                 content_path,
                 media,
             } = value;
+            let _ = (schema_version, id);
             common_authoring(
                 expected,
                 &entity,
@@ -1098,14 +1666,14 @@ fn add_entity_obligations(
                 expected,
                 &entity,
                 "id",
-                main.clone(),
+                main.column(SystemColumn::Id),
                 ObligationClass::Authoring,
             )?;
             field(
                 expected,
                 &entity,
                 "typeTermKey",
-                main.clone(),
+                main.column(SystemColumn::TypeTermKey),
                 ObligationClass::Authoring,
             )?;
             relations(
@@ -1122,15 +1690,27 @@ fn add_entity_obligations(
                 classification_term_keys,
                 |_, key| taxonomy_row(&entity, "classification", key),
             )?;
-            fields(expected, &entity, "regions", regions, main.clone())?;
-            optional_fields(expected, &entity, "website", website.as_ref(), main.clone())?;
+            fields(
+                expected,
+                &entity,
+                "regions",
+                regions,
+                main.column(SystemColumn::RegionsJson),
+            )?;
+            optional_fields(
+                expected,
+                &entity,
+                "website",
+                website.as_ref(),
+                main.column(SystemColumn::Website),
+            )?;
             localized(expected, &entity, localized_content, locale, main.clone())?;
             structural_media(expected, entry, locale, media.as_ref())?;
         }
         CanonicalEntity::ActiveIngredient(value) => {
             let crate::source::ActiveIngredientEntity {
-                schema_version: _,
-                id: _,
+                schema_version,
+                id,
                 type_term_key,
                 classification_term_keys,
                 regions,
@@ -1141,6 +1721,7 @@ fn add_entity_obligations(
                 content_path,
                 media,
             } = value;
+            let _ = (schema_version, id);
             common_authoring(
                 expected,
                 &entity,
@@ -1153,14 +1734,14 @@ fn add_entity_obligations(
                 expected,
                 &entity,
                 "id",
-                main.clone(),
+                main.column(SystemColumn::Id),
                 ObligationClass::Authoring,
             )?;
             field(
                 expected,
                 &entity,
                 "typeTermKey",
-                main.clone(),
+                main.column(SystemColumn::TypeTermKey),
                 ObligationClass::Authoring,
             )?;
             relations(
@@ -1177,42 +1758,48 @@ fn add_entity_obligations(
                 classification_term_keys,
                 |_, key| taxonomy_row(&entity, "classification", key),
             )?;
-            fields(expected, &entity, "regions", regions, main.clone())?;
+            fields(
+                expected,
+                &entity,
+                "regions",
+                regions,
+                main.column(SystemColumn::RegionsJson),
+            )?;
             optional_fields(
                 expected,
                 &entity,
                 "nomenclature.scientificName",
                 nomenclature.scientific_name.as_ref(),
-                main.clone(),
+                main.column(SystemColumn::NomenclatureJson),
             )?;
             optional_fields(
                 expected,
                 &entity,
                 "nomenclature.casNumber",
                 nomenclature.cas_number.as_ref(),
-                main.clone(),
+                main.column(SystemColumn::NomenclatureJson),
             )?;
             fields(
                 expected,
                 &entity,
                 "nomenclature.denominationStandards",
                 &nomenclature.denomination_standards,
-                main.clone(),
+                main.column(SystemColumn::NomenclatureJson),
             )?;
             optional_fields(
                 expected,
                 &entity,
                 "atcVetCode",
                 atc_vet_code.as_ref(),
-                main.clone(),
+                main.column(SystemColumn::AtcVetCode),
             )?;
             localized(expected, &entity, localized_content, locale, main.clone())?;
             structural_media(expected, entry, locale, media.as_ref())?;
         }
         CanonicalEntity::Condition(value) => {
             let crate::source::ConditionEntity {
-                schema_version: _,
-                id: _,
+                schema_version,
+                id,
                 type_term_key,
                 classification_term_keys,
                 regions,
@@ -1221,6 +1808,7 @@ fn add_entity_obligations(
                 content_path,
                 media,
             } = value;
+            let _ = (schema_version, id);
             common_authoring(
                 expected,
                 &entity,
@@ -1233,14 +1821,14 @@ fn add_entity_obligations(
                 expected,
                 &entity,
                 "id",
-                main.clone(),
+                main.column(SystemColumn::Id),
                 ObligationClass::Authoring,
             )?;
             field(
                 expected,
                 &entity,
                 "typeTermKey",
-                main.clone(),
+                main.column(SystemColumn::TypeTermKey),
                 ObligationClass::Authoring,
             )?;
             relations(
@@ -1257,14 +1845,20 @@ fn add_entity_obligations(
                 classification_term_keys,
                 |_, key| taxonomy_row(&entity, "classification", key),
             )?;
-            fields(expected, &entity, "regions", regions, main.clone())?;
+            fields(
+                expected,
+                &entity,
+                "regions",
+                regions,
+                main.column(SystemColumn::RegionsJson),
+            )?;
             localized(expected, &entity, localized_content, locale, main.clone())?;
             structural_media(expected, entry, locale, media.as_ref())?;
         }
         CanonicalEntity::Breed(value) => {
             let crate::source::BreedEntity {
-                schema_version: _,
-                id: _,
+                schema_version,
+                id,
                 species,
                 origin_place_ids,
                 size_term_key,
@@ -1275,6 +1869,7 @@ fn add_entity_obligations(
                 content_path,
                 media,
             } = value;
+            let _ = (schema_version, id);
             common_authoring(
                 expected,
                 &entity,
@@ -1287,10 +1882,16 @@ fn add_entity_obligations(
                 expected,
                 &entity,
                 "id",
-                main.clone(),
+                main.column(SystemColumn::Id),
                 ObligationClass::Authoring,
             )?;
-            fields(expected, &entity, "species", species, main.clone())?;
+            fields(
+                expected,
+                &entity,
+                "species",
+                species,
+                main.column(SystemColumn::SpeciesJson),
+            )?;
             relations(
                 expected,
                 &entity,
@@ -1308,7 +1909,7 @@ fn add_entity_obligations(
                 expected,
                 &entity,
                 "sizeTermKey",
-                main.clone(),
+                main.column(SystemColumn::SizeTermKey),
                 ObligationClass::Authoring,
             )?;
             relations(
@@ -1328,7 +1929,11 @@ fn add_entity_obligations(
                             expected,
                             &entity,
                             &format!("{name}.{sex}.{index}"),
-                            main.clone(),
+                            main.column(match name {
+                                "averageWeightKg" => SystemColumn::AverageWeightKgJson,
+                                "averageHeightCm" => SystemColumn::AverageHeightCmJson,
+                                _ => unreachable!(),
+                            }),
                             ObligationClass::Authoring,
                         )?;
                     }
@@ -1339,33 +1944,34 @@ fn add_entity_obligations(
         }
         CanonicalEntity::GeoPlace(value) => {
             let crate::source::GeoPlaceEntity {
-                schema_version: _,
-                id: _,
-                place_type: _,
+                schema_version,
+                id,
+                place_type,
                 country_codes,
                 parent_place_id,
                 centroid,
                 localized_content,
             } = value;
+            let _ = (schema_version, id, place_type);
             field(
                 expected,
                 &entity,
                 "schemaVersion",
-                metadata_target(locale),
+                canonical_validation_target(&entity, locale, "schema_version"),
                 ObligationClass::Authoring,
             )?;
             field(
                 expected,
                 &entity,
                 "id",
-                main.clone(),
+                main.column(SystemColumn::Id),
                 ObligationClass::Authoring,
             )?;
             field(
                 expected,
                 &entity,
                 "placeType",
-                main.clone(),
+                main.column(SystemColumn::PlaceType),
                 ObligationClass::Authoring,
             )?;
             fields(
@@ -1373,14 +1979,14 @@ fn add_entity_obligations(
                 &entity,
                 "countryCodes",
                 country_codes,
-                main.clone(),
+                main.column(SystemColumn::CountryCodesJson),
             )?;
             if parent_place_id.is_some() {
                 field(
                     expected,
                     &entity,
                     "parentPlaceId",
-                    main.clone(),
+                    main.column(SystemColumn::ParentPlaceId),
                     ObligationClass::Relation,
                 )?;
             }
@@ -1389,49 +1995,56 @@ fn add_entity_obligations(
                 &entity,
                 "centroid.latitude",
                 centroid.latitude.as_ref(),
-                main.clone(),
+                main.column(SystemColumn::Latitude),
             )?;
             optional_fields(
                 expected,
                 &entity,
                 "centroid.longitude",
                 centroid.longitude.as_ref(),
-                main.clone(),
+                main.column(SystemColumn::Longitude),
             )?;
             localized(expected, &entity, localized_content, locale, main.clone())?;
         }
         CanonicalEntity::TreatmentProtocol(value) => {
             let crate::source::TreatmentProtocolEntity {
-                schema_version: _,
-                id: _,
-                kind: _,
+                schema_version,
+                id,
+                kind,
                 species,
                 product_ids,
                 doses,
                 localized_content,
             } = value;
+            let _ = (schema_version, id, kind);
             field(
                 expected,
                 &entity,
                 "schemaVersion",
-                metadata_target(locale),
+                canonical_validation_target(&entity, locale, "schema_version"),
                 ObligationClass::Authoring,
             )?;
             field(
                 expected,
                 &entity,
                 "id",
-                main.clone(),
+                main.column(SystemColumn::Id),
                 ObligationClass::Authoring,
             )?;
             field(
                 expected,
                 &entity,
                 "kind",
-                main.clone(),
+                main.column(SystemColumn::Kind),
                 ObligationClass::Authoring,
             )?;
-            fields(expected, &entity, "species", species, main.clone())?;
+            fields(
+                expected,
+                &entity,
+                "species",
+                species,
+                main.column(SystemColumn::SpeciesJson),
+            )?;
             relations(expected, &entity, "productIds", product_ids, |_, id| {
                 table_row(
                     DatabaseKind::System,
@@ -1449,21 +2062,21 @@ fn add_entity_obligations(
                     expected,
                     &entity,
                     &format!("doses.{position}.id"),
-                    row.clone(),
+                    row.column(SystemColumn::DoseId),
                     ObligationClass::Authoring,
                 )?;
                 field(
                     expected,
                     &entity,
                     &format!("doses.{position}.validityValue"),
-                    row.clone(),
+                    row.column(SystemColumn::ValidityValue),
                     ObligationClass::Authoring,
                 )?;
                 field(
                     expected,
                     &entity,
                     &format!("doses.{position}.validityUnit"),
-                    row.clone(),
+                    row.column(SystemColumn::ValidityUnit),
                     ObligationClass::Authoring,
                 )?;
                 localized_with_prefix(
@@ -1479,40 +2092,54 @@ fn add_entity_obligations(
         }
         CanonicalEntity::Taxonomy(value) => {
             let crate::source::TaxonomyEntity {
-                schema_version: _,
-                id: _,
-                domain: _,
+                schema_version,
+                id,
+                domain,
                 purpose,
                 terms,
             } = value;
+            let _ = (schema_version, id, domain);
             field(
                 expected,
                 &entity,
                 "schemaVersion",
-                metadata_target(locale),
+                canonical_validation_target(&entity, locale, "schema_version"),
                 ObligationClass::Authoring,
             )?;
-            for name in ["id", "domain", "purpose"] {
-                field(
-                    expected,
-                    &entity,
-                    name,
-                    main.clone(),
-                    ObligationClass::Authoring,
-                )?;
-            }
+            field(
+                expected,
+                &entity,
+                "id",
+                main.column(SystemColumn::Id),
+                ObligationClass::Authoring,
+            )?;
+            field(
+                expected,
+                &entity,
+                "domain",
+                main.column(SystemColumn::Domain),
+                ObligationClass::Authoring,
+            )?;
+            field(
+                expected,
+                &entity,
+                "purpose",
+                main.column(SystemColumn::Purpose),
+                ObligationClass::Authoring,
+            )?;
             let table = semantic_term_table(purpose);
             for (position, term) in terms.iter().enumerate() {
-                let row = table_row(
-                    DatabaseKind::System,
-                    table,
-                    format!("{}/{}", entity.id, term.key),
-                );
+                let row_id = if table == SystemTable::TaxonomyTerms {
+                    format!("{}/{}", entity.id, term.key)
+                } else {
+                    term.key.clone()
+                };
+                let row = table_row(DatabaseKind::System, table, row_id);
                 field(
                     expected,
                     &entity,
                     &format!("terms.{position}.key"),
-                    row.clone(),
+                    row.column(SystemColumn::TermKey),
                     ObligationClass::Authoring,
                 )?;
                 if term.parent_key.is_some() {
@@ -1520,7 +2147,7 @@ fn add_entity_obligations(
                         expected,
                         &entity,
                         &format!("terms.{position}.parentKey"),
-                        row.clone(),
+                        row.column(SystemColumn::ParentTermKey),
                         ObligationClass::Relation,
                     )?;
                 }
@@ -1528,7 +2155,7 @@ fn add_entity_obligations(
                     expected,
                     &entity,
                     &format!("terms.{position}.order"),
-                    row.clone(),
+                    row.column(SystemColumn::SortOrder),
                     ObligationClass::Authoring,
                 )?;
                 localized_with_prefix(
@@ -1548,25 +2175,36 @@ fn add_entity_obligations(
         }
         insert_obligation(
             expected,
+            OperationDisposition {
+                owner: ProjectionOperationId::Compilation(CompilationOperationId::Document {
+                    entity: entity.clone(),
+                }),
+                target: ProjectionTarget::CompiledDocument {
+                    entity: entity.clone(),
+                    locale,
+                },
+            },
             SourceToken::Document {
                 entity: entity.clone(),
                 locale,
             },
-            ProjectionTarget::CompiledDocument {
-                entity: entity.clone(),
-                locale,
-            },
-            ObligationClass::LocalizedContent,
+            ObligationClass::Authoring,
         )?;
         for section in &document.sections {
             insert_obligation(
                 expected,
-                SourceToken::Section {
-                    entity: entity.clone(),
-                    locale,
-                    section_key: section.section_key.clone(),
+                OperationDisposition {
+                    owner: ProjectionOperationId::Compilation(CompilationOperationId::Section {
+                        entity: entity.clone(),
+                        section_key: section.section_key.clone(),
+                    }),
+                    target: ProjectionTarget::CompiledSection {
+                        entity: entity.clone(),
+                        locale,
+                        section_key: section.section_key.clone(),
+                    },
                 },
-                ProjectionTarget::CompiledSection {
+                SourceToken::Section {
                     entity: entity.clone(),
                     locale,
                     section_key: section.section_key.clone(),
@@ -1578,17 +2216,23 @@ fn add_entity_obligations(
     for reference in entry.markdown_media.get(&locale).into_iter().flatten() {
         insert_obligation(
             expected,
+            OperationDisposition {
+                owner: ProjectionOperationId::Compilation(CompilationOperationId::Section {
+                    entity: entity.clone(),
+                    section_key: reference.section_key.clone(),
+                }),
+                target: ProjectionTarget::CompiledSection {
+                    entity: entity.clone(),
+                    locale,
+                    section_key: reference.section_key.clone(),
+                },
+            },
             SourceToken::MarkdownMediaReference {
                 entity: entity.clone(),
                 locale,
                 section_key: reference.section_key.clone(),
                 occurrence: reference.occurrence,
                 media_key: reference.media_key.clone(),
-            },
-            ProjectionTarget::CompiledSection {
-                entity: entity.clone(),
-                locale,
-                section_key: reference.section_key.clone(),
             },
             ObligationClass::Media,
         )?;
@@ -1597,18 +2241,18 @@ fn add_entity_obligations(
 }
 
 fn common_authoring(
-    expected: &mut BTreeSet<ProjectionObligation>,
+    expected: &mut ObligationOwnership,
     entity: &EntityIdentity,
     locale: KnowledgeLocale,
     sections: &[crate::source::SectionDeclaration],
     content_path: Option<&str>,
-    main: &ProjectionTarget,
+    main: &OperationDisposition,
 ) -> Result<(), String> {
     field(
         expected,
         entity,
         "schemaVersion",
-        metadata_target(locale),
+        canonical_validation_target(entity, locale, "schema_version"),
         ObligationClass::Authoring,
     )?;
     if sections.is_empty() {
@@ -1616,27 +2260,37 @@ fn common_authoring(
             expected,
             entity,
             "sections",
-            main.clone(),
+            main.column(SystemColumn::ContentJson),
             ObligationClass::Authoring,
         )?;
     }
     for section in sections {
-        let target = ProjectionTarget::CompiledSection {
-            entity: entity.clone(),
-            locale,
-            section_key: section.section_key.clone(),
+        let crate::source::SectionDeclaration {
+            section_key,
+            section_number,
+        } = section;
+        let target = OperationDisposition {
+            owner: ProjectionOperationId::Compilation(CompilationOperationId::Section {
+                entity: entity.clone(),
+                section_key: section_key.clone(),
+            }),
+            target: ProjectionTarget::CompiledSection {
+                entity: entity.clone(),
+                locale,
+                section_key: section_key.clone(),
+            },
         };
         field(
             expected,
             entity,
-            &format!("sections.{}.sectionKey", section.section_number),
+            &format!("sections.{section_number}.sectionKey"),
             target.clone(),
             ObligationClass::Authoring,
         )?;
         field(
             expected,
             entity,
-            &format!("sections.{}.sectionNumber", section.section_number),
+            &format!("sections.{section_number}.sectionNumber"),
             target,
             ObligationClass::Authoring,
         )?;
@@ -1646,9 +2300,14 @@ fn common_authoring(
             expected,
             entity,
             "contentPath",
-            ProjectionTarget::CompiledDocument {
-                entity: entity.clone(),
-                locale,
+            OperationDisposition {
+                owner: ProjectionOperationId::Compilation(CompilationOperationId::Document {
+                    entity: entity.clone(),
+                }),
+                target: ProjectionTarget::CompiledDocument {
+                    entity: entity.clone(),
+                    locale,
+                },
             },
             ObligationClass::Authoring,
         )?;
@@ -1657,15 +2316,17 @@ fn common_authoring(
 }
 
 fn structural_media(
-    expected: &mut BTreeSet<ProjectionObligation>,
+    expected: &mut ObligationOwnership,
     entry: &ValidatedEntity,
     locale: KnowledgeLocale,
     media: Option<&StructuralMedia>,
 ) -> Result<(), String> {
     let entity = identity(&entry.source.entity);
-    if media.is_none() {
+    let Some(media) = media else {
         return Ok(());
-    }
+    };
+    let StructuralMedia { cover, gallery } = media;
+    let _ = (cover, gallery);
     for reference in &entry.structural_media {
         let row = format!(
             "{}/{}/{}/{}",
@@ -1673,6 +2334,11 @@ fn structural_media(
         );
         insert_obligation(
             expected,
+            table_row(
+                DatabaseKind::System,
+                SystemTable::EntityMediaReferences,
+                row,
+            ),
             SourceToken::StructuralMediaReference {
                 entity: entity.clone(),
                 locale,
@@ -1680,11 +2346,6 @@ fn structural_media(
                 sort_order: reference.sort_order,
                 media_key: reference.media_key.clone(),
             },
-            table_row(
-                DatabaseKind::System,
-                SystemTable::EntityMediaReferences,
-                row,
-            ),
             ObligationClass::Media,
         )?;
     }
@@ -1692,11 +2353,11 @@ fn structural_media(
 }
 
 fn localized(
-    expected: &mut BTreeSet<ProjectionObligation>,
+    expected: &mut ObligationOwnership,
     entity: &EntityIdentity,
     content: &LocalizedContent,
     locale: KnowledgeLocale,
-    target: ProjectionTarget,
+    target: OperationDisposition,
 ) -> Result<(), String> {
     localized_with_prefix(
         expected,
@@ -1709,70 +2370,125 @@ fn localized(
 }
 
 fn localized_with_prefix(
-    expected: &mut BTreeSet<ProjectionObligation>,
+    expected: &mut ObligationOwnership,
     entity: &EntityIdentity,
     content: &LocalizedContent,
     locale: KnowledgeLocale,
-    target: ProjectionTarget,
+    target: OperationDisposition,
     prefix: &str,
 ) -> Result<(), String> {
     for (field_name, value) in content {
         let values = value.values(locale);
+        let localized_path = format!("{prefix}.{field_name}");
+        let target = target.column(localized_column(entity, prefix, field_name)?);
         if values.is_empty() {
+            field(
+                expected,
+                entity,
+                &localized_path,
+                target.clone(),
+                ObligationClass::Authoring,
+            )?;
+        }
+        for position in 0..values.len() {
             insert_obligation(
                 expected,
+                target.clone(),
                 SourceToken::LocalizedValue {
                     entity: entity.clone(),
-                    field: format!("{prefix}.{field_name}"),
+                    field: localized_path.clone(),
                     locale,
-                    position: 0,
+                    position,
                 },
-                target.clone(),
                 ObligationClass::LocalizedContent,
             )?;
-        } else {
-            for position in 0..values.len() {
-                insert_obligation(
-                    expected,
-                    SourceToken::LocalizedValue {
-                        entity: entity.clone(),
-                        field: format!("{prefix}.{field_name}"),
-                        locale,
-                        position,
-                    },
-                    target.clone(),
-                    ObligationClass::LocalizedContent,
-                )?;
-            }
         }
     }
     Ok(())
 }
 
+fn localized_column(
+    entity: &EntityIdentity,
+    prefix: &str,
+    field: &str,
+) -> Result<SystemColumn, String> {
+    let column = if prefix.starts_with("terms.") {
+        match field {
+            "label" => SystemColumn::Label,
+            "aliases" => SystemColumn::AliasesJson,
+            _ => {
+                return Err(format!(
+                    "localized taxonomy field has no policy: {prefix}.{field}"
+                ))
+            }
+        }
+    } else if prefix.starts_with("doses.") {
+        match field {
+            "label" => SystemColumn::Label,
+            _ => {
+                return Err(format!(
+                    "localized dose field has no policy: {prefix}.{field}"
+                ))
+            }
+        }
+    } else {
+        match (entity.entity_type.as_str(), field) {
+            ("product", "name")
+            | ("manufacturer", "name")
+            | ("active_ingredient", "name")
+            | ("condition", "name")
+            | ("breed", "name")
+            | ("geo_place", "name")
+            | ("treatment_protocol", "name") => SystemColumn::Name,
+            ("product", "aliases")
+            | ("manufacturer", "aliases")
+            | ("active_ingredient", "aliases")
+            | ("condition", "aliases")
+            | ("breed", "aliases")
+            | ("geo_place", "aliases") => SystemColumn::AliasesJson,
+            ("product", "commercialLine") => SystemColumn::CommercialLine,
+            ("product", "presentationDosage") => SystemColumn::PresentationDosage,
+            ("product", "targetSpeciesWarnings") => SystemColumn::TargetSpeciesWarningsJson,
+            ("active_ingredient", "atcVetSystem") => SystemColumn::AtcVetSystem,
+            ("active_ingredient", denomination) if denomination.starts_with("denomination_") => {
+                SystemColumn::DenominationsJson
+            }
+            ("treatment_protocol", "observation") => SystemColumn::Observation,
+            _ => {
+                return Err(format!(
+                    "localized field has no projection policy: {}.{prefix}.{field}",
+                    entity.entity_type
+                ));
+            }
+        }
+    };
+    Ok(column)
+}
+
 fn field(
-    expected: &mut BTreeSet<ProjectionObligation>,
+    expected: &mut ObligationOwnership,
     entity: &EntityIdentity,
     path: &str,
-    target: ProjectionTarget,
+    target: OperationDisposition,
     class: ObligationClass,
 ) -> Result<(), String> {
     insert_obligation(
         expected,
+        target,
         SourceToken::Field {
             entity: entity.clone(),
             path: path.to_string(),
         },
-        target,
         class,
     )
 }
 
 fn fields<T>(
-    expected: &mut BTreeSet<ProjectionObligation>,
+    expected: &mut ObligationOwnership,
     entity: &EntityIdentity,
     path: &str,
     values: &[T],
-    target: ProjectionTarget,
+    target: OperationDisposition,
 ) -> Result<(), String> {
     if values.is_empty() {
         return field(expected, entity, path, target, ObligationClass::Authoring);
@@ -1790,11 +2506,11 @@ fn fields<T>(
 }
 
 fn optional_fields<T>(
-    expected: &mut BTreeSet<ProjectionObligation>,
+    expected: &mut ObligationOwnership,
     entity: &EntityIdentity,
     path: &str,
     value: Option<&T>,
-    target: ProjectionTarget,
+    target: OperationDisposition,
 ) -> Result<(), String> {
     if value.is_some() {
         field(expected, entity, path, target, ObligationClass::Authoring)?;
@@ -1803,14 +2519,14 @@ fn optional_fields<T>(
 }
 
 fn relations<F>(
-    expected: &mut BTreeSet<ProjectionObligation>,
+    expected: &mut ObligationOwnership,
     entity: &EntityIdentity,
     field_name: &str,
     values: &[String],
     mut target: F,
 ) -> Result<(), String>
 where
-    F: FnMut(usize, &str) -> ProjectionTarget,
+    F: FnMut(usize, &str) -> OperationDisposition,
 {
     if values.is_empty() {
         return Ok(());
@@ -1818,13 +2534,13 @@ where
     for (position, related) in values.iter().enumerate() {
         insert_obligation(
             expected,
+            target(position, related),
             SourceToken::Relation {
                 entity: entity.clone(),
                 field: field_name.to_string(),
                 position,
                 related: related.clone(),
             },
-            target(position, related),
             ObligationClass::Relation,
         )?;
     }
@@ -1832,7 +2548,7 @@ where
 }
 
 fn optional_relations(
-    expected: &mut BTreeSet<ProjectionObligation>,
+    expected: &mut ObligationOwnership,
     entity: &EntityIdentity,
     field_name: &str,
     values: Option<&[String]>,
@@ -1854,30 +2570,19 @@ fn optional_relations(
 }
 
 fn insert_obligation(
-    expected: &mut BTreeSet<ProjectionObligation>,
+    expected: &mut ObligationOwnership,
+    disposition: OperationDisposition,
     source: SourceToken,
-    target: ProjectionTarget,
     class: ObligationClass,
 ) -> Result<(), String> {
-    let obligation = ProjectionObligation {
-        source,
-        target,
-        class,
-    };
-    if expected.insert(obligation.clone()) {
-        Ok(())
-    } else {
-        Err(format!(
-            "duplicate expected projection obligation {obligation}"
-        ))
-    }
+    expected.insert(disposition, source, class)
 }
 
 fn identity(entity: &CanonicalEntity) -> EntityIdentity {
     EntityIdentity::new(entity.entity_type(), entity.id())
 }
 
-fn main_row_target(entity: &CanonicalEntity) -> ProjectionTarget {
+fn main_row_target(entity: &CanonicalEntity) -> OperationDisposition {
     let table = match entity {
         CanonicalEntity::Breed(_) => SystemTable::BreedReferenceItems,
         CanonicalEntity::Product(_) => SystemTable::ProductCatalogItems,
@@ -1891,23 +2596,46 @@ fn main_row_target(entity: &CanonicalEntity) -> ProjectionTarget {
     table_row(DatabaseKind::System, table, entity.id().to_string())
 }
 
-fn table_row(database: DatabaseKind, table: SystemTable, row: String) -> ProjectionTarget {
-    ProjectionTarget::TableRow {
-        database,
-        table,
-        row,
+fn table_row(database: DatabaseKind, table: SystemTable, row: String) -> OperationDisposition {
+    OperationDisposition {
+        owner: ProjectionOperationId::SystemRow {
+            table,
+            row: row.clone(),
+        },
+        target: ProjectionTarget::TableRow {
+            database,
+            table,
+            row,
+        },
     }
 }
 
-fn metadata_target(locale: KnowledgeLocale) -> ProjectionTarget {
-    ProjectionTarget::BuildMetadata {
-        database: DatabaseKind::System,
-        locale,
-        release: false,
+fn operation_disposition(
+    owner: ProjectionOperationId,
+    target: ProjectionTarget,
+) -> OperationDisposition {
+    OperationDisposition { owner, target }
+}
+
+fn canonical_validation_target(
+    entity: &EntityIdentity,
+    locale: KnowledgeLocale,
+    validation: &'static str,
+) -> OperationDisposition {
+    OperationDisposition {
+        owner: ProjectionOperationId::Compilation(CompilationOperationId::CanonicalValidation {
+            entity: entity.clone(),
+            validation,
+        }),
+        target: ProjectionTarget::CanonicalValidation {
+            entity: entity.clone(),
+            locale,
+            validation,
+        },
     }
 }
 
-fn taxonomy_row(entity: &EntityIdentity, kind: &str, term: &str) -> ProjectionTarget {
+fn taxonomy_row(entity: &EntityIdentity, kind: &str, term: &str) -> OperationDisposition {
     table_row(
         DatabaseKind::System,
         SystemTable::EntityTaxonomyTerms,
@@ -2036,103 +2764,106 @@ fn localized_list(
 mod tests {
     use super::*;
 
-    fn obligation(target: ProjectionTarget) -> ProjectionObligation {
+    fn obligation(target: ProjectionTarget, path: &str) -> ProjectionObligation {
         ProjectionObligation {
-            source: SourceToken::Entity(EntityIdentity::new("product", "id")),
+            source: SourceToken::LocalizedValue {
+                entity: EntityIdentity::new("product", "id"),
+                field: path.to_string(),
+                locale: KnowledgeLocale::EnUs,
+                position: 0,
+            },
             target,
-            class: ObligationClass::Entity,
+            class: ObligationClass::LocalizedContent,
         }
     }
 
-    fn ledger() -> ProjectionLedger {
+    fn row_target() -> ProjectionTarget {
+        table_row(
+            DatabaseKind::System,
+            SystemTable::ProductCatalogItems,
+            "id".to_string(),
+        )
+        .target
+    }
+
+    fn event() -> RowEvent {
+        RowEvent {
+            database: DatabaseKind::System,
+            table: SystemTable::ProductCatalogItems,
+            row: "id".to_string(),
+            entity: Some(EntityIdentity::new("product", "id")),
+        }
+    }
+
+    fn ledger() -> (ProjectionLedger, ProjectionObligation) {
         let target = table_row(
             DatabaseKind::System,
             SystemTable::ProductCatalogItems,
             "id".to_string(),
-        );
-        ProjectionLedger {
-            locale: KnowledgeLocale::EnUs,
-            expected: BTreeSet::from([obligation(target)]),
-            completed: BTreeSet::new(),
-            completed_targets: BTreeSet::new(),
-            row_events: Vec::new(),
-        }
+        )
+        .target;
+        let obligation = obligation(target, "localizedContent.name");
+        (
+            ProjectionLedger::new(KnowledgeLocale::EnUs, BTreeSet::from([obligation.clone()])),
+            obligation,
+        )
     }
 
     #[test]
-    fn journal_detects_missing_unexpected_and_duplicate_evidence() {
-        assert!(ledger().finish().is_err());
-        let target = table_row(
-            DatabaseKind::System,
-            SystemTable::ProductCatalogItems,
-            "id".to_string(),
-        );
-        let mut complete = ledger();
+    fn journal_detects_missing_unexpected_and_duplicate_obligations() {
+        assert!(ledger().0.finish().is_err());
+        let (mut complete, completed_obligation) = ledger();
         let mut journal = complete.journal();
-        journal.record_target(target.clone());
+        journal.complete(completed_obligation.clone());
         complete.commit(journal).unwrap();
         assert_eq!(complete.finish().unwrap().completed_count(), 1);
 
-        let mut duplicate = ledger();
+        let (mut duplicate, expected_obligation) = ledger();
         let mut first = duplicate.journal();
-        first.record_target(target.clone());
+        first.complete(expected_obligation.clone());
         duplicate.commit(first).unwrap();
         let mut second = duplicate.journal();
-        second.record_target(target);
+        second.complete(expected_obligation);
         assert!(duplicate.commit(second).is_err());
 
-        let mut unexpected = ledger();
+        let (mut unexpected, _) = ledger();
         let mut journal = unexpected.journal();
-        journal.record_target(ProjectionTarget::CasObject {
-            locale: KnowledgeLocale::EnUs,
-            content_hash: "0".repeat(64),
-        });
+        journal.complete(obligation(
+            ProjectionTarget::CasObject {
+                locale: KnowledgeLocale::EnUs,
+                content_hash: "0".repeat(64),
+            },
+            "localizedContent.aliases",
+        ));
         assert!(unexpected.commit(journal).is_err());
     }
 
     #[test]
     fn rejected_journal_publishes_no_partial_evidence() {
-        let target = table_row(
-            DatabaseKind::System,
-            SystemTable::ProductCatalogItems,
-            "id".to_string(),
-        );
-        let mut ledger = ledger();
+        let (mut ledger, obligation) = ledger();
         let mut rejected = ledger.journal();
-        rejected.record_target(target.clone());
-        rejected.record_target(target.clone());
+        rejected.complete(obligation.clone());
+        rejected.complete(obligation.clone());
         assert!(ledger.commit(rejected).is_err());
 
         let mut valid = ledger.journal();
-        valid.record_target(target);
+        valid.complete(obligation);
         ledger.commit(valid).unwrap();
         assert_eq!(ledger.finish().unwrap().completed_count(), 1);
     }
 
     #[test]
-    fn row_evidence_is_not_published_until_journal_commit() {
-        let mut ledger = ledger();
+    fn rollback_discards_operation_obligations_and_rows() {
+        let (mut ledger, obligation) = ledger();
         let mut rolled_back = ledger.journal();
         rolled_back
-            .record_row(
-                1,
-                DatabaseKind::System,
-                SystemTable::ProductCatalogItems,
-                "id",
-                Some(EntityIdentity::new("product", "id")),
-            )
+            .complete_operation(&BTreeSet::from([obligation.clone()]), 1, event())
             .unwrap();
         drop(rolled_back);
         assert!(ledger.clone().finish().is_err());
         let mut committed = ledger.journal();
         committed
-            .record_row(
-                1,
-                DatabaseKind::System,
-                SystemTable::ProductCatalogItems,
-                "id",
-                Some(EntityIdentity::new("product", "id")),
-            )
+            .complete_operation(&BTreeSet::from([obligation]), 1, event())
             .unwrap();
         ledger.commit(committed).unwrap();
         assert_eq!(ledger.finish().unwrap().row_event_count(), 1);
@@ -2140,104 +2871,136 @@ mod tests {
 
     #[test]
     fn row_event_rejects_divergent_insert_count() {
+        let (_, obligation) = ledger();
         let mut journal = ProjectionJournal::default();
         assert!(journal
-            .record_row(
-                0,
-                DatabaseKind::System,
-                SystemTable::ProductCatalogItems,
-                "id",
-                None,
-            )
+            .complete_operation(&BTreeSet::from([obligation]), 0, event(),)
             .is_err());
     }
 
     #[test]
-    fn one_source_value_requires_each_concrete_destination() {
-        let entity = EntityIdentity::new("product", "id");
-        let source = SourceToken::LocalizedValue {
-            entity: entity.clone(),
-            field: "localizedContent.name".to_string(),
-            locale: KnowledgeLocale::EnUs,
-            position: 0,
-        };
-        let row = table_row(
-            DatabaseKind::System,
-            SystemTable::ProductCatalogItems,
-            "id".to_string(),
+    fn shared_destination_does_not_complete_an_omitted_obligation() {
+        let target = row_target();
+        let first = obligation(target.clone(), "localizedContent.name");
+        let second = obligation(target, "localizedContent.aliases");
+        let mut ledger = ProjectionLedger::new(
+            KnowledgeLocale::EnUs,
+            BTreeSet::from([first.clone(), second]),
         );
-        let search = ProjectionTarget::SearchTerm {
-            entity,
-            locale: KnowledgeLocale::EnUs,
-            provenance: "entity.name".to_string(),
-            occurrence: 0,
-        };
-        let mut ledger = ProjectionLedger {
-            locale: KnowledgeLocale::EnUs,
-            expected: BTreeSet::from([
-                ProjectionObligation {
-                    source: source.clone(),
-                    target: row.clone(),
-                    class: ObligationClass::LocalizedContent,
-                },
-                ProjectionObligation {
-                    source,
-                    target: search,
-                    class: ObligationClass::LocalizedContent,
-                },
-            ]),
-            completed: BTreeSet::new(),
-            completed_targets: BTreeSet::new(),
-            row_events: Vec::new(),
-        };
         let mut journal = ledger.journal();
-        journal.record_target(row);
+        journal.complete(first);
         ledger.commit(journal).unwrap();
         assert!(ledger.finish().is_err());
     }
 
     #[test]
-    fn an_asset_does_not_mask_an_omitted_media_reference() {
-        let entity = EntityIdentity::new("condition", "id");
-        let asset = ProjectionTarget::SystemMediaAsset {
-            locale: KnowledgeLocale::EnUs,
-            media_key: "condition/id/media/cover.png".to_string(),
-        };
-        let reference = table_row(
-            DatabaseKind::System,
-            SystemTable::EntityMediaReferences,
-            "condition/id/cover/0".to_string(),
+    fn operation_can_publish_only_the_explicit_batch() {
+        let target = row_target();
+        let first = obligation(target.clone(), "localizedContent.name");
+        let second = obligation(target, "localizedContent.aliases");
+        let mut ledger = ProjectionLedger::new(
+            KnowledgeLocale::EnUs,
+            BTreeSet::from([first.clone(), second]),
         );
-        let mut ledger = ProjectionLedger {
-            locale: KnowledgeLocale::EnUs,
-            expected: BTreeSet::from([
-                ProjectionObligation {
-                    source: SourceToken::MediaAsset {
-                        locale: KnowledgeLocale::EnUs,
-                        media_key: "condition/id/media/cover.png".to_string(),
-                    },
-                    target: asset.clone(),
-                    class: ObligationClass::Media,
-                },
-                ProjectionObligation {
-                    source: SourceToken::StructuralMediaReference {
-                        entity,
-                        locale: KnowledgeLocale::EnUs,
-                        role: "cover".to_string(),
-                        sort_order: 0,
-                        media_key: "condition/id/media/cover.png".to_string(),
-                    },
-                    target: reference,
-                    class: ObligationClass::Media,
-                },
-            ]),
-            completed: BTreeSet::new(),
-            completed_targets: BTreeSet::new(),
-            row_events: Vec::new(),
-        };
         let mut journal = ledger.journal();
-        journal.record_target(asset);
+        journal
+            .complete_operation(&BTreeSet::from([first]), 1, event())
+            .unwrap();
         ledger.commit(journal).unwrap();
         assert!(ledger.finish().is_err());
+    }
+
+    #[test]
+    fn ownership_is_selected_only_by_operation_identity() {
+        let target = row_target();
+        let first_owner = ProjectionOperationId::SystemRow {
+            table: SystemTable::ProductCatalogItems,
+            row: "first".to_string(),
+        };
+        let second_owner = ProjectionOperationId::SystemRow {
+            table: SystemTable::ProductCatalogItems,
+            row: "second".to_string(),
+        };
+        let mut ownership = ObligationOwnership::default();
+        ownership
+            .insert(
+                operation_disposition(first_owner.clone(), target.clone()),
+                SourceToken::Field {
+                    entity: EntityIdentity::new("product", "id"),
+                    path: "localizedContent.name".to_string(),
+                },
+                ObligationClass::Authoring,
+            )
+            .unwrap();
+        ownership
+            .insert(
+                operation_disposition(second_owner.clone(), target),
+                SourceToken::Field {
+                    entity: EntityIdentity::new("product", "id"),
+                    path: "localizedContent.aliases".to_string(),
+                },
+                ObligationClass::Authoring,
+            )
+            .unwrap();
+
+        let first = ownership.claim(&first_owner).unwrap();
+        assert_eq!(first.len(), 1);
+        assert!(first.iter().all(|item| matches!(
+            &item.source,
+            SourceToken::Field { path, .. } if path == "localizedContent.name"
+        )));
+        assert!(ownership
+            .finish()
+            .unwrap_err()
+            .contains("1 projection owner"));
+
+        let mut unknown = ObligationOwnership::default();
+        assert!(unknown.claim(&second_owner).is_err());
+    }
+
+    #[test]
+    fn one_obligation_cannot_be_declared_for_two_owners() {
+        let target = row_target();
+        let source = SourceToken::Field {
+            entity: EntityIdentity::new("product", "id"),
+            path: "id".to_string(),
+        };
+        let mut ownership = ObligationOwnership::default();
+        ownership
+            .insert(
+                operation_disposition(
+                    ProjectionOperationId::SystemRow {
+                        table: SystemTable::ProductCatalogItems,
+                        row: "first".to_string(),
+                    },
+                    target.clone(),
+                ),
+                source.clone(),
+                ObligationClass::Authoring,
+            )
+            .unwrap();
+        let error = ownership
+            .insert(
+                operation_disposition(
+                    ProjectionOperationId::SystemRow {
+                        table: SystemTable::ProductCatalogItems,
+                        row: "second".to_string(),
+                    },
+                    target,
+                ),
+                source,
+                ObligationClass::Authoring,
+            )
+            .unwrap_err();
+        assert!(error.contains("declared more than once"));
+    }
+
+    #[test]
+    fn system_column_names_are_closed_and_unique() {
+        let names = SystemColumn::ALL
+            .into_iter()
+            .map(SystemColumn::as_str)
+            .collect::<BTreeSet<_>>();
+        assert_eq!(names.len(), SystemColumn::ALL.len());
     }
 }

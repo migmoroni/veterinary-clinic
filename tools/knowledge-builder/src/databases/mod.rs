@@ -1,5 +1,5 @@
 use crate::{media::sha256_hex, report::BuildContext, source::KnowledgeLocale};
-use rusqlite::{params, Connection};
+use rusqlite::Connection;
 use std::{fs, path::Path};
 
 pub const SYSTEM_SCHEMA_VERSION: u32 = 2;
@@ -62,34 +62,6 @@ pub fn create(path: &Path, kind: DatabaseKind) -> Result<Connection, String> {
         ))
         .map_err(|error| format!("cannot initialize SQLite schema {}: {error}", path.display()))?;
     Ok(connection)
-}
-
-pub fn insert_metadata(
-    connection: &Connection,
-    context: &BuildContext,
-    locale: KnowledgeLocale,
-    source_digest: &[u8],
-) -> Result<(), String> {
-    connection
-        .execute(
-            "INSERT INTO knowledge_build_metadata (singleton, build_version, builder_version, build_result_schema_version, source_digest_sha256, locale) VALUES (1, ?1, ?2, 1, ?3, ?4)",
-            params![
-                i64::try_from(context.build_version).map_err(|_| "buildVersion exceeds SQLite integer range".to_string())?,
-                env!("CARGO_PKG_VERSION"),
-                source_digest,
-                locale.as_str()
-            ],
-        )
-        .map_err(|error| format!("cannot insert build metadata: {error}"))?;
-    if let Some(release) = &context.release {
-        connection
-            .execute(
-                "INSERT INTO knowledge_release_metadata (singleton, release_id, generation, revision, locale) VALUES (1, ?1, ?2, ?3, ?4)",
-                params![release.release_id, release.generation, release.revision, locale.as_str()],
-            )
-            .map_err(|error| format!("cannot insert release metadata: {error}"))?;
-    }
-    Ok(())
 }
 
 pub fn finalize(connection: Connection, path: &Path) -> Result<String, String> {

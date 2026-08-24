@@ -21,3 +21,12 @@ asserção positiva ou negativa para cada caso. Limites de bytes e dimensões,
 assinatura/extensão, orientação, transparência, ausência de ampliação e
 adulterações de artefatos usam dados temporários para não manter binários
 redundantes no repositório.
+
+Os testes integrais também adulteram isoladamente colunas escalares e JSON,
+valor, normalização, proveniência e ordem de busca, label e aliases de
+taxonomias, identidades e ordens de relações, protocolos, conteúdo compilado e
+referências estruturais. A matriz temporária de mídia usa dois ativos e dois
+objetos CAS válidos para alterar hash, MIME, tamanho, dimensões e thumbnail de
+`system_media`, incluindo isoladamente o `thumbnail_mime_type`. Tamanhos e
+checksums externos são recalculados antes da reutilização, que ainda precisa
+recusar cada divergência em relação ao contrato tipado.

@@ -1,12 +1,14 @@
 use crate::{
     databases::{self, DatabaseKind, SYSTEM_MEDIA_SCHEMA_VERSION, SYSTEM_SCHEMA_VERSION},
-    ledger::{ProjectionLedger, SystemTable},
+    ledger::{evidence_digest, SystemTable},
     markdown::{collect_compiled_media_keys, CompiledDocument},
     media::{cas_relative_path, decode_hex, decode_image, mime_for_format, sha256_hex},
+    projection::contract::ProjectionContract,
     report::{self, BuildContext, BuildResult, DatabaseArtifact, ProjectionReport},
     schemas,
     source::{KnowledgeLocale, LOCALES},
     validation::ValidatedSource,
+    verification::readers,
 };
 use image::{GenericImageView, ImageFormat};
 use rusqlite::{Connection, OpenFlags};
@@ -23,6 +25,7 @@ type CompiledMediaOccurrences = BTreeMap<CompiledSectionIdentity, Vec<String>>;
 pub(crate) struct ArtifactVerifier<'a> {
     source: &'a ValidatedSource,
     context: &'a BuildContext,
+    contracts: &'a BTreeMap<KnowledgeLocale, ProjectionContract>,
     version_root: &'a Path,
     cas_root: &'a Path,
     result: &'a BuildResult,
@@ -32,6 +35,7 @@ impl<'a> ArtifactVerifier<'a> {
     pub(crate) fn new(
         source: &'a ValidatedSource,
         context: &'a BuildContext,
+        contracts: &'a BTreeMap<KnowledgeLocale, ProjectionContract>,
         version_root: &'a Path,
         cas_root: &'a Path,
         result: &'a BuildResult,
@@ -39,6 +43,7 @@ impl<'a> ArtifactVerifier<'a> {
         Self {
             source,
             context,
+            contracts,
             version_root,
             cas_root,
             result,
@@ -219,8 +224,13 @@ impl<'a> ArtifactVerifier<'a> {
             .locales
             .get(locale.as_str())
             .ok_or_else(|| format!("projection report misses locale {locale}"))?;
+        let contract = self
+            .contracts
+            .get(&locale)
+            .ok_or_else(|| format!("projection contract misses locale {locale}"))?;
         verify_database_row_counts(&system, DatabaseKind::System, locale_report)?;
         verify_database_row_counts(&media, DatabaseKind::SystemMedia, locale_report)?;
+        readers::verify_semantic_equivalence(&system, &media, contract)?;
 
         let structural_rows = structural_media_references(&system)?;
         let expected_structural = self
@@ -316,6 +326,11 @@ impl<'a> ArtifactVerifier<'a> {
             let source_asset = self.source.media.get(&media_key).ok_or_else(|| {
                 format!("localized media asset is absent from validated source: {media_key}")
             })?;
+            let expected_cas = contract
+                .cas
+                .iter()
+                .find(|operation| operation.content_hash == hash)
+                .ok_or_else(|| format!("projection contract misses CAS object {hash}"))?;
             if hash != source_asset.content_hash_sha256
                 || mime_type != source_asset.mime_type
                 || size_bytes != source_asset.size_bytes
@@ -347,7 +362,7 @@ impl<'a> ArtifactVerifier<'a> {
             let cas_bytes = fs::read(&cas_path).map_err(|error| {
                 format!("cannot read CAS object {}: {error}", cas_path.display())
             })?;
-            if cas_bytes != source_asset.bytes
+            if cas_bytes != expected_cas.bytes
                 || cas_bytes.len() as u64 != size_bytes
                 || mime_for_format(image::guess_format(&cas_bytes).map_err(|error| {
                     format!("cannot identify CAS object for {media_key}: {error}")
@@ -426,20 +441,36 @@ impl<'a> ArtifactVerifier<'a> {
             return Err("projection report source facts differ from validated source".to_string());
         }
         for locale in LOCALES {
-            let expected =
-                ProjectionLedger::expected(self.source, locale, self.context.release.is_some())?;
-            if expected.expected_relation_count() != self.source.relation_count {
+            let contract = self.contracts.get(&locale).unwrap();
+            let expected_relation_count = contract
+                .expected_obligations
+                .iter()
+                .filter(|obligation| obligation.class == crate::ledger::ObligationClass::Relation)
+                .map(|obligation| &obligation.source)
+                .collect::<BTreeSet<_>>()
+                .len();
+            let expected_localized_fragments = contract
+                .expected_obligations
+                .iter()
+                .filter(|obligation| {
+                    obligation.class == crate::ledger::ObligationClass::LocalizedContent
+                })
+                .map(|obligation| &obligation.source)
+                .collect::<BTreeSet<_>>()
+                .len();
+            if expected_relation_count != self.source.relation_count {
                 return Err(format!(
                     "regenerated relation obligations differ from source facts for {locale}"
                 ));
             }
             let actual = report.locales.get(locale.as_str()).unwrap();
-            if actual.expected_obligation_count != expected.expected_count()
-                || actual.completed_obligation_count != expected.expected_count()
-                || actual.resolved_relation_count != expected.expected_relation_count()
-                || actual.consumed_localized_fragments
-                    != expected.expected_localized_fragment_count()
-                || actual.evidence_digest_sha256 != expected.expected_evidence_digest()
+            if actual.expected_obligation_count != contract.expected_obligations.len()
+                || actual.completed_obligation_count != contract.expected_obligations.len()
+                || actual.operation_count != contract.operation_count()
+                || actual.resolved_relation_count != expected_relation_count
+                || actual.consumed_localized_fragments != expected_localized_fragments
+                || expected_localized_fragments != contract.source_facts.localized_fragments
+                || actual.evidence_digest_sha256 != evidence_digest(&contract.expected_obligations)
             {
                 return Err(format!("projection evidence mismatch for {locale}"));
             }

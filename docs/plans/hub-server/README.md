@@ -20,16 +20,18 @@ pertencem a outro servidor.
 5. [Parte 1B.1: consolidação dos contratos do `knowledge-builder`](./01b1-knowledge-builder-contract-consolidation.md)
 6. [Parte 1B.2: evidência de projeção e verificação integral](./01b2-projection-evidence-and-artifact-verification.md)
 7. [Parte 1B.3: evidência explícita e equivalência semântica](./01b3-explicit-evidence-and-semantic-equivalence.md)
-8. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
-9. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
-10. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
-11. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
-12. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
-13. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
+8. [Parte 1B.4: propriedade explícita e disposição fechada](./01b4-explicit-operation-ownership.md)
+9. [Parte 1B.5: cobertura exaustiva dos contratos de persistência](./01b5-projection-contract-test-coverage.md)
+10. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
+11. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
+12. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
+13. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
+14. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
+15. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
 
-A pré-fase, as subpartes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3 e 1C e as partes
-seguintes são executadas em ordem. Cada documento termina com testes e critérios
-de aceite próprios.
+A pré-fase, as subpartes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3, 1B.4, 1B.5 e 1C
+e as partes seguintes são executadas em ordem. Cada documento termina com
+testes e critérios de aceite próprios.
 
 ## Evolução Do Fluxo
 
@@ -43,6 +45,8 @@ flowchart LR
     P1B1["Parte 1B.1<br/>contratos verificáveis"]
     P1B2["Parte 1B.2<br/>evidência + verificação integral"]
     P1B3["Parte 1B.3<br/>evidência explícita + equivalência semântica"]
+    P1B4["Parte 1B.4<br/>owners explícitos + disposição fechada"]
+    P1B5["Parte 1B.5<br/>cobertura estrutural dos contratos"]
     P1C["Parte 1C<br/>consumo local"]
     P2["Parte 2<br/>base Rails + contratos"]
     P3["Parte 3<br/>Rails orquestra builder + releases"]
@@ -50,14 +54,14 @@ flowchart LR
     P5["Parte 5<br/>updater Tauri local"]
     P6["Parte 6<br/>GitHub + CI/CD"]
 
-    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
+    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
 ```
 
 As mudanças de origem dos artefatos são deliberadas:
 
 ```mermaid
 flowchart TB
-    subgraph S1["Partes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3 e 1C"]
+    subgraph S1["Partes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3, 1B.4, 1B.5 e 1C"]
         D1["data/knowledge<br/>fonte canônica"] --> G1["knowledge-builder Rust"]
         G1 --> B1["build/knowledge-artifacts"]
         B1 --> A1["Apps em desenvolvimento e build"]
@@ -87,11 +91,13 @@ a entidades, relações e taxonomias com significado de domínio e consolida cad
 entidade em um documento Markdown por locale. A Parte 1B implementa o
 `knowledge-builder` definitivo em Rust, a Parte 1B.1 consolida seus contratos
 executáveis, a Parte 1B.2 estrutura a auditoria e o verificador integral, a
-Parte 1B.3 exige evidência explícita e equivalência semântica, e a Parte 1C faz
-os apps consumirem os artefatos locais. A Parte 3 faz o `hub-server` invocar a mesma ferramenta e
-assumir releases, assinatura e publicação. A Parte 4 substitui a aquisição local
-pelo contrato de distribuição do Hub. A Parte 6 acrescenta o GitHub como
-provider externo.
+Parte 1B.3 exige evidência explícita e equivalência semântica, a Parte 1B.4
+fecha a propriedade operacional e a disposição de colunas, a Parte 1B.5 fecha
+a cobertura estrutural dos contratos de persistência, e a Parte 1C faz os apps
+consumirem os artefatos locais. A Parte 3 faz o `hub-server` invocar a mesma
+ferramenta e assumir releases, assinatura e publicação. A Parte 4 substitui a
+aquisição local pelo contrato de distribuição do Hub. A Parte 6 acrescenta o
+GitHub como provider externo.
 
 ## Decisões De Arquitetura
 
@@ -812,13 +818,15 @@ descobrir uma revisão incrementando URLs que não estejam declaradas.
 6. Implementar e validar a Parte 1B.1.
 7. Implementar e validar a Parte 1B.2.
 8. Implementar e validar a Parte 1B.3.
-9. Implementar e validar a Parte 1C.
-10. Implementar e validar a Parte 2.
-11. Implementar e validar a Parte 3.
-12. Implementar e validar a Parte 4.
-13. Implementar e validar a Parte 5.
-14. Mover o projeto para o repositório dedicado.
-15. Implementar e validar a Parte 6.
+9. Implementar e validar a Parte 1B.4.
+10. Implementar e validar a Parte 1B.5.
+11. Implementar e validar a Parte 1C.
+12. Implementar e validar a Parte 2.
+13. Implementar e validar a Parte 3.
+14. Implementar e validar a Parte 4.
+15. Implementar e validar a Parte 5.
+16. Mover o projeto para o repositório dedicado.
+17. Implementar e validar a Parte 6.
 
 ## Expansões Previstas
 

@@ -15,9 +15,13 @@ struct TestDirectory(PathBuf);
 impl TestDirectory {
     fn new(label: &str) -> Self {
         let counter = TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
+        let nonce = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("test clock is after Unix epoch")
+            .as_nanos();
         let path = std::env::temp_dir().join(format!(
-            "knowledge-builder-{label}-{}-{counter}",
-            std::process::id()
+            "knowledge-builder-{label}-{}-{counter}-{nonce}",
+            std::process::id(),
         ));
         if path.exists() {
             fs::remove_dir_all(&path).expect("stale test directory can be removed");
@@ -81,6 +85,17 @@ fn validates_and_builds_all_locales_deterministically() {
         fs::read(first_output.path().join(&first.checksum_file)).unwrap(),
         fs::read(second_output.path().join(&second.checksum_file)).unwrap()
     );
+    let report: serde_json::Value = serde_json::from_slice(
+        &fs::read(first_output.path().join(&first.projection.report_path)).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(report["schemaVersion"], 3);
+    for locale in LOCALES {
+        assert_eq!(
+            report["source"]["localizedFragmentsByLocale"][locale.as_str()],
+            report["locales"][locale.as_str()]["consumedLocalizedFragments"]
+        );
+    }
 
     let reused = build(&BuildOptions {
         source: source_root(),
@@ -320,6 +335,98 @@ fn artifact_verifier_recalculates_manifest_report_and_database_facts() {
 }
 
 #[test]
+fn semantically_tampered_database_is_rejected_after_checksums_are_refreshed() {
+    let output = TestDirectory::new("semantic-tampering");
+    let options = BuildOptions {
+        source: source_root(),
+        output: output.path().to_path_buf(),
+        context: context_path(),
+    };
+    let result = build(&options).expect("canonical source must build");
+    let result_path = output.path().join("versions/1/build-result.json");
+    let checksum_path = output.path().join(&result.checksum_file);
+    let system_path = output.path().join(&result.locales["pt-BR"].system.path);
+    let canonical_result = fs::read(&result_path).unwrap();
+    let canonical_checksums = fs::read(&checksum_path).unwrap();
+    let canonical_system = fs::read(&system_path).unwrap();
+
+    let mutations = [
+        (
+            "localized-name",
+            "UPDATE product_catalog_items SET name = name || ' adulterado' WHERE rowid = (SELECT rowid FROM product_catalog_items LIMIT 1)",
+        ),
+        (
+            "aliases-json",
+            "UPDATE product_catalog_items SET aliases_json = '[\"adulterado\"]' WHERE rowid = (SELECT rowid FROM product_catalog_items LIMIT 1)",
+        ),
+        (
+            "normalized-value",
+            "UPDATE product_catalog_items SET normalized_name = normalized_name || '-adulterado' WHERE rowid = (SELECT rowid FROM product_catalog_items LIMIT 1)",
+        ),
+        (
+            "relation-order",
+            "UPDATE product_active_ingredients SET sort_order = sort_order + 10000 WHERE rowid = (SELECT rowid FROM product_active_ingredients LIMIT 1)",
+        ),
+        (
+            "related-identity",
+            "UPDATE entity_taxonomy_terms SET term_key = (SELECT candidate.term_key FROM taxonomy_terms AS candidate WHERE candidate.taxonomy_id = entity_taxonomy_terms.taxonomy_id AND candidate.term_key NOT IN (SELECT existing.term_key FROM entity_taxonomy_terms AS existing WHERE existing.entity_type = entity_taxonomy_terms.entity_type AND existing.entity_id = entity_taxonomy_terms.entity_id AND existing.relation_kind = entity_taxonomy_terms.relation_kind) LIMIT 1) WHERE rowid = (SELECT relation.rowid FROM entity_taxonomy_terms AS relation WHERE EXISTS (SELECT 1 FROM taxonomy_terms AS candidate WHERE candidate.taxonomy_id = relation.taxonomy_id AND candidate.term_key NOT IN (SELECT existing.term_key FROM entity_taxonomy_terms AS existing WHERE existing.entity_type = relation.entity_type AND existing.entity_id = relation.entity_id AND existing.relation_kind = relation.relation_kind)) LIMIT 1)",
+        ),
+        (
+            "taxonomy-label",
+            "UPDATE taxonomy_terms SET label = label || ' adulterado' WHERE rowid = (SELECT rowid FROM taxonomy_terms LIMIT 1)",
+        ),
+        (
+            "search-provenance",
+            "UPDATE entity_search_terms SET provenance = provenance || '.adulterado' WHERE rowid = (SELECT rowid FROM entity_search_terms LIMIT 1)",
+        ),
+        (
+            "search-value",
+            "UPDATE entity_search_terms SET value = value || ' adulterado' WHERE rowid = (SELECT rowid FROM entity_search_terms LIMIT 1)",
+        ),
+        (
+            "search-normalized-value",
+            "UPDATE entity_search_terms SET normalized_value = normalized_value || ' adulterado' WHERE rowid = (SELECT rowid FROM entity_search_terms LIMIT 1)",
+        ),
+        (
+            "search-sort-order",
+            "UPDATE entity_search_terms SET sort_order = sort_order + 100000 WHERE rowid = (SELECT rowid FROM entity_search_terms LIMIT 1)",
+        ),
+        (
+            "taxonomy-aliases",
+            "UPDATE taxonomy_terms SET aliases_json = '[\"adulterado\"]' WHERE rowid = (SELECT rowid FROM taxonomy_terms LIMIT 1)",
+        ),
+        (
+            "protocol-content",
+            "UPDATE treatment_protocols SET observation = coalesce(observation, '') || ' adulterado' WHERE rowid = (SELECT rowid FROM treatment_protocols LIMIT 1)",
+        ),
+        (
+            "protocol-dose",
+            "UPDATE treatment_protocol_doses SET label = label || ' adulterado' WHERE rowid = (SELECT rowid FROM treatment_protocol_doses LIMIT 1)",
+        ),
+        (
+            "compiled-content",
+            "UPDATE product_catalog_items SET content_json = json_set(content_json, '$.sections[0].compiledMarkdown', json_extract(content_json, '$.sections[0].compiledMarkdown') || ' adulterado') WHERE json_array_length(content_json, '$.sections') > 0",
+        ),
+    ];
+
+    for (label, sql) in mutations {
+        fs::write(&result_path, &canonical_result).unwrap();
+        fs::write(&checksum_path, &canonical_checksums).unwrap();
+        fs::write(&system_path, &canonical_system).unwrap();
+        let database = Connection::open(&system_path).unwrap();
+        let affected = database.execute(sql, []).unwrap();
+        assert!(affected > 0, "mutation {label} must affect a row");
+        drop(database);
+        refresh_database_declarations(output.path(), &result, "pt-BR", "system");
+        let error = build(&options).unwrap_err();
+        assert!(
+            error.contains("not semantically equivalent"),
+            "mutation {label} produced an unexpected error: {error}"
+        );
+    }
+}
+
+#[test]
 fn logical_digest_is_independent_of_editorial_directory() {
     let original = validate(source_root()).expect("canonical source must validate");
     let moved_copy = TestDirectory::new("moved-source");
@@ -386,6 +493,23 @@ fn cli_is_independent_of_current_working_directory() {
         "{}",
         String::from_utf8_lossy(&output.stderr)
     );
+    let artifacts = TestDirectory::new("cwd-build");
+    let output = Command::new(env!("CARGO_BIN_EXE_knowledge-builder"))
+        .current_dir(working_directory.path())
+        .arg("build")
+        .arg("--source")
+        .arg(source_root())
+        .arg("--output")
+        .arg(artifacts.path())
+        .arg("--context")
+        .arg(context_path())
+        .output()
+        .expect("build CLI can be executed outside the workspace");
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
 }
 
 #[test]
@@ -446,6 +570,33 @@ fn validation_rejects_schema_reference_locale_and_markdown_violations() {
 }
 
 #[test]
+fn active_ingredient_denominations_follow_the_declared_closed_policy() {
+    let copy = TestDirectory::new("invalid-denomination-policy");
+    copy_tree(&source_root(), copy.path());
+    let manifest = find_manifest_containing(copy.path(), "\"denomination_inn\"").unwrap();
+    let original = fs::read(&manifest).unwrap();
+    let mut entity: serde_json::Value = serde_json::from_slice(&original).unwrap();
+    entity["localizedContent"]["denomination_undeclared"] =
+        entity["localizedContent"]["name"].clone();
+    fs::write(&manifest, serde_json::to_vec_pretty(&entity).unwrap()).unwrap();
+    let error = validate(copy.path()).unwrap_err().to_string();
+    assert!(error.contains("denomination has no declared nomenclature standard"));
+
+    let mut entity: serde_json::Value = serde_json::from_slice(&original).unwrap();
+    let declared = entity["nomenclature"]["denominationStandards"][0]
+        .as_str()
+        .unwrap()
+        .to_string();
+    entity["localizedContent"]
+        .as_object_mut()
+        .unwrap()
+        .remove(&format!("denomination_{declared}"));
+    fs::write(&manifest, serde_json::to_vec_pretty(&entity).unwrap()).unwrap();
+    let error = validate(copy.path()).unwrap_err().to_string();
+    assert!(error.contains(&format!("missing denomination_{declared}")));
+}
+
+#[test]
 fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
     let source = TestDirectory::new("media-source");
     copy_tree(&source_root(), source.path());
@@ -459,11 +610,21 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
     image::DynamicImage::ImageRgba8(pixels)
         .save(media_directory.join("cover.png"))
         .unwrap();
-    fs::copy(
-        media_directory.join("cover.png"),
-        media_directory.join("lateral.png"),
-    )
-    .unwrap();
+    let lateral_pixels = image::ImageBuffer::from_fn(320, 80, |x, _| {
+        image::Rgba([80, (x % 255) as u8, 30, if x < 10 { 0 } else { 255 }])
+    });
+    image::DynamicImage::ImageRgba8(lateral_pixels)
+        .save(media_directory.join("lateral.png"))
+        .unwrap();
+    assert_eq!(
+        fs::metadata(media_directory.join("cover.png"))
+            .unwrap()
+            .len(),
+        fs::metadata(media_directory.join("lateral.png"))
+            .unwrap()
+            .len(),
+        "media fixture requires distinct CAS objects with equal structural size"
+    );
 
     let mut entity: serde_json::Value =
         serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
@@ -490,7 +651,7 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
         context: context_path(),
     })
     .unwrap();
-    assert_eq!(result.cas.object_count, 1);
+    assert_eq!(result.cas.object_count, 2);
     for locale in LOCALES {
         let artifacts = result.locales.get(locale.as_str()).unwrap();
         let system = Connection::open(output.path().join(&artifacts.system.path)).unwrap();
@@ -540,6 +701,131 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
     let canonical_system = fs::read(&system_path).unwrap();
     let canonical_media = fs::read(&media_path).unwrap();
 
+    for (label, sql) in [
+        (
+            "structural-media-key",
+            "UPDATE entity_media_references SET media_key = (SELECT candidate.media_key FROM entity_media_references AS candidate WHERE candidate.media_key <> entity_media_references.media_key LIMIT 1) WHERE rowid = (SELECT rowid FROM entity_media_references ORDER BY role LIMIT 1)",
+        ),
+        (
+            "structural-sort-order",
+            "UPDATE entity_media_references SET sort_order = sort_order + 100 WHERE rowid = (SELECT rowid FROM entity_media_references ORDER BY role LIMIT 1)",
+        ),
+    ] {
+        fs::write(&result_path, &canonical_result).unwrap();
+        fs::write(&checksum_path, &canonical_checksums).unwrap();
+        fs::write(&system_path, &canonical_system).unwrap();
+        let database = Connection::open(&system_path).unwrap();
+        assert_eq!(database.execute(sql, []).unwrap(), 1);
+        drop(database);
+        refresh_database_declarations(output.path(), &result, "pt-BR", "system");
+        let error = build(&BuildOptions {
+            source: source.path().to_path_buf(),
+            output: output.path().to_path_buf(),
+            context: context_path(),
+        })
+        .unwrap_err();
+        assert!(
+            error.contains("not semantically equivalent"),
+            "mutation {label} produced an unexpected error: {error}"
+        );
+    }
+
+    fs::write(&result_path, &canonical_result).unwrap();
+    fs::write(&checksum_path, &canonical_checksums).unwrap();
+    fs::write(&system_path, &canonical_system).unwrap();
+    fs::write(&media_path, &canonical_media).unwrap();
+    let media_database = Connection::open(&media_path).unwrap();
+    media_database
+        .execute_batch("PRAGMA ignore_check_constraints = ON")
+        .unwrap();
+    assert_eq!(
+        media_database
+            .execute(
+                "UPDATE media_assets SET thumbnail_mime_type = 'image/png' WHERE rowid = (SELECT rowid FROM media_assets ORDER BY media_key LIMIT 1)",
+                [],
+            )
+            .unwrap(),
+        1
+    );
+    drop(media_database);
+    refresh_database_declarations(output.path(), &result, "pt-BR", "systemMedia");
+    let error = build(&BuildOptions {
+        source: source.path().to_path_buf(),
+        output: output.path().to_path_buf(),
+        context: context_path(),
+    })
+    .unwrap_err();
+    assert!(
+        error.contains("integrity")
+            || error.contains("thumbnail")
+            || error.contains("image/jpeg")
+            || error.contains("semantically equivalent"),
+        "mutation thumbnail-mime-type produced an unexpected error: {error}"
+    );
+
+    fs::write(&result_path, &canonical_result).unwrap();
+    fs::write(&checksum_path, &canonical_checksums).unwrap();
+    fs::write(&system_path, &canonical_system).unwrap();
+    fs::write(&media_path, &canonical_media).unwrap();
+    for (label, sql) in [
+        (
+            "content-hash",
+            "UPDATE media_assets SET content_hash = (SELECT candidate.content_hash FROM media_assets AS candidate WHERE candidate.media_key <> media_assets.media_key ORDER BY candidate.media_key LIMIT 1) WHERE rowid = (SELECT rowid FROM media_assets ORDER BY media_key LIMIT 1)",
+        ),
+        (
+            "mime-type",
+            "UPDATE media_assets SET mime_type = 'image/gif' WHERE rowid = (SELECT rowid FROM media_assets ORDER BY media_key LIMIT 1)",
+        ),
+        (
+            "size-bytes",
+            "UPDATE media_assets SET size_bytes = size_bytes + 1 WHERE rowid = (SELECT rowid FROM media_assets ORDER BY media_key LIMIT 1)",
+        ),
+        (
+            "width",
+            "UPDATE media_assets SET width = width + 1 WHERE rowid = (SELECT rowid FROM media_assets ORDER BY media_key LIMIT 1)",
+        ),
+        (
+            "height",
+            "UPDATE media_assets SET height = height + 1 WHERE rowid = (SELECT rowid FROM media_assets ORDER BY media_key LIMIT 1)",
+        ),
+        (
+            "thumbnail-width",
+            "UPDATE media_assets SET thumbnail_width = thumbnail_width - 1 WHERE rowid = (SELECT rowid FROM media_assets ORDER BY media_key LIMIT 1)",
+        ),
+        (
+            "thumbnail-height",
+            "UPDATE media_assets SET thumbnail_height = thumbnail_height - 1 WHERE rowid = (SELECT rowid FROM media_assets ORDER BY media_key LIMIT 1)",
+        ),
+        (
+            "thumbnail-jpeg-bytes",
+            "UPDATE media_assets SET thumbnail = (SELECT candidate.thumbnail FROM media_assets AS candidate WHERE candidate.media_key <> media_assets.media_key ORDER BY candidate.media_key LIMIT 1) WHERE rowid = (SELECT rowid FROM media_assets ORDER BY media_key LIMIT 1)",
+        ),
+    ] {
+        fs::write(&result_path, &canonical_result).unwrap();
+        fs::write(&checksum_path, &canonical_checksums).unwrap();
+        fs::write(&media_path, &canonical_media).unwrap();
+        let database = Connection::open(&media_path).unwrap();
+        assert_eq!(database.execute(sql, []).unwrap(), 1);
+        drop(database);
+        refresh_database_declarations(output.path(), &result, "pt-BR", "systemMedia");
+        let error = build(&BuildOptions {
+            source: source.path().to_path_buf(),
+            output: output.path().to_path_buf(),
+            context: context_path(),
+        })
+        .unwrap_err();
+        assert!(
+            error.contains("media")
+                || error.contains("thumbnail")
+                || error.contains("semantically equivalent"),
+            "mutation {label} produced an unexpected error: {error}"
+        );
+    }
+
+    fs::write(&result_path, &canonical_result).unwrap();
+    fs::write(&checksum_path, &canonical_checksums).unwrap();
+    fs::write(&system_path, &canonical_system).unwrap();
+    fs::write(&media_path, &canonical_media).unwrap();
     let media_database = Connection::open(&media_path).unwrap();
     media_database
         .execute("UPDATE media_assets SET thumbnail = x'00'", [])
@@ -605,14 +891,31 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
         .filter_map(|line| line.split_once("  ").map(|(_, path)| path))
         .find(|path| path.starts_with("CAS/system/"))
         .unwrap();
-    fs::write(output.path().join(cas_relative), b"tampered CAS object").unwrap();
+    let tampered_cas = b"tampered CAS object";
+    fs::write(output.path().join(cas_relative), tampered_cas).unwrap();
+    replace_checksum_entry(
+        &output.path().join(&result.checksum_file),
+        cas_relative,
+        &sha256(tampered_cas),
+    );
+    let refreshed_checksums =
+        fs::read_to_string(output.path().join(&result.checksum_file)).unwrap();
+    assert!(refreshed_checksums.contains(&format!(
+        "{}  {cas_relative}",
+        sha256(&fs::read(output.path().join(cas_relative)).unwrap())
+    )));
     let error = build(&BuildOptions {
         source: source.path().to_path_buf(),
         output: output.path().to_path_buf(),
         context: context_path(),
     })
     .unwrap_err();
-    assert!(error.contains("checksum mismatch"));
+    assert!(
+        error.contains("CAS object")
+            || error.contains("content hash")
+            || error.contains("checksum mismatch"),
+        "tampered CAS with refreshed checksum produced an unexpected error: {error}"
+    );
 }
 
 #[test]
@@ -732,17 +1035,20 @@ fn refresh_database_declarations(
 
 fn replace_checksum_entry(path: &Path, artifact: &str, checksum: &str) {
     let contents = fs::read_to_string(path).unwrap();
+    let mut replaced = false;
     let rewritten = contents
         .lines()
         .map(|line| {
             let (_, relative) = line.split_once("  ").unwrap();
             if relative == artifact {
+                replaced = true;
                 format!("{checksum}  {relative}\n")
             } else {
                 format!("{line}\n")
             }
         })
         .collect::<String>();
+    assert!(replaced, "checksum entry not found for {artifact}");
     fs::write(path, rewritten).unwrap();
 }
 

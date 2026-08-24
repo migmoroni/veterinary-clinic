@@ -21,10 +21,11 @@ saída preparada.
 
 ## Pré-requisito
 
-A [Parte 1B.3](./01b3-explicit-evidence-and-semantic-equivalence.md) está
-concluída e gera uma `build_version` válida com os seis pares de bancos, o CAS
-compartilhado, evidências explícitas da projeção e equivalência semântica entre
-a fonte validada e os artefatos.
+A [Parte 1B.5](./01b5-projection-contract-test-coverage.md) está concluída e gera
+uma `build_version` válida com os seis pares de bancos, o CAS compartilhado,
+propriedade operacional explícita das evidências, disposição fechada, cobertura
+exaustiva dos contratos de persistência e equivalência semântica entre a fonte
+validada e os artefatos.
 
 ## Escopo
 

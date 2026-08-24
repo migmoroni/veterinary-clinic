@@ -164,6 +164,7 @@
         "expectedObligationCount",
         "completedObligationCount",
         "rowEventCount",
+        "operationCount",
         "resolvedRelationCount",
         "consumedLocalizedFragments",
         "evidenceDigestSha256"
@@ -174,6 +175,7 @@
         "expectedObligationCount": { "$ref": "#/$defs/count" },
         "completedObligationCount": { "$ref": "#/$defs/count" },
         "rowEventCount": { "$ref": "#/$defs/count" },
+        "operationCount": { "$ref": "#/$defs/count" },
         "resolvedRelationCount": { "$ref": "#/$defs/count" },
         "consumedLocalizedFragments": { "$ref": "#/$defs/count" },
         "evidenceDigestSha256": { "$ref": "#/$defs/sha256" }
@@ -194,7 +196,7 @@
     }
   },
   "properties": {
-    "schemaVersion": { "const": 2 },
+    "schemaVersion": { "const": 3 },
     "sourceDigestSha256": { "$ref": "#/$defs/sha256" },
     "buildVersion": { "$ref": "#/$defs/positive" },
     "systemSchemaVersion": { "$ref": "#/$defs/positive" },
