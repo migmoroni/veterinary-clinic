@@ -1,3 +1,6 @@
+//! Compiles the allowed CommonMark profile into deterministic localized
+//! documents while resolving safe entity-owned media references.
+
 use crate::{
     media::{percent_encode_media_key, resolve_markdown_image, MediaAsset},
     normalization::normalize_text,

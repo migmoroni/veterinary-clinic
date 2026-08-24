@@ -1,3 +1,6 @@
+//! Resolves and validates source media, derives stable media identities, creates
+//! deterministic JPEG thumbnails, and defines the content-addressed layout.
+
 use crate::normalization::normalize_text;
 use image::{
     codecs::jpeg::JpegEncoder, imageops::FilterType, ColorType, DynamicImage, GenericImageView,

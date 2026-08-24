@@ -1,3 +1,6 @@
+//! Implements distinct normalization policies for compact canonical identities
+//! and whitespace-preserving search terms.
+
 use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 
 pub(crate) fn normalize_identity_key(value: &str) -> String {

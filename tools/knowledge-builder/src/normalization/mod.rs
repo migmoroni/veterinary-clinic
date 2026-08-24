@@ -1,3 +1,6 @@
+//! Exposes the canonical Unicode, identity-key, and search-text normalization
+//! policies used throughout validation and projection.
+
 mod search;
 mod unicode;
 

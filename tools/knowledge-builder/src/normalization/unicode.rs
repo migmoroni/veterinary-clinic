@@ -1,3 +1,6 @@
+//! Applies Unicode NFC normalization to authored text and every string in a JSON
+//! value before typed deserialization.
+
 use serde_json::Value;
 use unicode_normalization::UnicodeNormalization;
 

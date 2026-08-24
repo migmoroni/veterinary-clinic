@@ -1,3 +1,5 @@
+-- Canonical schema for localized public media metadata and JPEG thumbnails.
+
 CREATE TABLE knowledge_build_metadata (
     singleton INTEGER PRIMARY KEY CHECK(singleton = 1),
     build_version INTEGER NOT NULL CHECK(build_version > 0),

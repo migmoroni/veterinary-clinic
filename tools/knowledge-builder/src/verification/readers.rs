@@ -1,3 +1,6 @@
+//! Reads every projectable SQLite row into closed Rust types and compares the
+//! observed databases with the expected locale projection contract.
+
 use crate::{
     ledger::SystemTable,
     projection::contract::{MetadataRow, ProjectionContract, SystemMediaRow, SystemRow},

@@ -1,3 +1,6 @@
+//! Implements the closed command-line interface for source validation and
+//! six-locale artifact builds.
+
 use crate::{build, validate, BuildOptions};
 use std::{ffi::OsString, path::PathBuf};
 

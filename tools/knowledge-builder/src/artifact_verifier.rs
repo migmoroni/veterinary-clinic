@@ -1,3 +1,6 @@
+//! Verifies staged and reusable artifact sets against their source, build context,
+//! projection contracts, physical declarations, and semantic contents.
+
 use crate::{
     databases::{self, DatabaseKind, SYSTEM_MEDIA_SCHEMA_VERSION, SYSTEM_SCHEMA_VERSION},
     ledger::{evidence_digest, SystemTable},

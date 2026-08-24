@@ -1,3 +1,6 @@
+//! End-to-end coverage for deterministic builds, finalized-version reuse,
+//! canonical validation, and rejection of physically refreshed tampering.
+
 use knowledge_builder::{build, validate, BuildContext, BuildOptions, LOCALES};
 use rusqlite::Connection;
 use sha2::{Digest, Sha256};

@@ -1,3 +1,6 @@
+//! Owns the canonical SQLite schemas, technical database identities, staging
+//! creation, integrity checks, and deterministic schema fingerprints.
+
 use crate::{media::sha256_hex, report::BuildContext, source::KnowledgeLocale};
 use rusqlite::Connection;
 use std::{fs, path::Path};
