@@ -3,7 +3,7 @@
 
 use super::journal::ProjectionJournal;
 use super::*;
-use crate::{databases::DatabaseKind, source::KnowledgeLocale};
+use crate::{contracts::locale::KnowledgeLocale, databases::DatabaseKind};
 use std::collections::BTreeSet;
 
 fn obligation(target: ProjectionTarget, path: &str) -> ProjectionObligation {

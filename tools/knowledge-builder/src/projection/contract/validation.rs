@@ -73,21 +73,6 @@ impl ProjectionContract {
 }
 
 fn validate_universal_taxonomies(operations: &[SystemProjectionOperation]) -> Result<(), String> {
-    let allowed = BTreeSet::from([
-        ("breed", "size"),
-        ("manufacturer", "type"),
-        ("manufacturer", "classification"),
-        ("active_ingredient", "type"),
-        ("active_ingredient", "classification"),
-        ("condition", "type"),
-        ("condition", "classification"),
-        ("product", "type"),
-        ("product", "classification"),
-        ("product", "target"),
-        ("product", "vaccine_profile"),
-        ("product", "life_stage"),
-        ("product", "therapeutic_scope"),
-    ]);
     let mut registries = BTreeMap::<&str, (&str, &str)>::new();
     let mut terms = BTreeSet::<(&str, &str)>::new();
     let mut entities = BTreeSet::<(&str, &str)>::new();
@@ -98,7 +83,7 @@ fn validate_universal_taxonomies(operations: &[SystemProjectionOperation]) -> Re
                 domain,
                 purpose,
             } => {
-                if !allowed.contains(&(domain.as_str(), purpose.as_str())) {
+                if taxonomy_spec(domain, purpose).is_none() {
                     return Err(format!(
                         "unsupported taxonomy domain and purpose {domain}:{purpose}"
                     ));
@@ -137,6 +122,14 @@ fn validate_universal_taxonomies(operations: &[SystemProjectionOperation]) -> Re
         }
     }
 
+    for (entity_type, entity_id) in &entities {
+        if !taxonomy_domains().any(|domain| domain == *entity_type) {
+            return Err(format!(
+                "projected taxonomy entity has unsupported domain {entity_type}/{entity_id}"
+            ));
+        }
+    }
+
     let mut positions = BTreeSet::new();
     let mut counts = BTreeMap::<(&str, &str, &str), usize>::new();
     for operation in operations {
@@ -166,7 +159,7 @@ fn validate_universal_taxonomies(operations: &[SystemProjectionOperation]) -> Re
                 "taxonomy {taxonomy_id} domain {domain} is incompatible with {entity_type}"
             ));
         }
-        if !allowed.contains(&(entity_type.as_str(), purpose)) {
+        if taxonomy_spec(entity_type, purpose).is_none() {
             return Err(format!(
                 "taxonomy purpose {purpose} is incompatible with {entity_type}"
             ));
@@ -190,19 +183,19 @@ fn validate_universal_taxonomies(operations: &[SystemProjectionOperation]) -> Re
     }
 
     for (entity_type, entity_id) in entities {
-        let required_purpose = if entity_type == "breed" {
-            "size"
-        } else {
-            "type"
-        };
-        let count = counts
-            .get(&(entity_type, entity_id, required_purpose))
-            .copied()
-            .unwrap_or_default();
-        if count != 1 {
-            return Err(format!(
-                "{entity_type}/{entity_id} requires exactly one {required_purpose} taxonomy relation"
-            ));
+        for spec in CANONICAL_TAXONOMIES.iter().filter(|spec| {
+            spec.domain == entity_type && spec.cardinality == TaxonomyCardinality::ExactlyOne
+        }) {
+            let count = counts
+                .get(&(entity_type, entity_id, spec.purpose))
+                .copied()
+                .unwrap_or_default();
+            if count != 1 {
+                return Err(format!(
+                    "{entity_type}/{entity_id} requires exactly one {} taxonomy relation",
+                    spec.purpose
+                ));
+            }
         }
     }
     Ok(())

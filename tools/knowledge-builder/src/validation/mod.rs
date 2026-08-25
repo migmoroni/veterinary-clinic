@@ -31,15 +31,16 @@ use self::{
         is_simple_text, is_uuid_v4, validate_range, validate_species, validate_unique_texts,
     },
     references::validate_references,
-    taxonomy::{collect_taxonomies, validate_taxonomy},
+    taxonomy::{collect_taxonomies, validate_taxonomy, validate_taxonomy_completeness},
 };
 use crate::{
+    contracts::locale::{KnowledgeLocale, LOCALES},
     markdown::{compile_document, CompiledDocument, CompiledMediaReference},
     media::{resolve_media, sha256_hex, MediaAsset},
     normalization::normalize_search_text,
     source::{
-        deserialize_entity, source_schema_fingerprint_input, CanonicalEntity, KnowledgeLocale,
-        LocalizedContent, LocalizedValue, SourceEntry, TaxonomyEntity, LOCALES,
+        deserialize_entity, source_schema_fingerprint_input, CanonicalEntity, LocalizedContent,
+        LocalizedValue, SourceEntry, TaxonomyEntity,
     },
 };
 use serde_json::Value;

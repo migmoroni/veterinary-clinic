@@ -33,6 +33,11 @@ use self::{
     taxonomy::{project_geo_places, project_taxonomies},
 };
 use crate::{
+    contracts::{
+        locale::KnowledgeLocale,
+        taxonomy::{taxonomy_domains, taxonomy_spec, TaxonomyCardinality, CANONICAL_TAXONOMIES},
+        version::BUILD_RESULT_SCHEMA_VERSION,
+    },
     databases::DatabaseKind,
     ledger::{
         owned_obligations, search_candidates, CompilationOperationId, EntityIdentity,
@@ -44,7 +49,7 @@ use crate::{
     normalization::{normalize_identity_key, normalize_search_text},
     report::BuildContext,
     schemas,
-    source::{CanonicalEntity, KnowledgeLocale, LocalizedContent, LocalizedValue, TaxonomyEntity},
+    source::{CanonicalEntity, LocalizedContent, LocalizedValue, TaxonomyEntity},
     validation::{ValidatedEntity, ValidatedSource},
 };
 use std::collections::{BTreeMap, BTreeSet};

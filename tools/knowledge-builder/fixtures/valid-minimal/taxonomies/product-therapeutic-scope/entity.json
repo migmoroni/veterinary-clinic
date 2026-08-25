@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "entityType": "taxonomy",
+  "id": "fixture-product-therapeutic-scope",
+  "domain": "product",
+  "purpose": "therapeutic_scope",
+  "terms": [{
+    "key": "default", "parentKey": null, "order": 0,
+    "localizedContent": { "label": {
+      "pt-BR": "Padrão", "pt-PT": "Padrão", "gn-PY": "Teko",
+      "en-US": "Default", "es-ES": "Predeterminado", "fr-FR": "Défaut"
+    } }
+  }]
+}

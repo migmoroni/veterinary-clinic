@@ -1,37 +1,13 @@
 //! Validates taxonomy term trees and collects the closed taxonomy registry.
 
 use super::*;
+use crate::contracts::taxonomy::{taxonomy_spec, CANONICAL_TAXONOMIES};
 
 pub(super) fn validate_taxonomy(
     entry: &SourceEntry,
     taxonomy: &TaxonomyEntity,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    const ALLOWED: [(&str, &str); 13] = [
-        ("breed", "size"),
-        ("manufacturer", "type"),
-        ("manufacturer", "classification"),
-        ("active_ingredient", "type"),
-        ("active_ingredient", "classification"),
-        ("condition", "type"),
-        ("condition", "classification"),
-        ("product", "type"),
-        ("product", "classification"),
-        ("product", "target"),
-        ("product", "vaccine_profile"),
-        ("product", "life_stage"),
-        ("product", "therapeutic_scope"),
-    ];
-    if !ALLOWED.contains(&(taxonomy.domain.as_str(), taxonomy.purpose.as_str())) {
-        diagnostics.push(Diagnostic::entity(
-            entry,
-            "purpose",
-            format!(
-                "unsupported taxonomy domain and purpose {}:{}",
-                taxonomy.domain, taxonomy.purpose
-            ),
-        ));
-    }
     if taxonomy.purpose.contains("search") {
         diagnostics.push(Diagnostic::entity(
             entry,
@@ -109,6 +85,35 @@ pub(super) fn validate_taxonomy(
                 .find(|candidate| candidate.key == key)
                 .and_then(|candidate| candidate.parent_key.as_deref());
         }
+    }
+}
+
+pub(super) fn validate_taxonomy_completeness(
+    source_root: &Path,
+    taxonomies: &BTreeMap<(String, String), TaxonomyEntity>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let expected = CANONICAL_TAXONOMIES
+        .iter()
+        .map(|spec| (spec.domain, spec.purpose))
+        .collect::<BTreeSet<_>>();
+    let observed = taxonomies
+        .keys()
+        .map(|(domain, purpose)| (domain.as_str(), purpose.as_str()))
+        .collect::<BTreeSet<_>>();
+
+    for (domain, purpose) in expected.difference(&observed) {
+        diagnostics.push(Diagnostic::source(
+            source_root,
+            format!("missing canonical taxonomy {domain}:{purpose}"),
+        ));
+    }
+    for (domain, purpose) in observed.difference(&expected) {
+        debug_assert!(taxonomy_spec(domain, purpose).is_none());
+        diagnostics.push(Diagnostic::source(
+            source_root,
+            format!("unsupported taxonomy domain and purpose {domain}:{purpose}"),
+        ));
     }
 }
 

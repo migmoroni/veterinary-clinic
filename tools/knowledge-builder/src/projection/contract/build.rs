@@ -22,7 +22,7 @@ impl ProjectionContract {
                 row: MetadataRow::Build {
                     build_version: context.build_version,
                     builder_version: env!("CARGO_PKG_VERSION").to_string(),
-                    build_result_schema_version: 1,
+                    build_result_schema_version: BUILD_RESULT_SCHEMA_VERSION,
                     source_digest: source_digest.clone(),
                     locale: locale.to_string(),
                 },

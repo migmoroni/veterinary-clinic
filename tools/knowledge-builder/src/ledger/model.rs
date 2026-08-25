@@ -1,7 +1,7 @@
 //! Defines the closed identities, operation IDs, source tokens, projection targets,
 //! SQLite tables and columns shared by the ledger subsystems.
 
-use crate::{databases::DatabaseKind, source::KnowledgeLocale};
+use crate::{contracts::locale::KnowledgeLocale, databases::DatabaseKind};
 use std::fmt;
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]

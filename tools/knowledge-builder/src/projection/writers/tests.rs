@@ -9,6 +9,13 @@ struct ParsedInsert<'a> {
     columns: Vec<SystemColumn>,
 }
 
+fn empty_content_json() -> String {
+    format!(
+        r#"{{"schemaVersion":{},"sections":[]}}"#,
+        crate::contracts::version::CONTENT_DOCUMENT_SCHEMA_VERSION
+    )
+}
+
 fn parse_insert(sql: &str) -> Result<ParsedInsert<'_>, String> {
     let body = sql
         .strip_prefix("INSERT INTO ")
@@ -125,7 +132,7 @@ fn representative_row(case: SystemInsertCase) -> SystemRow {
             aliases_json: "[]".to_string(),
             average_weight_kg_json: r#"{"min":10,"max":20}"#.to_string(),
             average_height_cm_json: r#"{"min":30,"max":40}"#.to_string(),
-            content_json: r#"{"schemaVersion":1,"sections":[]}"#.to_string(),
+            content_json: empty_content_json(),
         },
         SystemInsertCase::BreedOrigin => SystemRow::BreedOrigin {
             breed_id: "breed-one".to_string(),
@@ -139,7 +146,7 @@ fn representative_row(case: SystemInsertCase) -> SystemRow {
             aliases_json: "[]".to_string(),
             regions_json: r#"["BR"]"#.to_string(),
             website: Some("https://example.test".to_string()),
-            content_json: r#"{"schemaVersion":1,"sections":[]}"#.to_string(),
+            content_json: empty_content_json(),
         },
         SystemInsertCase::ActiveIngredient => SystemRow::ActiveIngredient {
             id: "ingredient-one".to_string(),
@@ -151,7 +158,7 @@ fn representative_row(case: SystemInsertCase) -> SystemRow {
             atc_vet_code: Some("QA01".to_string()),
             atc_vet_system: Some("ATCvet".to_string()),
             denominations_json: r#"{"inn":"Ingredient One"}"#.to_string(),
-            content_json: r#"{"schemaVersion":1,"sections":[]}"#.to_string(),
+            content_json: empty_content_json(),
         },
         SystemInsertCase::Condition => SystemRow::Condition {
             id: "condition-one".to_string(),
@@ -159,7 +166,7 @@ fn representative_row(case: SystemInsertCase) -> SystemRow {
             normalized_name: "condition one".to_string(),
             aliases_json: "[]".to_string(),
             regions_json: r#"["BR"]"#.to_string(),
-            content_json: r#"{"schemaVersion":1,"sections":[]}"#.to_string(),
+            content_json: empty_content_json(),
         },
         SystemInsertCase::Product => SystemRow::Product {
             id: "product-one".to_string(),
@@ -173,7 +180,7 @@ fn representative_row(case: SystemInsertCase) -> SystemRow {
             commercial_line: Some("Companion".to_string()),
             presentation_dosage: Some("10 mg".to_string()),
             target_species_warnings_json: "[]".to_string(),
-            content_json: r#"{"schemaVersion":1,"sections":[]}"#.to_string(),
+            content_json: empty_content_json(),
         },
         SystemInsertCase::EntityTaxonomy => SystemRow::EntityTaxonomy {
             entity_type: "product".to_string(),

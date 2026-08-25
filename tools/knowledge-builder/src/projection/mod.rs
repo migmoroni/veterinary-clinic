@@ -19,15 +19,24 @@ use self::{
     contract::ProjectionContract,
     filesystem::{recursive_files, remove_stale_staging},
     reporting::projection_report,
-    reuse::{
-        artifact_database_path, assert_shared_fingerprint, database_artifact,
-        reuse_or_reject_existing, set_digest,
-    },
+    reuse::{assert_shared_fingerprint, database_artifact, reuse_or_reject_existing, set_digest},
     writers::{write_metadata, write_system, write_system_media},
 };
 use crate::{
     artifact_verifier::ArtifactVerifier,
-    databases::{self, DatabaseKind, SYSTEM_MEDIA_SCHEMA_VERSION, SYSTEM_SCHEMA_VERSION},
+    contracts::{
+        artifact::{
+            locale_artifact, locale_directory, version_artifact, version_root, VersionArtifact,
+            CAS_ALGORITHM, CAS_HASH_ENCODING, CAS_LAYOUT, CAS_PATH_PATTERN, CAS_ROOT,
+            VERSIONS_DIRECTORY,
+        },
+        locale::{KnowledgeLocale, LOCALES},
+        version::{
+            BUILD_RESULT_SCHEMA_VERSION, PROJECTION_REPORT_SCHEMA_VERSION,
+            SYSTEM_MEDIA_SCHEMA_VERSION, SYSTEM_SCHEMA_VERSION,
+        },
+    },
+    databases::{self, DatabaseKind},
     ledger::{CompletedLedger, ProjectionLedger},
     media::{cas_relative_path, sha256_hex},
     report::{
@@ -36,7 +45,6 @@ use crate::{
         TypeProjection,
     },
     schemas,
-    source::{KnowledgeLocale, LOCALES},
     validation::ValidatedSource,
 };
 use std::{

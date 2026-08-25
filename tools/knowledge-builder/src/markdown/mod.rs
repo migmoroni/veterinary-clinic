@@ -230,7 +230,7 @@ fn compile_source(
 
     Ok(CompiledEditorial {
         document: CompiledDocument {
-            schema_version: 1,
+            schema_version: crate::contracts::version::CONTENT_DOCUMENT_SCHEMA_VERSION,
             sections: compiled_sections,
         },
         media: all_media.into_values().collect(),

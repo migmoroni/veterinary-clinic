@@ -187,7 +187,7 @@ pub(super) fn content_json(
     locale: KnowledgeLocale,
 ) -> Result<String, String> {
     let empty = CompiledDocument {
-        schema_version: 1,
+        schema_version: crate::contracts::version::CONTENT_DOCUMENT_SCHEMA_VERSION,
         sections: Vec::new(),
     };
     let content = entry.editorial.get(&locale).unwrap_or(&empty);

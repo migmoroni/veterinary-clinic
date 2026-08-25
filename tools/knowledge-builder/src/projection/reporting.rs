@@ -64,7 +64,7 @@ pub(super) fn projection_report(
         .collect::<BTreeSet<_>>()
         .len();
     ProjectionReport {
-        schema_version: 4,
+        schema_version: PROJECTION_REPORT_SCHEMA_VERSION,
         source_digest_sha256: source.source_digest_sha256.clone(),
         build_version: context.build_version,
         system_schema_version: SYSTEM_SCHEMA_VERSION,

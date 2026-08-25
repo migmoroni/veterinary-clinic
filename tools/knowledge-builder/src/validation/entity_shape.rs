@@ -3,11 +3,14 @@
 use super::*;
 
 pub(super) fn validate_entity_shape(entry: &SourceEntry, diagnostics: &mut Vec<Diagnostic>) {
-    if entry.entity.schema_version() != 1 {
+    if entry.entity.schema_version() != crate::contracts::version::SOURCE_ENTITY_SCHEMA_VERSION {
         diagnostics.push(Diagnostic::entity(
             entry,
             "schemaVersion",
-            "schemaVersion must be 1",
+            format!(
+                "schemaVersion must be {}",
+                crate::contracts::version::SOURCE_ENTITY_SCHEMA_VERSION
+            ),
         ));
     }
     if entry.entity.id().trim() != entry.entity.id() || entry.entity.id().is_empty() {

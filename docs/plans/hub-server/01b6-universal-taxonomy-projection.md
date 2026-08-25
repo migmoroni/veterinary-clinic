@@ -553,4 +553,4 @@ presente e documentar apenas o modelo final.
 ## Próxima Parte
 
 Após cumprir todos os critérios, seguir para a
-[Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md).
+[Parte 1B.7: contratos centrais do `knowledge-builder`](./01b7-central-builder-contracts.md).

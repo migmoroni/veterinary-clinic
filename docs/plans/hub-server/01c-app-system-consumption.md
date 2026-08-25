@@ -21,11 +21,12 @@ saída preparada.
 
 ## Pré-requisito
 
-A [Parte 1B.6](./01b6-universal-taxonomy-projection.md) está concluída e gera uma
-`build_version` válida com os seis pares de bancos, o CAS compartilhado,
+A [Parte 1B.8](./01b8-knowledge-builder-maintainability.md) está concluída e gera
+uma `build_version` válida com os seis pares de bancos, o CAS compartilhado,
 propriedade operacional explícita das evidências, disposição fechada, cobertura
-exaustiva dos contratos de persistência, equivalência semântica e uma projeção
-taxonômica universal para todos os domínios de conhecimento.
+exaustiva dos contratos de persistência, equivalência semântica, projeção
+taxonômica universal, contratos transversais centralizados e superfície de
+manutenção coesa no `knowledge-builder`.
 
 ## Escopo
 

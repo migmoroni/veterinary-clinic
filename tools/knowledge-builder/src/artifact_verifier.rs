@@ -2,14 +2,25 @@
 //! projection contracts, physical declarations, and semantic contents.
 
 use crate::{
-    databases::{self, DatabaseKind, SYSTEM_MEDIA_SCHEMA_VERSION, SYSTEM_SCHEMA_VERSION},
+    contracts::{
+        artifact::{
+            locale_artifact, locale_directory, version_artifact, version_root, VersionArtifact,
+            CAS_ALGORITHM, CAS_HASH_ENCODING, CAS_LAYOUT, CAS_PATH_PATTERN, CAS_ROOT,
+            LOCALES_DIRECTORY, VERSIONS_DIRECTORY,
+        },
+        locale::{KnowledgeLocale, LOCALES},
+        version::{
+            BUILD_RESULT_SCHEMA_VERSION, PROJECTION_REPORT_SCHEMA_VERSION,
+            SYSTEM_MEDIA_SCHEMA_VERSION, SYSTEM_SCHEMA_VERSION,
+        },
+    },
+    databases::{self, DatabaseKind},
     ledger::{evidence_digest, SystemTable},
     markdown::{collect_compiled_media_keys, CompiledDocument},
     media::{cas_relative_path, decode_hex, decode_image, mime_for_format, sha256_hex},
     projection::contract::ProjectionContract,
     report::{self, BuildContext, BuildResult, DatabaseArtifact, ProjectionReport},
     schemas,
-    source::{KnowledgeLocale, LOCALES},
     validation::ValidatedSource,
     verification::readers,
 };
@@ -104,16 +115,34 @@ impl<'a> ArtifactVerifier<'a> {
 
     fn verify_identity(&self) -> Result<(), String> {
         schemas::validate_build_result(self.result)?;
-        if self.result.build_version != self.context.build_version
+        let expected_projection = report::normalized_relative_path(&version_artifact(
+            self.context.build_version,
+            VersionArtifact::ProjectionReport,
+        ))?;
+        let expected_checksums = report::normalized_relative_path(&version_artifact(
+            self.context.build_version,
+            VersionArtifact::Checksums,
+        ))?;
+        if self.result.schema_version != BUILD_RESULT_SCHEMA_VERSION
+            || self.result.build_version != self.context.build_version
             || self.result.release != self.context.release
             || self.result.source_digest_sha256 != self.source.source_digest_sha256
             || self.result.builder_version != env!("CARGO_PKG_VERSION")
             || self.result.system_schema_version != SYSTEM_SCHEMA_VERSION
             || self.result.system_media_schema_version != SYSTEM_MEDIA_SCHEMA_VERSION
+            || self.result.projection.report_path != expected_projection
+            || self.result.checksum_file != expected_checksums
+            || self.result.cas.algorithm != CAS_ALGORITHM
+            || self.result.cas.hash_encoding != CAS_HASH_ENCODING
+            || self.result.cas.root != CAS_ROOT
+            || self.result.cas.layout != CAS_LAYOUT
+            || self.result.cas.path_pattern != CAS_PATH_PATTERN
         {
             return Err("artifact identity differs from source or build context".to_string());
         }
-        let result_path = self.version_root.join("build-result.json");
+        let result_path = self
+            .version_root
+            .join(VersionArtifact::BuildResult.filename());
         let raw: serde_json::Value = serde_json::from_slice(
             &fs::read(&result_path)
                 .map_err(|error| format!("cannot read {}: {error}", result_path.display()))?,
@@ -134,8 +163,11 @@ impl<'a> ArtifactVerifier<'a> {
         if files != expected_files {
             return Err("version contains missing or additional files".to_string());
         }
-        let mut expected_directories = BTreeSet::from(["locales".to_string()]);
-        expected_directories.extend(LOCALES.map(|locale| format!("locales/{locale}")));
+        let mut expected_directories = BTreeSet::from([LOCALES_DIRECTORY.to_string()]);
+        expected_directories.extend(LOCALES.map(|locale| {
+            report::normalized_relative_path(&locale_directory(locale))
+                .expect("contract locale paths are normalized")
+        }));
         if directories != expected_directories {
             return Err("version contains missing or additional directories".to_string());
         }
@@ -171,14 +203,11 @@ impl<'a> ArtifactVerifier<'a> {
         kind: DatabaseKind,
         locale: KnowledgeLocale,
     ) -> Result<PathBuf, String> {
-        let expected_name = match kind {
-            DatabaseKind::System => "veterinary_clinic_system.db",
-            DatabaseKind::SystemMedia => "veterinary_clinic_system_media.db",
-        };
-        let expected_relative = format!(
-            "versions/{}/locales/{locale}/{expected_name}",
-            self.context.build_version
-        );
+        let expected_relative = report::normalized_relative_path(&locale_artifact(
+            self.context.build_version,
+            locale,
+            *kind.identity(),
+        ))?;
         if artifact.path != expected_relative {
             return Err(format!(
                 "non-canonical database artifact path: {}",
@@ -403,7 +432,7 @@ impl<'a> ArtifactVerifier<'a> {
         expected.insert(self.result.projection.report_path.clone());
         for hash in hashes {
             expected.insert(format!(
-                "CAS/system/{}",
+                "{CAS_ROOT}/{}",
                 report::normalized_relative_path(&cas_relative_path(hash)?)?
             ));
         }
@@ -414,7 +443,8 @@ impl<'a> ArtifactVerifier<'a> {
     }
 
     fn verify_report_semantics(&self, report: &ProjectionReport) -> Result<(), String> {
-        if report.source_digest_sha256 != self.result.source_digest_sha256
+        if report.schema_version != PROJECTION_REPORT_SCHEMA_VERSION
+            || report.source_digest_sha256 != self.result.source_digest_sha256
             || report.build_version != self.result.build_version
             || report.system_schema_version != self.result.system_schema_version
             || report.system_media_schema_version != self.result.system_media_schema_version
@@ -533,7 +563,10 @@ impl<'a> ArtifactVerifier<'a> {
     }
 
     fn resolve_version_path(&self, declared: &str) -> Result<PathBuf, String> {
-        let prefix = format!("versions/{}/", self.context.build_version);
+        let prefix = format!(
+            "{}/",
+            report::normalized_relative_path(&version_root(self.context.build_version))?
+        );
         let suffix = declared
             .strip_prefix(&prefix)
             .ok_or_else(|| format!("artifact path is outside version: {declared}"))?;
@@ -544,9 +577,9 @@ impl<'a> ArtifactVerifier<'a> {
     }
 
     fn resolve_declared_path(&self, declared: &str) -> Result<PathBuf, String> {
-        if declared.starts_with("versions/") {
+        if declared.starts_with(&format!("{VERSIONS_DIRECTORY}/")) {
             self.resolve_version_path(declared)
-        } else if let Some(suffix) = declared.strip_prefix("CAS/system/") {
+        } else if let Some(suffix) = declared.strip_prefix(&format!("{CAS_ROOT}/")) {
             if report::normalized_relative_path(Path::new(suffix))? != suffix {
                 return Err(format!("CAS path is not canonical: {declared}"));
             }
@@ -731,15 +764,19 @@ fn inspect_tree(root: &Path) -> Result<(BTreeSet<String>, BTreeSet<String>), Str
 
 fn expected_version_files() -> BTreeSet<String> {
     let mut files = BTreeSet::from([
-        "build-result.json".to_string(),
-        "checksums.sha256".to_string(),
-        "projection-report.json".to_string(),
+        VersionArtifact::BuildResult.filename().to_string(),
+        VersionArtifact::Checksums.filename().to_string(),
+        VersionArtifact::ProjectionReport.filename().to_string(),
     ]);
     for locale in LOCALES {
-        files.insert(format!("locales/{locale}/veterinary_clinic_system.db"));
-        files.insert(format!(
-            "locales/{locale}/veterinary_clinic_system_media.db"
-        ));
+        for kind in [DatabaseKind::System, DatabaseKind::SystemMedia] {
+            files.insert(
+                report::normalized_relative_path(
+                    &locale_directory(locale).join(kind.identity().artifact_filename),
+                )
+                .expect("contract artifact paths are normalized"),
+            );
+        }
     }
     files
 }

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "entityType": "taxonomy",
+  "id": "fixture-breed-size",
+  "domain": "breed",
+  "purpose": "size",
+  "terms": [{
+    "key": "default",
+    "parentKey": null,
+    "order": 0,
+    "localizedContent": { "label": {
+      "pt-BR": "Padrão", "pt-PT": "Padrão", "gn-PY": "Teko",
+      "en-US": "Default", "es-ES": "Predeterminado", "fr-FR": "Défaut"
+    } }
+  }]
+}

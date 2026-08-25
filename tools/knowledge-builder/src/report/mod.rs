@@ -1,6 +1,7 @@
 //! Defines build contexts and public artifact reports together with canonical
 //! JSON serialization and normalized relative-path handling.
 
+use crate::contracts::version::BUILD_CONTEXT_SCHEMA_VERSION;
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fs, path::Path};
 
@@ -171,8 +172,10 @@ pub fn read_context(path: &Path) -> Result<BuildContext, String> {
         .map_err(|error| format!("cannot read build context {}: {error}", path.display()))?;
     let context: BuildContext = serde_json::from_slice(&bytes)
         .map_err(|error| format!("invalid build context {}: {error}", path.display()))?;
-    if context.schema_version != 1 {
-        return Err("build context schemaVersion must be 1".to_string());
+    if context.schema_version != BUILD_CONTEXT_SCHEMA_VERSION {
+        return Err(format!(
+            "build context schemaVersion must be {BUILD_CONTEXT_SCHEMA_VERSION}"
+        ));
     }
     if context.build_version == 0 {
         return Err("buildVersion must be a positive integer".to_string());
@@ -235,9 +238,11 @@ mod tests {
 
     #[test]
     fn rejects_non_positive_build_version() {
-        let context = serde_json::from_str::<BuildContext>(
-            r#"{"schemaVersion":1,"buildVersion":0,"release":null}"#,
-        )
+        let context = serde_json::from_value::<BuildContext>(serde_json::json!({
+            "schemaVersion": BUILD_CONTEXT_SCHEMA_VERSION,
+            "buildVersion": 0,
+            "release": null
+        }))
         .unwrap();
         assert_eq!(context.build_version, 0);
     }

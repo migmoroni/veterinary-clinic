@@ -1,12 +1,18 @@
 //! Owns the canonical SQLite schemas, technical database identities, staging
 //! creation, integrity checks, and deterministic schema fingerprints.
 
-use crate::{media::sha256_hex, report::BuildContext, source::KnowledgeLocale};
+use crate::{
+    contracts::{
+        database::{DatabaseIdentity, SYSTEM_DATABASE, SYSTEM_MEDIA_DATABASE},
+        locale::KnowledgeLocale,
+        version::BUILD_RESULT_SCHEMA_VERSION,
+    },
+    media::sha256_hex,
+    report::BuildContext,
+};
 use rusqlite::Connection;
 use std::{fs, path::Path};
 
-pub const SYSTEM_SCHEMA_VERSION: u32 = 3;
-pub const SYSTEM_MEDIA_SCHEMA_VERSION: u32 = 2;
 pub const SYSTEM_DDL: &str = include_str!("../../schemas/system/system.sql");
 pub const SYSTEM_MEDIA_DDL: &str = include_str!("../../schemas/system_media/system_media.sql");
 
@@ -24,17 +30,10 @@ impl DatabaseKind {
         }
     }
 
-    fn schema_version(self) -> u32 {
+    pub(crate) const fn identity(self) -> &'static DatabaseIdentity {
         match self {
-            Self::System => SYSTEM_SCHEMA_VERSION,
-            Self::SystemMedia => SYSTEM_MEDIA_SCHEMA_VERSION,
-        }
-    }
-
-    fn application_id(self) -> u32 {
-        match self {
-            Self::System => 0x564b5359,
-            Self::SystemMedia => 0x564b534d,
+            Self::System => &SYSTEM_DATABASE,
+            Self::SystemMedia => &SYSTEM_MEDIA_DATABASE,
         }
     }
 }
@@ -59,8 +58,8 @@ pub fn create(path: &Path, kind: DatabaseKind) -> Result<Connection, String> {
     connection
         .execute_batch(&format!(
             "PRAGMA page_size=4096;\nPRAGMA journal_mode=OFF;\nPRAGMA synchronous=OFF;\nPRAGMA temp_store=MEMORY;\nPRAGMA foreign_keys=ON;\nPRAGMA trusted_schema=OFF;\nPRAGMA application_id={};\nPRAGMA user_version={};\n{}",
-            kind.application_id(),
-            kind.schema_version(),
+            kind.identity().application_id,
+            kind.identity().schema_version,
             kind.ddl()
         ))
         .map_err(|error| format!("cannot initialize SQLite schema {}: {error}", path.display()))?;
@@ -129,7 +128,9 @@ pub fn verify_contract(
     let user_version: u32 = connection
         .query_row("PRAGMA user_version", [], |row| row.get(0))
         .map_err(|error| format!("cannot read user_version from {}: {error}", path.display()))?;
-    if application_id != kind.application_id() || user_version != kind.schema_version() {
+    if application_id != kind.identity().application_id
+        || user_version != kind.identity().schema_version
+    {
         return Err(format!(
             "SQLite technical identity mismatch for {}",
             path.display()
@@ -154,7 +155,7 @@ pub fn verify_contract(
     ).map_err(|error| format!("cannot read build metadata from {}: {error}", path.display()))?;
     if metadata.0 != context.build_version
         || metadata.1 != env!("CARGO_PKG_VERSION")
-        || metadata.2 != 1
+        || metadata.2 != BUILD_RESULT_SCHEMA_VERSION
         || metadata.3 != source_digest
         || metadata.4 != locale.as_str()
     {
@@ -213,7 +214,7 @@ fn canonical_schema_fingerprint(kind: DatabaseKind) -> Result<String, String> {
     connection
         .execute_batch(&format!(
             "PRAGMA foreign_keys=ON;\nPRAGMA user_version={};\n{}",
-            kind.schema_version(),
+            kind.identity().schema_version,
             kind.ddl()
         ))
         .map_err(|error| format!("cannot initialize canonical schema fingerprint: {error}"))?;
@@ -343,6 +344,9 @@ mod tests {
             "../../schemas/system/content-document.schema.json"
         ))
         .unwrap();
-        assert_eq!(content_schema["properties"]["schemaVersion"]["const"], 1);
+        assert_eq!(
+            content_schema["properties"]["schemaVersion"]["const"],
+            crate::contracts::version::CONTENT_DOCUMENT_SCHEMA_VERSION
+        );
     }
 }

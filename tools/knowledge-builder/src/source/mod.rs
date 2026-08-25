@@ -1,52 +1,13 @@
-//! Defines the canonical authored data model, closed locale set, source discovery,
-//! schema selection, and normalized typed deserialization.
+//! Defines the canonical authored data model, source discovery, schema selection,
+//! and normalized typed deserialization.
 
-use crate::normalization::normalize_json_strings;
+use crate::{contracts::locale::KnowledgeLocale, normalization::normalize_json_strings};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{
     collections::BTreeMap,
-    fmt,
     path::{Path, PathBuf},
 };
-
-pub const LOCALES: [KnowledgeLocale; 6] = [
-    KnowledgeLocale::PtBr,
-    KnowledgeLocale::PtPt,
-    KnowledgeLocale::GnPy,
-    KnowledgeLocale::EnUs,
-    KnowledgeLocale::EsEs,
-    KnowledgeLocale::FrFr,
-];
-
-#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, Serialize)]
-pub enum KnowledgeLocale {
-    PtBr,
-    PtPt,
-    GnPy,
-    EnUs,
-    EsEs,
-    FrFr,
-}
-
-impl KnowledgeLocale {
-    pub const fn as_str(self) -> &'static str {
-        match self {
-            Self::PtBr => "pt-BR",
-            Self::PtPt => "pt-PT",
-            Self::GnPy => "gn-PY",
-            Self::EnUs => "en-US",
-            Self::EsEs => "es-ES",
-            Self::FrFr => "fr-FR",
-        }
-    }
-}
-
-impl fmt::Display for KnowledgeLocale {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(self.as_str())
-    }
-}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]

@@ -166,6 +166,9 @@ conjunto fechado dos seis locales e à política específica do tipo da entidade
 Cada JSON é validado contra seu schema embutido antes de entrar no modelo Rust.
 Depois disso, o validator verifica IDs, referências, taxonomias, aliases,
 locales, seções, arquivos declarados, limites e cobertura da árvore de autoria.
+Uma fonte válida declara exatamente os 13 pares canônicos de domínio e propósito;
+taxonomias ausentes, adicionais ou com proprietário duplicado são recusadas
+mesmo quando nenhuma entidade referencia o vocabulário afetado.
 
 O digest lógico usa o conteúdo canônico, não a organização editorial dos
 diretórios. Renomear ou mover uma entidade sem alterar seu contrato não muda a
@@ -425,7 +428,7 @@ referências estruturais de mídia. O schema atual possui versão técnica 3.
 JPEG. O schema atual possui versão técnica 2; os bytes originais permanecem no
 CAS compartilhado.
 
-O crate `knowledge-builder` usa versão `0.3.0`. O relatório usa
+O crate `knowledge-builder` usa versão `0.3.1`. O relatório usa
 `schemaVersion: 4`; `build-result.json` permanece em `schemaVersion: 1`.
 
 ## Determinismo E Reutilização
@@ -467,10 +470,23 @@ let result = build(&BuildOptions {
 Parser fechado dos comandos `validate` e `build`. Não depende do diretório
 corrente além dos caminhos explicitamente recebidos.
 
+`contracts/`
+
+Registro privado dos valores imutáveis que atravessam subsistemas. A raiz do
+crate reexporta somente `KnowledgeLocale` e `LOCALES`, que já integram a API
+pública. O diretório separa:
+
+- `artifact.rs`: nomes públicos, descritores CAS e construtores de caminhos;
+- `database.rs`: versão, application ID e filename de cada banco;
+- `locale.rs`: tipo e ordem fechada dos seis locales;
+- `taxonomy.rs`: matriz única dos 13 pares e suas cardinalidades;
+- `version.rs`: versões dos documentos serializados e dos bancos;
+- `tests.rs`: equivalência com JSON Schemas e DDLs declarativos.
+
 `source/`
 
-Tipos da autoria canônica, locales, descoberta de arquivos e desserialização
-após JSON Schema.
+Tipos da autoria canônica, descoberta de arquivos e desserialização após JSON
+Schema. `Localized<T>` permanece aqui por pertencer ao modelo de autoria.
 
 `validation/`
 
@@ -530,8 +546,9 @@ orquestrador, enquanto o diretório separa:
 
 `databases/`
 
-DDLs canônicos de `system` e `system_media`, criação, finalização, versões
-técnicas e fingerprints.
+DDLs canônicos de `system` e `system_media`, criação, finalização e
+fingerprints. Cada `DatabaseKind` resolve sua identidade técnica no registro de
+contratos.
 
 `ledger/`
 
@@ -593,6 +610,12 @@ a comparação semântica.
 ## Regras De Manutenção
 
 - Manter a fonte canônica independente do layout dos artefatos compilados.
+- Iniciar uma alteração transversal no arquivo proprietário de `contracts/` e
+  atualizar deliberadamente schemas declarativos e testes de equivalência; não
+  repetir o valor em validators, projection, reuse ou verifier.
+- Manter constantes exclusivas de mídia, Markdown, tabelas e colunas junto de
+  seus próprios módulos, em vez de transformar `contracts/` em um agrupamento
+  genérico.
 - Não adicionar leitura de rede, apps, packages, i18n, seeds ou bancos `user`.
 - Não introduzir fallback de locale, compatibilidade legada ou segunda fonte de
   verdade.

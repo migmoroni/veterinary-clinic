@@ -15,7 +15,10 @@ fn product_row() -> SystemRow {
         commercial_line: None,
         presentation_dosage: None,
         target_species_warnings_json: "[]".to_string(),
-        content_json: r#"{"schemaVersion":1,"sections":[]}"#.to_string(),
+        content_json: format!(
+            r#"{{"schemaVersion":{},"sections":[]}}"#,
+            crate::contracts::version::CONTENT_DOCUMENT_SCHEMA_VERSION
+        ),
     }
 }
 
@@ -142,8 +145,8 @@ fn non_system_operations_reject_divergent_targets() {
         database: DatabaseKind::System,
         row: MetadataRow::Build {
             build_version: 1,
-            builder_version: "0.3.0".to_string(),
-            build_result_schema_version: 1,
+            builder_version: env!("CARGO_PKG_VERSION").to_string(),
+            build_result_schema_version: BUILD_RESULT_SCHEMA_VERSION,
             source_digest: vec![0; 32],
             locale: "en-US".to_string(),
         },

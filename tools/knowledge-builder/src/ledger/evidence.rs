@@ -2,13 +2,16 @@
 //! computes the stable digest embedded in projection reports.
 
 use super::{ObligationClass, ProjectionObligation, ProjectionTarget, SourceToken};
-use crate::{databases::DatabaseKind, media::sha256_hex};
+use crate::{
+    contracts::version::PROJECTION_EVIDENCE_SCHEMA_VERSION, databases::DatabaseKind,
+    media::sha256_hex,
+};
 use serde::Serialize;
 use std::collections::BTreeSet;
 
 pub(crate) fn evidence_digest(obligations: &BTreeSet<ProjectionObligation>) -> String {
     let document = EvidenceDigestDocument {
-        schema_version: 1,
+        schema_version: PROJECTION_EVIDENCE_SCHEMA_VERSION,
         obligations: obligations.iter().map(EvidenceObligation::from).collect(),
     };
     let bytes =

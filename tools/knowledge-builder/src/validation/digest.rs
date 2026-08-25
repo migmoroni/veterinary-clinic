@@ -58,7 +58,7 @@ pub(super) fn logical_digest(
         })
         .collect::<Vec<_>>();
     let model = serde_json::json!({
-        "schemaVersion": 1,
+        "schemaVersion": crate::contracts::version::SOURCE_DIGEST_SCHEMA_VERSION,
         "sourceSchemas": schemas,
         "entities": logical_entities,
         "editorial": editorial,

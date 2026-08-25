@@ -8,8 +8,9 @@ use super::{
     SystemColumn, SystemTable,
 };
 use crate::{
+    contracts::locale::KnowledgeLocale,
     databases::DatabaseKind,
-    source::{CanonicalEntity, KnowledgeLocale},
+    source::CanonicalEntity,
     validation::{ValidatedEntity, ValidatedSource},
 };
 

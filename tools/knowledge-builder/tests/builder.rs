@@ -115,7 +115,7 @@ fn validates_and_builds_all_locales_deterministically() {
     )
     .unwrap();
     assert_eq!(report["schemaVersion"], 4);
-    assert_eq!(first.builder_version, "0.3.0");
+    assert_eq!(first.builder_version, "0.3.1");
     assert_eq!(first.system_schema_version, 3);
     assert_eq!(first.system_media_schema_version, 2);
     let expected_system_tables = [
@@ -370,7 +370,7 @@ fn validates_and_builds_all_locales_deterministically() {
 fn minimal_fixture_builds_and_tampered_version_is_not_reused() {
     let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
     let validated = validate(&fixture).expect("minimal fixture must validate");
-    assert_eq!(validated.entity_count(), 1);
+    assert_eq!(validated.entity_count(), 14);
     let output = TestDirectory::new("minimal-fixture");
     let result = build(&BuildOptions {
         source: fixture.clone(),
@@ -402,6 +402,35 @@ fn minimal_fixture_builds_and_tampered_version_is_not_reused() {
     })
     .unwrap_err();
     assert!(error.contains("additional files"));
+}
+
+#[test]
+fn minimal_fixture_rejects_missing_and_duplicate_taxonomy_owners() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
+
+    let missing = TestDirectory::new("minimal-missing-taxonomy");
+    copy_tree(&fixture, missing.path());
+    fs::remove_dir_all(missing.path().join("taxonomies/product-target")).unwrap();
+    let error = validate(missing.path()).unwrap_err().to_string();
+    assert!(error.contains("missing canonical taxonomy product:target"));
+
+    let duplicate = TestDirectory::new("minimal-duplicate-taxonomy");
+    copy_tree(&fixture, duplicate.path());
+    let original = duplicate
+        .path()
+        .join("taxonomies/product-target/entity.json");
+    let mut taxonomy: serde_json::Value =
+        serde_json::from_slice(&fs::read(&original).unwrap()).unwrap();
+    taxonomy["id"] = serde_json::Value::String("fixture-product-target-duplicate".to_string());
+    let duplicate_directory = duplicate.path().join("taxonomies/product-target-duplicate");
+    fs::create_dir_all(&duplicate_directory).unwrap();
+    fs::write(
+        duplicate_directory.join("entity.json"),
+        serde_json::to_vec_pretty(&taxonomy).unwrap(),
+    )
+    .unwrap();
+    let error = validate(duplicate.path()).unwrap_err().to_string();
+    assert!(error.contains("duplicate taxonomy owner product:target"));
 }
 
 #[test]

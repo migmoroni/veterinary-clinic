@@ -3,7 +3,8 @@
 
 use super::{journal::SearchCandidate, obligation_helpers::identity, SourceToken};
 use crate::{
-    source::{CanonicalEntity, KnowledgeLocale, LocalizedContent, LocalizedValue, TaxonomyEntity},
+    contracts::locale::KnowledgeLocale,
+    source::{CanonicalEntity, LocalizedContent, LocalizedValue, TaxonomyEntity},
     validation::ValidatedSource,
 };
 use std::collections::{BTreeMap, BTreeSet};

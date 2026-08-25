@@ -3,7 +3,9 @@
 As fixtures são autocontidas e exercitam contratos do compilador sem copiar o
 catálogo canônico:
 
-- `valid-minimal/`: fonte mínima que passa por validação e projeção;
+- `valid-minimal/`: fonte mínima que passa por validação e projeção, formada por
+  uma localidade e pelas 13 taxonomias canônicas com termos mínimos nos seis
+  locales;
 - `valid-markdown/`: CommonMark permitido e formas semanticamente equivalentes;
 - `valid-media/`: perfil fixo das fontes e do thumbnail JPEG;
 - `invalid-schema/`: forma JSON recusada pelo schema executável;
@@ -25,9 +27,10 @@ redundantes no repositório.
 Os testes integrais também adulteram isoladamente colunas escalares e JSON,
 valor, normalização, proveniência e ordem de busca, label e aliases de
 taxonomias, termo, taxonomia, tipo da entidade e ordem da relação universal,
-ausência de associação obrigatória, tabelas físicas indevidas, protocolos,
-conteúdo compilado e referências estruturais. A matriz temporária de mídia usa dois ativos e dois
-objetos CAS válidos para alterar hash, MIME, tamanho, dimensões e thumbnail de
+ausência de taxonomia canônica, proprietário taxonômico duplicado, ausência de
+associação obrigatória, tabelas físicas indevidas, protocolos, conteúdo
+compilado e referências estruturais. A matriz temporária de mídia usa dois
+ativos e dois objetos CAS válidos para alterar hash, MIME, tamanho, dimensões e thumbnail de
 `system_media`, incluindo isoladamente o `thumbnail_mime_type`. Tamanhos e
 checksums externos são recalculados antes da reutilização, que ainda precisa
 recusar cada divergência em relação ao contrato tipado.

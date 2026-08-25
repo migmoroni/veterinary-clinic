@@ -4,6 +4,7 @@
 //! schemas, system media indexes, CAS materialization and deterministic reports.
 
 mod artifact_verifier;
+mod contracts;
 mod databases;
 mod ledger;
 mod markdown;
@@ -18,8 +19,8 @@ mod verification;
 
 pub mod cli;
 
+pub use contracts::locale::{KnowledgeLocale, LOCALES};
 pub use report::{BuildContext, BuildResult, ReleaseContext};
-pub use source::{KnowledgeLocale, LOCALES};
 pub use validation::{Diagnostic, ValidatedSource, ValidationError};
 
 use std::path::{Path, PathBuf};

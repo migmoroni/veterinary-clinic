@@ -9,7 +9,7 @@ pub(super) fn reuse_or_reject_existing(
     context: &BuildContext,
     contracts: &BTreeMap<KnowledgeLocale, ProjectionContract>,
 ) -> Result<BuildResult, String> {
-    let result_path = final_version.join("build-result.json");
+    let result_path = final_version.join(VersionArtifact::BuildResult.filename());
     let bytes = fs::read(&result_path).map_err(|error| {
         format!(
             "build version {} already exists without a readable build-result.json: {error}",
@@ -25,6 +25,7 @@ pub(super) fn reuse_or_reject_existing(
         || result.release != context.release
         || result.source_digest_sha256 != source.source_digest_sha256
         || result.builder_version != env!("CARGO_PKG_VERSION")
+        || result.schema_version != BUILD_RESULT_SCHEMA_VERSION
         || result.system_schema_version != SYSTEM_SCHEMA_VERSION
         || result.system_media_schema_version != SYSTEM_MEDIA_SCHEMA_VERSION
     {
@@ -38,7 +39,7 @@ pub(super) fn reuse_or_reject_existing(
         context,
         contracts,
         final_version,
-        &output.join("CAS/system"),
+        &output.join(CAS_ROOT),
         &result,
     )
     .verify()?;
@@ -58,14 +59,6 @@ pub(super) fn database_artifact(
         checksum_sha256: sha256_hex(&bytes),
         schema_fingerprint_sha256: fingerprint,
     })
-}
-
-pub(super) fn artifact_database_path(
-    build_version: u64,
-    locale: KnowledgeLocale,
-    filename: &str,
-) -> String {
-    format!("versions/{build_version}/locales/{locale}/{filename}")
 }
 
 pub(super) fn assert_shared_fingerprint(

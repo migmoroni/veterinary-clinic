@@ -13,10 +13,10 @@ pub fn build_artifacts(
             output.display()
         )
     })?;
-    let versions_root = output.join("versions");
+    let versions_root = output.join(VERSIONS_DIRECTORY);
     fs::create_dir_all(&versions_root)
         .map_err(|error| format!("cannot create versions directory: {error}"))?;
-    let final_version = versions_root.join(context.build_version.to_string());
+    let final_version = output.join(version_root(context.build_version));
     let contracts = build_contracts(source, context)?;
     if final_version.exists() {
         return reuse_or_reject_existing(source, output, &final_version, context, &contracts);
@@ -34,7 +34,7 @@ pub fn build_artifacts(
     let result = build_in_staging(source, &contracts, &staging_version, &staging_cas, context);
     match result {
         Ok(result) => {
-            commit_cas(&staging_cas, &output.join("CAS/system"))?;
+            commit_cas(&staging_cas, &output.join(CAS_ROOT))?;
             if staging_cas.exists() {
                 fs::remove_dir_all(&staging_cas)
                     .map_err(|error| format!("cannot remove CAS staging directory: {error}"))?;
@@ -92,11 +92,12 @@ fn build_in_staging(
         }
         ledger.commit(compilation_journal)?;
 
-        let locale_directory = staging_version.join("locales").join(locale.as_str());
+        let locale_directory = staging_version.join(locale_directory(locale));
         fs::create_dir_all(&locale_directory)
             .map_err(|error| format!("cannot create locale directory {locale}: {error}"))?;
-        let system_path = locale_directory.join("veterinary_clinic_system.db");
-        let system_media_path = locale_directory.join("veterinary_clinic_system_media.db");
+        let system_path = locale_directory.join(DatabaseKind::System.identity().artifact_filename);
+        let system_media_path =
+            locale_directory.join(DatabaseKind::SystemMedia.identity().artifact_filename);
 
         let mut system = databases::create(&system_path, DatabaseKind::System)?;
         write_metadata(
@@ -136,13 +137,16 @@ fn build_in_staging(
             .map(|operation| operation.content_hash.clone())
             .collect::<BTreeSet<_>>();
         all_cas_hashes.extend(locale_hashes.iter().cloned());
-        let system_relative =
-            artifact_database_path(context.build_version, locale, "veterinary_clinic_system.db");
-        let media_relative = artifact_database_path(
+        let system_relative = report::normalized_relative_path(&locale_artifact(
             context.build_version,
             locale,
-            "veterinary_clinic_system_media.db",
-        );
+            *DatabaseKind::System.identity(),
+        ))?;
+        let media_relative = report::normalized_relative_path(&locale_artifact(
+            context.build_version,
+            locale,
+            *DatabaseKind::SystemMedia.identity(),
+        ))?;
         let system_artifact = database_artifact(
             &system_path,
             system_relative.clone(),
@@ -181,7 +185,7 @@ fn build_in_staging(
     }
     for hash in &all_cas_hashes {
         let relative = format!(
-            "CAS/system/{}",
+            "{CAS_ROOT}/{}",
             report::normalized_relative_path(&cas_relative_path(hash)?)?
         );
         checksum_entries.insert(relative, hash.clone());
@@ -189,13 +193,16 @@ fn build_in_staging(
 
     let projection_report = projection_report(source, context, contracts, &finished_ledgers);
     schemas::validate_projection_report(&projection_report)?;
-    let projection_path = staging_version.join("projection-report.json");
+    let projection_path = staging_version.join(VersionArtifact::ProjectionReport.filename());
     let projection_bytes = report::write_json(&projection_path, &projection_report)?;
     let projection_checksum = sha256_hex(&projection_bytes);
-    let projection_relative = format!("versions/{}/projection-report.json", context.build_version);
+    let projection_relative = report::normalized_relative_path(&version_artifact(
+        context.build_version,
+        VersionArtifact::ProjectionReport,
+    ))?;
     checksum_entries.insert(projection_relative.clone(), projection_checksum.clone());
 
-    let checksum_path = staging_version.join("checksums.sha256");
+    let checksum_path = staging_version.join(VersionArtifact::Checksums.filename());
     let checksum_contents = checksum_entries
         .iter()
         .map(|(path, checksum)| format!("{checksum}  {path}\n"))
@@ -204,7 +211,7 @@ fn build_in_staging(
         .map_err(|error| format!("cannot write checksums.sha256: {error}"))?;
 
     let result = BuildResult {
-        schema_version: 1,
+        schema_version: BUILD_RESULT_SCHEMA_VERSION,
         builder_version: env!("CARGO_PKG_VERSION").to_string(),
         build_version: context.build_version,
         release: context.release.clone(),
@@ -213,11 +220,11 @@ fn build_in_staging(
         system_media_schema_version: SYSTEM_MEDIA_SCHEMA_VERSION,
         locales: locale_artifacts,
         cas: CasResult {
-            algorithm: "sha256".to_string(),
-            hash_encoding: "lowercase_hex".to_string(),
-            root: "CAS/system".to_string(),
-            layout: "sha256_hex_2_2_bin".to_string(),
-            path_pattern: "{hash[0..2]}/{hash[2..4]}/{hash}.bin".to_string(),
+            algorithm: CAS_ALGORITHM.to_string(),
+            hash_encoding: CAS_HASH_ENCODING.to_string(),
+            root: CAS_ROOT.to_string(),
+            layout: CAS_LAYOUT.to_string(),
+            path_pattern: CAS_PATH_PATTERN.to_string(),
             object_count: all_cas_hashes.len(),
             set_digest_sha256: set_digest(&all_cas_hashes),
         },
@@ -225,10 +232,16 @@ fn build_in_staging(
             report_path: projection_relative,
             checksum_sha256: projection_checksum,
         },
-        checksum_file: format!("versions/{}/checksums.sha256", context.build_version),
+        checksum_file: report::normalized_relative_path(&version_artifact(
+            context.build_version,
+            VersionArtifact::Checksums,
+        ))?,
     };
     schemas::validate_build_result(&result)?;
-    report::write_json(&staging_version.join("build-result.json"), &result)?;
+    report::write_json(
+        &staging_version.join(VersionArtifact::BuildResult.filename()),
+        &result,
+    )?;
     ArtifactVerifier::new(
         source,
         context,

@@ -8,7 +8,9 @@ use super::{
     ObligationClass, ProjectionObligation, ProjectionOperationId, ProjectionTarget, SourceToken,
     SystemColumn, SystemTable,
 };
-use crate::{databases::DatabaseKind, source::KnowledgeLocale, validation::ValidatedSource};
+use crate::{
+    contracts::locale::KnowledgeLocale, databases::DatabaseKind, validation::ValidatedSource,
+};
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, Debug)]

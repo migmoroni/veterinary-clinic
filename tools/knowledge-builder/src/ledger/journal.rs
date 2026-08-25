@@ -5,7 +5,7 @@ use super::{
     evidence_digest, EntityIdentity, ObligationClass, ProjectionObligation, ProjectionTarget,
     RowEvent, SourceToken,
 };
-use crate::source::KnowledgeLocale;
+use crate::contracts::locale::KnowledgeLocale;
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, Debug, Default)]

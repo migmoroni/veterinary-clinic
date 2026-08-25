@@ -7,8 +7,9 @@ use super::{
     ProjectionTarget, SourceToken, SystemColumn, SystemTable,
 };
 use crate::{
+    contracts::locale::KnowledgeLocale,
     databases::DatabaseKind,
-    source::{CanonicalEntity, KnowledgeLocale, LocalizedContent, StructuralMedia},
+    source::{CanonicalEntity, LocalizedContent, StructuralMedia},
     validation::{ValidatedEntity, ValidatedSource},
 };
 

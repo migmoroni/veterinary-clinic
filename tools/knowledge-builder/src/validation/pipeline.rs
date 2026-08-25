@@ -70,6 +70,7 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
     }
 
     let taxonomies = collect_taxonomies(&entries, &mut diagnostics);
+    validate_taxonomy_completeness(&source_root, &taxonomies, &mut diagnostics);
     validate_references(&entries, &taxonomies, &mut diagnostics);
     validate_alias_ownership(&entries, &taxonomies, &mut diagnostics);
 
