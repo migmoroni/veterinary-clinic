@@ -54,6 +54,7 @@ impl ProjectionContract {
         if ownership != self.expected_obligations {
             return Err("operation obligations do not equal expected obligations".to_string());
         }
+        validate_universal_taxonomies(&self.system)?;
         let localized = self
             .expected_obligations
             .iter()
@@ -69,6 +70,142 @@ impl ProjectionContract {
         }
         Ok(())
     }
+}
+
+fn validate_universal_taxonomies(operations: &[SystemProjectionOperation]) -> Result<(), String> {
+    let allowed = BTreeSet::from([
+        ("breed", "size"),
+        ("manufacturer", "type"),
+        ("manufacturer", "classification"),
+        ("active_ingredient", "type"),
+        ("active_ingredient", "classification"),
+        ("condition", "type"),
+        ("condition", "classification"),
+        ("product", "type"),
+        ("product", "classification"),
+        ("product", "target"),
+        ("product", "vaccine_profile"),
+        ("product", "life_stage"),
+        ("product", "therapeutic_scope"),
+    ]);
+    let mut registries = BTreeMap::<&str, (&str, &str)>::new();
+    let mut terms = BTreeSet::<(&str, &str)>::new();
+    let mut entities = BTreeSet::<(&str, &str)>::new();
+    for operation in operations {
+        match &operation.row {
+            SystemRow::TaxonomyRegistry {
+                id,
+                domain,
+                purpose,
+            } => {
+                if !allowed.contains(&(domain.as_str(), purpose.as_str())) {
+                    return Err(format!(
+                        "unsupported taxonomy domain and purpose {domain}:{purpose}"
+                    ));
+                }
+                if registries
+                    .insert(id, (domain.as_str(), purpose.as_str()))
+                    .is_some()
+                {
+                    return Err(format!("duplicate taxonomy registry id {id}"));
+                }
+            }
+            SystemRow::TaxonomyTerm {
+                taxonomy_id,
+                term_key,
+                ..
+            } if !terms.insert((taxonomy_id, term_key)) => {
+                return Err(format!("duplicate taxonomy term {taxonomy_id}/{term_key}"));
+            }
+            SystemRow::TaxonomyTerm { .. } => {}
+            SystemRow::Breed { id, .. } => {
+                entities.insert(("breed", id));
+            }
+            SystemRow::Manufacturer { id, .. } => {
+                entities.insert(("manufacturer", id));
+            }
+            SystemRow::ActiveIngredient { id, .. } => {
+                entities.insert(("active_ingredient", id));
+            }
+            SystemRow::Condition { id, .. } => {
+                entities.insert(("condition", id));
+            }
+            SystemRow::Product { id, .. } => {
+                entities.insert(("product", id));
+            }
+            _ => {}
+        }
+    }
+
+    let mut positions = BTreeSet::new();
+    let mut counts = BTreeMap::<(&str, &str, &str), usize>::new();
+    for operation in operations {
+        let SystemRow::EntityTaxonomy {
+            entity_type,
+            entity_id,
+            taxonomy_id,
+            term_key,
+            sort_order,
+        } = &operation.row
+        else {
+            continue;
+        };
+        if !entities.contains(&(entity_type.as_str(), entity_id.as_str())) {
+            return Err(format!(
+                "taxonomy relation has no projected {entity_type} entity {entity_id}"
+            ));
+        }
+        let (domain, purpose) = registries
+            .get(taxonomy_id.as_str())
+            .copied()
+            .ok_or_else(|| {
+                format!("taxonomy relation references unknown taxonomy {taxonomy_id}")
+            })?;
+        if domain != entity_type {
+            return Err(format!(
+                "taxonomy {taxonomy_id} domain {domain} is incompatible with {entity_type}"
+            ));
+        }
+        if !allowed.contains(&(entity_type.as_str(), purpose)) {
+            return Err(format!(
+                "taxonomy purpose {purpose} is incompatible with {entity_type}"
+            ));
+        }
+        if !terms.contains(&(taxonomy_id.as_str(), term_key.as_str())) {
+            return Err(format!(
+                "taxonomy relation references foreign or missing term {taxonomy_id}/{term_key}"
+            ));
+        }
+        if !positions.insert((
+            entity_type.as_str(),
+            entity_id.as_str(),
+            taxonomy_id.as_str(),
+            *sort_order,
+        )) {
+            return Err(format!(
+                "taxonomy relation repeats sort order for {entity_type}/{entity_id}/{taxonomy_id}"
+            ));
+        }
+        *counts.entry((entity_type, entity_id, purpose)).or_default() += 1;
+    }
+
+    for (entity_type, entity_id) in entities {
+        let required_purpose = if entity_type == "breed" {
+            "size"
+        } else {
+            "type"
+        };
+        let count = counts
+            .get(&(entity_type, entity_id, required_purpose))
+            .copied()
+            .unwrap_or_default();
+        if count != 1 {
+            return Err(format!(
+                "{entity_type}/{entity_id} requires exactly one {required_purpose} taxonomy relation"
+            ));
+        }
+    }
+    Ok(())
 }
 
 pub(super) fn validate_operation_registration(
@@ -241,7 +378,6 @@ pub(super) fn validate_system_operation(
                     false
                 }
                 SystemRow::TaxonomyTerm {
-                    table,
                     taxonomy_id,
                     term_key,
                     parent_term_key,
@@ -251,7 +387,6 @@ pub(super) fn validate_system_operation(
                     sort_order,
                 } => {
                     let _ = (
-                        table,
                         taxonomy_id,
                         term_key,
                         parent_term_key,
@@ -292,7 +427,6 @@ pub(super) fn validate_system_operation(
                     name,
                     normalized_name,
                     aliases_json,
-                    size_term_key,
                     average_weight_kg_json,
                     average_height_cm_json,
                     content_json,
@@ -303,7 +437,6 @@ pub(super) fn validate_system_operation(
                         name,
                         normalized_name,
                         aliases_json,
-                        size_term_key,
                         average_weight_kg_json,
                         average_height_cm_json,
                         content_json,
@@ -320,7 +453,6 @@ pub(super) fn validate_system_operation(
                 }
                 SystemRow::Manufacturer {
                     id,
-                    type_term_key,
                     name,
                     normalized_name,
                     aliases_json,
@@ -330,7 +462,6 @@ pub(super) fn validate_system_operation(
                 } => {
                     let _ = (
                         id,
-                        type_term_key,
                         name,
                         normalized_name,
                         aliases_json,
@@ -342,7 +473,6 @@ pub(super) fn validate_system_operation(
                 }
                 SystemRow::ActiveIngredient {
                     id,
-                    type_term_key,
                     name,
                     normalized_name,
                     aliases_json,
@@ -355,7 +485,6 @@ pub(super) fn validate_system_operation(
                 } => {
                     let _ = (
                         id,
-                        type_term_key,
                         name,
                         normalized_name,
                         aliases_json,
@@ -370,7 +499,6 @@ pub(super) fn validate_system_operation(
                 }
                 SystemRow::Condition {
                     id,
-                    type_term_key,
                     name,
                     normalized_name,
                     aliases_json,
@@ -379,7 +507,6 @@ pub(super) fn validate_system_operation(
                 } => {
                     let _ = (
                         id,
-                        type_term_key,
                         name,
                         normalized_name,
                         aliases_json,
@@ -390,7 +517,6 @@ pub(super) fn validate_system_operation(
                 }
                 SystemRow::Product {
                     id,
-                    type_term_key,
                     name,
                     normalized_name,
                     species_json,
@@ -405,7 +531,6 @@ pub(super) fn validate_system_operation(
                 } => {
                     let _ = (
                         id,
-                        type_term_key,
                         name,
                         normalized_name,
                         species_json,
@@ -425,17 +550,9 @@ pub(super) fn validate_system_operation(
                     entity_id,
                     taxonomy_id,
                     term_key,
-                    relation_kind,
                     sort_order,
                 } => {
-                    let _ = (
-                        entity_type,
-                        entity_id,
-                        taxonomy_id,
-                        term_key,
-                        relation_kind,
-                        sort_order,
-                    );
+                    let _ = (entity_type, entity_id, taxonomy_id, term_key, sort_order);
                     false
                 }
                 SystemRow::ProductActiveIngredient {
@@ -444,15 +561,6 @@ pub(super) fn validate_system_operation(
                     sort_order,
                 } => {
                     let _ = (product_id, active_ingredient_id, sort_order);
-                    false
-                }
-                SystemRow::ProductTerm {
-                    table,
-                    product_id,
-                    term_key,
-                    sort_order,
-                } => {
-                    let _ = (table, product_id, term_key, sort_order);
                     false
                 }
                 SystemRow::TreatmentProtocol {

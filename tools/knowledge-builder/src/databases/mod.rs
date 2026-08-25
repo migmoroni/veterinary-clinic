@@ -5,7 +5,7 @@ use crate::{media::sha256_hex, report::BuildContext, source::KnowledgeLocale};
 use rusqlite::Connection;
 use std::{fs, path::Path};
 
-pub const SYSTEM_SCHEMA_VERSION: u32 = 2;
+pub const SYSTEM_SCHEMA_VERSION: u32 = 3;
 pub const SYSTEM_MEDIA_SCHEMA_VERSION: u32 = 2;
 pub const SYSTEM_DDL: &str = include_str!("../../schemas/system/system.sql");
 pub const SYSTEM_MEDIA_DDL: &str = include_str!("../../schemas/system_media/system_media.sql");
@@ -135,6 +135,18 @@ pub fn verify_contract(
             path.display()
         ));
     }
+    let actual_fingerprint = schema_fingerprint(connection)?;
+    let expected_fingerprint = canonical_schema_fingerprint(kind)?;
+    if actual_fingerprint != expected_fingerprint {
+        return Err(format!(
+            "SQLite physical schema differs from the canonical {} contract for {}",
+            match kind {
+                DatabaseKind::System => "system",
+                DatabaseKind::SystemMedia => "system_media",
+            },
+            path.display()
+        ));
+    }
     let metadata = connection.query_row(
         "SELECT build_version, builder_version, build_result_schema_version, source_digest_sha256, locale FROM knowledge_build_metadata",
         [],
@@ -193,6 +205,19 @@ pub fn verify_contract(
         }
     }
     Ok(())
+}
+
+fn canonical_schema_fingerprint(kind: DatabaseKind) -> Result<String, String> {
+    let connection = Connection::open_in_memory()
+        .map_err(|error| format!("cannot open canonical schema database: {error}"))?;
+    connection
+        .execute_batch(&format!(
+            "PRAGMA foreign_keys=ON;\nPRAGMA user_version={};\n{}",
+            kind.schema_version(),
+            kind.ddl()
+        ))
+        .map_err(|error| format!("cannot initialize canonical schema fingerprint: {error}"))?;
+    schema_fingerprint(&connection)
 }
 
 pub fn schema_fingerprint(connection: &Connection) -> Result<String, String> {

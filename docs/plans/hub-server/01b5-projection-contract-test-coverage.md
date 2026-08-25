@@ -317,4 +317,4 @@ Escrever no presente e descrever somente o contrato vigente.
 ## Próxima Parte
 
 Após cumprir todos os critérios, seguir para a
-[Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md).
+[Parte 1B.6: projeção taxonômica universal](./01b6-universal-taxonomy-projection.md).

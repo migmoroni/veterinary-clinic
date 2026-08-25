@@ -145,7 +145,7 @@ pub(crate) fn owned_obligations(
         }
     }
     for entry in &source.entities {
-        add_entity_obligations(&mut expected, entry, locale)?;
+        add_entity_obligations(&mut expected, source, entry, locale)?;
     }
     for candidate in search_candidates(source, locale)? {
         let class = if matches!(candidate.source, SourceToken::LocalizedValue { .. }) {

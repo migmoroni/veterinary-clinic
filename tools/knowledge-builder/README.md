@@ -213,7 +213,7 @@ daquela operação, e as evidências SQLite entram no ledger somente depois do
 Colunas projetáveis usam o enum fechado `SystemColumn`. Cada forma de
 `SystemRow` declara tabela, identidade lógica e colunas materializadas. Os SQLs
 dos writers também são fixos: uma matriz estrutural cobre todas as formas de
-`INSERT`, todos os destinos polimórficos e todas as variantes de
+`INSERT`, todos os destinos fechados e todas as variantes de
 `SystemColumn`.
 
 ### 5. Escrita, Verificação E Publicação
@@ -274,7 +274,7 @@ flowchart LR
     subgraph LOCALE["Artefatos de um locale"]
         direction LR
 
-        subgraph SYSTEM["veterinary_clinic_system.db — 26 tabelas"]
+        subgraph SYSTEM["veterinary_clinic_system.db — 18 tabelas"]
             direction TB
 
             subgraph SYSTEM_META["Identidade do artefato"]
@@ -285,29 +285,21 @@ flowchart LR
             subgraph TAXONOMIES["Vocabulários e taxonomias"]
                 TR["taxonomy_registry<br/>PK id<br/>UQ domain + purpose"]
                 TT["taxonomy_terms<br/>PK taxonomy_id + term_key<br/>parent_term_key · label · aliases_json"]
-                PTT["product_target_terms<br/>PK term_key<br/>parent_term_key · label · aliases_json"]
-                PVPT["product_vaccine_profile_terms<br/>PK term_key<br/>parent_term_key · label · aliases_json"]
-                PLST["product_life_stage_terms<br/>PK term_key<br/>parent_term_key · label · aliases_json"]
-                PTST["product_therapeutic_scope_terms<br/>PK term_key<br/>parent_term_key · label · aliases_json"]
             end
 
             subgraph CATALOG["Entidades localizadas"]
                 GEO["geo_places<br/>PK id<br/>parent_place_id · name · coordinates"]
-                BREED["breed_reference_items<br/>PK id<br/>species_json · size_term_key · content_json"]
+                BREED["breed_reference_items<br/>PK id<br/>species_json · measurements · content_json"]
                 BOP["breed_origin_places<br/>PK breed_id + place_id<br/>sort_order"]
-                MFR["manufacturer_catalog_items<br/>PK id<br/>type_term_key · name · content_json"]
-                ING["active_ingredient_catalog_items<br/>PK id<br/>type_term_key · nomenclature · content_json"]
-                COND["condition_catalog_items<br/>PK id<br/>type_term_key · name · content_json"]
-                PROD["product_catalog_items<br/>PK id<br/>manufacturer_id · type_term_key · content_json"]
+                MFR["manufacturer_catalog_items<br/>PK id<br/>name · regions_json · content_json"]
+                ING["active_ingredient_catalog_items<br/>PK id<br/>name · nomenclature · content_json"]
+                COND["condition_catalog_items<br/>PK id<br/>name · regions_json · content_json"]
+                PROD["product_catalog_items<br/>PK id<br/>manufacturer_id · species_json · content_json"]
             end
 
             subgraph RELATIONS["Relações semânticas"]
-                ETT["entity_taxonomy_terms<br/>PK entity_type + entity_id + relation_kind + term_key<br/>taxonomy_id · sort_order"]
+                ETT["entity_taxonomy_terms<br/>PK entity_type + entity_id + taxonomy_id + term_key<br/>sort_order"]
                 PAI["product_active_ingredients<br/>PK product_id + active_ingredient_id<br/>sort_order"]
-                PT["product_targets<br/>PK product_id + term_key<br/>sort_order"]
-                PVP["product_vaccine_profiles<br/>PK product_id + term_key<br/>sort_order"]
-                PLS["product_life_stages<br/>PK product_id + term_key<br/>sort_order"]
-                PTS["product_therapeutic_scopes<br/>PK product_id + term_key<br/>sort_order"]
             end
 
             subgraph PROTOCOLS["Protocolos de tratamento"]
@@ -338,10 +330,6 @@ flowchart LR
 
     TR -->|"FK taxonomy_id"| TT
     TT -->|"FK parent term"| TT
-    PTT -->|"FK parent term"| PTT
-    PVPT -->|"FK parent term"| PVPT
-    PLST -->|"FK parent term"| PLST
-    PTST -->|"FK parent term"| PTST
 
     GEO -->|"FK parent_place_id"| GEO
     BREED -->|"FK breed_id"| BOP
@@ -351,14 +339,6 @@ flowchart LR
     TT -->|"FK taxonomy_id + term_key"| ETT
     PROD -->|"FK product_id"| PAI
     ING -->|"FK active_ingredient_id"| PAI
-    PROD -->|"FK product_id"| PT
-    PTT -->|"FK term_key"| PT
-    PROD -->|"FK product_id"| PVP
-    PVPT -->|"FK term_key"| PVP
-    PROD -->|"FK product_id"| PLS
-    PLST -->|"FK term_key"| PLS
-    PROD -->|"FK product_id"| PTS
-    PTST -->|"FK term_key"| PTS
 
     TP -->|"FK protocol_id"| TPI
     PROD -->|"FK product_id"| TPI
@@ -388,9 +368,9 @@ flowchart LR
     classDef storage fill:#e4f6f7,stroke:#2c7d82,color:#123235;
 
     class KBM,KRM,MKBM,MKRM metadata;
-    class TR,TT,PTT,PVPT,PLST,PTST taxonomy;
+    class TR,TT taxonomy;
     class GEO,BREED,MFR,ING,COND,PROD,TP catalog;
-    class BOP,ETT,PAI,PT,PVP,PLS,PTS,TPI,TPD,EST relation;
+    class BOP,ETT,PAI,TPI,TPD,EST relation;
     class EMR,MA media;
     class CAS storage;
 ```
@@ -401,6 +381,20 @@ Setas tracejadas representam contratos lógicos verificados pelo builder e pelo
 polimórficos, atravessarem bancos diferentes ou apontarem para arquivos CAS.
 Colunas `*_json` guardam atributos compostos do próprio registro; elas não
 representam tabelas ou relacionamentos ocultos.
+
+As 13 taxonomias canônicas usam exclusivamente `taxonomy_registry` e
+`taxonomy_terms`. Raças, fabricantes, princípios ativos, condições e produtos
+materializam porte, tipo, classificação, alvo, perfil vacinal, estágio de vida
+e escopo terapêutico somente em `entity_taxonomy_terms`. O par
+`domain + purpose` resolve o vocabulário; não existe uma coluna ou tabela
+paralela por propósito.
+
+`idx_entity_taxonomy_filter(taxonomy_id, term_key, entity_type, entity_id)`
+atende filtros e facetas que partem de um termo.
+`idx_entity_taxonomy_entity(entity_type, entity_id, taxonomy_id, sort_order)`
+atende a leitura ordenada de todas as taxonomias de uma entidade. Labels e
+aliases associados também alimentam `entity_search_terms`, que permanece o read
+model textual e não substitui a relação taxonômica.
 
 `build-result.json`
 
@@ -413,7 +407,7 @@ checksums. O formato atual usa `schemaVersion: 1`.
 Evidência agregada da compilação: entidades por tipo, relações, fragmentos
 localizados, linhas por banco e tabela, operações, obrigações esperadas e
 concluídas e digest de evidências por locale. O formato atual usa
-`schemaVersion: 3`.
+`schemaVersion: 4`.
 
 `checksums.sha256`
 
@@ -423,13 +417,16 @@ declarados pela versão.
 `veterinary_clinic_system.db`
 
 Catálogo localizado de entidades, taxonomias, relações, protocolos, busca e
-referências estruturais de mídia. O schema atual possui versão técnica 2.
+referências estruturais de mídia. O schema atual possui versão técnica 3.
 
 `veterinary_clinic_system_media.db`
 
 Índice localizado dos ativos, hashes, propriedades das fontes e thumbnails
 JPEG. O schema atual possui versão técnica 2; os bytes originais permanecem no
 CAS compartilhado.
+
+O crate `knowledge-builder` usa versão `0.3.0`. O relatório usa
+`schemaVersion: 4`; `build-result.json` permanece em `schemaVersion: 1`.
 
 ## Determinismo E Reutilização
 

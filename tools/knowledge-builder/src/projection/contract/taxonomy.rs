@@ -24,7 +24,6 @@ pub(super) fn project_taxonomies(
             taxonomy.id.clone(),
             Some(identity(&entry.source.entity)),
         )?;
-        let table = semantic_term_table(&taxonomy.purpose);
         for term in &taxonomy.terms {
             let crate::source::TaxonomyTerm {
                 key,
@@ -33,17 +32,12 @@ pub(super) fn project_taxonomies(
                 localized_content,
             } = term;
             let label = localized_text(localized_content, "label", locale)?.to_string();
-            let row_id = if table == SystemTable::TaxonomyTerms {
-                format!("{}/{}", taxonomy.id, key)
-            } else {
-                key.clone()
-            };
+            let row_id = format!("{}/{}", taxonomy.id, key);
             push_system(
                 operations,
                 claims,
                 SystemRow::TaxonomyTerm {
-                    table,
-                    taxonomy_id: (table == SystemTable::TaxonomyTerms).then(|| taxonomy.id.clone()),
+                    taxonomy_id: taxonomy.id.clone(),
                     term_key: key.clone(),
                     parent_term_key: parent_key.clone(),
                     normalized_label: normalize_search_text(&label),
@@ -54,7 +48,7 @@ pub(super) fn project_taxonomies(
                     sort_order: usize::try_from(*order)
                         .map_err(|_| "taxonomy sort order exceeds usize".to_string())?,
                 },
-                table,
+                SystemTable::TaxonomyTerms,
                 row_id.clone(),
                 Some(identity(&entry.source.entity)),
             )?;

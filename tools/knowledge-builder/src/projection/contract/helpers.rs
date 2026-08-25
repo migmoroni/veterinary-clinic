@@ -7,31 +7,17 @@ pub(super) fn taxonomy_relations(
     operations: &mut Vec<SystemProjectionOperation>,
     claims: &mut ObligationOwnership,
     entity: &EntityIdentity,
-    type_key: Option<&String>,
-    classifications: &[String],
-    size_key: Option<&String>,
+    relations: &[(&str, &[String])],
 ) -> Result<(), String> {
-    for (purpose, relation_kind, values) in [
-        (
-            "type",
-            "type",
-            type_key.map(std::slice::from_ref).unwrap_or(&[]),
-        ),
-        ("classification", "classification", classifications),
-        (
-            "size",
-            "size",
-            size_key.map(std::slice::from_ref).unwrap_or(&[]),
-        ),
-    ] {
+    for (purpose, values) in relations {
         if values.is_empty() {
             continue;
         }
         let taxonomy = taxonomy_for(source, &entity.entity_type, purpose)?;
         for (sort_order, term_key) in values.iter().enumerate() {
             let row_id = format!(
-                "{}/{}/{relation_kind}/{term_key}",
-                entity.entity_type, entity.id
+                "{}/{}/{}/{term_key}",
+                entity.entity_type, entity.id, taxonomy.id
             );
             push_system(
                 operations,
@@ -41,7 +27,6 @@ pub(super) fn taxonomy_relations(
                     entity_id: entity.id.clone(),
                     taxonomy_id: taxonomy.id.clone(),
                     term_key: term_key.clone(),
-                    relation_kind: relation_kind.to_string(),
                     sort_order,
                 },
                 SystemTable::EntityTaxonomyTerms,
@@ -167,16 +152,6 @@ pub(super) fn taxonomy_for<'a>(
         .taxonomies
         .get(&(domain.to_string(), purpose.to_string()))
         .ok_or_else(|| format!("missing taxonomy {domain}:{purpose}"))
-}
-
-pub(super) fn semantic_term_table(purpose: &str) -> SystemTable {
-    match purpose {
-        "target" => SystemTable::ProductTargetTerms,
-        "vaccine_profile" => SystemTable::ProductVaccineProfileTerms,
-        "life_stage" => SystemTable::ProductLifeStageTerms,
-        "therapeutic_scope" => SystemTable::ProductTherapeuticScopeTerms,
-        _ => SystemTable::TaxonomyTerms,
-    }
 }
 
 pub(super) fn localized_text<'a>(

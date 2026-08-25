@@ -7,6 +7,31 @@ pub(super) fn validate_taxonomy(
     taxonomy: &TaxonomyEntity,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
+    const ALLOWED: [(&str, &str); 13] = [
+        ("breed", "size"),
+        ("manufacturer", "type"),
+        ("manufacturer", "classification"),
+        ("active_ingredient", "type"),
+        ("active_ingredient", "classification"),
+        ("condition", "type"),
+        ("condition", "classification"),
+        ("product", "type"),
+        ("product", "classification"),
+        ("product", "target"),
+        ("product", "vaccine_profile"),
+        ("product", "life_stage"),
+        ("product", "therapeutic_scope"),
+    ];
+    if !ALLOWED.contains(&(taxonomy.domain.as_str(), taxonomy.purpose.as_str())) {
+        diagnostics.push(Diagnostic::entity(
+            entry,
+            "purpose",
+            format!(
+                "unsupported taxonomy domain and purpose {}:{}",
+                taxonomy.domain, taxonomy.purpose
+            ),
+        ));
+    }
     if taxonomy.purpose.contains("search") {
         diagnostics.push(Diagnostic::entity(
             entry,

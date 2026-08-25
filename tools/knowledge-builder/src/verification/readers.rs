@@ -147,18 +147,7 @@ fn read_system_rows(connection: &Connection) -> Result<SystemRows, String> {
             },
         )?,
     );
-    result.insert(
-        SystemTable::TaxonomyTerms,
-        read_taxonomy_terms(connection, SystemTable::TaxonomyTerms)?,
-    );
-    for table in [
-        SystemTable::ProductTargetTerms,
-        SystemTable::ProductVaccineProfileTerms,
-        SystemTable::ProductLifeStageTerms,
-        SystemTable::ProductTherapeuticScopeTerms,
-    ] {
-        result.insert(table, read_taxonomy_terms(connection, table)?);
-    }
+    result.insert(SystemTable::TaxonomyTerms, read_taxonomy_terms(connection)?);
     result.insert(SystemTable::GeoPlaces, query(connection,
         "SELECT id, place_type, parent_place_id, country_codes_json, latitude, longitude, name, normalized_name, aliases_json FROM geo_places ORDER BY id", |row| {
             let id: String = row.get(0)?;
@@ -167,11 +156,11 @@ fn read_system_rows(connection: &Connection) -> Result<SystemRows, String> {
                 normalized_name: row.get(7)?, aliases_json: row.get(8)? }))
         })?);
     result.insert(SystemTable::BreedReferenceItems, query(connection,
-        "SELECT id, species_json, name, normalized_name, aliases_json, size_term_key, average_weight_kg_json, average_height_cm_json, content_json FROM breed_reference_items ORDER BY id", |row| {
+        "SELECT id, species_json, name, normalized_name, aliases_json, average_weight_kg_json, average_height_cm_json, content_json FROM breed_reference_items ORDER BY id", |row| {
             let id: String = row.get(0)?;
             Ok((id.clone(), SystemRow::Breed { id, species_json: row.get(1)?, name: row.get(2)?, normalized_name: row.get(3)?,
-                aliases_json: row.get(4)?, size_term_key: row.get(5)?, average_weight_kg_json: row.get(6)?,
-                average_height_cm_json: row.get(7)?, content_json: row.get(8)? }))
+                aliases_json: row.get(4)?, average_weight_kg_json: row.get(5)?,
+                average_height_cm_json: row.get(6)?, content_json: row.get(7)? }))
         })?);
     result.insert(SystemTable::BreedOriginPlaces, query(connection,
         "SELECT breed_id, place_id, sort_order FROM breed_origin_places ORDER BY breed_id, sort_order", |row| {
@@ -179,51 +168,43 @@ fn read_system_rows(connection: &Connection) -> Result<SystemRows, String> {
             Ok((format!("{breed_id}/{place_id}"), SystemRow::BreedOrigin { breed_id, place_id, sort_order: row.get(2)? }))
         })?);
     result.insert(SystemTable::ManufacturerCatalogItems, query(connection,
-        "SELECT id, type_term_key, name, normalized_name, aliases_json, regions_json, website, content_json FROM manufacturer_catalog_items ORDER BY id", |row| {
+        "SELECT id, name, normalized_name, aliases_json, regions_json, website, content_json FROM manufacturer_catalog_items ORDER BY id", |row| {
             let id: String = row.get(0)?;
-            Ok((id.clone(), SystemRow::Manufacturer { id, type_term_key: row.get(1)?, name: row.get(2)?, normalized_name: row.get(3)?,
-                aliases_json: row.get(4)?, regions_json: row.get(5)?, website: row.get(6)?, content_json: row.get(7)? }))
+            Ok((id.clone(), SystemRow::Manufacturer { id, name: row.get(1)?, normalized_name: row.get(2)?,
+                aliases_json: row.get(3)?, regions_json: row.get(4)?, website: row.get(5)?, content_json: row.get(6)? }))
         })?);
     result.insert(SystemTable::ActiveIngredientCatalogItems, query(connection,
-        "SELECT id, type_term_key, name, normalized_name, aliases_json, regions_json, nomenclature_json, atc_vet_code, atc_vet_system, denominations_json, content_json FROM active_ingredient_catalog_items ORDER BY id", |row| {
+        "SELECT id, name, normalized_name, aliases_json, regions_json, nomenclature_json, atc_vet_code, atc_vet_system, denominations_json, content_json FROM active_ingredient_catalog_items ORDER BY id", |row| {
             let id: String = row.get(0)?;
-            Ok((id.clone(), SystemRow::ActiveIngredient { id, type_term_key: row.get(1)?, name: row.get(2)?, normalized_name: row.get(3)?,
-                aliases_json: row.get(4)?, regions_json: row.get(5)?, nomenclature_json: row.get(6)?, atc_vet_code: row.get(7)?,
-                atc_vet_system: row.get(8)?, denominations_json: row.get(9)?, content_json: row.get(10)? }))
+            Ok((id.clone(), SystemRow::ActiveIngredient { id, name: row.get(1)?, normalized_name: row.get(2)?,
+                aliases_json: row.get(3)?, regions_json: row.get(4)?, nomenclature_json: row.get(5)?, atc_vet_code: row.get(6)?,
+                atc_vet_system: row.get(7)?, denominations_json: row.get(8)?, content_json: row.get(9)? }))
         })?);
     result.insert(SystemTable::ConditionCatalogItems, query(connection,
-        "SELECT id, type_term_key, name, normalized_name, aliases_json, regions_json, content_json FROM condition_catalog_items ORDER BY id", |row| {
+        "SELECT id, name, normalized_name, aliases_json, regions_json, content_json FROM condition_catalog_items ORDER BY id", |row| {
             let id: String = row.get(0)?;
-            Ok((id.clone(), SystemRow::Condition { id, type_term_key: row.get(1)?, name: row.get(2)?, normalized_name: row.get(3)?,
-                aliases_json: row.get(4)?, regions_json: row.get(5)?, content_json: row.get(6)? }))
+            Ok((id.clone(), SystemRow::Condition { id, name: row.get(1)?, normalized_name: row.get(2)?,
+                aliases_json: row.get(3)?, regions_json: row.get(4)?, content_json: row.get(5)? }))
         })?);
     result.insert(SystemTable::ProductCatalogItems, query(connection,
-        "SELECT id, type_term_key, name, normalized_name, species_json, aliases_json, manufacturer_id, regions_json, regulatory_identifiers_json, commercial_line, presentation_dosage, target_species_warnings_json, content_json FROM product_catalog_items ORDER BY id", |row| {
+        "SELECT id, name, normalized_name, species_json, aliases_json, manufacturer_id, regions_json, regulatory_identifiers_json, commercial_line, presentation_dosage, target_species_warnings_json, content_json FROM product_catalog_items ORDER BY id", |row| {
             let id: String = row.get(0)?;
-            Ok((id.clone(), SystemRow::Product { id, type_term_key: row.get(1)?, name: row.get(2)?, normalized_name: row.get(3)?,
-                species_json: row.get(4)?, aliases_json: row.get(5)?, manufacturer_id: row.get(6)?, regions_json: row.get(7)?,
-                regulatory_identifiers_json: row.get(8)?, commercial_line: row.get(9)?, presentation_dosage: row.get(10)?,
-                target_species_warnings_json: row.get(11)?, content_json: row.get(12)? }))
+            Ok((id.clone(), SystemRow::Product { id, name: row.get(1)?, normalized_name: row.get(2)?,
+                species_json: row.get(3)?, aliases_json: row.get(4)?, manufacturer_id: row.get(5)?, regions_json: row.get(6)?,
+                regulatory_identifiers_json: row.get(7)?, commercial_line: row.get(8)?, presentation_dosage: row.get(9)?,
+                target_species_warnings_json: row.get(10)?, content_json: row.get(11)? }))
         })?);
     result.insert(SystemTable::EntityTaxonomyTerms, query(connection,
-        "SELECT entity_type, entity_id, taxonomy_id, term_key, relation_kind, sort_order FROM entity_taxonomy_terms ORDER BY entity_type, entity_id, relation_kind, sort_order", |row| {
-            let entity_type: String = row.get(0)?; let entity_id: String = row.get(1)?; let term_key: String = row.get(3)?; let relation_kind: String = row.get(4)?;
-            let key = format!("{entity_type}/{entity_id}/{relation_kind}/{term_key}");
-            Ok((key, SystemRow::EntityTaxonomy { entity_type, entity_id, taxonomy_id: row.get(2)?, term_key, relation_kind, sort_order: row.get(5)? }))
+        "SELECT entity_type, entity_id, taxonomy_id, term_key, sort_order FROM entity_taxonomy_terms ORDER BY entity_type, entity_id, taxonomy_id, sort_order", |row| {
+            let entity_type: String = row.get(0)?; let entity_id: String = row.get(1)?; let taxonomy_id: String = row.get(2)?; let term_key: String = row.get(3)?;
+            let key = format!("{entity_type}/{entity_id}/{taxonomy_id}/{term_key}");
+            Ok((key, SystemRow::EntityTaxonomy { entity_type, entity_id, taxonomy_id, term_key, sort_order: row.get(4)? }))
         })?);
     result.insert(SystemTable::ProductActiveIngredients, query(connection,
         "SELECT product_id, active_ingredient_id, sort_order FROM product_active_ingredients ORDER BY product_id, sort_order", |row| {
             let product_id: String = row.get(0)?; let active_ingredient_id: String = row.get(1)?;
             Ok((format!("{product_id}/{active_ingredient_id}"), SystemRow::ProductActiveIngredient { product_id, active_ingredient_id, sort_order: row.get(2)? }))
         })?);
-    for table in [
-        SystemTable::ProductTargets,
-        SystemTable::ProductVaccineProfiles,
-        SystemTable::ProductLifeStages,
-        SystemTable::ProductTherapeuticScopes,
-    ] {
-        result.insert(table, read_product_terms(connection, table)?);
-    }
     result.insert(SystemTable::TreatmentProtocols, query(connection,
         "SELECT id, kind, name, normalized_name, species_json, observation FROM treatment_protocols ORDER BY id", |row| {
             let id: String = row.get(0)?;
@@ -256,50 +237,12 @@ fn read_system_rows(connection: &Connection) -> Result<SystemRows, String> {
     Ok(result)
 }
 
-fn read_taxonomy_terms(
-    connection: &Connection,
-    table: SystemTable,
-) -> Result<BTreeMap<String, SystemRow>, String> {
-    if table == SystemTable::TaxonomyTerms {
-        query(connection, "SELECT taxonomy_id, term_key, parent_term_key, label, normalized_label, aliases_json, sort_order FROM taxonomy_terms ORDER BY taxonomy_id, sort_order", |row| {
+fn read_taxonomy_terms(connection: &Connection) -> Result<BTreeMap<String, SystemRow>, String> {
+    query(connection, "SELECT taxonomy_id, term_key, parent_term_key, label, normalized_label, aliases_json, sort_order FROM taxonomy_terms ORDER BY taxonomy_id, sort_order", |row| {
             let taxonomy_id: String = row.get(0)?; let term_key: String = row.get(1)?;
-            Ok((format!("{taxonomy_id}/{term_key}"), SystemRow::TaxonomyTerm { table, taxonomy_id: Some(taxonomy_id), term_key,
+            Ok((format!("{taxonomy_id}/{term_key}"), SystemRow::TaxonomyTerm { taxonomy_id, term_key,
                 parent_term_key: row.get(2)?, label: row.get(3)?, normalized_label: row.get(4)?, aliases_json: row.get(5)?, sort_order: row.get(6)? }))
         })
-    } else {
-        let name = table.as_str();
-        query(connection, &format!("SELECT term_key, parent_term_key, label, normalized_label, aliases_json, sort_order FROM {name} ORDER BY sort_order"), |row| {
-            let term_key: String = row.get(0)?;
-            Ok((term_key.clone(), SystemRow::TaxonomyTerm { table, taxonomy_id: None, term_key,
-                parent_term_key: row.get(1)?, label: row.get(2)?, normalized_label: row.get(3)?, aliases_json: row.get(4)?, sort_order: row.get(5)? }))
-        })
-    }
-}
-
-fn read_product_terms(
-    connection: &Connection,
-    table: SystemTable,
-) -> Result<BTreeMap<String, SystemRow>, String> {
-    query(
-        connection,
-        &format!(
-            "SELECT product_id, term_key, sort_order FROM {} ORDER BY product_id, sort_order",
-            table.as_str()
-        ),
-        |row| {
-            let product_id: String = row.get(0)?;
-            let term_key: String = row.get(1)?;
-            Ok((
-                format!("{product_id}/{term_key}"),
-                SystemRow::ProductTerm {
-                    table,
-                    product_id,
-                    term_key,
-                    sort_order: row.get(2)?,
-                },
-            ))
-        },
-    )
 }
 
 fn read_media_rows(connection: &Connection) -> Result<BTreeMap<String, SystemMediaRow>, String> {

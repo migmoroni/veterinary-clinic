@@ -21,11 +21,11 @@ saída preparada.
 
 ## Pré-requisito
 
-A [Parte 1B.5](./01b5-projection-contract-test-coverage.md) está concluída e gera
-uma `build_version` válida com os seis pares de bancos, o CAS compartilhado,
+A [Parte 1B.6](./01b6-universal-taxonomy-projection.md) está concluída e gera uma
+`build_version` válida com os seis pares de bancos, o CAS compartilhado,
 propriedade operacional explícita das evidências, disposição fechada, cobertura
-exaustiva dos contratos de persistência e equivalência semântica entre a fonte
-validada e os artefatos.
+exaustiva dos contratos de persistência, equivalência semântica e uma projeção
+taxonômica universal para todos os domínios de conhecimento.
 
 ## Escopo
 
@@ -36,8 +36,8 @@ validada e os artefatos.
 - adaptar contratos, repositories e serviços aos campos localizados dos bancos;
 - preservar a resolução N:N entre produtos e princípios ativos e os links para
   as entidades farmacológicas relacionadas;
-- consumir alvos, perfis vacinais, estágios de vida e escopos terapêuticos pelas
-  relações N:N tipadas do produto;
+- consumir tipos, classificações, portes, alvos, perfis vacinais, estágios de
+  vida e escopos terapêuticos por `entity_taxonomy_terms`;
 - fazer buscas usarem nomes e aliases armazenados em `system`;
 - retirar chaves de i18n dos modelos de conhecimento;
 - retirar conteúdo de conhecimento dos arquivos de i18n do app;
@@ -625,8 +625,8 @@ APIs de consulta de conhecimento nem o formato físico do CAS local.
 7. Adaptar a leitura de `system_media` de `blobs` para `media_assets` por
    `mediaKey`.
 8. Adaptar repositories e DTOs aos campos resolvidos.
-9. Adaptar módulos, buscas, filtros e consumidores às relações tipadas de
-   produtos.
+9. Adaptar módulos, buscas, filtros e consumidores à relação taxonômica
+   universal.
 10. Implementar a troca recuperável de locale e invalidação de caches.
 11. Remover o conteúdo de conhecimento do i18n.
 12. Remover defaults, agregadores, seeds e produção de sistema substituídos em
@@ -667,9 +667,12 @@ Cobrir:
 - nomes, aliases, descrições e taxonomias corretos por locale;
 - produtos resolvendo seus princípios ativos pela relação N:N, na ordem
   declarada;
-- produtos resolvendo alvos, perfis vacinais, estágios de vida e escopos
-  terapêuticos exclusivamente por suas quatro relações N:N;
-- recusa de associação com termo pertencente a outro vocabulário de produto;
+- raças, fabricantes, princípios ativos, condições e produtos resolvendo suas
+  taxonomias exclusivamente por `entity_taxonomy_terms`;
+- produtos resolvendo tipos, classificações, alvos, perfis vacinais, estágios de
+  vida e escopos terapêuticos pelo propósito da taxonomia associada;
+- recusa de associação com termo pertencente a outro domínio, propósito ou
+  vocabulário;
 - navegação do produto para cada página de princípio ativo relacionado;
 - busca de produto pelos nomes e aliases localizados de seus princípios ativos;
 - ausência de `searchConcept` nos DTOs, repositories e índices consumidos;

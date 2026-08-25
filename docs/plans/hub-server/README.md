@@ -22,16 +22,17 @@ pertencem a outro servidor.
 7. [Parte 1B.3: evidência explícita e equivalência semântica](./01b3-explicit-evidence-and-semantic-equivalence.md)
 8. [Parte 1B.4: propriedade explícita e disposição fechada](./01b4-explicit-operation-ownership.md)
 9. [Parte 1B.5: cobertura exaustiva dos contratos de persistência](./01b5-projection-contract-test-coverage.md)
-10. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
-11. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
-12. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
-13. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
-14. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
-15. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
+10. [Parte 1B.6: projeção taxonômica universal](./01b6-universal-taxonomy-projection.md)
+11. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
+12. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
+13. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
+14. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
+15. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
+16. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
 
-A pré-fase, as subpartes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3, 1B.4, 1B.5 e 1C
-e as partes seguintes são executadas em ordem. Cada documento termina com
-testes e critérios de aceite próprios.
+A pré-fase, as subpartes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3, 1B.4, 1B.5,
+1B.6 e 1C e as partes seguintes são executadas em ordem. Cada documento termina
+com testes e critérios de aceite próprios.
 
 ## Evolução Do Fluxo
 
@@ -47,6 +48,7 @@ flowchart LR
     P1B3["Parte 1B.3<br/>evidência explícita + equivalência semântica"]
     P1B4["Parte 1B.4<br/>owners explícitos + disposição fechada"]
     P1B5["Parte 1B.5<br/>cobertura estrutural dos contratos"]
+    P1B6["Parte 1B.6<br/>taxonomias universais"]
     P1C["Parte 1C<br/>consumo local"]
     P2["Parte 2<br/>base Rails + contratos"]
     P3["Parte 3<br/>Rails orquestra builder + releases"]
@@ -54,14 +56,14 @@ flowchart LR
     P5["Parte 5<br/>updater Tauri local"]
     P6["Parte 6<br/>GitHub + CI/CD"]
 
-    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
+    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
 ```
 
 As mudanças de origem dos artefatos são deliberadas:
 
 ```mermaid
 flowchart TB
-    subgraph S1["Partes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3, 1B.4, 1B.5 e 1C"]
+    subgraph S1["Partes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3, 1B.4, 1B.5, 1B.6 e 1C"]
         D1["data/knowledge<br/>fonte canônica"] --> G1["knowledge-builder Rust"]
         G1 --> B1["build/knowledge-artifacts"]
         B1 --> A1["Apps em desenvolvimento e build"]
@@ -93,11 +95,12 @@ entidade em um documento Markdown por locale. A Parte 1B implementa o
 executáveis, a Parte 1B.2 estrutura a auditoria e o verificador integral, a
 Parte 1B.3 exige evidência explícita e equivalência semântica, a Parte 1B.4
 fecha a propriedade operacional e a disposição de colunas, a Parte 1B.5 fecha
-a cobertura estrutural dos contratos de persistência, e a Parte 1C faz os apps
-consumirem os artefatos locais. A Parte 3 faz o `hub-server` invocar a mesma
-ferramenta e assumir releases, assinatura e publicação. A Parte 4 substitui a
-aquisição local pelo contrato de distribuição do Hub. A Parte 6 acrescenta o
-GitHub como provider externo.
+a cobertura estrutural dos contratos de persistência, a Parte 1B.6 consolida
+todas as taxonomias e associações em um contrato universal, e a Parte 1C faz os
+apps consumirem os artefatos locais. A Parte 3 faz o `hub-server` invocar a
+mesma ferramenta e assumir releases, assinatura e publicação. A Parte 4
+substitui a aquisição local pelo contrato de distribuição do Hub. A Parte 6
+acrescenta o GitHub como provider externo.
 
 ## Decisões De Arquitetura
 
@@ -143,6 +146,10 @@ GitHub como provider externo.
 - Entidades referenciam tipos, classificações e portes somente por chaves
   taxonômicas completas. Labels e aliases gerais pertencem ao termo da taxonomia
   e não são repetidos nas entidades relacionadas.
+- Toda taxonomia é projetada em `taxonomy_registry` e `taxonomy_terms`. Raças,
+  fabricantes, princípios ativos, condições e produtos usam
+  `entity_taxonomy_terms` como única relação taxonômica indexada; domínio e
+  propósito pertencem ao registro da taxonomia e não são repetidos na relação.
 - Produtos referenciam princípios ativos por IDs de entidades
   `active_ingredient`. Combinações farmacológicas preservam uma relação por
   substância, e a navegação do catálogo usa essas entidades relacionadas.
@@ -820,13 +827,14 @@ descobrir uma revisão incrementando URLs que não estejam declaradas.
 8. Implementar e validar a Parte 1B.3.
 9. Implementar e validar a Parte 1B.4.
 10. Implementar e validar a Parte 1B.5.
-11. Implementar e validar a Parte 1C.
-12. Implementar e validar a Parte 2.
-13. Implementar e validar a Parte 3.
-14. Implementar e validar a Parte 4.
-15. Implementar e validar a Parte 5.
-16. Mover o projeto para o repositório dedicado.
-17. Implementar e validar a Parte 6.
+11. Implementar e validar a Parte 1B.6.
+12. Implementar e validar a Parte 1C.
+13. Implementar e validar a Parte 2.
+14. Implementar e validar a Parte 3.
+15. Implementar e validar a Parte 4.
+16. Implementar e validar a Parte 5.
+17. Mover o projeto para o repositório dedicado.
+18. Implementar e validar a Parte 6.
 
 ## Expansões Previstas
 

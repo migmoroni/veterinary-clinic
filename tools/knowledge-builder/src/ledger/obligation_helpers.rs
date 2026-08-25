@@ -9,7 +9,7 @@ use super::{
 use crate::{
     databases::DatabaseKind,
     source::{CanonicalEntity, KnowledgeLocale, LocalizedContent, StructuralMedia},
-    validation::ValidatedEntity,
+    validation::{ValidatedEntity, ValidatedSource},
 };
 
 pub(super) fn common_authoring(
@@ -319,28 +319,6 @@ where
     Ok(())
 }
 
-pub(super) fn optional_relations(
-    expected: &mut ObligationOwnership,
-    entity: &EntityIdentity,
-    field_name: &str,
-    values: Option<&[String]>,
-    table: SystemTable,
-) -> Result<(), String> {
-    relations(
-        expected,
-        entity,
-        field_name,
-        values.unwrap_or(&[]),
-        |_, related| {
-            table_row(
-                DatabaseKind::System,
-                table,
-                format!("{}/{related}", entity.id),
-            )
-        },
-    )
-}
-
 pub(super) fn insert_obligation(
     expected: &mut ObligationOwnership,
     disposition: OperationDisposition,
@@ -413,22 +391,24 @@ pub(super) fn canonical_validation_target(
 
 pub(super) fn taxonomy_row(
     entity: &EntityIdentity,
-    kind: &str,
+    taxonomy_id: &str,
     term: &str,
 ) -> OperationDisposition {
     table_row(
         DatabaseKind::System,
         SystemTable::EntityTaxonomyTerms,
-        format!("{}/{}/{kind}/{term}", entity.entity_type, entity.id),
+        format!("{}/{}/{taxonomy_id}/{term}", entity.entity_type, entity.id),
     )
 }
 
-pub(super) fn semantic_term_table(purpose: &str) -> SystemTable {
-    match purpose {
-        "target" => SystemTable::ProductTargetTerms,
-        "vaccine_profile" => SystemTable::ProductVaccineProfileTerms,
-        "life_stage" => SystemTable::ProductLifeStageTerms,
-        "therapeutic_scope" => SystemTable::ProductTherapeuticScopeTerms,
-        _ => SystemTable::TaxonomyTerms,
-    }
+pub(super) fn taxonomy_id<'a>(
+    source: &'a ValidatedSource,
+    domain: &str,
+    purpose: &str,
+) -> Result<&'a str, String> {
+    source
+        .taxonomies
+        .get(&(domain.to_string(), purpose.to_string()))
+        .map(|taxonomy| taxonomy.id.as_str())
+        .ok_or_else(|| format!("missing taxonomy {domain}:{purpose}"))
 }

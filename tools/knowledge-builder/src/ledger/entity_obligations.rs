@@ -10,11 +10,12 @@ use super::{
 use crate::{
     databases::DatabaseKind,
     source::{CanonicalEntity, KnowledgeLocale},
-    validation::ValidatedEntity,
+    validation::{ValidatedEntity, ValidatedSource},
 };
 
 pub(super) fn add_entity_obligations(
     expected: &mut ObligationOwnership,
+    source: &ValidatedSource,
     entry: &ValidatedEntity,
     locale: KnowledgeLocale,
 ) -> Result<(), String> {
@@ -70,26 +71,21 @@ pub(super) fn add_entity_obligations(
                 main.column(SystemColumn::Id),
                 ObligationClass::Authoring,
             )?;
-            field(
-                expected,
-                &entity,
-                "typeTermKey",
-                main.column(SystemColumn::TypeTermKey),
-                ObligationClass::Authoring,
-            )?;
+            let type_taxonomy = taxonomy_id(source, "product", "type")?;
+            let classification_taxonomy = taxonomy_id(source, "product", "classification")?;
             relations(
                 expected,
                 &entity,
                 "typeTermKey",
                 std::slice::from_ref(type_term_key),
-                |_, key| taxonomy_row(&entity, "type", key),
+                |_, key| taxonomy_row(&entity, type_taxonomy, key),
             )?;
             relations(
                 expected,
                 &entity,
                 "classificationTermKeys",
                 classification_term_keys,
-                |_, key| taxonomy_row(&entity, "classification", key),
+                |_, key| taxonomy_row(&entity, classification_taxonomy, key),
             )?;
             fields(
                 expected,
@@ -153,34 +149,33 @@ pub(super) fn add_entity_obligations(
                 regulatory_identifiers.gtin_ean.as_ref(),
                 main.column(SystemColumn::RegulatoryIdentifiersJson),
             )?;
-            optional_relations(
-                expected,
-                &entity,
-                "targetTermKeys",
-                target_term_keys.as_deref(),
-                SystemTable::ProductTargets,
-            )?;
-            optional_relations(
-                expected,
-                &entity,
-                "vaccineProfileTermKeys",
-                vaccine_profile_term_keys.as_deref(),
-                SystemTable::ProductVaccineProfiles,
-            )?;
-            optional_relations(
-                expected,
-                &entity,
-                "lifeStageTermKeys",
-                life_stage_term_keys.as_deref(),
-                SystemTable::ProductLifeStages,
-            )?;
-            optional_relations(
-                expected,
-                &entity,
-                "therapeuticScopeTermKeys",
-                therapeutic_scope_term_keys.as_deref(),
-                SystemTable::ProductTherapeuticScopes,
-            )?;
+            for (purpose, field_name, values) in [
+                ("target", "targetTermKeys", target_term_keys.as_deref()),
+                (
+                    "vaccine_profile",
+                    "vaccineProfileTermKeys",
+                    vaccine_profile_term_keys.as_deref(),
+                ),
+                (
+                    "life_stage",
+                    "lifeStageTermKeys",
+                    life_stage_term_keys.as_deref(),
+                ),
+                (
+                    "therapeutic_scope",
+                    "therapeuticScopeTermKeys",
+                    therapeutic_scope_term_keys.as_deref(),
+                ),
+            ] {
+                let taxonomy = taxonomy_id(source, "product", purpose)?;
+                relations(
+                    expected,
+                    &entity,
+                    field_name,
+                    values.unwrap_or(&[]),
+                    |_, key| taxonomy_row(&entity, taxonomy, key),
+                )?;
+            }
             localized(expected, &entity, localized_content, locale, main.clone())?;
             structural_media(expected, entry, locale, media.as_ref())?;
         }
@@ -213,26 +208,21 @@ pub(super) fn add_entity_obligations(
                 main.column(SystemColumn::Id),
                 ObligationClass::Authoring,
             )?;
-            field(
-                expected,
-                &entity,
-                "typeTermKey",
-                main.column(SystemColumn::TypeTermKey),
-                ObligationClass::Authoring,
-            )?;
+            let type_taxonomy = taxonomy_id(source, "manufacturer", "type")?;
+            let classification_taxonomy = taxonomy_id(source, "manufacturer", "classification")?;
             relations(
                 expected,
                 &entity,
                 "typeTermKey",
                 std::slice::from_ref(type_term_key),
-                |_, key| taxonomy_row(&entity, "type", key),
+                |_, key| taxonomy_row(&entity, type_taxonomy, key),
             )?;
             relations(
                 expected,
                 &entity,
                 "classificationTermKeys",
                 classification_term_keys,
-                |_, key| taxonomy_row(&entity, "classification", key),
+                |_, key| taxonomy_row(&entity, classification_taxonomy, key),
             )?;
             fields(
                 expected,
@@ -281,26 +271,22 @@ pub(super) fn add_entity_obligations(
                 main.column(SystemColumn::Id),
                 ObligationClass::Authoring,
             )?;
-            field(
-                expected,
-                &entity,
-                "typeTermKey",
-                main.column(SystemColumn::TypeTermKey),
-                ObligationClass::Authoring,
-            )?;
+            let type_taxonomy = taxonomy_id(source, "active_ingredient", "type")?;
+            let classification_taxonomy =
+                taxonomy_id(source, "active_ingredient", "classification")?;
             relations(
                 expected,
                 &entity,
                 "typeTermKey",
                 std::slice::from_ref(type_term_key),
-                |_, key| taxonomy_row(&entity, "type", key),
+                |_, key| taxonomy_row(&entity, type_taxonomy, key),
             )?;
             relations(
                 expected,
                 &entity,
                 "classificationTermKeys",
                 classification_term_keys,
-                |_, key| taxonomy_row(&entity, "classification", key),
+                |_, key| taxonomy_row(&entity, classification_taxonomy, key),
             )?;
             fields(
                 expected,
@@ -368,26 +354,21 @@ pub(super) fn add_entity_obligations(
                 main.column(SystemColumn::Id),
                 ObligationClass::Authoring,
             )?;
-            field(
-                expected,
-                &entity,
-                "typeTermKey",
-                main.column(SystemColumn::TypeTermKey),
-                ObligationClass::Authoring,
-            )?;
+            let type_taxonomy = taxonomy_id(source, "condition", "type")?;
+            let classification_taxonomy = taxonomy_id(source, "condition", "classification")?;
             relations(
                 expected,
                 &entity,
                 "typeTermKey",
                 std::slice::from_ref(type_term_key),
-                |_, key| taxonomy_row(&entity, "type", key),
+                |_, key| taxonomy_row(&entity, type_taxonomy, key),
             )?;
             relations(
                 expected,
                 &entity,
                 "classificationTermKeys",
                 classification_term_keys,
-                |_, key| taxonomy_row(&entity, "classification", key),
+                |_, key| taxonomy_row(&entity, classification_taxonomy, key),
             )?;
             fields(
                 expected,
@@ -449,19 +430,13 @@ pub(super) fn add_entity_obligations(
                     )
                 },
             )?;
-            field(
-                expected,
-                &entity,
-                "sizeTermKey",
-                main.column(SystemColumn::SizeTermKey),
-                ObligationClass::Authoring,
-            )?;
+            let size_taxonomy = taxonomy_id(source, "breed", "size")?;
             relations(
                 expected,
                 &entity,
                 "sizeTermKey",
                 std::slice::from_ref(size_term_key),
-                |_, key| taxonomy_row(&entity, "size", key),
+                |_, key| taxonomy_row(&entity, size_taxonomy, key),
             )?;
             for (name, range) in [
                 ("averageWeightKg", average_weight_kg),
@@ -642,7 +617,7 @@ pub(super) fn add_entity_obligations(
                 purpose,
                 terms,
             } = value;
-            let _ = (schema_version, id, domain);
+            let _ = (schema_version, id, domain, purpose);
             field(
                 expected,
                 &entity,
@@ -671,14 +646,12 @@ pub(super) fn add_entity_obligations(
                 main.column(SystemColumn::Purpose),
                 ObligationClass::Authoring,
             )?;
-            let table = semantic_term_table(purpose);
             for (position, term) in terms.iter().enumerate() {
-                let row_id = if table == SystemTable::TaxonomyTerms {
-                    format!("{}/{}", entity.id, term.key)
-                } else {
-                    term.key.clone()
-                };
-                let row = table_row(DatabaseKind::System, table, row_id);
+                let row = table_row(
+                    DatabaseKind::System,
+                    SystemTable::TaxonomyTerms,
+                    format!("{}/{}", entity.id, term.key),
+                );
                 field(
                     expected,
                     &entity,

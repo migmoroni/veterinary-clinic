@@ -38,46 +38,6 @@ CREATE TABLE taxonomy_terms (
     FOREIGN KEY(taxonomy_id, parent_term_key) REFERENCES taxonomy_terms(taxonomy_id, term_key)
 );
 
-CREATE TABLE product_target_terms (
-    term_key TEXT PRIMARY KEY CHECK(length(trim(term_key)) > 0),
-    parent_term_key TEXT,
-    label TEXT NOT NULL CHECK(length(trim(label)) > 0),
-    normalized_label TEXT NOT NULL CHECK(length(trim(normalized_label)) > 0),
-    aliases_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(aliases_json) AND json_type(aliases_json) = 'array'),
-    sort_order INTEGER NOT NULL UNIQUE CHECK(sort_order >= 0),
-    FOREIGN KEY(parent_term_key) REFERENCES product_target_terms(term_key)
-);
-
-CREATE TABLE product_vaccine_profile_terms (
-    term_key TEXT PRIMARY KEY CHECK(length(trim(term_key)) > 0),
-    parent_term_key TEXT,
-    label TEXT NOT NULL CHECK(length(trim(label)) > 0),
-    normalized_label TEXT NOT NULL CHECK(length(trim(normalized_label)) > 0),
-    aliases_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(aliases_json) AND json_type(aliases_json) = 'array'),
-    sort_order INTEGER NOT NULL UNIQUE CHECK(sort_order >= 0),
-    FOREIGN KEY(parent_term_key) REFERENCES product_vaccine_profile_terms(term_key)
-);
-
-CREATE TABLE product_life_stage_terms (
-    term_key TEXT PRIMARY KEY CHECK(length(trim(term_key)) > 0),
-    parent_term_key TEXT,
-    label TEXT NOT NULL CHECK(length(trim(label)) > 0),
-    normalized_label TEXT NOT NULL CHECK(length(trim(normalized_label)) > 0),
-    aliases_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(aliases_json) AND json_type(aliases_json) = 'array'),
-    sort_order INTEGER NOT NULL UNIQUE CHECK(sort_order >= 0),
-    FOREIGN KEY(parent_term_key) REFERENCES product_life_stage_terms(term_key)
-);
-
-CREATE TABLE product_therapeutic_scope_terms (
-    term_key TEXT PRIMARY KEY CHECK(length(trim(term_key)) > 0),
-    parent_term_key TEXT,
-    label TEXT NOT NULL CHECK(length(trim(label)) > 0),
-    normalized_label TEXT NOT NULL CHECK(length(trim(normalized_label)) > 0),
-    aliases_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(aliases_json) AND json_type(aliases_json) = 'array'),
-    sort_order INTEGER NOT NULL UNIQUE CHECK(sort_order >= 0),
-    FOREIGN KEY(parent_term_key) REFERENCES product_therapeutic_scope_terms(term_key)
-);
-
 CREATE TABLE geo_places (
     id TEXT PRIMARY KEY CHECK(length(trim(id)) > 0),
     place_type TEXT NOT NULL CHECK(length(trim(place_type)) > 0),
@@ -98,7 +58,6 @@ CREATE TABLE breed_reference_items (
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
     normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) > 0),
     aliases_json TEXT NOT NULL CHECK(json_valid(aliases_json) AND json_type(aliases_json) = 'array'),
-    size_term_key TEXT NOT NULL CHECK(length(trim(size_term_key)) > 0),
     average_weight_kg_json TEXT NOT NULL CHECK(json_valid(average_weight_kg_json)),
     average_height_cm_json TEXT NOT NULL CHECK(json_valid(average_height_cm_json)),
     content_json TEXT NOT NULL CHECK(json_valid(content_json))
@@ -116,7 +75,6 @@ CREATE TABLE breed_origin_places (
 
 CREATE TABLE manufacturer_catalog_items (
     id TEXT PRIMARY KEY,
-    type_term_key TEXT NOT NULL,
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
     normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) > 0),
     aliases_json TEXT NOT NULL CHECK(json_valid(aliases_json) AND json_type(aliases_json) = 'array'),
@@ -128,7 +86,6 @@ CREATE TABLE manufacturer_catalog_items (
 
 CREATE TABLE active_ingredient_catalog_items (
     id TEXT PRIMARY KEY,
-    type_term_key TEXT NOT NULL,
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
     normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) > 0),
     aliases_json TEXT NOT NULL CHECK(json_valid(aliases_json) AND json_type(aliases_json) = 'array'),
@@ -143,7 +100,6 @@ CREATE TABLE active_ingredient_catalog_items (
 
 CREATE TABLE condition_catalog_items (
     id TEXT PRIMARY KEY,
-    type_term_key TEXT NOT NULL,
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
     normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) > 0),
     aliases_json TEXT NOT NULL CHECK(json_valid(aliases_json) AND json_type(aliases_json) = 'array'),
@@ -154,7 +110,6 @@ CREATE TABLE condition_catalog_items (
 
 CREATE TABLE product_catalog_items (
     id TEXT PRIMARY KEY,
-    type_term_key TEXT NOT NULL,
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
     normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) > 0),
     species_json TEXT NOT NULL CHECK(json_valid(species_json) AND json_type(species_json) = 'array'),
@@ -171,14 +126,13 @@ CREATE TABLE product_catalog_items (
 );
 
 CREATE TABLE entity_taxonomy_terms (
-    entity_type TEXT NOT NULL,
-    entity_id TEXT NOT NULL,
+    entity_type TEXT NOT NULL CHECK(entity_type IN ('breed','manufacturer','active_ingredient','condition','product')),
+    entity_id TEXT NOT NULL CHECK(length(trim(entity_id)) > 0),
     taxonomy_id TEXT NOT NULL,
-    term_key TEXT NOT NULL,
-    relation_kind TEXT NOT NULL CHECK(relation_kind IN ('type','classification','size')),
+    term_key TEXT NOT NULL CHECK(length(trim(term_key)) > 0),
     sort_order INTEGER NOT NULL CHECK(sort_order >= 0),
-    PRIMARY KEY(entity_type, entity_id, relation_kind, term_key),
-    UNIQUE(entity_type, entity_id, relation_kind, sort_order),
+    PRIMARY KEY(entity_type, entity_id, taxonomy_id, term_key),
+    UNIQUE(entity_type, entity_id, taxonomy_id, sort_order),
     FOREIGN KEY(taxonomy_id, term_key) REFERENCES taxonomy_terms(taxonomy_id, term_key) ON DELETE RESTRICT
 );
 
@@ -190,34 +144,6 @@ CREATE TABLE product_active_ingredients (
     UNIQUE(product_id, sort_order),
     FOREIGN KEY(product_id) REFERENCES product_catalog_items(id) ON DELETE CASCADE,
     FOREIGN KEY(active_ingredient_id) REFERENCES active_ingredient_catalog_items(id) ON DELETE RESTRICT
-);
-
-CREATE TABLE product_targets (
-    product_id TEXT NOT NULL, term_key TEXT NOT NULL, sort_order INTEGER NOT NULL CHECK(sort_order >= 0),
-    PRIMARY KEY(product_id, term_key), UNIQUE(product_id, sort_order),
-    FOREIGN KEY(product_id) REFERENCES product_catalog_items(id) ON DELETE CASCADE,
-    FOREIGN KEY(term_key) REFERENCES product_target_terms(term_key) ON DELETE RESTRICT
-);
-
-CREATE TABLE product_vaccine_profiles (
-    product_id TEXT NOT NULL, term_key TEXT NOT NULL, sort_order INTEGER NOT NULL CHECK(sort_order >= 0),
-    PRIMARY KEY(product_id, term_key), UNIQUE(product_id, sort_order),
-    FOREIGN KEY(product_id) REFERENCES product_catalog_items(id) ON DELETE CASCADE,
-    FOREIGN KEY(term_key) REFERENCES product_vaccine_profile_terms(term_key) ON DELETE RESTRICT
-);
-
-CREATE TABLE product_life_stages (
-    product_id TEXT NOT NULL, term_key TEXT NOT NULL, sort_order INTEGER NOT NULL CHECK(sort_order >= 0),
-    PRIMARY KEY(product_id, term_key), UNIQUE(product_id, sort_order),
-    FOREIGN KEY(product_id) REFERENCES product_catalog_items(id) ON DELETE CASCADE,
-    FOREIGN KEY(term_key) REFERENCES product_life_stage_terms(term_key) ON DELETE RESTRICT
-);
-
-CREATE TABLE product_therapeutic_scopes (
-    product_id TEXT NOT NULL, term_key TEXT NOT NULL, sort_order INTEGER NOT NULL CHECK(sort_order >= 0),
-    PRIMARY KEY(product_id, term_key), UNIQUE(product_id, sort_order),
-    FOREIGN KEY(product_id) REFERENCES product_catalog_items(id) ON DELETE CASCADE,
-    FOREIGN KEY(term_key) REFERENCES product_therapeutic_scope_terms(term_key) ON DELETE RESTRICT
 );
 
 CREATE TABLE treatment_protocols (
@@ -262,9 +188,7 @@ CREATE INDEX idx_geo_places_parent ON geo_places(parent_place_id);
 CREATE INDEX idx_breed_origin_place ON breed_origin_places(place_id, breed_id);
 CREATE INDEX idx_product_manufacturer ON product_catalog_items(manufacturer_id);
 CREATE INDEX idx_product_active_ingredient ON product_active_ingredients(active_ingredient_id, product_id);
-CREATE INDEX idx_product_targets_term_key ON product_targets(term_key, product_id);
-CREATE INDEX idx_product_vaccine_profiles_term_key ON product_vaccine_profiles(term_key, product_id);
-CREATE INDEX idx_product_life_stages_term_key ON product_life_stages(term_key, product_id);
-CREATE INDEX idx_product_therapeutic_scopes_term_key ON product_therapeutic_scopes(term_key, product_id);
+CREATE INDEX idx_entity_taxonomy_filter ON entity_taxonomy_terms(taxonomy_id, term_key, entity_type, entity_id);
+CREATE INDEX idx_entity_taxonomy_entity ON entity_taxonomy_terms(entity_type, entity_id, taxonomy_id, sort_order);
 CREATE INDEX idx_search_normalized ON entity_search_terms(normalized_value, entity_type, entity_id);
 CREATE INDEX idx_entity_media_key ON entity_media_references(media_key, entity_type, entity_id);

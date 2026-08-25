@@ -86,25 +86,15 @@ fn validate_statement(
     Ok(columns)
 }
 
-fn taxonomy_term(table: SystemTable, marker: &str) -> SystemRow {
+fn taxonomy_term(marker: &str) -> SystemRow {
     SystemRow::TaxonomyTerm {
-        table,
-        taxonomy_id: (table == SystemTable::TaxonomyTerms).then(|| format!("taxonomy-{marker}")),
+        taxonomy_id: format!("taxonomy-{marker}"),
         term_key: format!("term-{marker}"),
         parent_term_key: Some(format!("parent-{marker}")),
         label: format!("Label {marker}"),
         normalized_label: format!("label {marker}"),
         aliases_json: format!(r#"["alias-{marker}"]"#),
         sort_order: 10,
-    }
-}
-
-fn product_term(table: SystemTable, marker: &str) -> SystemRow {
-    SystemRow::ProductTerm {
-        table,
-        product_id: format!("product-{marker}"),
-        term_key: format!("term-{marker}"),
-        sort_order: 20,
     }
 }
 
@@ -115,20 +105,7 @@ fn representative_row(case: SystemInsertCase) -> SystemRow {
             domain: "product".to_string(),
             purpose: "target".to_string(),
         },
-        SystemInsertCase::TaxonomyTerm => taxonomy_term(SystemTable::TaxonomyTerms, "taxonomy"),
-        SystemInsertCase::ProductTargetTerm => {
-            taxonomy_term(SystemTable::ProductTargetTerms, "target")
-        }
-        SystemInsertCase::ProductVaccineProfileTerm => {
-            taxonomy_term(SystemTable::ProductVaccineProfileTerms, "vaccine-profile")
-        }
-        SystemInsertCase::ProductLifeStageTerm => {
-            taxonomy_term(SystemTable::ProductLifeStageTerms, "life-stage")
-        }
-        SystemInsertCase::ProductTherapeuticScopeTerm => taxonomy_term(
-            SystemTable::ProductTherapeuticScopeTerms,
-            "therapeutic-scope",
-        ),
+        SystemInsertCase::TaxonomyTerm => taxonomy_term("taxonomy"),
         SystemInsertCase::GeoPlace => SystemRow::GeoPlace {
             id: "place-br".to_string(),
             place_type: "country".to_string(),
@@ -146,7 +123,6 @@ fn representative_row(case: SystemInsertCase) -> SystemRow {
             name: "Breed One".to_string(),
             normalized_name: "breed one".to_string(),
             aliases_json: "[]".to_string(),
-            size_term_key: "medium".to_string(),
             average_weight_kg_json: r#"{"min":10,"max":20}"#.to_string(),
             average_height_cm_json: r#"{"min":30,"max":40}"#.to_string(),
             content_json: r#"{"schemaVersion":1,"sections":[]}"#.to_string(),
@@ -158,7 +134,6 @@ fn representative_row(case: SystemInsertCase) -> SystemRow {
         },
         SystemInsertCase::Manufacturer => SystemRow::Manufacturer {
             id: "manufacturer-one".to_string(),
-            type_term_key: "laboratory".to_string(),
             name: "Manufacturer One".to_string(),
             normalized_name: "manufacturer one".to_string(),
             aliases_json: "[]".to_string(),
@@ -168,7 +143,6 @@ fn representative_row(case: SystemInsertCase) -> SystemRow {
         },
         SystemInsertCase::ActiveIngredient => SystemRow::ActiveIngredient {
             id: "ingredient-one".to_string(),
-            type_term_key: "compound".to_string(),
             name: "Ingredient One".to_string(),
             normalized_name: "ingredient one".to_string(),
             aliases_json: "[]".to_string(),
@@ -181,7 +155,6 @@ fn representative_row(case: SystemInsertCase) -> SystemRow {
         },
         SystemInsertCase::Condition => SystemRow::Condition {
             id: "condition-one".to_string(),
-            type_term_key: "clinical".to_string(),
             name: "Condition One".to_string(),
             normalized_name: "condition one".to_string(),
             aliases_json: "[]".to_string(),
@@ -190,7 +163,6 @@ fn representative_row(case: SystemInsertCase) -> SystemRow {
         },
         SystemInsertCase::Product => SystemRow::Product {
             id: "product-one".to_string(),
-            type_term_key: "medicine".to_string(),
             name: "Product One".to_string(),
             normalized_name: "product one".to_string(),
             species_json: r#"["dog"]"#.to_string(),
@@ -208,7 +180,6 @@ fn representative_row(case: SystemInsertCase) -> SystemRow {
             entity_id: "product-one".to_string(),
             taxonomy_id: "taxonomy-one".to_string(),
             term_key: "term-one".to_string(),
-            relation_kind: "classification".to_string(),
             sort_order: 40,
         },
         SystemInsertCase::ProductActiveIngredient => SystemRow::ProductActiveIngredient {
@@ -216,16 +187,6 @@ fn representative_row(case: SystemInsertCase) -> SystemRow {
             active_ingredient_id: "ingredient-one".to_string(),
             sort_order: 50,
         },
-        SystemInsertCase::ProductTarget => product_term(SystemTable::ProductTargets, "target"),
-        SystemInsertCase::ProductVaccineProfile => {
-            product_term(SystemTable::ProductVaccineProfiles, "vaccine-profile")
-        }
-        SystemInsertCase::ProductLifeStage => {
-            product_term(SystemTable::ProductLifeStages, "life-stage")
-        }
-        SystemInsertCase::ProductTherapeuticScope => {
-            product_term(SystemTable::ProductTherapeuticScopes, "therapeutic-scope")
-        }
         SystemInsertCase::TreatmentProtocol => SystemRow::TreatmentProtocol {
             id: "protocol-one".to_string(),
             kind: "treatment".to_string(),
@@ -309,7 +270,4 @@ fn structural_insert_reader_rejects_invalid_columns_and_shape() {
         sql: "INSERT INTO taxonomy_registry (id, domain, purpose, label) VALUES (?1, ?2, ?3, ?4)",
     };
     assert!(validate_statement(&row, &extra_column).is_err());
-
-    assert!(system_insert_statement(&taxonomy_term(SystemTable::GeoPlaces, "invalid")).is_err());
-    assert!(system_insert_statement(&product_term(SystemTable::TaxonomyTerms, "invalid")).is_err());
 }

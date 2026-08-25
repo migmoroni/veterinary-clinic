@@ -158,7 +158,7 @@ pub(crate) fn search_candidates(
                 position
             });
             let normalized = crate::normalization::normalize_search_text(&value);
-            if !seen.insert((provenance.clone(), normalized)) {
+            if !seen.insert(normalized) {
                 continue;
             }
             let source_token = match provenance.as_str() {

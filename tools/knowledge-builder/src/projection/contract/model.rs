@@ -68,8 +68,7 @@ pub(crate) enum SystemRow {
         purpose: String,
     },
     TaxonomyTerm {
-        table: SystemTable,
-        taxonomy_id: Option<String>,
+        taxonomy_id: String,
         term_key: String,
         parent_term_key: Option<String>,
         label: String,
@@ -94,7 +93,6 @@ pub(crate) enum SystemRow {
         name: String,
         normalized_name: String,
         aliases_json: String,
-        size_term_key: String,
         average_weight_kg_json: String,
         average_height_cm_json: String,
         content_json: String,
@@ -106,7 +104,6 @@ pub(crate) enum SystemRow {
     },
     Manufacturer {
         id: String,
-        type_term_key: String,
         name: String,
         normalized_name: String,
         aliases_json: String,
@@ -116,7 +113,6 @@ pub(crate) enum SystemRow {
     },
     ActiveIngredient {
         id: String,
-        type_term_key: String,
         name: String,
         normalized_name: String,
         aliases_json: String,
@@ -129,7 +125,6 @@ pub(crate) enum SystemRow {
     },
     Condition {
         id: String,
-        type_term_key: String,
         name: String,
         normalized_name: String,
         aliases_json: String,
@@ -138,7 +133,6 @@ pub(crate) enum SystemRow {
     },
     Product {
         id: String,
-        type_term_key: String,
         name: String,
         normalized_name: String,
         species_json: String,
@@ -156,18 +150,11 @@ pub(crate) enum SystemRow {
         entity_id: String,
         taxonomy_id: String,
         term_key: String,
-        relation_kind: String,
         sort_order: usize,
     },
     ProductActiveIngredient {
         product_id: String,
         active_ingredient_id: String,
-        sort_order: usize,
-    },
-    ProductTerm {
-        table: SystemTable,
-        product_id: String,
-        term_key: String,
         sort_order: usize,
     },
     TreatmentProtocol {

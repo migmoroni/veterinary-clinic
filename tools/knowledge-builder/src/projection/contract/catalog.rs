@@ -33,7 +33,6 @@ pub(super) fn project_catalog(
                     SystemTable::ManufacturerCatalogItems,
                     SystemRow::Manufacturer {
                         id: id.clone(),
-                        type_term_key: type_term_key.clone(),
                         normalized_name: normalize_identity_key(&name),
                         name,
                         aliases_json: json(
@@ -50,9 +49,10 @@ pub(super) fn project_catalog(
                     operations,
                     claims,
                     &entity,
-                    Some(type_term_key),
-                    classification_term_keys,
-                    None,
+                    &[
+                        ("type", std::slice::from_ref(type_term_key)),
+                        ("classification", classification_term_keys),
+                    ],
                 )?;
             }
             CanonicalEntity::ActiveIngredient(value) => {
@@ -101,7 +101,6 @@ pub(super) fn project_catalog(
                     SystemTable::ActiveIngredientCatalogItems,
                     SystemRow::ActiveIngredient {
                         id: id.clone(),
-                        type_term_key: type_term_key.clone(),
                         normalized_name: normalize_identity_key(&name),
                         name,
                         aliases_json: json(
@@ -126,9 +125,10 @@ pub(super) fn project_catalog(
                     operations,
                     claims,
                     &entity,
-                    Some(type_term_key),
-                    classification_term_keys,
-                    None,
+                    &[
+                        ("type", std::slice::from_ref(type_term_key)),
+                        ("classification", classification_term_keys),
+                    ],
                 )?;
             }
             CanonicalEntity::Condition(value) => {
@@ -152,7 +152,6 @@ pub(super) fn project_catalog(
                     SystemTable::ConditionCatalogItems,
                     SystemRow::Condition {
                         id: id.clone(),
-                        type_term_key: type_term_key.clone(),
                         normalized_name: normalize_identity_key(&name),
                         name,
                         aliases_json: json(
@@ -168,9 +167,10 @@ pub(super) fn project_catalog(
                     operations,
                     claims,
                     &entity,
-                    Some(type_term_key),
-                    classification_term_keys,
-                    None,
+                    &[
+                        ("type", std::slice::from_ref(type_term_key)),
+                        ("classification", classification_term_keys),
+                    ],
                 )?;
             }
             CanonicalEntity::Breed(value) => {
@@ -220,7 +220,6 @@ pub(super) fn project_catalog(
                             &localized_list(localized_content, "aliases", locale)
                                 .unwrap_or_default(),
                         )?,
-                        size_term_key: size_term_key.clone(),
                         average_weight_kg_json: json(average_weight_kg)?,
                         average_height_cm_json: json(average_height_cm)?,
                         content_json: content_json(entry, locale)?,
@@ -246,9 +245,7 @@ pub(super) fn project_catalog(
                     operations,
                     claims,
                     &entity,
-                    None,
-                    &[],
-                    Some(size_term_key),
+                    &[("size", std::slice::from_ref(size_term_key))],
                 )?;
             }
             CanonicalEntity::Product(value) => {
@@ -295,7 +292,6 @@ pub(super) fn project_catalog(
                     SystemTable::ProductCatalogItems,
                     SystemRow::Product {
                         id: id.clone(),
-                        type_term_key: type_term_key.clone(),
                         normalized_name: normalize_identity_key(&name),
                         name,
                         species_json: json(species)?,
@@ -330,9 +326,20 @@ pub(super) fn project_catalog(
                     operations,
                     claims,
                     &entity,
-                    Some(type_term_key),
-                    classification_term_keys,
-                    None,
+                    &[
+                        ("type", std::slice::from_ref(type_term_key)),
+                        ("classification", classification_term_keys),
+                        ("target", target_term_keys.as_deref().unwrap_or(&[])),
+                        (
+                            "vaccine_profile",
+                            vaccine_profile_term_keys.as_deref().unwrap_or(&[]),
+                        ),
+                        ("life_stage", life_stage_term_keys.as_deref().unwrap_or(&[])),
+                        (
+                            "therapeutic_scope",
+                            therapeutic_scope_term_keys.as_deref().unwrap_or(&[]),
+                        ),
+                    ],
                 )?;
                 for (sort_order, ingredient_id) in active_ingredient_ids.iter().enumerate() {
                     let row_id = format!("{id}/{ingredient_id}");
@@ -348,38 +355,6 @@ pub(super) fn project_catalog(
                         row_id.clone(),
                         Some(entity.clone()),
                     )?;
-                }
-                for (table, values) in [
-                    (SystemTable::ProductTargets, target_term_keys.as_deref()),
-                    (
-                        SystemTable::ProductVaccineProfiles,
-                        vaccine_profile_term_keys.as_deref(),
-                    ),
-                    (
-                        SystemTable::ProductLifeStages,
-                        life_stage_term_keys.as_deref(),
-                    ),
-                    (
-                        SystemTable::ProductTherapeuticScopes,
-                        therapeutic_scope_term_keys.as_deref(),
-                    ),
-                ] {
-                    for (sort_order, term_key) in values.unwrap_or(&[]).iter().enumerate() {
-                        let row_id = format!("{id}/{term_key}");
-                        push_system(
-                            operations,
-                            claims,
-                            SystemRow::ProductTerm {
-                                table,
-                                product_id: id.clone(),
-                                term_key: term_key.clone(),
-                                sort_order,
-                            },
-                            table,
-                            row_id.clone(),
-                            Some(entity.clone()),
-                        )?;
-                    }
                 }
             }
             CanonicalEntity::TreatmentProtocol(value) => {

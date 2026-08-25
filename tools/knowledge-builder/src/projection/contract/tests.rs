@@ -5,7 +5,6 @@ use super::*;
 fn product_row() -> SystemRow {
     SystemRow::Product {
         id: "id".to_string(),
-        type_term_key: "type".to_string(),
         name: "Name".to_string(),
         normalized_name: "name".to_string(),
         species_json: "[]".to_string(),
@@ -143,7 +142,7 @@ fn non_system_operations_reject_divergent_targets() {
         database: DatabaseKind::System,
         row: MetadataRow::Build {
             build_version: 1,
-            builder_version: "0.2.0".to_string(),
+            builder_version: "0.3.0".to_string(),
             build_result_schema_version: 1,
             source_digest: vec![0; 32],
             locale: "en-US".to_string(),

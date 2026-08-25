@@ -24,8 +24,9 @@ redundantes no repositório.
 
 Os testes integrais também adulteram isoladamente colunas escalares e JSON,
 valor, normalização, proveniência e ordem de busca, label e aliases de
-taxonomias, identidades e ordens de relações, protocolos, conteúdo compilado e
-referências estruturais. A matriz temporária de mídia usa dois ativos e dois
+taxonomias, termo, taxonomia, tipo da entidade e ordem da relação universal,
+ausência de associação obrigatória, tabelas físicas indevidas, protocolos,
+conteúdo compilado e referências estruturais. A matriz temporária de mídia usa dois ativos e dois
 objetos CAS válidos para alterar hash, MIME, tamanho, dimensões e thumbnail de
 `system_media`, incluindo isoladamente o `thumbnail_mime_type`. Tamanhos e
 checksums externos são recalculados antes da reutilização, que ainda precisa
