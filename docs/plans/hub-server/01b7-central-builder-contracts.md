@@ -473,4 +473,4 @@ Escrever no presente e documentar somente o contrato vigente.
 ## Próxima Parte
 
 Após cumprir todos os critérios, seguir para a
-[Parte 1B.8: manutenibilidade do `knowledge-builder`](./01b8-knowledge-builder-maintainability.md).
+[Parte 1B.8.1: contratos de rows e persistência](./01b8-knowledge-builder-maintainability/01-row-persistence-contracts.md).

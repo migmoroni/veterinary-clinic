@@ -24,17 +24,22 @@ pertencem a outro servidor.
 9. [Parte 1B.5: cobertura exaustiva dos contratos de persistência](./01b5-projection-contract-test-coverage.md)
 10. [Parte 1B.6: projeção taxonômica universal](./01b6-universal-taxonomy-projection.md)
 11. [Parte 1B.7: contratos centrais do `knowledge-builder`](./01b7-central-builder-contracts.md)
-12. [Parte 1B.8: manutenibilidade do `knowledge-builder`](./01b8-knowledge-builder-maintainability.md)
-13. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
-14. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
-15. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
-16. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
-17. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
-18. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
+12. [Parte 1B.8.1: contratos de rows e persistência](./01b8-knowledge-builder-maintainability/01-row-persistence-contracts.md)
+13. [Parte 1B.8.2: ledger e recibos confirmados](./01b8-knowledge-builder-maintainability/02-ledger-confirmed-receipts.md)
+14. [Parte 1B.8.3: verificação integral decomposta](./01b8-knowledge-builder-maintainability/03-artifact-verification.md)
+15. [Parte 1B.8.4: erros estruturados e fronteiras](./01b8-knowledge-builder-maintainability/04-structured-errors-boundaries.md)
+16. [Parte 1B.8.5: topologia de testes e guia de manutenção](./01b8-knowledge-builder-maintainability/05-test-topology-maintenance-guide.md)
+17. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
+18. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
+19. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
+20. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
+21. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
+22. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
 
 A pré-fase, as subpartes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3, 1B.4, 1B.5,
-1B.6, 1B.7, 1B.8 e 1C e as partes seguintes são executadas em ordem. Cada
-documento termina com testes e critérios de aceite próprios.
+1B.6, 1B.7, 1B.8.1, 1B.8.2, 1B.8.3, 1B.8.4, 1B.8.5 e 1C e as partes
+seguintes são executadas em ordem. Cada documento termina com testes e critérios
+de aceite próprios.
 
 ## Evolução Do Fluxo
 
@@ -52,7 +57,11 @@ flowchart LR
     P1B5["Parte 1B.5<br/>cobertura estrutural dos contratos"]
     P1B6["Parte 1B.6<br/>taxonomias universais"]
     P1B7["Parte 1B.7<br/>contratos centrais"]
-    P1B8["Parte 1B.8<br/>manutenibilidade"]
+    P1B81["Parte 1B.8.1<br/>rows + persistência"]
+    P1B82["Parte 1B.8.2<br/>ledger + recibos"]
+    P1B83["Parte 1B.8.3<br/>verificação"]
+    P1B84["Parte 1B.8.4<br/>erros + fronteiras"]
+    P1B85["Parte 1B.8.5<br/>testes + manutenção"]
     P1C["Parte 1C<br/>consumo local"]
     P2["Parte 2<br/>base Rails + contratos"]
     P3["Parte 3<br/>Rails orquestra builder + releases"]
@@ -60,14 +69,14 @@ flowchart LR
     P5["Parte 5<br/>updater Tauri local"]
     P6["Parte 6<br/>GitHub + CI/CD"]
 
-    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1B7 --> P1B8 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
+    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1B7 --> P1B81 --> P1B82 --> P1B83 --> P1B84 --> P1B85 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
 ```
 
 As mudanças de origem dos artefatos são deliberadas:
 
 ```mermaid
 flowchart TB
-    subgraph S1["Partes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3, 1B.4, 1B.5, 1B.6, 1B.7, 1B.8 e 1C"]
+    subgraph S1["Partes 1A a 1B.8.5 e 1C"]
         D1["data/knowledge<br/>fonte canônica"] --> G1["knowledge-builder Rust"]
         G1 --> B1["build/knowledge-artifacts"]
         B1 --> A1["Apps em desenvolvimento e build"]
@@ -100,13 +109,15 @@ executáveis, a Parte 1B.2 estrutura a auditoria e o verificador integral, a
 Parte 1B.3 exige evidência explícita e equivalência semântica, a Parte 1B.4
 fecha a propriedade operacional e a disposição de colunas, a Parte 1B.5 fecha
 a cobertura estrutural dos contratos de persistência, a Parte 1B.6 consolida
-todas as taxonomias e associações em um contrato universal, a Parte 1B.7
-centraliza os contratos transversais do builder e fecha o conjunto taxonômico,
-a Parte 1B.8 reduz a amplificação de mudança preservando as provas independentes,
-e a Parte 1C faz os apps consumirem os artefatos locais. A Parte 3 faz o
-`hub-server` invocar a mesma ferramenta e assumir releases, assinatura e
-publicação. A Parte 4 substitui a aquisição local pelo contrato de distribuição
-do Hub. A Parte 6 acrescenta o GitHub como provider externo.
+todas as taxonomias e associações em um contrato universal, e a Parte 1B.7
+centraliza os contratos transversais do builder e fecha o conjunto taxonômico.
+A Parte 1B.8.1 consolida rows e persistência, a Parte 1B.8.2 separa inventário,
+ownership e recibos confirmados, a Parte 1B.8.3 decompõe a verificação integral,
+a Parte 1B.8.4 estrutura erros e fronteiras, e a Parte 1B.8.5 organiza testes e o
+guia de manutenção. A Parte 1C faz os apps consumirem os artefatos locais. A
+Parte 3 faz o `hub-server` invocar a mesma ferramenta e assumir releases,
+assinatura e publicação. A Parte 4 substitui a aquisição local pelo contrato de
+distribuição do Hub. A Parte 6 acrescenta o GitHub como provider externo.
 
 ## Decisões De Arquitetura
 
@@ -127,6 +138,11 @@ do Hub. A Parte 6 acrescenta o GitHub como provider externo.
 - A manutenção do `knowledge-builder` reduz declarações paralelas sem unir
   provas independentes: inventário esperado, ownership das operações e recibos
   confirmados continuam comparáveis como conjuntos distintos.
+- Cada `SystemRow` possui um descritor único de caso, tabela, identidade e
+  colunas ordenadas. Writers mantêm `INSERT` fixos e readers mantêm `SELECT`
+  independentes com equivalência integral das rows.
+- Build novo e reutilização passam pela mesma fachada de verificação decomposta.
+  Erros do builder preservam estágio, contexto e causa por tipos estruturados.
 - `data/knowledge/` na raiz é a única fonte de autoria dos dados públicos. O
   diretório não pertence ao app, ao Rails nem a um package de código.
 - `geo/` é um domínio de conhecimento compartilhado. Localizações usam
@@ -841,14 +857,18 @@ descobrir uma revisão incrementando URLs que não estejam declaradas.
 10. Implementar e validar a Parte 1B.5.
 11. Implementar e validar a Parte 1B.6.
 12. Implementar e validar a Parte 1B.7.
-13. Implementar e validar a Parte 1B.8.
-14. Implementar e validar a Parte 1C.
-15. Implementar e validar a Parte 2.
-16. Implementar e validar a Parte 3.
-17. Implementar e validar a Parte 4.
-18. Implementar e validar a Parte 5.
-19. Mover o projeto para o repositório dedicado.
-20. Implementar e validar a Parte 6.
+13. Implementar e validar a Parte 1B.8.1.
+14. Implementar e validar a Parte 1B.8.2.
+15. Implementar e validar a Parte 1B.8.3.
+16. Implementar e validar a Parte 1B.8.4.
+17. Implementar e validar a Parte 1B.8.5.
+18. Implementar e validar a Parte 1C.
+19. Implementar e validar a Parte 2.
+20. Implementar e validar a Parte 3.
+21. Implementar e validar a Parte 4.
+22. Implementar e validar a Parte 5.
+23. Mover o projeto para o repositório dedicado.
+24. Implementar e validar a Parte 6.
 
 ## Expansões Previstas
 

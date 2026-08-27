@@ -21,12 +21,12 @@ saída preparada.
 
 ## Pré-requisito
 
-A [Parte 1B.8](./01b8-knowledge-builder-maintainability.md) está concluída e gera
-uma `build_version` válida com os seis pares de bancos, o CAS compartilhado,
-propriedade operacional explícita das evidências, disposição fechada, cobertura
-exaustiva dos contratos de persistência, equivalência semântica, projeção
-taxonômica universal, contratos transversais centralizados e superfície de
-manutenção coesa no `knowledge-builder`.
+A [Parte 1B.8.5](./01b8-knowledge-builder-maintainability/05-test-topology-maintenance-guide.md)
+está concluída. O `knowledge-builder` gera uma `build_version` válida com os seis
+pares de bancos e o CAS compartilhado, usa contratos coesos de rows, inventário,
+ownership e recibos confirmados, verifica integralmente os artefatos por uma
+fachada de componentes, expõe erros estruturados e mantém uma suíte organizada
+por custo e responsabilidade.
 
 ## Escopo
 
