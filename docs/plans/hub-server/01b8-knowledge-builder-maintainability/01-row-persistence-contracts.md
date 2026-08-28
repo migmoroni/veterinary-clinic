@@ -20,7 +20,9 @@ writer SQL fixo -> banco SQLite -> reader SQL independente -> SystemRow
 
 ## Pré-Requisitos
 
-- A [Parte 1B.7](../01b7-central-builder-contracts.md) está concluída.
+- A [Parte 1B.7A](../01b7a-canonical-animal-taxonomy.md) está concluída.
+- O builder usa `animal_reference_items`, 16 taxonomias canônicas, schema 4 de
+  `system`, relatório 5 e versão `0.4.0` do crate.
 - O gate geral do workspace está verde antes da primeira edição desta parte.
 - Falhas fora de `tools/knowledge-builder` são apresentadas ao usuário e
   resolvidas em tarefa própria ou mediante autorização explícita. Esta parte não
@@ -85,8 +87,8 @@ pub(crate) enum SystemRowCase {
     TaxonomyRegistry,
     TaxonomyTerm,
     GeoPlace,
-    Breed,
-    BreedOrigin,
+    Animal,
+    AnimalOrigin,
     Manufacturer,
     ActiveIngredient,
     Condition,

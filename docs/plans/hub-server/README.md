@@ -24,22 +24,23 @@ pertencem a outro servidor.
 9. [Parte 1B.5: cobertura exaustiva dos contratos de persistência](./01b5-projection-contract-test-coverage.md)
 10. [Parte 1B.6: projeção taxonômica universal](./01b6-universal-taxonomy-projection.md)
 11. [Parte 1B.7: contratos centrais do `knowledge-builder`](./01b7-central-builder-contracts.md)
-12. [Parte 1B.8.1: contratos de rows e persistência](./01b8-knowledge-builder-maintainability/01-row-persistence-contracts.md)
-13. [Parte 1B.8.2: ledger e recibos confirmados](./01b8-knowledge-builder-maintainability/02-ledger-confirmed-receipts.md)
-14. [Parte 1B.8.3: verificação integral decomposta](./01b8-knowledge-builder-maintainability/03-artifact-verification.md)
-15. [Parte 1B.8.4: erros estruturados e fronteiras](./01b8-knowledge-builder-maintainability/04-structured-errors-boundaries.md)
-16. [Parte 1B.8.5: topologia de testes e guia de manutenção](./01b8-knowledge-builder-maintainability/05-test-topology-maintenance-guide.md)
-17. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
-18. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
-19. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
-20. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
-21. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
-22. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
+12. [Parte 1B.7A: taxonomia animal canônica](./01b7a-canonical-animal-taxonomy.md)
+13. [Parte 1B.8.1: contratos de rows e persistência](./01b8-knowledge-builder-maintainability/01-row-persistence-contracts.md)
+14. [Parte 1B.8.2: ledger e recibos confirmados](./01b8-knowledge-builder-maintainability/02-ledger-confirmed-receipts.md)
+15. [Parte 1B.8.3: verificação integral decomposta](./01b8-knowledge-builder-maintainability/03-artifact-verification.md)
+16. [Parte 1B.8.4: erros estruturados e fronteiras](./01b8-knowledge-builder-maintainability/04-structured-errors-boundaries.md)
+17. [Parte 1B.8.5: topologia de testes e guia de manutenção](./01b8-knowledge-builder-maintainability/05-test-topology-maintenance-guide.md)
+18. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
+19. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
+20. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
+21. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
+22. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
+23. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
 
 A pré-fase, as subpartes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3, 1B.4, 1B.5,
-1B.6, 1B.7, 1B.8.1, 1B.8.2, 1B.8.3, 1B.8.4, 1B.8.5 e 1C e as partes
-seguintes são executadas em ordem. Cada documento termina com testes e critérios
-de aceite próprios.
+1B.6, 1B.7, 1B.7A, 1B.8.1, 1B.8.2, 1B.8.3, 1B.8.4, 1B.8.5 e 1C e as
+partes seguintes são executadas em ordem. Cada documento termina com testes e
+critérios de aceite próprios.
 
 ## Evolução Do Fluxo
 
@@ -57,6 +58,7 @@ flowchart LR
     P1B5["Parte 1B.5<br/>cobertura estrutural dos contratos"]
     P1B6["Parte 1B.6<br/>taxonomias universais"]
     P1B7["Parte 1B.7<br/>contratos centrais"]
+    P1B7A["Parte 1B.7A<br/>taxonomia animal"]
     P1B81["Parte 1B.8.1<br/>rows + persistência"]
     P1B82["Parte 1B.8.2<br/>ledger + recibos"]
     P1B83["Parte 1B.8.3<br/>verificação"]
@@ -69,7 +71,7 @@ flowchart LR
     P5["Parte 5<br/>updater Tauri local"]
     P6["Parte 6<br/>GitHub + CI/CD"]
 
-    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1B7 --> P1B81 --> P1B82 --> P1B83 --> P1B84 --> P1B85 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
+    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1B7 --> P1B7A --> P1B81 --> P1B82 --> P1B83 --> P1B84 --> P1B85 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
 ```
 
 As mudanças de origem dos artefatos são deliberadas:
@@ -111,13 +113,18 @@ fecha a propriedade operacional e a disposição de colunas, a Parte 1B.5 fecha
 a cobertura estrutural dos contratos de persistência, a Parte 1B.6 consolida
 todas as taxonomias e associações em um contrato universal, e a Parte 1B.7
 centraliza os contratos transversais do builder e fecha o conjunto taxonômico.
-A Parte 1B.8.1 consolida rows e persistência, a Parte 1B.8.2 separa inventário,
-ownership e recibos confirmados, a Parte 1B.8.3 decompõe a verificação integral,
-a Parte 1B.8.4 estrutura erros e fronteiras, e a Parte 1B.8.5 organiza testes e o
-guia de manutenção. A Parte 1C faz os apps consumirem os artefatos locais. A
-Parte 3 faz o `hub-server` invocar a mesma ferramenta e assumir releases,
-assinatura e publicação. A Parte 4 substitui a aquisição local pelo contrato de
-distribuição do Hub. A Parte 6 acrescenta o GitHub como provider externo.
+A Parte 1B.7A representa os oito níveis de filo, classe, ordem, família, gênero,
+espécie, raça e variedade como entidades animais; qualquer entidade pode manter
+classificações opcionais de origem, porte, tipos e medidas. Os diretórios servem
+somente à organização editorial. A Parte
+1B.8.1 consolida rows e persistência, a Parte 1B.8.2 separa
+inventário, ownership e recibos confirmados, a Parte 1B.8.3 decompõe a
+verificação integral, a Parte 1B.8.4 estrutura erros e fronteiras, e a Parte
+1B.8.5 organiza testes e o guia de manutenção. A Parte 1C faz os apps consumirem
+os artefatos locais. A Parte 3 faz o `hub-server` invocar a mesma ferramenta e
+assumir releases, assinatura e publicação. A Parte 4 substitui a aquisição local
+pelo contrato de distribuição do Hub. A Parte 6 acrescenta o GitHub como
+provider externo.
 
 ## Decisões De Arquitetura
 
@@ -132,6 +139,16 @@ distribuição do Hub. A Parte 6 acrescenta o GitHub como provider externo.
 - `tools/knowledge-builder/` é um binário Rust membro do Cargo Workspace e o
   único compilador de dados canônicos para `system`, `system_media` e
   `CAS/system`.
+- Cada `AnimalEntity` declara `phylum`, `class`, `order`, `family`, `genus`,
+  `species`, `breed` e `variety`. As posições não nulas formam um prefixo
+  contínuo, o `id` ocupa a posição da própria entidade e os níveis inferiores são
+  nulos. Todos os oito níveis são identidades de entidades animais.
+  `classifications` concentra origem, porte, tipos funcional, morfológico e
+  filogenético, peso médio e altura média; o objeto e cada campo interno são
+  opcionais nos oito níveis. Nenhum desses valores é inferido pela disposição
+  das pastas ou por outra entidade.
+- Produtos e protocolos declaram aplicabilidade pelos IDs canônicos das
+  entidades de espécie.
 - Contratos transversais do `knowledge-builder` vivem em `src/contracts/`,
   organizados por artefato, banco, locale, taxonomia e versão. Constantes
   exclusivas de um subsistema permanecem com seu proprietário.
@@ -174,9 +191,11 @@ distribuição do Hub. A Parte 6 acrescenta o GitHub como provider externo.
 - Entidades referenciam tipos, classificações e portes somente por chaves
   taxonômicas completas. Labels e aliases gerais pertencem ao termo da taxonomia
   e não são repetidos nas entidades relacionadas.
-- Toda taxonomia é projetada em `taxonomy_registry` e `taxonomy_terms`. Raças,
-  fabricantes, princípios ativos, condições e produtos usam
-  `entity_taxonomy_terms` como única relação taxonômica indexada; domínio e
+- Toda taxonomia classificatória é projetada em `taxonomy_registry` e
+  `taxonomy_terms`. As identidades dos oito níveis animais usam as colunas
+  autorreferenciadas de `animal_reference_items`; fabricantes, princípios
+  ativos, condições e produtos usam
+  `entity_taxonomy_terms` como única relação taxonômica indexada. Domínio e
   propósito pertencem ao registro da taxonomia e não são repetidos na relação.
 - Produtos referenciam princípios ativos por IDs de entidades
   `active_ingredient`. Combinações farmacológicas preservam uma relação por
@@ -857,18 +876,19 @@ descobrir uma revisão incrementando URLs que não estejam declaradas.
 10. Implementar e validar a Parte 1B.5.
 11. Implementar e validar a Parte 1B.6.
 12. Implementar e validar a Parte 1B.7.
-13. Implementar e validar a Parte 1B.8.1.
-14. Implementar e validar a Parte 1B.8.2.
-15. Implementar e validar a Parte 1B.8.3.
-16. Implementar e validar a Parte 1B.8.4.
-17. Implementar e validar a Parte 1B.8.5.
-18. Implementar e validar a Parte 1C.
-19. Implementar e validar a Parte 2.
-20. Implementar e validar a Parte 3.
-21. Implementar e validar a Parte 4.
-22. Implementar e validar a Parte 5.
-23. Mover o projeto para o repositório dedicado.
-24. Implementar e validar a Parte 6.
+13. Implementar e validar a Parte 1B.7A.
+14. Implementar e validar a Parte 1B.8.1.
+15. Implementar e validar a Parte 1B.8.2.
+16. Implementar e validar a Parte 1B.8.3.
+17. Implementar e validar a Parte 1B.8.4.
+18. Implementar e validar a Parte 1B.8.5.
+19. Implementar e validar a Parte 1C.
+20. Implementar e validar a Parte 2.
+21. Implementar e validar a Parte 3.
+22. Implementar e validar a Parte 4.
+23. Implementar e validar a Parte 5.
+24. Mover o projeto para o repositório dedicado.
+25. Implementar e validar a Parte 6.
 
 ## Expansões Previstas
 

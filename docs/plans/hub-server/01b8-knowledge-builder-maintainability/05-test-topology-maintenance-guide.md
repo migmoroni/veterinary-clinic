@@ -10,7 +10,7 @@ isoladamente; cenários integrais preservam todas as provas de segurança.
 ## Pré-Requisito
 
 A [Parte 1B.8.4](./04-structured-errors-boundaries.md) está concluída. O crate
-usa `0.4.0`, possui erros estruturados e dependências explícitas. A referência
+usa `0.5.0`, possui erros estruturados e dependências explícitas. A referência
 temporária criada na Parte 1B.8.1 continua disponível em `target/`.
 
 ## 1. Topologia Final
@@ -220,7 +220,7 @@ Depois, executar o gate geral da skill `$validate-workspace`.
   versões, bancos e artefatos.
 - O README descreve somente a arquitetura vigente.
 - Não permanecem artefatos temporários rastreados ou não rastreados da referência.
-- O crate `0.4.0` passa em formatação, compilação, Clippy e testes.
+- O crate `0.5.0` passa em formatação, compilação, Clippy e testes.
 - O workspace passa integralmente pela skill `$validate-workspace`.
 - O estado Git contém somente mudanças pertencentes a esta parte.
 

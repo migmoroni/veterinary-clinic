@@ -26,7 +26,10 @@ está concluída. O `knowledge-builder` gera uma `build_version` válida com os 
 pares de bancos e o CAS compartilhado, usa contratos coesos de rows, inventário,
 ownership e recibos confirmados, verifica integralmente os artefatos por uma
 fachada de componentes, expõe erros estruturados e mantém uma suíte organizada
-por custo e responsabilidade.
+por custo e responsabilidade. Os artefatos usam schema 4 de `system` e projetam
+os oito níveis taxonômicos em `animal_reference_items`. Toda linha possui filo;
+as posições seguintes formam um prefixo contínuo até o nível da própria entidade
+e as inferiores são nulas. Todas as colunas classificatórias são anuláveis.
 
 ## Escopo
 
@@ -37,8 +40,15 @@ por custo e responsabilidade.
 - adaptar contratos, repositories e serviços aos campos localizados dos bancos;
 - preservar a resolução N:N entre produtos e princípios ativos e os links para
   as entidades farmacológicas relacionadas;
-- consumir tipos, classificações, portes, alvos, perfis vacinais, estágios de
-  vida e escopos terapêuticos por `entity_taxonomy_terms`;
+- consumir classificações de catálogo, alvos, perfis vacinais, estágios de vida
+  e escopos terapêuticos por `entity_taxonomy_terms`;
+- consumir a taxonomia e as classificações diretamente de
+  `animal_reference_items` e a aplicabilidade de produtos e protocolos pelos
+  IDs canônicos das entidades de espécie;
+- expor conteúdo e navegação entre pai, filhos e descendentes nos oito níveis
+  taxonômicos;
+- resolver conhecimento animal pela entidade mais específica disponível:
+  variedade, raça e, quando não houver raça, espécie;
 - fazer buscas usarem nomes e aliases armazenados em `system`;
 - retirar chaves de i18n dos modelos de conhecimento;
 - retirar conteúdo de conhecimento dos arquivos de i18n do app;
@@ -375,9 +385,12 @@ name
 aliases
 description
 sections
+taxonomy
 classification
 relations
 originPlaces
+level
+parentId
 media
 ```
 
@@ -390,6 +403,12 @@ Cada item de `sections` expõe somente `sectionKey` e `compiledMarkdown`.
 `sectionKey` é um enum semântico do domínio, não uma chave de conteúdo. A camada
 de interface resolve o título padronizado pelo i18n associado à `sectionKey`,
 enquanto o corpo vem integralmente resolvido pelo banco ativo.
+
+Para entidades animais, `taxonomy` expõe filo, classe, ordem, família, gênero,
+espécie, raça e variedade em posições nomeadas. Cada posição não nula resolve ID
+e nome por `animal_reference_items`. O repository não deriva nenhum nível do
+caminho editorial. `level` corresponde à última posição não nula e `parentId`
+corresponde à posição imediatamente anterior; o filo não possui `parentId`.
 
 O repository lê o `content_json` da entidade, valida a `schemaVersion` suportada
 e desserializa o documento para um DTO tipado. A página percorre o array plano
@@ -668,8 +687,18 @@ Cobrir:
 - nomes, aliases, descrições e taxonomias corretos por locale;
 - produtos resolvendo seus princípios ativos pela relação N:N, na ordem
   declarada;
-- raças, fabricantes, princípios ativos, condições e produtos resolvendo suas
-  taxonomias exclusivamente por `entity_taxonomy_terms`;
+- entidades dos oito níveis expondo sua cadeia pelos campos autorreferenciados de
+  `animal_reference_items`;
+- filtros por filo, classe, ordem, família, gênero, espécie, raça e variedade
+  usando os campos indexados de `animal_reference_items`;
+- fabricantes, princípios ativos, condições e produtos resolvendo suas
+  classificações N:N exclusivamente por `entity_taxonomy_terms`;
+- cada entidade animal resolvendo somente as classificações e medidas presentes,
+  sem preencher campos ausentes por inferência;
+- pet sem raça definida consumindo diretamente o conteúdo da entidade de
+  espécie, sem criar raça genérica;
+- produtos e protocolos resolvendo aplicabilidade pelos IDs presentes em
+  `applicable_species_ids_json`;
 - produtos resolvendo tipos, classificações, alvos, perfis vacinais, estágios de
   vida e escopos terapêuticos pelo propósito da taxonomia associada;
 - recusa de associação com termo pertencente a outro domínio, propósito ou

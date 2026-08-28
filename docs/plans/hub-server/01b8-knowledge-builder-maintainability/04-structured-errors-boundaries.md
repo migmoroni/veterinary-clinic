@@ -143,11 +143,11 @@ deliberada, não para conservar caminhos substituídos.
 
 ## 6. Versão
 
-Elevar `knowledge-builder` de `0.3.1` para `0.4.0` nesta parte, junto da mudança
+Elevar `knowledge-builder` de `0.4.0` para `0.5.0` nesta parte, junto da mudança
 da API pública de `build` e `cli::run`. Atualizar `Cargo.lock`.
 
 Não elevar versões de fonte, bancos, conteúdo, contexto, manifest, relatório ou
-evidência. `builderVersion` passa a `0.4.0` nos artefatos gerados.
+evidência. `builderVersion` passa a `0.5.0` nos artefatos gerados.
 
 ## 7. Testes Específicos
 
@@ -181,7 +181,7 @@ Executar testes específicos, suíte integral e `$validate-workspace`.
 - Não há enums genéricos com contexto opcional indiscriminado.
 - Não existe `use super::*` no crate.
 - Dependências respeitam as fronteiras declaradas.
-- O crate usa versão `0.4.0`; schemas técnicos não mudam.
+- O crate usa versão `0.5.0`; schemas técnicos não mudam.
 - Os testes específicos e o gate geral da skill `$validate-workspace` passam.
 - O estado Git contém somente mudanças pertencentes a esta parte.
 
