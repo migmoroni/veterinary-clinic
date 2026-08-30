@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "scottish-terrier",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "scottish-terrier",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "scotland"
+    ],
+    "bodyMetrics": {
+      "size": "small"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Scottish Terrier",
+      "pt-PT": "Scottish Terrier",
+      "gn-PY": "Scottish Terrier",
+      "en-US": "Scottish Terrier",
+      "es-ES": "Scottish Terrier",
+      "fr-FR": "Terrier écossais"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

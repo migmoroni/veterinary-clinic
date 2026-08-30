@@ -1,47 +1,47 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "359cfb72-3f7d-4441-b686-21b165e4b8eb",
-	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
-	"classificationTermKeys": [
-		"origin.biological",
-		"therapeuticAction.prophylactic"
-	],
-	"species": [
-		"canine"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
-	"activeIngredientIds": [],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "BronchiGuard",
-			"pt-PT": "BronchiGuard",
-			"gn-PY": "BronchiGuard",
-			"en-US": "BronchiGuard",
-			"es-ES": "BronchiGuard",
-			"fr-FR": "BronchiGuard"
-		},
-		"aliases": {
-			"pt-BR": [],
-			"pt-PT": [],
-			"gn-PY": [],
-			"en-US": [],
-			"es-ES": [],
-			"fr-FR": []
-		}
-	},
-	"sections": [],
-	"targetTermKeys": [
-		"disease.canineInfectiousTracheobronchitis",
-		"pathogen.bordetellaBronchiseptica"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "359cfb72-3f7d-4441-b686-21b165e4b8eb",
+  "typeTermKey": "medication.biologicalAndImmunological.vaccine",
+  "classificationTermKeys": [
+    "origin.biological",
+    "therapeuticAction.prophylactic"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
+  "activeIngredientIds": [],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "BronchiGuard",
+      "pt-PT": "BronchiGuard",
+      "gn-PY": "BronchiGuard",
+      "en-US": "BronchiGuard",
+      "es-ES": "BronchiGuard",
+      "fr-FR": "BronchiGuard"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": [],
+  "targetTermKeys": [
+    "disease.canineInfectiousTracheobronchitis",
+    "pathogen.bordetellaBronchiseptica"
+  ],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris"
+  ]
 }

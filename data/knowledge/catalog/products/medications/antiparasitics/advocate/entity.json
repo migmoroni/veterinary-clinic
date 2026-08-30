@@ -1,47 +1,47 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "7e8221a6-267a-42f4-9fc9-daec5fbc9086",
-	"typeTermKey": "medication.antiparasitic.endectocide",
-	"classificationTermKeys": [
-		"origin.allopathic",
-		"therapeuticAction.control"
-	],
-	"species": [
-		"canine",
-		"feline"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
-	"activeIngredientIds": [
-		"9aba4d14-23bb-4f25-bae1-6f0a6f3e37c5",
-		"611f7516-b4da-4de8-ae4c-56dd407cb8da"
-	],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Advocate",
-			"pt-PT": "Advocate",
-			"gn-PY": "Advocate",
-			"en-US": "Advocate",
-			"es-ES": "Advocate",
-			"fr-FR": "Advocate"
-		},
-		"aliases": {
-			"pt-BR": [],
-			"pt-PT": [],
-			"gn-PY": [],
-			"en-US": [],
-			"es-ES": [],
-			"fr-FR": []
-		}
-	},
-	"sections": []
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "7e8221a6-267a-42f4-9fc9-daec5fbc9086",
+  "typeTermKey": "medication.antiparasitic.endectocide",
+  "classificationTermKeys": [
+    "origin.allopathic",
+    "therapeuticAction.control"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
+  "activeIngredientIds": [
+    "9aba4d14-23bb-4f25-bae1-6f0a6f3e37c5",
+    "611f7516-b4da-4de8-ae4c-56dd407cb8da"
+  ],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Advocate",
+      "pt-PT": "Advocate",
+      "gn-PY": "Advocate",
+      "en-US": "Advocate",
+      "es-ES": "Advocate",
+      "fr-FR": "Advocate"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": [],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris",
+    "felis-catus"
+  ]
 }

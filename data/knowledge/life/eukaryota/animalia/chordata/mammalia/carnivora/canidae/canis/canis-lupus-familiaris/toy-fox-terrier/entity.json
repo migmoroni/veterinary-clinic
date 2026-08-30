@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "toy-fox-terrier",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "toy-fox-terrier",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "us"
+    ],
+    "bodyMetrics": {
+      "size": "small"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Toy Fox Terrier",
+      "pt-PT": "Toy Fox Terrier",
+      "gn-PY": "Toy Fox Terrier",
+      "en-US": "Toy Fox Terrier",
+      "es-ES": "Toy Fox Terrier",
+      "fr-FR": "Toy Fox Terrier"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

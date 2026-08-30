@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "slovensky-kopov",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "slovensky-kopov",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "sk"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Slovensky Kopov",
+      "pt-PT": "Slovensky Kopov",
+      "gn-PY": "Slovensky Kopov",
+      "en-US": "Slovensky Kopov",
+      "es-ES": "Slovensky Kopov",
+      "fr-FR": "Slovensky Kopov"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

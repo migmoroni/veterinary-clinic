@@ -1,59 +1,59 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "05b77d6a-af87-4edb-905c-bbe5b49bc262",
-	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
-	"classificationTermKeys": [
-		"origin.biological",
-		"therapeuticAction.prophylactic"
-	],
-	"species": [
-		"canine"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
-	"activeIngredientIds": [],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Nobivac Intra-Trac Oral Bb",
-			"pt-PT": "Nobivac Intra-Trac Oral Bb",
-			"gn-PY": "Nobivac Intra-Trac Oral Bb",
-			"en-US": "Nobivac Intra-Trac Oral Bb",
-			"es-ES": "Nobivac Intra-Trac Oral Bb",
-			"fr-FR": "Nobivac Intra-Trac Oral Bb"
-		},
-		"aliases": {
-			"pt-BR": [
-				"Bb"
-			],
-			"pt-PT": [
-				"Bb"
-			],
-			"gn-PY": [
-				"Bb"
-			],
-			"en-US": [
-				"Bb"
-			],
-			"es-ES": [
-				"Bb"
-			],
-			"fr-FR": [
-				"Bb"
-			]
-		}
-	},
-	"sections": [],
-	"targetTermKeys": [
-		"disease.canineInfectiousTracheobronchitis",
-		"pathogen.bordetellaBronchiseptica"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "05b77d6a-af87-4edb-905c-bbe5b49bc262",
+  "typeTermKey": "medication.biologicalAndImmunological.vaccine",
+  "classificationTermKeys": [
+    "origin.biological",
+    "therapeuticAction.prophylactic"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+  "activeIngredientIds": [],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Nobivac Intra-Trac Oral Bb",
+      "pt-PT": "Nobivac Intra-Trac Oral Bb",
+      "gn-PY": "Nobivac Intra-Trac Oral Bb",
+      "en-US": "Nobivac Intra-Trac Oral Bb",
+      "es-ES": "Nobivac Intra-Trac Oral Bb",
+      "fr-FR": "Nobivac Intra-Trac Oral Bb"
+    },
+    "aliases": {
+      "pt-BR": [
+        "Bb"
+      ],
+      "pt-PT": [
+        "Bb"
+      ],
+      "gn-PY": [
+        "Bb"
+      ],
+      "en-US": [
+        "Bb"
+      ],
+      "es-ES": [
+        "Bb"
+      ],
+      "fr-FR": [
+        "Bb"
+      ]
+    }
+  },
+  "sections": [],
+  "targetTermKeys": [
+    "disease.canineInfectiousTracheobronchitis",
+    "pathogen.bordetellaBronchiseptica"
+  ],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris"
+  ]
 }

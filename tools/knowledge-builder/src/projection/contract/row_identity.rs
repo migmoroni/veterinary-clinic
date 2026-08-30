@@ -7,7 +7,7 @@ impl SystemRow {
         match self {
             Self::TaxonomyRegistry { id, .. }
             | Self::GeoPlace { id, .. }
-            | Self::Breed { id, .. }
+            | Self::Life { id, .. }
             | Self::Manufacturer { id, .. }
             | Self::ActiveIngredient { id, .. }
             | Self::Condition { id, .. }
@@ -18,9 +18,9 @@ impl SystemRow {
                 term_key,
                 ..
             } => format!("{taxonomy_id}/{term_key}"),
-            Self::BreedOrigin {
-                breed_id, place_id, ..
-            } => format!("{breed_id}/{place_id}"),
+            Self::LifeOrigin {
+                life_id, place_id, ..
+            } => format!("{life_id}/{place_id}"),
             Self::EntityTaxonomy {
                 entity_type,
                 entity_id,

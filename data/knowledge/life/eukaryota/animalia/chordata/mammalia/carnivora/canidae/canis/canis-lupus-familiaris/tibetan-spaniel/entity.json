@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "tibetan-spaniel",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "tibetan-spaniel",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "tibet"
+    ],
+    "bodyMetrics": {
+      "size": "small"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Spaniel Tibetano",
+      "pt-PT": "Spaniel Tibetano",
+      "gn-PY": "Spaniel tibetano",
+      "en-US": "Tibetan Spaniel",
+      "es-ES": "Spaniel tibetano",
+      "fr-FR": "Épagneul tibétain"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

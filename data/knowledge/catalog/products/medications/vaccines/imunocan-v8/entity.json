@@ -1,58 +1,58 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "38402bf9-fd60-438e-a726-b49375e5abbf",
-	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
-	"classificationTermKeys": [
-		"origin.biological",
-		"therapeuticAction.prophylactic"
-	],
-	"species": [
-		"canine"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "3e8a6566-b26d-4d9c-9700-9e86e1f671bf",
-	"activeIngredientIds": [],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Imunocan V8",
-			"pt-PT": "Imunocan V8",
-			"gn-PY": "Imunocan V8",
-			"en-US": "Imunocan V8",
-			"es-ES": "Imunocan V8",
-			"fr-FR": "Imunocan V8"
-		},
-		"aliases": {
-			"pt-BR": [],
-			"pt-PT": [],
-			"gn-PY": [],
-			"en-US": [],
-			"es-ES": [],
-			"fr-FR": []
-		}
-	},
-	"sections": [],
-	"targetTermKeys": [
-		"disease.canineDistemper",
-		"disease.infectiousCanineHepatitis",
-		"disease.canineParainfluenza",
-		"disease.canineParvovirosis",
-		"pathogen.canineParvovirus",
-		"pathogen.canineAdenovirusType2",
-		"disease.canineCoronavirusInfection",
-		"pathogen.canineCoronavirus",
-		"disease.canineLeptospirosis"
-	],
-	"vaccineProfileTermKeys": [
-		"canine.v8",
-		"canine.multivalent"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "38402bf9-fd60-438e-a726-b49375e5abbf",
+  "typeTermKey": "medication.biologicalAndImmunological.vaccine",
+  "classificationTermKeys": [
+    "origin.biological",
+    "therapeuticAction.prophylactic"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "3e8a6566-b26d-4d9c-9700-9e86e1f671bf",
+  "activeIngredientIds": [],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Imunocan V8",
+      "pt-PT": "Imunocan V8",
+      "gn-PY": "Imunocan V8",
+      "en-US": "Imunocan V8",
+      "es-ES": "Imunocan V8",
+      "fr-FR": "Imunocan V8"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": [],
+  "targetTermKeys": [
+    "disease.canineDistemper",
+    "disease.infectiousCanineHepatitis",
+    "disease.canineParainfluenza",
+    "disease.canineParvovirosis",
+    "pathogen.canineParvovirus",
+    "pathogen.canineAdenovirusType2",
+    "disease.canineCoronavirusInfection",
+    "pathogen.canineCoronavirus",
+    "disease.canineLeptospirosis"
+  ],
+  "vaccineProfileTermKeys": [
+    "canine.v8",
+    "canine.multivalent"
+  ],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris"
+  ]
 }

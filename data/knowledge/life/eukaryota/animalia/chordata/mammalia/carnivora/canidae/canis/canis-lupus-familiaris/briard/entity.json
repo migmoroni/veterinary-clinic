@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "briard",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "briard",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "fr"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Briard",
+      "pt-PT": "Briard",
+      "gn-PY": "Briard",
+      "en-US": "Briard",
+      "es-ES": "Briard",
+      "fr-FR": "Briard"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

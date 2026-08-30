@@ -13,7 +13,7 @@ fn source_schema(entity_type: &str) -> Option<&'static str> {
         "active_ingredient" => Some(include_str!(
             "../../schemas/source/active_ingredient.schema.json"
         )),
-        "breed" => Some(include_str!("../../schemas/source/breed.schema.json")),
+        "life" => Some(include_str!("../../schemas/source/life.schema.json")),
         "condition" => Some(include_str!("../../schemas/source/condition.schema.json")),
         "geo_place" => Some(include_str!("../../schemas/source/geo_place.schema.json")),
         "manufacturer" => Some(include_str!(
@@ -46,10 +46,17 @@ fn inline_common(mut schema: Value) -> Result<Value, String> {
         .get("$defs")
         .cloned()
         .ok_or_else(|| "common.schema.json has no $defs".to_string())?;
-    schema
+    let schema_object = schema
         .as_object_mut()
-        .ok_or_else(|| "source schema root must be an object".to_string())?
-        .insert("$defs".to_string(), definitions);
+        .ok_or_else(|| "source schema root must be an object".to_string())?;
+    let mut merged = definitions
+        .as_object()
+        .cloned()
+        .ok_or_else(|| "common.schema.json $defs must be an object".to_string())?;
+    if let Some(local) = schema_object.get("$defs").and_then(Value::as_object) {
+        merged.extend(local.clone());
+    }
+    schema_object.insert("$defs".to_string(), Value::Object(merged));
     rewrite_local_references(&mut schema);
     Ok(schema)
 }
@@ -129,7 +136,7 @@ mod tests {
         compile("common", &parse_schema("common", COMMON).unwrap()).unwrap();
         for entity_type in [
             "active_ingredient",
-            "breed",
+            "life",
             "condition",
             "geo_place",
             "manufacturer",

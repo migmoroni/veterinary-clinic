@@ -114,14 +114,14 @@ fn validates_and_builds_all_locales_deterministically() {
         &fs::read(first_output.path().join(&first.projection.report_path)).unwrap(),
     )
     .unwrap();
-    assert_eq!(report["schemaVersion"], 4);
-    assert_eq!(first.builder_version, "0.3.1");
-    assert_eq!(first.system_schema_version, 3);
+    assert_eq!(report["schemaVersion"], 5);
+    assert_eq!(first.builder_version, "0.4.0");
+    assert_eq!(first.system_schema_version, 4);
     assert_eq!(first.system_media_schema_version, 2);
     let expected_system_tables = [
         "active_ingredient_catalog_items",
-        "breed_origin_places",
-        "breed_reference_items",
+        "life_origin_places",
+        "life_reference_items",
         "condition_catalog_items",
         "entity_media_references",
         "entity_search_terms",
@@ -171,7 +171,7 @@ fn validates_and_builds_all_locales_deterministically() {
         let user_version: u32 = database
             .query_row("PRAGMA user_version", [], |row| row.get(0))
             .unwrap();
-        assert_eq!(user_version, 3);
+        assert_eq!(user_version, 4);
         let table_count: usize = database
             .query_row(
                 "SELECT count(*) FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
@@ -203,7 +203,6 @@ fn validates_and_builds_all_locales_deterministically() {
             .unwrap();
         assert_eq!(forbidden_table_count, 0);
         for (table, column) in [
-            ("breed_reference_items", "size_term_key"),
             ("manufacturer_catalog_items", "type_term_key"),
             ("active_ingredient_catalog_items", "type_term_key"),
             ("condition_catalog_items", "type_term_key"),
@@ -245,10 +244,10 @@ fn validates_and_builds_all_locales_deterministically() {
                 |row| row.get(0),
             )
             .unwrap();
-        assert_eq!(taxonomized_types, 5);
+        assert_eq!(taxonomized_types, 4);
         let invalid_required_cardinality: usize = database
             .query_row(
-                "WITH taxonomized(entity_type, entity_id, required_purpose) AS (SELECT 'breed', id, 'size' FROM breed_reference_items UNION ALL SELECT 'manufacturer', id, 'type' FROM manufacturer_catalog_items UNION ALL SELECT 'active_ingredient', id, 'type' FROM active_ingredient_catalog_items UNION ALL SELECT 'condition', id, 'type' FROM condition_catalog_items UNION ALL SELECT 'product', id, 'type' FROM product_catalog_items) SELECT count(*) FROM taxonomized entity WHERE (SELECT count(*) FROM entity_taxonomy_terms relation JOIN taxonomy_registry taxonomy ON taxonomy.id = relation.taxonomy_id WHERE relation.entity_type = entity.entity_type AND relation.entity_id = entity.entity_id AND taxonomy.domain = entity.entity_type AND taxonomy.purpose = entity.required_purpose) <> 1",
+                "WITH taxonomized(entity_type, entity_id, required_purpose) AS (SELECT 'manufacturer', id, 'type' FROM manufacturer_catalog_items UNION ALL SELECT 'active_ingredient', id, 'type' FROM active_ingredient_catalog_items UNION ALL SELECT 'condition', id, 'type' FROM condition_catalog_items UNION ALL SELECT 'product', id, 'type' FROM product_catalog_items) SELECT count(*) FROM taxonomized entity WHERE (SELECT count(*) FROM entity_taxonomy_terms relation JOIN taxonomy_registry taxonomy ON taxonomy.id = relation.taxonomy_id WHERE relation.entity_type = entity.entity_type AND relation.entity_id = entity.entity_id AND taxonomy.domain = entity.entity_type AND taxonomy.purpose = entity.required_purpose) <> 1",
                 [],
                 |row| row.get(0),
             )
@@ -370,7 +369,7 @@ fn validates_and_builds_all_locales_deterministically() {
 fn minimal_fixture_builds_and_tampered_version_is_not_reused() {
     let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
     let validated = validate(&fixture).expect("minimal fixture must validate");
-    assert_eq!(validated.entity_count(), 14);
+    assert_eq!(validated.entity_count(), 27);
     let output = TestDirectory::new("minimal-fixture");
     let result = build(&BuildOptions {
         source: fixture.clone(),
@@ -379,6 +378,80 @@ fn minimal_fixture_builds_and_tampered_version_is_not_reused() {
     })
     .expect("minimal fixture must build");
     assert_eq!(result.locales.len(), 6);
+    let database =
+        Connection::open(output.path().join(&result.locales["pt-BR"].system.path)).unwrap();
+    assert_eq!(
+        database
+            .query_row("SELECT count(*) FROM life_reference_items", [], |row| row
+                .get::<_, usize>(
+                0
+            ))
+            .unwrap(),
+        10
+    );
+    let projected_taxonomy = database
+        .query_row(
+            "SELECT domain_id, kingdom_id, phylum_id, class_id, order_id, family_id, genus_id, species_id, breed_id, variety_id, size_term_key FROM life_reference_items WHERE id = 'poodle-toy'",
+            [],
+            |row| {
+                (0..11)
+                    .map(|index| row.get::<_, Option<String>>(index))
+                    .collect::<Result<Vec<_>, _>>()
+            },
+        )
+        .unwrap();
+    assert_eq!(projected_taxonomy[0].as_deref(), Some("eukaryota"));
+    assert_eq!(projected_taxonomy[9].as_deref(), Some("poodle-toy"));
+    assert_eq!(projected_taxonomy[10].as_deref(), Some("default"));
+    assert_eq!(
+        database
+            .query_row(
+                "SELECT count(*) FROM life_reference_items WHERE breed_id = 'poodle' AND variety_id IS NOT NULL",
+                [],
+                |row| row.get::<_, usize>(0),
+            )
+            .unwrap(),
+        1
+    );
+    assert_eq!(
+        database
+            .query_row("SELECT count(*) FROM life_origin_places", [], |row| row
+                .get::<_, usize>(
+                0
+            ))
+            .unwrap(),
+        2
+    );
+    assert_eq!(
+        database
+            .query_row(
+                "SELECT count(*) FROM life_reference_items WHERE species_id = 'canis-lupus-familiaris' AND id <> 'canis-lupus-familiaris'",
+                [],
+                |row| row.get::<_, usize>(0),
+            )
+            .unwrap(),
+        2
+    );
+    assert_eq!(
+        database
+            .query_row(
+                "SELECT count(*) FROM product_catalog_items product JOIN life_reference_items target ON target.id = 'poodle-toy' WHERE EXISTS (SELECT 1 FROM json_each(product.applicable_taxon_ids_json) applicable WHERE applicable.value IN (target.domain_id,target.kingdom_id,target.phylum_id,target.class_id,target.order_id,target.family_id,target.genus_id,target.species_id,target.breed_id,target.variety_id))",
+                [],
+                |row| row.get::<_, usize>(0),
+            )
+            .unwrap(),
+        1
+    );
+    assert_eq!(
+        database
+            .query_row(
+                "SELECT count(*) FROM treatment_protocols protocol JOIN life_reference_items target ON target.id = 'poodle-toy' WHERE EXISTS (SELECT 1 FROM json_each(protocol.applicable_taxon_ids_json) applicable WHERE applicable.value IN (target.domain_id,target.kingdom_id,target.phylum_id,target.class_id,target.order_id,target.family_id,target.genus_id,target.species_id,target.breed_id,target.variety_id))",
+                [],
+                |row| row.get::<_, usize>(0),
+            )
+            .unwrap(),
+        1
+    );
 
     let result_path = output.path().join("versions/1/build-result.json");
     let canonical_result = fs::read(&result_path).unwrap();
@@ -609,6 +682,18 @@ fn semantically_tampered_database_is_rejected_after_checksums_are_refreshed() {
             "UPDATE product_catalog_items SET normalized_name = normalized_name || '-adulterado' WHERE rowid = (SELECT rowid FROM product_catalog_items LIMIT 1)",
         ),
         (
+            "life-taxonomy",
+            "UPDATE life_reference_items SET family_id = 'felidae' WHERE id = 'poodle'",
+        ),
+        (
+            "applicable-taxon",
+            "UPDATE product_catalog_items SET applicable_taxon_ids_json = '[\"eukaryota\"]' WHERE rowid = (SELECT rowid FROM product_catalog_items LIMIT 1)",
+        ),
+        (
+            "applicable-taxon-order",
+            "UPDATE product_catalog_items SET applicable_taxon_ids_json = json_array(json_extract(applicable_taxon_ids_json, '$[1]'), json_extract(applicable_taxon_ids_json, '$[0]')) WHERE rowid = (SELECT rowid FROM product_catalog_items WHERE json_array_length(applicable_taxon_ids_json) = 2 LIMIT 1)",
+        ),
+        (
             "relation-order",
             "UPDATE product_active_ingredients SET sort_order = sort_order + 10000 WHERE rowid = (SELECT rowid FROM product_active_ingredients LIMIT 1)",
         ),
@@ -622,7 +707,7 @@ fn semantically_tampered_database_is_rejected_after_checksums_are_refreshed() {
         ),
         (
             "taxonomy-entity-type",
-            "UPDATE entity_taxonomy_terms SET entity_type = 'manufacturer' WHERE rowid = (SELECT rowid FROM entity_taxonomy_terms WHERE entity_type = 'breed' LIMIT 1)",
+            "UPDATE entity_taxonomy_terms SET entity_type = 'manufacturer' WHERE rowid = (SELECT rowid FROM entity_taxonomy_terms WHERE entity_type = 'product' LIMIT 1)",
         ),
         (
             "taxonomy-sort-order",
@@ -630,7 +715,7 @@ fn semantically_tampered_database_is_rejected_after_checksums_are_refreshed() {
         ),
         (
             "missing-required-taxonomy",
-            "DELETE FROM entity_taxonomy_terms WHERE rowid = (SELECT relation.rowid FROM entity_taxonomy_terms relation JOIN taxonomy_registry taxonomy ON taxonomy.id = relation.taxonomy_id WHERE taxonomy.purpose IN ('type', 'size') ORDER BY relation.entity_type, relation.entity_id LIMIT 1)",
+            "DELETE FROM entity_taxonomy_terms WHERE rowid = (SELECT relation.rowid FROM entity_taxonomy_terms relation JOIN taxonomy_registry taxonomy ON taxonomy.id = relation.taxonomy_id WHERE taxonomy.purpose = 'type' ORDER BY relation.entity_type, relation.entity_id LIMIT 1)",
         ),
         (
             "taxonomy-label",
@@ -782,37 +867,37 @@ fn cli_is_independent_of_current_working_directory() {
 fn validation_rejects_schema_reference_locale_and_markdown_violations() {
     let copy = TestDirectory::new("invalid-source");
     copy_tree(&source_root(), copy.path());
-    let breed_manifest =
-        find_manifest_by_type(copy.path(), "breed").expect("source contains a breed");
-    let original_breed = fs::read(&breed_manifest).unwrap();
-    let mut breed: serde_json::Value = serde_json::from_slice(&original_breed).unwrap();
+    let life_manifest =
+        find_manifest_by_type(copy.path(), "life").expect("source contains a life entity");
+    let original_life = fs::read(&life_manifest).unwrap();
+    let mut life: serde_json::Value = serde_json::from_slice(&original_life).unwrap();
 
-    breed["unexpectedField"] = serde_json::Value::Bool(true);
-    fs::write(&breed_manifest, serde_json::to_vec_pretty(&breed).unwrap()).unwrap();
+    life["unexpectedField"] = serde_json::Value::Bool(true);
+    fs::write(&life_manifest, serde_json::to_vec_pretty(&life).unwrap()).unwrap();
     assert!(validate(copy.path())
         .unwrap_err()
         .to_string()
         .contains("schema violation"));
 
-    breed = serde_json::from_slice(&original_breed).unwrap();
-    breed["localizedContent"]["name"]
+    life = serde_json::from_slice(&original_life).unwrap();
+    life["localizedContent"]["name"]
         .as_object_mut()
         .unwrap()
         .remove("fr-FR");
-    fs::write(&breed_manifest, serde_json::to_vec_pretty(&breed).unwrap()).unwrap();
+    fs::write(&life_manifest, serde_json::to_vec_pretty(&life).unwrap()).unwrap();
     assert!(validate(copy.path())
         .unwrap_err()
         .to_string()
         .contains("schema violation"));
 
-    breed = serde_json::from_slice(&original_breed).unwrap();
-    breed["sizeTermKey"] = serde_json::Value::String("unknown-size".to_string());
-    fs::write(&breed_manifest, serde_json::to_vec_pretty(&breed).unwrap()).unwrap();
+    life = serde_json::from_slice(&original_life).unwrap();
+    life["classifications"] = serde_json::json!({ "bodyMetrics": { "size": "unknown-size" } });
+    fs::write(&life_manifest, serde_json::to_vec_pretty(&life).unwrap()).unwrap();
     assert!(validate(copy.path())
         .unwrap_err()
         .to_string()
-        .contains("unresolved or cross-domain taxonomy term"));
-    fs::write(&breed_manifest, &original_breed).unwrap();
+        .contains("unresolved life:size term"));
+    fs::write(&life_manifest, &original_life).unwrap();
 
     let taxonomy_manifest = find_manifest_by_type(copy.path(), "taxonomy").unwrap();
     let original_taxonomy = fs::read(&taxonomy_manifest).unwrap();
@@ -849,6 +934,60 @@ fn validation_rejects_schema_reference_locale_and_markdown_violations() {
         .unwrap_err()
         .to_string()
         .contains("forbidden Markdown AST node"));
+}
+
+#[test]
+fn life_contract_rejects_taxonomy_metrics_and_redundant_applicability() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
+    let cases = [
+        (
+            "wrong-own-id",
+            "poodle",
+            serde_json::json!("other-poodle"),
+            vec!["taxonomy", "breed"],
+        ),
+        (
+            "missing-ancestor",
+            "poodle",
+            serde_json::json!("missing-family"),
+            vec!["taxonomy", "family"],
+        ),
+    ];
+    for (label, id, replacement, path) in cases {
+        let copy = TestDirectory::new(label);
+        copy_tree(&fixture, copy.path());
+        let manifest = find_manifest_by_id(copy.path(), id).unwrap();
+        let mut value: serde_json::Value =
+            serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
+        value[path[0]][path[1]] = replacement;
+        fs::write(&manifest, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+        assert!(validate(copy.path()).is_err(), "{label} must be rejected");
+    }
+
+    let periods = TestDirectory::new("invalid-life-periods");
+    copy_tree(&fixture, periods.path());
+    let manifest = find_manifest_by_id(periods.path(), "poodle-toy").unwrap();
+    let mut value: serde_json::Value =
+        serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
+    value["classifications"]["bodyMetrics"]["stageMetrics"]["male"]["young"]["period"] =
+        serde_json::json!([2, 12]);
+    fs::write(&manifest, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+    assert!(validate(periods.path())
+        .unwrap_err()
+        .to_string()
+        .contains("periods must follow"));
+
+    let applicability = TestDirectory::new("redundant-life-applicability");
+    copy_tree(&fixture, applicability.path());
+    let product = find_manifest_by_type(applicability.path(), "product").unwrap();
+    let mut value: serde_json::Value =
+        serde_json::from_slice(&fs::read(&product).unwrap()).unwrap();
+    value["applicableTaxonIds"] = serde_json::json!(["canis-lupus-familiaris", "poodle"]);
+    fs::write(&product, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+    assert!(validate(applicability.path())
+        .unwrap_err()
+        .to_string()
+        .contains("redundant ancestor and descendant"));
 }
 
 #[test]
@@ -1414,6 +1553,25 @@ fn find_manifest_by_type(root: &Path, entity_type: &str) -> Option<PathBuf> {
                 serde_json::from_slice(&fs::read(entry.path()).ok()?).ok()?;
             if value.get("entityType").and_then(serde_json::Value::as_str) == Some(entity_type) {
                 return Some(entry.path());
+            }
+        }
+    }
+    None
+}
+
+fn find_manifest_by_id(root: &Path, id: &str) -> Option<PathBuf> {
+    let mut stack = vec![root.to_path_buf()];
+    while let Some(path) = stack.pop() {
+        for entry in fs::read_dir(path).ok()?.filter_map(Result::ok) {
+            let path = entry.path();
+            if path.is_dir() {
+                stack.push(path);
+            } else if path.file_name().is_some_and(|name| name == "entity.json") {
+                let value: serde_json::Value =
+                    serde_json::from_slice(&fs::read(&path).ok()?).ok()?;
+                if value.get("id").and_then(serde_json::Value::as_str) == Some(id) {
+                    return Some(path);
+                }
             }
         }
     }

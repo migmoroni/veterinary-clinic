@@ -7,7 +7,7 @@ fn product_row() -> SystemRow {
         id: "id".to_string(),
         name: "Name".to_string(),
         normalized_name: "name".to_string(),
-        species_json: "[]".to_string(),
+        applicable_taxon_ids_json: "[]".to_string(),
         aliases_json: "[]".to_string(),
         manufacturer_id: "manufacturer".to_string(),
         regions_json: "[]".to_string(),

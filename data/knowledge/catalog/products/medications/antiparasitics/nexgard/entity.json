@@ -1,49 +1,49 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "8200973c-fc8a-4213-b992-7aeef3779ef4",
-	"typeTermKey": "medication.antiparasitic.ectoparasiticide",
-	"classificationTermKeys": [
-		"origin.allopathic",
-		"therapeuticAction.control"
-	],
-	"species": [
-		"canine"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
-	"activeIngredientIds": [
-		"42ecd4a0-c4b3-4276-8122-693460cfe6a6"
-	],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "NexGard",
-			"pt-PT": "NexGard",
-			"gn-PY": "NexGard",
-			"en-US": "NexGard",
-			"es-ES": "NexGard",
-			"fr-FR": "NexGard"
-		},
-		"aliases": {
-			"pt-BR": [],
-			"pt-PT": [],
-			"gn-PY": [],
-			"en-US": [],
-			"es-ES": [],
-			"fr-FR": []
-		}
-	},
-	"sections": [],
-	"targetTermKeys": [
-		"parasite.flea",
-		"parasite.tick"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "8200973c-fc8a-4213-b992-7aeef3779ef4",
+  "typeTermKey": "medication.antiparasitic.ectoparasiticide",
+  "classificationTermKeys": [
+    "origin.allopathic",
+    "therapeuticAction.control"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+  "activeIngredientIds": [
+    "42ecd4a0-c4b3-4276-8122-693460cfe6a6"
+  ],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "NexGard",
+      "pt-PT": "NexGard",
+      "gn-PY": "NexGard",
+      "en-US": "NexGard",
+      "es-ES": "NexGard",
+      "fr-FR": "NexGard"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": [],
+  "targetTermKeys": [
+    "parasite.flea",
+    "parasite.tick"
+  ],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris"
+  ]
 }

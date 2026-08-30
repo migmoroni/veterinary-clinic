@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "romanian-carpathian-shepherd-dog",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "romanian-carpathian-shepherd-dog",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "ro"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Pastor Romeno dos Cárpatos",
+      "pt-PT": "Pastor Romeno dos Cárpatos",
+      "gn-PY": "Pastor rumano de los Cárpatos",
+      "en-US": "Romanian Carpathian Shepherd Dog",
+      "es-ES": "Pastor rumano de los Cárpatos",
+      "fr-FR": "Berger roumain des Carpates"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

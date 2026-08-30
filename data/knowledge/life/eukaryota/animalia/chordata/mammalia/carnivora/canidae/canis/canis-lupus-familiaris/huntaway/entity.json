@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "huntaway",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "huntaway",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "nz"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Huntaway",
+      "pt-PT": "Huntaway",
+      "gn-PY": "Huntaway",
+      "en-US": "Huntaway",
+      "es-ES": "Huntaway",
+      "fr-FR": "Huntaway"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

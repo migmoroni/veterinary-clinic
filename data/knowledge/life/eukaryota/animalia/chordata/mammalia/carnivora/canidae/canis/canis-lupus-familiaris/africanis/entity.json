@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "africanis",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "africanis",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "southern-africa"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Africanis",
+      "pt-PT": "Africanis",
+      "gn-PY": "Africanis",
+      "en-US": "Africanis",
+      "es-ES": "Africanis",
+      "fr-FR": "Africanis"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

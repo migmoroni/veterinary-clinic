@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "canadian-eskimo-dog",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "canadian-eskimo-dog",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "ca"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Cão Esquimó Canadense",
+      "pt-PT": "Cão Esquimó Canadense",
+      "gn-PY": "Perro esquimal canadiense",
+      "en-US": "Canadian Eskimo Dog",
+      "es-ES": "Perro esquimal canadiense",
+      "fr-FR": "Chien esquimau canadien"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

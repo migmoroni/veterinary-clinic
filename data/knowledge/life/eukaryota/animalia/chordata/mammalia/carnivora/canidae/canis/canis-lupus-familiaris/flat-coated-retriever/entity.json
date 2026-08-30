@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "flat-coated-retriever",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "flat-coated-retriever",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "england"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Flat-Coated Retriever",
+      "pt-PT": "Flat-Coated Retriever",
+      "gn-PY": "Flat-Coated Retriever",
+      "en-US": "Flat-Coated Retriever",
+      "es-ES": "Flat-Coated Retriever",
+      "fr-FR": "Flat-Coated Retriever"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

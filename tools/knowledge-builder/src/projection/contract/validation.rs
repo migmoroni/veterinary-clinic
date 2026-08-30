@@ -103,8 +103,8 @@ fn validate_universal_taxonomies(operations: &[SystemProjectionOperation]) -> Re
                 return Err(format!("duplicate taxonomy term {taxonomy_id}/{term_key}"));
             }
             SystemRow::TaxonomyTerm { .. } => {}
-            SystemRow::Breed { id, .. } => {
-                entities.insert(("breed", id));
+            SystemRow::Life { id, .. } => {
+                entities.insert(("life", id));
             }
             SystemRow::Manufacturer { id, .. } => {
                 entities.insert(("manufacturer", id));
@@ -414,34 +414,52 @@ pub(super) fn validate_system_operation(
                     );
                     false
                 }
-                SystemRow::Breed {
+                SystemRow::Life {
                     id,
-                    species_json,
+                    domain_id,
+                    kingdom_id,
+                    phylum_id,
+                    class_id,
+                    order_id,
+                    family_id,
+                    genus_id,
+                    species_id,
+                    breed_id,
+                    variety_id,
+                    size_term_key,
                     name,
                     normalized_name,
                     aliases_json,
-                    average_weight_kg_json,
-                    average_height_cm_json,
+                    stage_metrics_json,
                     content_json,
                 } => {
                     let _ = (
                         id,
-                        species_json,
+                        domain_id,
+                        kingdom_id,
+                        phylum_id,
+                        class_id,
+                        order_id,
+                        family_id,
+                        genus_id,
+                        species_id,
+                        breed_id,
+                        variety_id,
+                        size_term_key,
                         name,
                         normalized_name,
                         aliases_json,
-                        average_weight_kg_json,
-                        average_height_cm_json,
+                        stage_metrics_json,
                         content_json,
                     );
                     false
                 }
-                SystemRow::BreedOrigin {
-                    breed_id,
+                SystemRow::LifeOrigin {
+                    life_id,
                     place_id,
                     sort_order,
                 } => {
-                    let _ = (breed_id, place_id, sort_order);
+                    let _ = (life_id, place_id, sort_order);
                     false
                 }
                 SystemRow::Manufacturer {
@@ -512,7 +530,7 @@ pub(super) fn validate_system_operation(
                     id,
                     name,
                     normalized_name,
-                    species_json,
+                    applicable_taxon_ids_json,
                     aliases_json,
                     manufacturer_id,
                     regions_json,
@@ -526,7 +544,7 @@ pub(super) fn validate_system_operation(
                         id,
                         name,
                         normalized_name,
-                        species_json,
+                        applicable_taxon_ids_json,
                         aliases_json,
                         manufacturer_id,
                         regions_json,
@@ -561,10 +579,17 @@ pub(super) fn validate_system_operation(
                     kind,
                     name,
                     normalized_name,
-                    species_json,
+                    applicable_taxon_ids_json,
                     observation,
                 } => {
-                    let _ = (id, kind, name, normalized_name, species_json, observation);
+                    let _ = (
+                        id,
+                        kind,
+                        name,
+                        normalized_name,
+                        applicable_taxon_ids_json,
+                        observation,
+                    );
                     false
                 }
                 SystemRow::TreatmentProtocolItem {

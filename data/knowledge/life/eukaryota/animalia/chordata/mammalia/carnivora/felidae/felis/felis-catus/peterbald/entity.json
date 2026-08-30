@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "peterbald",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "felidae",
+    "genus": "felis",
+    "species": "felis-catus",
+    "breed": "peterbald",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "ru"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Peterbald",
+      "pt-PT": "Peterbald",
+      "gn-PY": "Peterbald",
+      "en-US": "Peterbald",
+      "es-ES": "Peterbald",
+      "fr-FR": "Peterbald"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

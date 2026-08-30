@@ -22,7 +22,7 @@ pub(super) fn validate_localized_schema(entry: &SourceEntry, diagnostics: &mut V
         ),
         CanonicalEntity::Manufacturer(_)
         | CanonicalEntity::Condition(_)
-        | CanonicalEntity::Breed(_)
+        | CanonicalEntity::Life(_)
         | CanonicalEntity::GeoPlace(_) => validate_localized_content(
             entry,
             content,
@@ -180,7 +180,7 @@ pub(super) fn validate_sections(entry: &SourceEntry, diagnostics: &mut Vec<Diagn
             "prevention",
             "references",
         ],
-        CanonicalEntity::Breed(_) => &[
+        CanonicalEntity::Life(_) => &[
             "characteristics",
             "morphology",
             "behavior",

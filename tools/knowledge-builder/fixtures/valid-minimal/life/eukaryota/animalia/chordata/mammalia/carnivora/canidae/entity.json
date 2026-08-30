@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "canidae",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": null,
+    "species": null,
+    "breed": null,
+    "variety": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "canidae",
+      "pt-PT": "canidae",
+      "gn-PY": "canidae",
+      "en-US": "canidae",
+      "es-ES": "canidae",
+      "fr-FR": "canidae"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

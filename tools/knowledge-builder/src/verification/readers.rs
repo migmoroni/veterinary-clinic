@@ -155,17 +155,18 @@ fn read_system_rows(connection: &Connection) -> Result<SystemRows, String> {
                 country_codes_json: row.get(3)?, latitude: row.get(4)?, longitude: row.get(5)?, name: row.get(6)?,
                 normalized_name: row.get(7)?, aliases_json: row.get(8)? }))
         })?);
-    result.insert(SystemTable::BreedReferenceItems, query(connection,
-        "SELECT id, species_json, name, normalized_name, aliases_json, average_weight_kg_json, average_height_cm_json, content_json FROM breed_reference_items ORDER BY id", |row| {
+    result.insert(SystemTable::LifeReferenceItems, query(connection,
+        "SELECT id, domain_id, kingdom_id, phylum_id, class_id, order_id, family_id, genus_id, species_id, breed_id, variety_id, size_term_key, name, normalized_name, aliases_json, stage_metrics_json, content_json FROM life_reference_items ORDER BY id", |row| {
             let id: String = row.get(0)?;
-            Ok((id.clone(), SystemRow::Breed { id, species_json: row.get(1)?, name: row.get(2)?, normalized_name: row.get(3)?,
-                aliases_json: row.get(4)?, average_weight_kg_json: row.get(5)?,
-                average_height_cm_json: row.get(6)?, content_json: row.get(7)? }))
+            Ok((id.clone(), SystemRow::Life { id, domain_id: row.get(1)?, kingdom_id: row.get(2)?, phylum_id: row.get(3)?, class_id: row.get(4)?,
+                order_id: row.get(5)?, family_id: row.get(6)?, genus_id: row.get(7)?, species_id: row.get(8)?, breed_id: row.get(9)?,
+                variety_id: row.get(10)?, size_term_key: row.get(11)?, name: row.get(12)?, normalized_name: row.get(13)?, aliases_json: row.get(14)?,
+                stage_metrics_json: row.get(15)?, content_json: row.get(16)? }))
         })?);
-    result.insert(SystemTable::BreedOriginPlaces, query(connection,
-        "SELECT breed_id, place_id, sort_order FROM breed_origin_places ORDER BY breed_id, sort_order", |row| {
-            let breed_id: String = row.get(0)?; let place_id: String = row.get(1)?;
-            Ok((format!("{breed_id}/{place_id}"), SystemRow::BreedOrigin { breed_id, place_id, sort_order: row.get(2)? }))
+    result.insert(SystemTable::LifeOriginPlaces, query(connection,
+        "SELECT life_id, place_id, sort_order FROM life_origin_places ORDER BY life_id, sort_order", |row| {
+            let life_id: String = row.get(0)?; let place_id: String = row.get(1)?;
+            Ok((format!("{life_id}/{place_id}"), SystemRow::LifeOrigin { life_id, place_id, sort_order: row.get(2)? }))
         })?);
     result.insert(SystemTable::ManufacturerCatalogItems, query(connection,
         "SELECT id, name, normalized_name, aliases_json, regions_json, website, content_json FROM manufacturer_catalog_items ORDER BY id", |row| {
@@ -187,10 +188,10 @@ fn read_system_rows(connection: &Connection) -> Result<SystemRows, String> {
                 aliases_json: row.get(3)?, regions_json: row.get(4)?, content_json: row.get(5)? }))
         })?);
     result.insert(SystemTable::ProductCatalogItems, query(connection,
-        "SELECT id, name, normalized_name, species_json, aliases_json, manufacturer_id, regions_json, regulatory_identifiers_json, commercial_line, presentation_dosage, target_species_warnings_json, content_json FROM product_catalog_items ORDER BY id", |row| {
+        "SELECT id, name, normalized_name, applicable_taxon_ids_json, aliases_json, manufacturer_id, regions_json, regulatory_identifiers_json, commercial_line, presentation_dosage, target_species_warnings_json, content_json FROM product_catalog_items ORDER BY id", |row| {
             let id: String = row.get(0)?;
             Ok((id.clone(), SystemRow::Product { id, name: row.get(1)?, normalized_name: row.get(2)?,
-                species_json: row.get(3)?, aliases_json: row.get(4)?, manufacturer_id: row.get(5)?, regions_json: row.get(6)?,
+                applicable_taxon_ids_json: row.get(3)?, aliases_json: row.get(4)?, manufacturer_id: row.get(5)?, regions_json: row.get(6)?,
                 regulatory_identifiers_json: row.get(7)?, commercial_line: row.get(8)?, presentation_dosage: row.get(9)?,
                 target_species_warnings_json: row.get(10)?, content_json: row.get(11)? }))
         })?);
@@ -206,10 +207,10 @@ fn read_system_rows(connection: &Connection) -> Result<SystemRows, String> {
             Ok((format!("{product_id}/{active_ingredient_id}"), SystemRow::ProductActiveIngredient { product_id, active_ingredient_id, sort_order: row.get(2)? }))
         })?);
     result.insert(SystemTable::TreatmentProtocols, query(connection,
-        "SELECT id, kind, name, normalized_name, species_json, observation FROM treatment_protocols ORDER BY id", |row| {
+        "SELECT id, kind, name, normalized_name, applicable_taxon_ids_json, observation FROM treatment_protocols ORDER BY id", |row| {
             let id: String = row.get(0)?;
             Ok((id.clone(), SystemRow::TreatmentProtocol { id, kind: row.get(1)?, name: row.get(2)?, normalized_name: row.get(3)?,
-                species_json: row.get(4)?, observation: row.get(5)? }))
+                applicable_taxon_ids_json: row.get(4)?, observation: row.get(5)? }))
         })?);
     result.insert(SystemTable::TreatmentProtocolItems, query(connection,
         "SELECT protocol_id, product_id, sort_order FROM treatment_protocol_items ORDER BY protocol_id, sort_order", |row| {

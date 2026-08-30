@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "indian-spitz",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "indian-spitz",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "in"
+    ],
+    "bodyMetrics": {
+      "size": "small"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Spitz Indiano",
+      "pt-PT": "Spitz Indiano",
+      "gn-PY": "Spitz indio",
+      "en-US": "Indian Spitz",
+      "es-ES": "Spitz indio",
+      "fr-FR": "Spitz indien"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

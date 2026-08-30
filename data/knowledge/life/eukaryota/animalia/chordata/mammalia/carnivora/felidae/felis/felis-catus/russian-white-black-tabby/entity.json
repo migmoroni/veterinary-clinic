@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "russian-white-black-tabby",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "felidae",
+    "genus": "felis",
+    "species": "felis-catus",
+    "breed": "russian-white-black-tabby",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "au"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Russian White, Black e Tabby",
+      "pt-PT": "Russian White, Black e Tabby",
+      "gn-PY": "Russian White, Black y Tabby",
+      "en-US": "Russian White, Black, and Tabby",
+      "es-ES": "Russian White, Black y Tabby",
+      "fr-FR": "Russe blanc, noir et tabby"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

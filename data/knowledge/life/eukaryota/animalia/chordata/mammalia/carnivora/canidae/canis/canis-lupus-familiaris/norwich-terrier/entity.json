@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "norwich-terrier",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "norwich-terrier",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "england"
+    ],
+    "bodyMetrics": {
+      "size": "small"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Norwich Terrier",
+      "pt-PT": "Norwich Terrier",
+      "gn-PY": "Norwich Terrier",
+      "en-US": "Norwich Terrier",
+      "es-ES": "Norwich Terrier",
+      "fr-FR": "Norwich Terrier"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

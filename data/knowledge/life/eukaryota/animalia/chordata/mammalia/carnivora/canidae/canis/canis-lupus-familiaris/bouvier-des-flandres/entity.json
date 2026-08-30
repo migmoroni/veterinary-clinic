@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "bouvier-des-flandres",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "bouvier-des-flandres",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "be"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Bouvier des Flandres",
+      "pt-PT": "Bouvier des Flandres",
+      "gn-PY": "Bouvier des Flandres",
+      "en-US": "Bouvier des Flandres",
+      "es-ES": "Bouvier des Flandres",
+      "fr-FR": "Bouvier des Flandres"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

@@ -89,13 +89,6 @@ pub struct SectionDeclaration {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct MeasurementRange {
-    pub male: [f64; 2],
-    pub female: [f64; 2],
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
 pub struct Centroid {
     pub latitude: Option<f64>,
     pub longitude: Option<f64>,
@@ -143,7 +136,8 @@ pub struct ProductEntity {
     pub type_term_key: String,
     #[serde(rename = "classificationTermKeys")]
     pub classification_term_keys: Vec<String>,
-    pub species: Vec<String>,
+    #[serde(rename = "applicableTaxonIds")]
+    pub applicable_taxon_ids: Vec<String>,
     pub regions: Vec<String>,
     #[serde(rename = "manufacturerId")]
     pub manufacturer_id: String,
@@ -230,19 +224,118 @@ pub struct ConditionEntity {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct BreedEntity {
+pub struct LifeTaxonomy {
+    pub domain: String,
+    pub kingdom: Option<String>,
+    pub phylum: Option<String>,
+    #[serde(rename = "class")]
+    pub class_id: Option<String>,
+    pub order: Option<String>,
+    pub family: Option<String>,
+    pub genus: Option<String>,
+    pub species: Option<String>,
+    pub breed: Option<String>,
+    pub variety: Option<String>,
+}
+
+impl LifeTaxonomy {
+    pub(crate) fn positions(&self) -> [Option<&str>; 10] {
+        [
+            Some(self.domain.as_str()),
+            self.kingdom.as_deref(),
+            self.phylum.as_deref(),
+            self.class_id.as_deref(),
+            self.order.as_deref(),
+            self.family.as_deref(),
+            self.genus.as_deref(),
+            self.species.as_deref(),
+            self.breed.as_deref(),
+            self.variety.as_deref(),
+        ]
+    }
+
+    pub(crate) fn level(&self) -> usize {
+        self.positions()
+            .iter()
+            .rposition(Option::is_some)
+            .unwrap_or(0)
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct LifeClassifications {
+    #[serde(rename = "originPlaceIds")]
+    pub origin_place_ids: Option<Vec<String>>,
+    #[serde(rename = "bodyMetrics")]
+    pub body_metrics: Option<LifeBodyMetrics>,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LifePeriodUnit {
+    Minutes,
+    Hours,
+    Days,
+    Weeks,
+    Months,
+    Years,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct LifeWeightMetrics {
+    pub live: [f64; 2],
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct LifeMeasures {
+    pub height: Option<[f64; 2]>,
+    pub length: Option<[f64; 2]>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct LifeBodyMetricStage {
+    pub period: [Option<f64>; 2],
+    pub weight: Option<LifeWeightMetrics>,
+    pub measure: Option<LifeMeasures>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct LifeSexBodyMetrics {
+    pub newborn: LifeBodyMetricStage,
+    pub young: LifeBodyMetricStage,
+    pub adult: LifeBodyMetricStage,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct LifeStageMetrics {
+    #[serde(rename = "periodUnit")]
+    pub period_unit: LifePeriodUnit,
+    pub male: LifeSexBodyMetrics,
+    pub female: LifeSexBodyMetrics,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct LifeBodyMetrics {
+    pub size: Option<String>,
+    #[serde(rename = "stageMetrics")]
+    pub stage_metrics: Option<LifeStageMetrics>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct LifeEntity {
     #[serde(rename = "schemaVersion")]
     pub schema_version: u32,
     pub id: String,
-    pub species: Vec<String>,
-    #[serde(rename = "originPlaceIds")]
-    pub origin_place_ids: Vec<String>,
-    #[serde(rename = "sizeTermKey")]
-    pub size_term_key: String,
-    #[serde(rename = "averageWeightKg")]
-    pub average_weight_kg: MeasurementRange,
-    #[serde(rename = "averageHeightCm")]
-    pub average_height_cm: MeasurementRange,
+    pub taxonomy: LifeTaxonomy,
+    pub classifications: Option<LifeClassifications>,
     #[serde(rename = "localizedContent")]
     pub localized_content: LocalizedContent,
     pub sections: Vec<SectionDeclaration>,
@@ -287,7 +380,8 @@ pub struct TreatmentProtocolEntity {
     pub schema_version: u32,
     pub id: String,
     pub kind: String,
-    pub species: Vec<String>,
+    #[serde(rename = "applicableTaxonIds")]
+    pub applicable_taxon_ids: Vec<String>,
     #[serde(rename = "productIds")]
     pub product_ids: Vec<String>,
     pub doses: Vec<ProtocolDose>,
@@ -320,8 +414,8 @@ pub struct TaxonomyEntity {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(tag = "entityType")]
 pub enum CanonicalEntity {
-    #[serde(rename = "breed")]
-    Breed(BreedEntity),
+    #[serde(rename = "life")]
+    Life(Box<LifeEntity>),
     #[serde(rename = "product")]
     Product(ProductEntity),
     #[serde(rename = "manufacturer")]
@@ -341,7 +435,7 @@ pub enum CanonicalEntity {
 impl CanonicalEntity {
     pub fn entity_type(&self) -> &'static str {
         match self {
-            Self::Breed(_) => "breed",
+            Self::Life(_) => "life",
             Self::Product(_) => "product",
             Self::Manufacturer(_) => "manufacturer",
             Self::ActiveIngredient(_) => "active_ingredient",
@@ -354,7 +448,7 @@ impl CanonicalEntity {
 
     pub fn id(&self) -> &str {
         match self {
-            Self::Breed(value) => &value.id,
+            Self::Life(value) => &value.id,
             Self::Product(value) => &value.id,
             Self::Manufacturer(value) => &value.id,
             Self::ActiveIngredient(value) => &value.id,
@@ -367,7 +461,7 @@ impl CanonicalEntity {
 
     pub fn schema_version(&self) -> u32 {
         match self {
-            Self::Breed(value) => value.schema_version,
+            Self::Life(value) => value.schema_version,
             Self::Product(value) => value.schema_version,
             Self::Manufacturer(value) => value.schema_version,
             Self::ActiveIngredient(value) => value.schema_version,
@@ -380,7 +474,7 @@ impl CanonicalEntity {
 
     pub fn localized_content(&self) -> Option<&LocalizedContent> {
         match self {
-            Self::Breed(value) => Some(&value.localized_content),
+            Self::Life(value) => Some(&value.localized_content),
             Self::Product(value) => Some(&value.localized_content),
             Self::Manufacturer(value) => Some(&value.localized_content),
             Self::ActiveIngredient(value) => Some(&value.localized_content),
@@ -393,7 +487,7 @@ impl CanonicalEntity {
 
     pub fn sections(&self) -> &[SectionDeclaration] {
         match self {
-            Self::Breed(value) => &value.sections,
+            Self::Life(value) => &value.sections,
             Self::Product(value) => &value.sections,
             Self::Manufacturer(value) => &value.sections,
             Self::ActiveIngredient(value) => &value.sections,
@@ -404,7 +498,7 @@ impl CanonicalEntity {
 
     pub fn content_path(&self) -> Option<&str> {
         match self {
-            Self::Breed(value) => value.content_path.as_deref(),
+            Self::Life(value) => value.content_path.as_deref(),
             Self::Product(value) => value.content_path.as_deref(),
             Self::Manufacturer(value) => value.content_path.as_deref(),
             Self::ActiveIngredient(value) => value.content_path.as_deref(),
@@ -415,7 +509,7 @@ impl CanonicalEntity {
 
     pub fn structural_media(&self) -> Option<&StructuralMedia> {
         match self {
-            Self::Breed(value) => value.media.as_ref(),
+            Self::Life(value) => value.media.as_ref(),
             Self::Product(value) => value.media.as_ref(),
             Self::Manufacturer(value) => value.media.as_ref(),
             Self::ActiveIngredient(value) => value.media.as_ref(),
@@ -445,7 +539,7 @@ pub fn source_schema_fingerprint_input() -> &'static [&'static str] {
     &[
         include_str!("../../schemas/source/common.schema.json"),
         include_str!("../../schemas/source/active_ingredient.schema.json"),
-        include_str!("../../schemas/source/breed.schema.json"),
+        include_str!("../../schemas/source/life.schema.json"),
         include_str!("../../schemas/source/condition.schema.json"),
         include_str!("../../schemas/source/geo_place.schema.json"),
         include_str!("../../schemas/source/manufacturer.schema.json"),

@@ -40,14 +40,6 @@
     },
     "sections": { "type": "array", "uniqueItems": true, "maxItems": 64, "items": { "$ref": "#/$defs/section" } },
     "contentPath": { "type": "string", "minLength": 1, "maxLength": 512, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000]+$" },
-    "range": {
-      "type": "array", "minItems": 2, "maxItems": 2,
-      "prefixItems": [{ "type": "number", "minimum": 0 }, { "type": "number", "minimum": 0 }], "items": false
-    },
-    "measurementRange": {
-      "type": "object", "additionalProperties": false, "required": ["male", "female"],
-      "properties": { "male": { "$ref": "#/$defs/range" }, "female": { "$ref": "#/$defs/range" } }
-    },
     "centroid": {
       "type": "object", "additionalProperties": false, "required": ["latitude", "longitude"],
       "properties": {

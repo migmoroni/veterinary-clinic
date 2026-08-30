@@ -1,46 +1,46 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "247a2984-bc4a-4473-a6af-014337a7f5f9",
-	"typeTermKey": "medication.antiparasitic.endectocide",
-	"classificationTermKeys": [
-		"origin.allopathic",
-		"therapeuticAction.control"
-	],
-	"species": [
-		"canine"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
-	"activeIngredientIds": [
-		"42ecd4a0-c4b3-4276-8122-693460cfe6a6",
-		"afda30e9-4ab0-4b35-a186-0e4891bd412d"
-	],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "NexGard Spectra",
-			"pt-PT": "NexGard Spectra",
-			"gn-PY": "NexGard Spectra",
-			"en-US": "NexGard Spectra",
-			"es-ES": "NexGard Spectra",
-			"fr-FR": "NexGard Spectra"
-		},
-		"aliases": {
-			"pt-BR": [],
-			"pt-PT": [],
-			"gn-PY": [],
-			"en-US": [],
-			"es-ES": [],
-			"fr-FR": []
-		}
-	},
-	"sections": []
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "247a2984-bc4a-4473-a6af-014337a7f5f9",
+  "typeTermKey": "medication.antiparasitic.endectocide",
+  "classificationTermKeys": [
+    "origin.allopathic",
+    "therapeuticAction.control"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+  "activeIngredientIds": [
+    "42ecd4a0-c4b3-4276-8122-693460cfe6a6",
+    "afda30e9-4ab0-4b35-a186-0e4891bd412d"
+  ],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "NexGard Spectra",
+      "pt-PT": "NexGard Spectra",
+      "gn-PY": "NexGard Spectra",
+      "en-US": "NexGard Spectra",
+      "es-ES": "NexGard Spectra",
+      "fr-FR": "NexGard Spectra"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": [],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris"
+  ]
 }

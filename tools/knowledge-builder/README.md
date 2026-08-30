@@ -149,7 +149,7 @@ positivos. Os exemplos executáveis vivem em `fixtures/contexts/`.
 A fonte pode conter:
 
 - produtos, fabricantes, princípios ativos e condições;
-- raças e localidades geográficas;
+- entidades de vida nos dez níveis e localidades geográficas;
 - taxonomias e relações semânticas;
 - protocolos e doses;
 - conteúdo localizado simples;
@@ -292,12 +292,12 @@ flowchart LR
 
             subgraph CATALOG["Entidades localizadas"]
                 GEO["geo_places<br/>PK id<br/>parent_place_id · name · coordinates"]
-                BREED["breed_reference_items<br/>PK id<br/>species_json · measurements · content_json"]
-                BOP["breed_origin_places<br/>PK breed_id + place_id<br/>sort_order"]
+                LIFE["life_reference_items<br/>PK id<br/>10 colunas taxonômicas · size · stage metrics"]
+                LOP["life_origin_places<br/>PK life_id + place_id<br/>sort_order"]
                 MFR["manufacturer_catalog_items<br/>PK id<br/>name · regions_json · content_json"]
                 ING["active_ingredient_catalog_items<br/>PK id<br/>name · nomenclature · content_json"]
                 COND["condition_catalog_items<br/>PK id<br/>name · regions_json · content_json"]
-                PROD["product_catalog_items<br/>PK id<br/>manufacturer_id · species_json · content_json"]
+                PROD["product_catalog_items<br/>PK id<br/>manufacturer_id · applicable_taxon_ids_json"]
             end
 
             subgraph RELATIONS["Relações semânticas"]
@@ -306,7 +306,7 @@ flowchart LR
             end
 
             subgraph PROTOCOLS["Protocolos de tratamento"]
-                TP["treatment_protocols<br/>PK id<br/>kind · name · species_json"]
+                TP["treatment_protocols<br/>PK id<br/>kind · name · applicable_taxon_ids_json"]
                 TPI["treatment_protocol_items<br/>PK protocol_id + product_id<br/>sort_order"]
                 TPD["treatment_protocol_doses<br/>PK protocol_id + dose_id<br/>validity · sort_order"]
             end
@@ -335,8 +335,9 @@ flowchart LR
     TT -->|"FK parent term"| TT
 
     GEO -->|"FK parent_place_id"| GEO
-    BREED -->|"FK breed_id"| BOP
-    GEO -->|"FK place_id"| BOP
+    LIFE -->|"FKs da cadeia"| LIFE
+    LIFE -->|"FK life_id"| LOP
+    GEO -->|"FK place_id"| LOP
     MFR -->|"FK manufacturer_id"| PROD
 
     TT -->|"FK taxonomy_id + term_key"| ETT
@@ -347,14 +348,14 @@ flowchart LR
     PROD -->|"FK product_id"| TPI
     TP -->|"FK protocol_id"| TPD
 
-    BREED -.->|"identidade lógica"| ENTITY_ID
+    LIFE -.->|"identidade lógica"| ENTITY_ID
     MFR -.->|"identidade lógica"| ENTITY_ID
     ING -.->|"identidade lógica"| ENTITY_ID
     COND -.->|"identidade lógica"| ENTITY_ID
     PROD -.->|"identidade lógica"| ENTITY_ID
     GEO -.->|"identidade lógica"| ENTITY_ID
     TP -.->|"identidade lógica"| ENTITY_ID
-    ENTITY_ID -.->|"5 tipos taxonomizados; sem FK"| ETT
+    ENTITY_ID -.->|"4 tipos de catálogo; sem FK"| ETT
     ENTITY_ID -.->|"entidades localizadas; sem FK"| EST
     ENTITY_ID -.->|"5 tipos com mídia; sem FK"| EMR
 
@@ -372,8 +373,8 @@ flowchart LR
 
     class KBM,KRM,MKBM,MKRM metadata;
     class TR,TT taxonomy;
-    class GEO,BREED,MFR,ING,COND,PROD,TP catalog;
-    class BOP,ETT,PAI,TPI,TPD,EST relation;
+    class GEO,LIFE,MFR,ING,COND,PROD,TP catalog;
+    class LOP,ETT,PAI,TPI,TPD,EST relation;
     class EMR,MA media;
     class CAS storage;
 ```
@@ -385,12 +386,11 @@ polimórficos, atravessarem bancos diferentes ou apontarem para arquivos CAS.
 Colunas `*_json` guardam atributos compostos do próprio registro; elas não
 representam tabelas ou relacionamentos ocultos.
 
-As 13 taxonomias canônicas usam exclusivamente `taxonomy_registry` e
-`taxonomy_terms`. Raças, fabricantes, princípios ativos, condições e produtos
-materializam porte, tipo, classificação, alvo, perfil vacinal, estágio de vida
-e escopo terapêutico somente em `entity_taxonomy_terms`. O par
-`domain + purpose` resolve o vocabulário; não existe uma coluna ou tabela
-paralela por propósito.
+As 13 taxonomias canônicas usam `taxonomy_registry` e `taxonomy_terms`.
+Fabricantes, princípios ativos, condições e produtos materializam relações N:N
+em `entity_taxonomy_terms`. `life:size` é `ZeroOrOne` e ocupa exclusivamente
+`life_reference_items.size_term_key`; identidade taxonômica, origens e métricas
+de vida usam suas colunas e tabelas fechadas, sem relações duplicadas.
 
 `idx_entity_taxonomy_filter(taxonomy_id, term_key, entity_type, entity_id)`
 atende filtros e facetas que partem de um termo.
@@ -410,7 +410,7 @@ checksums. O formato atual usa `schemaVersion: 1`.
 Evidência agregada da compilação: entidades por tipo, relações, fragmentos
 localizados, linhas por banco e tabela, operações, obrigações esperadas e
 concluídas e digest de evidências por locale. O formato atual usa
-`schemaVersion: 4`.
+`schemaVersion: 5`.
 
 `checksums.sha256`
 
@@ -420,7 +420,7 @@ declarados pela versão.
 `veterinary_clinic_system.db`
 
 Catálogo localizado de entidades, taxonomias, relações, protocolos, busca e
-referências estruturais de mídia. O schema atual possui versão técnica 3.
+referências estruturais de mídia. O schema atual possui versão técnica 4.
 
 `veterinary_clinic_system_media.db`
 
@@ -428,8 +428,8 @@ referências estruturais de mídia. O schema atual possui versão técnica 3.
 JPEG. O schema atual possui versão técnica 2; os bytes originais permanecem no
 CAS compartilhado.
 
-O crate `knowledge-builder` usa versão `0.3.1`. O relatório usa
-`schemaVersion: 4`; `build-result.json` permanece em `schemaVersion: 1`.
+O crate `knowledge-builder` usa versão `0.4.0`. O relatório usa
+`schemaVersion: 5`; `build-result.json` permanece em `schemaVersion: 1`.
 
 ## Determinismo E Reutilização
 
@@ -447,7 +447,7 @@ válidos. Conteúdo divergente ou adulterado é recusado.
 Além do binário, o crate expõe uma API pequena para testes e automações internas:
 
 ```rust
-use knowledge_builder::{build, validate, BuildOptions};
+use knowledge_builder::{build, validate, BuildOptions, LifeEntity};
 
 let validated = validate("data/knowledge")?;
 
@@ -461,7 +461,8 @@ let result = build(&BuildOptions {
 - `validate` devolve `ValidatedSource` ou `ValidationError` com diagnósticos;
 - `build` devolve o `BuildResult` verificado;
 - `BuildContext`, `ReleaseContext`, `KnowledgeLocale` e `LOCALES` também são
-  públicos.
+  públicos;
+- `LifeEntity` é o contrato público único da hierarquia biológica.
 
 ## Módulos
 
@@ -473,8 +474,8 @@ corrente além dos caminhos explicitamente recebidos.
 `contracts/`
 
 Registro privado dos valores imutáveis que atravessam subsistemas. A raiz do
-crate reexporta somente `KnowledgeLocale` e `LOCALES`, que já integram a API
-pública. O diretório separa:
+crate reexporta `KnowledgeLocale` e `LOCALES`; `LifeEntity` é reexportado do
+modelo de autoria. O diretório separa:
 
 - `artifact.rs`: nomes públicos, descritores CAS e construtores de caminhos;
 - `database.rs`: versão, application ID e filename de cada banco;
@@ -503,7 +504,8 @@ API pública e distribui o pipeline entre:
 - `aliases.rs`: ownership localizado de aliases;
 - `filesystem.rs`: descoberta, caminhos editoriais e cobertura de arquivos;
 - `digest.rs`: digest lógico e contagens determinísticas;
-- `primitives.rs`: UUIDs, ranges, espécies, textos e coleções;
+- `life/`: taxonomia, classificações corporais e aplicabilidade;
+- `primitives.rs`: UUIDs, textos e coleções;
 - `tests.rs`: testes dos validadores primitivos.
 
 `normalization/`

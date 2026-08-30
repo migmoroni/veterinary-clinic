@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "canis",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": null,
+    "breed": null,
+    "variety": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "canis",
+      "pt-PT": "canis",
+      "gn-PY": "canis",
+      "en-US": "canis",
+      "es-ES": "canis",
+      "fr-FR": "canis"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

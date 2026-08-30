@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "sokoke",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "felidae",
+    "genus": "felis",
+    "species": "felis-catus",
+    "breed": "sokoke",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "ke"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Sokoke",
+      "pt-PT": "Sokoke",
+      "gn-PY": "Sokoke",
+      "en-US": "Sokoke",
+      "es-ES": "Sokoke",
+      "fr-FR": "Sokoke"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

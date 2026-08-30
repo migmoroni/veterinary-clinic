@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "presa-canario",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "presa-canario",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "es"
+    ],
+    "bodyMetrics": {
+      "size": "giant"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Presa Canário",
+      "pt-PT": "Presa Canário",
+      "gn-PY": "Presa canario",
+      "en-US": "Presa Canario",
+      "es-ES": "Presa canario",
+      "fr-FR": "Dogue des Canaries"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

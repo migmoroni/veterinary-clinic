@@ -1,49 +1,49 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "1e7b2bb2-31e3-4866-8606-1e9ea4c39ff7",
-	"typeTermKey": "medication.antiparasitic.endoparasiticide",
-	"classificationTermKeys": [
-		"origin.allopathic",
-		"therapeuticAction.control"
-	],
-	"species": [
-		"canine"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "d7569f36-cd2f-416b-906f-ee89e82145cb",
-	"activeIngredientIds": [
-		"dfc38256-ecf1-4f1e-8571-6647b678c3be"
-	],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Giardicid",
-			"pt-PT": "Giardicid",
-			"gn-PY": "Giardicid",
-			"en-US": "Giardicid",
-			"es-ES": "Giardicid",
-			"fr-FR": "Giardicid"
-		},
-		"aliases": {
-			"pt-BR": [],
-			"pt-PT": [],
-			"gn-PY": [],
-			"en-US": [],
-			"es-ES": [],
-			"fr-FR": []
-		}
-	},
-	"sections": [],
-	"targetTermKeys": [
-		"parasite.giardia",
-		"parasite.roundworm"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "1e7b2bb2-31e3-4866-8606-1e9ea4c39ff7",
+  "typeTermKey": "medication.antiparasitic.endoparasiticide",
+  "classificationTermKeys": [
+    "origin.allopathic",
+    "therapeuticAction.control"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "d7569f36-cd2f-416b-906f-ee89e82145cb",
+  "activeIngredientIds": [
+    "dfc38256-ecf1-4f1e-8571-6647b678c3be"
+  ],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Giardicid",
+      "pt-PT": "Giardicid",
+      "gn-PY": "Giardicid",
+      "en-US": "Giardicid",
+      "es-ES": "Giardicid",
+      "fr-FR": "Giardicid"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": [],
+  "targetTermKeys": [
+    "parasite.giardia",
+    "parasite.roundworm"
+  ],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris"
+  ]
 }

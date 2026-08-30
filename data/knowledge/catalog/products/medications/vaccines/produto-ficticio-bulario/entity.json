@@ -1,154 +1,154 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "62305289-42b7-44c6-bca4-eb731d69eb7b",
-	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
-	"classificationTermKeys": [
-		"origin.biological",
-		"commercial.reference",
-		"therapeuticAction.prophylactic",
-		"pharmaceuticalForm.injectableSolution",
-		"administrationRoute.subcutaneous",
-		"administrationRoute.intramuscular"
-	],
-	"species": [
-		"canine",
-		"feline"
-	],
-	"regions": [
-		"BRA",
-		"PRT"
-	],
-	"manufacturerId": "dd7c932c-9c9a-4ee0-82eb-5e1f516ac9e1",
-	"activeIngredientIds": [
-		"b173a72a-5666-4df0-8ef9-3ed4fc5cae0f",
-		"a8f032f0-a093-4680-9a69-16b7a32ee8f8"
-	],
-	"regulatoryIdentifiers": {
-		"brazilMapa": "MAPA 00000/2026",
-		"unitedStatesNada": "NADA 000-000",
-		"unitedStatesAnada": null,
-		"gtinEan": "7890000000000"
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Produto Ficticio Bulário",
-			"pt-PT": "Produto Ficticio Bulário",
-			"gn-PY": "Produto Ficticio Bulário",
-			"en-US": "Produto Ficticio Bulário",
-			"es-ES": "Produto Ficticio Bulário",
-			"fr-FR": "Produto Ficticio Bulário"
-		},
-		"aliases": {
-			"pt-BR": [
-				"teste bulario",
-				"lorem ipsum",
-				"medicamento ficticio"
-			],
-			"pt-PT": [
-				"teste bulario",
-				"lorem ipsum",
-				"medicamento ficticio"
-			],
-			"gn-PY": [
-				"teste bulario",
-				"lorem ipsum",
-				"medicamento ficticio"
-			],
-			"en-US": [
-				"teste bulario",
-				"lorem ipsum",
-				"medicamento ficticio"
-			],
-			"es-ES": [
-				"teste bulario",
-				"lorem ipsum",
-				"medicamento ficticio"
-			],
-			"fr-FR": [
-				"teste bulario",
-				"lorem ipsum",
-				"medicamento ficticio"
-			]
-		},
-		"commercialLine": {
-			"pt-BR": "Linha demonstrativa",
-			"pt-PT": "Linha demonstrativa",
-			"gn-PY": "Linha demonstrativa",
-			"en-US": "Linha demonstrativa",
-			"es-ES": "Linha demonstrativa",
-			"fr-FR": "Linha demonstrativa"
-		},
-		"presentationDosage": {
-			"pt-BR": "Frasco com 1 dose; 1 mL por dose",
-			"pt-PT": "Frasco com 1 dose; 1 mL por dose",
-			"gn-PY": "Frasco com 1 dose; 1 mL por dose",
-			"en-US": "Frasco com 1 dose; 1 mL por dose",
-			"es-ES": "Frasco com 1 dose; 1 mL por dose",
-			"fr-FR": "Frasco com 1 dose; 1 mL por dose"
-		},
-		"targetSpeciesWarnings": {
-			"pt-BR": [
-				"Exemplo demonstrativo: confirmar a espécie-alvo antes de administrar produtos comerciais."
-			],
-			"pt-PT": [
-				"Exemplo demonstrativo: confirmar a espécie-alvo antes de administrar produtos comerciais."
-			],
-			"gn-PY": [
-				"Exemplo demonstrativo: confirmar a espécie-alvo antes de administrar produtos comerciais."
-			],
-			"en-US": [
-				"Exemplo demonstrativo: confirmar a espécie-alvo antes de administrar produtos comerciais."
-			],
-			"es-ES": [
-				"Exemplo demonstrativo: confirmar a espécie-alvo antes de administrar produtos comerciais."
-			],
-			"fr-FR": [
-				"Exemplo demonstrativo: confirmar a espécie-alvo antes de administrar produtos comerciais."
-			]
-		}
-	},
-	"sections": [
-		{
-			"sectionKey": "about",
-			"sectionNumber": 1
-		},
-		{
-			"sectionKey": "presentations",
-			"sectionNumber": 2
-		},
-		{
-			"sectionKey": "indications",
-			"sectionNumber": 3
-		},
-		{
-			"sectionKey": "administration",
-			"sectionNumber": 4
-		},
-		{
-			"sectionKey": "interactions",
-			"sectionNumber": 5
-		},
-		{
-			"sectionKey": "pharmacology",
-			"sectionNumber": 6
-		},
-		{
-			"sectionKey": "studies",
-			"sectionNumber": 7
-		},
-		{
-			"sectionKey": "videos",
-			"sectionNumber": 8
-		},
-		{
-			"sectionKey": "distributors",
-			"sectionNumber": 9
-		},
-		{
-			"sectionKey": "references",
-			"sectionNumber": 10
-		}
-	],
-	"contentPath": "./content"
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "62305289-42b7-44c6-bca4-eb731d69eb7b",
+  "typeTermKey": "medication.biologicalAndImmunological.vaccine",
+  "classificationTermKeys": [
+    "origin.biological",
+    "commercial.reference",
+    "therapeuticAction.prophylactic",
+    "pharmaceuticalForm.injectableSolution",
+    "administrationRoute.subcutaneous",
+    "administrationRoute.intramuscular"
+  ],
+  "regions": [
+    "BRA",
+    "PRT"
+  ],
+  "manufacturerId": "dd7c932c-9c9a-4ee0-82eb-5e1f516ac9e1",
+  "activeIngredientIds": [
+    "b173a72a-5666-4df0-8ef9-3ed4fc5cae0f",
+    "a8f032f0-a093-4680-9a69-16b7a32ee8f8"
+  ],
+  "regulatoryIdentifiers": {
+    "brazilMapa": "MAPA 00000/2026",
+    "unitedStatesNada": "NADA 000-000",
+    "unitedStatesAnada": null,
+    "gtinEan": "7890000000000"
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Produto Ficticio Bulário",
+      "pt-PT": "Produto Ficticio Bulário",
+      "gn-PY": "Produto Ficticio Bulário",
+      "en-US": "Produto Ficticio Bulário",
+      "es-ES": "Produto Ficticio Bulário",
+      "fr-FR": "Produto Ficticio Bulário"
+    },
+    "aliases": {
+      "pt-BR": [
+        "teste bulario",
+        "lorem ipsum",
+        "medicamento ficticio"
+      ],
+      "pt-PT": [
+        "teste bulario",
+        "lorem ipsum",
+        "medicamento ficticio"
+      ],
+      "gn-PY": [
+        "teste bulario",
+        "lorem ipsum",
+        "medicamento ficticio"
+      ],
+      "en-US": [
+        "teste bulario",
+        "lorem ipsum",
+        "medicamento ficticio"
+      ],
+      "es-ES": [
+        "teste bulario",
+        "lorem ipsum",
+        "medicamento ficticio"
+      ],
+      "fr-FR": [
+        "teste bulario",
+        "lorem ipsum",
+        "medicamento ficticio"
+      ]
+    },
+    "commercialLine": {
+      "pt-BR": "Linha demonstrativa",
+      "pt-PT": "Linha demonstrativa",
+      "gn-PY": "Linha demonstrativa",
+      "en-US": "Linha demonstrativa",
+      "es-ES": "Linha demonstrativa",
+      "fr-FR": "Linha demonstrativa"
+    },
+    "presentationDosage": {
+      "pt-BR": "Frasco com 1 dose; 1 mL por dose",
+      "pt-PT": "Frasco com 1 dose; 1 mL por dose",
+      "gn-PY": "Frasco com 1 dose; 1 mL por dose",
+      "en-US": "Frasco com 1 dose; 1 mL por dose",
+      "es-ES": "Frasco com 1 dose; 1 mL por dose",
+      "fr-FR": "Frasco com 1 dose; 1 mL por dose"
+    },
+    "targetSpeciesWarnings": {
+      "pt-BR": [
+        "Exemplo demonstrativo: confirmar a espécie-alvo antes de administrar produtos comerciais."
+      ],
+      "pt-PT": [
+        "Exemplo demonstrativo: confirmar a espécie-alvo antes de administrar produtos comerciais."
+      ],
+      "gn-PY": [
+        "Exemplo demonstrativo: confirmar a espécie-alvo antes de administrar produtos comerciais."
+      ],
+      "en-US": [
+        "Exemplo demonstrativo: confirmar a espécie-alvo antes de administrar produtos comerciais."
+      ],
+      "es-ES": [
+        "Exemplo demonstrativo: confirmar a espécie-alvo antes de administrar produtos comerciais."
+      ],
+      "fr-FR": [
+        "Exemplo demonstrativo: confirmar a espécie-alvo antes de administrar produtos comerciais."
+      ]
+    }
+  },
+  "sections": [
+    {
+      "sectionKey": "about",
+      "sectionNumber": 1
+    },
+    {
+      "sectionKey": "presentations",
+      "sectionNumber": 2
+    },
+    {
+      "sectionKey": "indications",
+      "sectionNumber": 3
+    },
+    {
+      "sectionKey": "administration",
+      "sectionNumber": 4
+    },
+    {
+      "sectionKey": "interactions",
+      "sectionNumber": 5
+    },
+    {
+      "sectionKey": "pharmacology",
+      "sectionNumber": 6
+    },
+    {
+      "sectionKey": "studies",
+      "sectionNumber": 7
+    },
+    {
+      "sectionKey": "videos",
+      "sectionNumber": 8
+    },
+    {
+      "sectionKey": "distributors",
+      "sectionNumber": 9
+    },
+    {
+      "sectionKey": "references",
+      "sectionNumber": 10
+    }
+  ],
+  "contentPath": "./content",
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris",
+    "felis-catus"
+  ]
 }

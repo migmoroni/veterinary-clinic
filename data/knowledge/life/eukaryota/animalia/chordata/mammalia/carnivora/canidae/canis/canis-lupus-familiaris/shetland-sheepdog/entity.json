@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "shetland-sheepdog",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "shetland-sheepdog",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "scotland"
+    ],
+    "bodyMetrics": {
+      "size": "small"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Pastor de Shetland",
+      "pt-PT": "Pastor de Shetland",
+      "gn-PY": "Pastor de Shetland",
+      "en-US": "Shetland Sheepdog",
+      "es-ES": "Pastor de Shetland",
+      "fr-FR": "Berger des Shetland"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

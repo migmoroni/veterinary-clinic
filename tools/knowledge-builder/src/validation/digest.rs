@@ -120,6 +120,7 @@ pub(super) fn relation_count(entities: &[ValidatedEntity]) -> usize {
         .map(|entry| match &entry.source.entity {
             CanonicalEntity::Product(value) => {
                 2 + value.classification_term_keys.len()
+                    + value.applicable_taxon_ids.len()
                     + value.active_ingredient_ids.len()
                     + value.target_term_keys.as_ref().map_or(0, Vec::len)
                     + value.vaccine_profile_term_keys.as_ref().map_or(0, Vec::len)
@@ -132,14 +133,31 @@ pub(super) fn relation_count(entities: &[ValidatedEntity]) -> usize {
             CanonicalEntity::Manufacturer(value) => 1 + value.classification_term_keys.len(),
             CanonicalEntity::ActiveIngredient(value) => 1 + value.classification_term_keys.len(),
             CanonicalEntity::Condition(value) => 1 + value.classification_term_keys.len(),
-            CanonicalEntity::Breed(value) => 1 + value.origin_place_ids.len(),
+            CanonicalEntity::Life(value) => {
+                value.taxonomy.positions().iter().flatten().count()
+                    + value
+                        .classifications
+                        .as_ref()
+                        .and_then(|classifications| classifications.origin_place_ids.as_ref())
+                        .map_or(0, Vec::len)
+                    + usize::from(
+                        value
+                            .classifications
+                            .as_ref()
+                            .and_then(|classifications| classifications.body_metrics.as_ref())
+                            .and_then(|body| body.size.as_ref())
+                            .is_some(),
+                    )
+            }
             CanonicalEntity::GeoPlace(value) => usize::from(value.parent_place_id.is_some()),
             CanonicalEntity::Taxonomy(value) => value
                 .terms
                 .iter()
                 .filter(|term| term.parent_key.is_some())
                 .count(),
-            CanonicalEntity::TreatmentProtocol(value) => value.product_ids.len(),
+            CanonicalEntity::TreatmentProtocol(value) => {
+                value.product_ids.len() + value.applicable_taxon_ids.len()
+            }
         })
         .sum()
 }

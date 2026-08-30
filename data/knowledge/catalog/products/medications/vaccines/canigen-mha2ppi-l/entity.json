@@ -1,68 +1,68 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "a70da13c-524b-4a06-b4a4-630b9fd34edc",
-	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
-	"classificationTermKeys": [
-		"origin.biological",
-		"therapeuticAction.prophylactic"
-	],
-	"species": [
-		"canine"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "a984d879-4d68-4282-a746-0b7961903b28",
-	"activeIngredientIds": [],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Canigen MHA2PPi/L",
-			"pt-PT": "Canigen MHA2PPi/L",
-			"gn-PY": "Canigen MHA2PPi/L",
-			"en-US": "Canigen MHA2PPi/L",
-			"es-ES": "Canigen MHA2PPi/L",
-			"fr-FR": "Canigen MHA2PPi/L"
-		},
-		"aliases": {
-			"pt-BR": [
-				"MHA2PPi/L"
-			],
-			"pt-PT": [
-				"MHA2PPi/L"
-			],
-			"gn-PY": [
-				"MHA2PPi/L"
-			],
-			"en-US": [
-				"MHA2PPi/L"
-			],
-			"es-ES": [
-				"MHA2PPi/L"
-			],
-			"fr-FR": [
-				"MHA2PPi/L"
-			]
-		}
-	},
-	"sections": [],
-	"targetTermKeys": [
-		"disease.canineDistemper",
-		"disease.infectiousCanineHepatitis",
-		"disease.canineParainfluenza",
-		"disease.canineParvovirosis",
-		"pathogen.canineParvovirus",
-		"pathogen.canineAdenovirusType2",
-		"disease.canineLeptospirosis"
-	],
-	"vaccineProfileTermKeys": [
-		"canine.v8",
-		"canine.multivalent"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "a70da13c-524b-4a06-b4a4-630b9fd34edc",
+  "typeTermKey": "medication.biologicalAndImmunological.vaccine",
+  "classificationTermKeys": [
+    "origin.biological",
+    "therapeuticAction.prophylactic"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "a984d879-4d68-4282-a746-0b7961903b28",
+  "activeIngredientIds": [],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Canigen MHA2PPi/L",
+      "pt-PT": "Canigen MHA2PPi/L",
+      "gn-PY": "Canigen MHA2PPi/L",
+      "en-US": "Canigen MHA2PPi/L",
+      "es-ES": "Canigen MHA2PPi/L",
+      "fr-FR": "Canigen MHA2PPi/L"
+    },
+    "aliases": {
+      "pt-BR": [
+        "MHA2PPi/L"
+      ],
+      "pt-PT": [
+        "MHA2PPi/L"
+      ],
+      "gn-PY": [
+        "MHA2PPi/L"
+      ],
+      "en-US": [
+        "MHA2PPi/L"
+      ],
+      "es-ES": [
+        "MHA2PPi/L"
+      ],
+      "fr-FR": [
+        "MHA2PPi/L"
+      ]
+    }
+  },
+  "sections": [],
+  "targetTermKeys": [
+    "disease.canineDistemper",
+    "disease.infectiousCanineHepatitis",
+    "disease.canineParainfluenza",
+    "disease.canineParvovirosis",
+    "pathogen.canineParvovirus",
+    "pathogen.canineAdenovirusType2",
+    "disease.canineLeptospirosis"
+  ],
+  "vaccineProfileTermKeys": [
+    "canine.v8",
+    "canine.multivalent"
+  ],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris"
+  ]
 }

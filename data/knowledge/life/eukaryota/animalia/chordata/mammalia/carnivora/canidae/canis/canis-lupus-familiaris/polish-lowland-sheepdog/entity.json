@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "polish-lowland-sheepdog",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "polish-lowland-sheepdog",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "pl"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Pastor Polonês de Planície",
+      "pt-PT": "Pastor Polonês de Planície",
+      "gn-PY": "Pastor polaco de tierras bajas",
+      "en-US": "Polish Lowland Sheepdog",
+      "es-ES": "Pastor polaco de tierras bajas",
+      "fr-FR": "Berger polonais de plaine"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

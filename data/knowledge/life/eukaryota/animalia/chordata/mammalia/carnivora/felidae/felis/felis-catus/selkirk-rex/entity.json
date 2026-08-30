@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "selkirk-rex",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "felidae",
+    "genus": "felis",
+    "species": "felis-catus",
+    "breed": "selkirk-rex",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "us"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Selkirk Rex",
+      "pt-PT": "Selkirk Rex",
+      "gn-PY": "Selkirk Rex",
+      "en-US": "Selkirk Rex",
+      "es-ES": "Selkirk Rex",
+      "fr-FR": "Selkirk Rex"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

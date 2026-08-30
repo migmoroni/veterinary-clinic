@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "entityType": "treatment_protocol",
+  "id": "33333333-3333-4333-8333-333333333333",
+  "kind": "vaccine",
+  "applicableTaxonIds": [
+    "mammalia"
+  ],
+  "productIds": [
+    "22222222-2222-4222-8222-222222222222"
+  ],
+  "doses": [
+    {
+      "id": "initial",
+      "validityValue": 1,
+      "validityUnit": "years",
+      "localizedContent": {
+        "label": {
+          "pt-BR": "Initial",
+          "pt-PT": "Initial",
+          "gn-PY": "Initial",
+          "en-US": "Initial",
+          "es-ES": "Initial",
+          "fr-FR": "Initial"
+        }
+      }
+    }
+  ],
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Fixture protocol",
+      "pt-PT": "Fixture protocol",
+      "gn-PY": "Fixture protocol",
+      "en-US": "Fixture protocol",
+      "es-ES": "Fixture protocol",
+      "fr-FR": "Fixture protocol"
+    }
+  }
+}

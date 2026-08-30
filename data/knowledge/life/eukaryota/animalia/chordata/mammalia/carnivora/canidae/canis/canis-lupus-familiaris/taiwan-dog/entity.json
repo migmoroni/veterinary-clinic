@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "taiwan-dog",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "taiwan-dog",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "tw"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Cão de Taiwan",
+      "pt-PT": "Cão de Taiwan",
+      "gn-PY": "Perro de Taiwán",
+      "en-US": "Taiwan Dog",
+      "es-ES": "Perro de Taiwán",
+      "fr-FR": "Chien de Taïwan"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

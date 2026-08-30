@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "mammalia",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": null,
+    "family": null,
+    "genus": null,
+    "species": null,
+    "breed": null,
+    "variety": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "mammalia",
+      "pt-PT": "mammalia",
+      "gn-PY": "mammalia",
+      "en-US": "mammalia",
+      "es-ES": "mammalia",
+      "fr-FR": "mammalia"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "veadeiro-pampeano",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "veadeiro-pampeano",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "br"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Veadeiro Pampeano",
+      "pt-PT": "Veadeiro Pampeano",
+      "gn-PY": "Veadeiro pampeano",
+      "en-US": "Pampean Deerhound",
+      "es-ES": "Veadeiro pampeano",
+      "fr-FR": "Veadeiro Pampeano"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

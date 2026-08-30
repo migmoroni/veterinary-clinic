@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "appenzeller-sennenhund",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "appenzeller-sennenhund",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "ch"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Appenzeller Sennenhund",
+      "pt-PT": "Appenzeller Sennenhund",
+      "gn-PY": "Appenzeller Sennenhund",
+      "en-US": "Appenzeller Sennenhund",
+      "es-ES": "Appenzeller Sennenhund",
+      "fr-FR": "Bouvier de l'Appenzell"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

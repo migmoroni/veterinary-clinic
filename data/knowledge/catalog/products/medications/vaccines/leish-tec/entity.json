@@ -1,46 +1,46 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "78ca8329-b820-48c0-a7f9-7088320adca3",
-	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
-	"classificationTermKeys": [
-		"origin.biological",
-		"therapeuticAction.prophylactic"
-	],
-	"species": [
-		"canine"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "131b3da4-334e-42ee-a185-5e57df388a49",
-	"activeIngredientIds": [],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Leish-Tec",
-			"pt-PT": "Leish-Tec",
-			"gn-PY": "Leish-Tec",
-			"en-US": "Leish-Tec",
-			"es-ES": "Leish-Tec",
-			"fr-FR": "Leish-Tec"
-		},
-		"aliases": {
-			"pt-BR": [],
-			"pt-PT": [],
-			"gn-PY": [],
-			"en-US": [],
-			"es-ES": [],
-			"fr-FR": []
-		}
-	},
-	"sections": [],
-	"targetTermKeys": [
-		"disease.leishmaniasis"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "78ca8329-b820-48c0-a7f9-7088320adca3",
+  "typeTermKey": "medication.biologicalAndImmunological.vaccine",
+  "classificationTermKeys": [
+    "origin.biological",
+    "therapeuticAction.prophylactic"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "131b3da4-334e-42ee-a185-5e57df388a49",
+  "activeIngredientIds": [],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Leish-Tec",
+      "pt-PT": "Leish-Tec",
+      "gn-PY": "Leish-Tec",
+      "en-US": "Leish-Tec",
+      "es-ES": "Leish-Tec",
+      "fr-FR": "Leish-Tec"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": [],
+  "targetTermKeys": [
+    "disease.leishmaniasis"
+  ],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris"
+  ]
 }

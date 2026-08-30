@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "mixed-breed",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "mixed-breed",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "varied"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Sem raça definida",
+      "pt-PT": "Sem raça definida",
+      "gn-PY": "Rása jehe’a",
+      "en-US": "Mixed breed",
+      "es-ES": "Mestizo",
+      "fr-FR": "Croisé"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": [
+    {
+      "sectionKey": "characteristics",
+      "sectionNumber": 1
+    },
+    {
+      "sectionKey": "morphology",
+      "sectionNumber": 2
+    },
+    {
+      "sectionKey": "behavior",
+      "sectionNumber": 3
+    },
+    {
+      "sectionKey": "diseases",
+      "sectionNumber": 4
+    },
+    {
+      "sectionKey": "references",
+      "sectionNumber": 5
+    }
+  ],
+  "contentPath": "./content"
+}

@@ -1526,4 +1526,4 @@ concorrentes para facilitar a execução.
 ## Próxima Parte
 
 Após cumprir todos os critérios, seguir para a
-[Parte 1B.8.1: contratos de rows e persistência](./01b8-knowledge-builder-maintainability/01-row-persistence-contracts.md).
+[Parte 1B.7B: layout reservado da fonte canônica](./01b7b-reserved-knowledge-layout.md).

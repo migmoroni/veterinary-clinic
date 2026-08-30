@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "somali",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "felidae",
+    "genus": "felis",
+    "species": "felis-catus",
+    "breed": "somali",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "us"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Somali",
+      "pt-PT": "Somali",
+      "gn-PY": "Somali",
+      "en-US": "Somali",
+      "es-ES": "Somali",
+      "fr-FR": "Somali"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

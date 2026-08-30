@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "english-cocker-spaniel",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "english-cocker-spaniel",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "england"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Cocker Spaniel Inglês",
+      "pt-PT": "Cocker Spaniel inglês",
+      "gn-PY": "Cocker Spaniel inglés",
+      "en-US": "English Cocker Spaniel",
+      "es-ES": "Cocker Spaniel inglés",
+      "fr-FR": "Cocker Spaniel anglais"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

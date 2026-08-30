@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "georgian-shepherd",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "georgian-shepherd",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "ge"
+    ],
+    "bodyMetrics": {
+      "size": "giant"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Pastor Georgiano",
+      "pt-PT": "Pastor Georgiano",
+      "gn-PY": "Pastor georgiano",
+      "en-US": "Georgian Shepherd",
+      "es-ES": "Pastor georgiano",
+      "fr-FR": "Berger géorgien"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

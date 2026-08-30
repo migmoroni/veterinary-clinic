@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "felidae",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "felidae",
+    "genus": null,
+    "species": null,
+    "breed": null,
+    "variety": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Felídeos",
+      "pt-PT": "Felídeos",
+      "gn-PY": "Felidae",
+      "en-US": "Felids",
+      "es-ES": "Félidos",
+      "fr-FR": "Félidés"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

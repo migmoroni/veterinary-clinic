@@ -1,359 +1,202 @@
 # Fonte Canônica De Conhecimento
 
-Este diretório contém a fonte de autoria dos dados públicos de conhecimento da
-clínica. Ele cobre o conteúdo que alimenta `system` e `system_media` e que será
-compilado para `CAS/system` pelo `knowledge-builder`.
+Este diretório é a única fonte de autoria dos dados públicos compilados para
+`system`, `system_media` e `CAS/system`. Apps e packages de runtime consomem
+somente os artefatos finalizados pelo `knowledge-builder`.
 
-O app e os packages não leem este diretório. Bancos SQLite, hashes, caminhos CAS
-e URIs internas são artefatos compilados e não integram o contrato de autoria.
-
-## Escopo
-
-Estão incluídos produtos, fabricantes, princípios ativos, condições, raças,
-localidades geográficas, taxonomias e protocolos públicos. `user/main`,
-`user/media`, `user/logs`, `CAS/user`, textos de interface e placeholders do app
-estão excluídos.
-
-Os defaults públicos atuais não contêm bytes de mídia. Por isso não há arquivos
-em `media/`; quando existirem, eles ficarão junto à entidade proprietária e serão
-referenciados por caminhos relativos.
-
-Toda string de autoria entra no modelo em Unicode NFC. Identidade exata e busca
-textual usam normalizações distintas: nomes canônicos removem separadores,
-enquanto consultas, labels e termos pesquisáveis preservam a separação por um
-único espaço.
-
-## Organização
+## Organização Editorial
 
 ```text
 data/knowledge/
-├── README.md
-├── inventory.json
-├── audit-report.json
 ├── catalog/
-│   ├── products/medications/{vaccines,antiparasitics}/
-│   ├── manufacturers/
 │   ├── active-ingredients/
 │   ├── conditions/
+│   ├── manufacturers/
+│   ├── products/
 │   └── taxonomies/
-├── animals/
-│   ├── breeds/{canine,feline}/
-│   └── taxonomies/
+├── clinical/treatment-protocols/
 ├── geo/places/
-└── clinical/treatment-protocols/
+└── life/
+    ├── taxonomies/sizes/entity.json
+    └── eukaryota/
+        ├── entity.json
+        └── animalia/.../<taxon>/entity.json
 ```
 
-Cada entidade ocupa um diretório e é descoberta pela presença de `entity.json`.
-O caminho serve somente à organização editorial; `entityType` e `id` definem a
-identidade e o schema.
+O scanner descobre recursivamente cada `entity.json`. Um diretório possui
+manifesto somente quando representa uma entidade real; sua profundidade não
+cria identidade, ancestralidade, classificação nem ordem. Mover uma entidade
+sem alterar o manifesto não modifica seu digest lógico.
 
-## Locales E Valores Simples
+## Locales
 
-Todo mapa localizado contém exatamente estas chaves, nesta ordem:
+Todo mapa localizado possui exatamente, nesta ordem:
 
 ```text
-pt-BR
-pt-PT
-gn-PY
-en-US
-es-ES
-fr-FR
+pt-BR · pt-PT · gn-PY · en-US · es-ES · fr-FR
 ```
 
-Não existe fallback entre locales. Campos opcionais sem conteúdo em nenhum
-locale são omitidos como unidade. Quando presentes, campos escalares usam texto
-simples não vazio e listas usam arrays, inclusive `[]` para um locale sem itens.
+Não existe fallback. Textos simples são não vazios, aparados e sem Markdown.
+Listas preservam a ordem autoral e não contêm duplicatas. Conteúdo editorial
+extenso vive nos seis documentos declarados por `contentPath`.
 
-Textos simples são UTF-8 de uma linha, sem espaços externos, caracteres de
-controle ou estrutura Markdown. Listas preservam a ordem autoral e não possuem
-duplicatas dentro de um locale.
+## Entidade Canônica De Vida
 
-```text
-LocalizedText     = Record<KnowledgeLocale, string>
-LocalizedTextList = Record<KnowledgeLocale, string[]>
-```
-
-## Manifestos E `localizedContent`
-
-O envelope comum é:
+`LifeEntity` representa qualquer domínio, reino, filo, classe, ordem, família,
+gênero, espécie, raça ou variedade. O papel clínico do organismo pertence ao
+contrato que referencia seu ID, não à entidade de vida.
 
 ```json
 {
   "schemaVersion": 1,
-  "entityType": "breed",
-  "id": "beagle"
+  "entityType": "life",
+  "id": "poodle",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "poodle",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": ["fr"],
+    "bodyMetrics": { "size": "medium" }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Poodle", "pt-PT": "Poodle", "gn-PY": "Caniche",
+      "en-US": "Poodle", "es-ES": "Caniche", "fr-FR": "Caniche"
+    },
+    "aliases": {
+      "pt-BR": [], "pt-PT": [], "gn-PY": [],
+      "en-US": [], "es-ES": [], "fr-FR": []
+    }
+  },
+  "sections": []
 }
 ```
 
-Todo conteúdo localizado simples pertence a `localizedContent` no mesmo objeto
-que o possui. O valor é sempre o mapa tipado, nunca um caminho:
+### Identidade Taxonômica
+
+As posições são fechadas e ordenadas:
+
+```text
+domain -> kingdom -> phylum -> class -> order -> family -> genus -> species -> breed -> variety
+```
+
+- `domain` nunca é nulo;
+- as posições não nulas formam um prefixo contínuo;
+- o `id` ocupa a última posição não nula;
+- posições inferiores à entidade são `null`;
+- cada ancestral resolve um `LifeEntity` do nível correspondente e declara o
+  mesmo prefixo;
+- cada descendente repete explicitamente toda a cadeia superior.
+
+O caminho editorial não participa dessa resolução. Não existem `parentKey`,
+listas de espécies, aliases taxonômicos ou inferência por nome de pasta.
+
+### Classificações Opcionais
+
+`classifications` pode ser omitido em qualquer nível. Quando presente, contém
+`originPlaceIds`, `bodyMetrics` ou ambos. Ausência significa apenas dado não
+disponível ou não aplicável.
+
+`bodyMetrics` contém `size`, `stageMetrics` ou ambos. `size` resolve zero ou um
+termo de `life:size`. Classificações não são herdadas entre ancestrais e
+descendentes.
 
 ```json
 {
-  "localizedContent": {
-    "name": {
-      "pt-BR": "Beagle",
-      "pt-PT": "Beagle",
-      "gn-PY": "Beagle",
-      "en-US": "Beagle",
-      "es-ES": "Beagle",
-      "fr-FR": "Beagle"
-    },
-    "aliases": {
-      "pt-BR": [],
-      "pt-PT": [],
-      "gn-PY": [],
-      "en-US": [],
-      "es-ES": [],
-      "fr-FR": []
+  "bodyMetrics": {
+    "stageMetrics": {
+      "periodUnit": "months",
+      "male": {
+        "newborn": { "period": [null, 1], "weight": { "live": [1, 8] } },
+        "young": { "period": [1, 12], "measure": { "height": [24, 55] } },
+        "adult": { "period": [12, null], "measure": { "length": [35, 85] } }
+      },
+      "female": {
+        "newborn": { "period": [null, 2], "weight": { "live": [1, 7] } },
+        "young": { "period": [2, 11], "measure": { "height": [24, 52] } },
+        "adult": { "period": [11, null], "measure": { "length": [35, 80] } }
+      }
     }
   }
 }
 ```
 
-O contrato cobre `name` e aliases próprios; `commercialLine`,
-`presentationDosage` e `targetSpeciesWarnings` de produtos; `atcVetSystem` e
-denominações de princípios ativos; `name` e `observation` de protocolos; e
-`label` das doses. Termos taxonômicos usam o mesmo contrato para `label` e
-aliases gerais.
+`periodUnit` aceita `minutes`, `hours`, `days`, `weeks`, `months` ou `years`.
+Cada sexo possui exatamente `newborn`, `young` e `adult`. Seus períodos seguem
+`[null, x]`, `[x, y]`, `[y, null]`, com `0 < x < y`. Cada estágio contém peso
+vivo, medidas ou ambos. Intervalos são finitos, positivos e ordenados;
+`measure` aceita somente `height` e `length`.
 
-Cada chave `denomination_<standard>` de princípio ativo corresponde exatamente
-a uma entrada de `nomenclature.denominationStandards`: não são aceitas
-denominações sem standard declarado nem standards sem o campo localizado.
-Chaves localizadas fora da política fechada do tipo da entidade são inválidas.
+## Aplicabilidade De Produtos E Protocolos
 
-Um fragmento localizado é um texto presente, cada item de uma lista e cada
-seção editorial compilada no locale. Uma lista `[]` possui zero fragmentos, mas
-sua forma vazia continua sendo parte estrutural da projeção.
+Produtos e protocolos usam exclusivamente `applicableTaxonIds`:
 
-O diretório `localized/` não faz parte do contrato.
+```json
+{ "applicableTaxonIds": ["canis-lupus-familiaris"] }
+```
+
+Cada ID resolve qualquer um dos dez níveis e alcança a própria entidade e todos
+os descendentes. Um array não pode conter simultaneamente um ancestral e seu
+descendente. A expansão usa as colunas taxonômicas compiladas e não materializa
+cópias dos descendentes.
+
+`targetSpeciesWarnings` permanece conteúdo clínico localizado e não define
+aplicabilidade.
 
 ## Vocabulários Controlados
 
-Taxonomias são agregados com `domain`, `purpose` e termos ordenados. Cada termo
-possui chave canônica completa, pai opcional e conteúdo localizado próprio:
-
-```json
-{
-  "key": "medication.antiparasitic.endectocide",
-  "parentKey": "medication.antiparasitic",
-  "order": 92,
-  "localizedContent": {
-    "label": {
-      "pt-BR": "Endectocida",
-      "pt-PT": "Endectocida",
-      "gn-PY": "Endectocida",
-      "en-US": "Endectocide",
-      "es-ES": "Endectocida",
-      "fr-FR": "Endectocide"
-    },
-    "aliases": {
-      "pt-BR": ["endectocida"],
-      "pt-PT": ["endectocida"],
-      "gn-PY": ["endectocida"],
-      "en-US": ["endectocide"],
-      "es-ES": ["endectocida"],
-      "fr-FR": ["endectocide"]
-    }
-  }
-}
-```
-
-`localizedContent.aliases` do termo é opcional como unidade. Cada conceito
-compartilhado pertence ao vocabulário de seu domínio: classificações, alvos,
-perfis vacinais, estágios de vida ou escopos terapêuticos. Abreviações
-equivalentes, como `V3`, “tríplice felina” e `FVRCP`, pertencem ao mesmo termo de
-perfil vacinal.
-
-Aliases de uma entidade representam somente grafias, siglas e nomes que
-identificam aquela entidade específica. Labels e aliases de tipos,
-classificações e relações não são copiados para as entidades.
-
-## Referências Taxonômicas
-
-Entidades usam somente referências explícitas e resolvíveis:
-
-- `typeTermKey` para um termo da taxonomia de tipos do domínio;
-- `classificationTermKeys` para termos da taxonomia de classificações do
-  domínio;
-- `sizeTermKey` para um termo de `breed-sizes`.
-
-Produtos também usam campos com proprietários fechados:
-
-- `activeIngredientIds` referencia entidades `active_ingredient` individuais;
-- `targetTermKeys` referencia `product-targets`;
-- `vaccineProfileTermKeys` referencia `product-vaccine-profiles`;
-- `lifeStageTermKeys` referencia `product-life-stages`;
-- `therapeuticScopeTermKeys` referencia `product-therapeutic-scopes`.
-
-Campos sem relações são omitidos como unidade, exceto `activeIngredientIds`, que
-integra o contrato estrutural do produto e pode ser `[]`. Arrays presentes são
-ordenados, resolvíveis e não contêm duplicatas.
-
-As referências armazenam a chave canônica completa, nunca arrays de ancestrais,
-segmentos terminais isolados, labels ou traduções. A ordem de um array é autoral
-somente quando possui significado no domínio.
-
-Produtos mantêm identificadores MAPA, NADA, ANADA e GTIN em
-`regulatoryIdentifiers`. Princípios ativos mantêm nome científico, CAS, standards
-de denominação e código ATC Vet como fatos estruturais. Esses valores não se
-tornam termos apenas por serem strings.
-
-Cada substância farmacologicamente distinta possui uma entidade persistente com
-UUIDv4. Combinações são decompostas em relações ordenadas; não existem entidades
-que representem apenas a concatenação de substâncias. Fatos desconhecidos usam
-`null`, `[]` ou campos opcionais omitidos, sem classificações inventadas.
-
-## Contratos Por Tipo
-
-- `product`: tipo, classificações reais, espécies, regiões, fabricante,
-  princípios ativos, alvos, perfis vacinais, estágios de vida, escopos
-  terapêuticos, identificadores regulatórios, conteúdo localizado e seções.
-- `manufacturer`: tipo, classificações, regiões, website, conteúdo localizado e
-  seções.
-- `active_ingredient`: tipo, classificações regulatórias, regiões, nomenclatura,
-  código ATC Vet, conteúdo localizado e seções.
-- `condition`: tipo, classificações, regiões, conteúdo localizado e seções.
-- `breed`: espécies, localidades de origem, `sizeTermKey`, medidas, conteúdo
-  localizado e seções.
-- `geo_place`: tipo de lugar, países, pai, centroide e conteúdo localizado.
-- `treatment_protocol`: tipo clínico, espécies, produtos ordenados, doses e
-  conteúdo localizado. Cada dose possui `localizedContent.label`.
-- `taxonomy`: domínio, finalidade e termos localizados.
-
-Relações não taxonômicas apontam diretamente para IDs de domínio e não repetem
-nomes ou aliases das entidades relacionadas.
-
-`classificationTermKeys` de produto contém somente origem, categoria comercial,
-ação terapêutica, forma farmacêutica, via de administração e classificações
-efetivas admitidas pelo schema. Doenças, patógenos, parasitas, perfis vacinais,
-estágios de vida e escopos terapêuticos não são classificações de produto.
-
-## Seções Markdown
-
-Markdown é reservado ao documento editorial único declarado por `contentPath`:
+Existem exatamente 13 pares canônicos de domínio e propósito. Doze pertencem
+aos catálogos e um classifica vida:
 
 ```text
-<entidade>/
-├── entity.json
-└── content/
-    ├── pt-BR.md
-    ├── pt-PT.md
-    ├── gn-PY.md
-    ├── en-US.md
-    ├── es-ES.md
-    └── fr-FR.md
+life:size -> ZeroOrOne
 ```
 
-Uma entidade com seções declara `"contentPath": "./content"`; uma entidade sem
-seções usa `sections: []`, omite `contentPath` e não possui documentos vazios.
-O diretório contém exatamente os seis arquivos e permanece dentro da entidade.
+Os dez níveis biológicos obtêm nomes, aliases, conteúdo e ancestralidade dos
+próprios `LifeEntity`. Eles não são termos de uma taxonomia paralela.
 
-O manifesto associa cada seção a um número autoral:
+Taxonomias compartilhadas usam termos ordenados com `key`, `parentKey`, `order`
+e `localizedContent`. Cada referência precisa resolver no domínio e propósito
+corretos.
 
-```json
-{
-  "contentPath": "./content",
-  "sections": [
-    { "sectionKey": "about", "sectionNumber": 1 },
-    { "sectionKey": "presentations", "sectionNumber": 2 }
-  ]
-}
-```
+## Demais Entidades
 
-Cada documento usa headings de nível `#` como delimitadores:
+- `product`: tipo, classificações, `applicableTaxonIds`, regiões, fabricante,
+  princípios ativos, relações terapêuticas, identificadores, conteúdo e mídia;
+- `manufacturer`: tipo, classificações, regiões, website, conteúdo e mídia;
+- `active_ingredient`: tipo, classificações, nomenclatura, ATC Vet e conteúdo;
+- `condition`: tipo, classificações, regiões e conteúdo;
+- `geo_place`: tipo, códigos de país, pai, centroide e nome localizado;
+- `treatment_protocol`: tipo clínico, `applicableTaxonIds`, produtos, doses e
+  conteúdo localizado;
+- `taxonomy`: proprietário fechado de um vocabulário compartilhado.
 
-```markdown
-# 1. Texto editorial opcional
+IDs de produto, fabricante, princípio ativo, condição e protocolo são UUIDv4
+minúsculos. Fatos desconhecidos usam `null`, `[]` ou omissão permitida; não são
+criados termos artificiais.
 
-Corpo da primeira seção.
+## Markdown E Mídia
 
-## Subtítulo interno
+Entidades com seções declaram `contentPath` e possuem exatamente um documento
+por locale. HTML bruto, links inseguros e arquivos não declarados são recusados.
 
-Continuação da primeira seção.
+Mídia estrutural usa `media.cover` e `media.gallery`; imagens Markdown também
+resolvem dentro do diretório proprietário. Em entidades de vida, toda mídia é
+compilada com `entity_type = life`. O hash do conteúdo define o objeto em
+`CAS/system`; thumbnails são JPEG determinísticos.
 
-# 2
+## Inventário E Auditoria
 
-Corpo da segunda seção.
-```
-
-`sectionNumber` é inteiro positivo, único e contíguo a partir de `1`. Os seis
-documentos contêm exatamente os números declarados, na mesma ordem. Conteúdo não
-vazio antes do primeiro delimitador é inválido. Somente headings `#` iniciam uma
-seção; headings de `##` a `######` pertencem ao corpo corrente.
-
-Depois do número, ponto e texto editorial são opcionais. O compilador descarta o
-heading delimitador inteiro e associa somente o corpo a `sectionKey`. Títulos de
-seção continuam pertencendo ao i18n da UI. Não existem título, label ou chave de
-tradução da seção no manifesto.
-
-Seções usam um perfil fechado baseado em CommonMark. São permitidos parágrafos,
-quebras, ênfase, headings internos, listas, citações, separadores, código tratado
-como texto, tabelas e links externos `https`. HTML bruto, scripts, imagens
-remotas e protocolos inseguros são proibidos. Imagens locais, quando existirem,
-apontam para arquivos da própria entidade.
-
-O compilador interpreta esse perfil pelo AST CommonMark, não por linhas nem por
-scanner de links. A serialização canônica uniformiza marcadores equivalentes,
-preserva o significado dos nós e não interpreta referências escritas dentro de
-código.
-
-## Mídias Estruturais
-
-`breed`, `product`, `manufacturer`, `active_ingredient` e `condition` podem
-declarar capa e galeria:
-
-```json
-{
-  "media": {
-    "cover": "./media/cover.png",
-    "gallery": ["./media/lateral.jpg"]
-  }
-}
-```
-
-`cover` é única, `gallery` preserva a ordem e não repete a capa. Uma referência
-Markdown e uma referência estrutural ao mesmo arquivo compartilham a mesma
-`media_key`. O original permanece imutável no CAS; `system_media` recebe um
-thumbnail JPEG determinístico com qualidade 72, lado máximo de 200 pixels, sem
-ampliação e com transparência composta sobre branco.
-
-## Busca Derivada
-
-A busca não possui taxonomia própria. A projeção localizada de um produto combina
-seus nomes e aliases próprios com fabricante, princípios ativos, alvos, perfis
-vacinais, estágios de vida, escopos terapêuticos, tipo e classificações reais.
-Cada valor mantém sua proveniência sem ser copiado para aliases do produto.
-
-## Auditoria
-
-Na raiz do workspace, execute:
-
-```bash
-pnpm knowledge:audit
-```
-
-A auditoria valida cobertura e paridade com os defaults e traduções atuais,
-schemas de autoria, mapas localizados, documentos editoriais numerados,
-propriedade de aliases, relações farmacológicas, taxonomias semânticas, projeção
-pesquisável, caminhos, mídias, IDs e contagens do
-[`inventory.json`](./inventory.json). Use `--write-report` para atualizar
-`audit-report.json`; a execução padrão é somente leitura.
-
-A auditoria não gera bancos nem CAS. A validação executável por JSON Schema,
-AST e regras semânticas, além da compilação offline, pertence ao crate
-`tools/knowledge-builder`:
-
-```bash
-pnpm knowledge:validate
-pnpm knowledge:build
-```
-
-Uma build válida projeta os seis locales, gera os doze bancos em
-`build/knowledge-artifacts` e conclui obrigações tipadas a partir dos eventos
-reais dos projectors. O `projection-report.json` v2 deriva dessas evidências. Um
-único verificador recalcula contagens, metadados, tamanhos, hashes, fingerprints,
-integridade, foreign keys, referências entre `system`, `system_media` e CAS,
-thumbnails JPEG, digests e cobertura de `checksums.sha256` tanto no staging
-quanto antes de reutilizar uma versão existente. A integração desses artefatos
-no runtime permanece fora deste contrato.
+[`inventory.json`](./inventory.json) registra contagens e cobertura do contrato
+vigente. [`audit-report.json`](./audit-report.json) registra o resultado da
+auditoria canônica. Ambos descrevem somente o estado atual e são conferidos em
+conjunto com `knowledge-builder validate` e os testes integrais.

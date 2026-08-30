@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "cornish-rex",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "felidae",
+    "genus": "felis",
+    "species": "felis-catus",
+    "breed": "cornish-rex",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "england"
+    ],
+    "bodyMetrics": {
+      "size": "small"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Cornish Rex",
+      "pt-PT": "Cornish Rex",
+      "gn-PY": "Cornish Rex",
+      "en-US": "Cornish Rex",
+      "es-ES": "Cornish Rex",
+      "fr-FR": "Cornish Rex"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

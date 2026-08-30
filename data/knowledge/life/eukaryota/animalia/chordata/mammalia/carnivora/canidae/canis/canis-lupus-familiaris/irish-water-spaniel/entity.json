@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "irish-water-spaniel",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "irish-water-spaniel",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "ie"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Spaniel de Água Irlandês",
+      "pt-PT": "Spaniel de Água Irlandês",
+      "gn-PY": "Perro de agua irlandés",
+      "en-US": "Irish Water Spaniel",
+      "es-ES": "Perro de agua irlandés",
+      "fr-FR": "Chien d'eau irlandais"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

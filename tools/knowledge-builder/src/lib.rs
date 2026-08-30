@@ -21,6 +21,10 @@ pub mod cli;
 
 pub use contracts::locale::{KnowledgeLocale, LOCALES};
 pub use report::{BuildContext, BuildResult, ReleaseContext};
+pub use source::{
+    LifeBodyMetricStage, LifeBodyMetrics, LifeClassifications, LifeEntity, LifeMeasures,
+    LifePeriodUnit, LifeSexBodyMetrics, LifeStageMetrics, LifeTaxonomy, LifeWeightMetrics,
+};
 pub use validation::{Diagnostic, ValidatedSource, ValidationError};
 
 use std::path::{Path, PathBuf};

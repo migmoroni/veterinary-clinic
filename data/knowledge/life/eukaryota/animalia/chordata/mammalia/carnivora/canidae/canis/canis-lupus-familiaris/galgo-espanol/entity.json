@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "galgo-espanol",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "galgo-espanol",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "es"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Galgo Espanhol",
+      "pt-PT": "Galgo Espanhol",
+      "gn-PY": "Galgo español",
+      "en-US": "Galgo Español",
+      "es-ES": "Galgo español",
+      "fr-FR": "Lévrier espagnol"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

@@ -25,17 +25,18 @@ pertencem a outro servidor.
 10. [Parte 1B.6: projeção taxonômica universal](./01b6-universal-taxonomy-projection.md)
 11. [Parte 1B.7: contratos centrais do `knowledge-builder`](./01b7-central-builder-contracts.md)
 12. [Parte 1B.7A: taxonomia canônica da vida](./01b7a-canonical-life-taxonomy.md)
-13. [Parte 1B.8.1: contratos de rows e persistência](./01b8-knowledge-builder-maintainability/01-row-persistence-contracts.md)
-14. [Parte 1B.8.2: ledger e recibos confirmados](./01b8-knowledge-builder-maintainability/02-ledger-confirmed-receipts.md)
-15. [Parte 1B.8.3: verificação integral decomposta](./01b8-knowledge-builder-maintainability/03-artifact-verification.md)
-16. [Parte 1B.8.4: erros estruturados e fronteiras](./01b8-knowledge-builder-maintainability/04-structured-errors-boundaries.md)
-17. [Parte 1B.8.5: topologia de testes e guia de manutenção](./01b8-knowledge-builder-maintainability/05-test-topology-maintenance-guide.md)
-18. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
-19. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
-20. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
-21. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
-22. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
-23. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
+13. [Parte 1B.7B: layout reservado da fonte canônica](./01b7b-reserved-knowledge-layout.md)
+14. [Parte 1B.8.1: contratos de rows e persistência](./01b8-knowledge-builder-maintainability/01-row-persistence-contracts.md)
+15. [Parte 1B.8.2: ledger e recibos confirmados](./01b8-knowledge-builder-maintainability/02-ledger-confirmed-receipts.md)
+16. [Parte 1B.8.3: verificação integral decomposta](./01b8-knowledge-builder-maintainability/03-artifact-verification.md)
+17. [Parte 1B.8.4: erros estruturados e fronteiras](./01b8-knowledge-builder-maintainability/04-structured-errors-boundaries.md)
+18. [Parte 1B.8.5: topologia de testes e guia de manutenção](./01b8-knowledge-builder-maintainability/05-test-topology-maintenance-guide.md)
+19. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
+20. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
+21. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
+22. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
+23. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
+24. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
 
 ## Referências Futuras Não Sequenciais
 
@@ -46,7 +47,7 @@ de implementação. Sua presença não autoriza execução nem alteração do co
 vigente sem uma solicitação explícita.
 
 A pré-fase, as subpartes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3, 1B.4, 1B.5,
-1B.6, 1B.7, 1B.7A, 1B.8.1, 1B.8.2, 1B.8.3, 1B.8.4, 1B.8.5 e 1C e as
+1B.6, 1B.7, 1B.7A, 1B.7B, 1B.8.1, 1B.8.2, 1B.8.3, 1B.8.4, 1B.8.5 e 1C e as
 partes seguintes são executadas em ordem. Cada documento termina com testes e
 critérios de aceite próprios.
 
@@ -67,6 +68,7 @@ flowchart LR
     P1B6["Parte 1B.6<br/>taxonomias universais"]
     P1B7["Parte 1B.7<br/>contratos centrais"]
     P1B7A["Parte 1B.7A<br/>taxonomia da vida"]
+    P1B7B["Parte 1B.7B<br/>layout reservado"]
     P1B81["Parte 1B.8.1<br/>rows + persistência"]
     P1B82["Parte 1B.8.2<br/>ledger + recibos"]
     P1B83["Parte 1B.8.3<br/>verificação"]
@@ -79,7 +81,7 @@ flowchart LR
     P5["Parte 5<br/>updater Tauri local"]
     P6["Parte 6<br/>GitHub + CI/CD"]
 
-    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1B7 --> P1B7A --> P1B81 --> P1B82 --> P1B83 --> P1B84 --> P1B85 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
+    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1B7 --> P1B7A --> P1B7B --> P1B81 --> P1B82 --> P1B83 --> P1B84 --> P1B85 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
 ```
 
 As mudanças de origem dos artefatos são deliberadas:
@@ -128,6 +130,8 @@ corporais.
 O mesmo contrato representa organismos que podem ser pacientes e organismos
 etiológicos associados a condições clínicas; o papel pertence ao domínio
 consumidor. Os diretórios servem somente à organização editorial. A Parte
+1B.7B reserva `_entity.json`, `_content` e `_media` para a infraestrutura de
+autoria e mantém os demais diretórios livres de significado implícito. A Parte
 1B.8.1 consolida rows e persistência, a Parte 1B.8.2 separa
 inventário, ownership e recibos confirmados, a Parte 1B.8.3 decompõe a
 verificação integral, a Parte 1B.8.4 estrutura erros e fronteiras, e a Parte
@@ -894,18 +898,19 @@ descobrir uma revisão incrementando URLs que não estejam declaradas.
 11. Implementar e validar a Parte 1B.6.
 12. Implementar e validar a Parte 1B.7.
 13. Implementar e validar a Parte 1B.7A.
-14. Implementar e validar a Parte 1B.8.1.
-15. Implementar e validar a Parte 1B.8.2.
-16. Implementar e validar a Parte 1B.8.3.
-17. Implementar e validar a Parte 1B.8.4.
-18. Implementar e validar a Parte 1B.8.5.
-19. Implementar e validar a Parte 1C.
-20. Implementar e validar a Parte 2.
-21. Implementar e validar a Parte 3.
-22. Implementar e validar a Parte 4.
-23. Implementar e validar a Parte 5.
-24. Mover o projeto para o repositório dedicado.
-25. Implementar e validar a Parte 6.
+14. Implementar e validar a Parte 1B.7B.
+15. Implementar e validar a Parte 1B.8.1.
+16. Implementar e validar a Parte 1B.8.2.
+17. Implementar e validar a Parte 1B.8.3.
+18. Implementar e validar a Parte 1B.8.4.
+19. Implementar e validar a Parte 1B.8.5.
+20. Implementar e validar a Parte 1C.
+21. Implementar e validar a Parte 2.
+22. Implementar e validar a Parte 3.
+23. Implementar e validar a Parte 4.
+24. Implementar e validar a Parte 5.
+25. Mover o projeto para o repositório dedicado.
+26. Implementar e validar a Parte 6.
 
 ## Expansões Previstas
 

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "peruvian-inca-orchid",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "peruvian-inca-orchid",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "pe"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Pelado Peruano",
+      "pt-PT": "Pelado Peruano",
+      "gn-PY": "Perro sin pelo del Perú",
+      "en-US": "Peruvian Inca Orchid",
+      "es-ES": "Perro sin pelo del Perú",
+      "fr-FR": "Chien nu du Pérou"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

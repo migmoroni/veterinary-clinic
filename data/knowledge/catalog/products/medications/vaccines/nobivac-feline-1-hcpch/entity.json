@@ -1,64 +1,64 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "ebc97309-ebfe-40a2-a8ec-6802bbf09324",
-	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
-	"classificationTermKeys": [
-		"origin.biological",
-		"therapeuticAction.prophylactic"
-	],
-	"species": [
-		"feline"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
-	"activeIngredientIds": [],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Nobivac Feline 1-HCPCh",
-			"pt-PT": "Nobivac Feline 1-HCPCh",
-			"gn-PY": "Nobivac Feline 1-HCPCh",
-			"en-US": "Nobivac Feline 1-HCPCh",
-			"es-ES": "Nobivac Feline 1-HCPCh",
-			"fr-FR": "Nobivac Feline 1-HCPCh"
-		},
-		"aliases": {
-			"pt-BR": [
-				"HCPCh"
-			],
-			"pt-PT": [
-				"HCPCh"
-			],
-			"gn-PY": [
-				"HCPCh"
-			],
-			"en-US": [
-				"HCPCh"
-			],
-			"es-ES": [
-				"HCPCh"
-			],
-			"fr-FR": [
-				"HCPCh"
-			]
-		}
-	},
-	"sections": [],
-	"targetTermKeys": [
-		"disease.felineRhinotracheitis",
-		"disease.felineCalicivirosis",
-		"disease.felinePanleukopenia",
-		"disease.felineChlamydiosis"
-	],
-	"vaccineProfileTermKeys": [
-		"feline.tetravalent"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "ebc97309-ebfe-40a2-a8ec-6802bbf09324",
+  "typeTermKey": "medication.biologicalAndImmunological.vaccine",
+  "classificationTermKeys": [
+    "origin.biological",
+    "therapeuticAction.prophylactic"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+  "activeIngredientIds": [],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Nobivac Feline 1-HCPCh",
+      "pt-PT": "Nobivac Feline 1-HCPCh",
+      "gn-PY": "Nobivac Feline 1-HCPCh",
+      "en-US": "Nobivac Feline 1-HCPCh",
+      "es-ES": "Nobivac Feline 1-HCPCh",
+      "fr-FR": "Nobivac Feline 1-HCPCh"
+    },
+    "aliases": {
+      "pt-BR": [
+        "HCPCh"
+      ],
+      "pt-PT": [
+        "HCPCh"
+      ],
+      "gn-PY": [
+        "HCPCh"
+      ],
+      "en-US": [
+        "HCPCh"
+      ],
+      "es-ES": [
+        "HCPCh"
+      ],
+      "fr-FR": [
+        "HCPCh"
+      ]
+    }
+  },
+  "sections": [],
+  "targetTermKeys": [
+    "disease.felineRhinotracheitis",
+    "disease.felineCalicivirosis",
+    "disease.felinePanleukopenia",
+    "disease.felineChlamydiosis"
+  ],
+  "vaccineProfileTermKeys": [
+    "feline.tetravalent"
+  ],
+  "applicableTaxonIds": [
+    "felis-catus"
+  ]
 }

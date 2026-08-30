@@ -3,6 +3,7 @@
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum TaxonomyCardinality {
     ExactlyOne,
+    ZeroOrOne,
     ZeroOrMore,
 }
 
@@ -15,9 +16,9 @@ pub(crate) struct TaxonomySpec {
 
 pub(crate) const CANONICAL_TAXONOMIES: [TaxonomySpec; 13] = [
     TaxonomySpec {
-        domain: "breed",
+        domain: "life",
         purpose: "size",
-        cardinality: TaxonomyCardinality::ExactlyOne,
+        cardinality: TaxonomyCardinality::ZeroOrOne,
     },
     TaxonomySpec {
         domain: "manufacturer",

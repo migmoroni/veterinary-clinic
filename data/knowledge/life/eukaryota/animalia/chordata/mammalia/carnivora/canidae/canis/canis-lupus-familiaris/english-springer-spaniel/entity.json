@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "english-springer-spaniel",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "english-springer-spaniel",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "england"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Springer Spaniel Inglês",
+      "pt-PT": "Springer Spaniel inglês",
+      "gn-PY": "Springer Spaniel inglés",
+      "en-US": "English Springer Spaniel",
+      "es-ES": "Springer Spaniel inglés",
+      "fr-FR": "Springer Spaniel anglais"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

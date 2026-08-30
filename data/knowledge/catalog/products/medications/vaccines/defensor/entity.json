@@ -1,47 +1,47 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "1561482d-af41-41a1-ba42-bee005c14ac9",
-	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
-	"classificationTermKeys": [
-		"origin.biological",
-		"therapeuticAction.prophylactic"
-	],
-	"species": [
-		"canine",
-		"feline"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
-	"activeIngredientIds": [],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Defensor",
-			"pt-PT": "Defensor",
-			"gn-PY": "Defensor",
-			"en-US": "Defensor",
-			"es-ES": "Defensor",
-			"fr-FR": "Defensor"
-		},
-		"aliases": {
-			"pt-BR": [],
-			"pt-PT": [],
-			"gn-PY": [],
-			"en-US": [],
-			"es-ES": [],
-			"fr-FR": []
-		}
-	},
-	"sections": [],
-	"targetTermKeys": [
-		"disease.rabies"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "1561482d-af41-41a1-ba42-bee005c14ac9",
+  "typeTermKey": "medication.biologicalAndImmunological.vaccine",
+  "classificationTermKeys": [
+    "origin.biological",
+    "therapeuticAction.prophylactic"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
+  "activeIngredientIds": [],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Defensor",
+      "pt-PT": "Defensor",
+      "gn-PY": "Defensor",
+      "en-US": "Defensor",
+      "es-ES": "Defensor",
+      "fr-FR": "Defensor"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": [],
+  "targetTermKeys": [
+    "disease.rabies"
+  ],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris",
+    "felis-catus"
+  ]
 }

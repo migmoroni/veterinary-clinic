@@ -1,50 +1,50 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "dc7cf197-26a5-411e-ad58-1699684a7f29",
-	"typeTermKey": "medication.antiparasitic.ectoparasiticide",
-	"classificationTermKeys": [
-		"origin.allopathic",
-		"therapeuticAction.control"
-	],
-	"species": [
-		"canine",
-		"feline"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "a984d879-4d68-4282-a746-0b7961903b28",
-	"activeIngredientIds": [
-		"76a4b9e3-0a82-4ddd-8ce8-b0f5aeb5f558"
-	],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Effipro",
-			"pt-PT": "Effipro",
-			"gn-PY": "Effipro",
-			"en-US": "Effipro",
-			"es-ES": "Effipro",
-			"fr-FR": "Effipro"
-		},
-		"aliases": {
-			"pt-BR": [],
-			"pt-PT": [],
-			"gn-PY": [],
-			"en-US": [],
-			"es-ES": [],
-			"fr-FR": []
-		}
-	},
-	"sections": [],
-	"targetTermKeys": [
-		"parasite.flea",
-		"parasite.tick"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "dc7cf197-26a5-411e-ad58-1699684a7f29",
+  "typeTermKey": "medication.antiparasitic.ectoparasiticide",
+  "classificationTermKeys": [
+    "origin.allopathic",
+    "therapeuticAction.control"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "a984d879-4d68-4282-a746-0b7961903b28",
+  "activeIngredientIds": [
+    "76a4b9e3-0a82-4ddd-8ce8-b0f5aeb5f558"
+  ],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Effipro",
+      "pt-PT": "Effipro",
+      "gn-PY": "Effipro",
+      "en-US": "Effipro",
+      "es-ES": "Effipro",
+      "fr-FR": "Effipro"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": [],
+  "targetTermKeys": [
+    "parasite.flea",
+    "parasite.tick"
+  ],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris",
+    "felis-catus"
+  ]
 }

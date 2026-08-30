@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "irish-wolfhound",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "irish-wolfhound",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "ie"
+    ],
+    "bodyMetrics": {
+      "size": "giant"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Wolfhound Irlandês",
+      "pt-PT": "Wolfhound irlandês",
+      "gn-PY": "Lobero irlandés",
+      "en-US": "Irish Wolfhound",
+      "es-ES": "Lobero irlandés",
+      "fr-FR": "Lévrier irlandais"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

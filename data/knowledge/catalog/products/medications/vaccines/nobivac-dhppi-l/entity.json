@@ -1,67 +1,67 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "7e01becd-732d-43b2-bf2d-e3334fb252da",
-	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
-	"classificationTermKeys": [
-		"origin.biological",
-		"therapeuticAction.prophylactic"
-	],
-	"species": [
-		"canine"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
-	"activeIngredientIds": [],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Nobivac DHPPI+L",
-			"pt-PT": "Nobivac DHPPI+L",
-			"gn-PY": "Nobivac DHPPI+L",
-			"en-US": "Nobivac DHPPI+L",
-			"es-ES": "Nobivac DHPPI+L",
-			"fr-FR": "Nobivac DHPPI+L"
-		},
-		"aliases": {
-			"pt-BR": [
-				"DHPPI+L"
-			],
-			"pt-PT": [
-				"DHPPI+L"
-			],
-			"gn-PY": [
-				"DHPPI+L"
-			],
-			"en-US": [
-				"DHPPI+L"
-			],
-			"es-ES": [
-				"DHPPI+L"
-			],
-			"fr-FR": [
-				"DHPPI+L"
-			]
-		}
-	},
-	"sections": [],
-	"targetTermKeys": [
-		"disease.canineDistemper",
-		"disease.infectiousCanineHepatitis",
-		"disease.canineParainfluenza",
-		"disease.canineParvovirosis",
-		"pathogen.canineParvovirus",
-		"disease.canineLeptospirosis"
-	],
-	"vaccineProfileTermKeys": [
-		"canine.v8",
-		"canine.multivalent"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "7e01becd-732d-43b2-bf2d-e3334fb252da",
+  "typeTermKey": "medication.biologicalAndImmunological.vaccine",
+  "classificationTermKeys": [
+    "origin.biological",
+    "therapeuticAction.prophylactic"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+  "activeIngredientIds": [],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Nobivac DHPPI+L",
+      "pt-PT": "Nobivac DHPPI+L",
+      "gn-PY": "Nobivac DHPPI+L",
+      "en-US": "Nobivac DHPPI+L",
+      "es-ES": "Nobivac DHPPI+L",
+      "fr-FR": "Nobivac DHPPI+L"
+    },
+    "aliases": {
+      "pt-BR": [
+        "DHPPI+L"
+      ],
+      "pt-PT": [
+        "DHPPI+L"
+      ],
+      "gn-PY": [
+        "DHPPI+L"
+      ],
+      "en-US": [
+        "DHPPI+L"
+      ],
+      "es-ES": [
+        "DHPPI+L"
+      ],
+      "fr-FR": [
+        "DHPPI+L"
+      ]
+    }
+  },
+  "sections": [],
+  "targetTermKeys": [
+    "disease.canineDistemper",
+    "disease.infectiousCanineHepatitis",
+    "disease.canineParainfluenza",
+    "disease.canineParvovirosis",
+    "pathogen.canineParvovirus",
+    "disease.canineLeptospirosis"
+  ],
+  "vaccineProfileTermKeys": [
+    "canine.v8",
+    "canine.multivalent"
+  ],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris"
+  ]
 }

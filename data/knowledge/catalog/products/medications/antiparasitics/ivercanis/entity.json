@@ -1,45 +1,45 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "1bffd0e4-e328-444f-83e5-fa6b6d138770",
-	"typeTermKey": "medication.antiparasitic.endectocide",
-	"classificationTermKeys": [
-		"origin.allopathic",
-		"therapeuticAction.control"
-	],
-	"species": [
-		"canine"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "33e5bfd1-2843-46c9-9afd-a30f78f4b087",
-	"activeIngredientIds": [
-		"456d6f0e-e862-4c3c-ae30-15e96b5e7459"
-	],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Ivercanis",
-			"pt-PT": "Ivercanis",
-			"gn-PY": "Ivercanis",
-			"en-US": "Ivercanis",
-			"es-ES": "Ivercanis",
-			"fr-FR": "Ivercanis"
-		},
-		"aliases": {
-			"pt-BR": [],
-			"pt-PT": [],
-			"gn-PY": [],
-			"en-US": [],
-			"es-ES": [],
-			"fr-FR": []
-		}
-	},
-	"sections": []
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "1bffd0e4-e328-444f-83e5-fa6b6d138770",
+  "typeTermKey": "medication.antiparasitic.endectocide",
+  "classificationTermKeys": [
+    "origin.allopathic",
+    "therapeuticAction.control"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "33e5bfd1-2843-46c9-9afd-a30f78f4b087",
+  "activeIngredientIds": [
+    "456d6f0e-e862-4c3c-ae30-15e96b5e7459"
+  ],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Ivercanis",
+      "pt-PT": "Ivercanis",
+      "gn-PY": "Ivercanis",
+      "en-US": "Ivercanis",
+      "es-ES": "Ivercanis",
+      "fr-FR": "Ivercanis"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": [],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris"
+  ]
 }

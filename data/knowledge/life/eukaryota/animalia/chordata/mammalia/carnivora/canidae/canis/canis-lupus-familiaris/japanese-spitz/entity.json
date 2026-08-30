@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "japanese-spitz",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "japanese-spitz",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "jp"
+    ],
+    "bodyMetrics": {
+      "size": "small"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Spitz Japonês",
+      "pt-PT": "Spitz japonês",
+      "gn-PY": "Spitz japonés",
+      "en-US": "Japanese Spitz",
+      "es-ES": "Spitz japonés",
+      "fr-FR": "Spitz japonais"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

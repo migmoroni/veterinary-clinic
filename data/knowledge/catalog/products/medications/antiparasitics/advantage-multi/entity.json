@@ -1,47 +1,47 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "6ec796e0-fd74-4cae-90b2-7328b957080a",
-	"typeTermKey": "medication.antiparasitic.endectocide",
-	"classificationTermKeys": [
-		"origin.allopathic",
-		"therapeuticAction.control"
-	],
-	"species": [
-		"canine",
-		"feline"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
-	"activeIngredientIds": [
-		"9aba4d14-23bb-4f25-bae1-6f0a6f3e37c5",
-		"611f7516-b4da-4de8-ae4c-56dd407cb8da"
-	],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Advantage Multi",
-			"pt-PT": "Advantage Multi",
-			"gn-PY": "Advantage Multi",
-			"en-US": "Advantage Multi",
-			"es-ES": "Advantage Multi",
-			"fr-FR": "Advantage Multi"
-		},
-		"aliases": {
-			"pt-BR": [],
-			"pt-PT": [],
-			"gn-PY": [],
-			"en-US": [],
-			"es-ES": [],
-			"fr-FR": []
-		}
-	},
-	"sections": []
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "6ec796e0-fd74-4cae-90b2-7328b957080a",
+  "typeTermKey": "medication.antiparasitic.endectocide",
+  "classificationTermKeys": [
+    "origin.allopathic",
+    "therapeuticAction.control"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
+  "activeIngredientIds": [
+    "9aba4d14-23bb-4f25-bae1-6f0a6f3e37c5",
+    "611f7516-b4da-4de8-ae4c-56dd407cb8da"
+  ],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Advantage Multi",
+      "pt-PT": "Advantage Multi",
+      "gn-PY": "Advantage Multi",
+      "en-US": "Advantage Multi",
+      "es-ES": "Advantage Multi",
+      "fr-FR": "Advantage Multi"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": [],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris",
+    "felis-catus"
+  ]
 }

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "entlebucher-mountain-dog",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "entlebucher-mountain-dog",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "ch"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Entlebucher Mountain Dog",
+      "pt-PT": "Entlebucher Mountain Dog",
+      "gn-PY": "Entlebucher Mountain Dog",
+      "en-US": "Entlebucher Mountain Dog",
+      "es-ES": "Entlebucher Mountain Dog",
+      "fr-FR": "Bouvier de l'Entlebuch"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "brazilian-pit-monster",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "brazilian-pit-monster",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "br"
+    ],
+    "bodyMetrics": {
+      "size": "giant"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Pit Monster Brasileiro",
+      "pt-PT": "Pit Monster Brasileiro",
+      "gn-PY": "Pit Monster brasileño",
+      "en-US": "Brazilian Pit Monster",
+      "es-ES": "Pit Monster brasileño",
+      "fr-FR": "Pit Monster brésilien"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

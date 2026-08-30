@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "ukrainian-levkoy",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "felidae",
+    "genus": "felis",
+    "species": "felis-catus",
+    "breed": "ukrainian-levkoy",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "ua"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Levkoy Ucraniano",
+      "pt-PT": "Levkoy Ucraniano",
+      "gn-PY": "Levkoy ucraniano",
+      "en-US": "Ukrainian Levkoy",
+      "es-ES": "Levkoy ucraniano",
+      "fr-FR": "Levkoy ukrainien"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

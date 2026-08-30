@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "volpino-italiano",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "volpino-italiano",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "it"
+    ],
+    "bodyMetrics": {
+      "size": "small"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Volpino Italiano",
+      "pt-PT": "Volpino Italiano",
+      "gn-PY": "Volpino italiano",
+      "en-US": "Volpino Italiano",
+      "es-ES": "Volpino italiano",
+      "fr-FR": "Volpino italien"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

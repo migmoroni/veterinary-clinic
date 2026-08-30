@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "affenpinscher",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "affenpinscher",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "de"
+    ],
+    "bodyMetrics": {
+      "size": "small"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Affenpinscher",
+      "pt-PT": "Affenpinscher",
+      "gn-PY": "Affenpinscher",
+      "en-US": "Affenpinscher",
+      "es-ES": "Affenpinscher",
+      "fr-FR": "Affenpinscher"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

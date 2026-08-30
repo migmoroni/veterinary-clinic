@@ -62,7 +62,14 @@ fn taxonomy_matrix_is_closed_unique_and_typed() {
             .iter()
             .filter(|spec| spec.cardinality == TaxonomyCardinality::ExactlyOne)
             .count(),
-        5
+        4
+    );
+    assert_eq!(
+        CANONICAL_TAXONOMIES
+            .iter()
+            .filter(|spec| spec.cardinality == TaxonomyCardinality::ZeroOrOne)
+            .count(),
+        1
     );
     assert_eq!(
         CANONICAL_TAXONOMIES
@@ -71,7 +78,7 @@ fn taxonomy_matrix_is_closed_unique_and_typed() {
             .count(),
         8
     );
-    for domain in taxonomy_domains() {
+    for domain in taxonomy_domains().filter(|domain| *domain != "life") {
         let exactly_one = CANONICAL_TAXONOMIES
             .iter()
             .filter(|spec| {
@@ -81,6 +88,10 @@ fn taxonomy_matrix_is_closed_unique_and_typed() {
         assert_eq!(exactly_one.len(), 1);
         assert!(taxonomy_spec(domain, exactly_one[0].purpose).is_some());
     }
+    assert_eq!(
+        taxonomy_spec("life", "size").map(|spec| spec.cardinality),
+        Some(TaxonomyCardinality::ZeroOrOne)
+    );
 }
 
 #[test]
@@ -103,7 +114,7 @@ fn minimal_fixture_has_exactly_the_canonical_taxonomy_matrix() {
 fn public_schema_versions_match_rust_contracts() {
     for source in [
         include_str!("../../schemas/source/active_ingredient.schema.json"),
-        include_str!("../../schemas/source/breed.schema.json"),
+        include_str!("../../schemas/source/life.schema.json"),
         include_str!("../../schemas/source/condition.schema.json"),
         include_str!("../../schemas/source/geo_place.schema.json"),
         include_str!("../../schemas/source/manufacturer.schema.json"),
@@ -222,7 +233,19 @@ fn database_identities_and_artifact_paths_are_canonical() {
 
 #[test]
 fn all_central_versions_are_explicitly_covered() {
-    assert_eq!(SOURCE_DIGEST_SCHEMA_VERSION, 1);
+    assert_eq!(SOURCE_DIGEST_SCHEMA_VERSION, 2);
     assert_eq!(BUILD_CONTEXT_SCHEMA_VERSION, 1);
     assert_eq!(PROJECTION_EVIDENCE_SCHEMA_VERSION, 1);
+}
+
+#[test]
+fn life_contract_has_no_parallel_breed_or_species_storage() {
+    let fingerprint = crate::source::source_schema_fingerprint_input().join("\n");
+    let ddl = include_str!("../../schemas/system/system.sql");
+    assert!(!fingerprint.contains("\"entityType\": { \"const\": \"breed\" }"));
+    assert!(!ddl.contains("breed_reference_items"));
+    assert!(!ddl.contains("breed_origin_places"));
+    assert!(!ddl.contains("species_json"));
+    assert!(ddl.contains("life_reference_items"));
+    assert!(ddl.contains("applicable_taxon_ids_json"));
 }

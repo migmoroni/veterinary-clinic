@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "german-shepherd",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "german-shepherd",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "de"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Pastor Alemão",
+      "pt-PT": "Pastor alemão",
+      "gn-PY": "Pastor alemán",
+      "en-US": "German Shepherd",
+      "es-ES": "Pastor alemán",
+      "fr-FR": "Berger allemand"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

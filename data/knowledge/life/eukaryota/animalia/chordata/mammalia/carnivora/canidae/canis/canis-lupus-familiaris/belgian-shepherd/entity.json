@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "belgian-shepherd",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "belgian-shepherd",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "be"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Pastor Belga",
+      "pt-PT": "Pastor belga",
+      "gn-PY": "Pastor belga",
+      "en-US": "Belgian Shepherd",
+      "es-ES": "Pastor belga",
+      "fr-FR": "Berger belge"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

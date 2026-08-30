@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "catalan-sheepdog",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "catalan-sheepdog",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "es"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Pastor Catalão",
+      "pt-PT": "Pastor Catalão",
+      "gn-PY": "Pastor catalán",
+      "en-US": "Catalan Sheepdog",
+      "es-ES": "Pastor catalán",
+      "fr-FR": "Berger catalan"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "petit-basset-griffon-vendeen",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "petit-basset-griffon-vendeen",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "fr"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Petit Basset Griffon Vendéen",
+      "pt-PT": "Petit Basset Griffon Vendéen",
+      "gn-PY": "Petit Basset Griffon Vendéen",
+      "en-US": "Petit Basset Griffon Vendéen",
+      "es-ES": "Petit Basset Griffon Vendéen",
+      "fr-FR": "Petit Basset Griffon Vendéen"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "bichon-frise",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "bichon-frise",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "fr"
+    ],
+    "bodyMetrics": {
+      "size": "small"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Bichon Frisé",
+      "pt-PT": "Bichon Frisé",
+      "gn-PY": "Bichón frisé",
+      "en-US": "Bichon Frise",
+      "es-ES": "Bichón frisé",
+      "fr-FR": "Bichon frisé"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

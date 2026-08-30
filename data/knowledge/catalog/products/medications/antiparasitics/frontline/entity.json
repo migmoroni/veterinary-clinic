@@ -1,50 +1,50 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "79dc7cf8-32aa-4b44-95c2-c9adfc7993e3",
-	"typeTermKey": "medication.antiparasitic.ectoparasiticide",
-	"classificationTermKeys": [
-		"origin.allopathic",
-		"therapeuticAction.control"
-	],
-	"species": [
-		"canine",
-		"feline"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
-	"activeIngredientIds": [
-		"76a4b9e3-0a82-4ddd-8ce8-b0f5aeb5f558"
-	],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Frontline",
-			"pt-PT": "Frontline",
-			"gn-PY": "Frontline",
-			"en-US": "Frontline",
-			"es-ES": "Frontline",
-			"fr-FR": "Frontline"
-		},
-		"aliases": {
-			"pt-BR": [],
-			"pt-PT": [],
-			"gn-PY": [],
-			"en-US": [],
-			"es-ES": [],
-			"fr-FR": []
-		}
-	},
-	"sections": [],
-	"targetTermKeys": [
-		"parasite.flea",
-		"parasite.tick"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "79dc7cf8-32aa-4b44-95c2-c9adfc7993e3",
+  "typeTermKey": "medication.antiparasitic.ectoparasiticide",
+  "classificationTermKeys": [
+    "origin.allopathic",
+    "therapeuticAction.control"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+  "activeIngredientIds": [
+    "76a4b9e3-0a82-4ddd-8ce8-b0f5aeb5f558"
+  ],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Frontline",
+      "pt-PT": "Frontline",
+      "gn-PY": "Frontline",
+      "en-US": "Frontline",
+      "es-ES": "Frontline",
+      "fr-FR": "Frontline"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": [],
+  "targetTermKeys": [
+    "parasite.flea",
+    "parasite.tick"
+  ],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris",
+    "felis-catus"
+  ]
 }

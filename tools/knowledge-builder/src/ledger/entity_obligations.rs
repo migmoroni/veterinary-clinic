@@ -42,7 +42,7 @@ pub(super) fn add_entity_obligations(
                 id,
                 type_term_key,
                 classification_term_keys,
-                species,
+                applicable_taxon_ids,
                 regions,
                 manufacturer_id,
                 active_ingredient_ids,
@@ -88,12 +88,12 @@ pub(super) fn add_entity_obligations(
                 classification_term_keys,
                 |_, key| taxonomy_row(&entity, classification_taxonomy, key),
             )?;
-            fields(
+            relations(
                 expected,
                 &entity,
-                "species",
-                species,
-                main.column(SystemColumn::SpeciesJson),
+                "applicableTaxonIds",
+                applicable_taxon_ids,
+                |_, _| main.column(SystemColumn::ApplicableTaxonIdsJson),
             )?;
             fields(
                 expected,
@@ -381,20 +381,17 @@ pub(super) fn add_entity_obligations(
             localized(expected, &entity, localized_content, locale, main.clone())?;
             structural_media(expected, entry, locale, media.as_ref())?;
         }
-        CanonicalEntity::Breed(value) => {
-            let crate::source::BreedEntity {
+        CanonicalEntity::Life(value) => {
+            let crate::source::LifeEntity {
                 schema_version,
                 id,
-                species,
-                origin_place_ids,
-                size_term_key,
-                average_weight_kg,
-                average_height_cm,
+                taxonomy,
+                classifications,
                 localized_content,
                 sections,
                 content_path,
                 media,
-            } = value;
+            } = &**value;
             let _ = (schema_version, id);
             common_authoring(
                 expected,
@@ -411,52 +408,69 @@ pub(super) fn add_entity_obligations(
                 main.column(SystemColumn::Id),
                 ObligationClass::Authoring,
             )?;
-            fields(
-                expected,
-                &entity,
-                "species",
-                species,
-                main.column(SystemColumn::SpeciesJson),
-            )?;
-            relations(
-                expected,
-                &entity,
-                "originPlaceIds",
-                origin_place_ids,
-                |_, id| {
-                    table_row(
-                        DatabaseKind::System,
-                        SystemTable::BreedOriginPlaces,
-                        format!("{}/{id}", entity.id),
-                    )
-                },
-            )?;
-            let size_taxonomy = taxonomy_id(source, "breed", "size")?;
-            relations(
-                expected,
-                &entity,
-                "sizeTermKey",
-                std::slice::from_ref(size_term_key),
-                |_, key| taxonomy_row(&entity, size_taxonomy, key),
-            )?;
-            for (name, range) in [
-                ("averageWeightKg", average_weight_kg),
-                ("averageHeightCm", average_height_cm),
-            ] {
-                for (sex, values) in [("male", range.male), ("female", range.female)] {
-                    for index in 0..values.len() {
+            for (index, value) in taxonomy.positions().iter().enumerate() {
+                if value.is_some() {
+                    field(
+                        expected,
+                        &entity,
+                        &format!(
+                            "taxonomy.{}",
+                            [
+                                "domain", "kingdom", "phylum", "class", "order", "family", "genus",
+                                "species", "breed", "variety"
+                            ][index]
+                        ),
+                        main.column(
+                            [
+                                SystemColumn::DomainId,
+                                SystemColumn::KingdomId,
+                                SystemColumn::PhylumId,
+                                SystemColumn::ClassId,
+                                SystemColumn::OrderId,
+                                SystemColumn::FamilyId,
+                                SystemColumn::GenusId,
+                                SystemColumn::SpeciesId,
+                                SystemColumn::BreedId,
+                                SystemColumn::VarietyId,
+                            ][index],
+                        ),
+                        ObligationClass::Relation,
+                    )?;
+                }
+            }
+            if let Some(classifications) = classifications {
+                if let Some(origins) = &classifications.origin_place_ids {
+                    relations(
+                        expected,
+                        &entity,
+                        "classifications.originPlaceIds",
+                        origins,
+                        |_, id| {
+                            table_row(
+                                DatabaseKind::System,
+                                SystemTable::LifeOriginPlaces,
+                                format!("{}/{id}", entity.id),
+                            )
+                        },
+                    )?;
+                }
+                if let Some(body) = &classifications.body_metrics {
+                    if body.size.is_some() {
                         field(
                             expected,
                             &entity,
-                            &format!("{name}.{sex}.{index}"),
-                            main.column(match name {
-                                "averageWeightKg" => SystemColumn::AverageWeightKgJson,
-                                "averageHeightCm" => SystemColumn::AverageHeightCmJson,
-                                _ => unreachable!(),
-                            }),
-                            ObligationClass::Authoring,
+                            "classifications.bodyMetrics.size",
+                            main.column(SystemColumn::SizeTermKey),
+                            ObligationClass::Relation,
                         )?;
                     }
+                    optional_fields(
+                        expected,
+                        &entity,
+                        "classifications.bodyMetrics.stageMetrics",
+                        body.stage_metrics.as_ref(),
+                        main.column(SystemColumn::StageMetricsJson),
+                    )?;
                 }
             }
             localized(expected, &entity, localized_content, locale, main.clone())?;
@@ -531,7 +545,7 @@ pub(super) fn add_entity_obligations(
                 schema_version,
                 id,
                 kind,
-                species,
+                applicable_taxon_ids,
                 product_ids,
                 doses,
                 localized_content,
@@ -558,12 +572,12 @@ pub(super) fn add_entity_obligations(
                 main.column(SystemColumn::Kind),
                 ObligationClass::Authoring,
             )?;
-            fields(
+            relations(
                 expected,
                 &entity,
-                "species",
-                species,
-                main.column(SystemColumn::SpeciesJson),
+                "applicableTaxonIds",
+                applicable_taxon_ids,
+                |_, _| main.column(SystemColumn::ApplicableTaxonIdsJson),
             )?;
             relations(expected, &entity, "productIds", product_ids, |_, id| {
                 table_row(

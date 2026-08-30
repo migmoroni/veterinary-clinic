@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "portuguese-water-dog",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "portuguese-water-dog",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "pt"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Cão de Água Português",
+      "pt-PT": "Cão de água português",
+      "gn-PY": "Perro de agua portugués",
+      "en-US": "Portuguese Water Dog",
+      "es-ES": "Perro de agua portugués",
+      "fr-FR": "Chien d'eau portugais"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

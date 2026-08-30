@@ -139,13 +139,7 @@ pub(crate) fn search_candidates(
                 &value.classification_term_keys,
                 locale,
             )?,
-            CanonicalEntity::Breed(value) => append_taxonomy_values(
-                &mut values,
-                taxonomy_for(source, "breed", "size")?,
-                std::slice::from_ref(&value.size_term_key),
-                locale,
-                "size",
-            )?,
+            CanonicalEntity::Life(_) => {}
             CanonicalEntity::GeoPlace(_) | CanonicalEntity::TreatmentProtocol(_) => {}
             CanonicalEntity::Taxonomy(_) => unreachable!(),
         }

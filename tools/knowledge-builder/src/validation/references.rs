@@ -143,25 +143,22 @@ pub(super) fn validate_references(
                     diagnostics,
                 );
             }
-            CanonicalEntity::Breed(value) => {
-                require_term(
-                    entry,
-                    taxonomies,
-                    "breed",
-                    "size",
-                    &value.size_term_key,
-                    "sizeTermKey",
-                    diagnostics,
-                );
-                for id in &value.origin_place_ids {
-                    require_identity(
-                        entry,
-                        &identities,
-                        "geo_place",
-                        id,
-                        "originPlaceIds",
-                        diagnostics,
-                    );
+            CanonicalEntity::Life(value) => {
+                if let Some(origins) = value
+                    .classifications
+                    .as_ref()
+                    .and_then(|classifications| classifications.origin_place_ids.as_ref())
+                {
+                    for id in origins {
+                        require_identity(
+                            entry,
+                            &identities,
+                            "geo_place",
+                            id,
+                            "classifications.originPlaceIds",
+                            diagnostics,
+                        );
+                    }
                 }
             }
             CanonicalEntity::GeoPlace(value) => {

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "pharaoh-hound",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "pharaoh-hound",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "mt"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Pharaoh Hound",
+      "pt-PT": "Pharaoh Hound",
+      "gn-PY": "Pharaoh Hound",
+      "en-US": "Pharaoh Hound",
+      "es-ES": "Pharaoh Hound",
+      "fr-FR": "Chien du Pharaon"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

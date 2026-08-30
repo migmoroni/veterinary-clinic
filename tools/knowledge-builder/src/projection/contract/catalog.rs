@@ -8,6 +8,7 @@ pub(super) fn project_catalog(
     claims: &mut ObligationOwnership,
     operations: &mut Vec<SystemProjectionOperation>,
 ) -> Result<(), String> {
+    project_life(source, locale, claims, operations)?;
     for entry in &source.entities {
         let entity = identity(&entry.source.entity);
         match &entry.source.entity {
@@ -173,88 +174,14 @@ pub(super) fn project_catalog(
                     ],
                 )?;
             }
-            CanonicalEntity::Breed(value) => {
-                let crate::source::BreedEntity {
-                    schema_version,
-                    id,
-                    species,
-                    origin_place_ids,
-                    size_term_key,
-                    average_weight_kg,
-                    average_height_cm,
-                    localized_content,
-                    sections,
-                    content_path,
-                    media,
-                } = value;
-                let crate::source::MeasurementRange {
-                    male: weight_male,
-                    female: weight_female,
-                } = average_weight_kg;
-                let crate::source::MeasurementRange {
-                    male: height_male,
-                    female: height_female,
-                } = average_height_cm;
-                let _ = (
-                    schema_version,
-                    sections,
-                    content_path,
-                    media,
-                    weight_male,
-                    weight_female,
-                    height_male,
-                    height_female,
-                );
-                let name = localized_text(localized_content, "name", locale)?.to_string();
-                push_main(
-                    operations,
-                    claims,
-                    &entity,
-                    SystemTable::BreedReferenceItems,
-                    SystemRow::Breed {
-                        id: id.clone(),
-                        species_json: json(species)?,
-                        normalized_name: normalize_identity_key(&name),
-                        name,
-                        aliases_json: json(
-                            &localized_list(localized_content, "aliases", locale)
-                                .unwrap_or_default(),
-                        )?,
-                        average_weight_kg_json: json(average_weight_kg)?,
-                        average_height_cm_json: json(average_height_cm)?,
-                        content_json: content_json(entry, locale)?,
-                    },
-                )?;
-                for (sort_order, place_id) in origin_place_ids.iter().enumerate() {
-                    let row_id = format!("{id}/{place_id}");
-                    push_system(
-                        operations,
-                        claims,
-                        SystemRow::BreedOrigin {
-                            breed_id: id.clone(),
-                            place_id: place_id.clone(),
-                            sort_order,
-                        },
-                        SystemTable::BreedOriginPlaces,
-                        row_id.clone(),
-                        Some(entity.clone()),
-                    )?;
-                }
-                taxonomy_relations(
-                    source,
-                    operations,
-                    claims,
-                    &entity,
-                    &[("size", std::slice::from_ref(size_term_key))],
-                )?;
-            }
+            CanonicalEntity::Life(_) => {}
             CanonicalEntity::Product(value) => {
                 let crate::source::ProductEntity {
                     schema_version,
                     id,
                     type_term_key,
                     classification_term_keys,
-                    species,
+                    applicable_taxon_ids,
                     regions,
                     manufacturer_id,
                     active_ingredient_ids,
@@ -294,7 +221,7 @@ pub(super) fn project_catalog(
                         id: id.clone(),
                         normalized_name: normalize_identity_key(&name),
                         name,
-                        species_json: json(species)?,
+                        applicable_taxon_ids_json: json(applicable_taxon_ids)?,
                         aliases_json: json(
                             &localized_list(localized_content, "aliases", locale)
                                 .unwrap_or_default(),
@@ -362,7 +289,7 @@ pub(super) fn project_catalog(
                     schema_version,
                     id,
                     kind,
-                    species,
+                    applicable_taxon_ids,
                     product_ids,
                     doses,
                     localized_content,
@@ -379,7 +306,7 @@ pub(super) fn project_catalog(
                         kind: kind.clone(),
                         normalized_name: normalize_identity_key(&name),
                         name,
-                        species_json: json(species)?,
+                        applicable_taxon_ids_json: json(applicable_taxon_ids)?,
                         observation: optional_localized_text(
                             localized_content,
                             "observation",
@@ -429,6 +356,87 @@ pub(super) fn project_catalog(
                 }
             }
             CanonicalEntity::GeoPlace(_) | CanonicalEntity::Taxonomy(_) => {}
+        }
+    }
+    Ok(())
+}
+
+fn project_life(
+    source: &ValidatedSource,
+    locale: KnowledgeLocale,
+    claims: &mut ObligationOwnership,
+    operations: &mut Vec<SystemProjectionOperation>,
+) -> Result<(), String> {
+    let mut entries = source
+        .entities
+        .iter()
+        .filter_map(|entry| match &entry.source.entity {
+            CanonicalEntity::Life(value) => {
+                Some((value.taxonomy.level(), value.id.as_str(), entry, value))
+            }
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    entries.sort_by(|left, right| (left.0, left.1).cmp(&(right.0, right.1)));
+    for (_, _, entry, value) in entries {
+        let entity = identity(&entry.source.entity);
+        let positions = value.taxonomy.positions();
+        let body = value
+            .classifications
+            .as_ref()
+            .and_then(|classifications| classifications.body_metrics.as_ref());
+        let name = localized_text(&value.localized_content, "name", locale)?.to_string();
+        push_main(
+            operations,
+            claims,
+            &entity,
+            SystemTable::LifeReferenceItems,
+            SystemRow::Life {
+                id: value.id.clone(),
+                domain_id: positions[0].expect("life domain is required").to_string(),
+                kingdom_id: positions[1].map(str::to_string),
+                phylum_id: positions[2].map(str::to_string),
+                class_id: positions[3].map(str::to_string),
+                order_id: positions[4].map(str::to_string),
+                family_id: positions[5].map(str::to_string),
+                genus_id: positions[6].map(str::to_string),
+                species_id: positions[7].map(str::to_string),
+                breed_id: positions[8].map(str::to_string),
+                variety_id: positions[9].map(str::to_string),
+                size_term_key: body.and_then(|metrics| metrics.size.clone()),
+                normalized_name: normalize_identity_key(&name),
+                name,
+                aliases_json: json(
+                    &localized_list(&value.localized_content, "aliases", locale)
+                        .unwrap_or_default(),
+                )?,
+                stage_metrics_json: body
+                    .and_then(|metrics| metrics.stage_metrics.as_ref())
+                    .map(json)
+                    .transpose()?,
+                content_json: content_json(entry, locale)?,
+            },
+        )?;
+        if let Some(origins) = value
+            .classifications
+            .as_ref()
+            .and_then(|classifications| classifications.origin_place_ids.as_ref())
+        {
+            for (sort_order, place_id) in origins.iter().enumerate() {
+                let row_id = format!("{}/{place_id}", value.id);
+                push_system(
+                    operations,
+                    claims,
+                    SystemRow::LifeOrigin {
+                        life_id: value.id.clone(),
+                        place_id: place_id.clone(),
+                        sort_order,
+                    },
+                    SystemTable::LifeOriginPlaces,
+                    row_id,
+                    Some(entity.clone()),
+                )?;
+            }
         }
     }
     Ok(())

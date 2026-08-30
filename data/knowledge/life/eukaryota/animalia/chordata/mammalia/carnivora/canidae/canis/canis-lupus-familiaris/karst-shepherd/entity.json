@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "karst-shepherd",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "karst-shepherd",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "si"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Pastor do Karst",
+      "pt-PT": "Pastor do Karst",
+      "gn-PY": "Pastor del Karst",
+      "en-US": "Karst Shepherd",
+      "es-ES": "Pastor del Karst",
+      "fr-FR": "Berger du Karst"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

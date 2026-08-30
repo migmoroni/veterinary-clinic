@@ -1,63 +1,63 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "b1478112-bba1-4a72-8f48-53fa715554c1",
-	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
-	"classificationTermKeys": [
-		"origin.biological",
-		"therapeuticAction.prophylactic"
-	],
-	"species": [
-		"feline"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
-	"activeIngredientIds": [],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Purevax RCP",
-			"pt-PT": "Purevax RCP",
-			"gn-PY": "Purevax RCP",
-			"en-US": "Purevax RCP",
-			"es-ES": "Purevax RCP",
-			"fr-FR": "Purevax RCP"
-		},
-		"aliases": {
-			"pt-BR": [
-				"RCP"
-			],
-			"pt-PT": [
-				"RCP"
-			],
-			"gn-PY": [
-				"RCP"
-			],
-			"en-US": [
-				"RCP"
-			],
-			"es-ES": [
-				"RCP"
-			],
-			"fr-FR": [
-				"RCP"
-			]
-		}
-	},
-	"sections": [],
-	"targetTermKeys": [
-		"disease.felineRhinotracheitis",
-		"disease.felineCalicivirosis",
-		"disease.felinePanleukopenia"
-	],
-	"vaccineProfileTermKeys": [
-		"feline.trivalent"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "b1478112-bba1-4a72-8f48-53fa715554c1",
+  "typeTermKey": "medication.biologicalAndImmunological.vaccine",
+  "classificationTermKeys": [
+    "origin.biological",
+    "therapeuticAction.prophylactic"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+  "activeIngredientIds": [],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Purevax RCP",
+      "pt-PT": "Purevax RCP",
+      "gn-PY": "Purevax RCP",
+      "en-US": "Purevax RCP",
+      "es-ES": "Purevax RCP",
+      "fr-FR": "Purevax RCP"
+    },
+    "aliases": {
+      "pt-BR": [
+        "RCP"
+      ],
+      "pt-PT": [
+        "RCP"
+      ],
+      "gn-PY": [
+        "RCP"
+      ],
+      "en-US": [
+        "RCP"
+      ],
+      "es-ES": [
+        "RCP"
+      ],
+      "fr-FR": [
+        "RCP"
+      ]
+    }
+  },
+  "sections": [],
+  "targetTermKeys": [
+    "disease.felineRhinotracheitis",
+    "disease.felineCalicivirosis",
+    "disease.felinePanleukopenia"
+  ],
+  "vaccineProfileTermKeys": [
+    "feline.trivalent"
+  ],
+  "applicableTaxonIds": [
+    "felis-catus"
+  ]
 }

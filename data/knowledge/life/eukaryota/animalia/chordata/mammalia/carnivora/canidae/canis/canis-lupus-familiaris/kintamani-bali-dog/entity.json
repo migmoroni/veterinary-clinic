@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "kintamani-bali-dog",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "kintamani-bali-dog",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "id"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Kintamani-Bali",
+      "pt-PT": "Kintamani-Bali",
+      "gn-PY": "Kintamani-Bali",
+      "en-US": "Kintamani-Bali Dog",
+      "es-ES": "Kintamani-Bali",
+      "fr-FR": "Chien de Bali Kintamani"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

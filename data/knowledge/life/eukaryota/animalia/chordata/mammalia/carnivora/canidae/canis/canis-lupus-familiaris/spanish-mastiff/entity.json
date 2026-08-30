@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "spanish-mastiff",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "spanish-mastiff",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "es"
+    ],
+    "bodyMetrics": {
+      "size": "giant"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Mastim Espanhol",
+      "pt-PT": "Mastim Espanhol",
+      "gn-PY": "Mastín español",
+      "en-US": "Spanish Mastiff",
+      "es-ES": "Mastín español",
+      "fr-FR": "Mâtin espagnol"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

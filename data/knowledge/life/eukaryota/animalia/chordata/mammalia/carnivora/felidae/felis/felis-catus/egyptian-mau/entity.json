@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "egyptian-mau",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "felidae",
+    "genus": "felis",
+    "species": "felis-catus",
+    "breed": "egyptian-mau",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "eg"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Mau Egípcio",
+      "pt-PT": "Mau egípcio",
+      "gn-PY": "Mau egipcio",
+      "en-US": "Egyptian Mau",
+      "es-ES": "Mau egipcio",
+      "fr-FR": "Mau égyptien"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

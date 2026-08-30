@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "arabian-mau",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "felidae",
+    "genus": "felis",
+    "species": "felis-catus",
+    "breed": "arabian-mau",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "middle-east"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Mau Árabe",
+      "pt-PT": "Mau Árabe",
+      "gn-PY": "Mau árabe",
+      "en-US": "Arabian Mau",
+      "es-ES": "Mau árabe",
+      "fr-FR": "Mau arabe"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

@@ -1,50 +1,50 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "7270fda6-7dc5-4ae8-95da-fde8f5744a11",
-	"typeTermKey": "medication.antiparasitic.ectoparasiticide",
-	"classificationTermKeys": [
-		"origin.allopathic",
-		"therapeuticAction.control"
-	],
-	"species": [
-		"canine",
-		"feline"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
-	"activeIngredientIds": [
-		"7b689484-1ac8-453a-947a-93a9c7b50f61"
-	],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Bravecto",
-			"pt-PT": "Bravecto",
-			"gn-PY": "Bravecto",
-			"en-US": "Bravecto",
-			"es-ES": "Bravecto",
-			"fr-FR": "Bravecto"
-		},
-		"aliases": {
-			"pt-BR": [],
-			"pt-PT": [],
-			"gn-PY": [],
-			"en-US": [],
-			"es-ES": [],
-			"fr-FR": []
-		}
-	},
-	"sections": [],
-	"targetTermKeys": [
-		"parasite.flea",
-		"parasite.tick"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "7270fda6-7dc5-4ae8-95da-fde8f5744a11",
+  "typeTermKey": "medication.antiparasitic.ectoparasiticide",
+  "classificationTermKeys": [
+    "origin.allopathic",
+    "therapeuticAction.control"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+  "activeIngredientIds": [
+    "7b689484-1ac8-453a-947a-93a9c7b50f61"
+  ],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Bravecto",
+      "pt-PT": "Bravecto",
+      "gn-PY": "Bravecto",
+      "en-US": "Bravecto",
+      "es-ES": "Bravecto",
+      "fr-FR": "Bravecto"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": [],
+  "targetTermKeys": [
+    "parasite.flea",
+    "parasite.tick"
+  ],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris",
+    "felis-catus"
+  ]
 }

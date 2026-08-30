@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "slovak-cuvac",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "slovak-cuvac",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "sk"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Cuvac Eslovaco",
+      "pt-PT": "Cuvac Eslovaco",
+      "gn-PY": "Cuvac eslovaco",
+      "en-US": "Slovak Cuvac",
+      "es-ES": "Cuvac eslovaco",
+      "fr-FR": "Cuvac slovaque"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

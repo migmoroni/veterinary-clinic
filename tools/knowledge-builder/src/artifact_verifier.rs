@@ -659,7 +659,7 @@ fn verify_structural_media_owners(connection: &Connection) -> Result<(), String>
     for row in rows {
         let (entity_type, entity_id) = row.map_err(|error| error.to_string())?;
         let table = match entity_type.as_str() {
-            "breed" => "breed_reference_items",
+            "life" => "life_reference_items",
             "product" => "product_catalog_items",
             "manufacturer" => "manufacturer_catalog_items",
             "active_ingredient" => "active_ingredient_catalog_items",
@@ -685,7 +685,7 @@ fn verify_structural_media_owners(connection: &Connection) -> Result<(), String>
 fn compiled_media_occurrences(connection: &Connection) -> Result<CompiledMediaOccurrences, String> {
     let mut result = BTreeMap::new();
     for (entity_type, table) in [
-        ("breed", "breed_reference_items"),
+        ("life", "life_reference_items"),
         ("manufacturer", "manufacturer_catalog_items"),
         ("active_ingredient", "active_ingredient_catalog_items"),
         ("condition", "condition_catalog_items"),

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "caucasian-shepherd-dog",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "caucasian-shepherd-dog",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "caucasus"
+    ],
+    "bodyMetrics": {
+      "size": "giant"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Pastor do Cáucaso",
+      "pt-PT": "Pastor do Cáucaso",
+      "gn-PY": "Pastor del Cáucaso",
+      "en-US": "Caucasian Shepherd Dog",
+      "es-ES": "Pastor del Cáucaso",
+      "fr-FR": "Berger du Caucase"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "entityType": "taxonomy",
+  "id": "fixture-life-size",
+  "domain": "life",
+  "purpose": "size",
+  "terms": [
+    {
+      "key": "default",
+      "parentKey": null,
+      "order": 0,
+      "localizedContent": {
+        "label": {
+          "pt-BR": "Padrão",
+          "pt-PT": "Padrão",
+          "gn-PY": "Teko",
+          "en-US": "Default",
+          "es-ES": "Predeterminado",
+          "fr-FR": "Défaut"
+        }
+      }
+    }
+  ]
+}

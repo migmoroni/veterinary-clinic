@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "greater-swiss-mountain-dog",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "greater-swiss-mountain-dog",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "ch"
+    ],
+    "bodyMetrics": {
+      "size": "giant"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Grande Boiadeiro Suíço",
+      "pt-PT": "Grande Boiadeiro Suíço",
+      "gn-PY": "Gran boyero suizo",
+      "en-US": "Greater Swiss Mountain Dog",
+      "es-ES": "Gran boyero suizo",
+      "fr-FR": "Grand bouvier suisse"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

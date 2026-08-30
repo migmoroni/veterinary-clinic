@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "norwegian-elkhound",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "norwegian-elkhound",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "no"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Elkhound Norueguês",
+      "pt-PT": "Elkhound Norueguês",
+      "gn-PY": "Elkhound noruego",
+      "en-US": "Norwegian Elkhound",
+      "es-ES": "Elkhound noruego",
+      "fr-FR": "Chien d'élan norvégien"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

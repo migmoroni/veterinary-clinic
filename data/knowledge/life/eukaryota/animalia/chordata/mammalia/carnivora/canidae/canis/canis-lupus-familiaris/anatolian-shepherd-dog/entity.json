@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "anatolian-shepherd-dog",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "anatolian-shepherd-dog",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "tr"
+    ],
+    "bodyMetrics": {
+      "size": "giant"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Pastor da Anatólia",
+      "pt-PT": "Pastor da Anatólia",
+      "gn-PY": "Pastor de Anatolia",
+      "en-US": "Anatolian Shepherd Dog",
+      "es-ES": "Pastor de Anatolia",
+      "fr-FR": "Berger d'Anatolie"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

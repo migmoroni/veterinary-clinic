@@ -47,8 +47,13 @@ pub(super) fn validate_entity_shape(entry: &SourceEntry, diagnostics: &mut Vec<D
                 false,
                 diagnostics,
             );
-            validate_unique_texts(entry, "species", &value.species, true, diagnostics);
-            validate_species(entry, &value.species, diagnostics);
+            validate_unique_texts(
+                entry,
+                "applicableTaxonIds",
+                &value.applicable_taxon_ids,
+                true,
+                diagnostics,
+            );
             validate_unique_texts(entry, "regions", &value.regions, false, diagnostics);
             validate_unique_texts(
                 entry,
@@ -151,41 +156,7 @@ pub(super) fn validate_entity_shape(entry: &SourceEntry, diagnostics: &mut Vec<D
             );
             validate_unique_texts(entry, "regions", &value.regions, false, diagnostics);
         }
-        CanonicalEntity::Breed(value) => {
-            validate_unique_texts(entry, "species", &value.species, true, diagnostics);
-            validate_species(entry, &value.species, diagnostics);
-            validate_unique_texts(
-                entry,
-                "originPlaceIds",
-                &value.origin_place_ids,
-                true,
-                diagnostics,
-            );
-            validate_range(
-                entry,
-                "averageWeightKg.male",
-                value.average_weight_kg.male,
-                diagnostics,
-            );
-            validate_range(
-                entry,
-                "averageWeightKg.female",
-                value.average_weight_kg.female,
-                diagnostics,
-            );
-            validate_range(
-                entry,
-                "averageHeightCm.male",
-                value.average_height_cm.male,
-                diagnostics,
-            );
-            validate_range(
-                entry,
-                "averageHeightCm.female",
-                value.average_height_cm.female,
-                diagnostics,
-            );
-        }
+        CanonicalEntity::Life(_) => {}
         CanonicalEntity::GeoPlace(value) => {
             validate_unique_texts(
                 entry,
@@ -217,8 +188,13 @@ pub(super) fn validate_entity_shape(entry: &SourceEntry, diagnostics: &mut Vec<D
                     "unsupported protocol kind",
                 ));
             }
-            validate_unique_texts(entry, "species", &value.species, true, diagnostics);
-            validate_species(entry, &value.species, diagnostics);
+            validate_unique_texts(
+                entry,
+                "applicableTaxonIds",
+                &value.applicable_taxon_ids,
+                true,
+                diagnostics,
+            );
             validate_unique_texts(entry, "productIds", &value.product_ids, true, diagnostics);
             let mut dose_ids = BTreeSet::new();
             for dose in &value.doses {

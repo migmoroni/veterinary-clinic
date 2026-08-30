@@ -1,50 +1,50 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "a96daab2-a453-4bb6-8fcc-091ec65db0af",
-	"typeTermKey": "medication.antiparasitic.endoparasiticide",
-	"classificationTermKeys": [
-		"origin.allopathic",
-		"therapeuticAction.control"
-	],
-	"species": [
-		"canine",
-		"feline"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
-	"activeIngredientIds": [
-		"afda30e9-4ab0-4b35-a186-0e4891bd412d",
-		"43e22778-1801-4c2a-ad8d-434de9654eaa"
-	],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Milbemax",
-			"pt-PT": "Milbemax",
-			"gn-PY": "Milbemax",
-			"en-US": "Milbemax",
-			"es-ES": "Milbemax",
-			"fr-FR": "Milbemax"
-		},
-		"aliases": {
-			"pt-BR": [],
-			"pt-PT": [],
-			"gn-PY": [],
-			"en-US": [],
-			"es-ES": [],
-			"fr-FR": []
-		}
-	},
-	"sections": [],
-	"therapeuticScopeTermKeys": [
-		"broadSpectrum"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "a96daab2-a453-4bb6-8fcc-091ec65db0af",
+  "typeTermKey": "medication.antiparasitic.endoparasiticide",
+  "classificationTermKeys": [
+    "origin.allopathic",
+    "therapeuticAction.control"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
+  "activeIngredientIds": [
+    "afda30e9-4ab0-4b35-a186-0e4891bd412d",
+    "43e22778-1801-4c2a-ad8d-434de9654eaa"
+  ],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Milbemax",
+      "pt-PT": "Milbemax",
+      "gn-PY": "Milbemax",
+      "en-US": "Milbemax",
+      "es-ES": "Milbemax",
+      "fr-FR": "Milbemax"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": [],
+  "therapeuticScopeTermKeys": [
+    "broadSpectrum"
+  ],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris",
+    "felis-catus"
+  ]
 }

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "phu-quoc-ridgeback",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "phu-quoc-ridgeback",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "vn"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Phu Quoc Ridgeback",
+      "pt-PT": "Phu Quoc Ridgeback",
+      "gn-PY": "Phu Quoc Ridgeback",
+      "en-US": "Phu Quoc Ridgeback",
+      "es-ES": "Phu Quoc Ridgeback",
+      "fr-FR": "Chien à crête dorsale de Phú Quốc"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

@@ -1,49 +1,49 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "a2dfdb74-2a2f-4b8b-a0fc-aec8a6a6d64b",
-	"typeTermKey": "medication.antiparasitic.endoparasiticide",
-	"classificationTermKeys": [
-		"origin.allopathic",
-		"therapeuticAction.control"
-	],
-	"species": [
-		"canine"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
-	"activeIngredientIds": [
-		"1abdddb0-c611-4ef5-aabd-1c5026a286c6",
-		"dfc38256-ecf1-4f1e-8571-6647b678c3be"
-	],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Drontal Puppy",
-			"pt-PT": "Drontal Puppy",
-			"gn-PY": "Drontal Puppy",
-			"en-US": "Drontal Puppy",
-			"es-ES": "Drontal Puppy",
-			"fr-FR": "Drontal Puppy"
-		},
-		"aliases": {
-			"pt-BR": [],
-			"pt-PT": [],
-			"gn-PY": [],
-			"en-US": [],
-			"es-ES": [],
-			"fr-FR": []
-		}
-	},
-	"sections": [],
-	"therapeuticScopeTermKeys": [
-		"broadSpectrum"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "a2dfdb74-2a2f-4b8b-a0fc-aec8a6a6d64b",
+  "typeTermKey": "medication.antiparasitic.endoparasiticide",
+  "classificationTermKeys": [
+    "origin.allopathic",
+    "therapeuticAction.control"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
+  "activeIngredientIds": [
+    "1abdddb0-c611-4ef5-aabd-1c5026a286c6",
+    "dfc38256-ecf1-4f1e-8571-6647b678c3be"
+  ],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Drontal Puppy",
+      "pt-PT": "Drontal Puppy",
+      "gn-PY": "Drontal Puppy",
+      "en-US": "Drontal Puppy",
+      "es-ES": "Drontal Puppy",
+      "fr-FR": "Drontal Puppy"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": [],
+  "therapeuticScopeTermKeys": [
+    "broadSpectrum"
+  ],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris"
+  ]
 }

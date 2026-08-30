@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "bernese-mountain-dog",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "bernese-mountain-dog",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "ch"
+    ],
+    "bodyMetrics": {
+      "size": "giant"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Boiadeiro de Berna",
+      "pt-PT": "Boiadeiro de Berna",
+      "gn-PY": "Boyero de Berna",
+      "en-US": "Bernese Mountain Dog",
+      "es-ES": "Boyero de Berna",
+      "fr-FR": "Bouvier bernois"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

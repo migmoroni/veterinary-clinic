@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "rajapalayam",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "rajapalayam",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "in"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Rajapalayam",
+      "pt-PT": "Rajapalayam",
+      "gn-PY": "Rajapalayam",
+      "en-US": "Rajapalayam",
+      "es-ES": "Rajapalayam",
+      "fr-FR": "Rajapalayam"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

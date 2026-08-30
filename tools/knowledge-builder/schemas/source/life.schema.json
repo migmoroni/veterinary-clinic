@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Canonical life entity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "entityType", "id", "taxonomy", "localizedContent", "sections"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "entityType": { "const": "life" },
+    "id": { "$ref": "common.schema.json#/$defs/key" },
+    "taxonomy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domain", "kingdom", "phylum", "class", "order", "family", "genus", "species", "breed", "variety"],
+      "properties": {
+        "domain": { "$ref": "common.schema.json#/$defs/key" },
+        "kingdom": { "oneOf": [{ "$ref": "common.schema.json#/$defs/key" }, { "type": "null" }] },
+        "phylum": { "oneOf": [{ "$ref": "common.schema.json#/$defs/key" }, { "type": "null" }] },
+        "class": { "oneOf": [{ "$ref": "common.schema.json#/$defs/key" }, { "type": "null" }] },
+        "order": { "oneOf": [{ "$ref": "common.schema.json#/$defs/key" }, { "type": "null" }] },
+        "family": { "oneOf": [{ "$ref": "common.schema.json#/$defs/key" }, { "type": "null" }] },
+        "genus": { "oneOf": [{ "$ref": "common.schema.json#/$defs/key" }, { "type": "null" }] },
+        "species": { "oneOf": [{ "$ref": "common.schema.json#/$defs/key" }, { "type": "null" }] },
+        "breed": { "oneOf": [{ "$ref": "common.schema.json#/$defs/key" }, { "type": "null" }] },
+        "variety": { "oneOf": [{ "$ref": "common.schema.json#/$defs/key" }, { "type": "null" }] }
+      },
+      "oneOf": [
+        { "properties": { "kingdom": { "type": "null" }, "phylum": { "type": "null" }, "class": { "type": "null" }, "order": { "type": "null" }, "family": { "type": "null" }, "genus": { "type": "null" }, "species": { "type": "null" }, "breed": { "type": "null" }, "variety": { "type": "null" } } },
+        { "properties": { "kingdom": { "$ref": "common.schema.json#/$defs/key" }, "phylum": { "type": "null" }, "class": { "type": "null" }, "order": { "type": "null" }, "family": { "type": "null" }, "genus": { "type": "null" }, "species": { "type": "null" }, "breed": { "type": "null" }, "variety": { "type": "null" } } },
+        { "properties": { "kingdom": { "$ref": "common.schema.json#/$defs/key" }, "phylum": { "$ref": "common.schema.json#/$defs/key" }, "class": { "type": "null" }, "order": { "type": "null" }, "family": { "type": "null" }, "genus": { "type": "null" }, "species": { "type": "null" }, "breed": { "type": "null" }, "variety": { "type": "null" } } },
+        { "properties": { "kingdom": { "$ref": "common.schema.json#/$defs/key" }, "phylum": { "$ref": "common.schema.json#/$defs/key" }, "class": { "$ref": "common.schema.json#/$defs/key" }, "order": { "type": "null" }, "family": { "type": "null" }, "genus": { "type": "null" }, "species": { "type": "null" }, "breed": { "type": "null" }, "variety": { "type": "null" } } },
+        { "properties": { "kingdom": { "$ref": "common.schema.json#/$defs/key" }, "phylum": { "$ref": "common.schema.json#/$defs/key" }, "class": { "$ref": "common.schema.json#/$defs/key" }, "order": { "$ref": "common.schema.json#/$defs/key" }, "family": { "type": "null" }, "genus": { "type": "null" }, "species": { "type": "null" }, "breed": { "type": "null" }, "variety": { "type": "null" } } },
+        { "properties": { "kingdom": { "$ref": "common.schema.json#/$defs/key" }, "phylum": { "$ref": "common.schema.json#/$defs/key" }, "class": { "$ref": "common.schema.json#/$defs/key" }, "order": { "$ref": "common.schema.json#/$defs/key" }, "family": { "$ref": "common.schema.json#/$defs/key" }, "genus": { "type": "null" }, "species": { "type": "null" }, "breed": { "type": "null" }, "variety": { "type": "null" } } },
+        { "properties": { "kingdom": { "$ref": "common.schema.json#/$defs/key" }, "phylum": { "$ref": "common.schema.json#/$defs/key" }, "class": { "$ref": "common.schema.json#/$defs/key" }, "order": { "$ref": "common.schema.json#/$defs/key" }, "family": { "$ref": "common.schema.json#/$defs/key" }, "genus": { "$ref": "common.schema.json#/$defs/key" }, "species": { "type": "null" }, "breed": { "type": "null" }, "variety": { "type": "null" } } },
+        { "properties": { "kingdom": { "$ref": "common.schema.json#/$defs/key" }, "phylum": { "$ref": "common.schema.json#/$defs/key" }, "class": { "$ref": "common.schema.json#/$defs/key" }, "order": { "$ref": "common.schema.json#/$defs/key" }, "family": { "$ref": "common.schema.json#/$defs/key" }, "genus": { "$ref": "common.schema.json#/$defs/key" }, "species": { "$ref": "common.schema.json#/$defs/key" }, "breed": { "type": "null" }, "variety": { "type": "null" } } },
+        { "properties": { "kingdom": { "$ref": "common.schema.json#/$defs/key" }, "phylum": { "$ref": "common.schema.json#/$defs/key" }, "class": { "$ref": "common.schema.json#/$defs/key" }, "order": { "$ref": "common.schema.json#/$defs/key" }, "family": { "$ref": "common.schema.json#/$defs/key" }, "genus": { "$ref": "common.schema.json#/$defs/key" }, "species": { "$ref": "common.schema.json#/$defs/key" }, "breed": { "$ref": "common.schema.json#/$defs/key" }, "variety": { "type": "null" } } },
+        { "properties": { "kingdom": { "$ref": "common.schema.json#/$defs/key" }, "phylum": { "$ref": "common.schema.json#/$defs/key" }, "class": { "$ref": "common.schema.json#/$defs/key" }, "order": { "$ref": "common.schema.json#/$defs/key" }, "family": { "$ref": "common.schema.json#/$defs/key" }, "genus": { "$ref": "common.schema.json#/$defs/key" }, "species": { "$ref": "common.schema.json#/$defs/key" }, "breed": { "$ref": "common.schema.json#/$defs/key" }, "variety": { "$ref": "common.schema.json#/$defs/key" } } }
+      ]
+    },
+    "classifications": {
+      "type": "object", "additionalProperties": false, "minProperties": 1,
+      "properties": {
+        "originPlaceIds": { "$ref": "common.schema.json#/$defs/nonEmptyStringArray" },
+        "bodyMetrics": {
+          "type": "object", "additionalProperties": false, "minProperties": 1,
+          "properties": {
+            "size": { "$ref": "common.schema.json#/$defs/key" },
+            "stageMetrics": {
+              "type": "object", "additionalProperties": false,
+              "required": ["periodUnit", "male", "female"],
+              "properties": {
+                "periodUnit": { "enum": ["minutes", "hours", "days", "weeks", "months", "years"] },
+                "male": { "$ref": "#/$defs/sexMetrics" },
+                "female": { "$ref": "#/$defs/sexMetrics" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "localizedContent": { "$ref": "common.schema.json#/$defs/localizedContent" },
+    "sections": { "$ref": "common.schema.json#/$defs/sections" },
+    "contentPath": { "$ref": "common.schema.json#/$defs/contentPath" },
+    "media": { "$ref": "common.schema.json#/$defs/media" }
+  },
+  "$defs": {
+    "positiveRange": { "type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{ "type": "number", "exclusiveMinimum": 0 }, { "type": "number", "exclusiveMinimum": 0 }], "items": false },
+    "period": { "type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{ "type": ["number", "null"], "minimum": 0 }, { "type": ["number", "null"], "minimum": 0 }], "items": false },
+    "stage": {
+      "type": "object", "additionalProperties": false, "required": ["period"], "minProperties": 2,
+      "properties": {
+        "period": { "$ref": "#/$defs/period" },
+        "weight": { "type": "object", "additionalProperties": false, "required": ["live"], "properties": { "live": { "$ref": "#/$defs/positiveRange" } } },
+        "measure": { "type": "object", "additionalProperties": false, "minProperties": 1, "properties": { "height": { "$ref": "#/$defs/positiveRange" }, "length": { "$ref": "#/$defs/positiveRange" } } }
+      },
+      "anyOf": [{ "required": ["weight"] }, { "required": ["measure"] }]
+    },
+    "sexMetrics": { "type": "object", "additionalProperties": false, "required": ["newborn", "young", "adult"], "properties": { "newborn": { "$ref": "#/$defs/stage" }, "young": { "$ref": "#/$defs/stage" }, "adult": { "$ref": "#/$defs/stage" } } }
+  }
+}

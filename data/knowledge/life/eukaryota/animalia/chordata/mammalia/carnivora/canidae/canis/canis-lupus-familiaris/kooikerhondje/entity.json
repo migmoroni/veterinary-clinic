@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "kooikerhondje",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "kooikerhondje",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "nl"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Kooikerhondje",
+      "pt-PT": "Kooikerhondje",
+      "gn-PY": "Kooikerhondje",
+      "en-US": "Kooikerhondje",
+      "es-ES": "Kooikerhondje",
+      "fr-FR": "Kooikerhondje"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

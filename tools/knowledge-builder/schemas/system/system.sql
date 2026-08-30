@@ -52,24 +52,63 @@ CREATE TABLE geo_places (
     CHECK((latitude IS NULL AND longitude IS NULL) OR (latitude IS NOT NULL AND longitude IS NOT NULL))
 );
 
-CREATE TABLE breed_reference_items (
+CREATE TABLE life_reference_items (
     id TEXT PRIMARY KEY CHECK(length(trim(id)) > 0),
-    species_json TEXT NOT NULL CHECK(json_valid(species_json) AND json_type(species_json) = 'array'),
+    domain_id TEXT NOT NULL CHECK(length(trim(domain_id)) > 0),
+    kingdom_id TEXT CHECK(kingdom_id IS NULL OR length(trim(kingdom_id)) > 0),
+    phylum_id TEXT CHECK(phylum_id IS NULL OR length(trim(phylum_id)) > 0),
+    class_id TEXT CHECK(class_id IS NULL OR length(trim(class_id)) > 0),
+    order_id TEXT CHECK(order_id IS NULL OR length(trim(order_id)) > 0),
+    family_id TEXT CHECK(family_id IS NULL OR length(trim(family_id)) > 0),
+    genus_id TEXT CHECK(genus_id IS NULL OR length(trim(genus_id)) > 0),
+    species_id TEXT CHECK(species_id IS NULL OR length(trim(species_id)) > 0),
+    breed_id TEXT CHECK(breed_id IS NULL OR length(trim(breed_id)) > 0),
+    variety_id TEXT CHECK(variety_id IS NULL OR length(trim(variety_id)) > 0),
+    size_term_key TEXT CHECK(size_term_key IS NULL OR length(trim(size_term_key)) > 0),
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
     normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) > 0),
     aliases_json TEXT NOT NULL CHECK(json_valid(aliases_json) AND json_type(aliases_json) = 'array'),
-    average_weight_kg_json TEXT NOT NULL CHECK(json_valid(average_weight_kg_json)),
-    average_height_cm_json TEXT NOT NULL CHECK(json_valid(average_height_cm_json)),
-    content_json TEXT NOT NULL CHECK(json_valid(content_json))
+    stage_metrics_json TEXT CHECK(stage_metrics_json IS NULL OR (json_valid(stage_metrics_json) AND json_type(stage_metrics_json) = 'object')),
+    content_json TEXT NOT NULL CHECK(json_valid(content_json)),
+    FOREIGN KEY(domain_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
+    FOREIGN KEY(kingdom_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
+    FOREIGN KEY(phylum_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
+    FOREIGN KEY(class_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
+    FOREIGN KEY(order_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
+    FOREIGN KEY(family_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
+    FOREIGN KEY(genus_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
+    FOREIGN KEY(species_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
+    FOREIGN KEY(breed_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
+    FOREIGN KEY(variety_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
+    CHECK(kingdom_id IS NOT NULL OR phylum_id IS NULL),
+    CHECK(phylum_id IS NOT NULL OR class_id IS NULL),
+    CHECK(class_id IS NOT NULL OR order_id IS NULL),
+    CHECK(order_id IS NOT NULL OR family_id IS NULL),
+    CHECK(family_id IS NOT NULL OR genus_id IS NULL),
+    CHECK(genus_id IS NOT NULL OR species_id IS NULL),
+    CHECK(species_id IS NOT NULL OR breed_id IS NULL),
+    CHECK(breed_id IS NOT NULL OR variety_id IS NULL),
+    CHECK(CASE
+        WHEN kingdom_id IS NULL THEN id = domain_id
+        WHEN phylum_id IS NULL THEN id = kingdom_id
+        WHEN class_id IS NULL THEN id = phylum_id
+        WHEN order_id IS NULL THEN id = class_id
+        WHEN family_id IS NULL THEN id = order_id
+        WHEN genus_id IS NULL THEN id = family_id
+        WHEN species_id IS NULL THEN id = genus_id
+        WHEN breed_id IS NULL THEN id = species_id
+        WHEN variety_id IS NULL THEN id = breed_id
+        ELSE id = variety_id
+    END)
 );
 
-CREATE TABLE breed_origin_places (
-    breed_id TEXT NOT NULL,
+CREATE TABLE life_origin_places (
+    life_id TEXT NOT NULL,
     place_id TEXT NOT NULL,
     sort_order INTEGER NOT NULL CHECK(sort_order >= 0),
-    PRIMARY KEY(breed_id, place_id),
-    UNIQUE(breed_id, sort_order),
-    FOREIGN KEY(breed_id) REFERENCES breed_reference_items(id) ON DELETE CASCADE,
+    PRIMARY KEY(life_id, place_id),
+    UNIQUE(life_id, sort_order),
+    FOREIGN KEY(life_id) REFERENCES life_reference_items(id) ON DELETE CASCADE,
     FOREIGN KEY(place_id) REFERENCES geo_places(id) ON DELETE RESTRICT
 );
 
@@ -112,7 +151,7 @@ CREATE TABLE product_catalog_items (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
     normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) > 0),
-    species_json TEXT NOT NULL CHECK(json_valid(species_json) AND json_type(species_json) = 'array'),
+    applicable_taxon_ids_json TEXT NOT NULL CHECK(json_valid(applicable_taxon_ids_json) AND json_type(applicable_taxon_ids_json) = 'array' AND json_array_length(applicable_taxon_ids_json) > 0),
     aliases_json TEXT NOT NULL CHECK(json_valid(aliases_json) AND json_type(aliases_json) = 'array'),
     manufacturer_id TEXT NOT NULL,
     regions_json TEXT NOT NULL CHECK(json_valid(regions_json) AND json_type(regions_json) = 'array'),
@@ -126,7 +165,7 @@ CREATE TABLE product_catalog_items (
 );
 
 CREATE TABLE entity_taxonomy_terms (
-    entity_type TEXT NOT NULL CHECK(entity_type IN ('breed','manufacturer','active_ingredient','condition','product')),
+    entity_type TEXT NOT NULL CHECK(entity_type IN ('manufacturer','active_ingredient','condition','product')),
     entity_id TEXT NOT NULL CHECK(length(trim(entity_id)) > 0),
     taxonomy_id TEXT NOT NULL,
     term_key TEXT NOT NULL CHECK(length(trim(term_key)) > 0),
@@ -149,7 +188,7 @@ CREATE TABLE product_active_ingredients (
 CREATE TABLE treatment_protocols (
     id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('vaccine','antiparasitic')),
     name TEXT NOT NULL CHECK(length(trim(name)) > 0), normalized_name TEXT NOT NULL,
-    species_json TEXT NOT NULL CHECK(json_valid(species_json) AND json_type(species_json) = 'array'), observation TEXT
+    applicable_taxon_ids_json TEXT NOT NULL CHECK(json_valid(applicable_taxon_ids_json) AND json_type(applicable_taxon_ids_json) = 'array' AND json_array_length(applicable_taxon_ids_json) > 0), observation TEXT
 );
 
 CREATE TABLE treatment_protocol_items (
@@ -167,14 +206,14 @@ CREATE TABLE treatment_protocol_doses (
 );
 
 CREATE TABLE entity_search_terms (
-    entity_type TEXT NOT NULL, entity_id TEXT NOT NULL, value TEXT NOT NULL,
+    entity_type TEXT NOT NULL CHECK(entity_type IN ('life','product','manufacturer','active_ingredient','condition','geo_place','treatment_protocol')), entity_id TEXT NOT NULL, value TEXT NOT NULL,
     normalized_value TEXT NOT NULL, provenance TEXT NOT NULL, sort_order INTEGER NOT NULL CHECK(sort_order >= 0),
     PRIMARY KEY(entity_type, entity_id, provenance, normalized_value),
     UNIQUE(entity_type, entity_id, sort_order)
 );
 
 CREATE TABLE entity_media_references (
-    entity_type TEXT NOT NULL CHECK(entity_type IN ('breed','product','manufacturer','active_ingredient','condition')),
+    entity_type TEXT NOT NULL CHECK(entity_type IN ('life','product','manufacturer','active_ingredient','condition')),
     entity_id TEXT NOT NULL CHECK(length(trim(entity_id)) > 0),
     role TEXT NOT NULL CHECK(role IN ('cover', 'gallery')),
     media_key TEXT NOT NULL CHECK(length(trim(media_key)) > 0),
@@ -185,7 +224,17 @@ CREATE TABLE entity_media_references (
 
 CREATE INDEX idx_taxonomy_terms_label ON taxonomy_terms(taxonomy_id, normalized_label);
 CREATE INDEX idx_geo_places_parent ON geo_places(parent_place_id);
-CREATE INDEX idx_breed_origin_place ON breed_origin_places(place_id, breed_id);
+CREATE INDEX idx_life_taxonomy ON life_reference_items(domain_id, kingdom_id, phylum_id, class_id, order_id, family_id, genus_id, species_id, breed_id, variety_id, normalized_name, id);
+CREATE INDEX idx_life_kingdom_items ON life_reference_items(kingdom_id, phylum_id, class_id, normalized_name, id);
+CREATE INDEX idx_life_phylum_items ON life_reference_items(phylum_id, class_id, order_id, normalized_name, id);
+CREATE INDEX idx_life_class_items ON life_reference_items(class_id, order_id, family_id, normalized_name, id);
+CREATE INDEX idx_life_order_items ON life_reference_items(order_id, family_id, genus_id, normalized_name, id);
+CREATE INDEX idx_life_family_items ON life_reference_items(family_id, genus_id, species_id, normalized_name, id);
+CREATE INDEX idx_life_genus_items ON life_reference_items(genus_id, species_id, breed_id, normalized_name, id);
+CREATE INDEX idx_life_species_items ON life_reference_items(species_id, breed_id, variety_id, normalized_name, id);
+CREATE INDEX idx_life_breed_items ON life_reference_items(breed_id, variety_id, normalized_name, id);
+CREATE INDEX idx_life_size ON life_reference_items(size_term_key, id);
+CREATE INDEX idx_life_origin_place ON life_origin_places(place_id, life_id);
 CREATE INDEX idx_product_manufacturer ON product_catalog_items(manufacturer_id);
 CREATE INDEX idx_product_active_ingredient ON product_active_ingredients(active_ingredient_id, product_id);
 CREATE INDEX idx_entity_taxonomy_filter ON entity_taxonomy_terms(taxonomy_id, term_key, entity_type, entity_id);

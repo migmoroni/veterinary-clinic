@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "canis-lupus-familiaris",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": null,
+    "variety": null
+  },
+  "classifications": {
+    "bodyMetrics": {
+      "stageMetrics": {
+        "periodUnit": "months",
+        "male": {
+          "newborn": {
+            "period": [
+              null,
+              1
+            ],
+            "weight": {
+              "live": [
+                0.5,
+                2
+              ]
+            },
+            "measure": {
+              "height": [
+                8,
+                18
+              ],
+              "length": [
+                12,
+                28
+              ]
+            }
+          },
+          "young": {
+            "period": [
+              1,
+              12
+            ],
+            "weight": {
+              "live": [
+                1.5,
+                3.5
+              ]
+            },
+            "measure": {
+              "height": [
+                16,
+                26
+              ],
+              "length": [
+                24,
+                38
+              ]
+            }
+          },
+          "adult": {
+            "period": [
+              12,
+              null
+            ],
+            "weight": {
+              "live": [
+                3,
+                4
+              ]
+            },
+            "measure": {
+              "height": [
+                24,
+                28
+              ],
+              "length": [
+                35,
+                40
+              ]
+            }
+          }
+        },
+        "female": {
+          "newborn": {
+            "period": [
+              null,
+              2
+            ],
+            "weight": {
+              "live": [
+                0.4,
+                1.8
+              ]
+            },
+            "measure": {
+              "height": [
+                7,
+                17
+              ],
+              "length": [
+                11,
+                27
+              ]
+            }
+          },
+          "young": {
+            "period": [
+              2,
+              11
+            ],
+            "weight": {
+              "live": [
+                1.4,
+                3.3
+              ]
+            },
+            "measure": {
+              "height": [
+                15,
+                25
+              ],
+              "length": [
+                23,
+                37
+              ]
+            }
+          },
+          "adult": {
+            "period": [
+              11,
+              null
+            ],
+            "weight": {
+              "live": [
+                2.8,
+                3.8
+              ]
+            },
+            "measure": {
+              "height": [
+                23,
+                27
+              ],
+              "length": [
+                34,
+                39
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "canis-lupus-familiaris",
+      "pt-PT": "canis-lupus-familiaris",
+      "gn-PY": "canis-lupus-familiaris",
+      "en-US": "canis-lupus-familiaris",
+      "es-ES": "canis-lupus-familiaris",
+      "fr-FR": "canis-lupus-familiaris"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

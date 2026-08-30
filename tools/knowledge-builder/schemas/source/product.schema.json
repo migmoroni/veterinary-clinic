@@ -1,10 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema", "title": "Canonical product", "type": "object", "additionalProperties": false,
-  "required": ["schemaVersion", "entityType", "id", "typeTermKey", "classificationTermKeys", "species", "regions", "manufacturerId", "activeIngredientIds", "regulatoryIdentifiers", "localizedContent", "sections"],
+  "required": ["schemaVersion", "entityType", "id", "typeTermKey", "classificationTermKeys", "applicableTaxonIds", "regions", "manufacturerId", "activeIngredientIds", "regulatoryIdentifiers", "localizedContent", "sections"],
   "properties": {
     "schemaVersion": { "const": 1 }, "entityType": { "const": "product" }, "id": { "$ref": "common.schema.json#/$defs/uuidV4" },
     "typeTermKey": { "$ref": "common.schema.json#/$defs/key" }, "classificationTermKeys": { "$ref": "common.schema.json#/$defs/stringArray" },
-    "species": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["canine", "feline"] } }, "regions": { "$ref": "common.schema.json#/$defs/stringArray" },
+    "applicableTaxonIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/key" } }, "regions": { "$ref": "common.schema.json#/$defs/stringArray" },
     "manufacturerId": { "$ref": "common.schema.json#/$defs/uuidV4" }, "activeIngredientIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/uuidV4" } },
     "regulatoryIdentifiers": { "$ref": "common.schema.json#/$defs/regulatoryIdentifiers" }, "localizedContent": { "$ref": "common.schema.json#/$defs/localizedContent" },
     "sections": { "$ref": "common.schema.json#/$defs/sections" }, "contentPath": { "$ref": "common.schema.json#/$defs/contentPath" }, "media": { "$ref": "common.schema.json#/$defs/media" },

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "cesky-fousek",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "cesky-fousek",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "cz"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Cesky Fousek",
+      "pt-PT": "Cesky Fousek",
+      "gn-PY": "Cesky Fousek",
+      "en-US": "Cesky Fousek",
+      "es-ES": "Cesky Fousek",
+      "fr-FR": "Cesky Fousek"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

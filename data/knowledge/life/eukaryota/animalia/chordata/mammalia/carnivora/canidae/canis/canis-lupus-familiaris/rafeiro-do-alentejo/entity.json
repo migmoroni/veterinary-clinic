@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "rafeiro-do-alentejo",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "rafeiro-do-alentejo",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "pt"
+    ],
+    "bodyMetrics": {
+      "size": "giant"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Rafeiro do Alentejo",
+      "pt-PT": "Rafeiro do Alentejo",
+      "gn-PY": "Rafeiro do Alentejo",
+      "en-US": "Rafeiro do Alentejo",
+      "es-ES": "Rafeiro do Alentejo",
+      "fr-FR": "Rafeiro de l'Alentejo"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

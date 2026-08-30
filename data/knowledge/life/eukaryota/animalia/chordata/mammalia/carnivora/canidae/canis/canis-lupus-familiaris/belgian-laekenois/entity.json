@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "belgian-laekenois",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "belgian-laekenois",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "be"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Pastor Belga Laekenois",
+      "pt-PT": "Pastor Belga Laekenois",
+      "gn-PY": "Pastor belga Laekenois",
+      "en-US": "Belgian Laekenois",
+      "es-ES": "Pastor belga Laekenois",
+      "fr-FR": "Berger belge Laekenois"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

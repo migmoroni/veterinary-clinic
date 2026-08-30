@@ -1,4 +1,4 @@
-//! Provides reusable validators for collections, species, ranges, simple text, and UUIDs.
+//! Provides reusable validators for collections, simple text, and UUID identities.
 
 use super::*;
 
@@ -28,37 +28,6 @@ pub(super) fn validate_unique_texts(
                 format!("duplicate value {value}"),
             ));
         }
-    }
-}
-
-pub(super) fn validate_species(
-    entry: &SourceEntry,
-    species: &[String],
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    for value in species {
-        if !matches!(value.as_str(), "canine" | "feline") {
-            diagnostics.push(Diagnostic::entity(
-                entry,
-                "species",
-                format!("unsupported species {value}"),
-            ));
-        }
-    }
-}
-
-pub(super) fn validate_range(
-    entry: &SourceEntry,
-    field: &str,
-    range: [f64; 2],
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    if !range[0].is_finite() || !range[1].is_finite() || range[0] <= 0.0 || range[0] > range[1] {
-        diagnostics.push(Diagnostic::entity(
-            entry,
-            field,
-            "measurement range must be finite, positive and ordered",
-        ));
     }
 }
 

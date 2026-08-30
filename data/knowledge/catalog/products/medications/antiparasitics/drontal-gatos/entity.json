@@ -1,49 +1,49 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "be582967-68f0-4793-ba31-763c136f7d46",
-	"typeTermKey": "medication.antiparasitic.endoparasiticide",
-	"classificationTermKeys": [
-		"origin.allopathic",
-		"therapeuticAction.control"
-	],
-	"species": [
-		"feline"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
-	"activeIngredientIds": [
-		"43e22778-1801-4c2a-ad8d-434de9654eaa",
-		"1abdddb0-c611-4ef5-aabd-1c5026a286c6"
-	],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Drontal Gatos",
-			"pt-PT": "Drontal Gatos",
-			"gn-PY": "Drontal Gatos",
-			"en-US": "Drontal Gatos",
-			"es-ES": "Drontal Gatos",
-			"fr-FR": "Drontal Gatos"
-		},
-		"aliases": {
-			"pt-BR": [],
-			"pt-PT": [],
-			"gn-PY": [],
-			"en-US": [],
-			"es-ES": [],
-			"fr-FR": []
-		}
-	},
-	"sections": [],
-	"targetTermKeys": [
-		"parasite.tapeworm"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "be582967-68f0-4793-ba31-763c136f7d46",
+  "typeTermKey": "medication.antiparasitic.endoparasiticide",
+  "classificationTermKeys": [
+    "origin.allopathic",
+    "therapeuticAction.control"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "f12a7466-ea74-4d71-b923-5e714c671f8a",
+  "activeIngredientIds": [
+    "43e22778-1801-4c2a-ad8d-434de9654eaa",
+    "1abdddb0-c611-4ef5-aabd-1c5026a286c6"
+  ],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Drontal Gatos",
+      "pt-PT": "Drontal Gatos",
+      "gn-PY": "Drontal Gatos",
+      "en-US": "Drontal Gatos",
+      "es-ES": "Drontal Gatos",
+      "fr-FR": "Drontal Gatos"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": [],
+  "targetTermKeys": [
+    "parasite.tapeworm"
+  ],
+  "applicableTaxonIds": [
+    "felis-catus"
+  ]
 }

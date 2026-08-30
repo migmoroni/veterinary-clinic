@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "perro-pampa-argentino",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "perro-pampa-argentino",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "ar"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Perro Pampa Argentino",
+      "pt-PT": "Perro Pampa Argentino",
+      "gn-PY": "Perro pampa argentino",
+      "en-US": "Perro Pampa Argentino",
+      "es-ES": "Perro pampa argentino",
+      "fr-FR": "Perro Pampa argentin"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

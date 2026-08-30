@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "wirehaired-pointing-griffon",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "wirehaired-pointing-griffon",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "fr"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Griffon de Aponte de Pelo Duro",
+      "pt-PT": "Griffon de Aponte de Pelo Duro",
+      "gn-PY": "Grifón de muestra de pelo duro",
+      "en-US": "Wirehaired Pointing Griffon",
+      "es-ES": "Grifón de muestra de pelo duro",
+      "fr-FR": "Griffon d'arrêt à poil dur Korthals"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

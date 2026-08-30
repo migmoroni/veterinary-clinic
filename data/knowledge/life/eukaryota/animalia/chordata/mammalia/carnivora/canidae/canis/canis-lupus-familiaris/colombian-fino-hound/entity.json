@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "colombian-fino-hound",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "colombian-fino-hound",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "co"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Sabueso Fino Colombiano",
+      "pt-PT": "Sabueso Fino Colombiano",
+      "gn-PY": "Sabueso fino colombiano",
+      "en-US": "Colombian Fino Hound",
+      "es-ES": "Sabueso fino colombiano",
+      "fr-FR": "Fino colombien"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

@@ -210,14 +210,14 @@ pub(super) fn localized_column(
             | ("manufacturer", "name")
             | ("active_ingredient", "name")
             | ("condition", "name")
-            | ("breed", "name")
+            | ("life", "name")
             | ("geo_place", "name")
             | ("treatment_protocol", "name") => SystemColumn::Name,
             ("product", "aliases")
             | ("manufacturer", "aliases")
             | ("active_ingredient", "aliases")
             | ("condition", "aliases")
-            | ("breed", "aliases")
+            | ("life", "aliases")
             | ("geo_place", "aliases") => SystemColumn::AliasesJson,
             ("product", "commercialLine") => SystemColumn::CommercialLine,
             ("product", "presentationDosage") => SystemColumn::PresentationDosage,
@@ -335,7 +335,7 @@ pub(super) fn identity(entity: &CanonicalEntity) -> EntityIdentity {
 
 pub(super) fn main_row_target(entity: &CanonicalEntity) -> OperationDisposition {
     let table = match entity {
-        CanonicalEntity::Breed(_) => SystemTable::BreedReferenceItems,
+        CanonicalEntity::Life(_) => SystemTable::LifeReferenceItems,
         CanonicalEntity::Product(_) => SystemTable::ProductCatalogItems,
         CanonicalEntity::Manufacturer(_) => SystemTable::ManufacturerCatalogItems,
         CanonicalEntity::ActiveIngredient(_) => SystemTable::ActiveIngredientCatalogItems,

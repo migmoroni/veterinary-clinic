@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "dogo-argentino",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "dogo-argentino",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "ar"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Dogo Argentino",
+      "pt-PT": "Dogo argentino",
+      "gn-PY": "Dogo argentino",
+      "en-US": "Dogo Argentino",
+      "es-ES": "Dogo argentino",
+      "fr-FR": "Dogue argentin"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

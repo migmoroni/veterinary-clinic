@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "shih-tzu",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "shih-tzu",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "cn"
+    ],
+    "bodyMetrics": {
+      "size": "small"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Shih Tzu",
+      "pt-PT": "Shih Tzu",
+      "gn-PY": "Shih Tzu",
+      "en-US": "Shih Tzu",
+      "es-ES": "Shih Tzu",
+      "fr-FR": "Shih Tzu"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

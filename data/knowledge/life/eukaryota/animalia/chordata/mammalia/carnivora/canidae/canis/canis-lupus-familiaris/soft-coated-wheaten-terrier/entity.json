@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "soft-coated-wheaten-terrier",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "soft-coated-wheaten-terrier",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "ie"
+    ],
+    "bodyMetrics": {
+      "size": "medium"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Soft Coated Wheaten Terrier",
+      "pt-PT": "Soft Coated Wheaten Terrier",
+      "gn-PY": "Soft Coated Wheaten Terrier",
+      "en-US": "Soft Coated Wheaten Terrier",
+      "es-ES": "Soft Coated Wheaten Terrier",
+      "fr-FR": "Irish Soft Coated Wheaten Terrier"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "belgian-groenendael",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "belgian-groenendael",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "be"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Pastor Belga Groenendael",
+      "pt-PT": "Pastor Belga Groenendael",
+      "gn-PY": "Pastor belga Groenendael",
+      "en-US": "Belgian Groenendael",
+      "es-ES": "Pastor belga Groenendael",
+      "fr-FR": "Berger belge Groenendael"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

@@ -1,50 +1,50 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "cce0eddf-bdbe-4837-bb32-926575e689a0",
-	"typeTermKey": "medication.antiparasitic.endoparasiticide",
-	"classificationTermKeys": [
-		"origin.allopathic",
-		"therapeuticAction.control"
-	],
-	"species": [
-		"canine",
-		"feline"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "f72b2273-c561-44d8-882e-ac7d0c8fd268",
-	"activeIngredientIds": [],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Chemital",
-			"pt-PT": "Chemital",
-			"gn-PY": "Chemital",
-			"en-US": "Chemital",
-			"es-ES": "Chemital",
-			"fr-FR": "Chemital"
-		},
-		"aliases": {
-			"pt-BR": [],
-			"pt-PT": [],
-			"gn-PY": [],
-			"en-US": [],
-			"es-ES": [],
-			"fr-FR": []
-		}
-	},
-	"sections": [],
-	"targetTermKeys": [
-		"parasite.endoparasite"
-	],
-	"therapeuticScopeTermKeys": [
-		"broadSpectrum"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "cce0eddf-bdbe-4837-bb32-926575e689a0",
+  "typeTermKey": "medication.antiparasitic.endoparasiticide",
+  "classificationTermKeys": [
+    "origin.allopathic",
+    "therapeuticAction.control"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "f72b2273-c561-44d8-882e-ac7d0c8fd268",
+  "activeIngredientIds": [],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Chemital",
+      "pt-PT": "Chemital",
+      "gn-PY": "Chemital",
+      "en-US": "Chemital",
+      "es-ES": "Chemital",
+      "fr-FR": "Chemital"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": [],
+  "targetTermKeys": [
+    "parasite.endoparasite"
+  ],
+  "therapeuticScopeTermKeys": [
+    "broadSpectrum"
+  ],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris",
+    "felis-catus"
+  ]
 }

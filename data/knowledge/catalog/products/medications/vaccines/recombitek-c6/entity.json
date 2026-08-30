@@ -1,59 +1,59 @@
 {
-	"schemaVersion": 1,
-	"entityType": "product",
-	"id": "e63d3560-a77e-41ed-9f40-632ebcecc7f4",
-	"typeTermKey": "medication.biologicalAndImmunological.vaccine",
-	"classificationTermKeys": [
-		"origin.biological",
-		"therapeuticAction.prophylactic"
-	],
-	"species": [
-		"canine"
-	],
-	"regions": [
-		"BRA"
-	],
-	"manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
-	"activeIngredientIds": [],
-	"regulatoryIdentifiers": {
-		"brazilMapa": null,
-		"unitedStatesNada": null,
-		"unitedStatesAnada": null,
-		"gtinEan": null
-	},
-	"localizedContent": {
-		"name": {
-			"pt-BR": "Recombitek C6",
-			"pt-PT": "Recombitek C6",
-			"gn-PY": "Recombitek C6",
-			"en-US": "Recombitek C6",
-			"es-ES": "Recombitek C6",
-			"fr-FR": "Recombitek C6"
-		},
-		"aliases": {
-			"pt-BR": [
-				"C6"
-			],
-			"pt-PT": [
-				"C6"
-			],
-			"gn-PY": [
-				"C6"
-			],
-			"en-US": [
-				"C6"
-			],
-			"es-ES": [
-				"C6"
-			],
-			"fr-FR": [
-				"C6"
-			]
-		}
-	},
-	"sections": [],
-	"vaccineProfileTermKeys": [
-		"canine.v10",
-		"canine.multivalent"
-	]
+  "schemaVersion": 1,
+  "entityType": "product",
+  "id": "e63d3560-a77e-41ed-9f40-632ebcecc7f4",
+  "typeTermKey": "medication.biologicalAndImmunological.vaccine",
+  "classificationTermKeys": [
+    "origin.biological",
+    "therapeuticAction.prophylactic"
+  ],
+  "regions": [
+    "BRA"
+  ],
+  "manufacturerId": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+  "activeIngredientIds": [],
+  "regulatoryIdentifiers": {
+    "brazilMapa": null,
+    "unitedStatesNada": null,
+    "unitedStatesAnada": null,
+    "gtinEan": null
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Recombitek C6",
+      "pt-PT": "Recombitek C6",
+      "gn-PY": "Recombitek C6",
+      "en-US": "Recombitek C6",
+      "es-ES": "Recombitek C6",
+      "fr-FR": "Recombitek C6"
+    },
+    "aliases": {
+      "pt-BR": [
+        "C6"
+      ],
+      "pt-PT": [
+        "C6"
+      ],
+      "gn-PY": [
+        "C6"
+      ],
+      "en-US": [
+        "C6"
+      ],
+      "es-ES": [
+        "C6"
+      ],
+      "fr-FR": [
+        "C6"
+      ]
+    }
+  },
+  "sections": [],
+  "vaccineProfileTermKeys": [
+    "canine.v10",
+    "canine.multivalent"
+  ],
+  "applicableTaxonIds": [
+    "canis-lupus-familiaris"
+  ]
 }

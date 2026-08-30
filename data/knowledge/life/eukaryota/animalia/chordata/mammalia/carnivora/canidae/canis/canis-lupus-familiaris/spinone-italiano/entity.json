@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "spinone-italiano",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "spinone-italiano",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "it"
+    ],
+    "bodyMetrics": {
+      "size": "large"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Spinone Italiano",
+      "pt-PT": "Spinone Italiano",
+      "gn-PY": "Spinone Italiano",
+      "en-US": "Spinone Italiano",
+      "es-ES": "Spinone Italiano",
+      "fr-FR": "Spinone italien"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "entityType": "life",
+  "id": "estrela-mountain-dog",
+  "taxonomy": {
+    "domain": "eukaryota",
+    "kingdom": "animalia",
+    "phylum": "chordata",
+    "class": "mammalia",
+    "order": "carnivora",
+    "family": "canidae",
+    "genus": "canis",
+    "species": "canis-lupus-familiaris",
+    "breed": "estrela-mountain-dog",
+    "variety": null
+  },
+  "classifications": {
+    "originPlaceIds": [
+      "pt"
+    ],
+    "bodyMetrics": {
+      "size": "giant"
+    }
+  },
+  "localizedContent": {
+    "name": {
+      "pt-BR": "Cão da Serra da Estrela",
+      "pt-PT": "Cão da Serra da Estrela",
+      "gn-PY": "Perro de la Sierra de la Estrella",
+      "en-US": "Estrela Mountain Dog",
+      "es-ES": "Perro de la Sierra de la Estrella",
+      "fr-FR": "Chien de montagne de l'Estrela"
+    },
+    "aliases": {
+      "pt-BR": [],
+      "pt-PT": [],
+      "gn-PY": [],
+      "en-US": [],
+      "es-ES": [],
+      "fr-FR": []
+    }
+  },
+  "sections": []
+}
