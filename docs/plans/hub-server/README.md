@@ -24,7 +24,7 @@ pertencem a outro servidor.
 9. [Parte 1B.5: cobertura exaustiva dos contratos de persistência](./01b5-projection-contract-test-coverage.md)
 10. [Parte 1B.6: projeção taxonômica universal](./01b6-universal-taxonomy-projection.md)
 11. [Parte 1B.7: contratos centrais do `knowledge-builder`](./01b7-central-builder-contracts.md)
-12. [Parte 1B.7A: taxonomia animal canônica](./01b7a-canonical-animal-taxonomy.md)
+12. [Parte 1B.7A: taxonomia canônica da vida](./01b7a-canonical-life-taxonomy.md)
 13. [Parte 1B.8.1: contratos de rows e persistência](./01b8-knowledge-builder-maintainability/01-row-persistence-contracts.md)
 14. [Parte 1B.8.2: ledger e recibos confirmados](./01b8-knowledge-builder-maintainability/02-ledger-confirmed-receipts.md)
 15. [Parte 1B.8.3: verificação integral decomposta](./01b8-knowledge-builder-maintainability/03-artifact-verification.md)
@@ -36,6 +36,14 @@ pertencem a outro servidor.
 21. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
 22. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
 23. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
+
+## Referências Futuras Não Sequenciais
+
+- [Expansão futura de `LifeEntity.bodyMetrics`](./future-life-body-metrics-expansion.md)
+
+Essas referências preservam possibilidades de evolução e não integram a ordem
+de implementação. Sua presença não autoriza execução nem alteração do contrato
+vigente sem uma solicitação explícita.
 
 A pré-fase, as subpartes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3, 1B.4, 1B.5,
 1B.6, 1B.7, 1B.7A, 1B.8.1, 1B.8.2, 1B.8.3, 1B.8.4, 1B.8.5 e 1C e as
@@ -58,7 +66,7 @@ flowchart LR
     P1B5["Parte 1B.5<br/>cobertura estrutural dos contratos"]
     P1B6["Parte 1B.6<br/>taxonomias universais"]
     P1B7["Parte 1B.7<br/>contratos centrais"]
-    P1B7A["Parte 1B.7A<br/>taxonomia animal"]
+    P1B7A["Parte 1B.7A<br/>taxonomia da vida"]
     P1B81["Parte 1B.8.1<br/>rows + persistência"]
     P1B82["Parte 1B.8.2<br/>ledger + recibos"]
     P1B83["Parte 1B.8.3<br/>verificação"]
@@ -113,10 +121,13 @@ fecha a propriedade operacional e a disposição de colunas, a Parte 1B.5 fecha
 a cobertura estrutural dos contratos de persistência, a Parte 1B.6 consolida
 todas as taxonomias e associações em um contrato universal, e a Parte 1B.7
 centraliza os contratos transversais do builder e fecha o conjunto taxonômico.
-A Parte 1B.7A representa os oito níveis de filo, classe, ordem, família, gênero,
-espécie, raça e variedade como entidades animais; qualquer entidade pode manter
-classificações opcionais de origem, porte, tipos e medidas. Os diretórios servem
-somente à organização editorial. A Parte
+A Parte 1B.7A representa os dez níveis de domínio, reino, filo, classe, ordem,
+família, gênero, espécie, raça e variedade como entidades de vida; qualquer
+entidade pode manter classificações opcionais de origem, porte e métricas
+corporais.
+O mesmo contrato representa organismos que podem ser pacientes e organismos
+etiológicos associados a condições clínicas; o papel pertence ao domínio
+consumidor. Os diretórios servem somente à organização editorial. A Parte
 1B.8.1 consolida rows e persistência, a Parte 1B.8.2 separa
 inventário, ownership e recibos confirmados, a Parte 1B.8.3 decompõe a
 verificação integral, a Parte 1B.8.4 estrutura erros e fronteiras, e a Parte
@@ -139,16 +150,18 @@ provider externo.
 - `tools/knowledge-builder/` é um binário Rust membro do Cargo Workspace e o
   único compilador de dados canônicos para `system`, `system_media` e
   `CAS/system`.
-- Cada `AnimalEntity` declara `phylum`, `class`, `order`, `family`, `genus`,
-  `species`, `breed` e `variety`. As posições não nulas formam um prefixo
-  contínuo, o `id` ocupa a posição da própria entidade e os níveis inferiores são
-  nulos. Todos os oito níveis são identidades de entidades animais.
-  `classifications` concentra origem, porte, tipos funcional, morfológico e
-  filogenético, peso médio e altura média; o objeto e cada campo interno são
-  opcionais nos oito níveis. Nenhum desses valores é inferido pela disposição
+- Cada `LifeEntity` declara `domain`, `kingdom`, `phylum`, `class`, `order`,
+  `family`, `genus`, `species`, `breed` e `variety`. As posições não nulas formam
+  um prefixo contínuo, o `id` ocupa a posição da própria entidade e os níveis
+  inferiores são nulos. Todos os dez níveis são identidades de entidades de
+  vida.
+  `classifications` concentra origem e `bodyMetrics`. `bodyMetrics.size`
+  representa o porte geral, enquanto `bodyMetrics.stageMetrics` organiza peso
+  vivo, altura e comprimento por sexo e estágio. O objeto e cada parte interna
+  são opcionais nos dez níveis. Nenhum desses valores é inferido pela disposição
   das pastas ou por outra entidade.
-- Produtos e protocolos declaram aplicabilidade pelos IDs canônicos das
-  entidades de espécie.
+- Produtos e protocolos declaram aplicabilidade pelos IDs canônicos de qualquer
+  um dos dez níveis. Cada alvo alcança a própria entidade e seus descendentes.
 - Contratos transversais do `knowledge-builder` vivem em `src/contracts/`,
   organizados por artefato, banco, locale, taxonomia e versão. Constantes
   exclusivas de um subsistema permanecem com seu proprietário.
@@ -188,12 +201,13 @@ provider externo.
 - `localizedContent` contém diretamente mapas dos seis locales. Ele não contém
   caminhos de arquivos; campos escalares e listas possuem tipos definidos pelo
   schema do objeto proprietário.
-- Entidades referenciam tipos, classificações e portes somente por chaves
-  taxonômicas completas. Labels e aliases gerais pertencem ao termo da taxonomia
-  e não são repetidos nas entidades relacionadas.
+- Entidades de catálogo referenciam seus tipos e classificações por chaves
+  taxonômicas completas. `LifeEntity` referencia somente
+  `bodyMetrics.size` como taxonomia classificatória. Labels e aliases gerais
+  pertencem ao termo da taxonomia e não são repetidos nas entidades relacionadas.
 - Toda taxonomia classificatória é projetada em `taxonomy_registry` e
-  `taxonomy_terms`. As identidades dos oito níveis animais usam as colunas
-  autorreferenciadas de `animal_reference_items`; fabricantes, princípios
+  `taxonomy_terms`. As identidades dos dez níveis de vida usam as colunas
+  autorreferenciadas de `life_reference_items`; fabricantes, princípios
   ativos, condições e produtos usam
   `entity_taxonomy_terms` como única relação taxonômica indexada. Domínio e
   propósito pertencem ao registro da taxonomia e não são repetidos na relação.
@@ -205,6 +219,9 @@ provider externo.
   apenas para busca.
 - A busca de produtos deriva termos das entidades, relações e taxonomias
   canônicas. O contrato de conhecimento não contém `searchConcept.*`.
+- A busca de `LifeEntity` projeta somente nome e aliases próprios. Consultas por
+  ancestralidade e subárvore usam as colunas taxonômicas de
+  `life_reference_items`, sem duplicar termos ancestrais nos descendentes.
 - `entity.json` declara um único `contentPath` e associa cada `sectionNumber` a
   uma `sectionKey` padronizada. Headings iniciados por `# <n>` delimitam as
   seções no documento localizado. Qualquer texto editorial depois do número é

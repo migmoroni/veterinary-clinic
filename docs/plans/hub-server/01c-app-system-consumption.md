@@ -27,7 +27,7 @@ pares de bancos e o CAS compartilhado, usa contratos coesos de rows, inventário
 ownership e recibos confirmados, verifica integralmente os artefatos por uma
 fachada de componentes, expõe erros estruturados e mantém uma suíte organizada
 por custo e responsabilidade. Os artefatos usam schema 4 de `system` e projetam
-os oito níveis taxonômicos em `animal_reference_items`. Toda linha possui filo;
+os dez níveis taxonômicos em `life_reference_items`. Toda linha possui domínio;
 as posições seguintes formam um prefixo contínuo até o nível da própria entidade
 e as inferiores são nulas. Todas as colunas classificatórias são anuláveis.
 
@@ -43,12 +43,17 @@ e as inferiores são nulas. Todas as colunas classificatórias são anuláveis.
 - consumir classificações de catálogo, alvos, perfis vacinais, estágios de vida
   e escopos terapêuticos por `entity_taxonomy_terms`;
 - consumir a taxonomia e as classificações diretamente de
-  `animal_reference_items` e a aplicabilidade de produtos e protocolos pelos
-  IDs canônicos das entidades de espécie;
-- expor conteúdo e navegação entre pai, filhos e descendentes nos oito níveis
+  `life_reference_items` e a aplicabilidade de produtos e protocolos pelos
+  IDs canônicos de qualquer um dos dez níveis de `LifeEntity`;
+- resolver cada alvo de aplicabilidade para a própria entidade e seus
+  descendentes pela cadeia taxonômica explícita;
+- expor conteúdo e navegação entre pai, filhos e descendentes nos dez níveis
   taxonômicos;
-- resolver conhecimento animal pela entidade mais específica disponível:
-  variedade, raça e, quando não houver raça, espécie;
+- consumir `LifeEntity` sem embutir papel clínico na taxonomia; módulos donos
+  definem por referência se o organismo atua como paciente, hospedeiro, vetor ou
+  organismo etiológico;
+- resolver conhecimento de vida pela entidade mais específica disponível; no
+  ramo de pacientes, usar variedade, raça e, quando não houver raça, espécie;
 - fazer buscas usarem nomes e aliases armazenados em `system`;
 - retirar chaves de i18n dos modelos de conhecimento;
 - retirar conteúdo de conhecimento dos arquivos de i18n do app;
@@ -404,11 +409,16 @@ Cada item de `sections` expõe somente `sectionKey` e `compiledMarkdown`.
 de interface resolve o título padronizado pelo i18n associado à `sectionKey`,
 enquanto o corpo vem integralmente resolvido pelo banco ativo.
 
-Para entidades animais, `taxonomy` expõe filo, classe, ordem, família, gênero,
-espécie, raça e variedade em posições nomeadas. Cada posição não nula resolve ID
-e nome por `animal_reference_items`. O repository não deriva nenhum nível do
-caminho editorial. `level` corresponde à última posição não nula e `parentId`
-corresponde à posição imediatamente anterior; o filo não possui `parentId`.
+Para entidades de vida, `taxonomy` expõe domínio, reino, filo, classe, ordem,
+família, gênero, espécie, raça e variedade em posições nomeadas. Cada posição não
+nula resolve ID e nome por `life_reference_items`. O repository não deriva nenhum
+nível do caminho editorial. `level` corresponde à última posição não nula e
+`parentId` corresponde à posição imediatamente anterior; o domínio não possui
+`parentId`.
+
+`bodyMetrics` expõe `size` e `stageMetrics` independentemente quando presentes.
+O repository recompõe esse objeto a partir de `size_term_key` e
+`stage_metrics_json`, sem inferir uma parte pela outra.
 
 O repository lê o `content_json` da entidade, valida a `schemaVersion` suportada
 e desserializa o documento para um DTO tipado. A página percorre o array plano
@@ -481,6 +491,11 @@ As APIs de busca utilizam:
 Para produtos, os nomes e aliases de princípios ativos, alvos, perfis vacinais,
 estágios de vida e escopos terapêuticos entram pela projeção derivada pelo
 builder. A busca não lê classificações genéricas ou campos `searchConcept`.
+
+Para `LifeEntity`, `entity_search_terms` contém somente nome e aliases próprios.
+Quando uma busca solicitar a subárvore de um táxon encontrado, o repository usa
+a coluna taxonômica correspondente de `life_reference_items`; ele não depende de
+termos ancestrais duplicados nas entidades descendentes.
 
 Quando o corpo das seções participar de uma busca, o repository usa o texto ou o
 índice FTS derivado pelo builder. A busca não interpreta nem percorre
@@ -687,18 +702,22 @@ Cobrir:
 - nomes, aliases, descrições e taxonomias corretos por locale;
 - produtos resolvendo seus princípios ativos pela relação N:N, na ordem
   declarada;
-- entidades dos oito níveis expondo sua cadeia pelos campos autorreferenciados de
-  `animal_reference_items`;
-- filtros por filo, classe, ordem, família, gênero, espécie, raça e variedade
-  usando os campos indexados de `animal_reference_items`;
+- entidades dos dez níveis expondo sua cadeia pelos campos autorreferenciados de
+  `life_reference_items`;
+- filtros por domínio, reino, filo, classe, ordem, família, gênero, espécie, raça
+  e variedade usando os campos indexados de `life_reference_items`;
 - fabricantes, princípios ativos, condições e produtos resolvendo suas
   classificações N:N exclusivamente por `entity_taxonomy_terms`;
-- cada entidade animal resolvendo somente as classificações e medidas presentes,
+- cada entidade de vida resolvendo somente as classificações e medidas presentes,
   sem preencher campos ausentes por inferência;
+- perfil corporal recompondo `bodyMetrics.size` de `size_term_key` e
+  `bodyMetrics.stageMetrics` de `stage_metrics_json`, preservando unidade, sexo,
+  estágios, períodos e intervalos de `weight` e `measure`;
 - pet sem raça definida consumindo diretamente o conteúdo da entidade de
   espécie, sem criar raça genérica;
-- produtos e protocolos resolvendo aplicabilidade pelos IDs presentes em
-  `applicable_species_ids_json`;
+- produtos e protocolos resolvendo os IDs de qualquer nível presentes em
+  `applicable_taxon_ids_json` e aplicando-os à própria entidade e a seus
+  descendentes;
 - produtos resolvendo tipos, classificações, alvos, perfis vacinais, estágios de
   vida e escopos terapêuticos pelo propósito da taxonomia associada;
 - recusa de associação com termo pertencente a outro domínio, propósito ou

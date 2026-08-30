@@ -473,4 +473,4 @@ Escrever no presente e documentar somente o contrato vigente.
 ## Próxima Parte
 
 Após cumprir todos os critérios, seguir para a
-[Parte 1B.7A: taxonomia animal canônica](./01b7a-canonical-animal-taxonomy.md).
+[Parte 1B.7A: taxonomia canônica da vida](./01b7a-canonical-life-taxonomy.md).
