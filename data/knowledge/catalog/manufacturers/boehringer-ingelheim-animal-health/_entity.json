@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"entityType": "manufacturer",
-	"id": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
+	"id": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
 	"typeTermKey": "veterinaryIndustrial.veterinaryIndustrialLaboratory",
 	"classificationTermKeys": [
 		"regulatoryStatus.veterinaryIndustrial",
@@ -14,12 +14,12 @@
 	"website": null,
 	"localizedContent": {
 		"name": {
-			"pt-BR": "Zoetis",
-			"pt-PT": "Zoetis",
-			"gn-PY": "Zoetis",
-			"en-US": "Zoetis",
-			"es-ES": "Zoetis",
-			"fr-FR": "Zoetis"
+			"pt-BR": "Boehringer Ingelheim Animal Health",
+			"pt-PT": "Boehringer Ingelheim Animal Health",
+			"gn-PY": "Boehringer Ingelheim Animal Health",
+			"en-US": "Boehringer Ingelheim Animal Health",
+			"es-ES": "Boehringer Ingelheim Animal Health",
+			"fr-FR": "Boehringer Ingelheim Animal Health"
 		},
 		"aliases": {
 			"pt-BR": [],
@@ -48,5 +48,5 @@
 			"sectionNumber": 4
 		}
 	],
-	"contentPath": "./content"
+	"contentPath": "./_content"
 }

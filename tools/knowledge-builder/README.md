@@ -42,7 +42,7 @@ e exige equivalência integral com o contrato que os originou.
 
 `knowledge-builder` faz:
 
-- descoberta e leitura dos `entity.json` canônicos;
+- descoberta e leitura dos `_entity.json` canônicos;
 - validação por JSON Schema Draft 2020-12 antes da desserialização Serde;
 - validação estrutural, referencial, localizada e semântica da fonte;
 - normalização determinística de Unicode, identidades e termos de busca;
@@ -143,7 +143,7 @@ positivos. Os exemplos executáveis vivem em `fixtures/contexts/`.
 
 `--source` aponta para a raiz descrita em
 [`data/knowledge`](../../data/knowledge/README.md). Entidades são descobertas por
-`entity.json`; os diretórios servem apenas à organização editorial, enquanto
+`_entity.json`; os diretórios servem apenas à organização editorial, enquanto
 `entityType` e `id` definem a identidade lógica.
 
 A fonte pode conter:
@@ -158,6 +158,36 @@ A fonte pode conter:
 
 Não existe fallback de idioma. Todo campo localizado presente obedece ao
 conjunto fechado dos seis locales e à política específica do tipo da entidade.
+
+### Layout Reservado Da Autoria
+
+O namespace técnico é fechado e sensível a maiúsculas e minúsculas:
+
+```text
+<entidade>/
+├── _entity.json
+├── _content/
+│   └── <locale>.md
+└── _media/
+    └── <caminho editorial>
+```
+
+- `_entity.json` é o único nome descoberto como manifesto;
+- `_content` contém exatamente os seis documentos canônicos e exige
+  `contentPath: "./_content"`;
+- `_media` contém somente arquivos referenciados pela entidade proprietária;
+- ambos os diretórios reservados são filhos diretos do diretório da entidade;
+- nomes desconhecidos iniciados por `_`, recursos órfãos, subdiretórios em
+  `_content`, symlinks, arquivos especiais e arquivos técnicos adicionais são
+  recusados antes da desserialização;
+- pastas sem `_` são apenas organização editorial e podem ser movidas sem
+  alterar a identidade lógica.
+
+Referências estruturais usam `./_media/<caminho>` e imagens Markdown usam
+`../_media/<caminho>`. O resolvedor separa o arquivo físico, o caminho interno
+sob `_media` e o caminho compilado `media/<caminho>`. A chave pública resultante
+é `<entity_type>/<entity_id>/media/<caminho>`; `_media` nunca aparece em
+`system_media` ou no Markdown compilado.
 
 ## Pipeline De Compilação
 
@@ -480,6 +510,8 @@ modelo de autoria. O diretório separa:
 - `artifact.rs`: nomes públicos, descritores CAS e construtores de caminhos;
 - `database.rs`: versão, application ID e filename de cada banco;
 - `locale.rs`: tipo e ordem fechada dos seis locales;
+- `source_layout.rs`: nomes reservados, caminhos autorais e namespace compilado
+  de mídia;
 - `taxonomy.rs`: matriz única dos 13 pares e suas cardinalidades;
 - `version.rs`: versões dos documentos serializados e dos bancos;
 - `tests.rs`: equivalência com JSON Schemas e DDLs declarativos.
@@ -502,7 +534,8 @@ API pública e distribui o pipeline entre:
 - `taxonomy.rs`: árvores de termos e registro fechado de taxonomias;
 - `references.rs`: referências entre entidades e termos;
 - `aliases.rs`: ownership localizado de aliases;
-- `filesystem.rs`: descoberta, caminhos editoriais e cobertura de arquivos;
+- `filesystem.rs`: namespace reservado, propriedade, descoberta e cobertura de
+  arquivos;
 - `digest.rs`: digest lógico e contagens determinísticas;
 - `life/`: taxonomia, classificações corporais e aplicabilidade;
 - `primitives.rs`: UUIDs, textos e coleções;

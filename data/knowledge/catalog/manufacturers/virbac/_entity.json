@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"entityType": "manufacturer",
-	"id": "f72b2273-c561-44d8-882e-ac7d0c8fd268",
+	"id": "a984d879-4d68-4282-a746-0b7961903b28",
 	"typeTermKey": "veterinaryIndustrial.veterinaryIndustrialLaboratory",
 	"classificationTermKeys": [
 		"regulatoryStatus.veterinaryIndustrial",
@@ -14,12 +14,12 @@
 	"website": null,
 	"localizedContent": {
 		"name": {
-			"pt-BR": "Chemitec",
-			"pt-PT": "Chemitec",
-			"gn-PY": "Chemitec",
-			"en-US": "Chemitec",
-			"es-ES": "Chemitec",
-			"fr-FR": "Chemitec"
+			"pt-BR": "Virbac",
+			"pt-PT": "Virbac",
+			"gn-PY": "Virbac",
+			"en-US": "Virbac",
+			"es-ES": "Virbac",
+			"fr-FR": "Virbac"
 		},
 		"aliases": {
 			"pt-BR": [],
@@ -48,5 +48,5 @@
 			"sectionNumber": 4
 		}
 	],
-	"contentPath": "./content"
+	"contentPath": "./_content"
 }

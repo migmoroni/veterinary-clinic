@@ -180,7 +180,7 @@ raças e os demais domínios seguem exatamente o mesmo caminho.
 
 ### Mapeamento Da Fonte
 
-Os campos canônicos permanecem explícitos no `entity.json`, mas todos são
+Os campos canônicos permanecem explícitos no `_entity.json`, mas todos são
 materializados como relações:
 
 | Campo canônico | Taxonomia resolvida | Cardinalidade |

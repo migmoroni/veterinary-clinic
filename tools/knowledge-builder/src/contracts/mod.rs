@@ -3,6 +3,7 @@
 pub(crate) mod artifact;
 pub(crate) mod database;
 pub(crate) mod locale;
+pub(crate) mod source_layout;
 pub(crate) mod taxonomy;
 pub(crate) mod version;
 

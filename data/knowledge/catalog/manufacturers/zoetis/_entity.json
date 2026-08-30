@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"entityType": "manufacturer",
-	"id": "db13c7b3-7263-49a5-91c3-4cdc45ddb6b0",
+	"id": "93249ad0-f3b1-4d3b-b482-8bff9a419603",
 	"typeTermKey": "veterinaryIndustrial.veterinaryIndustrialLaboratory",
 	"classificationTermKeys": [
 		"regulatoryStatus.veterinaryIndustrial",
@@ -14,12 +14,12 @@
 	"website": null,
 	"localizedContent": {
 		"name": {
-			"pt-BR": "Ourofino Saúde Animal",
-			"pt-PT": "Ourofino Saúde Animal",
-			"gn-PY": "Ourofino Saúde Animal",
-			"en-US": "Ourofino Saúde Animal",
-			"es-ES": "Ourofino Saúde Animal",
-			"fr-FR": "Ourofino Saúde Animal"
+			"pt-BR": "Zoetis",
+			"pt-PT": "Zoetis",
+			"gn-PY": "Zoetis",
+			"en-US": "Zoetis",
+			"es-ES": "Zoetis",
+			"fr-FR": "Zoetis"
 		},
 		"aliases": {
 			"pt-BR": [],
@@ -48,5 +48,5 @@
 			"sectionNumber": 4
 		}
 	],
-	"contentPath": "./content"
+	"contentPath": "./_content"
 }

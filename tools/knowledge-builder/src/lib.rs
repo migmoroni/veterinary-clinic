@@ -116,6 +116,22 @@ mod fixture_registry_tests {
                         .is_err());
                     }
                 }
+                "invalid-layout" => {
+                    for (directory, expected) in [
+                        ("unknown-reserved", "unknown reserved file"),
+                        ("orphan-content", "requires a sibling _entity.json owner"),
+                        ("orphan-media", "requires a sibling _entity.json owner"),
+                        ("nested-manifest", "forbidden inside a reserved directory"),
+                    ] {
+                        let error = validation::validate_source(&fixture.join(directory))
+                            .expect_err("reserved layout violation must be rejected")
+                            .to_string();
+                        assert!(
+                            error.contains(expected),
+                            "fixture {directory} produced an unexpected diagnostic: {error}"
+                        );
+                    }
+                }
                 "invalid-media" => {
                     let specification: serde_json::Value = serde_json::from_slice(
                         &fs::read(fixture.join("path-escape.json")).unwrap(),

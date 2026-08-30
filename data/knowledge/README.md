@@ -17,16 +17,41 @@ data/knowledge/
 ├── clinical/treatment-protocols/
 ├── geo/places/
 └── life/
-    ├── taxonomies/sizes/entity.json
+    ├── taxonomies/sizes/_entity.json
     └── eukaryota/
-        ├── entity.json
-        └── animalia/.../<taxon>/entity.json
+        ├── _entity.json
+        └── animalia/.../<taxon>/_entity.json
 ```
 
-O scanner descobre recursivamente cada `entity.json`. Um diretório possui
+O scanner descobre recursivamente cada `_entity.json`. Um diretório possui
 manifesto somente quando representa uma entidade real; sua profundidade não
 cria identidade, ancestralidade, classificação nem ordem. Mover uma entidade
 sem alterar o manifesto não modifica seu digest lógico.
+
+### Namespace Técnico Reservado
+
+Somente três nomes iniciados por `_` possuem significado para o builder:
+
+```text
+<diretórios editoriais livres>/
+└── <entidade>/
+    ├── _entity.json
+    ├── _content/
+    │   ├── pt-BR.md
+    │   ├── pt-PT.md
+    │   ├── gn-PY.md
+    │   ├── en-US.md
+    │   ├── es-ES.md
+    │   └── fr-FR.md
+    └── _media/
+        └── <subdiretórios e arquivos editoriais>
+```
+
+`_content` e `_media` são recursos exclusivos da entidade cujo `_entity.json`
+é irmão direto. Qualquer outro nome iniciado por `_`, recurso reservado sem
+manifesto proprietário, symlink, arquivo especial ou arquivo técnico fora
+desse envelope é recusado. Diretórios sem `_` continuam livres para organização
+editorial e não produzem identidade ou relações.
 
 ## Locales
 
@@ -186,13 +211,18 @@ criados termos artificiais.
 
 ## Markdown E Mídia
 
-Entidades com seções declaram `contentPath` e possuem exatamente um documento
-por locale. HTML bruto, links inseguros e arquivos não declarados são recusados.
+Entidades com seções declaram `contentPath: "./_content"` e possuem exatamente
+um documento por locale em `_content`. Entidades sem seções omitem o campo e
+não possuem esse diretório. HTML bruto, links inseguros e arquivos não
+declarados são recusados.
 
-Mídia estrutural usa `media.cover` e `media.gallery`; imagens Markdown também
-resolvem dentro do diretório proprietário. Em entidades de vida, toda mídia é
-compilada com `entity_type = life`. O hash do conteúdo define o objeto em
-`CAS/system`; thumbnails são JPEG determinísticos.
+Toda mídia editorial vive em `_media`. `media.cover` e `media.gallery` usam
+`./_media/<caminho>`, enquanto imagens Markdown usam
+`../_media/<caminho>`. A identidade compilada remove o marcador técnico e usa
+`<entity_type>/<entity_id>/media/<caminho-interno>`. Em entidades de vida,
+toda mídia é compilada com `entity_type = life`. O hash do conteúdo define o
+objeto em `CAS/system`; thumbnails são JPEG determinísticos e nenhum arquivo de
+`_media` pode permanecer sem referência.
 
 ## Inventário E Auditoria
 

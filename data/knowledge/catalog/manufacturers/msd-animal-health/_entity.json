@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"entityType": "manufacturer",
-	"id": "38b9d4e5-8f21-419d-aeb9-78eaead75e58",
+	"id": "453bf23c-08cf-4b91-a370-483b1ef6646d",
 	"typeTermKey": "veterinaryIndustrial.veterinaryIndustrialLaboratory",
 	"classificationTermKeys": [
 		"regulatoryStatus.veterinaryIndustrial",
@@ -14,12 +14,12 @@
 	"website": null,
 	"localizedContent": {
 		"name": {
-			"pt-BR": "Boehringer Ingelheim Animal Health",
-			"pt-PT": "Boehringer Ingelheim Animal Health",
-			"gn-PY": "Boehringer Ingelheim Animal Health",
-			"en-US": "Boehringer Ingelheim Animal Health",
-			"es-ES": "Boehringer Ingelheim Animal Health",
-			"fr-FR": "Boehringer Ingelheim Animal Health"
+			"pt-BR": "MSD Animal Health",
+			"pt-PT": "MSD Animal Health",
+			"gn-PY": "MSD Animal Health",
+			"en-US": "MSD Animal Health",
+			"es-ES": "MSD Animal Health",
+			"fr-FR": "MSD Animal Health"
 		},
 		"aliases": {
 			"pt-BR": [],
@@ -48,5 +48,5 @@
 			"sectionNumber": 4
 		}
 	],
-	"contentPath": "./content"
+	"contentPath": "./_content"
 }

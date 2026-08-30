@@ -1,7 +1,13 @@
 //! Resolves and validates source media, derives stable media identities, creates
 //! deterministic JPEG thumbnails, and defines the content-addressed layout.
 
-use crate::normalization::normalize_text;
+use crate::{
+    contracts::source_layout::{
+        COMPILED_MEDIA_NAMESPACE, CONTENT_DIRECTORY_NAME, MARKDOWN_MEDIA_PREFIX,
+        MEDIA_DIRECTORY_NAME, STRUCTURAL_MEDIA_PREFIX,
+    },
+    normalization::normalize_text,
+};
 use image::{
     codecs::jpeg::JpegEncoder, imageops::FilterType, ColorType, DynamicImage, GenericImageView,
     ImageDecoder, ImageEncoder, ImageFormat, ImageReader, Limits, Rgb, RgbImage,
@@ -22,6 +28,8 @@ const THUMBNAIL_JPEG_QUALITY: u8 = 72;
 #[derive(Clone, Debug, serde::Serialize)]
 pub struct MediaAsset {
     pub media_key: String,
+    #[serde(skip)]
+    pub internal_path: String,
     pub relative_path: String,
     #[serde(skip)]
     pub source_path: PathBuf,
@@ -46,17 +54,48 @@ pub fn resolve_markdown_image(
     entity_id: &str,
     destination: &str,
 ) -> Result<MediaAsset, String> {
-    if destination.trim() != destination || destination.is_empty() {
-        return Err("image destination must be non-empty and trimmed".to_string());
+    let internal_path = authored_media_path(
+        destination,
+        MARKDOWN_MEDIA_PREFIX,
+        "Markdown image destination",
+    )?;
+    let entity_root = fs::canonicalize(entity_directory).map_err(|error| {
+        format!(
+            "cannot resolve entity directory {}: {error}",
+            entity_directory.display()
+        )
+    })?;
+    let document_root = fs::canonicalize(document_directory).map_err(|error| {
+        format!(
+            "cannot resolve Markdown directory {}: {error}",
+            document_directory.display()
+        )
+    })?;
+    if document_root != entity_root.join(CONTENT_DIRECTORY_NAME) {
+        return Err(format!(
+            "Markdown documents must be direct children of {CONTENT_DIRECTORY_NAME}"
+        ));
     }
-    if destination.contains("knowledge-media:") || has_uri_scheme(destination) {
-        return Err(format!("image destination must be local: {destination}"));
-    }
-    let destination_path = Path::new(destination);
-    if destination_path.is_absolute() {
-        return Err(format!("absolute image path is forbidden: {destination}"));
-    }
-    let source_path = document_directory.join(destination_path);
+    let source_path = entity_directory
+        .join(MEDIA_DIRECTORY_NAME)
+        .join(&internal_path);
+    resolve_media(entity_directory, entity_type, entity_id, &source_path)
+}
+
+pub fn resolve_structural_media(
+    entity_directory: &Path,
+    entity_type: &str,
+    entity_id: &str,
+    destination: &str,
+) -> Result<MediaAsset, String> {
+    let internal_path = authored_media_path(
+        destination,
+        STRUCTURAL_MEDIA_PREFIX,
+        "structural media path",
+    )?;
+    let source_path = entity_directory
+        .join(MEDIA_DIRECTORY_NAME)
+        .join(internal_path);
     resolve_media(entity_directory, entity_type, entity_id, &source_path)
 }
 
@@ -75,9 +114,32 @@ pub fn resolve_media(
     })?;
     let canonical = fs::canonicalize(source_path)
         .map_err(|error| format!("cannot resolve media {}: {error}", source_path.display()))?;
-    if !canonical.starts_with(&entity_root) {
+    let media_directory = entity_directory.join(MEDIA_DIRECTORY_NAME);
+    let media_metadata = fs::symlink_metadata(&media_directory).map_err(|error| {
+        format!(
+            "cannot inspect owned media directory {}: {error}",
+            media_directory.display()
+        )
+    })?;
+    if media_metadata.file_type().is_symlink() || !media_metadata.is_dir() {
         return Err(format!(
-            "media path escapes entity directory: {}",
+            "{MEDIA_DIRECTORY_NAME} must be a regular directory without symlinks"
+        ));
+    }
+    let media_root = fs::canonicalize(&media_directory).map_err(|error| {
+        format!(
+            "cannot resolve owned media directory {}: {error}",
+            media_directory.display()
+        )
+    })?;
+    if media_root.parent() != Some(entity_root.as_path()) {
+        return Err(format!(
+            "{MEDIA_DIRECTORY_NAME} must be a direct child of the entity directory"
+        ));
+    }
+    if !canonical.starts_with(&media_root) || canonical == media_root {
+        return Err(format!(
+            "media path must stay inside the entity-owned {MEDIA_DIRECTORY_NAME}: {}",
             source_path.display()
         ));
     }
@@ -96,9 +158,10 @@ pub fn resolve_media(
         ));
     }
     let relative = canonical
-        .strip_prefix(&entity_root)
-        .map_err(|_| "media path escapes entity directory".to_string())?;
-    let relative_path = normalized_relative_path(relative)?;
+        .strip_prefix(&media_root)
+        .map_err(|_| format!("media path escapes {MEDIA_DIRECTORY_NAME}"))?;
+    let internal_path = normalized_relative_path(relative)?;
+    let relative_path = format!("{COMPILED_MEDIA_NAMESPACE}/{internal_path}");
     let bytes = fs::read(&canonical)
         .map_err(|error| format!("cannot read media {}: {error}", canonical.display()))?;
     let decoded = decode_image(&bytes, &canonical)?;
@@ -119,6 +182,7 @@ pub fn resolve_media(
 
     Ok(MediaAsset {
         media_key,
+        internal_path,
         relative_path,
         source_path: canonical,
         content_hash_sha256,
@@ -195,6 +259,25 @@ fn normalized_relative_path(path: &Path) -> Result<String, String> {
         return Err("media path is empty".to_string());
     }
     Ok(segments.join("/"))
+}
+
+fn authored_media_path(value: &str, prefix: &str, label: &str) -> Result<String, String> {
+    if value.trim() != value || value.is_empty() || has_uri_scheme(value) {
+        return Err(format!("{label} must be a normalized local path"));
+    }
+    let internal = value
+        .strip_prefix(prefix)
+        .ok_or_else(|| format!("{label} must start with {prefix}"))?;
+    if internal.is_empty() || internal.contains('\\') {
+        return Err(format!(
+            "{label} must identify a file inside {MEDIA_DIRECTORY_NAME}"
+        ));
+    }
+    let normalized = normalized_relative_path(Path::new(internal))?;
+    if normalized != internal {
+        return Err(format!("{label} must be normalized"));
+    }
+    Ok(normalized)
 }
 
 fn reject_symlink_components(entity_directory: &Path, source_path: &Path) -> Result<(), String> {
@@ -403,8 +486,8 @@ mod tests {
             std::process::id(),
             TEST_COUNTER.fetch_add(1, Ordering::Relaxed)
         ));
-        let content = root.join("content");
-        let media = root.join("media");
+        let content = root.join(CONTENT_DIRECTORY_NAME);
+        let media = root.join(MEDIA_DIRECTORY_NAME);
         fs::create_dir_all(&content).unwrap();
         fs::create_dir_all(&media).unwrap();
         image::DynamicImage::new_rgba8(1, 1)
@@ -415,16 +498,53 @@ mod tests {
             &content,
             "product",
             "37ef9309-c8fd-42ac-99a5-050b195d747f",
-            "../media/pixel.png",
+            "../_media/pixel.png",
         )
         .unwrap();
         assert_eq!(
             asset.media_key,
             "product/37ef9309-c8fd-42ac-99a5-050b195d747f/media/pixel.png"
         );
+        assert_eq!(asset.internal_path, "pixel.png");
+        assert_eq!(asset.relative_path, "media/pixel.png");
         assert_eq!((asset.width, asset.height), (1, 1));
         assert_eq!(asset.thumbnail_mime_type, "image/jpeg");
         assert_ne!(asset.thumbnail, asset.bytes);
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn authored_media_paths_are_closed_to_the_owned_reserved_directory() {
+        let root = test_root("reserved-paths");
+        let content = root.join(CONTENT_DIRECTORY_NAME);
+        let media = root.join(MEDIA_DIRECTORY_NAME);
+        fs::create_dir_all(&content).unwrap();
+        fs::create_dir_all(&media).unwrap();
+        fs::write(media.join("pixel.png"), encoded(ImageFormat::Png, 1, 1)).unwrap();
+
+        let structural =
+            resolve_structural_media(&root, "product", "entity", "./_media/pixel.png").unwrap();
+        assert_eq!(structural.relative_path, "media/pixel.png");
+        assert!(
+            resolve_structural_media(&root, "product", "entity", "./media/pixel.png")
+                .unwrap_err()
+                .contains("must start with ./_media/")
+        );
+        assert!(resolve_markdown_image(
+            &root,
+            &content,
+            "product",
+            "entity",
+            "../_media/../_media/pixel.png",
+        )
+        .unwrap_err()
+        .contains("normalized"));
+        assert!(
+            resolve_markdown_image(&root, &root, "product", "entity", "../_media/pixel.png",)
+                .unwrap_err()
+                .contains("direct children of _content")
+        );
+
         fs::remove_dir_all(root).unwrap();
     }
 
@@ -463,8 +583,9 @@ mod tests {
     #[test]
     fn thumbnail_composes_transparency_on_white_without_upscaling() {
         let root = test_root("transparent");
-        fs::create_dir_all(&root).unwrap();
-        let source = root.join("transparent.png");
+        let media = root.join(MEDIA_DIRECTORY_NAME);
+        fs::create_dir_all(&media).unwrap();
+        let source = media.join("transparent.png");
         fs::write(&source, encoded(ImageFormat::Png, 1, 1)).unwrap();
 
         let asset = resolve_media(&root, "product", "entity", &source).unwrap();
@@ -484,8 +605,9 @@ mod tests {
     #[test]
     fn rejects_oversized_files_and_extension_signature_mismatches() {
         let root = test_root("limits");
-        fs::create_dir_all(&root).unwrap();
-        let oversized = root.join("oversized.png");
+        let media = root.join(MEDIA_DIRECTORY_NAME);
+        fs::create_dir_all(&media).unwrap();
+        let oversized = media.join("oversized.png");
         File::create(&oversized)
             .unwrap()
             .set_len(MAX_SOURCE_BYTES + 1)
@@ -494,7 +616,7 @@ mod tests {
             .unwrap_err()
             .contains("25 MiB"));
 
-        let mismatch = root.join("mismatch.jpg");
+        let mismatch = media.join("mismatch.jpg");
         fs::write(&mismatch, encoded(ImageFormat::Png, 1, 1)).unwrap();
         assert!(resolve_media(&root, "product", "entity", &mismatch)
             .unwrap_err()

@@ -146,7 +146,7 @@
       "sectionNumber": 10
     }
   ],
-  "contentPath": "./content",
+  "contentPath": "./_content",
   "applicableTaxonIds": [
     "canis-lupus-familiaris",
     "felis-catus"

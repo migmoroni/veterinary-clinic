@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"entityType": "manufacturer",
-	"id": "f12a7466-ea74-4d71-b923-5e714c671f8a",
+	"id": "131b3da4-334e-42ee-a185-5e57df388a49",
 	"typeTermKey": "veterinaryIndustrial.veterinaryIndustrialLaboratory",
 	"classificationTermKeys": [
 		"regulatoryStatus.veterinaryIndustrial",
@@ -14,12 +14,12 @@
 	"website": null,
 	"localizedContent": {
 		"name": {
-			"pt-BR": "Elanco",
-			"pt-PT": "Elanco",
-			"gn-PY": "Elanco",
-			"en-US": "Elanco",
-			"es-ES": "Elanco",
-			"fr-FR": "Elanco"
+			"pt-BR": "Ceva Saúde Animal",
+			"pt-PT": "Ceva Saúde Animal",
+			"gn-PY": "Ceva Saúde Animal",
+			"en-US": "Ceva Saúde Animal",
+			"es-ES": "Ceva Saúde Animal",
+			"fr-FR": "Ceva Saúde Animal"
 		},
 		"aliases": {
 			"pt-BR": [],
@@ -48,5 +48,5 @@
 			"sectionNumber": 4
 		}
 	],
-	"contentPath": "./content"
+	"contentPath": "./_content"
 }

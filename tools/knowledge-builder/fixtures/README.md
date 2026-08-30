@@ -10,6 +10,7 @@ catálogo canônico:
 - `valid-markdown/`: CommonMark permitido e formas semanticamente equivalentes;
 - `valid-media/`: perfil fixo das fontes e do thumbnail JPEG;
 - `invalid-schema/`: forma JSON recusada pelo schema executável;
+- `invalid-layout/`: namespace reservado, recursos órfãos e manifesto aninhado;
 - `invalid-markdown/`: nós AST e links proibidos;
 - `invalid-media/`: caminhos e propriedades de mídia inválidos;
 - `contexts/`: contextos de build local e de release pública.

@@ -33,9 +33,12 @@ use self::{
     taxonomy::{collect_taxonomies, validate_taxonomy, validate_taxonomy_completeness},
 };
 use crate::{
-    contracts::locale::{KnowledgeLocale, LOCALES},
+    contracts::{
+        locale::{KnowledgeLocale, LOCALES},
+        source_layout::{CONTENT_DIRECTORY_NAME, CONTENT_PATH, ENTITY_MANIFEST_FILENAME},
+    },
     markdown::{compile_document, CompiledDocument, CompiledMediaReference},
-    media::{resolve_media, sha256_hex, MediaAsset},
+    media::{resolve_structural_media, sha256_hex, MediaAsset},
     normalization::normalize_search_text,
     source::{
         deserialize_entity, source_schema_fingerprint_input, CanonicalEntity, LifeEntity,

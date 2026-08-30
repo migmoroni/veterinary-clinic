@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Consolidar em cada `entity.json` todo conteúdo localizado simples e normalizar as
+Consolidar em cada `_entity.json` todo conteúdo localizado simples e normalizar as
 relações com vocabulários controlados. `localizedContent` armazena diretamente as
 variações dos seis locales; entidades referenciam taxonomias somente por chaves
 canônicas completas; Markdown permanece reservado às seções editoriais ricas.
@@ -226,15 +226,15 @@ conteúdo:
 
 ```text
 <entidade>/
-├── entity.json
-├── content/
+├── _entity.json
+├── _content/
 │   ├── pt-BR.md
 │   ├── pt-PT.md
 │   ├── gn-PY.md
 │   ├── en-US.md
 │   ├── es-ES.md
 │   └── fr-FR.md
-└── media/
+└── _media/
 ```
 
 O diretório `localized/` não integra o contrato final. Diretórios opcionais
@@ -329,7 +329,7 @@ taxonômicas, documentos Markdown e seções editoriais.
 
 ## Entregáveis
 
-- `entity.json` com todo conteúdo localizado simples inline;
+- `_entity.json` com todo conteúdo localizado simples inline;
 - termos taxonômicos com labels e aliases por locale;
 - entidades contendo somente chaves taxonômicas completas;
 - aliases gerais centralizados em seus termos ou relações proprietárias;

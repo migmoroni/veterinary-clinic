@@ -64,24 +64,24 @@ Todo diretório de entidade segue o mesmo envelope físico:
 
 ```text
 <entity>/
-├── entity.json
-├── content/
+├── _entity.json
+├── _content/
 │   ├── pt-BR.md
 │   ├── pt-PT.md
 │   ├── gn-PY.md
 │   ├── en-US.md
 │   ├── es-ES.md
 │   └── fr-FR.md
-└── media/
+└── _media/
     └── <arquivo-editorial>.<extensão>
 ```
 
 Os campos `entityType` e `id` formam a identidade usada pelos bancos e relações.
-O `entity.json` declara um único `contentPath` e associa cada `sectionNumber` a
+O `_entity.json` declara um único `contentPath` e associa cada `sectionNumber` a
 uma `sectionKey`; o builder não infere semântica pelo rótulo editorial do heading
 nem pelo nome das pastas.
 
-`entity.json` contém os campos estruturais compartilhados, as relações, os
+`_entity.json` contém os campos estruturais compartilhados, as relações, os
 valores localizados simples e a composição do conteúdo Markdown:
 
 ```json
@@ -112,14 +112,14 @@ valores localizados simples e a composição do conteúdo Markdown:
       "fr-FR": []
     }
   },
-  "contentPath": "./content",
+  "contentPath": "./_content",
   "sections": [
     {
       "sectionKey": "about",
       "sectionNumber": 1
     }
   ],
-  "cover": "./media/cover.webp"
+  "cover": "./_media/cover.webp"
 }
 ```
 
@@ -136,10 +136,10 @@ Conteúdo localizado da seção.
 
 ## Características
 
-![Texto alternativo](../media/detail.webp "Legenda opcional")
+![Texto alternativo](../_media/detail.webp "Legenda opcional")
 ```
 
-Cada domínio possui um schema estrito de `entity.json`, formatos esperados para
+Cada domínio possui um schema estrito de `_entity.json`, formatos esperados para
 os campos localizados e um conjunto fechado de `sectionKey`. Nomes, aliases,
 descrições simples e outros valores localizados ficam diretamente em
 `localizedContent`, sempre no JSON do objeto proprietário. Labels e aliases
@@ -907,7 +907,7 @@ Cobrir:
 - ausência de catálogos publicados em `packages/types`;
 - preparação do layout local pelo mesmo builder Rust em um workspace limpo;
 - inicialização do app com os artefatos exportados durante esta parte;
-- validação dos schemas de `entity.json`, dos mapas localizados JSON e dos
+- validação dos schemas de `_entity.json`, dos mapas localizados JSON e dos
   contratos Markdown de cada domínio;
 - um diretório de entidade por ID e integridade de todas as referências
   estruturais;
@@ -987,7 +987,7 @@ Cobrir:
 - O Hub consegue usar o builder para materializar a saída local necessária ao app
   até a Parte 4.
 - Os dados fonte são organizados por domínio e diretório de entidade, com
-  `localizedContent` inline no `entity.json`, referências taxonômicas por chaves
+  `localizedContent` inline no `_entity.json`, referências taxonômicas por chaves
   canônicas completas, um documento Markdown por locale e mídias referenciadas
   por caminhos relativos.
 - Toda versão coordena os seis pares de bancos e o `CAS/system` compartilhado.

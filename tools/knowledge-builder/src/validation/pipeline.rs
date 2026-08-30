@@ -29,13 +29,16 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
     };
     let entity_paths = files
         .iter()
-        .filter(|path| path.file_name().is_some_and(|name| name == "entity.json"))
+        .filter(|path| {
+            path.file_name()
+                .is_some_and(|name| name == ENTITY_MANIFEST_FILENAME)
+        })
         .cloned()
         .collect::<Vec<_>>();
     if entity_paths.is_empty() {
         diagnostics.push(Diagnostic::source(
             &source_root,
-            "no entity.json manifests were discovered",
+            format!("no {ENTITY_MANIFEST_FILENAME} manifests were discovered"),
         ));
     }
     let mut entries = Vec::new();
@@ -101,12 +104,11 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
                 declared_paths.push(("gallery", index, gallery));
             }
             for (role, sort_order, relative_path) in declared_paths {
-                let source_path = entry.entity_directory.join(relative_path);
-                match resolve_media(
+                match resolve_structural_media(
                     &entry.entity_directory,
                     entry.entity.entity_type(),
                     entry.entity.id(),
-                    &source_path,
+                    relative_path,
                 ) {
                     Ok(asset) => {
                         for keys in media_keys_by_locale.values_mut() {
@@ -119,7 +121,10 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
                         });
                         if let Some(previous) = media.insert(asset.media_key.clone(), asset.clone())
                         {
-                            if previous.content_hash_sha256 != asset.content_hash_sha256 {
+                            if previous.content_hash_sha256 != asset.content_hash_sha256
+                                || previous.internal_path != asset.internal_path
+                                || previous.relative_path != asset.relative_path
+                            {
                                 diagnostics.push(Diagnostic::entity(
                                     &entry,
                                     "media",
@@ -155,6 +160,7 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
                                         media.insert(asset.media_key.clone(), asset.clone())
                                     {
                                         if previous.content_hash_sha256 != asset.content_hash_sha256
+                                            || previous.internal_path != asset.internal_path
                                             || previous.relative_path != asset.relative_path
                                         {
                                             diagnostics.push(Diagnostic::editorial(

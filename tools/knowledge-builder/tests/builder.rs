@@ -13,6 +13,9 @@ use std::{
 use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 
 static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
+const ENTITY_MANIFEST_FILENAME: &str = "_entity.json";
+const CONTENT_DIRECTORY_NAME: &str = "_content";
+const MEDIA_DIRECTORY_NAME: &str = "_media";
 
 fn normalize_search(value: &str) -> String {
     let mut normalized = String::with_capacity(value.len());
@@ -491,14 +494,15 @@ fn minimal_fixture_rejects_missing_and_duplicate_taxonomy_owners() {
     copy_tree(&fixture, duplicate.path());
     let original = duplicate
         .path()
-        .join("taxonomies/product-target/entity.json");
+        .join("taxonomies/product-target")
+        .join(ENTITY_MANIFEST_FILENAME);
     let mut taxonomy: serde_json::Value =
         serde_json::from_slice(&fs::read(&original).unwrap()).unwrap();
     taxonomy["id"] = serde_json::Value::String("fixture-product-target-duplicate".to_string());
     let duplicate_directory = duplicate.path().join("taxonomies/product-target-duplicate");
     fs::create_dir_all(&duplicate_directory).unwrap();
     fs::write(
-        duplicate_directory.join("entity.json"),
+        duplicate_directory.join(ENTITY_MANIFEST_FILENAME),
         serde_json::to_vec_pretty(&taxonomy).unwrap(),
     )
     .unwrap();
@@ -801,7 +805,7 @@ fn logical_digest_is_independent_of_editorial_directory() {
         .expect("copied source contains editorial content");
     let entity_directory = manifest.parent().unwrap();
     fs::rename(
-        entity_directory.join("content"),
+        entity_directory.join(CONTENT_DIRECTORY_NAME),
         entity_directory.join("localized-editorial"),
     )
     .unwrap();
@@ -809,12 +813,8 @@ fn logical_digest_is_independent_of_editorial_directory() {
         serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
     value["contentPath"] = serde_json::Value::String("./localized-editorial".to_string());
     fs::write(&manifest, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
-    let renamed =
-        validate(editorial_copy.path()).expect("renamed editorial directory must validate");
-    assert_eq!(
-        original.source_digest_sha256(),
-        renamed.source_digest_sha256()
-    );
+    let error = validate(editorial_copy.path()).unwrap_err().to_string();
+    assert!(error.contains("contentPath") || error.contains("unrecognized source file"));
 
     let unicode_copy = TestDirectory::new("decomposed-unicode");
     copy_tree(&source_root(), unicode_copy.path());
@@ -1023,7 +1023,7 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
     copy_tree(&source_root(), source.path());
     let manifest = find_manifest_by_type(source.path(), "condition").unwrap();
     let entity_directory = manifest.parent().unwrap();
-    let media_directory = entity_directory.join("media");
+    let media_directory = entity_directory.join(MEDIA_DIRECTORY_NAME);
     fs::create_dir_all(&media_directory).unwrap();
     let pixels = image::ImageBuffer::from_fn(320, 80, |x, _| {
         image::Rgba([20, (x % 255) as u8, 140, if x < 10 { 0 } else { 255 }])
@@ -1050,8 +1050,8 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
     let mut entity: serde_json::Value =
         serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
     entity["media"] = serde_json::json!({
-        "cover": "./media/cover.png",
-        "gallery": ["./media/lateral.png"]
+        "cover": "./_media/cover.png",
+        "gallery": ["./_media/lateral.png"]
     });
     fs::write(&manifest, serde_json::to_vec_pretty(&entity).unwrap()).unwrap();
     let pt_br = entity_directory
@@ -1060,7 +1060,7 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
     let markdown = fs::read_to_string(&pt_br).unwrap();
     fs::write(
         &pt_br,
-        format!("{markdown}\n\n![Capa](../media/cover.png)\n"),
+        format!("{markdown}\n\n![Capa](../_media/cover.png)\n"),
     )
     .unwrap();
 
@@ -1508,7 +1508,7 @@ fn find_first_manifest(root: &Path) -> Option<PathBuf> {
             if let Some(path) = find_first_manifest(&entry.path()) {
                 return Some(path);
             }
-        } else if entry.file_name() == "entity.json" {
+        } else if entry.file_name() == ENTITY_MANIFEST_FILENAME {
             return Some(entry.path());
         }
     }
@@ -1526,7 +1526,7 @@ fn find_manifest_with_content(root: &Path) -> Option<PathBuf> {
             if let Some(path) = find_manifest_with_content(&entry.path()) {
                 return Some(path);
             }
-        } else if entry.file_name() == "entity.json" {
+        } else if entry.file_name() == ENTITY_MANIFEST_FILENAME {
             let value: serde_json::Value =
                 serde_json::from_slice(&fs::read(entry.path()).ok()?).ok()?;
             if value.get("contentPath").is_some() {
@@ -1548,7 +1548,7 @@ fn find_manifest_by_type(root: &Path, entity_type: &str) -> Option<PathBuf> {
             if let Some(path) = find_manifest_by_type(&entry.path(), entity_type) {
                 return Some(path);
             }
-        } else if entry.file_name() == "entity.json" {
+        } else if entry.file_name() == ENTITY_MANIFEST_FILENAME {
             let value: serde_json::Value =
                 serde_json::from_slice(&fs::read(entry.path()).ok()?).ok()?;
             if value.get("entityType").and_then(serde_json::Value::as_str) == Some(entity_type) {
@@ -1566,7 +1566,10 @@ fn find_manifest_by_id(root: &Path, id: &str) -> Option<PathBuf> {
             let path = entry.path();
             if path.is_dir() {
                 stack.push(path);
-            } else if path.file_name().is_some_and(|name| name == "entity.json") {
+            } else if path
+                .file_name()
+                .is_some_and(|name| name == ENTITY_MANIFEST_FILENAME)
+            {
                 let value: serde_json::Value =
                     serde_json::from_slice(&fs::read(&path).ok()?).ok()?;
                 if value.get("id").and_then(serde_json::Value::as_str) == Some(id) {
@@ -1589,7 +1592,7 @@ fn find_manifest_containing(root: &Path, needle: &str) -> Option<PathBuf> {
             if let Some(path) = find_manifest_containing(&entry.path(), needle) {
                 return Some(path);
             }
-        } else if entry.file_name() == "entity.json"
+        } else if entry.file_name() == ENTITY_MANIFEST_FILENAME
             && fs::read_to_string(entry.path()).ok()?.contains(needle)
         {
             return Some(entry.path());

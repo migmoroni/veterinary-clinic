@@ -10,7 +10,7 @@ reais de produto.
 
 Consolidar também o conteúdo editorial de cada entidade em um único documento
 Markdown por locale. Headings de nível `#` numerados delimitam as seções
-declaradas no `entity.json`; headings de níveis inferiores permanecem livres
+declaradas no `_entity.json`; headings de níveis inferiores permanecem livres
 para estruturar o conteúdo interno.
 
 A busca é uma projeção derivada dessas entidades, relações e taxonomias. Ela não
@@ -51,15 +51,15 @@ Cada entidade que possui seções editoriais declara um único diretório físic
 
 ```text
 <entidade>/
-├── entity.json
-├── content/
+├── _entity.json
+├── _content/
 │   ├── pt-BR.md
 │   ├── pt-PT.md
 │   ├── gn-PY.md
 │   ├── en-US.md
 │   ├── es-ES.md
 │   └── fr-FR.md
-└── media/
+└── _media/
     └── <arquivo-editorial>.<extensão>
 ```
 
@@ -69,7 +69,7 @@ associação entre uma seção do manifesto e um trecho Markdown usa
 
 ```json
 {
-  "contentPath": "./content",
+  "contentPath": "./_content",
   "sections": [
     {
       "sectionKey": "about",
@@ -138,7 +138,7 @@ O builder remove o heading delimitador inteiro e produz um item neste formato:
 
 Links de mídia no Markdown são resolvidos em relação ao documento localizado e
 devem permanecer dentro do diretório da entidade. Com o layout apresentado, uma
-mídia usa, por exemplo, `../media/cover.webp`.
+mídia usa, por exemplo, `../_media/cover.webp`.
 
 ## Contrato Atual Do Produto
 
@@ -164,7 +164,7 @@ nome de princípio ativo não fica em aliases, classificações ou termos dedica
 - Cada substância farmacologicamente distinta possui uma única entidade
   `active_ingredient` com ID estável.
 - IDs novos de catálogos usam UUIDv4, conforme as constraints atuais dessas
-  entidades. Eles são gerados uma vez e persistem no `entity.json`.
+  entidades. Eles são gerados uma vez e persistem no `_entity.json`.
 - `product.activeIngredientIds` contém somente IDs resolvíveis de entidades
   `active_ingredient`.
 - Uma combinação farmacológica referencia cada princípio ativo separadamente e
@@ -235,7 +235,7 @@ Cada princípio ativo usado pelos produtos possui diretório próprio:
 
 ```text
 data/knowledge/catalog/active-ingredients/<active-ingredient>/
-└── entity.json
+└── _entity.json
 ```
 
 O manifesto segue o contrato `active_ingredient` já definido:
@@ -410,7 +410,7 @@ O `inventory.json` registra separadamente:
 
 ### Atividade 2: Consolidação Dos Markdown
 
-1. Para cada entidade com seções, criar `content/<locale>.md` com todas as
+1. Para cada entidade com seções, criar `_content/<locale>.md` com todas as
    seções na ordem declarada.
 2. Numerar os headings de nível `#` conforme o array `sections`.
 3. Preservar os corpos, headings internos, links e referências de mídia no

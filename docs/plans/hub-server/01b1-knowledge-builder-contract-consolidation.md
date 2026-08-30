@@ -76,7 +76,7 @@ tempo de execução e nenhuma validação acessa a rede.
 
 ```mermaid
 flowchart LR
-    SOURCE["entity.json + Markdown + mídias"] --> SCHEMA["JSON Schemas executáveis"]
+    SOURCE["_entity.json + Markdown + mídias"] --> SCHEMA["JSON Schemas executáveis"]
     SCHEMA --> NORMALIZE["Unicode + normalização de domínio"]
     NORMALIZE --> AST["AST CommonMark + allowlist"]
     AST --> MODEL["Modelo semântico canônico"]
@@ -300,10 +300,10 @@ Os schemas das entidades que possuem página editorial aceitam opcionalmente:
 ```json
 {
   "media": {
-    "cover": "./media/cover.webp",
+    "cover": "./_media/cover.webp",
     "gallery": [
-      "./media/lateral.webp",
-      "./media/detalhe.webp"
+      "./_media/lateral.webp",
+      "./_media/detalhe.webp"
     ]
   }
 }
@@ -565,7 +565,7 @@ canônicas estáveis.
 - `normalized_name`, `normalized_label` e `normalized_value` usam funções
   adequadas aos seus papéis.
 - Strings Unicode canonicamente equivalentes produzem o mesmo modelo e digest.
-- Todo `entity.json` é validado por um schema executável antes da
+- Todo `_entity.json` é validado por um schema executável antes da
   desserialização tipada.
 - Todo documento e relatório de saída é validado por seu schema executável.
 - Nenhum schema depende de rede ou referência remota em runtime.

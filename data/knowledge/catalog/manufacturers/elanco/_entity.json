@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"entityType": "manufacturer",
-	"id": "d7569f36-cd2f-416b-906f-ee89e82145cb",
+	"id": "f12a7466-ea74-4d71-b923-5e714c671f8a",
 	"typeTermKey": "veterinaryIndustrial.veterinaryIndustrialLaboratory",
 	"classificationTermKeys": [
 		"regulatoryStatus.veterinaryIndustrial",
@@ -14,12 +14,12 @@
 	"website": null,
 	"localizedContent": {
 		"name": {
-			"pt-BR": "Agener União Saúde Animal",
-			"pt-PT": "Agener União Saúde Animal",
-			"gn-PY": "Agener União Saúde Animal",
-			"en-US": "Agener União Saúde Animal",
-			"es-ES": "Agener União Saúde Animal",
-			"fr-FR": "Agener União Saúde Animal"
+			"pt-BR": "Elanco",
+			"pt-PT": "Elanco",
+			"gn-PY": "Elanco",
+			"en-US": "Elanco",
+			"es-ES": "Elanco",
+			"fr-FR": "Elanco"
 		},
 		"aliases": {
 			"pt-BR": [],
@@ -48,5 +48,5 @@
 			"sectionNumber": 4
 		}
 	],
-	"contentPath": "./content"
+	"contentPath": "./_content"
 }

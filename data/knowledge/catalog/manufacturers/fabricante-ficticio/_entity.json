@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"entityType": "manufacturer",
-	"id": "131b3da4-334e-42ee-a185-5e57df388a49",
+	"id": "dd7c932c-9c9a-4ee0-82eb-5e1f516ac9e1",
 	"typeTermKey": "veterinaryIndustrial.veterinaryIndustrialLaboratory",
 	"classificationTermKeys": [
 		"regulatoryStatus.veterinaryIndustrial",
@@ -14,12 +14,12 @@
 	"website": null,
 	"localizedContent": {
 		"name": {
-			"pt-BR": "Ceva Saúde Animal",
-			"pt-PT": "Ceva Saúde Animal",
-			"gn-PY": "Ceva Saúde Animal",
-			"en-US": "Ceva Saúde Animal",
-			"es-ES": "Ceva Saúde Animal",
-			"fr-FR": "Ceva Saúde Animal"
+			"pt-BR": "Fabricante Ficticio",
+			"pt-PT": "Fabricante Ficticio",
+			"gn-PY": "Fabricante Ficticio",
+			"en-US": "Fabricante Ficticio",
+			"es-ES": "Fabricante Ficticio",
+			"fr-FR": "Fabricante Ficticio"
 		},
 		"aliases": {
 			"pt-BR": [],
@@ -48,5 +48,5 @@
 			"sectionNumber": 4
 		}
 	],
-	"contentPath": "./content"
+	"contentPath": "./_content"
 }

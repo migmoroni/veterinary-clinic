@@ -199,9 +199,9 @@ provider externo.
 - Cloudflare R2, GitLab e IPFS ficam previstos no contrato e desativados até suas
   fases próprias.
 - Os dados fonte de conhecimento são organizados por domínio e entidade. Cada
-  entidade possui `entity.json` para estrutura, composição, relações e todo
-  conteúdo localizado simples, um documento Markdown por locale para as seções
-  editoriais e um diretório `media/` com os bytes editoriais.
+  entidade possui `_entity.json` para estrutura, composição, relações e todo
+  conteúdo localizado simples, `_content/` com um documento Markdown por locale
+  para as seções editoriais e `_media/` com os bytes editoriais referenciados.
 - `localizedContent` contém diretamente mapas dos seis locales. Ele não contém
   caminhos de arquivos; campos escalares e listas possuem tipos definidos pelo
   schema do objeto proprietário.
@@ -226,7 +226,7 @@ provider externo.
 - A busca de `LifeEntity` projeta somente nome e aliases próprios. Consultas por
   ancestralidade e subárvore usam as colunas taxonômicas de
   `life_reference_items`, sem duplicar termos ancestrais nos descendentes.
-- `entity.json` declara um único `contentPath` e associa cada `sectionNumber` a
+- `_entity.json` declara `contentPath: "./_content"` e associa cada `sectionNumber` a
   uma `sectionKey` padronizada. Headings iniciados por `# <n>` delimitam as
   seções no documento localizado. Qualquer texto editorial depois do número é
   descartado, e o builder não deduz semântica dele ou do nome das pastas.

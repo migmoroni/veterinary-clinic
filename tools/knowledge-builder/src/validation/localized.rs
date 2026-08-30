@@ -148,6 +148,18 @@ pub(super) fn validate_sections(entry: &SourceEntry, diagnostics: &mut Vec<Diagn
                 "contentPath must be omitted without sections",
             ));
         }
+        if entry
+            .entity_directory
+            .join(CONTENT_DIRECTORY_NAME)
+            .try_exists()
+            .unwrap_or(false)
+        {
+            diagnostics.push(Diagnostic::entity(
+                entry,
+                "_content",
+                format!("{CONTENT_DIRECTORY_NAME} must be absent when sections are empty"),
+            ));
+        }
         return;
     }
     if entry.entity.content_path().is_none() {
@@ -155,6 +167,12 @@ pub(super) fn validate_sections(entry: &SourceEntry, diagnostics: &mut Vec<Diagn
             entry,
             "contentPath",
             "contentPath is required for entities with sections",
+        ));
+    } else if entry.entity.content_path() != Some(CONTENT_PATH) {
+        diagnostics.push(Diagnostic::entity(
+            entry,
+            "contentPath",
+            format!("contentPath must be exactly {CONTENT_PATH}"),
         ));
     }
     let allowed: &[&str] = match entry.entity {

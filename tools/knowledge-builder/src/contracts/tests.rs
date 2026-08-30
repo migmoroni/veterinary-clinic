@@ -7,6 +7,10 @@ use super::{
     },
     database::{SYSTEM_DATABASE, SYSTEM_MEDIA_DATABASE},
     locale::{KnowledgeLocale, LOCALES},
+    source_layout::{
+        COMPILED_MEDIA_NAMESPACE, CONTENT_DIRECTORY_NAME, CONTENT_PATH, ENTITY_MANIFEST_FILENAME,
+        MARKDOWN_MEDIA_PREFIX, MEDIA_DIRECTORY_NAME, STRUCTURAL_MEDIA_PREFIX,
+    },
     taxonomy::{taxonomy_domains, taxonomy_spec, TaxonomyCardinality, CANONICAL_TAXONOMIES},
     version::*,
 };
@@ -40,6 +44,22 @@ fn ddl_locale_sets(ddl: &str) -> Vec<Vec<&str>> {
                 .collect()
         })
         .collect()
+}
+
+#[test]
+fn source_layout_namespace_is_closed_and_distinct_from_compiled_media() {
+    assert_eq!(ENTITY_MANIFEST_FILENAME, "_entity.json");
+    assert_eq!(CONTENT_DIRECTORY_NAME, "_content");
+    assert_eq!(MEDIA_DIRECTORY_NAME, "_media");
+    assert_eq!(CONTENT_PATH, "./_content");
+    assert_eq!(STRUCTURAL_MEDIA_PREFIX, "./_media/");
+    assert_eq!(MARKDOWN_MEDIA_PREFIX, "../_media/");
+    assert_eq!(COMPILED_MEDIA_NAMESPACE, "media");
+    let common = schema(include_str!("../../schemas/source/common.schema.json"));
+    assert_eq!(common["$defs"]["contentPath"]["const"], CONTENT_PATH);
+    assert!(common["$defs"]["structuralMediaPath"]["pattern"]
+        .as_str()
+        .is_some_and(|pattern| pattern.contains("_media")));
 }
 
 #[test]

@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"entityType": "manufacturer",
-	"id": "453bf23c-08cf-4b91-a370-483b1ef6646d",
+	"id": "33e5bfd1-2843-46c9-9afd-a30f78f4b087",
 	"typeTermKey": "veterinaryIndustrial.veterinaryIndustrialLaboratory",
 	"classificationTermKeys": [
 		"regulatoryStatus.veterinaryIndustrial",
@@ -14,12 +14,12 @@
 	"website": null,
 	"localizedContent": {
 		"name": {
-			"pt-BR": "MSD Animal Health",
-			"pt-PT": "MSD Animal Health",
-			"gn-PY": "MSD Animal Health",
-			"en-US": "MSD Animal Health",
-			"es-ES": "MSD Animal Health",
-			"fr-FR": "MSD Animal Health"
+			"pt-BR": "World Veterinária",
+			"pt-PT": "World Veterinária",
+			"gn-PY": "World Veterinária",
+			"en-US": "World Veterinária",
+			"es-ES": "World Veterinária",
+			"fr-FR": "World Veterinária"
 		},
 		"aliases": {
 			"pt-BR": [],
@@ -48,5 +48,5 @@
 			"sectionNumber": 4
 		}
 	],
-	"contentPath": "./content"
+	"contentPath": "./_content"
 }

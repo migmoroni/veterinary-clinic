@@ -39,7 +39,8 @@
       }
     },
     "sections": { "type": "array", "uniqueItems": true, "maxItems": 64, "items": { "$ref": "#/$defs/section" } },
-    "contentPath": { "type": "string", "minLength": 1, "maxLength": 512, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000]+$" },
+    "contentPath": { "const": "./_content" },
+    "structuralMediaPath": { "type": "string", "minLength": 10, "maxLength": 512, "pattern": "^\\./_media/(?!\\.\\.?(?:/|$))[^/\\u0000\\\\]+(?:/(?!\\.\\.?(?:/|$))[^/\\u0000\\\\]+)*$" },
     "centroid": {
       "type": "object", "additionalProperties": false, "required": ["latitude", "longitude"],
       "properties": {
@@ -70,8 +71,8 @@
     "media": {
       "type": "object", "additionalProperties": false, "minProperties": 1,
       "properties": {
-        "cover": { "$ref": "#/$defs/contentPath" },
-        "gallery": { "type": "array", "uniqueItems": true, "maxItems": 32, "items": { "$ref": "#/$defs/contentPath" } }
+        "cover": { "$ref": "#/$defs/structuralMediaPath" },
+        "gallery": { "type": "array", "uniqueItems": true, "maxItems": 32, "items": { "$ref": "#/$defs/structuralMediaPath" } }
       }
     }
   }

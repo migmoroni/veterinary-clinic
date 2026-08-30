@@ -4,7 +4,7 @@
 
 Organizar `data/knowledge/life` e o `knowledge-builder` em torno de uma entidade
 de vida única, cuja identidade taxonômica e cujas classificações opcionais vivem
-no próprio `entity.json`. O contrato representa tanto organismos que podem ser
+no próprio `_entity.json`. O contrato representa tanto organismos que podem ser
 pacientes quanto organismos associados à origem de condições clínicas:
 
 ```text
@@ -49,10 +49,10 @@ ramo `user`.
 
 ## Invariantes
 
-- Existe exatamente um `entity.json` para cada domínio, reino, filo, classe,
+- Existe exatamente um `_entity.json` para cada domínio, reino, filo, classe,
   ordem, família, gênero, espécie, raça ou variedade referenciada no conjunto
   canônico.
-- Um diretório contém `entity.json` somente quando representa um item real de
+- Um diretório contém `_entity.json` somente quando representa um item real de
   conhecimento; sua profundidade na árvore não cria nem proíbe a entidade.
 - `taxonomy` declara `domain`, `kingdom`, `phylum`, `class`, `order`, `family`,
   `genus`, `species`, `breed` e `variety` na própria entidade. As posições formam
@@ -73,7 +73,7 @@ ramo `user`.
   superior.
 - O caminho editorial não define identidade, taxonomia, classificação ou ordem
   semântica.
-- IDs, chaves e referências presentes em `entity.json` são a única fonte de
+- IDs, chaves e referências presentes em `_entity.json` são a única fonte de
   verdade.
 - Não existem aliases de campos, formatos paralelos, leitura dupla, adapters de
   transição ou schemas substituídos no estado final.
@@ -316,59 +316,59 @@ Não criar diretórios genéricos `domains/`, `kingdoms/`, `phyla/`, `classes/`,
 data/knowledge/life/
 ├── taxonomies/
 │   └── sizes/
-│       └── entity.json
+│       └── _entity.json
 └── eukaryota/
-    ├── entity.json
+    ├── _entity.json
     └── animalia/
-        ├── entity.json
+        ├── _entity.json
         └── chordata/
-            ├── entity.json
+            ├── _entity.json
             └── mammalia/
-                ├── entity.json
+                ├── _entity.json
                 └── carnivora/
-                    ├── entity.json
+                    ├── _entity.json
                     ├── canidae/
-                    │   ├── entity.json
+                    │   ├── _entity.json
                     │   └── canis/
-                    │       ├── entity.json
+                    │       ├── _entity.json
                     │       └── canis-lupus-familiaris/
-                    │           ├── entity.json
-                    │           ├── content/
+                    │           ├── _entity.json
+                    │           ├── _content/
                     │           │   └── <locale>.md
                     │           ├── affenpinscher/
-                    │           │   └── entity.json
+                    │           │   └── _entity.json
                     │           └── poodle/
-                    │               ├── entity.json
-                    │               ├── content/
+                    │               ├── _entity.json
+                    │               ├── _content/
                     │               │   └── <locale>.md
                     │               └── toy/
-                    │                   ├── entity.json
-                    │                   └── content/
+                    │                   ├── _entity.json
+                    │                   └── _content/
                     │                       └── <locale>.md
                     └── felidae/
-                        ├── entity.json
+                        ├── _entity.json
                         └── felis/
-                            ├── entity.json
+                            ├── _entity.json
                             └── felis-catus/
-                                ├── entity.json
+                                ├── _entity.json
                                 └── persian/
-                                    └── entity.json
+                                    └── _entity.json
 ```
 
-`eukaryota/entity.json` descreve o domínio, `animalia/entity.json` o reino,
-`chordata/entity.json` o filo, `mammalia/entity.json` a classe e
-`carnivora/entity.json` a ordem, `canidae/entity.json` a família e
-`canis/entity.json` o gênero.
-`canis-lupus-familiaris/entity.json` descreve a espécie,
-`poodle/entity.json` a raça e `toy/entity.json` a variedade. Cada manifesto
+`eukaryota/_entity.json` descreve o domínio, `animalia/_entity.json` o reino,
+`chordata/_entity.json` o filo, `mammalia/_entity.json` a classe e
+`carnivora/_entity.json` a ordem, `canidae/_entity.json` a família e
+`canis/_entity.json` o gênero.
+`canis-lupus-familiaris/_entity.json` descreve a espécie,
+`poodle/_entity.json` a raça e `toy/_entity.json` a variedade. Cada manifesto
 declara sua identidade e sua cadeia ancestral completa; o caminho apenas reúne
 editorialmente a mesma hierarquia.
 
-Qualquer um dos dez níveis pode manter `content/`, `media/`, `sections` e os
+Qualquer um dos dez níveis pode manter `_content/`, `_media/`, `sections` e os
 demais campos comuns de `LifeEntity`. A árvore omite parte desses diretórios
 somente para permanecer legível.
 
-O scanner descobre recursivamente todos os `entity.json`. O conteúdo do
+O scanner descobre recursivamente todos os `_entity.json`. O conteúdo do
 manifesto determina se o arquivo é uma taxonomia compartilhada ou uma entidade
 de vida. O caminho não participa dessa decisão.
 
@@ -738,7 +738,7 @@ define os termos e valores canônicos usados na implementação.
 ```
 
 O exemplo demonstra apenas o shape. Toda classificação precisa estar
-explicitamente revisada no próprio `entity.json`. Não inferir termos por nome,
+explicitamente revisada no próprio `_entity.json`. Não inferir termos por nome,
 pasta, espécie, tamanho ou localidade.
 
 ### 3.5 Exemplo De Variedade
@@ -1491,7 +1491,7 @@ concorrentes para facilitar a execução.
 - Os períodos de cada sexo seguem `[null, x]`, `[x, y]` e `[y, null]`, sem
   lacunas ou sobreposições, e cada estágio possui `weight`, `measure` ou ambos.
 - `weight` contém somente `live`; `measure` aceita somente `height` e `length`.
-- Diretórios recebem `entity.json` somente quando representam um item real de
+- Diretórios recebem `_entity.json` somente quando representam um item real de
   conhecimento, independentemente da profundidade na árvore editorial.
 - O caminho não participa da identidade, taxonomia ou classificação.
 - Cada entidade usa seu `id` na posição correspondente ao próprio nível.

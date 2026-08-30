@@ -115,7 +115,7 @@ packages/engine/src/storage/cas.rs
 O levantamento identifica DDL, constraints, índices, normalização, projeção de
 catálogos, composição de coleções de mídia, geração de thumbnails, SHA-256 e
 disposição física do CAS. Os schemas preservam as garantias válidas desse
-processo e aplicam o contrato canônico de `entity.json`, `localizedContent`,
+processo e aplicam o contrato canônico de `_entity.json`, `localizedContent`,
 referências taxonômicas, seções Markdown, locales e caminhos relativos definido
 nas Partes 1A, 1A.1 e 1A.2.
 
@@ -139,7 +139,7 @@ Schemas, migrations, escrita de mídia, sincronização, replicação e CAS do r
 
 ```mermaid
 flowchart LR
-    DATA["entity.json + Markdown por locale + mídias"] --> JSON["Validar localizedContent<br/>e chaves taxonômicas"]
+    DATA["_entity.json + Markdown por locale + mídias"] --> JSON["Validar localizedContent<br/>e chaves taxonômicas"]
     JSON --> TAXONOMY["Resolver taxonomias<br/>e relações"]
     TAXONOMY --> PATHS["Resolver caminhos<br/>editoriais"]
     PATHS --> PARSE["Parser Markdown<br/>por AST"]
@@ -159,8 +159,8 @@ flowchart LR
 O pipeline normativo é:
 
 ```text
-entity.json + documentos Markdown por locale + mídias
--> validação estrutural do entity.json
+_entity.json + documentos Markdown por locale + mídias
+-> validação estrutural do _entity.json
 -> validação dos mapas de localizedContent por locale
 -> resolução das chaves taxonômicas completas
 -> resolução segura dos caminhos editoriais
@@ -193,7 +193,7 @@ tools/knowledge-builder/
 │   ├── validation/
 │   ├── projection/
 │   ├── databases/
-│   ├── media/
+│   ├── _media/
 │   └── report/
 ├── schemas/
 │   ├── source/
@@ -213,7 +213,7 @@ build pertencem a esse crate.
 ## Descoberta Da Fonte
 
 O builder percorre `data/knowledge/` recursivamente e identifica entidades por
-diretórios que contenham `entity.json`. O caminho é metadado editorial e não
+diretórios que contenham `_entity.json`. O caminho é metadado editorial e não
 seleciona schema nem gera identidade.
 
 O carregamento segue esta ordem lógica:
@@ -229,7 +229,7 @@ entityType
 O builder:
 
 - seleciona o schema por `entityType`;
-- desserializa `entity.json` de forma estrita;
+- desserializa `_entity.json` de forma estrita;
 - valida cada campo de `localizedContent` como mapa tipado com exatamente os seis
   locales;
 - resolve `typeTermKey`, `classificationTermKeys`, `sizeTermKey`,
@@ -260,8 +260,8 @@ O builder:
 - recusa seção ausente, adicional, repetida, descontínua ou fora de ordem;
 - resolve referências por IDs;
 - não infere significado pelo nome dos diretórios;
-- produz o mesmo conteúdo lógico quando uma entidade ou seu diretório editorial
-  é movido com o manifesto atualizado e sem mudança de conteúdo ou identidade;
+- produz o mesmo conteúdo lógico quando o diretório completo de uma entidade é
+  movido sem mudança de conteúdo ou identidade;
 - trata o caminho relativo da mídia dentro da entidade como parte de sua
   referência editorial estável.
 
@@ -292,13 +292,13 @@ suporte novo no consumidor eleva essa versão.
 ## Padrão De Projeção Relacional
 
 O builder segue uma arquitetura schema-first com Data Mappers explícitos. O DDL
-é a fonte de verdade da estrutura SQL; `entity.json`, as seções Markdown e as
+é a fonte de verdade da estrutura SQL; `_entity.json`, as seções Markdown e as
 mídias são a fonte de verdade do conteúdo de domínio. Valores simples vêm
 exclusivamente de `localizedContent`; conceitos compartilhados vêm dos termos
 referenciados por chave.
 
 ```text
-entity.json + documentos Markdown por locale + mídias
+_entity.json + documentos Markdown por locale + mídias
 -> validação e compilação canônica da fonte
 -> modelo canônico Rust
 -> projector do entityType
@@ -934,7 +934,7 @@ com os hashes armazenados de forma plana.
 Para cada arquivo de autoria, o builder:
 
 ```text
-referência relativa de entity.json ou Markdown
+referência relativa de _entity.json ou Markdown
 -> resolver dentro do diretório da entidade
 -> normalizar o caminho relativo
 -> derivar media_key de entityType + id + caminho relativo
@@ -959,7 +959,7 @@ pelo app e evita diretórios com quantidade excessiva de objetos.
 Cada `system_media.db` é o índice canônico das mídias exigidas por seu locale. O
 conjunto de chaves de um locale une:
 
-- referências estruturais de `entity.json`, como `cover`;
+- referências estruturais de `_entity.json`, como `cover`;
 - links relativos extraídos dos Markdown por parser estruturado;
 - mídias exigidas pelo projector do domínio.
 
@@ -996,7 +996,7 @@ contentHash
 
 O digest cobre:
 
-- campos estruturais e relações do `entity.json`, após validação e conversão para
+- campos estruturais e relações do `_entity.json`, após validação e conversão para
   o modelo tipado;
 - campos e seções localizados, identificados por chave semântica e locale;
 - chaves taxonômicas resolvidas e conteúdo dos termos efetivamente projetados;
@@ -1004,8 +1004,8 @@ O digest cobre:
 - fingerprints canônicos dos schemas de autoria efetivamente usados;
 - `mediaKey`, `contentHash` e metadados de mídia com significado no resultado.
 
-O digest não usa os bytes do JSON ou Markdown original. `contentPath`, nomes dos
-diretórios de conteúdo, caminhos absolutos, posição organizacional da entidade,
+O digest não usa os bytes do JSON ou Markdown original. `contentPath`, caminhos
+absolutos, posição organizacional da entidade,
 BOM, estilo de quebra de linha, rótulos editoriais opcionais dos headings e
 diferenças sintáticas eliminadas pela normalização não entram na identidade. O
 caminho relativo normalizado da mídia participa por meio da `mediaKey`, e seus
@@ -1067,7 +1067,7 @@ O builder recusa:
 - link com protocolo não permitido ou imagem que não use mídia relativa da
   própria entidade;
 - `sectionKey` desconhecida ou repetida;
-- conteúdo localizado sem associação no `entity.json`;
+- conteúdo localizado sem associação no `_entity.json`;
 - `labelKey` ou `translationKey` em conteúdo de conhecimento;
 - ID técnico criado somente para mídia ou projeção na fonte canônica;
 - hash, base64, caminho físico de CAS ou outro detalhe de materialização em JSON
@@ -1098,7 +1098,7 @@ relações, cobertura, hashes e relatórios.
 ## Sequência De Implementação
 
 1. Criar o crate e integrar ao Cargo Workspace.
-2. Implementar modelos estritos e schemas de `entity.json`, incluindo todos os
+2. Implementar modelos estritos e schemas de `_entity.json`, incluindo todos os
    mapas de `localizedContent` e as referências taxonômicas.
 3. Implementar descoberta recursiva e ordenação lógica.
 4. Implementar resolução taxonômica e composição dos valores pesquisáveis
@@ -1131,8 +1131,7 @@ Cobrir:
 - execução a partir de diretórios de trabalho diferentes;
 - descoberta independente da árvore organizacional;
 - mesmo digest e mesma saída após mover uma entidade;
-- mesmo digest após renomear o diretório editorial e atualizar `contentPath` no
-  manifesto;
+- recusa de renomear `_content` ou alterar o `contentPath` fechado;
 - seleção do projector exclusivamente por `entityType`;
 - enum canônico e dispatch exaustivos para todos os tipos suportados;
 - uma entidade projetada em múltiplas tabelas conforme o DDL;
@@ -1143,7 +1142,7 @@ Cobrir:
 - recusa de locale ausente ou adicional, tipo incorreto, string obrigatória vazia
   e item de lista duplicado no mesmo locale;
 - listas vazias representadas por `[]` sem leitura de arquivo correspondente;
-- projeção de todo conteúdo simples exclusivamente a partir de `entity.json`;
+- projeção de todo conteúdo simples exclusivamente a partir de `_entity.json`;
 - ausência de caminho de arquivo em `localizedContent` e ausência do diretório
   `localized/`;
 - resolução de `typeTermKey`, `classificationTermKeys`, `sizeTermKey`,
