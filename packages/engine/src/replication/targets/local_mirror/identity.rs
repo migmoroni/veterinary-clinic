@@ -5,7 +5,7 @@
 //! data from another clinic/base when the user selects the wrong folder.
 
 use crate::{
-    replication::types::StorageDomain,
+    replication::types::UserStorageDomain,
     storage::{ensure_same_database_identity, StorageManager},
 };
 use rusqlite::Connection;
@@ -20,7 +20,7 @@ pub(super) fn validate_existing_target(
         return Ok(());
     }
 
-    let target_logs_path = target_path.join(StorageDomain::UserLogs.base_database_name());
+    let target_logs_path = target_path.join(UserStorageDomain::Logs.base_database_name());
     if !target_logs_path.is_file() {
         return Err("replication_target_logs_manifest_missing".to_string());
     }

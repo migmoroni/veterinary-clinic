@@ -10,7 +10,7 @@ use crate::{
     replication::{
         applier,
         outbox::queue,
-        types::{CasMediaPayload, StorageDomain},
+        types::{CasMediaPayload, UserStorageDomain},
     },
     storage::{bytes_to_hex, decode_hash_hex, StorageManager},
 };
@@ -19,7 +19,7 @@ use std::{fs, path::Path};
 
 pub(super) fn write_mirror_media(
     target_path: &Path,
-    domain: StorageDomain,
+    domain: UserStorageDomain,
     media: &CasMediaPayload,
 ) -> Result<(), String> {
     let hash = decode_hash_hex(&media.hash_hex)?;
@@ -44,7 +44,7 @@ pub(super) fn sync_user_cas_bidirectional(
 ) -> Result<bool, String> {
     let active_vault = storage.user_vault_path();
     let backup_vault = target_path
-        .join(StorageDomain::UserMedia.as_str())
+        .join(UserStorageDomain::Media.as_str())
         .join("vault");
 
     // CAS files are only meaningful when indexed by the media DB. Copying every
@@ -62,11 +62,11 @@ pub(super) fn collect_new_target_payloads(
     target_path: &Path,
     queue_connection: &Connection,
 ) -> Result<Vec<CasMediaPayload>, String> {
-    let media_db_path = target_path.join(StorageDomain::UserMedia.base_database_name());
+    let media_db_path = target_path.join(UserStorageDomain::Media.base_database_name());
     if !media_db_path.is_file() {
         return Ok(Vec::new());
     }
-    let connection = applier::open_domain_database(&media_db_path, StorageDomain::UserMedia)?;
+    let connection = applier::open_domain_database(&media_db_path, UserStorageDomain::Media)?;
     if !table_exists(&connection, "blobs")? {
         return Ok(Vec::new());
     }
@@ -85,7 +85,7 @@ pub(super) fn collect_new_target_payloads(
         if queue::is_media_known(queue_connection, &hash_hex)? {
             continue;
         }
-        let path = target_cas_path(target_path, StorageDomain::UserMedia, &hash_hex);
+        let path = target_cas_path(target_path, UserStorageDomain::Media, &hash_hex);
         if !path.is_file() {
             continue;
         }
@@ -140,11 +140,11 @@ fn active_media_hashes(storage: &StorageManager) -> Result<Vec<String>, String> 
 }
 
 fn target_media_hashes(target_path: &Path) -> Result<Vec<String>, String> {
-    let media_db_path = target_path.join(StorageDomain::UserMedia.base_database_name());
+    let media_db_path = target_path.join(UserStorageDomain::Media.base_database_name());
     if !media_db_path.is_file() {
         return Ok(Vec::new());
     }
-    let connection = applier::open_domain_database(&media_db_path, StorageDomain::UserMedia)?;
+    let connection = applier::open_domain_database(&media_db_path, UserStorageDomain::Media)?;
     media_hashes(&connection, "replication_target_media")
 }
 
@@ -176,7 +176,7 @@ fn cas_path_from_root(root: &Path, hash_hex: &str) -> Result<std::path::PathBuf,
 
 fn target_cas_path(
     target_path: &Path,
-    domain: StorageDomain,
+    domain: UserStorageDomain,
     hash_hex: &str,
 ) -> std::path::PathBuf {
     target_path

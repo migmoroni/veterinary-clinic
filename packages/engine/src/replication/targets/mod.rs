@@ -10,7 +10,7 @@ mod local;
 pub(crate) mod local_mirror;
 
 use crate::{
-    replication::types::{PatchEnvelope, StorageDomain, TargetId},
+    replication::types::{PatchEnvelope, TargetId, UserStorageDomain},
     storage::StorageManager,
 };
 
@@ -85,7 +85,7 @@ pub(crate) fn pull_from_configured_targets(
 pub(crate) fn ack_pulled(
     storage: &StorageManager,
     origin: TargetId,
-    domain: StorageDomain,
+    domain: UserStorageDomain,
 ) -> Result<(), String> {
     match origin {
         TargetId::Local => local::ack_pulled_domain(storage, domain),

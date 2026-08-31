@@ -6,7 +6,7 @@
 
 use crate::{
     replication::types::{
-        CasMediaPayload, EnvelopeStage, OutboxItem, PatchEnvelope, StorageDomain, TargetId,
+        CasMediaPayload, EnvelopeStage, OutboxItem, PatchEnvelope, TargetId, UserStorageDomain,
     },
     storage::{sha256, StorageManager},
 };
@@ -91,9 +91,9 @@ fn initialize_queue_schema(connection: &Connection) -> Result<(), String> {
             "#,
         )
         .map_err(|error| format!("replication_outbox_schema_failed:{error}"))?;
-    ensure_queue_column(&connection, "origin_target", "TEXT")?;
+    ensure_queue_column(connection, "origin_target", "TEXT")?;
     ensure_queue_column(
-        &connection,
+        connection,
         "delivered_targets_json",
         "TEXT NOT NULL DEFAULT '[]'",
     )?;
@@ -557,7 +557,7 @@ fn row_to_envelope(row: &rusqlite::Row<'_>) -> rusqlite::Result<OutboxItem> {
         .map_err(|error| domain_row_error(8, error))?;
     let delivered_targets =
         deserialize_targets(&delivered_targets_json).map_err(|error| domain_row_error(9, error))?;
-    let domain = StorageDomain::try_from(domain_text.as_str())
+    let domain = UserStorageDomain::try_from(domain_text.as_str())
         .map_err(|error| domain_row_error(2, error))?;
     let stage =
         EnvelopeStage::try_from(stage_text.as_str()).map_err(|error| domain_row_error(3, error))?;
@@ -693,7 +693,7 @@ mod tests {
     fn sample_envelope(sequence_id: u64) -> PatchEnvelope {
         PatchEnvelope {
             sequence_id,
-            domain: StorageDomain::UserData,
+            domain: UserStorageDomain::Main,
             device_id: "device-a".to_string(),
             created_at: 1,
             patch_bytes: vec![1, 2, 3],

@@ -10,7 +10,7 @@ mod restore;
 mod sqlite;
 
 use crate::{
-    replication::types::{PatchEnvelope, StorageDomain},
+    replication::types::{PatchEnvelope, UserStorageDomain},
     storage::StorageManager,
 };
 use rusqlite::Connection;
@@ -45,9 +45,9 @@ pub(crate) fn apply_envelope_to_active(
 ) -> Result<(), String> {
     media::write_inbound_media_files(storage, envelope)?;
     let connection = match envelope.domain {
-        StorageDomain::UserData => storage.user_db.clone(),
-        StorageDomain::UserMedia => storage.user_media_db.clone(),
-        StorageDomain::UserLogs => storage.user_logs_db.clone(),
+        UserStorageDomain::Main => storage.user_db.clone(),
+        UserStorageDomain::Media => storage.user_media_db.clone(),
+        UserStorageDomain::Logs => storage.user_logs_db.clone(),
     };
     let guard = connection
         .lock()

@@ -12,7 +12,7 @@ mod schema;
 use crate::{
     replication::{
         outbox::queue,
-        types::{EnvelopeStage, PatchEnvelope, StorageDomain},
+        types::{EnvelopeStage, PatchEnvelope, UserStorageDomain},
     },
     storage::{StorageDatabase, StorageManager},
 };
@@ -23,9 +23,9 @@ pub(crate) fn capture_once(storage: &StorageManager) -> Result<usize, String> {
     let queue_connection = queue::open_queue(storage)?;
     let mut produced = 0_usize;
     for domain in [
-        StorageDomain::UserData,
-        StorageDomain::UserMedia,
-        StorageDomain::UserLogs,
+        UserStorageDomain::Main,
+        UserStorageDomain::Media,
+        UserStorageDomain::Logs,
     ] {
         if capture_domain(storage, &queue_connection, domain)?.is_some() {
             produced = produced.saturating_add(1);
@@ -38,9 +38,9 @@ pub(crate) fn reset_all_baselines(storage: &StorageManager) -> Result<(), String
     // A reset means the current active state is already represented by
     // receivers. It prevents duplicated patches after bootstrap/pull syncs.
     for domain in [
-        StorageDomain::UserData,
-        StorageDomain::UserMedia,
-        StorageDomain::UserLogs,
+        UserStorageDomain::Main,
+        UserStorageDomain::Media,
+        UserStorageDomain::Logs,
     ] {
         let path = baseline::baseline_path(storage, domain)?;
         baseline::snapshot_active_database(storage, domain, &path)?;
@@ -66,7 +66,7 @@ pub(crate) fn snapshot_connection(
 fn capture_domain(
     storage: &StorageManager,
     queue_connection: &Connection,
-    domain: StorageDomain,
+    domain: UserStorageDomain,
 ) -> Result<Option<String>, String> {
     let database = storage_database_for_domain(domain);
     let baseline_path = baseline::baseline_path(storage, domain)?;
@@ -92,24 +92,24 @@ fn capture_domain(
 fn capture_dirty_domain(
     storage: &StorageManager,
     queue_connection: &Connection,
-    domain: StorageDomain,
+    domain: UserStorageDomain,
     baseline_path: &Path,
 ) -> Result<Option<String>, String> {
     let connection = match domain {
-        StorageDomain::UserData => storage.user_db.clone(),
-        StorageDomain::UserMedia => storage.user_media_db.clone(),
-        StorageDomain::UserLogs => storage.user_logs_db.clone(),
+        UserStorageDomain::Main => storage.user_db.clone(),
+        UserStorageDomain::Media => storage.user_media_db.clone(),
+        UserStorageDomain::Logs => storage.user_logs_db.clone(),
     };
     let guard = connection
         .lock()
         .map_err(|_| "database_connection_lock_failed".to_string())?;
-    let patch_bytes = changeset::create_against_baseline(&guard, &baseline_path)?;
+    let patch_bytes = changeset::create_against_baseline(&guard, baseline_path)?;
 
     if patch_bytes.is_empty() {
         return Ok(None);
     }
 
-    let media_files = if domain == StorageDomain::UserMedia {
+    let media_files = if domain == UserStorageDomain::Media {
         media::collect_new_payloads(storage, &guard, queue_connection)?
     } else {
         Vec::new()
@@ -125,15 +125,15 @@ fn capture_dirty_domain(
     };
     let id = queue::enqueue_envelope(queue_connection, &envelope, EnvelopeStage::Micro, None, &[])?;
     queue::remember_media_files(queue_connection, &envelope.media_files)?;
-    baseline::snapshot_connection(&guard, &baseline_path)?;
+    baseline::snapshot_connection(&guard, baseline_path)?;
     Ok(Some(id))
 }
 
-fn storage_database_for_domain(domain: StorageDomain) -> StorageDatabase {
+fn storage_database_for_domain(domain: UserStorageDomain) -> StorageDatabase {
     match domain {
-        StorageDomain::UserData => StorageDatabase::User,
-        StorageDomain::UserMedia => StorageDatabase::UserMedia,
-        StorageDomain::UserLogs => StorageDatabase::UserLogs,
+        UserStorageDomain::Main => StorageDatabase::User,
+        UserStorageDomain::Media => StorageDatabase::UserMedia,
+        UserStorageDomain::Logs => StorageDatabase::UserLogs,
     }
 }
 

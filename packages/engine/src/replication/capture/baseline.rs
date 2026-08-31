@@ -4,7 +4,7 @@
 //! reset after any bootstrap or inbound sync that changes active databases.
 
 use crate::{
-    replication::{outbox::queue, types::StorageDomain},
+    replication::{outbox::queue, types::UserStorageDomain},
     storage::StorageManager,
 };
 use rusqlite::Connection;
@@ -15,7 +15,7 @@ use std::{
 
 pub(crate) fn baseline_path(
     storage: &StorageManager,
-    domain: StorageDomain,
+    domain: UserStorageDomain,
 ) -> Result<PathBuf, String> {
     Ok(queue::replication_dir(storage)?
         .join("baseline")
@@ -24,7 +24,7 @@ pub(crate) fn baseline_path(
 
 pub(crate) fn snapshot_active_database(
     storage: &StorageManager,
-    domain: StorageDomain,
+    domain: UserStorageDomain,
     destination: &Path,
 ) -> Result<(), String> {
     if let Some(parent) = destination.parent() {
@@ -34,21 +34,21 @@ pub(crate) fn snapshot_active_database(
     let temp_path = destination.with_extension("db.tmp");
     remove_file_if_exists(&temp_path)?;
     match domain {
-        StorageDomain::UserData => {
+        UserStorageDomain::Main => {
             let guard = storage
                 .user_db
                 .lock()
                 .map_err(|_| "database_connection_lock_failed".to_string())?;
             vacuum_into(&guard, &temp_path)?;
         }
-        StorageDomain::UserMedia => {
+        UserStorageDomain::Media => {
             let guard = storage
                 .user_media_db
                 .lock()
                 .map_err(|_| "database_connection_lock_failed".to_string())?;
             vacuum_into(&guard, &temp_path)?;
         }
-        StorageDomain::UserLogs => {
+        UserStorageDomain::Logs => {
             let guard = storage
                 .user_logs_db
                 .lock()

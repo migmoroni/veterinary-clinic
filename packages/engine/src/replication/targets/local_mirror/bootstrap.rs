@@ -7,7 +7,7 @@
 
 use super::schema::{table_exists, user_tables};
 use crate::{
-    replication::{applier, capture, outbox::queue, types::StorageDomain},
+    replication::{applier, capture, outbox::queue, types::UserStorageDomain},
     storage::StorageManager,
 };
 use rusqlite::{params, Connection, OptionalExtension};
@@ -21,9 +21,9 @@ pub(super) fn bootstrap_databases(
     target_path: &Path,
 ) -> Result<(), String> {
     for domain in [
-        StorageDomain::UserData,
-        StorageDomain::UserMedia,
-        StorageDomain::UserLogs,
+        UserStorageDomain::Main,
+        UserStorageDomain::Media,
+        UserStorageDomain::Logs,
     ] {
         bootstrap_domain(storage, target_path, domain)?;
     }
@@ -33,26 +33,26 @@ pub(super) fn bootstrap_databases(
 fn bootstrap_domain(
     storage: &StorageManager,
     target_path: &Path,
-    domain: StorageDomain,
+    domain: UserStorageDomain,
 ) -> Result<(), String> {
     let target_connection =
         applier::open_domain_database(&target_path.join(domain.base_database_name()), domain)?;
     match domain {
-        StorageDomain::UserData => {
+        UserStorageDomain::Main => {
             let active = storage
                 .user_db
                 .lock()
                 .map_err(|_| "database_connection_lock_failed".to_string())?;
             bootstrap_pair(storage, &active, &target_connection, domain)
         }
-        StorageDomain::UserMedia => {
+        UserStorageDomain::Media => {
             let active = storage
                 .user_media_db
                 .lock()
                 .map_err(|_| "database_connection_lock_failed".to_string())?;
             bootstrap_pair(storage, &active, &target_connection, domain)
         }
-        StorageDomain::UserLogs => {
+        UserStorageDomain::Logs => {
             let active = storage
                 .user_logs_db
                 .lock()
@@ -66,7 +66,7 @@ fn bootstrap_pair(
     storage: &StorageManager,
     active: &Connection,
     target: &Connection,
-    domain: StorageDomain,
+    domain: UserStorageDomain,
 ) -> Result<(), String> {
     ensure_target_has_active_tables(active, target)?;
 
@@ -89,7 +89,7 @@ fn bootstrap_pair(
 
 fn empty_baseline_path(
     storage: &StorageManager,
-    domain: StorageDomain,
+    domain: UserStorageDomain,
     side: &str,
 ) -> Result<PathBuf, String> {
     Ok(queue::replication_dir(storage)?

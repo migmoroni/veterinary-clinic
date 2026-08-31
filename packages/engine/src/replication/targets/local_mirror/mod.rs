@@ -19,7 +19,7 @@ use crate::{
     replication::{
         applier, capture,
         outbox::queue,
-        types::{LocalReceptorConfig, PatchEnvelope, StorageDomain},
+        types::{LocalReceptorConfig, PatchEnvelope, UserStorageDomain},
     },
     storage::StorageManager,
 };
@@ -90,9 +90,9 @@ pub(crate) fn pull_envelopes(storage: &StorageManager) -> Result<Vec<PatchEnvelo
     let queue_connection = queue::open_queue(storage)?;
     let mut envelopes = Vec::new();
     for domain in [
-        StorageDomain::UserData,
-        StorageDomain::UserMedia,
-        StorageDomain::UserLogs,
+        UserStorageDomain::Main,
+        UserStorageDomain::Media,
+        UserStorageDomain::Logs,
     ] {
         if !baseline::ensure_exists(storage, &target.path, domain)? {
             continue;
@@ -106,7 +106,7 @@ pub(crate) fn pull_envelopes(storage: &StorageManager) -> Result<Vec<PatchEnvelo
         if patch_bytes.is_empty() {
             continue;
         }
-        let media_files = if domain == StorageDomain::UserMedia {
+        let media_files = if domain == UserStorageDomain::Media {
             media::collect_new_target_payloads(&target.path, &queue_connection)?
         } else {
             Vec::new()
@@ -126,7 +126,7 @@ pub(crate) fn pull_envelopes(storage: &StorageManager) -> Result<Vec<PatchEnvelo
 
 pub(crate) fn ack_pulled_domain(
     storage: &StorageManager,
-    domain: StorageDomain,
+    domain: UserStorageDomain,
 ) -> Result<(), String> {
     let config = load_config(storage)?;
     if !config.enabled {
@@ -171,15 +171,15 @@ mod tests {
         );
         assert!(target
             .path
-            .join(StorageDomain::UserData.base_database_name())
+            .join(UserStorageDomain::Main.base_database_name())
             .is_file());
         assert!(target
             .path
-            .join(StorageDomain::UserMedia.base_database_name())
+            .join(UserStorageDomain::Media.base_database_name())
             .is_file());
         assert!(target
             .path
-            .join(StorageDomain::UserLogs.base_database_name())
+            .join(UserStorageDomain::Logs.base_database_name())
             .is_file());
     }
 
@@ -199,7 +199,7 @@ mod tests {
         let target_orphan_path = cas_path_from_root(
             &target
                 .path
-                .join(StorageDomain::UserMedia.as_str())
+                .join(UserStorageDomain::Media.as_str())
                 .join("vault"),
             orphan_hash,
         );
@@ -215,7 +215,7 @@ mod tests {
         let target_path = root.join("mirror");
         fs::create_dir_all(&target_path).expect("create mirror");
         let target_user_db = open_sqlite_db(
-            &target_path.join(StorageDomain::UserData.base_database_name()),
+            &target_path.join(UserStorageDomain::Main.base_database_name()),
             DbType::Operational,
         )
         .expect("open mirror db");
@@ -241,7 +241,7 @@ mod tests {
         let target_path = root.join("mirror");
         fs::create_dir_all(&target_path).expect("create mirror");
         let target_user_db = open_sqlite_db(
-            &target_path.join(StorageDomain::UserData.base_database_name()),
+            &target_path.join(UserStorageDomain::Main.base_database_name()),
             DbType::Operational,
         )
         .expect("open mirror db");
@@ -278,7 +278,7 @@ mod tests {
         let target_path = root.join("mirror");
         fs::create_dir_all(&target_path).expect("create mirror");
         let _target_logs_db = open_sqlite_db(
-            &target_path.join(StorageDomain::UserLogs.base_database_name()),
+            &target_path.join(UserStorageDomain::Logs.base_database_name()),
             DbType::Logs,
         )
         .expect("create target logs db");
@@ -301,7 +301,7 @@ mod tests {
         let target_user_db = open_sqlite_db(
             &target
                 .path
-                .join(StorageDomain::UserData.base_database_name()),
+                .join(UserStorageDomain::Main.base_database_name()),
             DbType::Operational,
         )
         .expect("open target db");
@@ -315,7 +315,7 @@ mod tests {
         let envelopes = pull_envelopes(&storage).expect("pull envelopes");
 
         assert_eq!(1, envelopes.len());
-        assert_eq!(StorageDomain::UserData, envelopes[0].domain);
+        assert_eq!(UserStorageDomain::Main, envelopes[0].domain);
         assert!(!envelopes[0].patch_bytes.is_empty());
     }
 
@@ -405,7 +405,7 @@ mod tests {
             read_database_manifest(&active_logs).expect("read active manifest")
         };
         let target_logs = open_sqlite_db(
-            &target_path.join(StorageDomain::UserLogs.base_database_name()),
+            &target_path.join(UserStorageDomain::Logs.base_database_name()),
             DbType::Logs,
         )
         .expect("open target logs db");

@@ -4,7 +4,7 @@
 //! isolated because it replaces the whole user bundle and reopens connections.
 
 use crate::{
-    replication::types::{RestoreFromBackupRequest, StorageDomain},
+    replication::types::{RestoreFromBackupRequest, UserStorageDomain},
     storage::StorageManager,
 };
 use std::{
@@ -21,9 +21,9 @@ pub(crate) fn restore_from_backup(
         return Err("replication_restore_path_invalid".to_string());
     }
 
-    let user_db_source = source_root.join(StorageDomain::UserData.base_database_name());
-    let media_db_source = source_root.join(StorageDomain::UserMedia.base_database_name());
-    let logs_db_source = source_root.join(StorageDomain::UserLogs.base_database_name());
+    let user_db_source = source_root.join(UserStorageDomain::Main.base_database_name());
+    let media_db_source = source_root.join(UserStorageDomain::Media.base_database_name());
+    let logs_db_source = source_root.join(UserStorageDomain::Logs.base_database_name());
     if !user_db_source.is_file() || !media_db_source.is_file() || !logs_db_source.is_file() {
         return Err("replication_restore_database_missing".to_string());
     }
@@ -35,7 +35,7 @@ pub(crate) fn restore_from_backup(
         replace_file(&logs_db_source, &storage.user_logs_database_path())?;
         replace_dir_recursive_if_exists(
             &source_root
-                .join(StorageDomain::UserMedia.as_str())
+                .join(UserStorageDomain::Media.as_str())
                 .join("vault"),
             &storage.user_vault_path(),
         )?;

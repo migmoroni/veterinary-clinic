@@ -6,7 +6,7 @@
 use crate::{
     replication::{
         outbox::queue,
-        types::{LocalReceptorConfig, StorageDomain},
+        types::{LocalReceptorConfig, UserStorageDomain},
     },
     storage::{read_database_manifest, StorageManager},
 };
@@ -28,17 +28,19 @@ pub(super) fn resolve_effective_target(
     storage: &StorageManager,
     config: &LocalReceptorConfig,
 ) -> Result<EffectiveTarget, String> {
-    if config.enabled && !config.target_path.as_os_str().is_empty() {
-        if fs::create_dir_all(&config.target_path).is_ok() && config.target_path.is_dir() {
-            let path = resolve_configured_target_path(storage, &config.target_path)?;
-            fs::create_dir_all(&path)
-                .map_err(|error| format!("replication_target_create_failed:{error}"))?;
-            return Ok(EffectiveTarget {
-                path,
-                using_fallback: false,
-                destination_available: true,
-            });
-        }
+    if config.enabled
+        && !config.target_path.as_os_str().is_empty()
+        && fs::create_dir_all(&config.target_path).is_ok()
+        && config.target_path.is_dir()
+    {
+        let path = resolve_configured_target_path(storage, &config.target_path)?;
+        fs::create_dir_all(&path)
+            .map_err(|error| format!("replication_target_create_failed:{error}"))?;
+        return Ok(EffectiveTarget {
+            path,
+            using_fallback: false,
+            destination_available: true,
+        });
     }
 
     let fallback = queue::replication_dir(storage)?
@@ -98,9 +100,9 @@ fn backup_folder_label(storage: &StorageManager) -> Result<String, String> {
 
 fn looks_like_mirror_root(path: &Path) -> bool {
     [
-        StorageDomain::UserData,
-        StorageDomain::UserMedia,
-        StorageDomain::UserLogs,
+        UserStorageDomain::Main,
+        UserStorageDomain::Media,
+        UserStorageDomain::Logs,
     ]
     .into_iter()
     .any(|domain| path.join(domain.base_database_name()).is_file())

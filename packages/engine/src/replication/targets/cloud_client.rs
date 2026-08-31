@@ -6,7 +6,7 @@
 //! client requests them.
 
 use crate::{
-    replication::types::{PatchEnvelope, StorageDomain},
+    replication::types::{PatchEnvelope, UserStorageDomain},
     storage::StorageManager,
 };
 
@@ -31,7 +31,7 @@ pub(crate) fn pull_pending_from_server(
 
 pub(crate) fn ack_pulled_domain(
     _storage: &StorageManager,
-    _domain: StorageDomain,
+    _domain: UserStorageDomain,
 ) -> Result<(), String> {
     Ok(())
 }

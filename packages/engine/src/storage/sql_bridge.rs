@@ -136,10 +136,8 @@ fn json_value_to_sql(value: JsonValue) -> Result<SqlValue, String> {
         JsonValue::String(value) => Ok(SqlValue::Text(value)),
         JsonValue::Array(values) => json_array_to_blob(values).map(SqlValue::Blob),
         JsonValue::Object(mut object) => {
-            if let Some(data) = object.remove("data") {
-                if let JsonValue::Array(values) = data {
-                    return json_array_to_blob(values).map(SqlValue::Blob);
-                }
+            if let Some(JsonValue::Array(values)) = object.remove("data") {
+                return json_array_to_blob(values).map(SqlValue::Blob);
             }
             Ok(SqlValue::Text(JsonValue::Object(object).to_string()))
         }

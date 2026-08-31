@@ -171,7 +171,7 @@ mod tests {
     fn sample_update_envelope(value: &str, updated_at: &str) -> PatchEnvelope {
         PatchEnvelope {
             sequence_id: 1,
-            domain: crate::replication::types::StorageDomain::UserData,
+            domain: crate::replication::types::UserStorageDomain::Main,
             device_id: "remote-device".to_string(),
             created_at: 1,
             patch_bytes: update_patch(value, updated_at),

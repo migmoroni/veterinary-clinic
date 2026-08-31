@@ -8,39 +8,41 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum StorageDomain {
-    UserData,
-    UserMedia,
-    UserLogs,
+pub enum UserStorageDomain {
+    #[serde(rename = "userData")]
+    Main,
+    #[serde(rename = "userMedia")]
+    Media,
+    #[serde(rename = "userLogs")]
+    Logs,
 }
 
-impl StorageDomain {
+impl UserStorageDomain {
     pub(crate) fn as_str(self) -> &'static str {
         match self {
-            Self::UserData => "userData",
-            Self::UserMedia => "userMedia",
-            Self::UserLogs => "userLogs",
+            Self::Main => "userData",
+            Self::Media => "userMedia",
+            Self::Logs => "userLogs",
         }
     }
 
     pub(crate) fn base_database_name(self) -> &'static str {
         match self {
-            Self::UserData => "base_veterinary_clinic_user.db",
-            Self::UserMedia => "base_veterinary_clinic_user_media.db",
-            Self::UserLogs => "base_veterinary_clinic_user_logs.db",
+            Self::Main => "base_veterinary_clinic_user.db",
+            Self::Media => "base_veterinary_clinic_user_media.db",
+            Self::Logs => "base_veterinary_clinic_user_logs.db",
         }
     }
 }
 
-impl TryFrom<&str> for StorageDomain {
+impl TryFrom<&str> for UserStorageDomain {
     type Error = String;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            "userData" => Ok(Self::UserData),
-            "userMedia" => Ok(Self::UserMedia),
-            "userLogs" => Ok(Self::UserLogs),
+            "userData" => Ok(Self::Main),
+            "userMedia" => Ok(Self::Media),
+            "userLogs" => Ok(Self::Logs),
             _ => Err(format!("replication_domain_invalid:{value}")),
         }
     }
@@ -85,7 +87,7 @@ pub struct CasMediaPayload {
 #[serde(rename_all = "camelCase")]
 pub struct PatchEnvelope {
     pub sequence_id: u64,
-    pub domain: StorageDomain,
+    pub domain: UserStorageDomain,
     pub device_id: String,
     pub created_at: i64,
     pub patch_bytes: Vec<u8>,
@@ -179,4 +181,29 @@ pub struct BackupStatus {
     pub pending_c3: u64,
     pub pending_total: u64,
     pub last_error: Option<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn user_storage_domains_preserve_the_wire_contract() {
+        for (domain, wire_value) in [
+            (UserStorageDomain::Main, "userData"),
+            (UserStorageDomain::Media, "userMedia"),
+            (UserStorageDomain::Logs, "userLogs"),
+        ] {
+            assert_eq!(domain.as_str(), wire_value);
+            assert_eq!(
+                serde_json::to_string(&domain).unwrap(),
+                format!("\"{wire_value}\"")
+            );
+            assert_eq!(
+                serde_json::from_str::<UserStorageDomain>(&format!("\"{wire_value}\"")).unwrap(),
+                domain
+            );
+            assert_eq!(UserStorageDomain::try_from(wire_value).unwrap(), domain);
+        }
+    }
 }

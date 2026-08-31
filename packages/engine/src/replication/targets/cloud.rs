@@ -7,7 +7,7 @@
 use crate::{
     replication::{
         targets::cloud_client,
-        types::{PatchEnvelope, StorageDomain},
+        types::{PatchEnvelope, UserStorageDomain},
     },
     storage::StorageManager,
 };
@@ -29,7 +29,7 @@ pub(super) fn pull_from_target(storage: &StorageManager) -> Result<Vec<PatchEnve
 
 pub(super) fn ack_pulled_domain(
     storage: &StorageManager,
-    domain: StorageDomain,
+    domain: UserStorageDomain,
 ) -> Result<(), String> {
     cloud_client::ack_pulled_domain(storage, domain)
 }

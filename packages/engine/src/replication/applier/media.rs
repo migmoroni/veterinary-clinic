@@ -4,7 +4,7 @@
 //! CAS attachments in the envelope and are written before the DB patch applies.
 
 use crate::{
-    replication::types::{PatchEnvelope, StorageDomain},
+    replication::types::{PatchEnvelope, UserStorageDomain},
     storage::{
         bytes_to_hex, decode_hash_hex, sha256, StorageDomain as CasStorageDomain, StorageManager,
     },
@@ -14,7 +14,7 @@ pub(super) fn write_inbound_media_files(
     storage: &StorageManager,
     envelope: &PatchEnvelope,
 ) -> Result<(), String> {
-    if envelope.domain != StorageDomain::UserMedia {
+    if envelope.domain != UserStorageDomain::Media {
         return Ok(());
     }
     for media in &envelope.media_files {

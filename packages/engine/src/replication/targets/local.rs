@@ -3,7 +3,7 @@
 use crate::{
     replication::{
         targets::local_mirror,
-        types::{PatchEnvelope, StorageDomain},
+        types::{PatchEnvelope, UserStorageDomain},
     },
     storage::StorageManager,
 };
@@ -25,7 +25,7 @@ pub(super) fn pull_from_target(storage: &StorageManager) -> Result<Vec<PatchEnve
 
 pub(super) fn ack_pulled_domain(
     storage: &StorageManager,
-    domain: StorageDomain,
+    domain: UserStorageDomain,
 ) -> Result<(), String> {
     local_mirror::ack_pulled_domain(storage, domain)
 }

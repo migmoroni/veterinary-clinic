@@ -4,15 +4,15 @@
 //! databases. Existing files are kept; missing ones are created with VACUUM INTO
 //! so WAL state is captured safely.
 
-use crate::{replication::types::StorageDomain, storage::StorageManager};
+use crate::{replication::types::UserStorageDomain, storage::StorageManager};
 use rusqlite::Connection;
 use std::{fs, path::Path};
 
 pub(super) fn has_any_base_database(target_path: &Path) -> bool {
     [
-        StorageDomain::UserData,
-        StorageDomain::UserMedia,
-        StorageDomain::UserLogs,
+        UserStorageDomain::Main,
+        UserStorageDomain::Media,
+        UserStorageDomain::Logs,
     ]
     .into_iter()
     .any(|domain| target_path.join(domain.base_database_name()).is_file())
@@ -23,9 +23,9 @@ pub(super) fn ensure_all_base_databases(
     target_path: &Path,
 ) -> Result<(), String> {
     for domain in [
-        StorageDomain::UserData,
-        StorageDomain::UserMedia,
-        StorageDomain::UserLogs,
+        UserStorageDomain::Main,
+        UserStorageDomain::Media,
+        UserStorageDomain::Logs,
     ] {
         ensure_base_database(storage, target_path, domain)?;
     }
@@ -35,7 +35,7 @@ pub(super) fn ensure_all_base_databases(
 fn ensure_base_database(
     storage: &StorageManager,
     target_path: &Path,
-    domain: StorageDomain,
+    domain: UserStorageDomain,
 ) -> Result<(), String> {
     let destination = target_path.join(domain.base_database_name());
     if destination.is_file() {
@@ -53,21 +53,21 @@ fn ensure_base_database(
     }
 
     match domain {
-        StorageDomain::UserData => {
+        UserStorageDomain::Main => {
             let guard = storage
                 .user_db
                 .lock()
                 .map_err(|_| "database_connection_lock_failed".to_string())?;
             vacuum_into(&guard, &temp_path)?;
         }
-        StorageDomain::UserMedia => {
+        UserStorageDomain::Media => {
             let guard = storage
                 .user_media_db
                 .lock()
                 .map_err(|_| "database_connection_lock_failed".to_string())?;
             vacuum_into(&guard, &temp_path)?;
         }
-        StorageDomain::UserLogs => {
+        UserStorageDomain::Logs => {
             let guard = storage
                 .user_logs_db
                 .lock()
