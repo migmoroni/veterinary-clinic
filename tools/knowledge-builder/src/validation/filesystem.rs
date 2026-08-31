@@ -22,12 +22,13 @@ pub(super) fn discover_files(
         area: Option<ReservedArea>,
         files: &mut Vec<PathBuf>,
         diagnostics: &mut Vec<Diagnostic>,
-    ) -> Result<(), String> {
+    ) -> Result<bool, String> {
         let mut entries = fs::read_dir(directory)
             .map_err(|error| format!("cannot read {}: {error}", directory.display()))?
             .collect::<Result<Vec<_>, _>>()
             .map_err(|error| format!("cannot enumerate {}: {error}", directory.display()))?;
         entries.sort_by_key(|entry| entry.file_name());
+        let mut contains_media_file = false;
 
         for entry in entries {
             let path = entry.path();
@@ -41,6 +42,9 @@ pub(super) fn discover_files(
                 continue;
             }
             if file_type.is_dir() {
+                let is_media_root = name == MEDIA_DIRECTORY_NAME;
+                let is_media_subdirectory =
+                    matches!(area, Some(ReservedArea::Media)) && !name.starts_with('_');
                 let next_area = match name.as_str() {
                     CONTENT_DIRECTORY_NAME => {
                         validate_reserved_directory(
@@ -81,7 +85,21 @@ pub(super) fn discover_files(
                         area
                     }
                 };
-                visit(root, &path, next_area, files, diagnostics)?;
+                let child_contains_media = visit(root, &path, next_area, files, diagnostics)?;
+                if (is_media_root || is_media_subdirectory) && !child_contains_media {
+                    diagnostics.push(Diagnostic::source(
+                        &path,
+                        if is_media_root {
+                            format!(
+                                "{MEDIA_DIRECTORY_NAME} must contain at least one regular media file"
+                            )
+                        } else {
+                            "media subdirectory must contain at least one regular media file"
+                                .to_string()
+                        },
+                    ));
+                }
+                contains_media_file |= child_contains_media;
                 continue;
             }
             if !file_type.is_file() {
@@ -120,7 +138,10 @@ pub(super) fn discover_files(
                         }
                         files.push(path);
                     }
-                    Some(ReservedArea::Media) => files.push(path),
+                    Some(ReservedArea::Media) => {
+                        files.push(path);
+                        contains_media_file = true;
+                    }
                     Some(ReservedArea::Invalid) => diagnostics.push(Diagnostic::source(
                         &path,
                         "files are forbidden inside an unknown reserved directory",
@@ -135,7 +156,7 @@ pub(super) fn discover_files(
                 }
             }
         }
-        Ok(())
+        Ok(contains_media_file)
     }
 
     let mut files = Vec::new();
@@ -166,7 +187,9 @@ fn validate_reserved_directory(
             format!("{name} requires a sibling {ENTITY_MANIFEST_FILENAME} owner"),
         ));
     }
-    if fs::read_dir(directory).is_ok_and(|mut entries| entries.next().is_none()) {
+    if name == CONTENT_DIRECTORY_NAME
+        && fs::read_dir(directory).is_ok_and(|mut entries| entries.next().is_none())
+    {
         diagnostics.push(Diagnostic::source(
             directory,
             format!("{name} must not be empty"),
@@ -360,6 +383,44 @@ mod tests {
         assert!(diagnostics
             .iter()
             .any(|diagnostic| diagnostic.message == "symlinks are forbidden"));
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn media_directories_require_regular_files_in_every_branch() {
+        let root = root("media-directory-coverage");
+        fs::write(root.join(ENTITY_MANIFEST_FILENAME), b"{}").unwrap();
+        let media = root.join(MEDIA_DIRECTORY_NAME);
+        fs::create_dir_all(media.join("populated/nested")).unwrap();
+        fs::write(media.join("populated/nested/pixel.png"), b"bytes").unwrap();
+        fs::create_dir_all(media.join("empty/nested")).unwrap();
+
+        let mut diagnostics = Vec::new();
+        discover_files(&root, &mut diagnostics).unwrap();
+        assert!(diagnostics.iter().any(|diagnostic| {
+            diagnostic.path == media.join("empty")
+                && diagnostic.message
+                    == "media subdirectory must contain at least one regular media file"
+        }));
+        assert!(!diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.path == media.join("populated")));
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn rejects_media_directory_without_regular_media_files() {
+        let root = root("empty-media-directory");
+        fs::write(root.join(ENTITY_MANIFEST_FILENAME), b"{}").unwrap();
+        let media = root.join(MEDIA_DIRECTORY_NAME);
+        fs::create_dir_all(media.join("empty/nested")).unwrap();
+
+        let mut diagnostics = Vec::new();
+        discover_files(&root, &mut diagnostics).unwrap();
+        assert!(diagnostics.iter().any(|diagnostic| {
+            diagnostic.path == media
+                && diagnostic.message == "_media must contain at least one regular media file"
+        }));
         fs::remove_dir_all(root).unwrap();
     }
 }
