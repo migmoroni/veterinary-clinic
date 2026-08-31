@@ -49,8 +49,8 @@ pub fn run() {
             replication::orchestrator::apply_inbound_patch
         ])
         .setup(|app| {
-            let storage = StorageManager::new(app.handle().clone())
-                .map_err(|error| std::io::Error::new(std::io::ErrorKind::Other, error))?;
+            let storage =
+                StorageManager::new(app.handle().clone()).map_err(std::io::Error::other)?;
             replication::start_background(storage.clone(), app.handle().clone());
             app.manage(storage);
 
