@@ -25,12 +25,30 @@ tools/knowledge-builder/
     ├── support/
     │   └── mod.rs
     ├── component.rs
-    └── integral.rs
+    ├── component_cases/
+    │   ├── mod.rs
+    │   ├── databases.rs
+    │   ├── filesystem.rs
+    │   ├── media.rs
+    │   └── verification.rs
+    ├── integral.rs
+    └── integral_cases/
+        ├── mod.rs
+        ├── determinism.rs
+        ├── reuse.rs
+        ├── tampering.rs
+        └── cli.rs
 ```
 
 `support` contém somente infraestrutura de teste: diretório temporário, cópia de
 fixture, geração de contexto, abertura de banco e helpers de adulteração. Ele não
 reimplementa validação, projeção, hashing ou verificação de produção.
+
+`component.rs` e `integral.rs` são raízes finas dos respectivos binários de
+teste. Elas declaram `support` e os módulos de casos, sem concentrar cenários ou
+helpers. Cada arquivo em `component_cases/` e `integral_cases/` possui uma
+responsabilidade coesa e pode compartilhar infraestrutura somente por
+`support`.
 
 Remover `tests/builder.rs` depois de distribuir todos os cenários. Não manter o
 arquivo como agregador ou wrapper.
@@ -209,6 +227,8 @@ Depois, executar o gate geral da skill `$validate-workspace`.
 ## Critérios De Aceite
 
 - As três camadas possuem comandos e responsabilidades explícitas.
+- `component.rs` e `integral.rs` permanecem raízes finas; os cenários estão
+  divididos por responsabilidade nos diretórios próprios.
 - A camada rápida não constrói os seis locales.
 - A quantidade de builds integrais é menor que a referência, sem perda de
   cenários.

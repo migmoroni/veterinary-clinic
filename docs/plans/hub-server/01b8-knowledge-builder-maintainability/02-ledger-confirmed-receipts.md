@@ -32,26 +32,70 @@ rows é coeso e writer e reader preservam equivalência exata.
 - Regras de domínio não são decididas pelo ledger.
 - A refatoração não altera rows, DDLs, relatórios ou digests públicos.
 
-## 1. Inventário Esperado
+## Arquitetura Alvo
 
-Mover a derivação específica da fonte para uma fronteira de projeção, por
-exemplo:
+Organizar as responsabilidades de cobertura dentro da própria projeção:
 
 ```text
-projection/inventory/
-├── mod.rs
-├── entities.rs
-├── search.rs
-├── taxonomy.rs
-└── media.rs
+projection/
+├── coverage/
+│   ├── mod.rs
+│   └── model.rs
+├── inventory/
+│   ├── mod.rs
+│   ├── entities.rs
+│   ├── search.rs
+│   ├── taxonomy.rs
+│   └── media.rs
+├── contract/
+├── execution/
+│   ├── receipts.rs
+│   ├── writers/
+│   └── cas.rs
+└── ledger/
 ```
+
+`projection::coverage` é o proprietário do vocabulário fechado compartilhado
+pelas provas de cobertura: `ProjectionObligation`, `ObligationClass`,
+`SourceToken`, `ProjectionTarget`, `ProjectionOperationId` e as identidades
+tipadas de banco, tabela, coluna e row usadas por esses contratos. Tipos
+consolidados na Parte 1B.8.1 são movidos para essa fronteira quando também
+descrevem uma obrigação; não são duplicados.
+
+As dependências respeitam este DAG:
+
+```text
+coverage -> inventory -> expected ---------------------------┐
+coverage -> contract  -> owned + operações                   ├-> ledger
+                         operações -> execution -> recibos --┘
+```
+
+Regras obrigatórias:
+
+- `coverage` não percorre a fonte, não constrói operações, não executa efeitos e
+  não conhece o ledger;
+- `inventory` e `contract` dependem de `coverage`, mas não dependem um do outro;
+- `execution` consome operações tipadas e produz recibos sem depender do
+  ledger;
+- `ledger` recebe os conjuntos `expected` e `owned` e os recibos confirmados,
+  importando somente o vocabulário de `coverage` e o contrato dos recibos; ele
+  não depende das implementações de inventário, contrato, writers, CAS ou
+  SQLite;
+- nenhuma dessas responsabilidades é colocada em `common`, `utils`, `helpers`
+  ou outro módulo sem proprietário semântico;
+- ao final existe somente a estrutura alvo; não permanecem wrappers, reexports
+  ou caminhos internos paralelos.
+
+## 1. Inventário Esperado
 
 Esse inventário percorre `ValidatedSource` e produz
 `BTreeSet<ProjectionObligation>` sem consultar `ProjectionContract`, operações,
 writers, journals ou recibos.
 
-Helpers podem compartilhar tipos fechados de identidade, source token e target.
-Não podem compartilhar a decisão de que uma operação concreta existe.
+Identidade, source token e target são importados exclusivamente de
+`projection::coverage`. Inventário e contrato não mantêm helpers paralelos para
+reconstruir esse vocabulário nem compartilham a decisão de que uma operação
+concreta existe.
 
 ## 2. Ownership
 
@@ -87,6 +131,13 @@ simular eventos de naturezas diferentes.
 Construtores de `ConfirmedReceipt` ficam privados ao módulo que confirma o
 efeito. O ledger recebe somente recibos confirmados; não oferece API que converta
 um plano diretamente em observação.
+
+`PendingReceipt` é detalhe privado de `projection::execution`. Ele pode acumular
+os fatos necessários enquanto um efeito está em andamento, mas não implementa
+conversão pública para `ConfirmedReceipt`. Cada executor possui uma única
+fronteira de confirmação, chamada somente depois da prova física correspondente.
+Não criar um tipo de recibo por writer, tabela ou arquivo quando
+`ProjectionEvent` já diferencia essas naturezas de forma fechada.
 
 Um executor com zero operações planejadas não cria batch nem observação. Isso é
 um resultado válido para conjuntos CAS vazios e não equivale a confirmar uma
@@ -135,6 +186,7 @@ porque a operação foi planejada.
 O ledger mantém somente:
 
 - conjunto esperado;
+- conjunto owned;
 - conjunto observado;
 - unicidade e locale dos recibos;
 - eventos observados;
@@ -142,15 +194,18 @@ O ledger mantém somente:
 - digest determinístico de evidência;
 - finalização em `CompletedLedger`.
 
-Remover de `ledger/` a reconstrução de relações e regras concretas de entidades.
-Arquivos sem responsabilidade própria são absorvidos pelo inventário, contrato
-ou journal e removidos, sem wrappers.
+`projection/ledger/` não contém reconstrução de relações ou regras concretas de
+entidades. Cada arquivo pertence a `coverage`, inventário, contrato, execução ou
+ledger conforme a responsabilidade que implementa; não existem wrappers sem
+comportamento próprio.
 
 ## 7. Testes Específicos
 
 Cobrir:
 
 - `expected`, `owned` e `observed` construídos por percursos independentes;
+- dependências acíclicas entre `coverage`, `inventory`, `contract`, `execution`
+  e `ledger`;
 - owner ausente, inesperado e duplicado;
 - receipt com operação, target, locale ou cardinalidade divergente;
 - impossibilidade de confirmar antes do commit;
@@ -179,6 +234,8 @@ o gate geral `$validate-workspace`.
 - Apenas efeitos confirmados produzem `ConfirmedReceipt`.
 - Rollback e falhas não alteram o ledger.
 - Ledger não conhece regras concretas de entidades, busca, taxonomia ou mídia.
+- O vocabulário de cobertura possui um único proprietário e não existe módulo
+  genérico usado para contornar dependências.
 - Digests, relatórios, bancos e CAS permanecem semanticamente inalterados.
 - Os testes específicos e o gate geral da skill `$validate-workspace` passam.
 - O estado Git contém somente mudanças pertencentes a esta parte.

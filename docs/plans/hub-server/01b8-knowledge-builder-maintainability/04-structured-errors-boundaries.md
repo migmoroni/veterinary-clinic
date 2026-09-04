@@ -53,6 +53,12 @@ Os tipos diretamente carregados pelas variantes públicas também são públicos
 reexportados pela raiz do crate. Eles expõem contexto estável por variantes ou
 getters, mantendo detalhes internos encapsulados.
 
+Não criar uma família pública de erro para cada arquivo ou função. Cada família
+acima representa uma fronteira de responsabilidade completa. Erros auxiliares
+permanecem privados ao módulo proprietário e são convertidos para a família da
+fronteira antes de alcançar a API pública. Campos concretos ficam privados e
+somente contexto estável recebe getter público.
+
 `BuildOptions`, `BuildResult`, `ValidatedSource`, `ValidationError` e os schemas
 serializados permanecem com seus contratos atuais.
 
@@ -88,8 +94,14 @@ cadeias internas manualmente.
 - staging, rename e finalização possuem `PublicationError`.
 
 Cada tipo implementa `Display` e `std::error::Error`. Quando houver causa Rust
-concreta, `source()` a preserva. Implementar com a biblioteca padrão; qualquer
-crate adicional exige interrupção e autorização explícita do usuário.
+concreta, `source()` a preserva.
+
+Antes da primeira edição desta parte, solicitar autorização explícita para
+adicionar `thiserror = "2"` como dependência direta do `knowledge-builder`.
+Com autorização, usar somente os derives necessários para reduzir implementação
+cerimonial, mantendo os contratos e o contexto definidos neste plano. Sem
+autorização, implementar os mesmos contratos com a biblioteca padrão e não
+adicionar dependências. Nenhuma outra crate entra nesta parte.
 
 ## 4. Contexto Estruturado
 
@@ -109,20 +121,22 @@ tipado em sua fronteira e deixam a apresentação para `Display`.
 
 ## 5. Dependências Explícitas
 
-Remover `use super::*` de todos os arquivos de produção e teste do crate. Cada
-arquivo importa diretamente os tipos e funções consumidos.
+Remover `use super::*` dos módulos de produção. Cada arquivo de produção importa
+diretamente os tipos e funções consumidos. Módulos locais sob `#[cfg(test)]`
+podem usar `use super::*` para testar a API privada do proprietário; testes de
+integração importam explicitamente apenas a API pública e o suporte de teste.
 
 Preservar o fluxo:
 
 ```text
-contracts
--> source
--> validation
--> projection::inventory + projection::contract
--> writers + CAS
--> verification
--> publication
--> CLI
+contracts -> source -> validation
+contracts -> projection::coverage
+projection::coverage -> projection::inventory
+projection::coverage -> projection::contract -> projection::execution
+projection::inventory + projection::contract + execution::receipts
+  -> projection::ledger
+projection::contract + projection::ledger
+  -> verification -> publication -> CLI
 ```
 
 Regras obrigatórias:
@@ -130,16 +144,20 @@ Regras obrigatórias:
 - `contracts` não depende das camadas seguintes;
 - `source` não depende de SQLite;
 - `validation` não depende de writers;
+- `coverage` não depende de inventário, contrato, execução ou ledger;
+- inventário e contrato não dependem um do outro;
 - contrato e inventário não abrem bancos;
+- execução não depende do ledger;
 - writers não leem JSON ou Markdown de autoria;
+- ledger depende somente do vocabulário de cobertura e dos recibos, não de
+  entidades concretas ou executores;
 - readers não dependem de writers;
-- ledger depende de obrigações e recibos, não de entidades concretas;
 - verification não altera artefatos;
 - CLI usa apenas `validate`, `build` e seus erros públicos.
 
 Não resolver ciclos com `common`, `utils`, `helpers`, `manager` ou tipos sem
 proprietário. Reexports internos só existem quando expressam uma fronteira
-deliberada, não para conservar caminhos substituídos.
+deliberada, não para criar caminhos internos paralelos.
 
 ## 6. Versão
 
@@ -160,7 +178,8 @@ dedicados a `Display` e usage da CLI:
 - `source()` disponível para causas concretas;
 - CLI convertendo erros públicos e mantendo código de saída;
 - ausência de `Result<_, String>` nas fronteiras principais;
-- ausência de `use super::*` em `tools/knowledge-builder/src`.
+- ausência de `use super::*` nos módulos de produção de
+  `tools/knowledge-builder/src`.
 
 Executar testes específicos, suíte integral e `$validate-workspace`.
 
@@ -177,9 +196,12 @@ Executar testes específicos, suíte integral e `$validate-workspace`.
 - `build` retorna `KnowledgeBuilderError` e `validate` mantém `ValidationError`.
 - `cli::run` retorna `CliError`.
 - Erros de domínio preservam contexto e causa de forma tipada.
+- Famílias de erro correspondem a fronteiras de responsabilidade, sem enums
+  públicos por arquivo ou função.
 - A apresentação textual fica concentrada em `Display` e na CLI.
 - Não há enums genéricos com contexto opcional indiscriminado.
-- Não existe `use super::*` no crate.
+- Não existe `use super::*` em módulos de produção; testes unitários locais
+  podem importar o módulo proprietário dessa forma.
 - Dependências respeitam as fronteiras declaradas.
 - O crate usa versão `0.5.0`; schemas técnicos não mudam.
 - Os testes específicos e o gate geral da skill `$validate-workspace` passam.
