@@ -30,6 +30,24 @@ fn required_strings(value: &Value) -> Vec<&str> {
         .collect()
 }
 
+fn property_names(value: &Value) -> BTreeSet<&str> {
+    value
+        .as_object()
+        .expect("properties must be an object")
+        .keys()
+        .map(String::as_str)
+        .collect()
+}
+
+fn assert_required_properties_match(value: &Value) {
+    assert_eq!(
+        required_strings(&value["required"])
+            .into_iter()
+            .collect::<BTreeSet<_>>(),
+        property_names(&value["properties"])
+    );
+}
+
 fn ddl_locale_sets(ddl: &str) -> Vec<Vec<&str>> {
     ddl.match_indices("CHECK(locale IN (")
         .map(|(index, marker)| {
@@ -64,7 +82,45 @@ fn source_layout_namespace_is_closed_and_distinct_from_compiled_media() {
 
 #[test]
 fn taxonomy_matrix_is_closed_unique_and_typed() {
-    assert_eq!(CANONICAL_TAXONOMIES.len(), 13);
+    let expected = [
+        ("life", "size", TaxonomyCardinality::ZeroOrOne),
+        ("manufacturer", "type", TaxonomyCardinality::ExactlyOne),
+        (
+            "manufacturer",
+            "classification",
+            TaxonomyCardinality::ZeroOrMore,
+        ),
+        ("active_ingredient", "type", TaxonomyCardinality::ExactlyOne),
+        (
+            "active_ingredient",
+            "classification",
+            TaxonomyCardinality::ZeroOrMore,
+        ),
+        ("condition", "type", TaxonomyCardinality::ExactlyOne),
+        (
+            "condition",
+            "classification",
+            TaxonomyCardinality::ZeroOrMore,
+        ),
+        ("product", "type", TaxonomyCardinality::ExactlyOne),
+        ("product", "classification", TaxonomyCardinality::ZeroOrMore),
+        ("product", "target", TaxonomyCardinality::ZeroOrMore),
+        (
+            "product",
+            "vaccine_profile",
+            TaxonomyCardinality::ZeroOrMore,
+        ),
+        ("product", "life_stage", TaxonomyCardinality::ZeroOrMore),
+        (
+            "product",
+            "therapeutic_scope",
+            TaxonomyCardinality::ZeroOrMore,
+        ),
+    ];
+    assert_eq!(
+        CANONICAL_TAXONOMIES.map(|spec| (spec.domain, spec.purpose, spec.cardinality)),
+        expected
+    );
     assert!(CANONICAL_TAXONOMIES
         .iter()
         .all(|spec| !spec.domain.is_empty() && !spec.purpose.is_empty()));
@@ -179,24 +235,29 @@ fn locales_match_source_schemas_and_database_constraints() {
         required_strings(&common["$defs"]["localizedText"]["required"]),
         expected
     );
+    assert_required_properties_match(&common["$defs"]["localizedText"]);
     assert_eq!(
         required_strings(&common["$defs"]["localizedList"]["required"]),
         expected
     );
+    assert_required_properties_match(&common["$defs"]["localizedList"]);
     let build_result = schema(include_str!("../../schemas/build-result.schema.json"));
     assert_eq!(
         required_strings(&build_result["properties"]["locales"]["required"]),
         expected
     );
+    assert_required_properties_match(&build_result["properties"]["locales"]);
     let projection_report = schema(include_str!("../../schemas/projection-report.schema.json"));
     assert_eq!(
         required_strings(&projection_report["properties"]["locales"]["required"]),
         expected
     );
+    assert_required_properties_match(&projection_report["properties"]["locales"]);
     assert_eq!(
         required_strings(&projection_report["$defs"]["localizedCounts"]["required"]),
         expected
     );
+    assert_required_properties_match(&projection_report["$defs"]["localizedCounts"]);
     for ddl in [
         include_str!("../../schemas/system/system.sql"),
         include_str!("../../schemas/system_media/system_media.sql"),
@@ -230,12 +291,24 @@ fn database_identities_and_artifact_paths_are_canonical() {
     );
     assert_eq!(SYSTEM_MEDIA_DATABASE.application_id, 0x564b534d);
     assert_eq!(
+        SYSTEM_DATABASE.artifact_filename,
+        "veterinary_clinic_system.db"
+    );
+    assert_eq!(
+        SYSTEM_MEDIA_DATABASE.artifact_filename,
+        "veterinary_clinic_system_media.db"
+    );
+    assert_eq!(
         locale_artifact(7, KnowledgeLocale::EnUs, SYSTEM_DATABASE),
         std::path::Path::new("versions/7/locales/en-US/veterinary_clinic_system.db")
     );
     assert_eq!(
         version_artifact(7, VersionArtifact::Checksums),
         std::path::Path::new("versions/7/checksums.sha256")
+    );
+    assert_eq!(
+        locale_artifact(7, KnowledgeLocale::EnUs, SYSTEM_MEDIA_DATABASE),
+        std::path::Path::new("versions/7/locales/en-US/veterinary_clinic_system_media.db")
     );
     assert!(!locale_artifact(7, KnowledgeLocale::EnUs, SYSTEM_DATABASE).is_absolute());
     for artifact in [
@@ -252,10 +325,70 @@ fn database_identities_and_artifact_paths_are_canonical() {
 }
 
 #[test]
-fn all_central_versions_are_explicitly_covered() {
-    assert_eq!(SOURCE_DIGEST_SCHEMA_VERSION, 2);
-    assert_eq!(BUILD_CONTEXT_SCHEMA_VERSION, 1);
-    assert_eq!(PROJECTION_EVIDENCE_SCHEMA_VERSION, 1);
+fn producers_and_verifiers_consume_central_versions_and_artifact_identities() {
+    for (source, required) in [
+        (
+            include_str!("../validation/entity_shape.rs"),
+            &["SOURCE_ENTITY_SCHEMA_VERSION"][..],
+        ),
+        (
+            include_str!("../validation/digest.rs"),
+            &["SOURCE_DIGEST_SCHEMA_VERSION"][..],
+        ),
+        (
+            include_str!("../markdown/mod.rs"),
+            &["CONTENT_DOCUMENT_SCHEMA_VERSION"][..],
+        ),
+        (
+            include_str!("../report/mod.rs"),
+            &["BUILD_CONTEXT_SCHEMA_VERSION"][..],
+        ),
+        (
+            include_str!("../projection/build.rs"),
+            &[
+                "BUILD_RESULT_SCHEMA_VERSION",
+                "SYSTEM_SCHEMA_VERSION",
+                "SYSTEM_MEDIA_SCHEMA_VERSION",
+                "version_artifact",
+                "locale_artifact",
+            ][..],
+        ),
+        (
+            include_str!("../projection/reporting.rs"),
+            &["PROJECTION_REPORT_SCHEMA_VERSION"][..],
+        ),
+        (
+            include_str!("../projection/ledger/evidence.rs"),
+            &["PROJECTION_EVIDENCE_SCHEMA_VERSION"][..],
+        ),
+        (
+            include_str!("../projection/reuse.rs"),
+            &[
+                "BUILD_RESULT_SCHEMA_VERSION",
+                "SYSTEM_SCHEMA_VERSION",
+                "SYSTEM_MEDIA_SCHEMA_VERSION",
+                "VersionArtifact",
+            ][..],
+        ),
+        (
+            include_str!("../verification/artifact/identity.rs"),
+            &[
+                "BUILD_RESULT_SCHEMA_VERSION",
+                "SYSTEM_SCHEMA_VERSION",
+                "SYSTEM_MEDIA_SCHEMA_VERSION",
+                "CAS_ALGORITHM",
+                "CAS_HASH_ENCODING",
+                "CAS_LAYOUT",
+                "CAS_PATH_PATTERN",
+                "CAS_ROOT",
+                "version_artifact",
+            ][..],
+        ),
+    ] {
+        for contract in required {
+            assert!(source.contains(contract), "consumer misses {contract}");
+        }
+    }
 }
 
 #[test]

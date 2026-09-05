@@ -611,9 +611,12 @@ Fachada das obrigações tipadas e evidências de projeção. O diretório separ
 
 Releitura tipada dos bancos e equivalência semântica com o contrato de projeção.
 
-`artifact_verifier.rs`
+`verification/artifact/`
 
-Verificação integral do staging e de versões existentes antes da reutilização.
+Fachada única de verificação integral do staging e de versões existentes antes
+da reutilização. Os módulos de identidade, árvore, manifesto, bancos, mídia, CAS
+e evidência recalculam observações de forma independente e não escrevem nos
+artefatos.
 
 `report/`
 
@@ -632,24 +635,54 @@ exata entre diretórios e asserções executadas; detalhes estão no
 
 ## Desenvolvimento E Testes
 
-Validação rápida do crate:
+A suíte possui três camadas explícitas. A camada rápida reúne testes unitários
+junto dos módulos proprietários e não chama um build integral dos seis locales:
 
 ```text
-cargo check -p knowledge-builder --all-targets --offline
-cargo clippy -p knowledge-builder --all-targets --offline -- -D warnings
-cargo test -p knowledge-builder --all-targets --offline
+cargo test -p knowledge-builder --lib
 ```
 
-Formatação:
+A camada de componente usa fixtures e diretórios temporários exclusivos para
+exercitar filesystem, bancos SQLite, mídia, CAS e recusa de artefatos sem
+depender de outro teste:
+
+```text
+cargo test -p knowledge-builder --test component
+```
+
+A camada integral preserva os builds determinísticos dos seis locales,
+reutilização, contexto divergente, adulterações com checksums recalculados e a
+CLI executada fora da raiz do workspace:
+
+```text
+cargo test -p knowledge-builder --test integral
+```
+
+As raízes `tests/component.rs` e `tests/integral.rs` apenas declaram `support` e
+os módulos de casos. `tests/support/mod.rs` contém exclusivamente infraestrutura
+de teste: diretórios temporários, cópia de fixtures, contexto, localização de
+manifestos e adulteração controlada de declarações. Os cenários ficam em
+`component_cases/` e `integral_cases/`, separados por responsabilidade.
+
+Antes de entregar uma mudança, executar também:
 
 ```text
 cargo fmt --all -- --check
+cargo check -p knowledge-builder --all-targets
+cargo clippy -p knowledge-builder --all-targets -- -D warnings
+cargo test -p knowledge-builder --all-targets --locked
 ```
 
-Os testes integrais constroem e reutilizam versões completas para os seis
-locales. Também adulteram isoladamente bancos, relatórios, checksums, mídia,
-thumbnails e CAS para comprovar que declarações físicas recalculadas não vencem
-a comparação semântica.
+### Escolha Da Camada Por Mudança
+
+- alterações puras em contratos, normalização, Markdown, validação, rows,
+  ownership, recibos ou erros começam por `--lib`;
+- alterações em DDL, transações, writers, readers, filesystem, mídia, thumbnail,
+  CAS ou verificação executam `--lib` e `--test component`;
+- alterações no orquestrador, determinismo, publicação, reutilização, relatórios,
+  checksums ou CLI executam as três camadas;
+- alterações em schemas, rows persistidas ou evidência também exigem os casos
+  integrais de adulteração correspondentes.
 
 ## Regras De Manutenção
 
@@ -665,10 +698,33 @@ a comparação semântica.
   verdade.
 - Não montar SQL, tabela ou coluna a partir de entrada canônica; writers usam
   comandos fechados.
-- Ao adicionar uma forma de `SystemRow`, atualizar o descritor de `INSERT`, a
-  matriz estrutural e a cobertura de `SystemColumn` no mesmo fluxo.
+- Ao adicionar ou alterar um campo de autoria, começar no tipo proprietário em
+  `source/`, atualizar o JSON Schema aplicável e sua validação semântica, e então
+  declarar cada folha projetável no owner fechado da operação.
+- Ao adicionar uma relação, row ou tabela, atualizar o payload `SystemRow`, seu
+  descritor único de tabela/identidade/colunas, `SystemTable` e `SystemColumn`
+  quando aplicáveis, o DDL e as constraints. Relações ordenadas também declaram
+  `sort_order` no contrato e nas obrigações.
+- Writers consomem rows e produzem recibos confirmados somente depois do commit.
+  Ao adicionar uma forma de `SystemRow`, atualizar o `INSERT` fixo, bindings e a
+  matriz estrutural que prova caso, destino, colunas e parâmetros.
+- Readers permanecem independentes dos writers. Para cada row nova ou alterada,
+  atualizar o `SELECT`, a reconstrução tipada e a comparação exata com o
+  contrato projetado.
+- Toda folha projetável deve entrar em `expected` pelo inventário e possuir um
+  único owner por `ProjectionOperationId`. Atualizar ambos deliberadamente; o
+  diff entre expected, owned e observed deve continuar vazio.
+- Cada efeito persistido recebe um `PendingReceipt` com operação, obrigações,
+  evento e cardinalidade. O writer confirma o lote depois do commit e o ledger
+  só então publica observações e evidência.
 - Ao adicionar uma propriedade persistida, incluí-la no contrato, writer,
-  releitura tipada, equivalência semântica e testes de adulteração aplicáveis.
+  reader independente, equivalência semântica, recibo, evidência e testes de
+  adulteração aplicáveis.
+- Classificar erros na fronteira proprietária em `ValidationError`,
+  `BuildContextError`, `ContractError`, `DatabaseError`, `MediaError`, `CasError`,
+  `VerificationError` ou `PublicationError`. Preservar caminho, locale, banco,
+  tabela, operação e a causa concreta disponíveis; a CLI apenas separa erros de
+  argumentos de `KnowledgeBuilderError` e apresenta `Display`.
 - Ao alterar DDL, atualizar a versão técnica, fingerprint, queries e testes no
   mesmo fluxo.
 - Ao alterar `build-result.json` ou `projection-report.json`, atualizar DTO,
