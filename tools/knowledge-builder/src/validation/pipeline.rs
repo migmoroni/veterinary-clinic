@@ -1,6 +1,19 @@
 //! Coordinates canonical source discovery, validation, compilation, media resolution, and digesting.
 
-use super::*;
+use super::{
+    collect_taxonomies, compile_document, deserialize_entity, discover_files, exact_content_files,
+    localized_fragment_counts, logical_digest, relation_count, resolve_content_directory,
+    resolve_structural_media, validate_alias_ownership, validate_entity_shape,
+    validate_file_coverage, validate_references, validate_taxonomy_completeness, Diagnostic,
+    SourceEntry, ValidatedEntity, ValidatedMediaReference, ValidatedSource, ValidationError,
+    ENTITY_MANIFEST_FILENAME, LOCALES,
+};
+use crate::validation::life;
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    fs,
+    path::Path,
+};
 
 pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, ValidationError> {
     let mut diagnostics = Vec::new();

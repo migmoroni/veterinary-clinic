@@ -4,7 +4,8 @@ mod applicability;
 mod classifications;
 mod taxonomy;
 
-use super::*;
+use super::{Diagnostic, SourceEntry, TaxonomyEntity};
+use std::collections::BTreeMap;
 
 pub(super) fn validate_life_contracts(
     entries: &[SourceEntry],

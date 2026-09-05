@@ -26,15 +26,24 @@ use crate::{
         coverage::SystemTable,
         execution::receipts::{ConfirmedReceiptBatch, PendingReceipt, ProjectionEvent},
     },
+    DatabaseError,
 };
 use rusqlite::{params, Connection, Transaction};
+use std::path::PathBuf;
+
+fn database_path(connection: &Connection) -> PathBuf {
+    connection
+        .path()
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("<in-memory SQLite database>"))
+}
 
 fn preserve_deterministic_write_epochs(
     connection: &Connection,
     database: DatabaseKind,
     metadata_operations: usize,
     has_domain_rows: bool,
-) -> Result<(), String> {
+) -> Result<(), DatabaseError> {
     // Consolidating metadata and domain rows removes header-only SQLite write
     // epochs. Reapply those epochs without changing data so canonical database
     // bytes and their published checksums remain stable.
@@ -42,7 +51,11 @@ fn preserve_deterministic_write_epochs(
     for _ in 1..previous_epochs {
         connection
             .pragma_update(None, "user_version", database.identity().schema_version)
-            .map_err(|error| format!("cannot stabilize SQLite write epoch: {error}"))?;
+            .map_err(|source| DatabaseError::Sqlite {
+                database: database_path(connection),
+                operation: "stabilize write epoch",
+                source: Box::new(source),
+            })?;
     }
     Ok(())
 }

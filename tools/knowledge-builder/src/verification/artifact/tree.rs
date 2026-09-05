@@ -19,7 +19,12 @@ pub(super) struct VerifiedTree {
 pub(super) fn verify(
     context: &VerificationContext<'_>,
     _identity: &VerifiedIdentity,
-) -> Result<VerifiedTree, String> {
+) -> Result<VerifiedTree, crate::VerificationError> {
+    verify_inner(context)
+        .map_err(|detail| crate::VerificationError::invalid("artifact tree", detail))
+}
+
+fn verify_inner(context: &VerificationContext<'_>) -> Result<VerifiedTree, String> {
     let (files, directories) = inspect(context.version_root)?;
     if files != expected_files() {
         return Err("version contains missing or additional files".to_string());

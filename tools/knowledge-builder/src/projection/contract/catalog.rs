@@ -1,6 +1,18 @@
 //! Projects catalog entities and their semantic relationships into system rows.
 
-use super::*;
+use super::{
+    helpers::{
+        content_json, identity, json, localized_list, localized_text, optional_localized_text,
+        push_main, push_system, taxonomy_relations,
+    },
+    ownership::ObligationOwnership,
+    SystemProjectionOperation, SystemRow,
+};
+use crate::{
+    contracts::locale::KnowledgeLocale, normalization::normalize_identity_key,
+    projection::coverage::SystemTable, source::CanonicalEntity, validation::ValidatedSource,
+};
+use std::collections::BTreeMap;
 
 pub(super) fn project_catalog(
     source: &ValidatedSource,

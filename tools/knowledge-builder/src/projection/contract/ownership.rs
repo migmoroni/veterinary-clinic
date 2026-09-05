@@ -1,6 +1,10 @@
 //! Assigns each independently inventoried obligation to one explicit operation identity.
 
-use super::*;
+use crate::projection::coverage::{
+    CompilationOperationId, ProjectionObligation, ProjectionOperationId, ProjectionTarget,
+    RowIdentity, SystemTable,
+};
+use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, Debug, Default)]
 pub(super) struct ObligationOwnership {

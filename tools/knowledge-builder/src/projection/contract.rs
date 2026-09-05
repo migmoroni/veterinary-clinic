@@ -30,31 +30,3 @@ use self::validation::{
     validate_cas_operation, validate_compilation_operation, validate_metadata_operation,
     validate_system_media_operation, validate_system_operation,
 };
-use self::{
-    catalog::project_catalog,
-    helpers::*,
-    taxonomy::{project_geo_places, project_taxonomies},
-};
-use crate::{
-    contracts::{
-        locale::KnowledgeLocale,
-        taxonomy::{taxonomy_domains, taxonomy_spec, TaxonomyCardinality, CANONICAL_TAXONOMIES},
-        version::BUILD_RESULT_SCHEMA_VERSION,
-    },
-    databases::DatabaseKind,
-    markdown::CompiledDocument,
-    media::decode_hex,
-    normalization::{normalize_identity_key, normalize_search_text},
-    projection::coverage::{
-        CompilationOperationId, EntityIdentity, ObligationClass, ProjectionObligation,
-        ProjectionOperationId, ProjectionTarget, RowEvent, RowIdentity, SearchCandidate,
-        SystemTable,
-    },
-    report::BuildContext,
-    schemas,
-    source::{CanonicalEntity, LocalizedContent, LocalizedValue, TaxonomyEntity},
-    validation::{ValidatedEntity, ValidatedSource},
-};
-use std::collections::{BTreeMap, BTreeSet};
-
-use self::ownership::ObligationOwnership;

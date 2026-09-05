@@ -1,6 +1,18 @@
 //! Provides shared helpers for relations, localized content, search, media, and row emission.
 
-use super::*;
+use super::{ownership::ObligationOwnership, SystemProjectionOperation, SystemRow};
+use crate::{
+    contracts::locale::KnowledgeLocale,
+    databases::DatabaseKind,
+    markdown::CompiledDocument,
+    normalization::normalize_search_text,
+    projection::coverage::{
+        EntityIdentity, ProjectionOperationId, RowEvent, RowIdentity, SearchCandidate, SystemTable,
+    },
+    schemas,
+    source::{CanonicalEntity, LocalizedContent, LocalizedValue, TaxonomyEntity},
+    validation::{ValidatedEntity, ValidatedSource},
+};
 
 pub(super) fn taxonomy_relations(
     source: &ValidatedSource,

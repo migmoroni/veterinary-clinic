@@ -1,6 +1,9 @@
 //! Provides deterministic staging cleanup and recursive file discovery.
 
-use super::*;
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 pub(super) fn remove_stale_staging(path: &Path) -> Result<(), String> {
     if path.exists() {

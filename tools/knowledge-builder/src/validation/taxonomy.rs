@@ -1,7 +1,11 @@
 //! Validates taxonomy term trees and collects the closed taxonomy registry.
 
-use super::*;
+use super::{
+    validate_localized_content, CanonicalEntity, Diagnostic, SourceEntry, TaxonomyEntity, LOCALES,
+};
 use crate::contracts::taxonomy::{taxonomy_spec, CANONICAL_TAXONOMIES};
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
 
 pub(super) fn validate_taxonomy(
     entry: &SourceEntry,

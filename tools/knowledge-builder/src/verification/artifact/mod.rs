@@ -13,6 +13,7 @@ use crate::{
     projection::contract::ProjectionContract,
     report::{BuildContext, BuildResult},
     validation::ValidatedSource,
+    VerificationError,
 };
 use std::{collections::BTreeMap, path::Path};
 
@@ -53,7 +54,7 @@ impl<'a> ArtifactVerifier<'a> {
         }
     }
 
-    pub(crate) fn verify(&self) -> Result<(), String> {
+    pub(crate) fn verify(&self) -> Result<(), VerificationError> {
         let context = VerificationContext {
             source: self.source,
             context: self.context,

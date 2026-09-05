@@ -1,6 +1,18 @@
 //! Projects taxonomy registries, taxonomy terms, and geographic places.
 
-use super::*;
+use super::{
+    helpers::{identity, json, localized_list, localized_text, push_system},
+    ownership::ObligationOwnership,
+    SystemProjectionOperation, SystemRow,
+};
+use crate::{
+    contracts::locale::KnowledgeLocale,
+    normalization::{normalize_identity_key, normalize_search_text},
+    projection::coverage::SystemTable,
+    source::CanonicalEntity,
+    validation::ValidatedSource,
+};
+use std::collections::BTreeSet;
 
 pub(super) fn project_taxonomies(
     source: &ValidatedSource,

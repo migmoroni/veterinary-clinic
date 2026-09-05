@@ -458,7 +458,7 @@ referências estruturais de mídia. O schema atual possui versão técnica 4.
 JPEG. O schema atual possui versão técnica 2; os bytes originais permanecem no
 CAS compartilhado.
 
-O crate `knowledge-builder` usa versão `0.4.0`. O relatório usa
+O crate `knowledge-builder` usa versão `0.5.0`. O relatório usa
 `schemaVersion: 5`; `build-result.json` permanece em `schemaVersion: 1`.
 
 ## Determinismo E Reutilização
@@ -489,7 +489,9 @@ let result = build(&BuildOptions {
 ```
 
 - `validate` devolve `ValidatedSource` ou `ValidationError` com diagnósticos;
-- `build` devolve o `BuildResult` verificado;
+- `build` devolve o `BuildResult` verificado ou `KnowledgeBuilderError`, cujo
+  enum preserva a família responsável e a cadeia de causas;
+- `cli::run` devolve `CliError`, separando parsing/usage de falhas do builder;
 - `BuildContext`, `ReleaseContext`, `KnowledgeLocale` e `LOCALES` também são
   públicos;
 - `LifeEntity` é o contrato público único da hierarquia biológica.
@@ -540,6 +542,13 @@ API pública e distribui o pipeline entre:
 - `life/`: taxonomia, classificações corporais e aplicabilidade;
 - `primitives.rs`: UUIDs, textos e coleções;
 - `tests.rs`: testes dos validadores primitivos.
+
+`errors.rs`
+
+Famílias públicas de erro por responsabilidade: contexto, contrato, SQLite,
+mídia, CAS, verificação e publicação. `Display` concentra o texto apresentado
+pela CLI, enquanto as variantes mantêm caminho, locale, operação, banco, tabela
+e causas concretas disponíveis para automações.
 
 `normalization/`
 

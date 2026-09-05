@@ -1,7 +1,13 @@
 //! Defines validation diagnostics, errors, and the validated source graph.
 
-use super::*;
+use super::{CompiledDocument, KnowledgeLocale, MediaAsset, SourceEntry, TaxonomyEntity};
+use crate::markdown::CompiledMediaReference;
 use serde::Serialize;
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    fmt,
+    path::Path,
+};
 
 #[derive(Clone, Debug, Serialize)]
 pub struct Diagnostic {

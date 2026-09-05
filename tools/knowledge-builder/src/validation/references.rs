@@ -1,6 +1,7 @@
 //! Validates semantic references between canonical entities and taxonomy terms.
 
-use super::*;
+use super::{CanonicalEntity, Diagnostic, SourceEntry, TaxonomyEntity};
+use std::collections::{BTreeMap, BTreeSet};
 
 pub(super) fn validate_references(
     entries: &[SourceEntry],

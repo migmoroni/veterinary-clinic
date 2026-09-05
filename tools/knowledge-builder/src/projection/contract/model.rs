@@ -1,6 +1,12 @@
 //! Defines the typed row payloads and operation containers used by projection contracts.
 
-use super::*;
+use super::SystemRow;
+use crate::{
+    contracts::locale::KnowledgeLocale,
+    databases::DatabaseKind,
+    projection::coverage::{CompilationOperationId, ProjectionObligation, RowEvent},
+};
+use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, Debug)]
 pub(crate) struct ProjectionContract {

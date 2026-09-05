@@ -26,6 +26,14 @@ pub(super) struct VerifiedDatabases {
 pub(super) fn verify(
     context: &VerificationContext<'_>,
     manifest: &VerifiedManifest,
+) -> Result<VerifiedDatabases, crate::VerificationError> {
+    verify_inner(context, manifest)
+        .map_err(|detail| crate::VerificationError::invalid("databases", detail))
+}
+
+fn verify_inner(
+    context: &VerificationContext<'_>,
+    manifest: &VerifiedManifest,
 ) -> Result<VerifiedDatabases, String> {
     let mut locales = BTreeMap::new();
     let mut system_fingerprint = None;
@@ -106,8 +114,11 @@ fn open_and_verify(
         context.context,
         locale,
         &source_digest,
-    )?;
-    if databases::schema_fingerprint(&connection)? != artifact.schema_fingerprint_sha256 {
+    )
+    .map_err(|error| error.to_string())?;
+    if databases::schema_fingerprint(&connection).map_err(|error| error.to_string())?
+        != artifact.schema_fingerprint_sha256
+    {
         return Err(format!(
             "schema fingerprint mismatch for {}",
             path.display()

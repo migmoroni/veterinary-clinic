@@ -1,12 +1,15 @@
 //! Persists build and release metadata operations inside a locale transaction.
 
-use super::*;
+use super::{
+    database_path, params, DatabaseError, DatabaseKind, MetadataOperation, MetadataRow,
+    PendingReceipt, ProjectionEvent, Transaction,
+};
 
 pub(crate) fn write_metadata(
     transaction: &Transaction<'_>,
     database: DatabaseKind,
     operations: &[MetadataOperation],
-) -> Result<Vec<PendingReceipt>, String> {
+) -> Result<Vec<PendingReceipt>, DatabaseError> {
     let mut pending = Vec::new();
     for operation in operations
         .iter()
@@ -33,13 +36,27 @@ pub(crate) fn write_metadata(
                 params![release_id, generation, revision, locale],
             ),
         }
-        .map_err(|error| format!("cannot persist metadata operation: {error}"))?;
-        pending.push(PendingReceipt::new(
-            operation.id(),
-            operation.obligations.clone(),
-            ProjectionEvent::SqliteRow(operation.event.clone()),
-            affected,
-        )?);
+        .map_err(|source| DatabaseError::Table {
+            database: database_path(transaction),
+            table: operation.event.table.as_str().to_string(),
+            operation: "insert metadata row",
+            source: Box::new(source),
+        })?;
+        pending.push(
+            PendingReceipt::new(
+                operation.id(),
+                operation.obligations.clone(),
+                ProjectionEvent::SqliteRow(operation.event.clone()),
+                affected,
+            )
+            .map_err(|detail| {
+                DatabaseError::invariant(
+                    database_path(transaction),
+                    "confirm metadata receipt",
+                    detail,
+                )
+            })?,
+        );
     }
     Ok(pending)
 }

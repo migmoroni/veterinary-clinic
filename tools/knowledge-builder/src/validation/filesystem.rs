@@ -1,8 +1,15 @@
 //! Discovers source files and enforces the closed reserved authoring namespace.
 
-use super::*;
+use super::{
+    Diagnostic, KnowledgeLocale, MediaAsset, SourceEntry, ENTITY_MANIFEST_FILENAME, LOCALES,
+};
 use crate::contracts::source_layout::{
     CONTENT_DIRECTORY_NAME, CONTENT_PATH, MEDIA_DIRECTORY_NAME, ROOT_TECHNICAL_FILES,
+};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    fs,
+    path::{Path, PathBuf},
 };
 
 #[derive(Clone, Copy)]
@@ -297,6 +304,7 @@ pub(super) fn validate_file_coverage(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::contracts::source_layout::ENTITY_MANIFEST_FILENAME;
     use std::sync::atomic::{AtomicU64, Ordering};
 
     static COUNTER: AtomicU64 = AtomicU64::new(0);

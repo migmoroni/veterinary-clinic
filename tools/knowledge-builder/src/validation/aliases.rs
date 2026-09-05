@@ -1,6 +1,10 @@
 //! Enforces locale-specific alias ownership across entities, taxonomies, and product relations.
 
-use super::*;
+use super::{
+    normalize_search_text, CanonicalEntity, Diagnostic, KnowledgeLocale, LocalizedContent,
+    SourceEntry, TaxonomyEntity, LOCALES,
+};
+use std::collections::{BTreeMap, BTreeSet};
 
 pub(super) fn validate_alias_ownership(
     entries: &[SourceEntry],

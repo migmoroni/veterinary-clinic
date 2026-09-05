@@ -21,6 +21,13 @@ pub(super) struct VerifiedCas {
 pub(super) fn verify(
     context: &VerificationContext<'_>,
     media: &VerifiedMedia,
+) -> Result<VerifiedCas, crate::VerificationError> {
+    verify_inner(context, media).map_err(|detail| crate::VerificationError::invalid("CAS", detail))
+}
+
+fn verify_inner(
+    context: &VerificationContext<'_>,
+    media: &VerifiedMedia,
 ) -> Result<VerifiedCas, String> {
     let mut global_hashes = BTreeSet::new();
     for locale in LOCALES {

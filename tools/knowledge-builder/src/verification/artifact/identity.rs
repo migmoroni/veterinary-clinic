@@ -24,7 +24,13 @@ pub(super) struct VerifiedIdentity {
     pub(super) checksum_path: PathBuf,
 }
 
-pub(super) fn verify(context: &VerificationContext<'_>) -> Result<VerifiedIdentity, String> {
+pub(super) fn verify(
+    context: &VerificationContext<'_>,
+) -> Result<VerifiedIdentity, crate::VerificationError> {
+    verify_inner(context).map_err(|detail| crate::VerificationError::invalid("identity", detail))
+}
+
+fn verify_inner(context: &VerificationContext<'_>) -> Result<VerifiedIdentity, String> {
     schemas::validate_build_result(context.result)?;
     let expected_projection = report::normalized_relative_path(&version_artifact(
         context.context.build_version,

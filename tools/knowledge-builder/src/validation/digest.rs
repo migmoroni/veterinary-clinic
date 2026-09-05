@@ -1,6 +1,10 @@
 //! Computes the logical source digest and deterministic source projection counts.
 
-use super::*;
+use super::{
+    sha256_hex, source_schema_fingerprint_input, CanonicalEntity, KnowledgeLocale, MediaAsset,
+    ValidatedEntity, Value, LOCALES,
+};
+use std::collections::BTreeMap;
 
 pub(super) fn logical_digest(
     entities: &[ValidatedEntity],

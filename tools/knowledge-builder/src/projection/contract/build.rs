@@ -1,6 +1,25 @@
 //! Assembles one locale projection contract from validated canonical knowledge.
 
-use super::*;
+use super::{
+    catalog::project_catalog,
+    helpers::{identity, project_media_references, project_search},
+    ownership::ObligationOwnership,
+    taxonomy::{project_geo_places, project_taxonomies},
+    CasProjectionOperation, CompilationOperation, MetadataOperation, MetadataRow,
+    ProjectionContract, ProjectionSourceFacts, SystemMediaProjectionOperation, SystemMediaRow,
+};
+use crate::{
+    contracts::{locale::KnowledgeLocale, version::BUILD_RESULT_SCHEMA_VERSION},
+    databases::DatabaseKind,
+    media::decode_hex,
+    projection::coverage::{
+        CompilationOperationId, ProjectionObligation, ProjectionOperationId, RowEvent, RowIdentity,
+        SearchCandidate, SystemTable,
+    },
+    report::BuildContext,
+    validation::ValidatedSource,
+};
+use std::collections::{BTreeMap, BTreeSet};
 
 impl ProjectionContract {
     pub(crate) fn build(

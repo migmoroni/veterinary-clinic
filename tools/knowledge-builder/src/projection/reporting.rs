@@ -1,6 +1,20 @@
 //! Builds the public projection report from completed evidence ledgers.
 
-use super::*;
+use crate::{
+    contracts::{
+        locale::KnowledgeLocale,
+        version::{
+            PROJECTION_REPORT_SCHEMA_VERSION, SYSTEM_MEDIA_SCHEMA_VERSION, SYSTEM_SCHEMA_VERSION,
+        },
+    },
+    projection::{contract::ProjectionContract, ledger::CompletedLedger},
+    report::{
+        BuildContext, LocaleProjection, MediaProjection, ProjectionReport, ProjectionSource,
+        TypeProjection,
+    },
+    validation::ValidatedSource,
+};
+use std::collections::{BTreeMap, BTreeSet};
 
 pub(super) fn projection_report(
     source: &ValidatedSource,

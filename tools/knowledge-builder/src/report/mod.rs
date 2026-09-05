@@ -1,7 +1,7 @@
 //! Defines build contexts and public artifact reports together with canonical
 //! JSON serialization and normalized relative-path handling.
 
-use crate::contracts::version::BUILD_CONTEXT_SCHEMA_VERSION;
+use crate::{contracts::version::BUILD_CONTEXT_SCHEMA_VERSION, BuildContextError};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fs, path::Path};
 
@@ -167,25 +167,43 @@ pub struct MediaProjection {
     pub unique_content_hashes: usize,
 }
 
-pub fn read_context(path: &Path) -> Result<BuildContext, String> {
-    let bytes = fs::read(path)
-        .map_err(|error| format!("cannot read build context {}: {error}", path.display()))?;
-    let context: BuildContext = serde_json::from_slice(&bytes)
-        .map_err(|error| format!("invalid build context {}: {error}", path.display()))?;
+pub fn read_context(path: &Path) -> Result<BuildContext, BuildContextError> {
+    let bytes = fs::read(path).map_err(|source| BuildContextError::Read {
+        path: path.to_path_buf(),
+        source,
+    })?;
+    let context: BuildContext =
+        serde_json::from_slice(&bytes).map_err(|source| BuildContextError::Decode {
+            path: path.to_path_buf(),
+            source,
+        })?;
     if context.schema_version != BUILD_CONTEXT_SCHEMA_VERSION {
-        return Err(format!(
-            "build context schemaVersion must be {BUILD_CONTEXT_SCHEMA_VERSION}"
-        ));
+        return Err(BuildContextError::Invalid {
+            path: path.to_path_buf(),
+            detail: format!(
+                "schemaVersion must be {BUILD_CONTEXT_SCHEMA_VERSION}, observed {}",
+                context.schema_version
+            ),
+        });
     }
     if context.build_version == 0 {
-        return Err("buildVersion must be a positive integer".to_string());
+        return Err(BuildContextError::Invalid {
+            path: path.to_path_buf(),
+            detail: "buildVersion must be a positive integer".to_string(),
+        });
     }
     if let Some(release) = &context.release {
         if !is_uuid(release.release_id.as_str()) {
-            return Err("releaseId must be a lowercase UUID".to_string());
+            return Err(BuildContextError::Invalid {
+                path: path.to_path_buf(),
+                detail: "releaseId must be a lowercase UUID".to_string(),
+            });
         }
         if release.generation == 0 || release.revision == 0 {
-            return Err("release generation and revision must be positive".to_string());
+            return Err(BuildContextError::Invalid {
+                path: path.to_path_buf(),
+                detail: "release generation and revision must be positive".to_string(),
+            });
         }
     }
     Ok(context)

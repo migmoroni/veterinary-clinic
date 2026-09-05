@@ -12,6 +12,16 @@ use std::{
 };
 use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 
+trait DisplayContains {
+    fn contains(&self, pattern: &str) -> bool;
+}
+
+impl<T: std::fmt::Display> DisplayContains for T {
+    fn contains(&self, pattern: &str) -> bool {
+        self.to_string().as_str().contains(pattern)
+    }
+}
+
 static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 const ENTITY_MANIFEST_FILENAME: &str = "_entity.json";
 const CONTENT_DIRECTORY_NAME: &str = "_content";
@@ -118,7 +128,7 @@ fn validates_and_builds_all_locales_deterministically() {
     )
     .unwrap();
     assert_eq!(report["schemaVersion"], 5);
-    assert_eq!(first.builder_version, "0.4.0");
+    assert_eq!(first.builder_version, "0.5.0");
     assert_eq!(first.system_schema_version, 4);
     assert_eq!(first.system_media_schema_version, 2);
     let expected_system_tables = [

@@ -29,6 +29,15 @@ pub(super) fn verify(
     context: &VerificationContext<'_>,
     identity: &VerifiedIdentity,
     tree: &VerifiedTree,
+) -> Result<VerifiedManifest, crate::VerificationError> {
+    verify_inner(context, identity, tree)
+        .map_err(|detail| crate::VerificationError::invalid("manifest", detail))
+}
+
+fn verify_inner(
+    context: &VerificationContext<'_>,
+    identity: &VerifiedIdentity,
+    tree: &VerifiedTree,
 ) -> Result<VerifiedManifest, String> {
     if !tree
         .files
@@ -61,6 +70,15 @@ pub(super) fn verify(
 }
 
 pub(super) fn verify_coverage(
+    context: &VerificationContext<'_>,
+    manifest: &VerifiedManifest,
+    cas: &VerifiedCas,
+) -> Result<(), crate::VerificationError> {
+    verify_coverage_inner(context, manifest, cas)
+        .map_err(|detail| crate::VerificationError::invalid("manifest coverage", detail))
+}
+
+fn verify_coverage_inner(
     context: &VerificationContext<'_>,
     manifest: &VerifiedManifest,
     cas: &VerifiedCas,

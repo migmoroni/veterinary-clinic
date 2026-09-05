@@ -1,6 +1,11 @@
 //! Validates canonical entity shapes and entity-specific scalar and collection policies.
 
-use super::*;
+use super::taxonomy::validate_taxonomy;
+use super::{
+    is_uuid_v4, validate_localized_content, validate_localized_schema, validate_sections,
+    validate_unique_texts, CanonicalEntity, Diagnostic, SourceEntry,
+};
+use std::collections::BTreeSet;
 
 pub(super) fn validate_entity_shape(entry: &SourceEntry, diagnostics: &mut Vec<Diagnostic>) {
     if entry.entity.schema_version() != crate::contracts::version::SOURCE_ENTITY_SCHEMA_VERSION {

@@ -1,29 +1,46 @@
 //! Persists typed system rows through fixed, structurally verified SQLite statements.
 
 use super::metadata::write_metadata;
-use super::*;
+use super::{
+    database_path, params, preserve_deterministic_write_epochs, ConfirmedReceiptBatch, Connection,
+    DatabaseError, DatabaseKind, MetadataOperation, PendingReceipt, ProjectionEvent,
+    SystemProjectionOperation, SystemRow, SystemRowCase, SystemRowDescriptor, SystemTable,
+    Transaction,
+};
 
 pub(crate) fn write_system(
     connection: &mut Connection,
     metadata: &[MetadataOperation],
     operations: &[SystemProjectionOperation],
-) -> Result<ConfirmedReceiptBatch, String> {
+) -> Result<ConfirmedReceiptBatch, DatabaseError> {
+    let path = database_path(connection);
     let transaction = connection
         .transaction()
-        .map_err(|error| format!("cannot begin system projection: {error}"))?;
+        .map_err(|source| DatabaseError::Sqlite {
+            database: path.clone(),
+            operation: "begin system transaction",
+            source: Box::new(source),
+        })?;
     let mut pending = write_metadata(&transaction, DatabaseKind::System, metadata)?;
     for operation in operations {
         let affected = write_system_row(&transaction, &operation.row)?;
-        pending.push(PendingReceipt::new(
-            operation.id(),
-            operation.obligations.clone(),
-            ProjectionEvent::SqliteRow(operation.event.clone()),
-            affected,
-        )?);
+        pending.push(
+            PendingReceipt::new(
+                operation.id(),
+                operation.obligations.clone(),
+                ProjectionEvent::SqliteRow(operation.event.clone()),
+                affected,
+            )
+            .map_err(|detail| DatabaseError::invariant(&path, "confirm system receipt", detail))?,
+        );
     }
     transaction
         .commit()
-        .map_err(|error| format!("cannot commit system projection: {error}"))?;
+        .map_err(|source| DatabaseError::Sqlite {
+            database: path.clone(),
+            operation: "commit system transaction",
+            source: Box::new(source),
+        })?;
     preserve_deterministic_write_epochs(
         connection,
         DatabaseKind::System,
@@ -34,6 +51,7 @@ pub(crate) fn write_system(
         !operations.is_empty(),
     )?;
     ConfirmedReceiptBatch::confirm(pending)
+        .map_err(|detail| DatabaseError::invariant(path, "confirm system receipt batch", detail))
 }
 
 pub(super) struct SystemInsertStatement {
@@ -70,7 +88,7 @@ pub(super) fn system_insert_statement(row: &SystemRow) -> SystemInsertStatement 
 pub(crate) fn write_system_row(
     transaction: &Transaction<'_>,
     row: &SystemRow,
-) -> Result<usize, String> {
+) -> Result<usize, DatabaseError> {
     let statement = system_insert_statement(row);
     let _ = (statement.case, statement.table);
     match row {
@@ -350,10 +368,10 @@ pub(crate) fn write_system_row(
             params![entity_type, entity_id, role, media_key, sort_order],
         ),
     }
-    .map_err(|error| {
-        format!(
-            "cannot persist {} operation: {error}",
-            statement.table.as_str()
-        )
+    .map_err(|source| DatabaseError::Table {
+        database: database_path(transaction),
+        table: statement.table.as_str().to_string(),
+        operation: "insert system row",
+        source: Box::new(source),
     })
 }

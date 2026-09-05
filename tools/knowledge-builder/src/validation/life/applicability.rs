@@ -1,6 +1,7 @@
 //! Resolves product and protocol applicability and rejects redundant ancestry targets.
 
-use super::{taxonomy::LifeIndex, *};
+use super::{sorted, taxonomy::LifeIndex};
+use crate::validation::{CanonicalEntity, Diagnostic, SourceEntry};
 
 pub(super) fn validate_applicability(
     entries: &[SourceEntry],

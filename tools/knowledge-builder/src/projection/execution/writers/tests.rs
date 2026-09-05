@@ -147,7 +147,7 @@ fn metadata_operation(database: DatabaseKind) -> MetadataOperation {
         database,
         row: MetadataRow::Build {
             build_version: 1,
-            builder_version: "0.4.0".to_string(),
+            builder_version: "0.5.0".to_string(),
             build_result_schema_version: 1,
             source_digest: vec![0; 32],
             locale: KnowledgeLocale::EnUs.to_string(),

@@ -1,6 +1,11 @@
 //! Derives stable operation identities from typed projection operations.
 
-use super::*;
+use super::{
+    CasProjectionOperation, CompilationOperation, MetadataOperation, MetadataRow,
+    ProjectionContract, SystemMediaProjectionOperation, SystemProjectionOperation,
+};
+use crate::projection::coverage::{ProjectionObligation, ProjectionOperationId};
+use std::collections::{BTreeMap, BTreeSet};
 
 impl ProjectionContract {
     pub(crate) fn ownership(

@@ -1,6 +1,21 @@
 //! Validates operation ownership and semantic compatibility across the complete contract.
 
-use super::*;
+use super::{
+    CasProjectionOperation, CompilationOperation, MetadataOperation, ProjectionContract,
+    SystemMediaProjectionOperation, SystemProjectionOperation, SystemRow,
+};
+use crate::{
+    contracts::{
+        locale::KnowledgeLocale,
+        taxonomy::{taxonomy_domains, taxonomy_spec, TaxonomyCardinality, CANONICAL_TAXONOMIES},
+    },
+    databases::DatabaseKind,
+    projection::coverage::{
+        CompilationOperationId, ObligationClass, ProjectionObligation, ProjectionOperationId,
+        ProjectionTarget, RowIdentity, SystemTable,
+    },
+};
+use std::collections::{BTreeMap, BTreeSet};
 
 impl ProjectionContract {
     pub(crate) fn validate(&self) -> Result<(), String> {

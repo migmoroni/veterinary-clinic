@@ -1,6 +1,11 @@
 //! Validates localized field schemas, values, and declared editorial sections.
 
-use super::*;
+use super::{
+    is_simple_text, CanonicalEntity, Diagnostic, LocalizedContent, LocalizedValue, SourceEntry,
+    LOCALES,
+};
+use crate::contracts::source_layout::{CONTENT_DIRECTORY_NAME, CONTENT_PATH};
+use std::collections::BTreeSet;
 
 pub(super) fn validate_localized_schema(entry: &SourceEntry, diagnostics: &mut Vec<Diagnostic>) {
     let Some(content) = entry.entity.localized_content() else {

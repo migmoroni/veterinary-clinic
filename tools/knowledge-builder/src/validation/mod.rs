@@ -30,14 +30,14 @@ use self::{
     localized::{validate_localized_content, validate_localized_schema, validate_sections},
     primitives::{is_simple_text, is_uuid_v4, validate_unique_texts},
     references::validate_references,
-    taxonomy::{collect_taxonomies, validate_taxonomy, validate_taxonomy_completeness},
+    taxonomy::{collect_taxonomies, validate_taxonomy_completeness},
 };
 use crate::{
     contracts::{
         locale::{KnowledgeLocale, LOCALES},
-        source_layout::{CONTENT_DIRECTORY_NAME, CONTENT_PATH, ENTITY_MANIFEST_FILENAME},
+        source_layout::ENTITY_MANIFEST_FILENAME,
     },
-    markdown::{compile_document, CompiledDocument, CompiledMediaReference},
+    markdown::{compile_document, CompiledDocument},
     media::{resolve_structural_media, sha256_hex, MediaAsset},
     normalization::normalize_search_text,
     source::{
@@ -46,8 +46,3 @@ use crate::{
     },
 };
 use serde_json::Value;
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    fmt, fs,
-    path::{Path, PathBuf},
-};

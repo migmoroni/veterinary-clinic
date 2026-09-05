@@ -5,6 +5,7 @@
 
 mod contracts;
 mod databases;
+mod errors;
 mod markdown;
 mod media;
 mod normalization;
@@ -17,7 +18,12 @@ mod verification;
 
 pub mod cli;
 
+pub use cli::{CliArgumentError, CliError};
 pub use contracts::locale::{KnowledgeLocale, LOCALES};
+pub use errors::{
+    BuildContextError, CasError, ContractError, DatabaseError, KnowledgeBuilderError, MediaError,
+    PublicationError, VerificationError,
+};
 pub use report::{BuildContext, BuildResult, ReleaseContext};
 pub use source::{
     LifeBodyMetricStage, LifeBodyMetrics, LifeClassifications, LifeEntity, LifeMeasures,
@@ -41,8 +47,8 @@ pub struct BuildOptions {
 }
 
 /// Builds one complete and atomically finalized knowledge artifact version.
-pub fn build(options: &BuildOptions) -> Result<BuildResult, String> {
-    let validated = validate(&options.source).map_err(|error| error.to_string())?;
+pub fn build(options: &BuildOptions) -> Result<BuildResult, KnowledgeBuilderError> {
+    let validated = validate(&options.source)?;
     let context = report::read_context(&options.context)?;
     projection::build_artifacts(&validated, &options.output, &context)
 }

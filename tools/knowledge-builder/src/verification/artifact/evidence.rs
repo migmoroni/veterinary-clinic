@@ -17,6 +17,16 @@ pub(super) fn verify(
     manifest: &VerifiedManifest,
     databases: &VerifiedDatabases,
     cas: &VerifiedCas,
+) -> Result<VerifiedEvidence, crate::VerificationError> {
+    verify_inner(context, manifest, databases, cas)
+        .map_err(|detail| crate::VerificationError::invalid("projection evidence", detail))
+}
+
+fn verify_inner(
+    context: &VerificationContext<'_>,
+    manifest: &VerifiedManifest,
+    databases: &VerifiedDatabases,
+    cas: &VerifiedCas,
 ) -> Result<VerifiedEvidence, String> {
     let report = &manifest.report;
     if report.schema_version != PROJECTION_REPORT_SCHEMA_VERSION

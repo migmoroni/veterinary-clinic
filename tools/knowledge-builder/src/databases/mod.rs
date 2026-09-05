@@ -9,6 +9,7 @@ use crate::{
     },
     media::sha256_hex,
     report::BuildContext,
+    DatabaseError,
 };
 use rusqlite::Connection;
 use std::{fs, path::Path};
@@ -38,23 +39,26 @@ impl DatabaseKind {
     }
 }
 
-pub fn create(path: &Path, kind: DatabaseKind) -> Result<Connection, String> {
+pub fn create(path: &Path, kind: DatabaseKind) -> Result<Connection, DatabaseError> {
     if path.exists() {
-        return Err(format!(
-            "database staging path already exists: {}",
-            path.display()
+        return Err(DatabaseError::invariant(
+            path,
+            "create staging database",
+            "staging path already exists",
         ));
     }
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(|error| {
-            format!(
-                "cannot create database directory {}: {error}",
-                parent.display()
-            )
+        fs::create_dir_all(parent).map_err(|source| DatabaseError::Io {
+            path: parent.to_path_buf(),
+            operation: "create database directory",
+            source,
         })?;
     }
-    let connection = Connection::open(path)
-        .map_err(|error| format!("cannot create SQLite database {}: {error}", path.display()))?;
+    let connection = Connection::open(path).map_err(|source| DatabaseError::Sqlite {
+        database: path.to_path_buf(),
+        operation: "create database",
+        source: Box::new(source),
+    })?;
     connection
         .execute_batch(&format!(
             "PRAGMA page_size=4096;\nPRAGMA journal_mode=OFF;\nPRAGMA synchronous=OFF;\nPRAGMA temp_store=MEMORY;\nPRAGMA foreign_keys=ON;\nPRAGMA trusted_schema=OFF;\nPRAGMA application_id={};\nPRAGMA user_version={};\n{}",
@@ -62,24 +66,32 @@ pub fn create(path: &Path, kind: DatabaseKind) -> Result<Connection, String> {
             kind.identity().schema_version,
             kind.ddl()
         ))
-        .map_err(|error| format!("cannot initialize SQLite schema {}: {error}", path.display()))?;
+        .map_err(|source| DatabaseError::Sqlite {
+            database: path.to_path_buf(),
+            operation: "initialize schema and PRAGMAs",
+            source: Box::new(source),
+        })?;
     Ok(connection)
 }
 
-pub fn finalize(connection: Connection, path: &Path) -> Result<String, String> {
+pub fn finalize(connection: Connection, path: &Path) -> Result<String, DatabaseError> {
     connection
         .execute_batch("PRAGMA optimize; VACUUM;")
-        .map_err(|error| {
-            format!(
-                "cannot finalize SQLite database {}: {error}",
-                path.display()
-            )
+        .map_err(|source| DatabaseError::Sqlite {
+            database: path.to_path_buf(),
+            operation: "optimize and vacuum",
+            source: Box::new(source),
         })?;
     verify(&connection, path)?;
-    schema_fingerprint(&connection)
+    schema_fingerprint_at(&connection, path)
 }
 
-pub fn verify(connection: &Connection, path: &Path) -> Result<(), String> {
+pub fn verify(connection: &Connection, path: &Path) -> Result<(), DatabaseError> {
+    verify_inner(connection, path)
+        .map_err(|detail| DatabaseError::invariant(path, "verify integrity", detail))
+}
+
+fn verify_inner(connection: &Connection, path: &Path) -> Result<(), String> {
     let integrity: String = connection
         .query_row("PRAGMA integrity_check", [], |row| row.get(0))
         .map_err(|error| format!("cannot run integrity_check on {}: {error}", path.display()))?;
@@ -115,8 +127,20 @@ pub fn verify_contract(
     context: &BuildContext,
     locale: KnowledgeLocale,
     source_digest: &[u8],
+) -> Result<(), DatabaseError> {
+    verify_contract_inner(connection, path, kind, context, locale, source_digest)
+        .map_err(|detail| DatabaseError::invariant(path, "verify database contract", detail))
+}
+
+fn verify_contract_inner(
+    connection: &Connection,
+    path: &Path,
+    kind: DatabaseKind,
+    context: &BuildContext,
+    locale: KnowledgeLocale,
+    source_digest: &[u8],
 ) -> Result<(), String> {
-    verify(connection, path)?;
+    verify_inner(connection, path)?;
     let application_id: u32 = connection
         .query_row("PRAGMA application_id", [], |row| row.get(0))
         .map_err(|error| {
@@ -136,7 +160,7 @@ pub fn verify_contract(
             path.display()
         ));
     }
-    let actual_fingerprint = schema_fingerprint(connection)?;
+    let actual_fingerprint = schema_fingerprint_inner(connection)?;
     let expected_fingerprint = canonical_schema_fingerprint(kind)?;
     if actual_fingerprint != expected_fingerprint {
         return Err(format!(
@@ -218,10 +242,19 @@ fn canonical_schema_fingerprint(kind: DatabaseKind) -> Result<String, String> {
             kind.ddl()
         ))
         .map_err(|error| format!("cannot initialize canonical schema fingerprint: {error}"))?;
-    schema_fingerprint(&connection)
+    schema_fingerprint_inner(&connection)
 }
 
-pub fn schema_fingerprint(connection: &Connection) -> Result<String, String> {
+pub fn schema_fingerprint(connection: &Connection) -> Result<String, DatabaseError> {
+    schema_fingerprint_at(connection, Path::new("<open SQLite connection>"))
+}
+
+fn schema_fingerprint_at(connection: &Connection, path: &Path) -> Result<String, DatabaseError> {
+    schema_fingerprint_inner(connection)
+        .map_err(|detail| DatabaseError::invariant(path, "fingerprint schema", detail))
+}
+
+fn schema_fingerprint_inner(connection: &Connection) -> Result<String, String> {
     let user_version: u32 = connection
         .query_row("PRAGMA user_version", [], |row| row.get(0))
         .map_err(|error| format!("cannot read user_version: {error}"))?;

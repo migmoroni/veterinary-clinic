@@ -1,6 +1,7 @@
 //! Provides reusable validators for collections, simple text, and UUID identities.
 
-use super::*;
+use super::{Diagnostic, SourceEntry};
+use std::collections::BTreeSet;
 
 pub(super) fn validate_unique_texts(
     entry: &SourceEntry,

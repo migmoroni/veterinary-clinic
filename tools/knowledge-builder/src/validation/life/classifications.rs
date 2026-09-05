@@ -1,7 +1,11 @@
 //! Validates optional life classifications, body intervals, origins, and size terms.
 
-use super::{taxonomy::LifeIndex, *};
-use crate::source::{LifeBodyMetricStage, LifeSexBodyMetrics};
+use super::{sorted, taxonomy::LifeIndex};
+use crate::{
+    source::{LifeBodyMetricStage, LifeSexBodyMetrics, SourceEntry, TaxonomyEntity},
+    validation::Diagnostic,
+};
+use std::collections::{BTreeMap, BTreeSet};
 
 pub(super) fn validate_life_classifications(
     life: &LifeIndex<'_>,

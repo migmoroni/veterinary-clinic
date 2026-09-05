@@ -21,6 +21,14 @@ pub(super) struct VerifiedMedia {
 pub(super) fn verify(
     context: &VerificationContext<'_>,
     databases: &VerifiedDatabases,
+) -> Result<VerifiedMedia, crate::VerificationError> {
+    verify_inner(context, databases)
+        .map_err(|detail| crate::VerificationError::invalid("media", detail))
+}
+
+fn verify_inner(
+    context: &VerificationContext<'_>,
+    databases: &VerifiedDatabases,
 ) -> Result<VerifiedMedia, String> {
     let expected_structural = context
         .source

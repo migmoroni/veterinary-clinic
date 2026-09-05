@@ -1,6 +1,8 @@
 //! Computes contract operation totals and projected row counts.
 
-use super::*;
+use super::ProjectionContract;
+use crate::projection::coverage::SystemTable;
+use std::collections::BTreeMap;
 
 impl ProjectionContract {
     pub(crate) fn rows_by_database(&self) -> BTreeMap<String, BTreeMap<String, usize>> {

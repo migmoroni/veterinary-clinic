@@ -1,6 +1,7 @@
 //! Validates the closed ten-level taxonomy and resolves every explicit ancestry edge.
 
-use super::*;
+use super::super::{CanonicalEntity, Diagnostic, LifeEntity, SourceEntry};
+use std::collections::BTreeMap;
 
 pub(super) type LifeIndex<'a> = BTreeMap<&'a str, (&'a SourceEntry, &'a LifeEntity)>;
 

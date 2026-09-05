@@ -1,7 +1,15 @@
 //! Exercises contract validation against deliberately divergent operation evidence.
 
 use super::*;
-use crate::projection::coverage::{RowIdentity, SourceToken, SystemColumn};
+use crate::{
+    contracts::{locale::KnowledgeLocale, version::BUILD_RESULT_SCHEMA_VERSION},
+    databases::DatabaseKind,
+    projection::coverage::{
+        CompilationOperationId, EntityIdentity, ObligationClass, ProjectionObligation,
+        ProjectionTarget, RowEvent, RowIdentity, SourceToken, SystemColumn, SystemTable,
+    },
+};
+use std::collections::{BTreeMap, BTreeSet};
 
 fn product_row() -> SystemRow {
     SystemRow::Product {
