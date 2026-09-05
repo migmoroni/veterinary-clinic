@@ -59,9 +59,8 @@ e exige equivalência integral com o contrato que os originou.
 - leitura de apps, packages de runtime, i18n, seeds ou bancos do ramo `user`;
 - download de conteúdo ou qualquer consulta de rede;
 - edição ou correção automática da fonte canônica;
-- migrations, conversões ou backfills de artefatos anteriores;
 - publicação remota, empacotamento Tauri ou instalação no app;
-- fallback entre locales ou entre contratos substituídos.
+- fallback entre locales ou múltiplas fontes de verdade.
 
 ## Pré-Requisitos
 
@@ -74,6 +73,32 @@ Execute os comandos a partir da raiz do workspace.
 
 O crate declara Rust 1.87 como MSRV. Para builds reprodutíveis, mantenha o lockfile
 do workspace e use `--locked` em ambientes de integração e publicação.
+
+## Dependências Rust
+
+O `Cargo.toml` declara somente crates usadas diretamente pelo pipeline. O
+`Cargo.lock` fixa a resolução completa, incluindo dependências transitivas;
+estas não constituem APIs escolhidas diretamente pelo `knowledge-builder`.
+
+| Dependência | Configuração | Responsabilidade no tool |
+| --- | --- | --- |
+| `comrak` | `=0.35.0`, sem features padrão | Interpreta Markdown como AST CommonMark. O builder inspeciona tipos de nós, links e imagens antes de produzir o documento compilado. As features padrão de CLI, syntax highlighting e builders auxiliares não são necessárias. |
+| `image` | `=0.25.5`, somente `png`, `jpeg`, `gif` e `webp` | Detecta e decodifica os formatos de mídia aceitos, aplica orientação visual, lê dimensões e gera thumbnails JPEG determinísticos. A seleção explícita evita habilitar codecs e paralelismo que não pertencem ao contrato de mídia. |
+| `jsonschema` | `=0.26.2`, sem features padrão | Compila e executa os JSON Schemas Draft 2020-12 embutidos para fontes, conteúdo, manifestos e relatórios. A desativação das features padrão remove resolução HTTP e filesystem: todos os schemas usados pelo build pertencem ao próprio crate. |
+| `rusqlite` | `0.32`, com `bundled` e `modern_sqlite` | Cria, escreve, finaliza e relê os bancos `system` e `system_media`; também executa PRAGMAs, transações, checks de integridade e consultas de verificação. `bundled` fornece uma implementação SQLite conhecida sem depender da biblioteca instalada no sistema, e `modern_sqlite` usa os bindings da API SQLite moderna. |
+| `serde` | `1.0`, com `derive` | Define a serialização e desserialização tipada da autoria, contexto, contratos públicos, relatórios e evidências. `derive` mantém os nomes e formatos declarados junto dos próprios tipos. |
+| `serde_json` | `1.0` | Lê JSON validado, produz JSON canônico, manipula documentos durante validação e serializa manifestos, relatórios, conteúdo compilado e valores persistidos em SQLite. |
+| `sha2` | `0.10.9` | Calcula SHA-256 para o digest lógico da fonte, checksums de artefatos, fingerprints de schemas, evidências e endereços do CAS. |
+| `thiserror` | `2` | Implementa as famílias públicas de erros estruturados e suas cadeias de causas sem concentrar a apresentação da CLI dentro das regras de domínio. |
+| `unicode-normalization` | `=0.1.24` | Aplica NFC e decomposição Unicode na identidade canônica, na comparação de conteúdo e na normalização dos termos de busca. |
+
+As versões exatas de `comrak`, `image`, `jsonschema` e
+`unicode-normalization` tornam deliberada qualquer alteração de parser, codec,
+validador ou normalização que possa mudar artefatos. As demais dependências usam
+faixas compatíveis, sempre resolvidas pelo lockfile em execuções com `--locked`.
+
+Não há seção `[dev-dependencies]`: os testes exercitam as mesmas bibliotecas e
+os mesmos codecs usados pelo binário e pela API de produção.
 
 ## Comandos
 
@@ -234,14 +259,17 @@ mais de uma entidade, papel ou locale.
 
 ### 4. Contrato De Projeção
 
-Cada locale produz um `ProjectionContract` puro, tipado e determinístico. Ele
-contém os valores finais de bancos, relações ordenadas, busca, documentos,
-mídia, CAS e metadados.
+Para cada locale, o inventário deriva independentemente o conjunto `expected`
+de obrigações da fonte validada. O `ProjectionContract` puro, tipado e
+determinístico contém os valores finais de bancos, relações ordenadas, busca,
+documentos, mídia, CAS e metadados, além do owner fechado de cada obrigação por
+`ProjectionOperationId`.
 
-Cada folha validada declara diretamente seu proprietário fechado por
-`ProjectionOperationId`. O `ProjectionJournal` conclui apenas o lote concreto
-daquela operação, e as evidências SQLite entram no ledger somente depois do
-`commit`.
+A execução produz `PendingReceipt` para cada efeito. Writers SQLite confirmam o
+lote somente após o `commit`; compilação e CAS confirmam seus próprios efeitos
+após materialização. O `ProjectionLedger` aceita apenas `ConfirmedReceiptBatch`
+compatível com locale, operação, cardinalidade e ownership, e exige igualdade
+exata entre `expected`, `owned` e `observed`.
 
 Colunas projetáveis usam o enum fechado `SystemColumn`. Cada forma de
 `SystemRow` declara tabela, identidade lógica e colunas materializadas. Os SQLs
@@ -426,8 +454,8 @@ de vida usam suas colunas e tabelas fechadas, sem relações duplicadas.
 atende filtros e facetas que partem de um termo.
 `idx_entity_taxonomy_entity(entity_type, entity_id, taxonomy_id, sort_order)`
 atende a leitura ordenada de todas as taxonomias de uma entidade. Labels e
-aliases associados também alimentam `entity_search_terms`, que permanece o read
-model textual e não substitui a relação taxonômica.
+Aliases associados também alimentam `entity_search_terms`, o read model textual
+da busca, distinto da relação taxonômica.
 
 `build-result.json`
 
@@ -455,11 +483,11 @@ referências estruturais de mídia. O schema atual possui versão técnica 4.
 `veterinary_clinic_system_media.db`
 
 Índice localizado dos ativos, hashes, propriedades das fontes e thumbnails
-JPEG. O schema atual possui versão técnica 2; os bytes originais permanecem no
-CAS compartilhado.
+JPEG. O schema usa versão técnica 2; o CAS compartilhado contém os bytes
+originais.
 
 O crate `knowledge-builder` usa versão `0.5.0`. O relatório usa
-`schemaVersion: 5`; `build-result.json` permanece em `schemaVersion: 1`.
+`schemaVersion: 5`; `build-result.json` usa `schemaVersion: 1`.
 
 ## Determinismo E Reutilização
 
@@ -496,6 +524,27 @@ let result = build(&BuildOptions {
   públicos;
 - `LifeEntity` é o contrato público único da hierarquia biológica.
 
+## Erros E Código De Saída
+
+A CLI escreve diagnósticos em `stderr` e retorna `0` em sucesso ou `1` em
+falha. `CliError` separa erros de argumentos (`CliArgumentError`) das falhas do
+pipeline (`KnowledgeBuilderError`).
+
+`KnowledgeBuilderError` preserva a fronteira responsável:
+
+- `ValidationError`: diagnósticos ordenados da fonte;
+- `BuildContextError`: leitura, JSON e semântica do contexto;
+- `ContractError`: inventário, ownership e contrato de projeção;
+- `DatabaseError`: criação, transação, escrita, finalização e invariantes SQLite;
+- `MediaError`: leitura, decodificação e thumbnail;
+- `CasError`: staging, hashing e publicação dos objetos CAS;
+- `VerificationError`: identidade e equivalência física ou semântica;
+- `PublicationError`: diretórios, staging e publicação atômica.
+
+As variantes carregam o contexto aplicável, como caminho, operação, locale,
+banco, tabela e artefato. Causas concretas de I/O, JSON, SQLite e imagem ficam
+disponíveis pela cadeia de `Error::source`.
+
 ## Módulos
 
 `cli.rs`
@@ -521,7 +570,7 @@ modelo de autoria. O diretório separa:
 `source/`
 
 Tipos da autoria canônica, descoberta de arquivos e desserialização após JSON
-Schema. `Localized<T>` permanece aqui por pertencer ao modelo de autoria.
+Schema. `Localized<T>` pertence a esse modelo.
 
 `validation/`
 
@@ -566,27 +615,38 @@ layout CAS e geração determinística de thumbnails JPEG.
 
 `projection/`
 
-Constrói e materializa um contrato puro por locale. A fachada `mod.rs` expõe o
-orquestrador, enquanto o diretório separa:
+Coordena o pipeline tipado por locale. A fachada `mod.rs` expõe o orquestrador e
+mantém as seguintes fronteiras:
 
 - `build.rs`: staging, bancos, ledger, verificação e publicação atômica;
-- `cas.rs`: staging e commit dos objetos endereçados por conteúdo;
-- `reporting.rs`: relatório público derivado das evidências concluídas;
-- `reuse.rs`: verificação de versões reutilizáveis, artefatos e digests;
 - `filesystem.rs`: limpeza de staging e descoberta determinística de arquivos;
-- `contract.rs`: fachada dos payloads e operações do contrato;
+- `reporting.rs`: relatório público derivado das evidências concluídas;
+- `reuse.rs`: validação de versões finalizadas candidatas à reutilização;
+- `coverage/`: vocabulário fechado compartilhado por inventário, contrato,
+  execução e ledger, incluindo operações, obligations, targets, tabelas,
+  colunas e identidades de rows;
+- `inventory/`: travessia independente da fonte que declara as obrigações
+  `expected` de entidades, taxonomias, busca, mídia e CAS;
+- `contract.rs`: fachada dos payloads, operações e ownership do contrato;
 - `contract/model.rs`: tipos de payload e containers operacionais;
-- `contract/row_*.rs`: tabela, identidade e colunas de cada `SystemRow`;
+- `contract/rows/model.rs`: enum fechado dos payloads `SystemRow`;
+- `contract/rows/descriptor.rs`: caso, tabela, identidade e colunas ordenadas de
+  cada `SystemRow`;
 - `contract/build.rs`: montagem completa do contrato de um locale;
 - `contract/taxonomy.rs` e `contract/catalog.rs`: projeções por domínio;
 - `contract/helpers.rs`: relações, conteúdo localizado, busca, mídia e emissão;
-- `contract/validation.rs`: ownership e compatibilidade entre owners e targets;
+- `contract/ownership.rs`: atribuição única das obrigações aos owners;
+- `contract/validation.rs`: fechamento e compatibilidade entre operações,
+  obligations e targets;
 - `contract/metrics.rs` e `contract/operations.rs`: contagens e identidades;
-- `writers.rs`: fachada da persistência SQLite;
-- `writers/metadata.rs`, `writers/system.rs` e `writers/system_media.rs`: SQLs
-  fixos para cada destino;
-- `tests.rs`, `contract/tests.rs` e `writers/tests.rs`: testes estruturais dos
-  helpers, do contrato e da matriz entre `SystemRow` e `INSERT`.
+- `execution/`: efeitos tipados e emissão de recibos confirmados;
+- `execution/cas.rs`: staging e commit dos objetos endereçados por conteúdo;
+- `execution/compilation.rs`: confirmação do conteúdo compilado;
+- `execution/receipts.rs`: recibos pendentes e confirmados;
+- `execution/writers/`: transações, metadata e SQLs fixos de `system` e
+  `system_media`;
+- `ledger/`: comparação entre `expected`, `owned` e `observed`, fechamento das
+  evidências e digest canônico.
 
 `databases/`
 
@@ -594,29 +654,13 @@ DDLs canônicos de `system` e `system_media`, criação, finalização e
 fingerprints. Cada `DatabaseKind` resolve sua identidade técnica no registro de
 contratos.
 
-`ledger/`
-
-Fachada das obrigações tipadas e evidências de projeção. O diretório separa:
-
-- `model.rs`: vocabulário fechado de owners, sources, targets, tabelas e colunas;
-- `journal.rs`: commits de evidência, conclusão e contagens agregadas;
-- `ownership.rs`: lotes declarados por `ProjectionOperationId`;
-- `entity_obligations.rs`: matriz de obrigações de cada entidade canônica;
-- `obligation_helpers.rs`: campos, relações, localização, documentos e mídia;
-- `search.rs`: candidatos de busca localizados e deterministicamente ordenados;
-- `evidence.rs`: DTO canônico e digest das evidências;
-- `tests.rs`: atomicidade, ownership e fechamento do vocabulário de colunas.
-
 `verification/`
 
-Releitura tipada dos bancos e equivalência semântica com o contrato de projeção.
-
-`verification/artifact/`
-
-Fachada única de verificação integral do staging e de versões existentes antes
-da reutilização. Os módulos de identidade, árvore, manifesto, bancos, mídia, CAS
-e evidência recalculam observações de forma independente e não escrevem nos
-artefatos.
+Fachada única de verificação integral do staging e de versões finalizadas. O
+diretório `readers/` relê metadata, rows de `system` e ativos de `system_media`
+sem consumir writers. O diretório `artifact/` verifica identidade, árvore,
+manifesto, bancos, mídia, CAS e evidência, recalculando observações sem escrever
+nos artefatos.
 
 `report/`
 
@@ -632,6 +676,84 @@ JSON Schemas embutidos da fonte, do conteúdo compilado e dos relatórios públi
 Casos autocontidos de sucesso e falha. `registry.json` exige correspondência
 exata entre diretórios e asserções executadas; detalhes estão no
 [README das fixtures](fixtures/README.md).
+
+## Topologia De `tests/`
+
+O diretório `tools/knowledge-builder/tests` contém os testes que atravessam uma
+fronteira externa do crate, como filesystem, SQLite, CAS, processo da CLI ou uma
+versão completa de artefatos. Testes puramente internos ficam junto dos módulos
+proprietários em `src/` e são executados por `cargo test --lib`.
+
+```text
+tests/
+├── support/
+│   └── mod.rs
+├── component.rs
+├── component_cases/
+│   ├── mod.rs
+│   ├── databases.rs
+│   ├── filesystem.rs
+│   ├── media.rs
+│   └── verification.rs
+├── integral.rs
+└── integral_cases/
+    ├── mod.rs
+    ├── cli.rs
+    ├── determinism.rs
+    ├── reuse.rs
+    └── tampering.rs
+```
+
+### Raízes Dos Binários De Teste
+
+`component.rs` e `integral.rs` são raízes deliberadamente finas. Cada uma
+declara o `support` compartilhado e seu diretório de casos, sem conter cenários,
+fixtures ou lógica auxiliar. Essa separação mantém os comandos Cargo estáveis e
+impede que um único arquivo volte a concentrar responsabilidades distintas.
+
+### Infraestrutura Compartilhada
+
+`support/mod.rs` contém somente infraestrutura de teste:
+
+- criação e remoção de diretórios temporários exclusivos;
+- resolução da raiz do workspace, fonte canônica e contexto de build;
+- cópia determinística de fixtures;
+- localização de manifestos usados pelos casos;
+- leitura e atualização controlada de manifestos e checksums adulterados;
+- cálculo auxiliar de SHA-256 para conferir adulterações.
+
+O suporte não implementa validação, projeção, normalização, persistência ou
+verificação. Os testes sempre acionam a API ou o binário de produção para essas
+responsabilidades.
+
+### Casos De Componente
+
+`component_cases/` exercita uma responsabilidade externa por vez, sempre em um
+diretório temporário próprio:
+
+- `databases.rs`: criação, finalização, integridade e leitura dos bancos;
+- `filesystem.rs`: descoberta, layout reservado, digest e rejeições da fonte;
+- `media.rs`: leitura da imagem, thumbnail JPEG, row de mídia e objeto CAS;
+- `verification.rs`: recusa de uma árvore finalizada adulterada.
+
+Esses casos usam fixtures pequenas quando o catálogo completo não é necessário.
+Nenhum teste depende da saída ou da ordem de execução de outro teste.
+
+### Casos Integrais
+
+`integral_cases/` comprova propriedades do pipeline completo:
+
+- `determinism.rs`: build dos seis locales, igualdade entre execuções e
+  invariantes dos artefatos canônicos;
+- `reuse.rs`: reutilização válida, identidade da versão e contexto divergente;
+- `tampering.rs`: adulterações de manifesto, relatório, bancos, rows, mídia,
+  thumbnails e CAS, inclusive com checksums recalculados;
+- `cli.rs`: execução do binário com caminhos explícitos fora da raiz do
+  workspace.
+
+Mutações do mesmo artefato compartilham apenas uma cópia canônica imutável
+dentro do próprio teste matricial. Os bytes originais são restaurados antes de
+cada caso, e testes diferentes não compartilham diretórios mutáveis.
 
 ## Desenvolvimento E Testes
 
@@ -657,12 +779,6 @@ CLI executada fora da raiz do workspace:
 ```text
 cargo test -p knowledge-builder --test integral
 ```
-
-As raízes `tests/component.rs` e `tests/integral.rs` apenas declaram `support` e
-os módulos de casos. `tests/support/mod.rs` contém exclusivamente infraestrutura
-de teste: diretórios temporários, cópia de fixtures, contexto, localização de
-manifestos e adulteração controlada de declarações. Os cenários ficam em
-`component_cases/` e `integral_cases/`, separados por responsabilidade.
 
 Antes de entregar uma mudança, executar também:
 
@@ -694,8 +810,7 @@ cargo test -p knowledge-builder --all-targets --locked
   seus próprios módulos, em vez de transformar `contracts/` em um agrupamento
   genérico.
 - Não adicionar leitura de rede, apps, packages, i18n, seeds ou bancos `user`.
-- Não introduzir fallback de locale, compatibilidade legada ou segunda fonte de
-  verdade.
+- Não introduzir fallback de locale ou segunda fonte de verdade.
 - Não montar SQL, tabela ou coluna a partir de entrada canônica; writers usam
   comandos fechados.
 - Ao adicionar ou alterar um campo de autoria, começar no tipo proprietário em
@@ -708,7 +823,7 @@ cargo test -p knowledge-builder --all-targets --locked
 - Writers consomem rows e produzem recibos confirmados somente depois do commit.
   Ao adicionar uma forma de `SystemRow`, atualizar o `INSERT` fixo, bindings e a
   matriz estrutural que prova caso, destino, colunas e parâmetros.
-- Readers permanecem independentes dos writers. Para cada row nova ou alterada,
+- Readers são independentes dos writers. Para cada row nova ou alterada,
   atualizar o `SELECT`, a reconstrução tipada e a comparação exata com o
   contrato projetado.
 - Toda folha projetável deve entrar em `expected` pelo inventário e possuir um
