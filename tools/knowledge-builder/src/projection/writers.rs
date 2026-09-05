@@ -12,11 +12,14 @@ pub(crate) use system::write_system;
 pub(crate) use system_media::write_system_media;
 
 #[cfg(test)]
-use system::{system_insert_statement, SystemInsertCase, SystemInsertStatement};
+pub(crate) use system::write_system_row;
+
+#[cfg(test)]
+use system::{system_insert_statement, SystemInsertStatement};
 
 use super::contract::{
     MetadataOperation, MetadataRow, SystemMediaProjectionOperation, SystemProjectionOperation,
-    SystemRow,
+    SystemRow, SystemRowCase, SystemRowDescriptor,
 };
 use crate::{
     databases::DatabaseKind,

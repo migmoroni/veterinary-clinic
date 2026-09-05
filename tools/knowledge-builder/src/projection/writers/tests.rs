@@ -1,19 +1,15 @@
-//! Verifies that every typed system row matches its fixed SQL insert contract.
+//! Verifies every fixed system INSERT against the canonical ordered row descriptor.
 
 use super::*;
-use crate::ledger::SystemColumn;
+use crate::{
+    ledger::SystemColumn,
+    projection::contract::{representative_row, SystemRowCase},
+};
 use std::collections::BTreeSet;
 
 struct ParsedInsert<'a> {
     table: &'a str,
     columns: Vec<SystemColumn>,
-}
-
-fn empty_content_json() -> String {
-    format!(
-        r#"{{"schemaVersion":{},"sections":[]}}"#,
-        crate::contracts::version::CONTENT_DOCUMENT_SCHEMA_VERSION
-    )
 }
 
 fn parse_insert(sql: &str) -> Result<ParsedInsert<'_>, String> {
@@ -67,189 +63,32 @@ fn parse_insert(sql: &str) -> Result<ParsedInsert<'_>, String> {
 fn validate_statement(
     row: &SystemRow,
     statement: &SystemInsertStatement,
-) -> Result<BTreeSet<SystemColumn>, String> {
+) -> Result<Vec<SystemColumn>, String> {
     let parsed = parse_insert(statement.sql)?;
-    if parsed.table != statement.table.as_str() {
+    let descriptor = row.descriptor();
+    if parsed.table != descriptor.table.as_str() || statement.table != descriptor.table {
         return Err(format!(
-            "SQL table {} differs from descriptor table {}",
-            parsed.table,
-            statement.table.as_str()
+            "INSERT table differs from row descriptor for {:?}",
+            descriptor.case
         ));
     }
-    if statement.table != row.table() {
+    if parsed.columns != descriptor.columns {
         return Err(format!(
-            "descriptor table {} differs from payload table {}",
-            statement.table.as_str(),
-            row.table().as_str()
+            "INSERT columns differ from ordered row descriptor for {:?}",
+            descriptor.case
         ));
     }
-    let columns = parsed.columns.into_iter().collect::<BTreeSet<_>>();
-    if columns != row.materialized_columns() {
-        return Err(format!(
-            "SQL columns differ from payload columns for {:?}",
-            statement.case
-        ));
-    }
-    Ok(columns)
-}
-
-fn taxonomy_term(marker: &str) -> SystemRow {
-    SystemRow::TaxonomyTerm {
-        taxonomy_id: format!("taxonomy-{marker}"),
-        term_key: format!("term-{marker}"),
-        parent_term_key: Some(format!("parent-{marker}")),
-        label: format!("Label {marker}"),
-        normalized_label: format!("label {marker}"),
-        aliases_json: format!(r#"["alias-{marker}"]"#),
-        sort_order: 10,
-    }
-}
-
-fn representative_row(case: SystemInsertCase) -> SystemRow {
-    match case {
-        SystemInsertCase::TaxonomyRegistry => SystemRow::TaxonomyRegistry {
-            id: "taxonomy-registry".to_string(),
-            domain: "product".to_string(),
-            purpose: "target".to_string(),
-        },
-        SystemInsertCase::TaxonomyTerm => taxonomy_term("taxonomy"),
-        SystemInsertCase::GeoPlace => SystemRow::GeoPlace {
-            id: "place-br".to_string(),
-            place_type: "country".to_string(),
-            parent_place_id: None,
-            country_codes_json: r#"["BR"]"#.to_string(),
-            latitude: Some(-15.8),
-            longitude: Some(-47.9),
-            name: "Brasil".to_string(),
-            normalized_name: "brasil".to_string(),
-            aliases_json: r#"["Brazil"]"#.to_string(),
-        },
-        SystemInsertCase::Life => SystemRow::Life {
-            id: "canis".to_string(),
-            domain_id: "eukaryota".to_string(),
-            kingdom_id: Some("animalia".to_string()),
-            phylum_id: Some("chordata".to_string()),
-            class_id: Some("mammalia".to_string()),
-            order_id: Some("carnivora".to_string()),
-            family_id: Some("canidae".to_string()),
-            genus_id: Some("canis".to_string()),
-            species_id: None,
-            breed_id: None,
-            variety_id: None,
-            size_term_key: Some("medium".to_string()),
-            name: "Canis".to_string(),
-            normalized_name: "canis".to_string(),
-            aliases_json: "[]".to_string(),
-            stage_metrics_json: None,
-            content_json: empty_content_json(),
-        },
-        SystemInsertCase::LifeOrigin => SystemRow::LifeOrigin {
-            life_id: "canis".to_string(),
-            place_id: "place-br".to_string(),
-            sort_order: 30,
-        },
-        SystemInsertCase::Manufacturer => SystemRow::Manufacturer {
-            id: "manufacturer-one".to_string(),
-            name: "Manufacturer One".to_string(),
-            normalized_name: "manufacturer one".to_string(),
-            aliases_json: "[]".to_string(),
-            regions_json: r#"["BR"]"#.to_string(),
-            website: Some("https://example.test".to_string()),
-            content_json: empty_content_json(),
-        },
-        SystemInsertCase::ActiveIngredient => SystemRow::ActiveIngredient {
-            id: "ingredient-one".to_string(),
-            name: "Ingredient One".to_string(),
-            normalized_name: "ingredient one".to_string(),
-            aliases_json: "[]".to_string(),
-            regions_json: r#"["BR"]"#.to_string(),
-            nomenclature_json: r#"{"standards":["inn"]}"#.to_string(),
-            atc_vet_code: Some("QA01".to_string()),
-            atc_vet_system: Some("ATCvet".to_string()),
-            denominations_json: r#"{"inn":"Ingredient One"}"#.to_string(),
-            content_json: empty_content_json(),
-        },
-        SystemInsertCase::Condition => SystemRow::Condition {
-            id: "condition-one".to_string(),
-            name: "Condition One".to_string(),
-            normalized_name: "condition one".to_string(),
-            aliases_json: "[]".to_string(),
-            regions_json: r#"["BR"]"#.to_string(),
-            content_json: empty_content_json(),
-        },
-        SystemInsertCase::Product => SystemRow::Product {
-            id: "product-one".to_string(),
-            name: "Product One".to_string(),
-            normalized_name: "product one".to_string(),
-            applicable_taxon_ids_json: r#"["dog"]"#.to_string(),
-            aliases_json: "[]".to_string(),
-            manufacturer_id: "manufacturer-one".to_string(),
-            regions_json: r#"["BR"]"#.to_string(),
-            regulatory_identifiers_json: r#"{"BR":"123"}"#.to_string(),
-            commercial_line: Some("Companion".to_string()),
-            presentation_dosage: Some("10 mg".to_string()),
-            target_species_warnings_json: "[]".to_string(),
-            content_json: empty_content_json(),
-        },
-        SystemInsertCase::EntityTaxonomy => SystemRow::EntityTaxonomy {
-            entity_type: "product".to_string(),
-            entity_id: "product-one".to_string(),
-            taxonomy_id: "taxonomy-one".to_string(),
-            term_key: "term-one".to_string(),
-            sort_order: 40,
-        },
-        SystemInsertCase::ProductActiveIngredient => SystemRow::ProductActiveIngredient {
-            product_id: "product-one".to_string(),
-            active_ingredient_id: "ingredient-one".to_string(),
-            sort_order: 50,
-        },
-        SystemInsertCase::TreatmentProtocol => SystemRow::TreatmentProtocol {
-            id: "protocol-one".to_string(),
-            kind: "treatment".to_string(),
-            name: "Protocol One".to_string(),
-            normalized_name: "protocol one".to_string(),
-            applicable_taxon_ids_json: r#"["dog"]"#.to_string(),
-            observation: Some("Observe".to_string()),
-        },
-        SystemInsertCase::TreatmentProtocolItem => SystemRow::TreatmentProtocolItem {
-            protocol_id: "protocol-one".to_string(),
-            product_id: "product-one".to_string(),
-            sort_order: 60,
-        },
-        SystemInsertCase::TreatmentProtocolDose => SystemRow::TreatmentProtocolDose {
-            protocol_id: "protocol-one".to_string(),
-            dose_id: "dose-one".to_string(),
-            label: "Daily".to_string(),
-            validity_value: 7,
-            validity_unit: "day".to_string(),
-            sort_order: 70,
-        },
-        SystemInsertCase::SearchTerm => SystemRow::SearchTerm {
-            entity_type: "product".to_string(),
-            entity_id: "product-one".to_string(),
-            value: "Product One".to_string(),
-            normalized_value: "product one".to_string(),
-            provenance: "name".to_string(),
-            sort_order: 80,
-        },
-        SystemInsertCase::MediaReference => SystemRow::MediaReference {
-            entity_type: "product".to_string(),
-            entity_id: "product-one".to_string(),
-            role: "cover".to_string(),
-            media_key: "product/product-one/cover".to_string(),
-            sort_order: 90,
-        },
-    }
+    Ok(parsed.columns)
 }
 
 #[test]
-fn every_system_insert_matches_its_payload_table_and_columns() {
+fn every_system_insert_matches_its_case_table_and_ordered_columns() {
     let mut observed_cases = BTreeSet::new();
     let mut observed_columns = BTreeSet::new();
 
-    for expected_case in SystemInsertCase::ALL {
+    for expected_case in SystemRowCase::ALL {
         let row = representative_row(expected_case);
-        let statement = system_insert_statement(&row).unwrap();
+        let statement = system_insert_statement(&row);
         assert_eq!(statement.case, expected_case);
         assert!(
             observed_cases.insert(statement.case),
@@ -261,7 +100,7 @@ fn every_system_insert_matches_its_payload_table_and_columns() {
 
     assert_eq!(
         observed_cases,
-        SystemInsertCase::ALL.into_iter().collect::<BTreeSet<_>>()
+        SystemRowCase::ALL.into_iter().collect::<BTreeSet<_>>()
     );
     assert_eq!(
         observed_columns,
@@ -270,7 +109,7 @@ fn every_system_insert_matches_its_payload_table_and_columns() {
 }
 
 #[test]
-fn structural_insert_reader_rejects_invalid_columns_and_shape() {
+fn structural_insert_parser_rejects_shape_column_and_order_divergence() {
     assert!(parse_insert("UPDATE taxonomy_registry SET domain = ?1").is_err());
     assert!(parse_insert("INSERT INTO  (id) VALUES (?1)").is_err());
     assert!(parse_insert("INSERT INTO taxonomy_registry () VALUES ()").is_err());
@@ -279,11 +118,18 @@ fn structural_insert_reader_rejects_invalid_columns_and_shape() {
     );
     assert!(parse_insert("INSERT INTO taxonomy_registry (id, id) VALUES (?1, ?2)").is_err());
 
-    let row = representative_row(SystemInsertCase::TaxonomyRegistry);
+    let row = representative_row(SystemRowCase::TaxonomyRegistry);
     let extra_column = SystemInsertStatement {
-        case: SystemInsertCase::TaxonomyRegistry,
+        case: SystemRowCase::TaxonomyRegistry,
         table: SystemTable::TaxonomyRegistry,
         sql: "INSERT INTO taxonomy_registry (id, domain, purpose, label) VALUES (?1, ?2, ?3, ?4)",
     };
     assert!(validate_statement(&row, &extra_column).is_err());
+
+    let reordered = SystemInsertStatement {
+        case: SystemRowCase::TaxonomyRegistry,
+        table: SystemTable::TaxonomyRegistry,
+        sql: "INSERT INTO taxonomy_registry (domain, id, purpose) VALUES (?1, ?2, ?3)",
+    };
+    assert!(validate_statement(&row, &reordered).is_err());
 }

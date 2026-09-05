@@ -1,0 +1,155 @@
+//! Supplies one valid, distinctive payload for every closed system row case.
+
+use super::{SystemRow, SystemRowCase};
+
+fn empty_content_json() -> String {
+    format!(
+        r#"{{"schemaVersion":{},"sections":[]}}"#,
+        crate::contracts::version::CONTENT_DOCUMENT_SCHEMA_VERSION
+    )
+}
+
+pub(crate) fn representative_row(case: SystemRowCase) -> SystemRow {
+    match case {
+        SystemRowCase::TaxonomyRegistry => SystemRow::TaxonomyRegistry {
+            id: "taxonomy-registry".to_string(),
+            domain: "product".to_string(),
+            purpose: "target".to_string(),
+        },
+        SystemRowCase::TaxonomyTerm => SystemRow::TaxonomyTerm {
+            taxonomy_id: "taxonomy-registry".to_string(),
+            term_key: "term-taxonomy".to_string(),
+            parent_term_key: None,
+            label: "Taxonomy label".to_string(),
+            normalized_label: "taxonomy label".to_string(),
+            aliases_json: r#"["taxonomy alias"]"#.to_string(),
+            sort_order: 10,
+        },
+        SystemRowCase::GeoPlace => SystemRow::GeoPlace {
+            id: "place-br".to_string(),
+            place_type: "country".to_string(),
+            parent_place_id: None,
+            country_codes_json: r#"["BR"]"#.to_string(),
+            latitude: Some(-15.8),
+            longitude: Some(-47.9),
+            name: "Brasil".to_string(),
+            normalized_name: "brasil".to_string(),
+            aliases_json: r#"["Brazil"]"#.to_string(),
+        },
+        SystemRowCase::Life => SystemRow::Life {
+            id: "eukaryota".to_string(),
+            domain_id: "eukaryota".to_string(),
+            kingdom_id: None,
+            phylum_id: None,
+            class_id: None,
+            order_id: None,
+            family_id: None,
+            genus_id: None,
+            species_id: None,
+            breed_id: None,
+            variety_id: None,
+            size_term_key: Some("medium".to_string()),
+            name: "Eukaryota".to_string(),
+            normalized_name: "eukaryota".to_string(),
+            aliases_json: "[]".to_string(),
+            stage_metrics_json: Some(r#"{"adult":{"weightKg":10}}"#.to_string()),
+            content_json: empty_content_json(),
+        },
+        SystemRowCase::LifeOrigin => SystemRow::LifeOrigin {
+            life_id: "eukaryota".to_string(),
+            place_id: "place-br".to_string(),
+            sort_order: 30,
+        },
+        SystemRowCase::Manufacturer => SystemRow::Manufacturer {
+            id: "manufacturer-one".to_string(),
+            name: "Manufacturer One".to_string(),
+            normalized_name: "manufacturer one".to_string(),
+            aliases_json: "[]".to_string(),
+            regions_json: r#"["BR"]"#.to_string(),
+            website: Some("https://example.test".to_string()),
+            content_json: empty_content_json(),
+        },
+        SystemRowCase::ActiveIngredient => SystemRow::ActiveIngredient {
+            id: "ingredient-one".to_string(),
+            name: "Ingredient One".to_string(),
+            normalized_name: "ingredient one".to_string(),
+            aliases_json: "[]".to_string(),
+            regions_json: r#"["BR"]"#.to_string(),
+            nomenclature_json: r#"{"standards":["inn"]}"#.to_string(),
+            atc_vet_code: Some("QA01".to_string()),
+            atc_vet_system: Some("ATCvet".to_string()),
+            denominations_json: r#"{"inn":"Ingredient One"}"#.to_string(),
+            content_json: empty_content_json(),
+        },
+        SystemRowCase::Condition => SystemRow::Condition {
+            id: "condition-one".to_string(),
+            name: "Condition One".to_string(),
+            normalized_name: "condition one".to_string(),
+            aliases_json: "[]".to_string(),
+            regions_json: r#"["BR"]"#.to_string(),
+            content_json: empty_content_json(),
+        },
+        SystemRowCase::Product => SystemRow::Product {
+            id: "product-one".to_string(),
+            name: "Product One".to_string(),
+            normalized_name: "product one".to_string(),
+            applicable_taxon_ids_json: r#"["eukaryota"]"#.to_string(),
+            aliases_json: "[]".to_string(),
+            manufacturer_id: "manufacturer-one".to_string(),
+            regions_json: r#"["BR"]"#.to_string(),
+            regulatory_identifiers_json: r#"{"BR":"123"}"#.to_string(),
+            commercial_line: Some("Companion".to_string()),
+            presentation_dosage: Some("10 mg".to_string()),
+            target_species_warnings_json: "[]".to_string(),
+            content_json: empty_content_json(),
+        },
+        SystemRowCase::EntityTaxonomy => SystemRow::EntityTaxonomy {
+            entity_type: "product".to_string(),
+            entity_id: "product-one".to_string(),
+            taxonomy_id: "taxonomy-registry".to_string(),
+            term_key: "term-taxonomy".to_string(),
+            sort_order: 40,
+        },
+        SystemRowCase::ProductActiveIngredient => SystemRow::ProductActiveIngredient {
+            product_id: "product-one".to_string(),
+            active_ingredient_id: "ingredient-one".to_string(),
+            sort_order: 50,
+        },
+        SystemRowCase::TreatmentProtocol => SystemRow::TreatmentProtocol {
+            id: "protocol-one".to_string(),
+            kind: "vaccine".to_string(),
+            name: "Protocol One".to_string(),
+            normalized_name: "protocol one".to_string(),
+            applicable_taxon_ids_json: r#"["eukaryota"]"#.to_string(),
+            observation: Some("Observe".to_string()),
+        },
+        SystemRowCase::TreatmentProtocolItem => SystemRow::TreatmentProtocolItem {
+            protocol_id: "protocol-one".to_string(),
+            product_id: "product-one".to_string(),
+            sort_order: 60,
+        },
+        SystemRowCase::TreatmentProtocolDose => SystemRow::TreatmentProtocolDose {
+            protocol_id: "protocol-one".to_string(),
+            dose_id: "dose-one".to_string(),
+            label: "Daily".to_string(),
+            validity_value: 7,
+            validity_unit: "days".to_string(),
+            sort_order: 70,
+        },
+        SystemRowCase::SearchTerm => SystemRow::SearchTerm {
+            entity_type: "product".to_string(),
+            entity_id: "product-one".to_string(),
+            value: "Product One".to_string(),
+            normalized_value: "product one".to_string(),
+            provenance: "name".to_string(),
+            sort_order: 80,
+        },
+        SystemRowCase::MediaReference => SystemRow::MediaReference {
+            entity_type: "product".to_string(),
+            entity_id: "product-one".to_string(),
+            role: "cover".to_string(),
+            media_key: "product/product-one/media/cover.png".to_string(),
+            sort_order: 90,
+        },
+    }
+}

@@ -7,9 +7,7 @@ mod helpers;
 mod metrics;
 mod model;
 mod operations;
-mod row_columns;
-mod row_identity;
-mod row_table;
+mod rows;
 mod taxonomy;
 mod validation;
 
@@ -19,8 +17,12 @@ mod tests;
 pub(crate) use model::{
     CasProjectionOperation, CompilationOperation, MetadataOperation, MetadataRow,
     ProjectionContract, ProjectionSourceFacts, SystemMediaProjectionOperation, SystemMediaRow,
-    SystemProjectionOperation, SystemRow,
+    SystemProjectionOperation,
 };
+pub(crate) use rows::{RowIdentity, SystemRow, SystemRowCase, SystemRowDescriptor};
+
+#[cfg(test)]
+pub(crate) use rows::representative_row;
 
 #[cfg(test)]
 use self::validation::{
@@ -42,7 +44,7 @@ use crate::{
     ledger::{
         owned_obligations, search_candidates, CompilationOperationId, EntityIdentity,
         ObligationClass, ObligationOwnership, ProjectionObligation, ProjectionOperationId,
-        ProjectionTarget, RowEvent, SystemColumn, SystemTable,
+        ProjectionTarget, RowEvent, SystemTable,
     },
     markdown::CompiledDocument,
     media::decode_hex,

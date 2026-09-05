@@ -10,6 +10,9 @@ mod reuse;
 mod writers;
 
 #[cfg(test)]
+pub(crate) use writers::write_system_row;
+
+#[cfg(test)]
 mod tests;
 
 pub use build::build_artifacts;

@@ -1,6 +1,7 @@
 //! Exercises contract validation against deliberately divergent operation evidence.
 
 use super::*;
+use crate::ledger::SystemColumn;
 
 fn product_row() -> SystemRow {
     SystemRow::Product {
