@@ -1,4 +1,4 @@
-//! Provides typed semantic verification of persisted artifacts against the
-//! in-memory projection contracts that produced them.
+//! Provides the single staged and reusable artifact-verification pipeline.
 
-pub(crate) mod readers;
+pub(crate) mod artifact;
+mod readers;

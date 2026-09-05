@@ -576,6 +576,17 @@ fn artifact_verifier_recalculates_manifest_report_and_database_facts() {
     });
     assert!(error.contains("projection evidence mismatch"));
 
+    let error = run_case("tampered-evidence-digest", &|output, result| {
+        let report_path = output.join(&result.projection.report_path);
+        let mut report: serde_json::Value =
+            serde_json::from_slice(&fs::read(&report_path).unwrap()).unwrap();
+        report["locales"]["pt-BR"]["evidenceDigestSha256"] =
+            serde_json::Value::String("0".repeat(64));
+        fs::write(&report_path, serde_json::to_vec_pretty(&report).unwrap()).unwrap();
+        refresh_projection_declarations(output, result);
+    });
+    assert!(error.contains("projection evidence mismatch"));
+
     let error = run_case("tampered-metadata", &|output, result| {
         let path = output.join(&result.locales["pt-BR"].system.path);
         let database = Connection::open(&path).unwrap();
@@ -597,6 +608,30 @@ fn artifact_verifier_recalculates_manifest_report_and_database_facts() {
         refresh_database_declarations(output, result, "pt-BR", "system");
     });
     assert!(error.contains("physical schema differs"));
+
+    let error = run_case("tampered-application-id", &|output, result| {
+        let path = output.join(&result.locales["pt-BR"].system.path);
+        let database = Connection::open(&path).unwrap();
+        database.execute_batch("PRAGMA application_id = 1").unwrap();
+        drop(database);
+        refresh_database_declarations(output, result, "pt-BR", "system");
+    });
+    assert!(
+        error.contains("technical identity mismatch"),
+        "unexpected application_id error: {error}"
+    );
+
+    let error = run_case("tampered-user-version", &|output, result| {
+        let path = output.join(&result.locales["pt-BR"].system.path);
+        let database = Connection::open(&path).unwrap();
+        database.execute_batch("PRAGMA user_version = 1").unwrap();
+        drop(database);
+        refresh_database_declarations(output, result, "pt-BR", "system");
+    });
+    assert!(
+        error.contains("technical identity mismatch"),
+        "unexpected user_version error: {error}"
+    );
 
     let error = run_case("tampered-specific-taxonomy-table", &|output, result| {
         let path = output.join(&result.locales["pt-BR"].system.path);
@@ -1312,6 +1347,17 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
         .filter_map(|line| line.split_once("  ").map(|(_, path)| path))
         .find(|path| path.starts_with("CAS/system/"))
         .unwrap();
+    let canonical_cas = fs::read(output.path().join(cas_relative)).unwrap();
+    fs::remove_file(output.path().join(cas_relative)).unwrap();
+    let error = build(&BuildOptions {
+        source: source.path().to_path_buf(),
+        output: output.path().to_path_buf(),
+        context: context_path(),
+    })
+    .unwrap_err();
+    assert!(error.contains("cannot inspect artifact"));
+    fs::write(output.path().join(cas_relative), canonical_cas).unwrap();
+
     let tampered_cas = b"tampered CAS object";
     fs::write(output.path().join(cas_relative), tampered_cas).unwrap();
     replace_checksum_entry(

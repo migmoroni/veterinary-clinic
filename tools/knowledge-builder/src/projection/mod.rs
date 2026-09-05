@@ -31,7 +31,6 @@ use self::{
     reuse::{assert_shared_fingerprint, database_artifact, reuse_or_reject_existing, set_digest},
 };
 use crate::{
-    artifact_verifier::ArtifactVerifier,
     contracts::{
         artifact::{
             locale_artifact, locale_directory, version_artifact, version_root, VersionArtifact,
@@ -53,6 +52,7 @@ use crate::{
     },
     schemas,
     validation::ValidatedSource,
+    verification::artifact::ArtifactVerifier,
 };
 use std::{
     collections::{BTreeMap, BTreeSet},

@@ -3,7 +3,6 @@
 //! The library owns source validation, localized projection, the public SQLite
 //! schemas, system media indexes, CAS materialization and deterministic reports.
 
-mod artifact_verifier;
 mod contracts;
 mod databases;
 mod markdown;
