@@ -1,24 +1,39 @@
 //! Persists typed system rows through fixed, structurally verified SQLite statements.
 
+use super::metadata::write_metadata;
 use super::*;
 
 pub(crate) fn write_system(
     connection: &mut Connection,
+    metadata: &[MetadataOperation],
     operations: &[SystemProjectionOperation],
-    ledger: &mut ProjectionLedger,
-) -> Result<(), String> {
+) -> Result<ConfirmedReceiptBatch, String> {
     let transaction = connection
         .transaction()
         .map_err(|error| format!("cannot begin system projection: {error}"))?;
-    let mut journal = ledger.journal();
+    let mut pending = write_metadata(&transaction, DatabaseKind::System, metadata)?;
     for operation in operations {
         let affected = write_system_row(&transaction, &operation.row)?;
-        journal.complete_operation(&operation.obligations, affected, operation.event.clone())?;
+        pending.push(PendingReceipt::new(
+            operation.id(),
+            operation.obligations.clone(),
+            ProjectionEvent::SqliteRow(operation.event.clone()),
+            affected,
+        )?);
     }
     transaction
         .commit()
         .map_err(|error| format!("cannot commit system projection: {error}"))?;
-    ledger.commit(journal)
+    preserve_deterministic_write_epochs(
+        connection,
+        DatabaseKind::System,
+        metadata
+            .iter()
+            .filter(|operation| operation.database == DatabaseKind::System)
+            .count(),
+        !operations.is_empty(),
+    )?;
+    ConfirmedReceiptBatch::confirm(pending)
 }
 
 pub(super) struct SystemInsertStatement {

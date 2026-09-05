@@ -1,13 +1,36 @@
-//! Defines the closed identities, operation IDs, source tokens, projection targets,
-//! SQLite tables and columns shared by the ledger subsystems.
+//! Defines the closed vocabulary shared by projection coverage proofs.
 
 use crate::{contracts::locale::KnowledgeLocale, databases::DatabaseKind};
 use std::fmt;
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub(crate) struct RowIdentity(String);
+
+impl RowIdentity {
+    pub(crate) fn new(value: impl Into<String>) -> Self {
+        Self(value.into())
+    }
+}
+
+impl fmt::Display for RowIdentity {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(&self.0)
+    }
+}
+
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub(crate) struct EntityIdentity {
     pub entity_type: String,
     pub id: String,
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct SearchCandidate {
+    pub entity: EntityIdentity,
+    pub value: String,
+    pub provenance: String,
+    pub occurrence: usize,
+    pub source: SourceToken,
 }
 
 impl EntityIdentity {
@@ -264,7 +287,7 @@ pub(crate) enum ProjectionOperationId {
     },
     SystemRow {
         table: SystemTable,
-        row: String,
+        row: RowIdentity,
     },
     SystemMediaAsset {
         media_key: String,
@@ -405,12 +428,12 @@ pub(crate) enum ProjectionTarget {
     TableRow {
         database: DatabaseKind,
         table: SystemTable,
-        row: String,
+        row: RowIdentity,
     },
     TableColumn {
         database: DatabaseKind,
         table: SystemTable,
-        row: String,
+        row: RowIdentity,
         column: SystemColumn,
     },
     SearchTerm {
@@ -464,6 +487,6 @@ impl fmt::Display for ProjectionObligation {
 pub(crate) struct RowEvent {
     pub database: DatabaseKind,
     pub table: SystemTable,
-    pub row: String,
+    pub row: RowIdentity,
     pub entity: Option<EntityIdentity>,
 }

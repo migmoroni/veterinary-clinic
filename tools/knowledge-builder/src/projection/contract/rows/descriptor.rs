@@ -1,8 +1,7 @@
 //! Binds each system row case to its table, logical identity, and ordered columns.
 
 use super::SystemRow;
-use crate::ledger::{SystemColumn, SystemTable};
-use std::fmt;
+use crate::projection::coverage::{RowIdentity, SystemColumn, SystemTable};
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub(crate) enum SystemRowCase {
@@ -44,25 +43,6 @@ impl SystemRowCase {
         Self::SearchTerm,
         Self::MediaReference,
     ];
-}
-
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub(crate) struct RowIdentity(String);
-
-impl RowIdentity {
-    fn new(value: String) -> Self {
-        Self(value)
-    }
-
-    pub(crate) fn into_string(self) -> String {
-        self.0
-    }
-}
-
-impl fmt::Display for RowIdentity {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&self.0)
-    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -326,10 +306,6 @@ impl SystemRow {
 
     pub(crate) fn table(&self) -> SystemTable {
         self.descriptor().table
-    }
-
-    pub(crate) fn logical_row_id(&self) -> String {
-        self.descriptor().identity.into_string()
     }
 
     pub(crate) fn materialized_columns(&self) -> &'static [SystemColumn] {

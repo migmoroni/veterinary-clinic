@@ -2,10 +2,8 @@
 //! observed databases with the expected locale projection contract.
 
 use crate::{
-    ledger::SystemTable,
-    projection::contract::{
-        MetadataRow, ProjectionContract, RowIdentity, SystemMediaRow, SystemRow,
-    },
+    projection::contract::{MetadataRow, ProjectionContract, SystemMediaRow, SystemRow},
+    projection::coverage::{RowIdentity, SystemTable},
 };
 use rusqlite::{Connection, Row};
 use std::collections::BTreeMap;

@@ -1,11 +1,19 @@
-//! Stages and atomically publishes content-addressed media objects.
+//! Stages, verifies, and confirms content-addressed media objects.
 
-use super::*;
+use super::receipts::{ConfirmedReceiptBatch, PendingReceipt, ProjectionEvent};
+use crate::{
+    contracts::locale::KnowledgeLocale,
+    media::{cas_relative_path, sha256_hex},
+    projection::{
+        contract::ProjectionContract, coverage::ProjectionOperationId, filesystem::recursive_files,
+    },
+};
+use std::{collections::BTreeMap, fs, io::Write, path::Path};
 
-pub(super) fn stage_cas_objects(
+pub(crate) fn stage_cas_objects(
     contracts: &BTreeMap<KnowledgeLocale, ProjectionContract>,
     staging: &Path,
-) -> Result<(), String> {
+) -> Result<BTreeMap<KnowledgeLocale, ConfirmedReceiptBatch>, String> {
     let mut objects = BTreeMap::<String, &[u8]>::new();
     for contract in contracts.values() {
         for operation in &contract.cas {
@@ -54,10 +62,38 @@ pub(super) fn stage_cas_objects(
             ));
         }
     }
-    Ok(())
+    let mut receipts = BTreeMap::new();
+    for (locale, contract) in contracts {
+        let mut pending = Vec::new();
+        for operation in &contract.cas {
+            let path = staging.join(cas_relative_path(&operation.content_hash)?);
+            let persisted = fs::read(&path)
+                .map_err(|error| format!("cannot reread CAS staging object: {error}"))?;
+            if sha256_hex(&persisted) != operation.content_hash {
+                return Err(format!(
+                    "CAS staging object failed receipt verification: {}",
+                    path.display()
+                ));
+            }
+            pending.push(PendingReceipt::new(
+                ProjectionOperationId::CasObject {
+                    content_hash: operation.content_hash.clone(),
+                },
+                operation.obligations.clone(),
+                ProjectionEvent::CasObject {
+                    content_hash: operation.content_hash.clone(),
+                },
+                1,
+            )?);
+        }
+        if !pending.is_empty() {
+            receipts.insert(*locale, ConfirmedReceiptBatch::confirm(pending)?);
+        }
+    }
+    Ok(receipts)
 }
 
-pub(super) fn commit_cas(staging: &Path, final_root: &Path) -> Result<(), String> {
+pub(crate) fn commit_cas(staging: &Path, final_root: &Path) -> Result<(), String> {
     fs::create_dir_all(final_root).map_err(|error| format!("cannot create CAS/system: {error}"))?;
     for staged in recursive_files(staging)? {
         let relative = staged

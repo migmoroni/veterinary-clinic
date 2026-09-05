@@ -7,6 +7,7 @@ mod helpers;
 mod metrics;
 mod model;
 mod operations;
+mod ownership;
 mod rows;
 mod taxonomy;
 mod validation;
@@ -19,7 +20,7 @@ pub(crate) use model::{
     ProjectionContract, ProjectionSourceFacts, SystemMediaProjectionOperation, SystemMediaRow,
     SystemProjectionOperation,
 };
-pub(crate) use rows::{RowIdentity, SystemRow, SystemRowCase, SystemRowDescriptor};
+pub(crate) use rows::{SystemRow, SystemRowCase, SystemRowDescriptor};
 
 #[cfg(test)]
 pub(crate) use rows::representative_row;
@@ -41,17 +42,19 @@ use crate::{
         version::BUILD_RESULT_SCHEMA_VERSION,
     },
     databases::DatabaseKind,
-    ledger::{
-        owned_obligations, search_candidates, CompilationOperationId, EntityIdentity,
-        ObligationClass, ObligationOwnership, ProjectionObligation, ProjectionOperationId,
-        ProjectionTarget, RowEvent, SystemTable,
-    },
     markdown::CompiledDocument,
     media::decode_hex,
     normalization::{normalize_identity_key, normalize_search_text},
+    projection::coverage::{
+        CompilationOperationId, EntityIdentity, ObligationClass, ProjectionObligation,
+        ProjectionOperationId, ProjectionTarget, RowEvent, RowIdentity, SearchCandidate,
+        SystemTable,
+    },
     report::BuildContext,
     schemas,
     source::{CanonicalEntity, LocalizedContent, LocalizedValue, TaxonomyEntity},
     validation::{ValidatedEntity, ValidatedSource},
 };
 use std::collections::{BTreeMap, BTreeSet};
+
+use self::ownership::ObligationOwnership;

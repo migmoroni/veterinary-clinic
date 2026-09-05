@@ -71,12 +71,11 @@ pub(super) fn project_media_references(
 }
 
 pub(super) fn project_search(
-    source: &ValidatedSource,
-    locale: KnowledgeLocale,
+    candidates: Vec<SearchCandidate>,
     claims: &mut ObligationOwnership,
     operations: &mut Vec<SystemProjectionOperation>,
 ) -> Result<(), String> {
-    for candidate in search_candidates(source, locale)? {
+    for candidate in candidates {
         let row_id = format!("{}/{}", candidate.entity, candidate.occurrence);
         push_system(
             operations,
@@ -124,7 +123,7 @@ pub(super) fn push_system(
 ) -> Result<(), String> {
     let owner = ProjectionOperationId::SystemRow {
         table,
-        row: row_id.clone(),
+        row: RowIdentity::new(&row_id),
     };
     operations.push(SystemProjectionOperation {
         row,
@@ -132,7 +131,7 @@ pub(super) fn push_system(
         event: RowEvent {
             database: DatabaseKind::System,
             table,
-            row: row_id,
+            row: RowIdentity::new(row_id),
             entity,
         },
     });

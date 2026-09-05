@@ -6,7 +6,6 @@
 mod artifact_verifier;
 mod contracts;
 mod databases;
-mod ledger;
 mod markdown;
 mod media;
 mod normalization;

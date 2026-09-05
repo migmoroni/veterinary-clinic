@@ -1,7 +1,7 @@
 //! Exercises contract validation against deliberately divergent operation evidence.
 
 use super::*;
-use crate::ledger::SystemColumn;
+use crate::projection::coverage::{RowIdentity, SourceToken, SystemColumn};
 
 fn product_row() -> SystemRow {
     SystemRow::Product {
@@ -27,7 +27,7 @@ fn product_operation(target: ProjectionTarget) -> SystemProjectionOperation {
     SystemProjectionOperation {
         row: product_row(),
         obligations: BTreeSet::from([ProjectionObligation {
-            source: crate::ledger::SourceToken::Field {
+            source: SourceToken::Field {
                 entity: EntityIdentity::new("product", "id"),
                 path: "id".to_string(),
             },
@@ -37,7 +37,7 @@ fn product_operation(target: ProjectionTarget) -> SystemProjectionOperation {
         event: RowEvent {
             database: DatabaseKind::System,
             table: SystemTable::ProductCatalogItems,
-            row: "id".to_string(),
+            row: RowIdentity::new("id"),
             entity: Some(EntityIdentity::new("product", "id")),
         },
     }
@@ -48,7 +48,7 @@ fn system_operation_rejects_incompatible_column_and_identity() {
     let valid = product_operation(ProjectionTarget::TableColumn {
         database: DatabaseKind::System,
         table: SystemTable::ProductCatalogItems,
-        row: "id".to_string(),
+        row: RowIdentity::new("id"),
         column: SystemColumn::Id,
     });
     validate_system_operation(&valid, KnowledgeLocale::EnUs).unwrap();
@@ -56,7 +56,7 @@ fn system_operation_rejects_incompatible_column_and_identity() {
     let invalid_column = product_operation(ProjectionTarget::TableColumn {
         database: DatabaseKind::System,
         table: SystemTable::ProductCatalogItems,
-        row: "id".to_string(),
+        row: RowIdentity::new("id"),
         column: SystemColumn::Domain,
     });
     assert!(validate_system_operation(&invalid_column, KnowledgeLocale::EnUs).is_err());
@@ -64,7 +64,7 @@ fn system_operation_rejects_incompatible_column_and_identity() {
     let wrong_row = product_operation(ProjectionTarget::TableColumn {
         database: DatabaseKind::System,
         table: SystemTable::ProductCatalogItems,
-        row: "other".to_string(),
+        row: RowIdentity::new("other"),
         column: SystemColumn::Id,
     });
     assert!(validate_system_operation(&wrong_row, KnowledgeLocale::EnUs).is_err());
@@ -72,13 +72,13 @@ fn system_operation_rejects_incompatible_column_and_identity() {
     let wrong_table = product_operation(ProjectionTarget::TableColumn {
         database: DatabaseKind::System,
         table: SystemTable::ConditionCatalogItems,
-        row: "id".to_string(),
+        row: RowIdentity::new("id"),
         column: SystemColumn::Id,
     });
     assert!(validate_system_operation(&wrong_table, KnowledgeLocale::EnUs).is_err());
 
     let mut wrong_event = valid;
-    wrong_event.event.row = "other".to_string();
+    wrong_event.event.row = RowIdentity::new("other");
     assert!(validate_system_operation(&wrong_event, KnowledgeLocale::EnUs).is_err());
 }
 
@@ -94,7 +94,7 @@ fn search_operation_rejects_a_divergent_search_target() {
             sort_order: 0,
         },
         obligations: BTreeSet::from([ProjectionObligation {
-            source: crate::ledger::SourceToken::SearchValue {
+            source: SourceToken::SearchValue {
                 entity: EntityIdentity::new("product", "id"),
                 locale: KnowledgeLocale::EnUs,
                 provenance: "entity.name".to_string(),
@@ -111,7 +111,7 @@ fn search_operation_rejects_a_divergent_search_target() {
         event: RowEvent {
             database: DatabaseKind::System,
             table: SystemTable::EntitySearchTerms,
-            row: "product/id/0".to_string(),
+            row: RowIdentity::new("product/id/0"),
             entity: Some(EntityIdentity::new("product", "id")),
         },
     };
@@ -127,7 +127,7 @@ fn non_system_operations_reject_divergent_targets() {
             section_key: "about".to_string(),
         },
         obligations: BTreeSet::from([ProjectionObligation {
-            source: crate::ledger::SourceToken::Section {
+            source: SourceToken::Section {
                 entity: entity.clone(),
                 locale: KnowledgeLocale::EnUs,
                 section_key: "about".to_string(),
@@ -152,7 +152,7 @@ fn non_system_operations_reject_divergent_targets() {
             locale: "en-US".to_string(),
         },
         obligations: BTreeSet::from([ProjectionObligation {
-            source: crate::ledger::SourceToken::BuildMetadata {
+            source: SourceToken::BuildMetadata {
                 database: DatabaseKind::System,
                 locale: KnowledgeLocale::EnUs,
                 release: false,
@@ -167,7 +167,7 @@ fn non_system_operations_reject_divergent_targets() {
         event: RowEvent {
             database: DatabaseKind::System,
             table: SystemTable::KnowledgeBuildMetadata,
-            row: "1".to_string(),
+            row: RowIdentity::new("1"),
             entity: None,
         },
     };
@@ -187,7 +187,7 @@ fn non_system_operations_reject_divergent_targets() {
             height: 1,
         },
         obligations: BTreeSet::from([ProjectionObligation {
-            source: crate::ledger::SourceToken::MediaAsset {
+            source: SourceToken::MediaAsset {
                 locale: KnowledgeLocale::EnUs,
                 media_key: "condition/id/cover".to_string(),
             },
@@ -200,7 +200,7 @@ fn non_system_operations_reject_divergent_targets() {
         event: RowEvent {
             database: DatabaseKind::SystemMedia,
             table: SystemTable::MediaAssets,
-            row: "condition/id/cover".to_string(),
+            row: RowIdentity::new("condition/id/cover"),
             entity: None,
         },
     };
@@ -210,7 +210,7 @@ fn non_system_operations_reject_divergent_targets() {
         content_hash: "a".repeat(64),
         bytes: vec![1],
         obligations: BTreeSet::from([ProjectionObligation {
-            source: crate::ledger::SourceToken::CasObject {
+            source: SourceToken::CasObject {
                 locale: KnowledgeLocale::EnUs,
                 content_hash: "a".repeat(64),
             },
@@ -227,7 +227,7 @@ fn non_system_operations_reject_divergent_targets() {
 #[test]
 fn duplicate_operation_identity_is_rejected() {
     let obligation = ProjectionObligation {
-        source: crate::ledger::SourceToken::Document {
+        source: SourceToken::Document {
             entity: EntityIdentity::new("condition", "id"),
             locale: KnowledgeLocale::EnUs,
         },

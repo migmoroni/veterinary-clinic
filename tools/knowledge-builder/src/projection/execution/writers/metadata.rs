@@ -1,14 +1,13 @@
-//! Persists build and release metadata operations into a locale database.
+//! Persists build and release metadata operations inside a locale transaction.
 
 use super::*;
 
 pub(crate) fn write_metadata(
-    connection: &Connection,
+    transaction: &Transaction<'_>,
     database: DatabaseKind,
     operations: &[MetadataOperation],
-    ledger: &mut ProjectionLedger,
-) -> Result<(), String> {
-    let mut journal = ledger.journal();
+) -> Result<Vec<PendingReceipt>, String> {
+    let mut pending = Vec::new();
     for operation in operations
         .iter()
         .filter(|operation| operation.database == database)
@@ -20,7 +19,7 @@ pub(crate) fn write_metadata(
                 build_result_schema_version,
                 source_digest,
                 locale,
-            } => connection.execute(
+            } => transaction.execute(
                 "INSERT INTO knowledge_build_metadata (singleton, build_version, builder_version, build_result_schema_version, source_digest_sha256, locale) VALUES (1, ?1, ?2, ?3, ?4, ?5)",
                 params![build_version, builder_version, build_result_schema_version, source_digest, locale],
             ),
@@ -29,13 +28,18 @@ pub(crate) fn write_metadata(
                 generation,
                 revision,
                 locale,
-            } => connection.execute(
+            } => transaction.execute(
                 "INSERT INTO knowledge_release_metadata (singleton, release_id, generation, revision, locale) VALUES (1, ?1, ?2, ?3, ?4)",
                 params![release_id, generation, revision, locale],
             ),
         }
         .map_err(|error| format!("cannot persist metadata operation: {error}"))?;
-        journal.complete_operation(&operation.obligations, affected, operation.event.clone())?;
+        pending.push(PendingReceipt::new(
+            operation.id(),
+            operation.obligations.clone(),
+            ProjectionEvent::SqliteRow(operation.event.clone()),
+            affected,
+        )?);
     }
-    ledger.commit(journal)
+    Ok(pending)
 }

@@ -62,7 +62,10 @@ fn build_contracts(
     LOCALES
         .into_iter()
         .map(|locale| {
-            ProjectionContract::build(source, locale, context).map(|contract| (locale, contract))
+            let expected = expected_obligations(source, locale, context.release.is_some())?;
+            let candidates = inventory::search_candidates(source, locale)?;
+            ProjectionContract::build(source, locale, context, expected, candidates)
+                .map(|contract| (locale, contract))
         })
         .collect()
 }
@@ -83,14 +86,14 @@ fn build_in_staging(
 
     for locale in LOCALES {
         let contract = contracts.get(&locale).unwrap();
-        let mut ledger = ProjectionLedger::new(locale, contract.expected_obligations.clone());
-        let mut compilation_journal = ledger.journal();
-        for operation in &contract.compilation {
-            for obligation in &operation.obligations {
-                compilation_journal.complete(obligation.clone());
-            }
+        let mut ledger = ProjectionLedger::new(
+            locale,
+            contract.expected_obligations.clone(),
+            contract.ownership()?,
+        )?;
+        if let Some(receipts) = confirm_compilation(source, locale, &contract.compilation)? {
+            ledger.observe(receipts)?;
         }
-        ledger.commit(compilation_journal)?;
 
         let locale_directory = staging_version.join(locale_directory(locale));
         fs::create_dir_all(&locale_directory)
@@ -100,13 +103,8 @@ fn build_in_staging(
             locale_directory.join(DatabaseKind::SystemMedia.identity().artifact_filename);
 
         let mut system = databases::create(&system_path, DatabaseKind::System)?;
-        write_metadata(
-            &system,
-            DatabaseKind::System,
-            &contract.metadata,
-            &mut ledger,
-        )?;
-        write_system(&mut system, &contract.system, &mut ledger)?;
+        let system_receipts = write_system(&mut system, &contract.metadata, &contract.system)?;
+        ledger.observe(system_receipts)?;
         let current_system_fingerprint = databases::finalize(system, &system_path)?;
         assert_shared_fingerprint(
             &mut system_fingerprint,
@@ -116,13 +114,12 @@ fn build_in_staging(
         )?;
 
         let mut system_media = databases::create(&system_media_path, DatabaseKind::SystemMedia)?;
-        write_metadata(
-            &system_media,
-            DatabaseKind::SystemMedia,
+        let media_receipts = write_system_media(
+            &mut system_media,
             &contract.metadata,
-            &mut ledger,
+            &contract.system_media,
         )?;
-        write_system_media(&mut system_media, &contract.system_media, &mut ledger)?;
+        ledger.observe(media_receipts)?;
         let current_media_fingerprint = databases::finalize(system_media, &system_media_path)?;
         assert_shared_fingerprint(
             &mut media_fingerprint,
@@ -170,17 +167,12 @@ fn build_in_staging(
         completed_ledgers.insert(locale, ledger);
     }
 
-    stage_cas_objects(contracts, staging_cas)?;
+    let mut cas_receipts = stage_cas_objects(contracts, staging_cas)?;
     let mut finished_ledgers = BTreeMap::new();
     for (locale, mut ledger) in completed_ledgers {
-        let contract = contracts.get(&locale).unwrap();
-        let mut journal = ledger.journal();
-        for operation in &contract.cas {
-            for obligation in &operation.obligations {
-                journal.complete(obligation.clone());
-            }
+        if let Some(receipts) = cas_receipts.remove(&locale) {
+            ledger.observe(receipts)?;
         }
-        ledger.commit(journal)?;
         finished_ledgers.insert(locale, ledger.finish()?);
     }
     for hash in &all_cas_hashes {

@@ -1,7 +1,6 @@
-//! Derives deterministic localized search candidates from entities, related
-//! names, aliases, denominations, and taxonomy terms.
+//! Discovers deterministic locale search candidates from validated source data.
 
-use super::{journal::SearchCandidate, obligation_helpers::identity, SourceToken};
+use super::{helpers::identity, SearchCandidate, SourceToken};
 use crate::{
     contracts::locale::KnowledgeLocale,
     source::{CanonicalEntity, LocalizedContent, LocalizedValue, TaxonomyEntity},

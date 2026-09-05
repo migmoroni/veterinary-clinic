@@ -1,10 +1,10 @@
-//! Serializes the closed obligation model into canonical evidence DTOs and
-//! computes the stable digest embedded in projection reports.
+//! Serializes projection obligations into the canonical deterministic evidence digest.
 
-use super::{ObligationClass, ProjectionObligation, ProjectionTarget, SourceToken};
 use crate::{
-    contracts::version::PROJECTION_EVIDENCE_SCHEMA_VERSION, databases::DatabaseKind,
+    contracts::version::PROJECTION_EVIDENCE_SCHEMA_VERSION,
+    databases::DatabaseKind,
     media::sha256_hex,
+    projection::coverage::{ObligationClass, ProjectionObligation, ProjectionTarget, SourceToken},
 };
 use serde::Serialize;
 use std::collections::BTreeSet;
@@ -322,7 +322,7 @@ impl From<&ProjectionTarget> for EvidenceTarget {
             } => Self::TableRow {
                 database: database_name(*database),
                 table: table.as_str(),
-                row: row.clone(),
+                row: row.to_string(),
             },
             ProjectionTarget::TableColumn {
                 database,
@@ -332,7 +332,7 @@ impl From<&ProjectionTarget> for EvidenceTarget {
             } => Self::TableColumn {
                 database: database_name(*database),
                 table: table.as_str(),
-                row: row.clone(),
+                row: row.to_string(),
                 column: column.as_str().to_string(),
             },
             ProjectionTarget::SearchTerm {

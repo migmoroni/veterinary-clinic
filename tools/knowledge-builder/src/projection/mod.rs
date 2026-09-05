@@ -2,15 +2,17 @@
 //! publication through focused projection submodules.
 
 mod build;
-mod cas;
 pub(crate) mod contract;
+pub(crate) mod coverage;
+mod execution;
 mod filesystem;
+mod inventory;
+pub(crate) mod ledger;
 mod reporting;
 mod reuse;
-mod writers;
 
 #[cfg(test)]
-pub(crate) use writers::write_system_row;
+pub(crate) use execution::writers::write_system_row;
 
 #[cfg(test)]
 mod tests;
@@ -18,12 +20,15 @@ mod tests;
 pub use build::build_artifacts;
 
 use self::{
-    cas::{commit_cas, stage_cas_objects},
     contract::ProjectionContract,
-    filesystem::{recursive_files, remove_stale_staging},
+    execution::{
+        commit_cas, confirm_compilation, stage_cas_objects, write_system, write_system_media,
+    },
+    filesystem::remove_stale_staging,
+    inventory::expected_obligations,
+    ledger::{CompletedLedger, ProjectionLedger},
     reporting::projection_report,
     reuse::{assert_shared_fingerprint, database_artifact, reuse_or_reject_existing, set_digest},
-    writers::{write_metadata, write_system, write_system_media},
 };
 use crate::{
     artifact_verifier::ArtifactVerifier,
@@ -40,7 +45,6 @@ use crate::{
         },
     },
     databases::{self, DatabaseKind},
-    ledger::{CompletedLedger, ProjectionLedger},
     media::{cas_relative_path, sha256_hex},
     report::{
         self, BuildContext, BuildResult, CasResult, DatabaseArtifact, LocaleArtifacts,
@@ -53,6 +57,5 @@ use crate::{
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs,
-    io::Write,
     path::{Path, PathBuf},
 };

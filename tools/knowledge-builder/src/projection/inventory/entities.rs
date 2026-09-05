@@ -1,11 +1,8 @@
-//! Declares the closed obligation matrix for every canonical entity variant and
-//! routes repeated authoring patterns through shared ledger helpers.
+//! Builds the entity-specific portion of the independent expected inventory.
 
 use super::{
-    obligation_helpers::*,
-    ownership::{ObligationOwnership, OperationDisposition},
-    CompilationOperationId, ObligationClass, ProjectionOperationId, ProjectionTarget, SourceToken,
-    SystemColumn, SystemTable,
+    helpers::*, ExpectedInventory, ObligationClass, OperationDisposition, ProjectionTarget,
+    SourceToken, SystemColumn, SystemTable,
 };
 use crate::{
     contracts::locale::KnowledgeLocale,
@@ -15,7 +12,7 @@ use crate::{
 };
 
 pub(super) fn add_entity_obligations(
-    expected: &mut ObligationOwnership,
+    expected: &mut ExpectedInventory,
     source: &ValidatedSource,
     entry: &ValidatedEntity,
     locale: KnowledgeLocale,
@@ -708,9 +705,6 @@ pub(super) fn add_entity_obligations(
         insert_obligation(
             expected,
             OperationDisposition {
-                owner: ProjectionOperationId::Compilation(CompilationOperationId::Document {
-                    entity: entity.clone(),
-                }),
                 target: ProjectionTarget::CompiledDocument {
                     entity: entity.clone(),
                     locale,
@@ -726,10 +720,6 @@ pub(super) fn add_entity_obligations(
             insert_obligation(
                 expected,
                 OperationDisposition {
-                    owner: ProjectionOperationId::Compilation(CompilationOperationId::Section {
-                        entity: entity.clone(),
-                        section_key: section.section_key.clone(),
-                    }),
                     target: ProjectionTarget::CompiledSection {
                         entity: entity.clone(),
                         locale,
@@ -749,10 +739,6 @@ pub(super) fn add_entity_obligations(
         insert_obligation(
             expected,
             OperationDisposition {
-                owner: ProjectionOperationId::Compilation(CompilationOperationId::Section {
-                    entity: entity.clone(),
-                    section_key: reference.section_key.clone(),
-                }),
                 target: ProjectionTarget::CompiledSection {
                     entity: entity.clone(),
                     locale,

@@ -287,7 +287,7 @@ pub(super) fn validate_metadata_operation(
     };
     if operation.event.database != operation.database
         || operation.event.table != expected_table
-        || operation.event.row != "1"
+        || operation.event.row != RowIdentity::new("1")
     {
         return Err("metadata event differs from its operation identity".to_string());
     }
@@ -311,7 +311,7 @@ pub(super) fn validate_system_operation(
     locale: KnowledgeLocale,
 ) -> Result<(), String> {
     let table = operation.row.table();
-    let row = operation.row.logical_row_id();
+    let row = operation.row.descriptor().identity;
     if operation.event.database != DatabaseKind::System
         || operation.event.table != table
         || operation.event.row != row
@@ -687,7 +687,7 @@ pub(super) fn validate_system_media_operation(
 ) -> Result<(), String> {
     if operation.event.database != DatabaseKind::SystemMedia
         || operation.event.table != SystemTable::MediaAssets
-        || operation.event.row != operation.row.media_key
+        || operation.event.row != RowIdentity::new(&operation.row.media_key)
     {
         return Err("system_media event differs from payload identity".to_string());
     }

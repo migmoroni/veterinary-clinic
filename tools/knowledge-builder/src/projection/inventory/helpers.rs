@@ -1,10 +1,8 @@
-//! Provides reusable declarations for authored fields, localized fragments,
-//! relations, compiled documents, and structural media references.
+//! Provides focused constructors for independent expected obligations.
 
 use super::{
-    ownership::{ObligationOwnership, OperationDisposition},
-    CompilationOperationId, EntityIdentity, ObligationClass, ProjectionOperationId,
-    ProjectionTarget, SourceToken, SystemColumn, SystemTable,
+    EntityIdentity, ExpectedInventory, ObligationClass, OperationDisposition, ProjectionTarget,
+    RowIdentity, SourceToken, SystemColumn, SystemTable,
 };
 use crate::{
     contracts::locale::KnowledgeLocale,
@@ -14,7 +12,7 @@ use crate::{
 };
 
 pub(super) fn common_authoring(
-    expected: &mut ObligationOwnership,
+    expected: &mut ExpectedInventory,
     entity: &EntityIdentity,
     locale: KnowledgeLocale,
     sections: &[crate::source::SectionDeclaration],
@@ -43,10 +41,6 @@ pub(super) fn common_authoring(
             section_number,
         } = section;
         let target = OperationDisposition {
-            owner: ProjectionOperationId::Compilation(CompilationOperationId::Section {
-                entity: entity.clone(),
-                section_key: section_key.clone(),
-            }),
             target: ProjectionTarget::CompiledSection {
                 entity: entity.clone(),
                 locale,
@@ -74,9 +68,6 @@ pub(super) fn common_authoring(
             entity,
             "contentPath",
             OperationDisposition {
-                owner: ProjectionOperationId::Compilation(CompilationOperationId::Document {
-                    entity: entity.clone(),
-                }),
                 target: ProjectionTarget::CompiledDocument {
                     entity: entity.clone(),
                     locale,
@@ -89,7 +80,7 @@ pub(super) fn common_authoring(
 }
 
 pub(super) fn structural_media(
-    expected: &mut ObligationOwnership,
+    expected: &mut ExpectedInventory,
     entry: &ValidatedEntity,
     locale: KnowledgeLocale,
     media: Option<&StructuralMedia>,
@@ -126,7 +117,7 @@ pub(super) fn structural_media(
 }
 
 pub(super) fn localized(
-    expected: &mut ObligationOwnership,
+    expected: &mut ExpectedInventory,
     entity: &EntityIdentity,
     content: &LocalizedContent,
     locale: KnowledgeLocale,
@@ -143,7 +134,7 @@ pub(super) fn localized(
 }
 
 pub(super) fn localized_with_prefix(
-    expected: &mut ObligationOwnership,
+    expected: &mut ExpectedInventory,
     entity: &EntityIdentity,
     content: &LocalizedContent,
     locale: KnowledgeLocale,
@@ -239,7 +230,7 @@ pub(super) fn localized_column(
 }
 
 pub(super) fn field(
-    expected: &mut ObligationOwnership,
+    expected: &mut ExpectedInventory,
     entity: &EntityIdentity,
     path: &str,
     target: OperationDisposition,
@@ -257,7 +248,7 @@ pub(super) fn field(
 }
 
 pub(super) fn fields<T>(
-    expected: &mut ObligationOwnership,
+    expected: &mut ExpectedInventory,
     entity: &EntityIdentity,
     path: &str,
     values: &[T],
@@ -279,7 +270,7 @@ pub(super) fn fields<T>(
 }
 
 pub(super) fn optional_fields<T>(
-    expected: &mut ObligationOwnership,
+    expected: &mut ExpectedInventory,
     entity: &EntityIdentity,
     path: &str,
     value: Option<&T>,
@@ -292,7 +283,7 @@ pub(super) fn optional_fields<T>(
 }
 
 pub(super) fn relations<F>(
-    expected: &mut ObligationOwnership,
+    expected: &mut ExpectedInventory,
     entity: &EntityIdentity,
     field_name: &str,
     values: &[String],
@@ -321,7 +312,7 @@ where
 }
 
 pub(super) fn insert_obligation(
-    expected: &mut ObligationOwnership,
+    expected: &mut ExpectedInventory,
     disposition: OperationDisposition,
     source: SourceToken,
     class: ObligationClass,
@@ -353,23 +344,12 @@ pub(super) fn table_row(
     row: String,
 ) -> OperationDisposition {
     OperationDisposition {
-        owner: ProjectionOperationId::SystemRow {
-            table,
-            row: row.clone(),
-        },
         target: ProjectionTarget::TableRow {
             database,
             table,
-            row,
+            row: RowIdentity::new(row),
         },
     }
-}
-
-pub(super) fn operation_disposition(
-    owner: ProjectionOperationId,
-    target: ProjectionTarget,
-) -> OperationDisposition {
-    OperationDisposition { owner, target }
 }
 
 pub(super) fn canonical_validation_target(
@@ -378,10 +358,6 @@ pub(super) fn canonical_validation_target(
     validation: &'static str,
 ) -> OperationDisposition {
     OperationDisposition {
-        owner: ProjectionOperationId::Compilation(CompilationOperationId::CanonicalValidation {
-            entity: entity.clone(),
-            validation,
-        }),
         target: ProjectionTarget::CanonicalValidation {
             entity: entity.clone(),
             locale,

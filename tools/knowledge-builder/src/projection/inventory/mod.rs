@@ -1,21 +1,25 @@
-//! Assigns every projection obligation to one explicit operation owner and
-//! exposes closed batches for contract construction.
+//! Traverses validated source data to build the independent expected inventory.
 
-use super::{
-    entity_obligations::add_entity_obligations,
-    obligation_helpers::{insert_obligation, operation_disposition},
-    search::search_candidates,
-    ObligationClass, ProjectionObligation, ProjectionOperationId, ProjectionTarget, SourceToken,
-    SystemColumn, SystemTable,
+use self::{entities::add_entity_obligations, helpers::insert_obligation};
+use super::coverage::{
+    EntityIdentity, ObligationClass, ProjectionObligation, ProjectionTarget, RowIdentity,
+    SearchCandidate, SourceToken, SystemColumn, SystemTable,
 };
 use crate::{
     contracts::locale::KnowledgeLocale, databases::DatabaseKind, validation::ValidatedSource,
 };
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
+
+mod entities;
+mod helpers;
+mod media;
+mod search;
+mod taxonomy;
+
+pub(crate) use search::search_candidates;
 
 #[derive(Clone, Debug)]
 pub(super) struct OperationDisposition {
-    pub(super) owner: ProjectionOperationId,
     pub(super) target: ProjectionTarget,
 }
 
@@ -30,7 +34,6 @@ impl OperationDisposition {
             panic!("only a SQLite row disposition can select a column");
         };
         Self {
-            owner: self.owner.clone(),
             target: ProjectionTarget::TableColumn {
                 database: *database,
                 table: *table,
@@ -42,36 +45,11 @@ impl OperationDisposition {
 }
 
 #[derive(Clone, Debug, Default)]
-pub(crate) struct ObligationOwnership {
-    by_owner: BTreeMap<ProjectionOperationId, BTreeSet<ProjectionObligation>>,
+struct ExpectedInventory {
     expected: BTreeSet<ProjectionObligation>,
 }
 
-impl ObligationOwnership {
-    pub(crate) fn claim(
-        &mut self,
-        owner: &ProjectionOperationId,
-    ) -> Result<BTreeSet<ProjectionObligation>, String> {
-        self.by_owner
-            .remove(owner)
-            .ok_or_else(|| format!("operation has no declared obligation owner: {owner:?}"))
-    }
-
-    pub(crate) fn expected(&self) -> BTreeSet<ProjectionObligation> {
-        self.expected.clone()
-    }
-
-    pub(crate) fn finish(self) -> Result<(), String> {
-        if self.by_owner.is_empty() {
-            Ok(())
-        } else {
-            Err(format!(
-                "{} projection owner(s) have no operation",
-                self.by_owner.len()
-            ))
-        }
-    }
-
+impl ExpectedInventory {
     pub(super) fn insert(
         &mut self,
         disposition: OperationDisposition,
@@ -88,28 +66,20 @@ impl ObligationOwnership {
                 "projection obligation is declared more than once: {obligation}"
             ));
         }
-        self.by_owner
-            .entry(disposition.owner)
-            .or_default()
-            .insert(obligation);
         Ok(())
     }
 }
 
-pub(crate) fn owned_obligations(
+pub(crate) fn expected_obligations(
     source: &ValidatedSource,
     locale: KnowledgeLocale,
     release: bool,
-) -> Result<ObligationOwnership, String> {
-    let mut expected = ObligationOwnership::default();
+) -> Result<BTreeSet<ProjectionObligation>, String> {
+    let mut expected = ExpectedInventory::default();
     for database in [DatabaseKind::System, DatabaseKind::SystemMedia] {
         insert_obligation(
             &mut expected,
             OperationDisposition {
-                owner: ProjectionOperationId::Metadata {
-                    database,
-                    release: false,
-                },
                 target: ProjectionTarget::BuildMetadata {
                     database,
                     locale,
@@ -127,10 +97,6 @@ pub(crate) fn owned_obligations(
             insert_obligation(
                 &mut expected,
                 OperationDisposition {
-                    owner: ProjectionOperationId::Metadata {
-                        database,
-                        release: true,
-                    },
                     target: ProjectionTarget::BuildMetadata {
                         database,
                         locale,
@@ -157,18 +123,14 @@ pub(crate) fn owned_obligations(
         };
         insert_obligation(
             &mut expected,
-            operation_disposition(
-                ProjectionOperationId::SystemRow {
-                    table: SystemTable::EntitySearchTerms,
-                    row: format!("{}/{}", candidate.entity, candidate.occurrence),
-                },
-                ProjectionTarget::SearchTerm {
+            OperationDisposition {
+                target: ProjectionTarget::SearchTerm {
                     entity: candidate.entity.clone(),
                     locale,
                     provenance: candidate.provenance.clone(),
                     occurrence: candidate.occurrence,
                 },
-            ),
+            },
             candidate.source,
             class,
         )?;
@@ -183,9 +145,6 @@ pub(crate) fn owned_obligations(
         insert_obligation(
             &mut expected,
             OperationDisposition {
-                owner: ProjectionOperationId::SystemMediaAsset {
-                    media_key: media_key.clone(),
-                },
                 target: ProjectionTarget::SystemMediaAsset {
                     locale,
                     media_key: media_key.clone(),
@@ -207,9 +166,6 @@ pub(crate) fn owned_obligations(
         insert_obligation(
             &mut expected,
             OperationDisposition {
-                owner: ProjectionOperationId::CasObject {
-                    content_hash: content_hash.clone(),
-                },
                 target: ProjectionTarget::CasObject {
                     locale,
                     content_hash: content_hash.clone(),
@@ -222,5 +178,5 @@ pub(crate) fn owned_obligations(
             ObligationClass::Cas,
         )?;
     }
-    Ok(expected)
+    Ok(expected.expected)
 }

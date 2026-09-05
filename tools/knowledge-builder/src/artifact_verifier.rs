@@ -15,10 +15,13 @@ use crate::{
         },
     },
     databases::{self, DatabaseKind},
-    ledger::{evidence_digest, SystemTable},
     markdown::{collect_compiled_media_keys, CompiledDocument},
     media::{cas_relative_path, decode_hex, decode_image, mime_for_format, sha256_hex},
     projection::contract::ProjectionContract,
+    projection::{
+        coverage::{ObligationClass, SystemTable},
+        ledger::evidence_digest,
+    },
     report::{self, BuildContext, BuildResult, DatabaseArtifact, ProjectionReport},
     schemas,
     validation::ValidatedSource,
@@ -478,16 +481,14 @@ impl<'a> ArtifactVerifier<'a> {
             let expected_relation_count = contract
                 .expected_obligations
                 .iter()
-                .filter(|obligation| obligation.class == crate::ledger::ObligationClass::Relation)
+                .filter(|obligation| obligation.class == ObligationClass::Relation)
                 .map(|obligation| &obligation.source)
                 .collect::<BTreeSet<_>>()
                 .len();
             let expected_localized_fragments = contract
                 .expected_obligations
                 .iter()
-                .filter(|obligation| {
-                    obligation.class == crate::ledger::ObligationClass::LocalizedContent
-                })
+                .filter(|obligation| obligation.class == ObligationClass::LocalizedContent)
                 .map(|obligation| &obligation.source)
                 .collect::<BTreeSet<_>>()
                 .len();

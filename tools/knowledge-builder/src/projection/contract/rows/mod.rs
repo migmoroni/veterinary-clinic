@@ -6,7 +6,7 @@ mod model;
 #[cfg(test)]
 mod test_support;
 
-pub(crate) use descriptor::{RowIdentity, SystemRowCase, SystemRowDescriptor};
+pub(crate) use descriptor::{SystemRowCase, SystemRowDescriptor};
 pub(crate) use model::SystemRow;
 
 #[cfg(test)]

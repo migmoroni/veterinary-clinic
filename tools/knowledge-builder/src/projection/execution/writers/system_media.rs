@@ -1,16 +1,17 @@
 //! Persists locale media metadata and thumbnails into the system-media database.
 
+use super::metadata::write_metadata;
 use super::*;
 
 pub(crate) fn write_system_media(
     connection: &mut Connection,
+    metadata: &[MetadataOperation],
     operations: &[SystemMediaProjectionOperation],
-    ledger: &mut ProjectionLedger,
-) -> Result<(), String> {
+) -> Result<ConfirmedReceiptBatch, String> {
     let transaction = connection
         .transaction()
         .map_err(|error| format!("cannot begin system_media projection: {error}"))?;
-    let mut journal = ledger.journal();
+    let mut pending = write_metadata(&transaction, DatabaseKind::SystemMedia, metadata)?;
     for operation in operations {
         let row = &operation.row;
         let affected = transaction.execute(
@@ -18,10 +19,24 @@ pub(crate) fn write_system_media(
             params![row.media_key, row.content_hash, row.thumbnail, row.thumbnail_mime_type,
                 row.thumbnail_width, row.thumbnail_height, row.mime_type, row.size_bytes, row.width, row.height],
         ).map_err(|error| format!("cannot persist media asset {}: {error}", row.media_key))?;
-        journal.complete_operation(&operation.obligations, affected, operation.event.clone())?;
+        pending.push(PendingReceipt::new(
+            operation.id(),
+            operation.obligations.clone(),
+            ProjectionEvent::SqliteRow(operation.event.clone()),
+            affected,
+        )?);
     }
     transaction
         .commit()
         .map_err(|error| format!("cannot commit system_media projection: {error}"))?;
-    ledger.commit(journal)
+    preserve_deterministic_write_epochs(
+        connection,
+        DatabaseKind::SystemMedia,
+        metadata
+            .iter()
+            .filter(|operation| operation.database == DatabaseKind::SystemMedia)
+            .count(),
+        !operations.is_empty(),
+    )?;
+    ConfirmedReceiptBatch::confirm(pending)
 }

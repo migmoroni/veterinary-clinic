@@ -7,9 +7,10 @@ impl ProjectionContract {
         source: &ValidatedSource,
         locale: KnowledgeLocale,
         context: &BuildContext,
+        expected_obligations: BTreeSet<ProjectionObligation>,
+        search_candidates: Vec<SearchCandidate>,
     ) -> Result<Self, String> {
-        let mut claims = owned_obligations(source, locale, context.release.is_some())?;
-        let expected_obligations = claims.expected();
+        let mut claims = ObligationOwnership::from_expected(&expected_obligations)?;
         let source_digest = decode_hex(&source.source_digest_sha256)?;
         let mut metadata = Vec::new();
         for database in [DatabaseKind::System, DatabaseKind::SystemMedia] {
@@ -30,7 +31,7 @@ impl ProjectionContract {
                 event: RowEvent {
                     database,
                     table: SystemTable::KnowledgeBuildMetadata,
-                    row: "1".to_string(),
+                    row: RowIdentity::new("1"),
                     entity: None,
                 },
             });
@@ -51,7 +52,7 @@ impl ProjectionContract {
                     event: RowEvent {
                         database,
                         table: SystemTable::KnowledgeReleaseMetadata,
-                        row: "1".to_string(),
+                        row: RowIdentity::new("1"),
                         entity: None,
                     },
                 });
@@ -100,7 +101,7 @@ impl ProjectionContract {
         project_geo_places(source, locale, &mut claims, &mut system)?;
         project_catalog(source, locale, &mut claims, &mut system)?;
         project_media_references(source, locale, &mut claims, &mut system)?;
-        project_search(source, locale, &mut claims, &mut system)?;
+        project_search(search_candidates, &mut claims, &mut system)?;
 
         let mut system_media = Vec::new();
         let mut cas_hashes = BTreeSet::new();
@@ -134,7 +135,7 @@ impl ProjectionContract {
                 event: RowEvent {
                     database: DatabaseKind::SystemMedia,
                     table: SystemTable::MediaAssets,
-                    row: media_key.clone(),
+                    row: RowIdentity::new(media_key),
                     entity: None,
                 },
             });
