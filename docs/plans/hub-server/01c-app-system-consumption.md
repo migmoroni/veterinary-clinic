@@ -21,15 +21,14 @@ saída preparada.
 
 ## Pré-requisito
 
-A [Parte 1B.8.5](./01b8-knowledge-builder-maintainability/05-test-topology-maintenance-guide.md)
-está concluída. O `knowledge-builder` gera uma `build_version` válida com os seis
-pares de bancos e o CAS compartilhado, usa contratos coesos de rows, inventário,
-ownership e recibos confirmados, verifica integralmente os artefatos por uma
-fachada de componentes, expõe erros estruturados e mantém uma suíte organizada
-por custo e responsabilidade. Os artefatos usam schema 4 de `system` e projetam
-os dez níveis taxonômicos em `life_reference_items`. Toda linha possui domínio;
-as posições seguintes formam um prefixo contínuo até o nível da própria entidade
-e as inferiores são nulas. Todas as colunas classificatórias são anuláveis.
+A [Parte 1B.9.4](./01b9-artifact-builder/04-closure.md) está concluída. O
+`knowledge-builder` compila o domínio veterinário e delega SQLite, CAS,
+verificação e publicação à crate `artifact-builder`. O fluxo gera uma
+`build_version` válida com os seis pares de bancos e o CAS compartilhado. Os
+artefatos usam schema 5 de `system` e projetam os dez níveis taxonômicos em
+`life_reference_items`. Toda linha possui domínio; as posições seguintes formam
+um prefixo contínuo até o nível da própria entidade e as inferiores são nulas.
+Todas as colunas classificatórias são anuláveis.
 
 ## Escopo
 
@@ -40,8 +39,11 @@ e as inferiores são nulas. Todas as colunas classificatórias são anuláveis.
 - adaptar contratos, repositories e serviços aos campos localizados dos bancos;
 - preservar a resolução N:N entre produtos e princípios ativos e os links para
   as entidades farmacológicas relacionadas;
-- consumir classificações de catálogo, alvos, perfis vacinais, estágios de vida
-  e escopos terapêuticos por `entity_taxonomy_terms`;
+- consumir tipos, classificações de catálogo e alvos por
+  `entity_taxonomy_terms`;
+- consumir `applicable_life_stages_json`, `vaccine_multiplicity`,
+  `vaccine_valence` e `therapeutic_spectrum` diretamente de
+  `product_catalog_items`;
 - consumir a taxonomia e as classificações diretamente de
   `life_reference_items` e a aplicabilidade de produtos e protocolos pelos
   IDs canônicos de qualquer um dos dez níveis de `LifeEntity`;
@@ -75,7 +77,8 @@ manifest, instalação de releases, bootstraps e deltas pertencem à Parte 4.
 ```mermaid
 flowchart LR
     DATA["data/knowledge"] --> BUILDER["knowledge-builder Rust"]
-    BUILDER --> OUTPUT["build/knowledge-artifacts"]
+    BUILDER --> ARTIFACTS["artifact-builder Rust"]
+    ARTIFACTS --> OUTPUT["build/knowledge-artifacts"]
     OUTPUT --> PREPARE["Validar e instalar<br/>locale selecionado"]
     PREPARE --> ACTIVE["app_database_dir + vault/system"]
     ACTIVE --> ENGINE["engine/storage<br/>system somente leitura"]
@@ -98,8 +101,17 @@ não dispara geração implicitamente.
 
 ### `tools/knowledge-builder`
 
-- escreve os bancos públicos e o CAS;
-- valida e relata a saída;
+- valida e compila a fonte veterinária;
+- fornece DDLs, rows e objetos CAS à crate `artifact-builder`;
+- relata a saída específica do conjunto de conhecimento;
+- não é biblioteca de runtime do app.
+
+### `packages/artifact-builder`
+
+- materializa bancos públicos e objetos CAS a partir do contrato neutro;
+- verifica integridade, checksums, rows e árvore de saída;
+- publica versões locais de maneira atômica;
+- não conhece entidades veterinárias, locales ou caminhos do app;
 - não é biblioteca de runtime do app.
 
 ### `packages/engine/storage`
@@ -233,14 +245,15 @@ Antes de preparar um locale, o app valida:
 4. presença de `defaultKnowledgeLocale` na lista;
 5. caminho relativo e SHA-256 de `build-result.json`;
 6. igualdade de `buildVersion` entre os dois documentos;
-7. presença, no resultado do builder, de cada locale declarado.
+7. presença, no resultado do builder, de uma variante cuja chave corresponda a
+   cada locale declarado.
 
-O `build-result.json` preserva o relatório integral dos seis locales produzido
-pela Parte 1B. Na raiz reduzida do app, as entradas que não pertencem a
+O `build-result.json` preserva o descritor integral das seis variantes de locale
+produzido pela Parte 1B.9. Na raiz reduzida do app, as entradas que não pertencem a
 `includedKnowledgeLocales` servem somente como proveniência e não obrigam a
 presença de seus bancos ou objetos CAS. O runtime resolve e valida arquivos apenas
-para os locales incluídos. Ele também não resolve `projection.reportPath`,
-`checksumFile` nem o digest CAS global dessa saída integral.
+para os locales incluídos. Ele também não exige objetos CAS pertencentes
+exclusivamente aos demais locales da saída integral.
 
 O arquivo usa UTF-8 e serialização JSON determinística. A preparação local da
 raiz gera a árvore em `build/app-resources/<app-name>/knowledge/`. O bundle Tauri
@@ -277,8 +290,9 @@ Antes de instalar, a fronteira:
 
 1. lê e valida `knowledge-bundle.json`;
 2. lê `build-result.json` pelo caminho interno declarado e confere seu SHA-256;
-3. valida o contrato integral de `build-result.json`, incluindo suas seis entradas
-   de locale, sem exigir na raiz reduzida os arquivos dos locales não incluídos;
+3. valida o contrato integral de `build-result.json`, incluindo suas seis
+   variantes identificadas pelas chaves de locale, sem exigir na raiz reduzida
+   os arquivos dos locales não incluídos;
 4. resolve somente caminhos internos à raiz de recursos de conhecimento;
 5. confere tamanho e SHA-256 dos dois bancos;
 6. confere `PRAGMA integrity_check` quando exigido pela política local;
@@ -488,9 +502,12 @@ As APIs de busca utilizam:
 - termos de taxonomia localizados;
 - campos estruturais pesquisáveis definidos pelo domínio.
 
-Para produtos, os nomes e aliases de princípios ativos, alvos, perfis vacinais,
-estágios de vida e escopos terapêuticos entram pela projeção derivada pelo
-builder. A busca não lê classificações genéricas ou campos `searchConcept`.
+Para produtos, os nomes e aliases de princípios ativos e alvos entram pela
+projeção derivada pelo builder. Estágios de vida, perfil vacinal e espectro
+terapêutico são campos estruturados de filtro e não injetam seus códigos
+internos na busca textual. Um termo associado diretamente ao produto participa
+da busca por `localizedContent.aliases`. A busca não lê classificações genéricas
+ou campos `searchConcept`.
 
 Para `LifeEntity`, `entity_search_terms` contém somente nome e aliases próprios.
 Quando uma busca solicitar a subárvore de um táxon encontrado, o repository usa
@@ -594,15 +611,15 @@ Cada build declara:
 - `includedKnowledgeLocales` como lista não vazia de locales;
 - `defaultKnowledgeLocale` como integrante obrigatório dessa lista.
 
-Antes de selecionar recursos, o pipeline valida a saída integral da Parte 1B em
+Antes de selecionar recursos, o pipeline valida a saída integral da Parte 1B.9 em
 `build/knowledge-artifacts`:
 
-1. confere o contrato de `build-result.json` e suas seis entradas de locale;
-2. confere o checksum e a cobertura integral de `projection-report.json`;
-3. confere `checksums.sha256` contra os doze bancos e todos os objetos CAS da
+1. confere o contrato de `build-result.json` e suas seis variantes de locale;
+2. confere os checksums declarados dos doze bancos e de todos os objetos CAS da
    `build_version`;
-4. valida metadados, fingerprints, integridade e digests do conjunto completo;
-5. encerra o empacotamento diante de qualquer divergência.
+3. valida profile metadata, versões técnicas, integridade e digests do conjunto
+   completo;
+4. encerra o empacotamento diante de qualquer divergência.
 
 Somente depois dessa auditoria o pipeline cria a raiz reduzida de recursos do app.
 
@@ -614,10 +631,9 @@ O empacotamento inclui somente:
 - a união dos hashes referenciados por esses bancos `system_media`;
 - os metadados necessários para validar os recursos incorporados.
 
-`projection-report.json` e `checksums.sha256` permanecem na saída integral de
-build e não são incorporados ao app. O `build-result.json` copiado permanece
-integral, mas o runtime usa somente os descritores dos locales incluídos. Para
-cada um deles, o conjunto CAS incorporado é derivado do respectivo
+O `build-result.json` copiado permanece integral, mas o runtime usa somente os
+descritores dos locales incluídos. Para cada um deles, o conjunto CAS
+incorporado é derivado do respectivo
 `system_media`, comparado com `casSetDigestSha256` e copiado sem objetos extras.
 O digest CAS global do resultado integral é validado pelo pipeline antes da
 seleção e não é usado para exigir no bundle objetos pertencentes a outros locales.
@@ -686,10 +702,8 @@ Cobrir:
 - divergência de `buildVersion` ou locale entre `knowledge-bundle.json` e
   `build-result.json`;
 - validação de `build-result.json`, tamanho e SHA-256;
-- auditoria integral de `projection-report.json`, `checksums.sha256`, dos doze
-  bancos e do CAS antes da seleção de locales;
-- ausência de `projection-report.json` e `checksums.sha256` na raiz reduzida sem
-  impedir sua validação prévia no pipeline;
+- auditoria integral dos checksums, dos doze bancos e do CAS antes da seleção de
+  locales;
 - `build-result.json` integral em bundle com subconjunto de locales, sem tentativa
   de resolver bancos ou CAS dos locales não incluídos;
 - derivação do conjunto CAS por `system_media` e igualdade com o
@@ -718,8 +732,10 @@ Cobrir:
 - produtos e protocolos resolvendo os IDs de qualquer nível presentes em
   `applicable_taxon_ids_json` e aplicando-os à própria entidade e a seus
   descendentes;
-- produtos resolvendo tipos, classificações, alvos, perfis vacinais, estágios de
-  vida e escopos terapêuticos pelo propósito da taxonomia associada;
+- produtos resolvendo tipos, classificações e alvos pelo propósito da taxonomia
+  associada;
+- produtos lendo estágios de vida, perfil vacinal e espectro terapêutico como
+  atributos diretos opcionais e validados;
 - recusa de associação com termo pertencente a outro domínio, propósito ou
   vocabulário;
 - navegação do produto para cada página de princípio ativo relacionado;

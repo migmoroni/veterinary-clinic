@@ -92,7 +92,10 @@ Restrições principais:
 - delta exige revisão positiva e aponta para a revisão imediatamente anterior;
 - `KnowledgeRelease` guarda versões independentes de `system` e `system_media`;
 - `KnowledgeRelease.build_version` é inteiro positivo e único;
-- `builder_version` é SemVer válido e identifica o binário Rust usado;
+- `builder_version` é SemVer válido e identifica o perfil
+  `knowledge-builder` usado;
+- `artifact_builder_version` é SemVer válido e identifica a crate genérica que
+  materializa os artefatos;
 - `build_result_schema_version` é inteiro positivo suportado pelo Hub;
 - `build_result_checksum_sha256` e `source_digest_sha256` usam SHA-256 válido;
 - uma release só alcança estado validado depois que a identidade do draft, a
@@ -343,8 +346,8 @@ Cobrir:
 - recusa de manifest source com placeholder desconhecido, host fora da allowlist
   ou padrão imutável incompleto;
 - recusa de geração, revisão ou predecessor incoerente;
-- recusa de `build_version`, `builder_version`, contrato do relatório ou digest da
-  fonte inválido;
+- recusa de `build_version`, `builder_version`, `artifact_builder_version`,
+  contrato do resultado ou digest da fonte inválido;
 - imutabilidade da proveniência depois da validação;
 - recusa de componente ausente, duplicado ou incompatível com `delivery_mode`;
 - recusa de `entry_path` ausente, duplicado ou fora da allowlist;

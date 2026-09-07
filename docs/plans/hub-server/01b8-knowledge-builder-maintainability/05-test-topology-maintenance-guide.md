@@ -247,4 +247,4 @@ Depois, executar o gate geral da skill `$validate-workspace`.
 ## Próxima Parte
 
 Após cumprir todos os critérios, seguir para a
-[Parte 1B.8.6: fechamento das fronteiras e do custo de manutenção](./06-maintainability-completion.md).
+[Parte 1B.8.6: atributos diretos de produto](./06-direct-product-attributes.md).

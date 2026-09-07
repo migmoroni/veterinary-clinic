@@ -31,12 +31,17 @@ pertencem a outro servidor.
 16. [Parte 1B.8.3: verificação integral decomposta](./01b8-knowledge-builder-maintainability/03-artifact-verification.md)
 17. [Parte 1B.8.4: erros estruturados e fronteiras](./01b8-knowledge-builder-maintainability/04-structured-errors-boundaries.md)
 18. [Parte 1B.8.5: topologia de testes e guia de manutenção](./01b8-knowledge-builder-maintainability/05-test-topology-maintenance-guide.md)
-19. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
-20. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
-21. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
-22. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
-23. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
-24. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
+19. [Parte 1B.8.6: atributos diretos de produto](./01b8-knowledge-builder-maintainability/06-direct-product-attributes.md)
+20. [Parte 1B.9.1: contrato neutro do `artifact-builder`](./01b9-artifact-builder/01-neutral-contract.md)
+21. [Parte 1B.9.2: motor genérico de artefatos](./01b9-artifact-builder/02-generic-engine.md)
+22. [Parte 1B.9.3: adaptador veterinário](./01b9-artifact-builder/03-veterinary-adapter.md)
+23. [Parte 1B.9.4: fechamento e documentação](./01b9-artifact-builder/04-closure.md)
+24. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
+25. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
+26. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
+27. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
+28. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
+29. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
 
 ## Referências Futuras Não Sequenciais
 
@@ -47,9 +52,9 @@ de implementação. Sua presença não autoriza execução nem alteração do co
 vigente sem uma solicitação explícita.
 
 A pré-fase, as subpartes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3, 1B.4, 1B.5,
-1B.6, 1B.7, 1B.7A, 1B.7B, 1B.8.1, 1B.8.2, 1B.8.3, 1B.8.4, 1B.8.5 e 1C e as
-partes seguintes são executadas em ordem. Cada documento termina com testes e
-critérios de aceite próprios.
+1B.6, 1B.7, 1B.7A, 1B.7B, 1B.8.1 a 1B.8.6, 1B.9.1 a 1B.9.4, 1C e as partes
+seguintes são executadas em ordem. Cada documento termina com testes e critérios
+de aceite próprios.
 
 ## Evolução Do Fluxo
 
@@ -74,6 +79,11 @@ flowchart LR
     P1B83["Parte 1B.8.3<br/>verificação"]
     P1B84["Parte 1B.8.4<br/>erros + fronteiras"]
     P1B85["Parte 1B.8.5<br/>testes + manutenção"]
+    P1B86["Parte 1B.8.6<br/>atributos de produto"]
+    P1B91["Parte 1B.9.1<br/>contrato neutro"]
+    P1B92["Parte 1B.9.2<br/>motor genérico"]
+    P1B93["Parte 1B.9.3<br/>adaptador veterinário"]
+    P1B94["Parte 1B.9.4<br/>fechamento"]
     P1C["Parte 1C<br/>consumo local"]
     P2["Parte 2<br/>base Rails + contratos"]
     P3["Parte 3<br/>Rails orquestra builder + releases"]
@@ -81,23 +91,25 @@ flowchart LR
     P5["Parte 5<br/>updater Tauri local"]
     P6["Parte 6<br/>GitHub + CI/CD"]
 
-    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1B7 --> P1B7A --> P1B7B --> P1B81 --> P1B82 --> P1B83 --> P1B84 --> P1B85 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
+    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1B7 --> P1B7A --> P1B7B --> P1B81 --> P1B82 --> P1B83 --> P1B84 --> P1B85 --> P1B86 --> P1B91 --> P1B92 --> P1B93 --> P1B94 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
 ```
 
 As mudanças de origem dos artefatos são deliberadas:
 
 ```mermaid
 flowchart TB
-    subgraph S1["Partes 1A a 1B.8.5 e 1C"]
+    subgraph S1["Partes 1A a 1B.9.4 e 1C"]
         D1["data/knowledge<br/>fonte canônica"] --> G1["knowledge-builder Rust"]
-        G1 --> B1["build/knowledge-artifacts"]
+        G1 --> AB1["artifact-builder Rust"]
+        AB1 --> B1["build/knowledge-artifacts"]
         B1 --> A1["Apps em desenvolvimento e build"]
     end
 
     subgraph S2["Partes 3 e 4"]
-        D2["data/knowledge"] --> G2["Mesmo knowledge-builder Rust"]
+        D2["data/knowledge"] --> G2["knowledge-builder Rust"]
         R2["Rails: jobs, releases e manifest"] --> G2
-        G2 --> R2
+        G2 --> AB2["artifact-builder Rust"]
+        AB2 --> R2
         R2 --> H2["API do hub-server"]
         H2 --> A2["Apps"]
     end
@@ -115,8 +127,8 @@ Parte 1A estabelece `data/knowledge` como fonte canônica, e a Parte 1A.1
 consolida o conteúdo localizado simples no JSON e normaliza as referências
 taxonômicas. A Parte 1A.2 atribui princípios ativos e demais conceitos de produto
 a entidades, relações e taxonomias com significado de domínio e consolida cada
-entidade em um documento Markdown por locale. A Parte 1B implementa o
-`knowledge-builder` definitivo em Rust, a Parte 1B.1 consolida seus contratos
+entidade em um documento Markdown por locale. A Parte 1B estabelece o
+`knowledge-builder` em Rust, e a Parte 1B.1 consolida seus contratos
 executáveis, a Parte 1B.2 estrutura a auditoria e o verificador integral, a
 Parte 1B.3 exige evidência explícita e equivalência semântica, a Parte 1B.4
 fecha a propriedade operacional e a disposição de colunas, a Parte 1B.5 fecha
@@ -134,9 +146,14 @@ consumidor. Os diretórios servem somente à organização editorial. A Parte
 autoria e mantém os demais diretórios livres de significado implícito. A Parte
 1B.8.1 consolida rows e persistência, a Parte 1B.8.2 separa
 inventário, ownership e recibos confirmados, a Parte 1B.8.3 decompõe a
-verificação integral, a Parte 1B.8.4 estrutura erros e fronteiras, e a Parte
-1B.8.5 organiza testes e o guia de manutenção. A Parte 1C faz os apps consumirem
-os artefatos locais. A Parte 3 faz o `hub-server` invocar a mesma ferramenta e
+verificação integral, a Parte 1B.8.4 estrutura erros e fronteiras, a Parte
+1B.8.5 organiza testes e o guia de manutenção e a Parte 1B.8.6 representa
+estágios de vida, perfil vacinal e espectro terapêutico como atributos diretos
+de produto. As Partes 1B.9.1 a 1B.9.4
+estabelecem a crate genérica `artifact-builder`, concentram nela SQLite, CAS,
+verificação e publicação, e mantêm `knowledge-builder` como adaptador do domínio
+veterinário. A Parte 1C faz os apps consumirem os artefatos locais. A Parte 3 faz
+o `hub-server` invocar a mesma ferramenta e
 assumir releases, assinatura e publicação. A Parte 4 substitui a aquisição local
 pelo contrato de distribuição do Hub. A Parte 6 acrescenta o GitHub como
 provider externo.
@@ -151,9 +168,10 @@ provider externo.
   `workspace:*`.
 - As partes do Hub usam somente comandos pnpm; não mantêm lockfiles ou comandos
   concorrentes de outro gerenciador.
-- `tools/knowledge-builder/` é um binário Rust membro do Cargo Workspace e o
-  único compilador de dados canônicos para `system`, `system_media` e
-  `CAS/system`.
+- `packages/artifact-builder/` é uma library crate neutra responsável por
+  materialização SQLite, CAS, verificação estrutural e publicação atômica.
+- `tools/knowledge-builder/` é o binário Rust que valida e compila
+  `data/knowledge` para o contrato de `artifact-builder`.
 - Cada `LifeEntity` declara `domain`, `kingdom`, `phylum`, `class`, `order`,
   `family`, `genus`, `species`, `breed` e `variety`. As posições não nulas formam
   um prefixo contínuo, o `id` ocupa a posição da própria entidade e os níveis
@@ -166,17 +184,12 @@ provider externo.
   das pastas ou por outra entidade.
 - Produtos e protocolos declaram aplicabilidade pelos IDs canônicos de qualquer
   um dos dez níveis. Cada alvo alcança a própria entidade e seus descendentes.
-- Contratos transversais do `knowledge-builder` vivem em `src/contracts/`,
-  organizados por artefato, banco, locale, taxonomia e versão. Constantes
-  exclusivas de um subsistema permanecem com seu proprietário.
-- A manutenção do `knowledge-builder` reduz declarações paralelas sem unir
-  provas independentes: inventário esperado, ownership das operações e recibos
-  confirmados continuam comparáveis como conjuntos distintos.
-- Cada `SystemRow` possui um descritor único de caso, tabela, identidade e
-  colunas ordenadas. Writers mantêm `INSERT` fixos e readers mantêm `SELECT`
-  independentes com equivalência integral das rows.
-- Build novo e reutilização passam pela mesma fachada de verificação decomposta.
-  Erros do builder preservam estágio, contexto e causa por tipos estruturados.
+- O contrato neutro recebe variantes, DDLs, tabelas, rows e objetos CAS já
+  compilados. Conceitos veterinários permanecem fora da crate genérica.
+- `knowledge-builder` percorre a fonte validada e produz diretamente o plano de
+  artefatos. Ele não possui ledger, ownership, recibos ou writers SQLite.
+- Um único verificador genérico comprova schema, rows, integridade, checksums,
+  CAS e árvore de saída antes da publicação.
 - `data/knowledge/` na raiz é a única fonte de autoria dos dados públicos. O
   diretório não pertence ao app, ao Rails nem a um package de código.
 - `geo/` é um domínio de conhecimento compartilhado. Localizações usam
@@ -218,9 +231,12 @@ provider externo.
 - Produtos referenciam princípios ativos por IDs de entidades
   `active_ingredient`. Combinações farmacológicas preservam uma relação por
   substância, e a navegação do catálogo usa essas entidades relacionadas.
-- Alvos, perfis vacinais, estágios de vida e escopos terapêuticos possuem
-  taxonomias próprias. `classificationTermKeys` não recebe conceitos criados
-  apenas para busca.
+- Alvos usam o vocabulário compartilhado `product-targets`. Estágios de vida,
+  perfil vacinal e espectro terapêutico usam respectivamente
+  `product.applicableLifeStages`, `product.vaccineProfile` e
+  `product.therapeuticSpectrum` como atributos fechados, projetados diretamente
+  em `product_catalog_items`.
+  `classificationTermKeys` não recebe conceitos criados apenas para busca.
 - A busca de produtos deriva termos das entidades, relações e taxonomias
   canônicas. O contrato de conhecimento não contém `searchConcept.*`.
 - A busca de `LifeEntity` projeta somente nome e aliases próprios. Consultas por
@@ -300,9 +316,10 @@ provider externo.
 
 ```mermaid
 flowchart LR
-    DATA["Dados públicos canônicos"] --> BUILDER["tools/knowledge-builder<br/>compilação Rust"]
+    DATA["Dados públicos canônicos"] --> BUILDER["tools/knowledge-builder<br/>adaptador veterinário"]
+    BUILDER --> ARTIFACTS["packages/artifact-builder<br/>SQLite, CAS e publicação"]
     HUB["apps/hub-server<br/>jobs, releases, manifests e APIs"] --> BUILDER
-    BUILDER --> HUB
+    ARTIFACTS --> HUB
     HUB --> APP["apps/*<br/>consumo, validação e instalação"]
     HUB --> PROVIDERS["Providers externos<br/>réplicas e entrega de bytes"]
     PROVIDERS --> APP
@@ -318,7 +335,10 @@ apps/hub-server/
   orquestração, publicação, manifests e APIs
 
 tools/knowledge-builder/
-  validação, projeção, geração dos bancos, CAS e relatório do build
+  validação e compilação veterinária para o contrato neutro
+
+packages/artifact-builder/
+  materialização SQLite, CAS, verificação e publicação atômica
 
 apps/vet-app/
   consumo, validação, instalação e atualização
@@ -384,6 +404,7 @@ KnowledgeRelease
   previous_release_id
   build_version
   builder_version
+  artifact_builder_version
   build_result_schema_version
   build_result_checksum_sha256
   source_digest_sha256
@@ -422,11 +443,12 @@ KnowledgeArtifactSource
 `previous_release_id` é nulo no bootstrap e obrigatório no delta.
 O par `generation`, `revision` é globalmente único e não depende de canal.
 
-`build_version`, `builder_version`, `build_result_schema_version`,
-`build_result_checksum_sha256` e `source_digest_sha256` registram a proveniência
-da compilação. Retry do mesmo draft conserva esses valores quando repete a mesma
-entrada e o mesmo builder; qualquer mudança exige descartar o resultado preparado
-e executar outra compilação antes da validação.
+`build_version`, `builder_version`, `artifact_builder_version`,
+`build_result_schema_version`, `build_result_checksum_sha256` e
+`source_digest_sha256` registram a proveniência da compilação. Retry do mesmo
+draft conserva esses valores quando repete a mesma entrada, o mesmo perfil e o
+mesmo motor; qualquer mudança exige descartar o resultado preparado e executar
+outra compilação antes da validação.
 
 `system_schema_version` e `system_media_schema_version` permanecem separados da
 versão de conhecimento. Cada `KnowledgeArtifact` representa um conteúdo.
@@ -904,13 +926,18 @@ descobrir uma revisão incrementando URLs que não estejam declaradas.
 17. Implementar e validar a Parte 1B.8.3.
 18. Implementar e validar a Parte 1B.8.4.
 19. Implementar e validar a Parte 1B.8.5.
-20. Implementar e validar a Parte 1C.
-21. Implementar e validar a Parte 2.
-22. Implementar e validar a Parte 3.
-23. Implementar e validar a Parte 4.
-24. Implementar e validar a Parte 5.
-25. Mover o projeto para o repositório dedicado.
-26. Implementar e validar a Parte 6.
+20. Implementar e validar a Parte 1B.8.6.
+21. Implementar e validar a Parte 1B.9.1.
+22. Implementar e validar a Parte 1B.9.2.
+23. Implementar e validar a Parte 1B.9.3.
+24. Implementar e validar a Parte 1B.9.4.
+25. Implementar e validar a Parte 1C.
+26. Implementar e validar a Parte 2.
+27. Implementar e validar a Parte 3.
+28. Implementar e validar a Parte 4.
+29. Implementar e validar a Parte 5.
+30. Mover o projeto para o repositório dedicado.
+31. Implementar e validar a Parte 6.
 
 ## Expansões Previstas
 
