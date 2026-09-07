@@ -2,118 +2,33 @@
 
 use super::{
     catalog::project_catalog,
-    helpers::{identity, project_media_references, project_search},
+    compilation::build_compilation_operations,
+    declarations::{owned_obligations, search_candidates},
+    media::{project_media_assets, project_media_references},
+    metadata::build_metadata_operations,
     ownership::ObligationOwnership,
+    search::project_search,
     taxonomy::{project_geo_places, project_taxonomies},
-    CasProjectionOperation, CompilationOperation, MetadataOperation, MetadataRow,
-    ProjectionContract, ProjectionSourceFacts, SystemMediaProjectionOperation, SystemMediaRow,
+    ProjectionContract, ProjectionSourceFacts,
 };
 use crate::{
-    contracts::{locale::KnowledgeLocale, version::BUILD_RESULT_SCHEMA_VERSION},
-    databases::DatabaseKind,
-    media::decode_hex,
-    projection::coverage::{
-        CompilationOperationId, ProjectionObligation, ProjectionOperationId, RowEvent, RowIdentity,
-        SearchCandidate, SystemTable,
-    },
-    report::BuildContext,
+    contracts::locale::KnowledgeLocale, media::decode_hex, report::BuildContext,
     validation::ValidatedSource,
 };
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 impl ProjectionContract {
     pub(crate) fn build(
         source: &ValidatedSource,
         locale: KnowledgeLocale,
         context: &BuildContext,
-        expected_obligations: BTreeSet<ProjectionObligation>,
-        search_candidates: Vec<SearchCandidate>,
-    ) -> Result<Self, String> {
-        let mut claims = ObligationOwnership::from_expected(&expected_obligations)?;
+    ) -> Result<Self, crate::ContractError> {
+        let declared = owned_obligations(source, locale, context.release.is_some())?;
+        let mut claims = ObligationOwnership::from_declared(&declared)?;
+        let search_candidates = search_candidates(source, locale)?;
         let source_digest = decode_hex(&source.source_digest_sha256)?;
-        let mut metadata = Vec::new();
-        for database in [DatabaseKind::System, DatabaseKind::SystemMedia] {
-            let owner = ProjectionOperationId::Metadata {
-                database,
-                release: false,
-            };
-            metadata.push(MetadataOperation {
-                database,
-                row: MetadataRow::Build {
-                    build_version: context.build_version,
-                    builder_version: env!("CARGO_PKG_VERSION").to_string(),
-                    build_result_schema_version: BUILD_RESULT_SCHEMA_VERSION,
-                    source_digest: source_digest.clone(),
-                    locale: locale.to_string(),
-                },
-                obligations: claims.claim(&owner)?,
-                event: RowEvent {
-                    database,
-                    table: SystemTable::KnowledgeBuildMetadata,
-                    row: RowIdentity::new("1"),
-                    entity: None,
-                },
-            });
-            if let Some(release) = &context.release {
-                let owner = ProjectionOperationId::Metadata {
-                    database,
-                    release: true,
-                };
-                metadata.push(MetadataOperation {
-                    database,
-                    row: MetadataRow::Release {
-                        release_id: release.release_id.clone(),
-                        generation: release.generation,
-                        revision: release.revision,
-                        locale: locale.to_string(),
-                    },
-                    obligations: claims.claim(&owner)?,
-                    event: RowEvent {
-                        database,
-                        table: SystemTable::KnowledgeReleaseMetadata,
-                        row: RowIdentity::new("1"),
-                        entity: None,
-                    },
-                });
-            }
-        }
-
-        let mut compilation = Vec::new();
-        for entry in &source.entities {
-            let entity = identity(&entry.source.entity);
-            for validation in ["entity_type", "schema_version"] {
-                let identity = CompilationOperationId::CanonicalValidation {
-                    entity: entity.clone(),
-                    validation,
-                };
-                compilation.push(CompilationOperation {
-                    obligations: claims
-                        .claim(&ProjectionOperationId::Compilation(identity.clone()))?,
-                    identity,
-                });
-            }
-            if let Some(document) = entry.editorial.get(&locale) {
-                let identity = CompilationOperationId::Document {
-                    entity: entity.clone(),
-                };
-                compilation.push(CompilationOperation {
-                    obligations: claims
-                        .claim(&ProjectionOperationId::Compilation(identity.clone()))?,
-                    identity,
-                });
-                for section in &document.sections {
-                    let identity = CompilationOperationId::Section {
-                        entity: entity.clone(),
-                        section_key: section.section_key.clone(),
-                    };
-                    compilation.push(CompilationOperation {
-                        obligations: claims
-                            .claim(&ProjectionOperationId::Compilation(identity.clone()))?,
-                        identity,
-                    });
-                }
-            }
-        }
+        let metadata = build_metadata_operations(source_digest, locale, context, &mut claims)?;
+        let compilation = build_compilation_operations(source, locale, &mut claims)?;
 
         let mut system = Vec::new();
         project_taxonomies(source, locale, &mut claims, &mut system)?;
@@ -122,60 +37,7 @@ impl ProjectionContract {
         project_media_references(source, locale, &mut claims, &mut system)?;
         project_search(search_candidates, &mut claims, &mut system)?;
 
-        let mut system_media = Vec::new();
-        let mut cas_hashes = BTreeSet::new();
-        for media_key in source
-            .media_keys_by_locale
-            .get(&locale)
-            .into_iter()
-            .flatten()
-        {
-            let asset = source
-                .media
-                .get(media_key)
-                .ok_or_else(|| format!("media key has no source asset: {media_key}"))?;
-            let owner = ProjectionOperationId::SystemMediaAsset {
-                media_key: media_key.clone(),
-            };
-            system_media.push(SystemMediaProjectionOperation {
-                row: SystemMediaRow {
-                    media_key: asset.media_key.clone(),
-                    content_hash: decode_hex(&asset.content_hash_sha256)?,
-                    thumbnail: asset.thumbnail.clone(),
-                    thumbnail_mime_type: asset.thumbnail_mime_type.clone(),
-                    thumbnail_width: asset.thumbnail_width,
-                    thumbnail_height: asset.thumbnail_height,
-                    mime_type: asset.mime_type.clone(),
-                    size_bytes: asset.size_bytes,
-                    width: asset.width,
-                    height: asset.height,
-                },
-                obligations: claims.claim(&owner)?,
-                event: RowEvent {
-                    database: DatabaseKind::SystemMedia,
-                    table: SystemTable::MediaAssets,
-                    row: RowIdentity::new(media_key),
-                    entity: None,
-                },
-            });
-            cas_hashes.insert(asset.content_hash_sha256.clone());
-        }
-        let mut cas = Vec::new();
-        for content_hash in cas_hashes {
-            let asset = source
-                .media
-                .values()
-                .find(|asset| asset.content_hash_sha256 == content_hash)
-                .ok_or_else(|| format!("CAS hash has no source asset: {content_hash}"))?;
-            let owner = ProjectionOperationId::CasObject {
-                content_hash: content_hash.clone(),
-            };
-            cas.push(CasProjectionOperation {
-                content_hash,
-                bytes: asset.bytes.clone(),
-                obligations: claims.claim(&owner)?,
-            });
-        }
+        let (system_media, cas) = project_media_assets(source, locale, &mut claims)?;
         claims.finish()?;
 
         let entities_by_type =
@@ -200,7 +62,6 @@ impl ProjectionContract {
             system,
             system_media,
             cas,
-            expected_obligations,
             source_facts: ProjectionSourceFacts {
                 entities_by_type,
                 relation_count: source.relation_count,

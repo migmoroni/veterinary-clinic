@@ -31,7 +31,11 @@ pub(crate) fn write_system(
                 ProjectionEvent::SqliteRow(operation.event.clone()),
                 affected,
             )
-            .map_err(|detail| DatabaseError::invariant(&path, "confirm system receipt", detail))?,
+            .map_err(|source| DatabaseError::Contract {
+                database: path.clone(),
+                operation: "confirm system receipt",
+                source: Box::new(source),
+            })?,
         );
     }
     transaction
@@ -50,8 +54,11 @@ pub(crate) fn write_system(
             .count(),
         !operations.is_empty(),
     )?;
-    ConfirmedReceiptBatch::confirm(pending)
-        .map_err(|detail| DatabaseError::invariant(path, "confirm system receipt batch", detail))
+    ConfirmedReceiptBatch::confirm(pending).map_err(|source| DatabaseError::Contract {
+        database: path,
+        operation: "confirm system receipt batch",
+        source: Box::new(source),
+    })
 }
 
 pub(super) struct SystemInsertStatement {

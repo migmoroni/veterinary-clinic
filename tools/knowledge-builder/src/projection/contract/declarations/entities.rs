@@ -1,10 +1,8 @@
 //! Builds the entity-specific portion of the independent expected inventory.
 
 use super::{
-    authoring::*,
-    model::{ExpectedInventory, OperationDisposition},
-    taxonomy::{taxonomy_id, taxonomy_row},
-    ObligationClass, ProjectionTarget, SourceToken, SystemColumn, SystemTable,
+    values::*, ExpectedInventory, ObligationClass, OperationDisposition, ProjectionTarget,
+    SourceToken, SystemColumn, SystemTable,
 };
 use crate::{
     contracts::locale::KnowledgeLocale,

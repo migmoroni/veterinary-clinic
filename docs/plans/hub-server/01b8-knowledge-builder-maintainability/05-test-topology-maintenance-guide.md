@@ -247,4 +247,4 @@ Depois, executar o gate geral da skill `$validate-workspace`.
 ## Próxima Parte
 
 Após cumprir todos os critérios, seguir para a
-[Parte 1C: consumo local dos artefatos `system`](../01c-app-system-consumption.md).
+[Parte 1B.8.6: fechamento das fronteiras e do custo de manutenção](./06-maintainability-completion.md).

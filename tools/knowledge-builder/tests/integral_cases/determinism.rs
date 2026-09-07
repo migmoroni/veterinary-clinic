@@ -1,7 +1,7 @@
 //! Proves deterministic six-locale projection and canonical database invariants.
 
 use crate::support::*;
-use knowledge_builder::{build, validate, BuildOptions, LOCALES};
+use knowledge_builder::{validate, BuildOptions, LOCALES};
 use rusqlite::Connection;
 use std::fs;
 use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
@@ -34,7 +34,7 @@ fn validates_and_builds_all_locales_deterministically() {
     assert!(validated.relation_count() > 0);
 
     let first_output = TestDirectory::new("first-build");
-    let first = build(&BuildOptions {
+    let first = fresh_build(&BuildOptions {
         source: source_root(),
         output: first_output.path().to_path_buf(),
         context: context_path(),
@@ -44,7 +44,7 @@ fn validates_and_builds_all_locales_deterministically() {
     assert_eq!(first.source_digest_sha256, validated.source_digest_sha256());
 
     let second_output = TestDirectory::new("second-build");
-    let second = build(&BuildOptions {
+    let second = fresh_build(&BuildOptions {
         source: source_root(),
         output: second_output.path().to_path_buf(),
         context: context_path(),
@@ -97,7 +97,7 @@ fn validates_and_builds_all_locales_deterministically() {
         assert_eq!(reported_system_tables, expected_system_tables);
     }
 
-    let reused = build(&BuildOptions {
+    let reused = verify_reuse(&BuildOptions {
         source: source_root(),
         output: first_output.path().to_path_buf(),
         context: context_path(),

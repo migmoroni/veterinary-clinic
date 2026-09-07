@@ -21,13 +21,14 @@ pub(super) fn verify(
     _identity: &VerifiedIdentity,
 ) -> Result<VerifiedTree, crate::VerificationError> {
     verify_inner(context)
-        .map_err(|detail| crate::VerificationError::invalid("artifact tree", detail))
 }
 
-fn verify_inner(context: &VerificationContext<'_>) -> Result<VerifiedTree, String> {
+fn verify_inner(
+    context: &VerificationContext<'_>,
+) -> Result<VerifiedTree, crate::VerificationError> {
     let (files, directories) = inspect(context.version_root)?;
     if files != expected_files() {
-        return Err("version contains missing or additional files".to_string());
+        return Err(("version contains missing or additional files".to_string()).into());
     }
     let mut expected_directories = BTreeSet::from([LOCALES_DIRECTORY.to_string()]);
     expected_directories.extend(LOCALES.map(|locale| {
@@ -35,7 +36,7 @@ fn verify_inner(context: &VerificationContext<'_>) -> Result<VerifiedTree, Strin
             .expect("contract locale paths are normalized")
     }));
     if directories != expected_directories {
-        return Err("version contains missing or additional directories".to_string());
+        return Err(("version contains missing or additional directories".to_string()).into());
     }
     Ok(VerifiedTree { files })
 }
@@ -59,23 +60,37 @@ fn expected_files() -> BTreeSet<String> {
     files
 }
 
-fn inspect(root: &Path) -> Result<(BTreeSet<String>, BTreeSet<String>), String> {
+fn inspect(root: &Path) -> Result<(BTreeSet<String>, BTreeSet<String>), crate::VerificationError> {
     fn visit(
         root: &Path,
         directory: &Path,
         files: &mut BTreeSet<String>,
         directories: &mut BTreeSet<String>,
-    ) -> Result<(), String> {
+    ) -> Result<(), crate::VerificationError> {
         let mut entries = fs::read_dir(directory)
-            .map_err(|error| format!("cannot inspect {}: {error}", directory.display()))?
+            .map_err(|source| crate::VerificationError::Io {
+                artifact: "artifact tree".to_string(),
+                path: directory.to_path_buf(),
+                source,
+            })?
             .collect::<Result<Vec<_>, _>>()
-            .map_err(|error| error.to_string())?;
+            .map_err(|source| crate::VerificationError::Io {
+                artifact: "artifact tree".to_string(),
+                path: directory.to_path_buf(),
+                source,
+            })?;
         entries.sort_by_key(|entry| entry.file_name());
         for entry in entries {
             let path = entry.path();
-            let file_type = entry.file_type().map_err(|error| error.to_string())?;
+            let file_type = entry
+                .file_type()
+                .map_err(|source| crate::VerificationError::Io {
+                    artifact: "artifact tree".to_string(),
+                    path: path.clone(),
+                    source,
+                })?;
             if file_type.is_symlink() {
-                return Err(format!("artifact symlink is forbidden: {}", path.display()));
+                return Err((format!("artifact symlink is forbidden: {}", path.display())).into());
             }
             let relative = path
                 .strip_prefix(root)
@@ -87,10 +102,9 @@ fn inspect(root: &Path) -> Result<(BTreeSet<String>, BTreeSet<String>), String> 
             } else if file_type.is_file() {
                 files.insert(relative);
             } else {
-                return Err(format!(
-                    "special artifact file is forbidden: {}",
-                    path.display()
-                ));
+                return Err(
+                    (format!("special artifact file is forbidden: {}", path.display())).into(),
+                );
             }
         }
         Ok(())

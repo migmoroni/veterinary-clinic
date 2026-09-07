@@ -9,7 +9,7 @@ use crate::{
         },
     },
     media::sha256_hex,
-    projection::contract::ProjectionContract,
+    projection::contract::LocaleProjectionPlan,
     report::{BuildContext, BuildResult, DatabaseArtifact},
     schemas,
     validation::ValidatedSource,
@@ -27,7 +27,7 @@ pub(super) fn reuse_or_reject_existing(
     output: &Path,
     final_version: &Path,
     context: &BuildContext,
-    contracts: &BTreeMap<KnowledgeLocale, ProjectionContract>,
+    plans: &BTreeMap<KnowledgeLocale, LocaleProjectionPlan>,
 ) -> Result<BuildResult, VerificationError> {
     let result_path = final_version.join(VersionArtifact::BuildResult.filename());
     let bytes = fs::read(&result_path).map_err(|source| VerificationError::Io {
@@ -35,12 +35,20 @@ pub(super) fn reuse_or_reject_existing(
         path: result_path.clone(),
         source,
     })?;
-    let raw: serde_json::Value = serde_json::from_slice(&bytes)
-        .map_err(|error| VerificationError::invalid("build-result.json", error.to_string()))?;
+    let raw: serde_json::Value =
+        serde_json::from_slice(&bytes).map_err(|source| VerificationError::Json {
+            artifact: "build-result.json".to_string(),
+            path: result_path.clone(),
+            source,
+        })?;
     schemas::validate_build_result(&raw)
         .map_err(|detail| VerificationError::invalid("build-result.json schema", detail))?;
-    let result: BuildResult = serde_json::from_value(raw)
-        .map_err(|error| VerificationError::invalid("build-result.json", error.to_string()))?;
+    let result: BuildResult =
+        serde_json::from_value(raw).map_err(|source| VerificationError::Json {
+            artifact: "build-result.json".to_string(),
+            path: result_path,
+            source,
+        })?;
     if result.build_version != context.build_version
         || result.release != context.release
         || result.source_digest_sha256 != source.source_digest_sha256
@@ -60,7 +68,7 @@ pub(super) fn reuse_or_reject_existing(
     ArtifactVerifier::new(
         source,
         context,
-        contracts,
+        plans,
         final_version,
         &output.join(CAS_ROOT),
         &result,

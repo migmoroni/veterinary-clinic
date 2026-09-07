@@ -27,10 +27,12 @@ pub(super) struct VerifiedIdentity {
 pub(super) fn verify(
     context: &VerificationContext<'_>,
 ) -> Result<VerifiedIdentity, crate::VerificationError> {
-    verify_inner(context).map_err(|detail| crate::VerificationError::invalid("identity", detail))
+    verify_inner(context)
 }
 
-fn verify_inner(context: &VerificationContext<'_>) -> Result<VerifiedIdentity, String> {
+fn verify_inner(
+    context: &VerificationContext<'_>,
+) -> Result<VerifiedIdentity, crate::VerificationError> {
     schemas::validate_build_result(context.result)?;
     let expected_projection = report::normalized_relative_path(&version_artifact(
         context.context.build_version,
@@ -55,22 +57,32 @@ fn verify_inner(context: &VerificationContext<'_>) -> Result<VerifiedIdentity, S
         || context.result.cas.layout != CAS_LAYOUT
         || context.result.cas.path_pattern != CAS_PATH_PATTERN
     {
-        return Err("artifact identity differs from source or build context".to_string());
+        return Err(("artifact identity differs from source or build context".to_string()).into());
     }
 
     let result_path = context
         .version_root
         .join(VersionArtifact::BuildResult.filename());
-    let raw: serde_json::Value = serde_json::from_slice(
-        &fs::read(&result_path)
-            .map_err(|error| format!("cannot read {}: {error}", result_path.display()))?,
-    )
-    .map_err(|error| format!("build-result.json is invalid JSON: {error}"))?;
+    let bytes = fs::read(&result_path).map_err(|source| crate::VerificationError::Io {
+        artifact: "build-result.json".to_string(),
+        path: result_path.clone(),
+        source,
+    })?;
+    let raw: serde_json::Value =
+        serde_json::from_slice(&bytes).map_err(|source| crate::VerificationError::Json {
+            artifact: "build-result.json".to_string(),
+            path: result_path.clone(),
+            source,
+        })?;
     schemas::validate_build_result(&raw)?;
-    let expected = serde_json::to_value(context.result)
-        .map_err(|error| format!("cannot compare build result: {error}"))?;
+    let expected =
+        serde_json::to_value(context.result).map_err(|source| crate::VerificationError::Json {
+            artifact: "build-result.json comparison".to_string(),
+            path: result_path,
+            source,
+        })?;
     if raw != expected {
-        return Err("build-result.json differs from the verified manifest".to_string());
+        return Err(("build-result.json differs from the verified manifest".to_string()).into());
     }
 
     Ok(VerifiedIdentity {
@@ -82,12 +94,15 @@ fn verify_inner(context: &VerificationContext<'_>) -> Result<VerifiedIdentity, S
 pub(super) fn resolve_version_path(
     context: &VerificationContext<'_>,
     declared: &str,
-) -> Result<PathBuf, String> {
+) -> Result<PathBuf, crate::VerificationError> {
     let suffix = canonical_version_suffix(context.context.build_version, declared)?;
     Ok(context.version_root.join(suffix))
 }
 
-fn canonical_version_suffix(build_version: u64, declared: &str) -> Result<&str, String> {
+fn canonical_version_suffix(
+    build_version: u64,
+    declared: &str,
+) -> Result<&str, crate::VerificationError> {
     let prefix = format!(
         "{}/",
         report::normalized_relative_path(&version_root(build_version))?
@@ -96,7 +111,7 @@ fn canonical_version_suffix(build_version: u64, declared: &str) -> Result<&str, 
         .strip_prefix(&prefix)
         .ok_or_else(|| format!("artifact path is outside version: {declared}"))?;
     if report::normalized_relative_path(Path::new(suffix))? != suffix {
-        return Err(format!("artifact path is not canonical: {declared}"));
+        return Err((format!("artifact path is not canonical: {declared}")).into());
     }
     Ok(suffix)
 }
@@ -104,16 +119,16 @@ fn canonical_version_suffix(build_version: u64, declared: &str) -> Result<&str, 
 pub(super) fn resolve_declared_path(
     context: &VerificationContext<'_>,
     declared: &str,
-) -> Result<PathBuf, String> {
+) -> Result<PathBuf, crate::VerificationError> {
     if declared.starts_with(&format!("{VERSIONS_DIRECTORY}/")) {
         resolve_version_path(context, declared)
     } else if let Some(suffix) = declared.strip_prefix(&format!("{CAS_ROOT}/")) {
         if report::normalized_relative_path(Path::new(suffix))? != suffix {
-            return Err(format!("CAS path is not canonical: {declared}"));
+            return Err((format!("CAS path is not canonical: {declared}")).into());
         }
         Ok(context.cas_root.join(suffix))
     } else {
-        Err(format!("unexpected artifact path: {declared}"))
+        Err(format!("unexpected artifact path: {declared}").into())
     }
 }
 

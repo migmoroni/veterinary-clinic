@@ -10,7 +10,7 @@ mod tree;
 
 use crate::{
     contracts::locale::KnowledgeLocale,
-    projection::contract::ProjectionContract,
+    projection::contract::LocaleProjectionPlan,
     report::{BuildContext, BuildResult},
     validation::ValidatedSource,
     VerificationError,
@@ -20,7 +20,7 @@ use std::{collections::BTreeMap, path::Path};
 pub(crate) struct ArtifactVerifier<'a> {
     source: &'a ValidatedSource,
     context: &'a BuildContext,
-    contracts: &'a BTreeMap<KnowledgeLocale, ProjectionContract>,
+    plans: &'a BTreeMap<KnowledgeLocale, LocaleProjectionPlan>,
     version_root: &'a Path,
     cas_root: &'a Path,
     result: &'a BuildResult,
@@ -29,7 +29,7 @@ pub(crate) struct ArtifactVerifier<'a> {
 pub(super) struct VerificationContext<'a> {
     pub(super) source: &'a ValidatedSource,
     pub(super) context: &'a BuildContext,
-    pub(super) contracts: &'a BTreeMap<KnowledgeLocale, ProjectionContract>,
+    pub(super) plans: &'a BTreeMap<KnowledgeLocale, LocaleProjectionPlan>,
     pub(super) version_root: &'a Path,
     pub(super) cas_root: &'a Path,
     pub(super) result: &'a BuildResult,
@@ -39,7 +39,7 @@ impl<'a> ArtifactVerifier<'a> {
     pub(crate) fn new(
         source: &'a ValidatedSource,
         context: &'a BuildContext,
-        contracts: &'a BTreeMap<KnowledgeLocale, ProjectionContract>,
+        plans: &'a BTreeMap<KnowledgeLocale, LocaleProjectionPlan>,
         version_root: &'a Path,
         cas_root: &'a Path,
         result: &'a BuildResult,
@@ -47,7 +47,7 @@ impl<'a> ArtifactVerifier<'a> {
         Self {
             source,
             context,
-            contracts,
+            plans,
             version_root,
             cas_root,
             result,
@@ -58,7 +58,7 @@ impl<'a> ArtifactVerifier<'a> {
         let context = VerificationContext {
             source: self.source,
             context: self.context,
-            contracts: self.contracts,
+            plans: self.plans,
             version_root: self.version_root,
             cas_root: self.cas_root,
             result: self.result,
@@ -68,6 +68,7 @@ impl<'a> ArtifactVerifier<'a> {
         let manifest = manifest::verify(&context, &identity, &tree)?;
         let databases = database::verify(&context, &manifest)?;
         let media = media::verify(&context, &databases)?;
+        database::verify_semantic_equivalence(&context, &databases)?;
         let cas = cas::verify(&context, &media)?;
         manifest::verify_coverage(&context, &manifest, &cas)?;
         evidence::verify(&context, &manifest, &databases, &cas)?;

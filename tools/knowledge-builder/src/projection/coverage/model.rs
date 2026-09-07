@@ -24,15 +24,6 @@ pub(crate) struct EntityIdentity {
     pub id: String,
 }
 
-#[derive(Clone, Debug)]
-pub(crate) struct SearchCandidate {
-    pub entity: EntityIdentity,
-    pub value: String,
-    pub provenance: String,
-    pub occurrence: usize,
-    pub source: SourceToken,
-}
-
 impl EntityIdentity {
     pub(crate) fn new(entity_type: impl Into<String>, id: impl Into<String>) -> Self {
         Self {

@@ -1,7 +1,9 @@
 //! Proves that refreshed declarations cannot legitimize artifact tampering.
 
 use crate::support::*;
-use knowledge_builder::{build, validate, BuildOptions, LOCALES};
+use knowledge_builder::{
+    validate, BuildOptions, KnowledgeBuilderError, VerificationError, LOCALES,
+};
 use rusqlite::Connection;
 use std::{fs, path::Path};
 
@@ -14,7 +16,7 @@ fn artifact_verifier_recalculates_manifest_report_and_database_facts() {
         output: canonical.path().to_path_buf(),
         context: context_path(),
     };
-    let result = build(&canonical_options).unwrap();
+    let result = fresh_build(&canonical_options).unwrap();
 
     let run_case = |label: &str, mutate: &dyn Fn(&Path, &knowledge_builder::BuildResult)| {
         let output = TestDirectory::new(label);
@@ -25,8 +27,17 @@ fn artifact_verifier_recalculates_manifest_report_and_database_facts() {
             context: context_path(),
         };
         mutate(output.path(), &result);
-        build(&options).unwrap_err()
+        verify_reuse(&options).unwrap_err()
     };
+
+    let error = run_case("invalid-report-json", &|output, result| {
+        fs::write(output.join(&result.projection.report_path), b"{").unwrap();
+        refresh_projection_declarations(output, result);
+    });
+    assert!(matches!(
+        error,
+        KnowledgeBuilderError::Verification(VerificationError::Json { .. })
+    ));
 
     let error = run_case("tampered-size", &|output, result| {
         update_build_result(output, result, |manifest| {
@@ -98,7 +109,13 @@ fn artifact_verifier_recalculates_manifest_report_and_database_facts() {
         drop(database);
         refresh_database_declarations(output, result, "pt-BR", "system");
     });
-    assert!(error.contains("knowledge_build_metadata mismatch"));
+    assert!(matches!(
+        error,
+        KnowledgeBuilderError::Verification(VerificationError::Database {
+            stage: "verify database contract",
+            ..
+        })
+    ));
 
     let error = run_case("tampered-fingerprint", &|output, result| {
         let path = output.join(&result.locales["pt-BR"].system.path);
@@ -201,7 +218,7 @@ fn semantically_tampered_database_is_rejected_after_checksums_are_refreshed() {
         output: output.path().to_path_buf(),
         context: context_path(),
     };
-    let result = build(&options).expect("canonical source must build");
+    let result = fresh_build(&options).expect("canonical source must build");
     let result_path = output.path().join("versions/1/build-result.json");
     let checksum_path = output.path().join(&result.checksum_file);
     let system_path = output.path().join(&result.locales["pt-BR"].system.path);
@@ -305,16 +322,21 @@ fn semantically_tampered_database_is_rejected_after_checksums_are_refreshed() {
         assert!(affected > 0, "mutation {label} must affect a row");
         drop(database);
         refresh_database_declarations(output.path(), &result, "pt-BR", "system");
-        let error = build(&options).unwrap_err();
-        let expected_error = if label == "missing-required-taxonomy" {
-            "row count mismatch"
+        let error = verify_reuse(&options).unwrap_err();
+        if label == "missing-required-taxonomy" {
+            assert!(matches!(
+                error,
+                KnowledgeBuilderError::Verification(VerificationError::Invalid { .. })
+            ));
         } else {
-            "not semantically equivalent"
-        };
-        assert!(
-            error.contains(expected_error),
-            "mutation {label} produced an unexpected error: {error}"
-        );
+            assert!(matches!(
+                error,
+                KnowledgeBuilderError::Verification(VerificationError::Database {
+                    stage: "compare semantic rows",
+                    ..
+                })
+            ));
+        }
     }
 }
 
@@ -367,7 +389,7 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
 
     validate(source.path()).expect("structural and localized media must validate");
     let output = TestDirectory::new("media-build");
-    let result = build(&BuildOptions {
+    let result = fresh_build(&BuildOptions {
         source: source.path().to_path_buf(),
         output: output.path().to_path_buf(),
         context: context_path(),
@@ -440,15 +462,18 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
         assert_eq!(database.execute(sql, []).unwrap(), 1);
         drop(database);
         refresh_database_declarations(output.path(), &result, "pt-BR", "system");
-        let error = build(&BuildOptions {
+        let error = verify_reuse(&BuildOptions {
             source: source.path().to_path_buf(),
             output: output.path().to_path_buf(),
             context: context_path(),
         })
         .unwrap_err();
         assert!(
-            error.contains("not semantically equivalent"),
-            "mutation {label} produced an unexpected error: {error}"
+            matches!(
+                error,
+                KnowledgeBuilderError::Verification(VerificationError::Invalid { .. })
+            ),
+            "mutation {label} did not fail media verification"
         );
     }
 
@@ -471,7 +496,7 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
     );
     drop(media_database);
     refresh_database_declarations(output.path(), &result, "pt-BR", "systemMedia");
-    let error = build(&BuildOptions {
+    let error = verify_reuse(&BuildOptions {
         source: source.path().to_path_buf(),
         output: output.path().to_path_buf(),
         context: context_path(),
@@ -530,7 +555,7 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
         assert_eq!(database.execute(sql, []).unwrap(), 1);
         drop(database);
         refresh_database_declarations(output.path(), &result, "pt-BR", "systemMedia");
-        let error = build(&BuildOptions {
+        let error = verify_reuse(&BuildOptions {
             source: source.path().to_path_buf(),
             output: output.path().to_path_buf(),
             context: context_path(),
@@ -554,13 +579,16 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
         .unwrap();
     drop(media_database);
     refresh_database_declarations(output.path(), &result, "pt-BR", "systemMedia");
-    let error = build(&BuildOptions {
+    let error = verify_reuse(&BuildOptions {
         source: source.path().to_path_buf(),
         output: output.path().to_path_buf(),
         context: context_path(),
     })
     .unwrap_err();
-    assert!(error.contains("thumbnail"));
+    assert!(matches!(
+        error,
+        KnowledgeBuilderError::Verification(VerificationError::Image { .. })
+    ));
 
     fs::write(&result_path, &canonical_result).unwrap();
     fs::write(&checksum_path, &canonical_checksums).unwrap();
@@ -574,7 +602,7 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
         .unwrap();
     drop(media_database);
     refresh_database_declarations(output.path(), &result, "pt-BR", "systemMedia");
-    let error = build(&BuildOptions {
+    let error = verify_reuse(&BuildOptions {
         source: source.path().to_path_buf(),
         output: output.path().to_path_buf(),
         context: context_path(),
@@ -595,7 +623,7 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
         .unwrap();
     drop(system_database);
     refresh_database_declarations(output.path(), &result, "pt-BR", "system");
-    let error = build(&BuildOptions {
+    let error = verify_reuse(&BuildOptions {
         source: source.path().to_path_buf(),
         output: output.path().to_path_buf(),
         context: context_path(),
@@ -615,13 +643,16 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
         .unwrap();
     let canonical_cas = fs::read(output.path().join(cas_relative)).unwrap();
     fs::remove_file(output.path().join(cas_relative)).unwrap();
-    let error = build(&BuildOptions {
+    let error = verify_reuse(&BuildOptions {
         source: source.path().to_path_buf(),
         output: output.path().to_path_buf(),
         context: context_path(),
     })
     .unwrap_err();
-    assert!(error.contains("cannot inspect artifact"));
+    assert!(matches!(
+        error,
+        KnowledgeBuilderError::Verification(VerificationError::Io { .. })
+    ));
     fs::write(output.path().join(cas_relative), canonical_cas).unwrap();
 
     let tampered_cas = b"tampered CAS object";
@@ -637,7 +668,7 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
         "{}  {cas_relative}",
         sha256(&fs::read(output.path().join(cas_relative)).unwrap())
     )));
-    let error = build(&BuildOptions {
+    let error = verify_reuse(&BuildOptions {
         source: source.path().to_path_buf(),
         output: output.path().to_path_buf(),
         context: context_path(),

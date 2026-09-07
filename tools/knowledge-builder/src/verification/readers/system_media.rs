@@ -3,13 +3,17 @@
 use crate::projection::contract::{ProjectionContract, SystemMediaRow};
 use rusqlite::Connection;
 use std::collections::BTreeMap;
+use std::path::Path;
 
 pub(crate) type SystemMediaRows = BTreeMap<String, SystemMediaRow>;
 
-pub(super) fn read(connection: &Connection) -> Result<SystemMediaRows, String> {
+pub(super) fn read(
+    connection: &Connection,
+    database: &Path,
+) -> Result<SystemMediaRows, crate::DatabaseError> {
     let mut statement = connection
         .prepare("SELECT media_key, content_hash, thumbnail, thumbnail_mime_type, thumbnail_width, thumbnail_height, mime_type, size_bytes, width, height FROM media_assets ORDER BY media_key")
-        .map_err(|error| format!("cannot prepare media semantic query: {error}"))?;
+        .map_err(|source| crate::DatabaseError::Sqlite { database: database.to_path_buf(), operation: "prepare media semantic query", source: Box::new(source) })?;
     let rows = statement
         .query_map([], |row| {
             let media_key: String = row.get(0)?;
@@ -26,13 +30,25 @@ pub(super) fn read(connection: &Connection) -> Result<SystemMediaRows, String> {
                 height: row.get(9)?,
             })
         })
-        .map_err(|error| format!("cannot run media semantic query: {error}"))?;
+        .map_err(|source| crate::DatabaseError::Sqlite {
+            database: database.to_path_buf(),
+            operation: "run media semantic query",
+            source: Box::new(source),
+        })?;
     let mut result = BTreeMap::new();
     for row in rows {
-        let value = row.map_err(|error| format!("cannot read media semantic row: {error}"))?;
+        let value = row.map_err(|source| crate::DatabaseError::Sqlite {
+            database: database.to_path_buf(),
+            operation: "read media semantic row",
+            source: Box::new(source),
+        })?;
         let key = value.media_key.clone();
         if result.insert(key.clone(), value).is_some() {
-            return Err(format!("duplicate media semantic row identity {key}"));
+            return Err(crate::DatabaseError::invariant(
+                database,
+                "read media semantic rows",
+                format!("duplicate media semantic row identity {key}"),
+            ));
         }
     }
     Ok(result)
@@ -41,7 +57,8 @@ pub(super) fn read(connection: &Connection) -> Result<SystemMediaRows, String> {
 pub(super) fn verify(
     observed: &SystemMediaRows,
     contract: &ProjectionContract,
-) -> Result<(), String> {
+    database: &Path,
+) -> Result<(), crate::DatabaseError> {
     let expected = contract
         .system_media
         .iter()
@@ -55,16 +72,24 @@ pub(super) fn verify(
                     || expected_row.thumbnail_width != observed_row.thumbnail_width
                     || expected_row.thumbnail_height != observed_row.thumbnail_height
                 {
-                    return Err(format!(
-                        "thumbnail differs from projection contract for {media_key} for {}",
-                        contract.locale
+                    return Err(crate::DatabaseError::invariant(
+                        database,
+                        "compare media rows",
+                        format!(
+                            "thumbnail differs from projection contract for {media_key} for {}",
+                            contract.locale
+                        ),
                     ));
                 }
             }
         }
-        return Err(format!(
+        return Err(crate::DatabaseError::invariant(
+            database,
+            "compare media rows",
+            format!(
             "system_media database is not semantically equivalent to projection contract for {}",
             contract.locale
+        ),
         ));
     }
     Ok(())
@@ -85,7 +110,7 @@ mod tests {
             rusqlite::params!["key", vec![1_u8; 32], vec![2_u8; 4], "image/jpeg", 2, 1, "image/png", 8, 4, 2],
         ).unwrap();
 
-        let rows = read(&connection).unwrap();
+        let rows = read(&connection, Path::new("<memory-system-media>")).unwrap();
         let row = &rows["key"];
         assert_eq!(row.content_hash, vec![1_u8; 32]);
         assert_eq!(row.thumbnail, vec![2_u8; 4]);

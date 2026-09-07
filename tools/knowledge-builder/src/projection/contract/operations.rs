@@ -10,7 +10,8 @@ use std::collections::{BTreeMap, BTreeSet};
 impl ProjectionContract {
     pub(crate) fn ownership(
         &self,
-    ) -> Result<BTreeMap<ProjectionOperationId, BTreeSet<ProjectionObligation>>, String> {
+    ) -> Result<BTreeMap<ProjectionOperationId, BTreeSet<ProjectionObligation>>, crate::ContractError>
+    {
         let mut ownership = BTreeMap::new();
         for (id, obligations) in self
             .compilation
@@ -38,7 +39,10 @@ impl ProjectionContract {
             )
         {
             if ownership.insert(id.clone(), obligations.clone()).is_some() {
-                return Err(format!("duplicate projection operation identity: {id:?}"));
+                return Err(crate::ContractError::invariant(
+                    "operation ownership",
+                    format!("duplicate projection operation identity: {id:?}"),
+                ));
             }
         }
         Ok(ownership)

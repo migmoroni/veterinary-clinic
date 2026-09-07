@@ -5,8 +5,12 @@ use crate::{
     projection::contract::{MetadataRow, ProjectionContract},
 };
 use rusqlite::Connection;
+use std::path::Path;
 
-pub(super) fn read(connection: &Connection) -> Result<Vec<MetadataRow>, String> {
+pub(super) fn read(
+    connection: &Connection,
+    database: &Path,
+) -> Result<Vec<MetadataRow>, crate::DatabaseError> {
     let mut observed = Vec::new();
     let build = connection
         .query_row(
@@ -22,14 +26,14 @@ pub(super) fn read(connection: &Connection) -> Result<Vec<MetadataRow>, String> 
                 })
             },
         )
-        .map_err(|error| format!("cannot read semantic build metadata: {error}"))?;
+        .map_err(|source| crate::DatabaseError::Sqlite { database: database.to_path_buf(), operation: "read semantic build metadata", source: Box::new(source) })?;
     observed.push(build);
 
     let mut statement = connection
         .prepare(
             "SELECT release_id, generation, revision, locale FROM knowledge_release_metadata ORDER BY singleton",
         )
-        .map_err(|error| format!("cannot prepare semantic release metadata: {error}"))?;
+        .map_err(|source| crate::DatabaseError::Sqlite { database: database.to_path_buf(), operation: "prepare semantic release metadata", source: Box::new(source) })?;
     let rows = statement
         .query_map([], |row| {
             Ok(MetadataRow::Release {
@@ -39,9 +43,17 @@ pub(super) fn read(connection: &Connection) -> Result<Vec<MetadataRow>, String> 
                 locale: row.get(3)?,
             })
         })
-        .map_err(|error| format!("cannot read semantic release metadata: {error}"))?;
+        .map_err(|source| crate::DatabaseError::Sqlite {
+            database: database.to_path_buf(),
+            operation: "query semantic release metadata",
+            source: Box::new(source),
+        })?;
     for row in rows {
-        observed.push(row.map_err(|error| error.to_string())?);
+        observed.push(row.map_err(|source| crate::DatabaseError::Sqlite {
+            database: database.to_path_buf(),
+            operation: "read semantic release metadata",
+            source: Box::new(source),
+        })?);
     }
     Ok(observed)
 }
@@ -50,7 +62,8 @@ pub(super) fn verify(
     observed: &[MetadataRow],
     contract: &ProjectionContract,
     database: DatabaseKind,
-) -> Result<(), String> {
+    path: &Path,
+) -> Result<(), crate::DatabaseError> {
     let expected = contract
         .metadata
         .iter()
@@ -58,10 +71,30 @@ pub(super) fn verify(
         .map(|operation| operation.row.clone())
         .collect::<Vec<_>>();
     if observed != expected {
-        return Err(format!(
-            "metadata is not semantically equivalent for {}",
-            contract.locale
+        return Err(crate::DatabaseError::invariant(
+            path,
+            "compare metadata rows",
+            format!(
+                "metadata is not semantically equivalent for {}",
+                contract.locale
+            ),
         ));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::error::Error;
+
+    #[test]
+    fn sqlite_reader_failure_preserves_database_context_and_source() {
+        let connection = Connection::open_in_memory().unwrap();
+        let path = Path::new("broken-system.sqlite3");
+        let error = read(&connection, path).unwrap_err();
+        assert!(matches!(error, crate::DatabaseError::Sqlite { .. }));
+        assert_eq!(error.database(), path);
+        assert!(error.source().is_some());
+    }
 }

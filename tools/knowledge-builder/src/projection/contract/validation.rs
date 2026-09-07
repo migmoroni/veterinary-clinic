@@ -18,7 +18,7 @@ use crate::{
 use std::collections::{BTreeMap, BTreeSet};
 
 impl ProjectionContract {
-    pub(crate) fn validate(&self) -> Result<(), String> {
+    pub(crate) fn validate(&self) -> Result<(), crate::ContractError> {
         let mut operation_ids = BTreeSet::new();
         let mut ownership = BTreeSet::new();
         for operation in &self.compilation {
@@ -66,28 +66,31 @@ impl ProjectionContract {
             )?;
             validate_cas_operation(operation, self.locale)?;
         }
-        if ownership != self.expected_obligations {
-            return Err("operation obligations do not equal expected obligations".to_string());
-        }
         validate_universal_taxonomies(&self.system)?;
-        let localized = self
-            .expected_obligations
+        let owned = self
+            .ownership()?
+            .into_values()
+            .flatten()
+            .collect::<BTreeSet<_>>();
+        let localized = owned
             .iter()
             .filter(|obligation| obligation.class == ObligationClass::LocalizedContent)
             .map(|obligation| &obligation.source)
             .collect::<BTreeSet<_>>()
             .len();
         if localized != self.source_facts.localized_fragments {
-            return Err(format!(
+            return Err((format!(
                 "localized fragment count differs between source and contract for {}: source {}, contract {localized}",
                 self.locale, self.source_facts.localized_fragments
-            ));
+            )).into());
         }
         Ok(())
     }
 }
 
-fn validate_universal_taxonomies(operations: &[SystemProjectionOperation]) -> Result<(), String> {
+fn validate_universal_taxonomies(
+    operations: &[SystemProjectionOperation],
+) -> Result<(), crate::ContractError> {
     let mut registries = BTreeMap::<&str, (&str, &str)>::new();
     let mut terms = BTreeSet::<(&str, &str)>::new();
     let mut entities = BTreeSet::<(&str, &str)>::new();
@@ -99,15 +102,16 @@ fn validate_universal_taxonomies(operations: &[SystemProjectionOperation]) -> Re
                 purpose,
             } => {
                 if taxonomy_spec(domain, purpose).is_none() {
-                    return Err(format!(
+                    return Err((format!(
                         "unsupported taxonomy domain and purpose {domain}:{purpose}"
-                    ));
+                    ))
+                    .into());
                 }
                 if registries
                     .insert(id, (domain.as_str(), purpose.as_str()))
                     .is_some()
                 {
-                    return Err(format!("duplicate taxonomy registry id {id}"));
+                    return Err((format!("duplicate taxonomy registry id {id}")).into());
                 }
             }
             SystemRow::TaxonomyTerm {
@@ -115,7 +119,7 @@ fn validate_universal_taxonomies(operations: &[SystemProjectionOperation]) -> Re
                 term_key,
                 ..
             } if !terms.insert((taxonomy_id, term_key)) => {
-                return Err(format!("duplicate taxonomy term {taxonomy_id}/{term_key}"));
+                return Err((format!("duplicate taxonomy term {taxonomy_id}/{term_key}")).into());
             }
             SystemRow::TaxonomyTerm { .. } => {}
             SystemRow::Life { id, .. } => {
@@ -139,9 +143,10 @@ fn validate_universal_taxonomies(operations: &[SystemProjectionOperation]) -> Re
 
     for (entity_type, entity_id) in &entities {
         if !taxonomy_domains().any(|domain| domain == *entity_type) {
-            return Err(format!(
+            return Err((format!(
                 "projected taxonomy entity has unsupported domain {entity_type}/{entity_id}"
-            ));
+            ))
+            .into());
         }
     }
 
@@ -159,9 +164,10 @@ fn validate_universal_taxonomies(operations: &[SystemProjectionOperation]) -> Re
             continue;
         };
         if !entities.contains(&(entity_type.as_str(), entity_id.as_str())) {
-            return Err(format!(
+            return Err((format!(
                 "taxonomy relation has no projected {entity_type} entity {entity_id}"
-            ));
+            ))
+            .into());
         }
         let (domain, purpose) = registries
             .get(taxonomy_id.as_str())
@@ -170,19 +176,21 @@ fn validate_universal_taxonomies(operations: &[SystemProjectionOperation]) -> Re
                 format!("taxonomy relation references unknown taxonomy {taxonomy_id}")
             })?;
         if domain != entity_type {
-            return Err(format!(
+            return Err((format!(
                 "taxonomy {taxonomy_id} domain {domain} is incompatible with {entity_type}"
-            ));
+            ))
+            .into());
         }
         if taxonomy_spec(entity_type, purpose).is_none() {
-            return Err(format!(
-                "taxonomy purpose {purpose} is incompatible with {entity_type}"
-            ));
+            return Err(
+                (format!("taxonomy purpose {purpose} is incompatible with {entity_type}")).into(),
+            );
         }
         if !terms.contains(&(taxonomy_id.as_str(), term_key.as_str())) {
-            return Err(format!(
+            return Err((format!(
                 "taxonomy relation references foreign or missing term {taxonomy_id}/{term_key}"
-            ));
+            ))
+            .into());
         }
         if !positions.insert((
             entity_type.as_str(),
@@ -190,9 +198,10 @@ fn validate_universal_taxonomies(operations: &[SystemProjectionOperation]) -> Re
             taxonomy_id.as_str(),
             *sort_order,
         )) {
-            return Err(format!(
+            return Err((format!(
                 "taxonomy relation repeats sort order for {entity_type}/{entity_id}/{taxonomy_id}"
-            ));
+            ))
+            .into());
         }
         *counts.entry((entity_type, entity_id, purpose)).or_default() += 1;
     }
@@ -206,10 +215,11 @@ fn validate_universal_taxonomies(operations: &[SystemProjectionOperation]) -> Re
                 .copied()
                 .unwrap_or_default();
             if count != 1 {
-                return Err(format!(
+                return Err((format!(
                     "{entity_type}/{entity_id} requires exactly one {} taxonomy relation",
                     spec.purpose
-                ));
+                ))
+                .into());
             }
         }
     }
@@ -221,20 +231,19 @@ pub(super) fn validate_operation_registration(
     obligations: &BTreeSet<ProjectionObligation>,
     operation_ids: &mut BTreeSet<ProjectionOperationId>,
     ownership: &mut BTreeSet<ProjectionObligation>,
-) -> Result<(), String> {
+) -> Result<(), crate::ContractError> {
     if !operation_ids.insert(id.clone()) {
-        return Err(format!("duplicate projection operation identity: {id:?}"));
+        return Err((format!("duplicate projection operation identity: {id:?}")).into());
     }
     if obligations.is_empty() {
-        return Err(format!(
-            "projection operation has no declared owner batch: {id:?}"
-        ));
+        return Err((format!("projection operation has no declared owner batch: {id:?}")).into());
     }
     for obligation in obligations {
         if !ownership.insert(obligation.clone()) {
-            return Err(format!(
+            return Err((format!(
                 "projection obligation belongs to more than one operation: {obligation}"
-            ));
+            ))
+            .into());
         }
     }
     Ok(())
@@ -243,7 +252,7 @@ pub(super) fn validate_operation_registration(
 pub(super) fn validate_compilation_operation(
     operation: &CompilationOperation,
     locale: KnowledgeLocale,
-) -> Result<(), String> {
+) -> Result<(), crate::ContractError> {
     for obligation in &operation.obligations {
         let compatible = match (&operation.identity, &obligation.target) {
             (
@@ -281,10 +290,11 @@ pub(super) fn validate_compilation_operation(
             _ => false,
         };
         if !compatible {
-            return Err(format!(
+            return Err((format!(
                 "compilation operation {:?} cannot materialize target {:?}",
                 operation.identity, obligation.target
-            ));
+            ))
+            .into());
         }
     }
     Ok(())
@@ -293,7 +303,7 @@ pub(super) fn validate_compilation_operation(
 pub(super) fn validate_metadata_operation(
     operation: &MetadataOperation,
     locale: KnowledgeLocale,
-) -> Result<(), String> {
+) -> Result<(), crate::ContractError> {
     let release = operation.row.is_release();
     let expected_table = if release {
         SystemTable::KnowledgeReleaseMetadata
@@ -304,7 +314,7 @@ pub(super) fn validate_metadata_operation(
         || operation.event.table != expected_table
         || operation.event.row != RowIdentity::new("1")
     {
-        return Err("metadata event differs from its operation identity".to_string());
+        return Err(("metadata event differs from its operation identity".to_string()).into());
     }
     for obligation in &operation.obligations {
         if !matches!(
@@ -315,7 +325,9 @@ pub(super) fn validate_metadata_operation(
                 release: target_release,
             } if *database == operation.database && *target_locale == locale && *target_release == release
         ) {
-            return Err("metadata obligation differs from its operation identity".to_string());
+            return Err(
+                ("metadata obligation differs from its operation identity".to_string()).into(),
+            );
         }
     }
     Ok(())
@@ -324,18 +336,19 @@ pub(super) fn validate_metadata_operation(
 pub(super) fn validate_system_operation(
     operation: &SystemProjectionOperation,
     locale: KnowledgeLocale,
-) -> Result<(), String> {
+) -> Result<(), crate::ContractError> {
     let table = operation.row.table();
     let row = operation.row.descriptor().identity;
     if operation.event.database != DatabaseKind::System
         || operation.event.table != table
         || operation.event.row != row
     {
-        return Err(format!(
+        return Err((format!(
             "system row event differs from payload identity: {}:{}",
             table.as_str(),
             row
-        ));
+        ))
+        .into());
     }
     let columns = operation.row.materialized_columns();
     for obligation in &operation.obligations {
@@ -685,12 +698,13 @@ pub(super) fn validate_system_operation(
             }
         };
         if !compatible {
-            return Err(format!(
+            return Err((format!(
                 "system operation {}:{} cannot materialize target {:?}",
                 table.as_str(),
                 row,
                 obligation.target
-            ));
+            ))
+            .into());
         }
     }
     Ok(())
@@ -699,12 +713,12 @@ pub(super) fn validate_system_operation(
 pub(super) fn validate_system_media_operation(
     operation: &SystemMediaProjectionOperation,
     locale: KnowledgeLocale,
-) -> Result<(), String> {
+) -> Result<(), crate::ContractError> {
     if operation.event.database != DatabaseKind::SystemMedia
         || operation.event.table != SystemTable::MediaAssets
         || operation.event.row != RowIdentity::new(&operation.row.media_key)
     {
-        return Err("system_media event differs from payload identity".to_string());
+        return Err(("system_media event differs from payload identity".to_string()).into());
     }
     for obligation in &operation.obligations {
         if !matches!(
@@ -712,7 +726,9 @@ pub(super) fn validate_system_media_operation(
             ProjectionTarget::SystemMediaAsset { locale: target_locale, media_key }
                 if *target_locale == locale && media_key == &operation.row.media_key
         ) {
-            return Err("system_media obligation differs from payload identity".to_string());
+            return Err(
+                ("system_media obligation differs from payload identity".to_string()).into(),
+            );
         }
     }
     Ok(())
@@ -721,14 +737,14 @@ pub(super) fn validate_system_media_operation(
 pub(super) fn validate_cas_operation(
     operation: &CasProjectionOperation,
     locale: KnowledgeLocale,
-) -> Result<(), String> {
+) -> Result<(), crate::ContractError> {
     for obligation in &operation.obligations {
         if !matches!(
             &obligation.target,
             ProjectionTarget::CasObject { locale: target_locale, content_hash }
                 if *target_locale == locale && content_hash == &operation.content_hash
         ) {
-            return Err("CAS obligation differs from operation identity".to_string());
+            return Err(("CAS obligation differs from operation identity".to_string()).into());
         }
     }
     Ok(())

@@ -5,18 +5,20 @@ use crate::{
     contracts::locale::KnowledgeLocale,
     media::{cas_relative_path, sha256_hex},
     projection::{
-        contract::ProjectionContract, coverage::ProjectionOperationId, filesystem::recursive_files,
+        contract::LocaleProjectionPlan, coverage::ProjectionOperationId,
+        filesystem::recursive_files,
     },
     CasError,
 };
 use std::{collections::BTreeMap, fs, io::Write, path::Path};
 
 pub(crate) fn stage_cas_objects(
-    contracts: &BTreeMap<KnowledgeLocale, ProjectionContract>,
+    plans: &BTreeMap<KnowledgeLocale, LocaleProjectionPlan>,
     staging: &Path,
 ) -> Result<BTreeMap<KnowledgeLocale, ConfirmedReceiptBatch>, CasError> {
     let mut objects = BTreeMap::<String, &[u8]>::new();
-    for contract in contracts.values() {
+    for plan in plans.values() {
+        let contract = &plan.contract;
         for operation in &contract.cas {
             if let Some(existing) = objects.insert(operation.content_hash.clone(), &operation.bytes)
             {
@@ -84,7 +86,8 @@ pub(crate) fn stage_cas_objects(
         }
     }
     let mut receipts = BTreeMap::new();
-    for (locale, contract) in contracts {
+    for (locale, plan) in plans {
+        let contract = &plan.contract;
         let mut pending = Vec::new();
         for operation in &contract.cas {
             let path = staging.join(cas_relative_path(&operation.content_hash).map_err(
@@ -113,14 +116,21 @@ pub(crate) fn stage_cas_objects(
                     },
                     1,
                 )
-                .map_err(|detail| CasError::invalid(&path, "create receipt", detail))?,
+                .map_err(|source| CasError::Contract {
+                    artifact: path.clone(),
+                    operation: "create receipt",
+                    source: Box::new(source),
+                })?,
             );
         }
         if !pending.is_empty() {
             receipts.insert(
                 *locale,
-                ConfirmedReceiptBatch::confirm(pending)
-                    .map_err(|detail| CasError::invalid(staging, "confirm receipts", detail))?,
+                ConfirmedReceiptBatch::confirm(pending).map_err(|source| CasError::Contract {
+                    artifact: staging.to_path_buf(),
+                    operation: "confirm receipts",
+                    source: Box::new(source),
+                })?,
             );
         }
     }
@@ -133,9 +143,7 @@ pub(crate) fn commit_cas(staging: &Path, final_root: &Path) -> Result<(), CasErr
         operation: "create final root",
         source,
     })?;
-    for staged in recursive_files(staging)
-        .map_err(|detail| CasError::invalid(staging, "enumerate staged objects", detail))?
-    {
+    for staged in recursive_files(staging)? {
         let relative = staged.strip_prefix(staging).map_err(|_| {
             CasError::invalid(&staged, "resolve final path", "path escapes staging")
         })?;

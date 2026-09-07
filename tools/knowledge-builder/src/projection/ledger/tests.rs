@@ -87,14 +87,17 @@ fn expected_and_owned_must_match_before_execution() {
         BTreeSet::from([first.clone(), second.clone()]),
         BTreeMap::from([(operation("id"), BTreeSet::from([first.clone()]))]),
     );
-    assert!(missing_owner.unwrap_err().contains("1 missing"));
+    assert!(missing_owner.unwrap_err().to_string().contains("1 missing"));
 
     let unexpected_owner = ProjectionLedger::new(
         KnowledgeLocale::EnUs,
         BTreeSet::from([first.clone()]),
         BTreeMap::from([(operation("id"), BTreeSet::from([first, second]))]),
     );
-    assert!(unexpected_owner.unwrap_err().contains("1 unexpected"));
+    assert!(unexpected_owner
+        .unwrap_err()
+        .to_string()
+        .contains("1 unexpected"));
 }
 
 #[test]
@@ -109,7 +112,7 @@ fn one_obligation_cannot_have_two_owners() {
         ]),
     )
     .unwrap_err();
-    assert!(error.contains("more than one operation"));
+    assert!(error.to_string().contains("more than one operation"));
 }
 
 #[test]
@@ -140,6 +143,7 @@ fn receipt_rejects_unexpected_operation_locale_and_cardinality() {
             BTreeSet::from([item])
         )]))
         .unwrap_err()
+        .to_string()
         .contains("unexpected operation"));
 
     let owner = operation("id");
@@ -154,6 +158,7 @@ fn receipt_rejects_unexpected_operation_locale_and_cardinality() {
     assert!(locale_ledger
         .observe(batch(vec![receipt(owner, BTreeSet::from([foreign]))]))
         .unwrap_err()
+        .to_string()
         .contains("another locale"));
 
     let (mut cardinality_ledger, owner, item) = ledger();
@@ -162,6 +167,7 @@ fn receipt_rejects_unexpected_operation_locale_and_cardinality() {
     assert!(cardinality_ledger
         .observe(batch(vec![divergent]))
         .unwrap_err()
+        .to_string()
         .contains("divergent cardinality"));
 }
 
@@ -217,4 +223,55 @@ fn evidence_digest_remains_order_independent_and_stable() {
         evidence_digest(&BTreeSet::from([first.clone(), second.clone()])),
         evidence_digest(&BTreeSet::from([second, first]))
     );
+}
+
+#[test]
+fn large_batch_uses_ordered_uniqueness_and_finishes_atomically() {
+    let mut expected = BTreeSet::new();
+    let mut owners = BTreeMap::new();
+    let mut receipts = Vec::new();
+    for index in 0..1_024 {
+        let row = format!("row-{index:04}");
+        let owner = operation(&row);
+        let item = obligation(&format!("localizedContent.value{index}"), &row);
+        expected.insert(item.clone());
+        owners.insert(owner.clone(), BTreeSet::from([item.clone()]));
+        receipts.push(receipt(owner, BTreeSet::from([item])));
+    }
+    let mut ledger = ProjectionLedger::new(KnowledgeLocale::EnUs, expected, owners).unwrap();
+    ledger.observe(batch(receipts)).unwrap();
+    assert_eq!(ledger.finish().unwrap().completed_count(), 1_024);
+}
+
+#[test]
+fn duplicate_inside_batch_and_against_accumulated_state_are_rejected() {
+    let first_owner = operation("first");
+    let second_owner = operation("second");
+    let first = obligation("localizedContent.name", "first");
+    let second = obligation("localizedContent.aliases", "second");
+    let expected = BTreeSet::from([first.clone(), second.clone()]);
+    let owners = BTreeMap::from([
+        (first_owner.clone(), BTreeSet::from([first.clone()])),
+        (second_owner.clone(), BTreeSet::from([second.clone()])),
+    ]);
+    let mut ledger = ProjectionLedger::new(KnowledgeLocale::EnUs, expected, owners).unwrap();
+    let duplicate = receipt(first_owner.clone(), BTreeSet::from([first.clone()]));
+    assert!(matches!(
+        ledger.observe(batch(vec![duplicate.clone(), duplicate])),
+        Err(crate::ContractError::Invariant { .. })
+    ));
+    ledger
+        .observe(batch(vec![receipt(
+            first_owner.clone(),
+            BTreeSet::from([first.clone()]),
+        )]))
+        .unwrap();
+    assert!(matches!(
+        ledger.observe(batch(vec![receipt(first_owner, BTreeSet::from([first]))])),
+        Err(crate::ContractError::Invariant { .. })
+    ));
+    ledger
+        .observe(batch(vec![receipt(second_owner, BTreeSet::from([second]))]))
+        .unwrap();
+    assert_eq!(ledger.finish().unwrap().completed_count(), 2);
 }

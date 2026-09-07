@@ -88,6 +88,12 @@ impl ContractError {
     }
 }
 
+impl From<String> for ContractError {
+    fn from(detail: String) -> Self {
+        Self::invariant("projection contract", detail)
+    }
+}
+
 /// Failure while creating, querying, or finalizing SQLite databases.
 #[derive(Debug, Error)]
 #[non_exhaustive]
@@ -114,6 +120,13 @@ pub enum DatabaseError {
         #[source]
         source: Box<rusqlite::Error>,
     },
+    #[error("database operation {operation} failed for {} while confirming its contract", database.display())]
+    Contract {
+        database: PathBuf,
+        operation: &'static str,
+        #[source]
+        source: Box<ContractError>,
+    },
     #[error("database operation {operation} failed for {}: {detail}", database.display())]
     Invariant {
         database: PathBuf,
@@ -128,6 +141,7 @@ impl DatabaseError {
             Self::Io { path, .. } => path,
             Self::Sqlite { database, .. }
             | Self::Table { database, .. }
+            | Self::Contract { database, .. }
             | Self::Invariant { database, .. } => database,
         }
     }
@@ -144,6 +158,7 @@ impl DatabaseError {
             Self::Io { operation, .. }
             | Self::Sqlite { operation, .. }
             | Self::Table { operation, .. }
+            | Self::Contract { operation, .. }
             | Self::Invariant { operation, .. } => operation,
         }
     }
@@ -158,6 +173,12 @@ impl DatabaseError {
             operation,
             detail: detail.into(),
         }
+    }
+}
+
+impl From<String> for DatabaseError {
+    fn from(detail: String) -> Self {
+        Self::invariant("<database>", "database invariant", detail)
     }
 }
 
@@ -214,6 +235,13 @@ pub enum CasError {
         #[source]
         source: io::Error,
     },
+    #[error("CAS operation {operation} failed for {} while confirming its contract", artifact.display())]
+    Contract {
+        artifact: PathBuf,
+        operation: &'static str,
+        #[source]
+        source: Box<ContractError>,
+    },
     #[error("CAS operation {operation} failed for {}: {detail}", artifact.display())]
     Invalid {
         artifact: PathBuf,
@@ -225,13 +253,17 @@ pub enum CasError {
 impl CasError {
     pub fn artifact(&self) -> &std::path::Path {
         match self {
-            Self::Io { artifact, .. } | Self::Invalid { artifact, .. } => artifact,
+            Self::Io { artifact, .. }
+            | Self::Contract { artifact, .. }
+            | Self::Invalid { artifact, .. } => artifact,
         }
     }
 
     pub fn operation(&self) -> &'static str {
         match self {
-            Self::Io { operation, .. } | Self::Invalid { operation, .. } => operation,
+            Self::Io { operation, .. }
+            | Self::Contract { operation, .. }
+            | Self::Invalid { operation, .. } => operation,
         }
     }
 
@@ -259,6 +291,34 @@ pub enum VerificationError {
         #[source]
         source: io::Error,
     },
+    #[error("verification stage {stage} failed for {artifact} in locale {locale}: {source}")]
+    Database {
+        artifact: String,
+        locale: KnowledgeLocale,
+        stage: &'static str,
+        #[source]
+        source: Box<DatabaseError>,
+    },
+    #[error("verification of {artifact} failed while evaluating its contract")]
+    Contract {
+        artifact: String,
+        #[source]
+        source: Box<ContractError>,
+    },
+    #[error("verification of {artifact} failed while decoding JSON")]
+    Json {
+        artifact: String,
+        path: PathBuf,
+        #[source]
+        source: serde_json::Error,
+    },
+    #[error("verification of {artifact} failed while decoding image {}", path.display())]
+    Image {
+        artifact: String,
+        path: PathBuf,
+        #[source]
+        source: image::ImageError,
+    },
     #[error("verification of {artifact} failed for locale {locale}: {detail}")]
     Locale {
         artifact: String,
@@ -279,6 +339,10 @@ impl VerificationError {
     pub fn artifact(&self) -> &str {
         match self {
             Self::Io { artifact, .. }
+            | Self::Database { artifact, .. }
+            | Self::Contract { artifact, .. }
+            | Self::Json { artifact, .. }
+            | Self::Image { artifact, .. }
             | Self::Locale { artifact, .. }
             | Self::Invalid { artifact, .. } => artifact,
             Self::DatabaseTable { table, .. } => table,
@@ -287,7 +351,7 @@ impl VerificationError {
 
     pub fn locale(&self) -> Option<KnowledgeLocale> {
         match self {
-            Self::Locale { locale, .. } => Some(*locale),
+            Self::Locale { locale, .. } | Self::Database { locale, .. } => Some(*locale),
             _ => None,
         }
     }
@@ -295,6 +359,7 @@ impl VerificationError {
     pub fn database(&self) -> Option<&std::path::Path> {
         match self {
             Self::DatabaseTable { database, .. } => Some(database),
+            Self::Database { source, .. } => Some(source.database()),
             _ => None,
         }
     }
@@ -306,10 +371,32 @@ impl VerificationError {
         }
     }
 
+    pub fn stage(&self) -> Option<&'static str> {
+        match self {
+            Self::Database { stage, .. } => Some(*stage),
+            _ => None,
+        }
+    }
+
     pub(crate) fn invalid(artifact: impl Into<String>, detail: impl Into<String>) -> Self {
         Self::Invalid {
             artifact: artifact.into(),
             detail: detail.into(),
+        }
+    }
+}
+
+impl From<String> for VerificationError {
+    fn from(detail: String) -> Self {
+        Self::invalid("artifact", detail)
+    }
+}
+
+impl From<ContractError> for VerificationError {
+    fn from(source: ContractError) -> Self {
+        Self::Contract {
+            artifact: "artifact contract".to_string(),
+            source: Box::new(source),
         }
     }
 }
@@ -325,6 +412,13 @@ pub enum PublicationError {
         #[source]
         source: io::Error,
     },
+    #[error("publication operation {operation} could not encode JSON for {}", path.display())]
+    Json {
+        path: PathBuf,
+        operation: &'static str,
+        #[source]
+        source: serde_json::Error,
+    },
     #[error("publication operation {operation} failed for {}: {detail}", path.display())]
     Invalid {
         path: PathBuf,
@@ -336,25 +430,15 @@ pub enum PublicationError {
 impl PublicationError {
     pub fn path(&self) -> &std::path::Path {
         match self {
-            Self::Io { path, .. } | Self::Invalid { path, .. } => path,
+            Self::Io { path, .. } | Self::Json { path, .. } | Self::Invalid { path, .. } => path,
         }
     }
 
     pub fn operation(&self) -> &'static str {
         match self {
-            Self::Io { operation, .. } | Self::Invalid { operation, .. } => operation,
-        }
-    }
-
-    pub(crate) fn invalid(
-        path: impl Into<PathBuf>,
-        operation: &'static str,
-        detail: impl Into<String>,
-    ) -> Self {
-        Self::Invalid {
-            path: path.into(),
-            operation,
-            detail: detail.into(),
+            Self::Io { operation, .. }
+            | Self::Json { operation, .. }
+            | Self::Invalid { operation, .. } => operation,
         }
     }
 }

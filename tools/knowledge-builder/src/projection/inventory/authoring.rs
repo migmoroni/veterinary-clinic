@@ -1,14 +1,15 @@
-//! Provides focused constructors for independent expected obligations.
+//! Maps canonical authoring leaves to expected projection obligations.
 
 use super::{
-    EntityIdentity, ExpectedInventory, ObligationClass, OperationDisposition, ProjectionTarget,
-    RowIdentity, SourceToken, SystemColumn, SystemTable,
+    model::{ExpectedInventory, OperationDisposition},
+    EntityIdentity, ObligationClass, ProjectionTarget, RowIdentity, SourceToken, SystemColumn,
+    SystemTable,
 };
 use crate::{
     contracts::locale::KnowledgeLocale,
     databases::DatabaseKind,
     source::{CanonicalEntity, LocalizedContent, StructuralMedia},
-    validation::{ValidatedEntity, ValidatedSource},
+    validation::ValidatedEntity,
 };
 
 pub(super) fn common_authoring(
@@ -18,7 +19,7 @@ pub(super) fn common_authoring(
     sections: &[crate::source::SectionDeclaration],
     content_path: Option<&str>,
     main: &OperationDisposition,
-) -> Result<(), String> {
+) -> Result<(), crate::ContractError> {
     field(
         expected,
         entity,
@@ -84,7 +85,7 @@ pub(super) fn structural_media(
     entry: &ValidatedEntity,
     locale: KnowledgeLocale,
     media: Option<&StructuralMedia>,
-) -> Result<(), String> {
+) -> Result<(), crate::ContractError> {
     let entity = identity(&entry.source.entity);
     let Some(media) = media else {
         return Ok(());
@@ -122,7 +123,7 @@ pub(super) fn localized(
     content: &LocalizedContent,
     locale: KnowledgeLocale,
     target: OperationDisposition,
-) -> Result<(), String> {
+) -> Result<(), crate::ContractError> {
     localized_with_prefix(
         expected,
         entity,
@@ -140,7 +141,7 @@ pub(super) fn localized_with_prefix(
     locale: KnowledgeLocale,
     target: OperationDisposition,
     prefix: &str,
-) -> Result<(), String> {
+) -> Result<(), crate::ContractError> {
     for (field_name, value) in content {
         let values = value.values(locale);
         let localized_path = format!("{prefix}.{field_name}");
@@ -175,24 +176,24 @@ pub(super) fn localized_column(
     entity: &EntityIdentity,
     prefix: &str,
     field: &str,
-) -> Result<SystemColumn, String> {
+) -> Result<SystemColumn, crate::ContractError> {
     let column = if prefix.starts_with("terms.") {
         match field {
             "label" => SystemColumn::Label,
             "aliases" => SystemColumn::AliasesJson,
             _ => {
-                return Err(format!(
-                    "localized taxonomy field has no policy: {prefix}.{field}"
-                ))
+                return Err(
+                    (format!("localized taxonomy field has no policy: {prefix}.{field}")).into(),
+                )
             }
         }
     } else if prefix.starts_with("doses.") {
         match field {
             "label" => SystemColumn::Label,
             _ => {
-                return Err(format!(
-                    "localized dose field has no policy: {prefix}.{field}"
-                ))
+                return Err(
+                    (format!("localized dose field has no policy: {prefix}.{field}")).into(),
+                )
             }
         }
     } else {
@@ -219,10 +220,11 @@ pub(super) fn localized_column(
             }
             ("treatment_protocol", "observation") => SystemColumn::Observation,
             _ => {
-                return Err(format!(
+                return Err((format!(
                     "localized field has no projection policy: {}.{prefix}.{field}",
                     entity.entity_type
-                ));
+                ))
+                .into());
             }
         }
     };
@@ -235,7 +237,7 @@ pub(super) fn field(
     path: &str,
     target: OperationDisposition,
     class: ObligationClass,
-) -> Result<(), String> {
+) -> Result<(), crate::ContractError> {
     insert_obligation(
         expected,
         target,
@@ -253,7 +255,7 @@ pub(super) fn fields<T>(
     path: &str,
     values: &[T],
     target: OperationDisposition,
-) -> Result<(), String> {
+) -> Result<(), crate::ContractError> {
     if values.is_empty() {
         return field(expected, entity, path, target, ObligationClass::Authoring);
     }
@@ -275,7 +277,7 @@ pub(super) fn optional_fields<T>(
     path: &str,
     value: Option<&T>,
     target: OperationDisposition,
-) -> Result<(), String> {
+) -> Result<(), crate::ContractError> {
     if value.is_some() {
         field(expected, entity, path, target, ObligationClass::Authoring)?;
     }
@@ -288,7 +290,7 @@ pub(super) fn relations<F>(
     field_name: &str,
     values: &[String],
     mut target: F,
-) -> Result<(), String>
+) -> Result<(), crate::ContractError>
 where
     F: FnMut(usize, &str) -> OperationDisposition,
 {
@@ -316,7 +318,7 @@ pub(super) fn insert_obligation(
     disposition: OperationDisposition,
     source: SourceToken,
     class: ObligationClass,
-) -> Result<(), String> {
+) -> Result<(), crate::ContractError> {
     expected.insert(disposition, source, class)
 }
 
@@ -364,28 +366,4 @@ pub(super) fn canonical_validation_target(
             validation,
         },
     }
-}
-
-pub(super) fn taxonomy_row(
-    entity: &EntityIdentity,
-    taxonomy_id: &str,
-    term: &str,
-) -> OperationDisposition {
-    table_row(
-        DatabaseKind::System,
-        SystemTable::EntityTaxonomyTerms,
-        format!("{}/{}/{taxonomy_id}/{term}", entity.entity_type, entity.id),
-    )
-}
-
-pub(super) fn taxonomy_id<'a>(
-    source: &'a ValidatedSource,
-    domain: &str,
-    purpose: &str,
-) -> Result<&'a str, String> {
-    source
-        .taxonomies
-        .get(&(domain.to_string(), purpose.to_string()))
-        .map(|taxonomy| taxonomy.id.as_str())
-        .ok_or_else(|| format!("missing taxonomy {domain}:{purpose}"))
 }

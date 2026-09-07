@@ -10,6 +10,7 @@ use crate::{
         },
         execution::{ConfirmedReceipt, ConfirmedReceiptBatch, ProjectionEvent},
     },
+    ContractError,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -21,7 +22,7 @@ pub(crate) struct ProjectionLedger {
     owners: BTreeMap<ProjectionOperationId, BTreeSet<ProjectionObligation>>,
     observed: BTreeSet<ProjectionObligation>,
     observed_operations: BTreeSet<ProjectionOperationId>,
-    events: Vec<ProjectionEvent>,
+    events: BTreeSet<ProjectionEvent>,
 }
 
 #[derive(Clone, Debug)]
@@ -30,7 +31,7 @@ pub(crate) struct CompletedLedger {
     expected: BTreeSet<ProjectionObligation>,
     owned: BTreeSet<ProjectionObligation>,
     observed: BTreeSet<ProjectionObligation>,
-    events: Vec<ProjectionEvent>,
+    events: BTreeSet<ProjectionEvent>,
 }
 
 impl ProjectionLedger {
@@ -38,24 +39,31 @@ impl ProjectionLedger {
         locale: KnowledgeLocale,
         expected: BTreeSet<ProjectionObligation>,
         owners: BTreeMap<ProjectionOperationId, BTreeSet<ProjectionObligation>>,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, ContractError> {
         let mut owned = BTreeSet::new();
         for (owner, obligations) in &owners {
             if obligations.is_empty() {
-                return Err(format!(
-                    "projection operation owns no obligations: {owner:?}"
+                return Err(ContractError::invariant(
+                    "ledger ownership",
+                    format!("projection operation owns no obligations: {owner:?}"),
                 ));
             }
             for obligation in obligations {
                 if !owned.insert(obligation.clone()) {
-                    return Err(format!(
+                    return Err(ContractError::invariant(
+                        "ledger ownership",
+                        format!(
                         "projection obligation belongs to more than one operation: {obligation}"
+                    ),
                     ));
                 }
             }
         }
         if expected != owned {
-            return Err(coverage_difference(&expected, &owned, "owned"));
+            return Err(ContractError::invariant(
+                "ledger ownership",
+                coverage_difference(&expected, &owned, "owned"),
+            ));
         }
         Ok(Self {
             locale,
@@ -64,72 +72,92 @@ impl ProjectionLedger {
             owners,
             observed: BTreeSet::new(),
             observed_operations: BTreeSet::new(),
-            events: Vec::new(),
+            events: BTreeSet::new(),
         })
     }
 
-    pub(crate) fn observe(&mut self, batch: ConfirmedReceiptBatch) -> Result<(), String> {
-        let mut observed = self.observed.clone();
-        let mut operations = self.observed_operations.clone();
-        let mut events = self.events.clone();
+    pub(crate) fn observe(&mut self, batch: ConfirmedReceiptBatch) -> Result<(), ContractError> {
+        let mut observed = BTreeSet::new();
+        let mut operations = BTreeSet::new();
+        let mut events = BTreeSet::new();
         for receipt in batch.iter() {
             self.validate_receipt(receipt)?;
-            if !operations.insert(receipt.operation.clone()) {
-                return Err(format!(
-                    "duplicated confirmed operation receipt: {:?}",
-                    receipt.operation
+            if self.observed_operations.contains(&receipt.operation)
+                || !operations.insert(receipt.operation.clone())
+            {
+                return Err(ContractError::invariant(
+                    "ledger observation",
+                    format!(
+                        "duplicated confirmed operation receipt: {:?}",
+                        receipt.operation
+                    ),
                 ));
             }
             for obligation in &receipt.obligations {
-                if !observed.insert(obligation.clone()) {
-                    return Err(format!("duplicated projection obligation {obligation}"));
+                if self.observed.contains(obligation) || !observed.insert(obligation.clone()) {
+                    return Err(ContractError::invariant(
+                        "ledger observation",
+                        format!("duplicated projection obligation {obligation}"),
+                    ));
                 }
             }
-            if !events.insert_unique(receipt.event.clone()) {
-                return Err(format!("duplicated projection event: {:?}", receipt.event));
+            if self.events.contains(&receipt.event) || !events.insert(receipt.event.clone()) {
+                return Err(ContractError::invariant(
+                    "ledger observation",
+                    format!("duplicated projection event: {:?}", receipt.event),
+                ));
             }
         }
-        self.observed = observed;
-        self.observed_operations = operations;
-        self.events = events;
+        self.observed.extend(observed);
+        self.observed_operations.extend(operations);
+        self.events.extend(events);
         Ok(())
     }
 
-    fn validate_receipt(&self, receipt: &ConfirmedReceipt) -> Result<(), String> {
+    fn validate_receipt(&self, receipt: &ConfirmedReceipt) -> Result<(), ContractError> {
         if receipt.observed_count != 1 {
-            return Err(format!(
-                "confirmed receipt {:?} has divergent cardinality {}",
-                receipt.operation, receipt.observed_count
+            return Err(ContractError::invariant(
+                "ledger receipt",
+                format!(
+                    "confirmed receipt {:?} has divergent cardinality {}",
+                    receipt.operation, receipt.observed_count
+                ),
             ));
         }
         let owned = self.owners.get(&receipt.operation).ok_or_else(|| {
-            format!(
-                "confirmed receipt has unexpected operation: {:?}",
-                receipt.operation
+            ContractError::invariant(
+                "ledger receipt",
+                format!(
+                    "confirmed receipt has unexpected operation: {:?}",
+                    receipt.operation
+                ),
             )
         })?;
         if owned != &receipt.obligations {
-            return Err(format!(
-                "confirmed receipt obligations diverge for {:?}",
-                receipt.operation
+            return Err(ContractError::invariant(
+                "ledger receipt",
+                format!(
+                    "confirmed receipt obligations diverge for {:?}",
+                    receipt.operation
+                ),
             ));
         }
         for obligation in &receipt.obligations {
             if obligation_locale(obligation).is_some_and(|locale| locale != self.locale) {
-                return Err(format!(
-                    "projection obligation belongs to another locale: {obligation}"
+                return Err(ContractError::invariant(
+                    "ledger receipt",
+                    format!("projection obligation belongs to another locale: {obligation}"),
                 ));
             }
         }
         validate_event(&receipt.operation, &receipt.event)
     }
 
-    pub(crate) fn finish(self) -> Result<CompletedLedger, String> {
+    pub(crate) fn finish(self) -> Result<CompletedLedger, ContractError> {
         if self.expected != self.observed {
-            return Err(coverage_difference(
-                &self.expected,
-                &self.observed,
-                "observed",
+            return Err(ContractError::invariant(
+                "ledger completion",
+                coverage_difference(&self.expected, &self.observed, "observed"),
             ));
         }
         Ok(CompletedLedger {
@@ -142,25 +170,10 @@ impl ProjectionLedger {
     }
 }
 
-trait UniqueEventVec {
-    fn insert_unique(&mut self, event: ProjectionEvent) -> bool;
-}
-
-impl UniqueEventVec for Vec<ProjectionEvent> {
-    fn insert_unique(&mut self, event: ProjectionEvent) -> bool {
-        if self.contains(&event) {
-            false
-        } else {
-            self.push(event);
-            true
-        }
-    }
-}
-
 fn validate_event(
     operation: &ProjectionOperationId,
     event: &ProjectionEvent,
-) -> Result<(), String> {
+) -> Result<(), ContractError> {
     let compatible = match (operation, event) {
         (ProjectionOperationId::Compilation(operation), ProjectionEvent::Compilation(event)) => {
             operation == event
@@ -202,8 +215,9 @@ fn validate_event(
     if compatible {
         Ok(())
     } else {
-        Err(format!(
-            "confirmed receipt event diverges from operation {operation:?}: {event:?}"
+        Err(ContractError::invariant(
+            "ledger event",
+            format!("confirmed receipt event diverges from operation {operation:?}: {event:?}"),
         ))
     }
 }

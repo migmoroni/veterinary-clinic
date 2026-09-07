@@ -1,4 +1,28 @@
-//! Keeps taxonomy inventory ownership explicit within the inventory boundary.
+//! Owns expected taxonomy destinations and taxonomy lookup policy.
 
-// Taxonomy obligations are emitted by the entity traversal alongside the
-// authored taxonomy entities and relations that define them.
+use super::{authoring::table_row, model::OperationDisposition, EntityIdentity, SystemTable};
+use crate::{databases::DatabaseKind, validation::ValidatedSource};
+
+pub(super) fn taxonomy_row(
+    entity: &EntityIdentity,
+    taxonomy_id: &str,
+    term: &str,
+) -> OperationDisposition {
+    table_row(
+        DatabaseKind::System,
+        SystemTable::EntityTaxonomyTerms,
+        format!("{}/{}/{taxonomy_id}/{term}", entity.entity_type, entity.id),
+    )
+}
+
+pub(super) fn taxonomy_id<'a>(
+    source: &'a ValidatedSource,
+    domain: &str,
+    purpose: &str,
+) -> Result<&'a str, crate::ContractError> {
+    Ok(source
+        .taxonomies
+        .get(&(domain.to_string(), purpose.to_string()))
+        .map(|taxonomy| taxonomy.id.as_str())
+        .ok_or_else(|| format!("missing taxonomy {domain}:{purpose}"))?)
+}

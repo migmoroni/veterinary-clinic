@@ -19,7 +19,6 @@ pub(super) fn verify(
     cas: &VerifiedCas,
 ) -> Result<VerifiedEvidence, crate::VerificationError> {
     verify_inner(context, manifest, databases, cas)
-        .map_err(|detail| crate::VerificationError::invalid("projection evidence", detail))
 }
 
 fn verify_inner(
@@ -27,7 +26,7 @@ fn verify_inner(
     manifest: &VerifiedManifest,
     databases: &VerifiedDatabases,
     cas: &VerifiedCas,
-) -> Result<VerifiedEvidence, String> {
+) -> Result<VerifiedEvidence, crate::VerificationError> {
     let report = &manifest.report;
     if report.schema_version != PROJECTION_REPORT_SCHEMA_VERSION
         || report.source_digest_sha256 != context.result.source_digest_sha256
@@ -35,10 +34,12 @@ fn verify_inner(
         || report.system_schema_version != context.result.system_schema_version
         || report.system_media_schema_version != context.result.system_media_schema_version
     {
-        return Err("projection report identity differs from build-result.json".to_string());
+        return Err(
+            ("projection report identity differs from build-result.json".to_string()).into(),
+        );
     }
     if databases.locales.len() != LOCALES.len() || cas.locale_hashes.len() != LOCALES.len() {
-        return Err("verified locale coverage is incomplete".to_string());
+        return Err(("verified locale coverage is incomplete".to_string()).into());
     }
     let entities_by_type = context.source.entities.iter().fold(
         BTreeMap::<String, usize>::new(),
@@ -60,39 +61,43 @@ fn verify_inner(
         || report.source.localized_fragments_by_locale != localized
         || report.source.source_files != context.source.source_files
     {
-        return Err("projection report source facts differ from validated source".to_string());
+        return Err(
+            ("projection report source facts differ from validated source".to_string()).into(),
+        );
     }
     for locale in LOCALES {
-        let contract = context.contracts.get(&locale).unwrap();
-        let expected_relation_count = contract
-            .expected_obligations
+        let plan = context.plans.get(&locale).unwrap();
+        let contract = &plan.contract;
+        let expected_relation_count = plan
+            .expected
             .iter()
             .filter(|obligation| obligation.class == ObligationClass::Relation)
             .map(|obligation| &obligation.source)
             .collect::<BTreeSet<_>>()
             .len();
-        let expected_localized_fragments = contract
-            .expected_obligations
+        let expected_localized_fragments = plan
+            .expected
             .iter()
             .filter(|obligation| obligation.class == ObligationClass::LocalizedContent)
             .map(|obligation| &obligation.source)
             .collect::<BTreeSet<_>>()
             .len();
         if expected_relation_count != context.source.relation_count {
-            return Err(format!(
+            return Err((format!(
                 "regenerated relation obligations differ from source facts for {locale}"
-            ));
+            ))
+            .into());
         }
         let actual = report.locales.get(locale.as_str()).unwrap();
-        if actual.expected_obligation_count != contract.expected_obligations.len()
-            || actual.completed_obligation_count != contract.expected_obligations.len()
+        if actual.expected_obligation_count != plan.expected.len()
+            || actual.completed_obligation_count != plan.expected.len()
             || actual.operation_count != contract.operation_count()
             || actual.resolved_relation_count != expected_relation_count
             || actual.consumed_localized_fragments != expected_localized_fragments
             || expected_localized_fragments != contract.source_facts.localized_fragments
-            || actual.evidence_digest_sha256 != evidence_digest(&contract.expected_obligations)
+            || actual.evidence_digest_sha256 != evidence_digest(&plan.expected)
         {
-            return Err(format!("projection evidence mismatch for {locale}"));
+            return Err((format!("projection evidence mismatch for {locale}")).into());
         }
         let projected_entities = actual
             .projected_by_type
@@ -100,7 +105,7 @@ fn verify_inner(
             .map(|(entity_type, projection)| (entity_type.clone(), projection.entities))
             .collect::<BTreeMap<_, _>>();
         if projected_entities != entities_by_type {
-            return Err(format!("projected entity counts mismatch for {locale}"));
+            return Err((format!("projected entity counts mismatch for {locale}")).into());
         }
         let projectable_rows = actual
             .rows_by_database
@@ -109,7 +114,7 @@ fn verify_inner(
             .sum::<usize>();
         let metadata_events = 2 + usize::from(context.context.release.is_some()) * 2;
         if actual.row_event_count != projectable_rows + metadata_events {
-            return Err(format!("row event count mismatch for {locale}"));
+            return Err((format!("row event count mismatch for {locale}")).into());
         }
         let mut rows_from_types = BTreeMap::<String, usize>::new();
         for projection in actual.projected_by_type.values() {
@@ -120,9 +125,9 @@ fn verify_inner(
         let system_rows = actual.rows_by_database.get("system").unwrap();
         for (table, count) in system_rows {
             if rows_from_types.get(table).copied().unwrap_or_default() != *count {
-                return Err(format!(
-                    "rowsByTable attribution mismatch for {locale}.{table}"
-                ));
+                return Err(
+                    (format!("rowsByTable attribution mismatch for {locale}.{table}")).into(),
+                );
             }
         }
     }
@@ -144,7 +149,9 @@ fn verify_inner(
         || report.media.referenced_media_keys != context.source.media.len()
         || report.media.unique_content_hashes != unique_hashes
     {
-        return Err("projection report media facts differ from validated source".to_string());
+        return Err(
+            ("projection report media facts differ from validated source".to_string()).into(),
+        );
     }
     Ok(VerifiedEvidence)
 }

@@ -1,8 +1,8 @@
 //! Projects taxonomy registries, taxonomy terms, and geographic places.
 
 use super::{
-    helpers::{identity, json, localized_list, localized_text, push_system},
     ownership::ObligationOwnership,
+    values::{identity, json, localized_list, localized_text, push_system, taxonomy_for},
     SystemProjectionOperation, SystemRow,
 };
 use crate::{
@@ -14,12 +14,48 @@ use crate::{
 };
 use std::collections::BTreeSet;
 
+pub(super) fn taxonomy_relations(
+    source: &ValidatedSource,
+    operations: &mut Vec<SystemProjectionOperation>,
+    claims: &mut ObligationOwnership,
+    entity: &crate::projection::coverage::EntityIdentity,
+    relations: &[(&str, &[String])],
+) -> Result<(), crate::ContractError> {
+    for (purpose, values) in relations {
+        if values.is_empty() {
+            continue;
+        }
+        let taxonomy = taxonomy_for(source, &entity.entity_type, purpose)?;
+        for (sort_order, term_key) in values.iter().enumerate() {
+            let row_id = format!(
+                "{}/{}/{}/{term_key}",
+                entity.entity_type, entity.id, taxonomy.id
+            );
+            push_system(
+                operations,
+                claims,
+                SystemRow::EntityTaxonomy {
+                    entity_type: entity.entity_type.clone(),
+                    entity_id: entity.id.clone(),
+                    taxonomy_id: taxonomy.id.clone(),
+                    term_key: term_key.clone(),
+                    sort_order,
+                },
+                SystemTable::EntityTaxonomyTerms,
+                row_id,
+                Some(entity.clone()),
+            )?;
+        }
+    }
+    Ok(())
+}
+
 pub(super) fn project_taxonomies(
     source: &ValidatedSource,
     locale: KnowledgeLocale,
     claims: &mut ObligationOwnership,
     operations: &mut Vec<SystemProjectionOperation>,
-) -> Result<(), String> {
+) -> Result<(), crate::ContractError> {
     for entry in &source.entities {
         let CanonicalEntity::Taxonomy(taxonomy) = &entry.source.entity else {
             continue;
@@ -74,7 +110,7 @@ pub(super) fn project_geo_places(
     locale: KnowledgeLocale,
     claims: &mut ObligationOwnership,
     operations: &mut Vec<SystemProjectionOperation>,
-) -> Result<(), String> {
+) -> Result<(), crate::ContractError> {
     let mut remaining = source
         .entities
         .iter()
@@ -133,7 +169,9 @@ pub(super) fn project_geo_places(
             inserted.insert(id.clone());
         }
         if next.len() == before {
-            return Err("geo_place hierarchy could not be topologically projected".to_string());
+            return Err(
+                ("geo_place hierarchy could not be topologically projected".to_string()).into(),
+            );
         }
         remaining = next;
     }

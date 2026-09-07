@@ -16,8 +16,44 @@ pub(crate) struct ProjectionContract {
     pub system: Vec<SystemProjectionOperation>,
     pub system_media: Vec<SystemMediaProjectionOperation>,
     pub cas: Vec<CasProjectionOperation>,
-    pub expected_obligations: BTreeSet<ProjectionObligation>,
     pub source_facts: ProjectionSourceFacts,
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct LocaleProjectionPlan {
+    pub(crate) expected: BTreeSet<ProjectionObligation>,
+    pub(crate) contract: ProjectionContract,
+}
+
+impl LocaleProjectionPlan {
+    pub(crate) fn new(
+        expected: BTreeSet<ProjectionObligation>,
+        contract: ProjectionContract,
+    ) -> Result<Self, crate::ContractError> {
+        let owned = contract
+            .ownership()?
+            .into_values()
+            .flatten()
+            .collect::<BTreeSet<_>>();
+        if expected != owned {
+            return Err(crate::ContractError::invariant(
+                "expected and owned coverage",
+                coverage_difference(&expected, &owned),
+            ));
+        }
+        Ok(Self { expected, contract })
+    }
+}
+
+fn coverage_difference(
+    expected: &BTreeSet<ProjectionObligation>,
+    owned: &BTreeSet<ProjectionObligation>,
+) -> String {
+    format!(
+        "{} missing and {} unexpected obligations",
+        expected.difference(owned).count(),
+        owned.difference(expected).count()
+    )
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]

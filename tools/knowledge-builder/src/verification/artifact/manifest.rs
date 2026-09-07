@@ -31,20 +31,19 @@ pub(super) fn verify(
     tree: &VerifiedTree,
 ) -> Result<VerifiedManifest, crate::VerificationError> {
     verify_inner(context, identity, tree)
-        .map_err(|detail| crate::VerificationError::invalid("manifest", detail))
 }
 
 fn verify_inner(
     context: &VerificationContext<'_>,
     identity: &VerifiedIdentity,
     tree: &VerifiedTree,
-) -> Result<VerifiedManifest, String> {
+) -> Result<VerifiedManifest, crate::VerificationError> {
     if !tree
         .files
         .contains(VersionArtifact::ProjectionReport.filename())
         || !tree.files.contains(VersionArtifact::Checksums.filename())
     {
-        return Err("version manifest files are absent from verified tree".to_string());
+        return Err(("version manifest files are absent from verified tree".to_string()).into());
     }
     verify_file_checksum(
         &identity.projection_path,
@@ -56,13 +55,24 @@ fn verify_inner(
         verify_file_checksum(&path, checksum)?;
     }
 
-    let bytes = fs::read(&identity.projection_path)
-        .map_err(|error| format!("cannot read projection report: {error}"))?;
-    let raw: serde_json::Value = serde_json::from_slice(&bytes)
-        .map_err(|error| format!("projection report is invalid JSON: {error}"))?;
+    let bytes =
+        fs::read(&identity.projection_path).map_err(|source| crate::VerificationError::Io {
+            artifact: "projection report".to_string(),
+            path: identity.projection_path.clone(),
+            source,
+        })?;
+    let raw: serde_json::Value =
+        serde_json::from_slice(&bytes).map_err(|source| crate::VerificationError::Json {
+            artifact: "projection report".to_string(),
+            path: identity.projection_path.clone(),
+            source,
+        })?;
     schemas::validate_projection_report(&raw)?;
-    let report = serde_json::from_value(raw)
-        .map_err(|error| format!("projection report has an invalid contract: {error}"))?;
+    let report = serde_json::from_value(raw).map_err(|source| crate::VerificationError::Json {
+        artifact: "projection report".to_string(),
+        path: identity.projection_path.clone(),
+        source,
+    })?;
     Ok(VerifiedManifest {
         report,
         checksum_entries: entries,
@@ -75,14 +85,13 @@ pub(super) fn verify_coverage(
     cas: &VerifiedCas,
 ) -> Result<(), crate::VerificationError> {
     verify_coverage_inner(context, manifest, cas)
-        .map_err(|detail| crate::VerificationError::invalid("manifest coverage", detail))
 }
 
 fn verify_coverage_inner(
     context: &VerificationContext<'_>,
     manifest: &VerifiedManifest,
     cas: &VerifiedCas,
-) -> Result<(), String> {
+) -> Result<(), crate::VerificationError> {
     let mut expected = BTreeSet::new();
     for locale in LOCALES {
         let artifacts = context.result.locales.get(locale.as_str()).unwrap();
@@ -103,31 +112,48 @@ fn verify_coverage_inner(
         .collect::<BTreeSet<_>>()
         != expected
     {
-        return Err("checksums.sha256 coverage differs from referenced artifacts".to_string());
+        return Err(
+            ("checksums.sha256 coverage differs from referenced artifacts".to_string()).into(),
+        );
     }
     Ok(())
 }
 
-pub(super) fn verify_file_checksum(path: &Path, expected: &str) -> Result<(), String> {
-    let metadata = fs::symlink_metadata(path)
-        .map_err(|error| format!("cannot inspect artifact {}: {error}", path.display()))?;
+pub(super) fn verify_file_checksum(
+    path: &Path,
+    expected: &str,
+) -> Result<(), crate::VerificationError> {
+    let metadata = fs::symlink_metadata(path).map_err(|source| crate::VerificationError::Io {
+        artifact: "artifact checksum".to_string(),
+        path: path.to_path_buf(),
+        source,
+    })?;
     if !metadata.file_type().is_file() {
-        return Err(format!(
+        return Err((format!(
             "artifact must be a regular file without symlinks: {}",
             path.display()
-        ));
+        ))
+        .into());
     }
-    let bytes = fs::read(path)
-        .map_err(|error| format!("cannot read artifact {}: {error}", path.display()))?;
+    let bytes = fs::read(path).map_err(|source| crate::VerificationError::Io {
+        artifact: "artifact checksum".to_string(),
+        path: path.to_path_buf(),
+        source,
+    })?;
     if sha256_hex(&bytes) != expected {
-        return Err(format!("artifact checksum mismatch for {}", path.display()));
+        return Err((format!("artifact checksum mismatch for {}", path.display())).into());
     }
     Ok(())
 }
 
-fn read_checksum_entries(path: &Path) -> Result<BTreeMap<String, String>, String> {
-    let contents = fs::read_to_string(path)
-        .map_err(|error| format!("cannot read checksum file {}: {error}", path.display()))?;
+fn read_checksum_entries(
+    path: &Path,
+) -> Result<BTreeMap<String, String>, crate::VerificationError> {
+    let contents = fs::read_to_string(path).map_err(|source| crate::VerificationError::Io {
+        artifact: "checksum manifest".to_string(),
+        path: path.to_path_buf(),
+        source,
+    })?;
     let mut result = BTreeMap::new();
     for (index, line) in contents.lines().enumerate() {
         let (checksum, relative) = line
@@ -135,21 +161,15 @@ fn read_checksum_entries(path: &Path) -> Result<BTreeMap<String, String>, String
             .ok_or_else(|| format!("{}:{}: invalid checksum line", path.display(), index + 1))?;
         decode_hex(checksum)?;
         if report::normalized_relative_path(Path::new(relative))? != relative {
-            return Err(format!(
-                "{}:{}: non-canonical path",
-                path.display(),
-                index + 1
-            ));
+            return Err((format!("{}:{}: non-canonical path", path.display(), index + 1)).into());
         }
         if result
             .insert(relative.to_string(), checksum.to_string())
             .is_some()
         {
-            return Err(format!(
-                "{}:{}: duplicate checksum path",
-                path.display(),
-                index + 1
-            ));
+            return Err(
+                (format!("{}:{}: duplicate checksum path", path.display(), index + 1)).into(),
+            );
         }
     }
     Ok(result)
@@ -166,6 +186,6 @@ mod tests {
         fs::write(&path, format!("{}  versions/1/../bad\n", "0".repeat(64))).unwrap();
         let error = read_checksum_entries(&path).unwrap_err();
         fs::remove_file(path).unwrap();
-        assert!(!error.is_empty());
+        assert!(matches!(error, crate::VerificationError::Contract { .. }));
     }
 }

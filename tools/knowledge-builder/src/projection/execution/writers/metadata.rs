@@ -49,12 +49,10 @@ pub(crate) fn write_metadata(
                 ProjectionEvent::SqliteRow(operation.event.clone()),
                 affected,
             )
-            .map_err(|detail| {
-                DatabaseError::invariant(
-                    database_path(transaction),
-                    "confirm metadata receipt",
-                    detail,
-                )
+            .map_err(|source| DatabaseError::Contract {
+                database: database_path(transaction),
+                operation: "confirm metadata receipt",
+                source: Box::new(source),
             })?,
         );
     }

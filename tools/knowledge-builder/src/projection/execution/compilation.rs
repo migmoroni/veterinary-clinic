@@ -11,7 +11,7 @@ pub(crate) fn confirm_compilation(
     source: &ValidatedSource,
     locale: KnowledgeLocale,
     operations: &[CompilationOperation],
-) -> Result<Option<ConfirmedReceiptBatch>, String> {
+) -> Result<Option<ConfirmedReceiptBatch>, crate::ContractError> {
     let mut pending = Vec::new();
     for operation in operations {
         let entity = match &operation.identity {
@@ -43,9 +43,10 @@ pub(crate) fn confirm_compilation(
                     .iter()
                     .any(|section| section.section_key == *section_key)
                 {
-                    return Err(format!(
+                    return Err((format!(
                         "compiled section {section_key} is missing for {entity} in {locale}"
-                    ));
+                    ))
+                    .into());
                 }
             }
         }

@@ -9,6 +9,38 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
+pub fn fresh_build(
+    options: &knowledge_builder::BuildOptions,
+) -> Result<knowledge_builder::BuildResult, knowledge_builder::KnowledgeBuilderError> {
+    let context: knowledge_builder::BuildContext =
+        serde_json::from_slice(&fs::read(&options.context).expect("build context is readable"))
+            .expect("build context is valid");
+    assert!(
+        !options
+            .output
+            .join(format!("versions/{}", context.build_version))
+            .exists(),
+        "fresh_build requires an unpublished version"
+    );
+    knowledge_builder::build(options)
+}
+
+pub fn verify_reuse(
+    options: &knowledge_builder::BuildOptions,
+) -> Result<knowledge_builder::BuildResult, knowledge_builder::KnowledgeBuilderError> {
+    let context: knowledge_builder::BuildContext =
+        serde_json::from_slice(&fs::read(&options.context).expect("build context is readable"))
+            .expect("build context is valid");
+    assert!(
+        options
+            .output
+            .join(format!("versions/{}", context.build_version))
+            .exists(),
+        "verify_reuse requires a finalized version"
+    );
+    knowledge_builder::build(options)
+}
+
 pub trait DisplayContains {
     fn contains(&self, pattern: &str) -> bool;
 }

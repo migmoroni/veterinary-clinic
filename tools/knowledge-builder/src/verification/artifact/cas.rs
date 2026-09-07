@@ -3,7 +3,7 @@
 use super::{manifest::verify_file_checksum, media::VerifiedMedia, VerificationContext};
 use crate::{
     contracts::locale::{KnowledgeLocale, LOCALES},
-    media::{cas_relative_path, decode_image, mime_for_format, sha256_hex},
+    media::{cas_relative_path, mime_for_format, sha256_hex},
 };
 use image::GenericImageView;
 use std::{
@@ -22,21 +22,21 @@ pub(super) fn verify(
     context: &VerificationContext<'_>,
     media: &VerifiedMedia,
 ) -> Result<VerifiedCas, crate::VerificationError> {
-    verify_inner(context, media).map_err(|detail| crate::VerificationError::invalid("CAS", detail))
+    verify_inner(context, media)
 }
 
 fn verify_inner(
     context: &VerificationContext<'_>,
     media: &VerifiedMedia,
-) -> Result<VerifiedCas, String> {
+) -> Result<VerifiedCas, crate::VerificationError> {
     let mut global_hashes = BTreeSet::new();
     for locale in LOCALES {
         let hashes = media.locale_hashes.get(&locale).unwrap();
         let artifacts = context.result.locales.get(locale.as_str()).unwrap();
         if set_digest(hashes) != artifacts.cas_set_digest_sha256 {
-            return Err(format!("locale CAS set digest mismatch for {locale}"));
+            return Err((format!("locale CAS set digest mismatch for {locale}")).into());
         }
-        let contract = context.contracts.get(&locale).unwrap();
+        let contract = &context.plans.get(&locale).unwrap().contract;
         for hash in hashes {
             let source_asset = context
                 .source
@@ -51,24 +51,35 @@ fn verify_inner(
                 .ok_or_else(|| format!("projection contract misses CAS object {hash}"))?;
             let path = context.cas_root.join(cas_relative_path(hash)?);
             verify_file_checksum(&path, hash)?;
-            let bytes = fs::read(&path)
-                .map_err(|error| format!("cannot read CAS object {}: {error}", path.display()))?;
+            let bytes = fs::read(&path).map_err(|source| crate::VerificationError::Io {
+                artifact: format!("CAS object {hash}"),
+                path: path.clone(),
+                source,
+            })?;
             if bytes != expected.bytes
                 || bytes.len() as u64 != source_asset.size_bytes
-                || mime_for_format(image::guess_format(&bytes).map_err(|error| {
-                    format!(
-                        "cannot identify CAS object for {}: {error}",
-                        source_asset.media_key
-                    )
+                || mime_for_format(image::guess_format(&bytes).map_err(|source| {
+                    crate::VerificationError::Image {
+                        artifact: format!("CAS object {}", source_asset.media_key),
+                        path: path.clone(),
+                        source,
+                    }
                 })?)?
                     != source_asset.mime_type
-                || decode_image(&bytes, &source_asset.source_path)?.dimensions()
+                || image::load_from_memory(&bytes)
+                    .map_err(|source| crate::VerificationError::Image {
+                        artifact: format!("CAS object {}", source_asset.media_key),
+                        path: path.clone(),
+                        source,
+                    })?
+                    .dimensions()
                     != (source_asset.width, source_asset.height)
             {
-                return Err(format!(
+                return Err((format!(
                     "CAS object bytes or visual metadata differ for {}",
                     source_asset.media_key
-                ));
+                ))
+                .into());
             }
         }
         global_hashes.extend(hashes.iter().cloned());
@@ -76,7 +87,7 @@ fn verify_inner(
     if global_hashes.len() != context.result.cas.object_count
         || set_digest(&global_hashes) != context.result.cas.set_digest_sha256
     {
-        return Err("global CAS set differs from build-result.json".to_string());
+        return Err(("global CAS set differs from build-result.json".to_string()).into());
     }
     Ok(VerifiedCas {
         global_hashes,

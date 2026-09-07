@@ -7,7 +7,7 @@ use crate::{
             PROJECTION_REPORT_SCHEMA_VERSION, SYSTEM_MEDIA_SCHEMA_VERSION, SYSTEM_SCHEMA_VERSION,
         },
     },
-    projection::{contract::ProjectionContract, ledger::CompletedLedger},
+    projection::{contract::LocaleProjectionPlan, ledger::CompletedLedger},
     report::{
         BuildContext, LocaleProjection, MediaProjection, ProjectionReport, ProjectionSource,
         TypeProjection,
@@ -19,7 +19,7 @@ use std::collections::{BTreeMap, BTreeSet};
 pub(super) fn projection_report(
     source: &ValidatedSource,
     context: &BuildContext,
-    contracts: &BTreeMap<KnowledgeLocale, ProjectionContract>,
+    plans: &BTreeMap<KnowledgeLocale, LocaleProjectionPlan>,
     ledgers: &BTreeMap<KnowledgeLocale, CompletedLedger>,
 ) -> ProjectionReport {
     let entities_by_type = source
@@ -40,7 +40,7 @@ pub(super) fn projection_report(
         .iter()
         .map(|(locale, ledger)| {
             debug_assert_eq!(ledger.locale, *locale);
-            let contract = contracts.get(locale).unwrap();
+            let contract = &plans.get(locale).unwrap().contract;
             let consumed_entities = ledger.entities_by_type();
             let rows = ledger.rows_by_type();
             let projected_by_type = entities_by_type

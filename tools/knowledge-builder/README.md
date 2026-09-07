@@ -15,12 +15,17 @@ autoria.
 flowchart LR
     SOURCE[data/knowledge]
     VALIDATION[validação canônica]
-    CONTRACT[ProjectionContract por locale]
+    INVENTORY[inventário expected por locale]
+    CONTRACT[ProjectionContract e owned por locale]
+    PLAN[LocaleProjectionPlan]
     WRITERS[writers SQLite e CAS]
     VERIFY[ArtifactVerifier]
     VERSION[versão finalizada]
 
-    SOURCE --> VALIDATION --> CONTRACT --> WRITERS --> VERIFY --> VERSION
+    SOURCE --> VALIDATION
+    VALIDATION --> INVENTORY --> PLAN
+    VALIDATION --> CONTRACT --> PLAN
+    PLAN --> WRITERS --> VERIFY --> VERSION
 ```
 
 O build sempre trabalha para os seis locales fechados:
@@ -34,9 +39,12 @@ es-ES
 fr-FR
 ```
 
-Cada locale recebe um contrato completo antes da abertura dos bancos. Os writers
-apenas persistem operações já validadas; depois, o verificador relê os artefatos
-e exige equivalência integral com o contrato que os originou.
+Cada locale recebe duas travessias independentes antes da abertura dos bancos. O
+inventário produz `expected`; o contrato produz operações que declaram suas
+próprias obrigações, cuja união forma `owned`. O `LocaleProjectionPlan` só é
+aceito quando os dois conjuntos são exatamente iguais. Os writers persistem as
+operações validadas e o verificador relê os artefatos, usando `expected` para a
+cobertura e o contrato para a equivalência semântica.
 
 ## Responsabilidades
 
@@ -270,6 +278,11 @@ lote somente após o `commit`; compilação e CAS confirmam seus próprios efeit
 após materialização. O `ProjectionLedger` aceita apenas `ConfirmedReceiptBatch`
 compatível com locale, operação, cardinalidade e ownership, e exige igualdade
 exata entre `expected`, `owned` e `observed`.
+
+Operações, obrigações e eventos observados são mantidos em `BTreeSet`. Cada lote
+é validado por inteiro, inclusive contra duplicações internas e contra o estado
+acumulado, antes de qualquer conjunto do ledger ser alterado. Assim, um lote
+recusado não publica observações parciais e a unicidade permanece logarítmica.
 
 Colunas projetáveis usam o enum fechado `SystemColumn`. Cada forma de
 `SystemRow` declara tabela, identidade lógica e colunas materializadas. Os SQLs
@@ -625,16 +638,31 @@ mantém as seguintes fronteiras:
 - `coverage/`: vocabulário fechado compartilhado por inventário, contrato,
   execução e ledger, incluindo operações, obligations, targets, tabelas,
   colunas e identidades de rows;
-- `inventory/`: travessia independente da fonte que declara as obrigações
-  `expected` de entidades, taxonomias, busca, mídia e CAS;
+- `inventory/mod.rs`: coordena a travessia independente que produz `expected`;
+- `inventory/model.rs`: conjunto esperado, destinos e inserção única;
+- `inventory/authoring.rs`: mapeamento comum das folhas autorais para o
+  vocabulário neutro de cobertura;
+- `inventory/metadata.rs`: obrigações dos metadados dos bancos e da release;
+- `inventory/entities.rs`: campos e relações das entidades canônicas;
+- `inventory/taxonomy.rs`: destinos de registry, termos, hierarquia e relações;
+- `inventory/search.rs`: candidatos e obrigações esperadas de busca;
+- `inventory/media.rs`: ativos de `system_media` e objetos CAS esperados;
 - `contract.rs`: fachada dos payloads, operações e ownership do contrato;
-- `contract/model.rs`: tipos de payload e containers operacionais;
+- `contract/model.rs`: containers operacionais e `LocaleProjectionPlan`;
 - `contract/rows/model.rs`: enum fechado dos payloads `SystemRow`;
 - `contract/rows/descriptor.rs`: caso, tabela, identidade e colunas ordenadas de
   cada `SystemRow`;
 - `contract/build.rs`: montagem completa do contrato de um locale;
-- `contract/taxonomy.rs` e `contract/catalog.rs`: projeções por domínio;
-- `contract/helpers.rs`: relações, conteúdo localizado, busca, mídia e emissão;
+- `contract/declarations/`: cobertura própria das operações e candidatos de
+  busca, derivados sem consumir o inventário;
+- `contract/metadata.rs`: operações dos metadados de build e release;
+- `contract/compilation.rs`: operações de validação e conteúdo compilado;
+- `contract/taxonomy.rs`: rows e relações taxonômicas;
+- `contract/catalog.rs`: rows dos catálogos e protocolos;
+- `contract/search.rs`: rows de busca construídas pelo contrato;
+- `contract/media.rs`: referências estruturais, rows de `system_media` e
+  operações CAS;
+- `contract/values.rs`: extração localizada e codificação dos valores;
 - `contract/ownership.rs`: atribuição única das obrigações aos owners;
 - `contract/validation.rs`: fechamento e compatibilidade entre operações,
   obligations e targets;
@@ -645,8 +673,8 @@ mantém as seguintes fronteiras:
 - `execution/receipts.rs`: recibos pendentes e confirmados;
 - `execution/writers/`: transações, metadata e SQLs fixos de `system` e
   `system_media`;
-- `ledger/`: comparação entre `expected`, `owned` e `observed`, fechamento das
-  evidências e digest canônico.
+- `ledger/`: comparação entre `expected`, `owned` e `observed`, unicidade
+  ordenada, publicação atômica dos lotes e digest canônico.
 
 `databases/`
 
@@ -691,10 +719,7 @@ tests/
 ├── component.rs
 ├── component_cases/
 │   ├── mod.rs
-│   ├── databases.rs
-│   ├── filesystem.rs
-│   ├── media.rs
-│   └── verification.rs
+│   └── filesystem.rs
 ├── integral.rs
 └── integral_cases/
     ├── mod.rs
@@ -720,7 +745,9 @@ impede que um único arquivo volte a concentrar responsabilidades distintas.
 - cópia determinística de fixtures;
 - localização de manifestos usados pelos casos;
 - leitura e atualização controlada de manifestos e checksums adulterados;
-- cálculo auxiliar de SHA-256 para conferir adulterações.
+- cálculo auxiliar de SHA-256 para conferir adulterações;
+- distinção explícita entre construção nova (`fresh_build`) e verificação de
+  uma versão finalizada (`verify_reuse`) nos casos integrais.
 
 O suporte não implementa validação, projeção, normalização, persistência ou
 verificação. Os testes sempre acionam a API ou o binário de produção para essas
@@ -728,16 +755,17 @@ responsabilidades.
 
 ### Casos De Componente
 
-`component_cases/` exercita uma responsabilidade externa por vez, sempre em um
-diretório temporário próprio:
+`component_cases/filesystem.rs` atravessa a API pública `validate` com fixtures
+pequenas para comprovar descoberta, layout reservado, digest lógico e rejeições
+estruturais ou semânticas da fonte. Essa camada não importa `BuildOptions` nem
+chama `build`; cada caso usa um diretório temporário próprio e não depende da
+saída ou da ordem de outro teste.
 
-- `databases.rs`: criação, finalização, integridade e leitura dos bancos;
-- `filesystem.rs`: descoberta, layout reservado, digest e rejeições da fonte;
-- `media.rs`: leitura da imagem, thumbnail JPEG, row de mídia e objeto CAS;
-- `verification.rs`: recusa de uma árvore finalizada adulterada.
-
-Esses casos usam fixtures pequenas quando o catálogo completo não é necessário.
-Nenhum teste depende da saída ou da ordem de execução de outro teste.
+Transações, commit, rollback, round-trip de rows, readers, mídia, thumbnail,
+CAS, ownership, ledger e estágios individuais do verificador são testados como
+componentes privados junto dos módulos proprietários em `src/`. Esses testes
+acessam contratos internos sem ampliar a API pública e pertencem à execução
+`cargo test --lib`.
 
 ### Casos Integrais
 
@@ -765,8 +793,7 @@ cargo test -p knowledge-builder --lib
 ```
 
 A camada de componente usa fixtures e diretórios temporários exclusivos para
-exercitar filesystem, bancos SQLite, mídia, CAS e recusa de artefatos sem
-depender de outro teste:
+exercitar a validação pública da fonte sem construir os seis locales:
 
 ```text
 cargo test -p knowledge-builder --test component

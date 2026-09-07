@@ -1,10 +1,6 @@
 //! Discovers deterministic locale search candidates from validated source data.
 
-use super::{
-    authoring::{identity, insert_obligation},
-    model::{ExpectedInventory, OperationDisposition},
-    ObligationClass, ProjectionTarget, SourceToken,
-};
+use super::{values::identity, SourceToken};
 use crate::{
     contracts::locale::KnowledgeLocale,
     source::{CanonicalEntity, LocalizedContent, LocalizedValue, TaxonomyEntity},
@@ -13,15 +9,15 @@ use crate::{
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, Debug)]
-struct SearchCandidate {
-    entity: crate::projection::coverage::EntityIdentity,
-    _value: String,
-    provenance: String,
-    occurrence: usize,
-    source: SourceToken,
+pub(crate) struct SearchCandidate {
+    pub(crate) entity: crate::projection::coverage::EntityIdentity,
+    pub(crate) value: String,
+    pub(crate) provenance: String,
+    pub(crate) occurrence: usize,
+    pub(crate) source: SourceToken,
 }
 
-fn search_candidates(
+pub(crate) fn search_candidates(
     source: &ValidatedSource,
     locale: KnowledgeLocale,
 ) -> Result<Vec<SearchCandidate>, crate::ContractError> {
@@ -190,7 +186,7 @@ fn search_candidates(
             };
             result.push(SearchCandidate {
                 entity: entity.clone(),
-                _value: value,
+                value,
                 provenance: provenance.clone(),
                 occurrence: order,
                 source: source_token,
@@ -199,34 +195,6 @@ fn search_candidates(
         }
     }
     Ok(result)
-}
-
-pub(super) fn add_search_obligations(
-    expected: &mut ExpectedInventory,
-    source: &ValidatedSource,
-    locale: KnowledgeLocale,
-) -> Result<(), crate::ContractError> {
-    for candidate in search_candidates(source, locale)? {
-        let class = if matches!(candidate.source, SourceToken::LocalizedValue { .. }) {
-            ObligationClass::LocalizedContent
-        } else {
-            ObligationClass::Authoring
-        };
-        insert_obligation(
-            expected,
-            OperationDisposition {
-                target: ProjectionTarget::SearchTerm {
-                    entity: candidate.entity.clone(),
-                    locale,
-                    provenance: candidate.provenance.clone(),
-                    occurrence: candidate.occurrence,
-                },
-            },
-            candidate.source,
-            class,
-        )?;
-    }
-    Ok(())
 }
 
 fn taxonomy_for<'a>(

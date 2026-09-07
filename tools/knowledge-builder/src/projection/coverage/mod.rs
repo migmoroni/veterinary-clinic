@@ -4,6 +4,6 @@ mod model;
 
 pub(crate) use model::{
     CompilationOperationId, EntityIdentity, ObligationClass, ProjectionObligation,
-    ProjectionOperationId, ProjectionTarget, RowEvent, RowIdentity, SearchCandidate, SourceToken,
-    SystemColumn, SystemTable,
+    ProjectionOperationId, ProjectionTarget, RowEvent, RowIdentity, SourceToken, SystemColumn,
+    SystemTable,
 };

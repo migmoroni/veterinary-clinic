@@ -88,34 +88,26 @@ pub fn finalize(connection: Connection, path: &Path) -> Result<String, DatabaseE
 
 pub fn verify(connection: &Connection, path: &Path) -> Result<(), DatabaseError> {
     verify_inner(connection, path)
-        .map_err(|detail| DatabaseError::invariant(path, "verify integrity", detail))
 }
 
-fn verify_inner(connection: &Connection, path: &Path) -> Result<(), String> {
+fn verify_inner(connection: &Connection, path: &Path) -> Result<(), DatabaseError> {
     let integrity: String = connection
         .query_row("PRAGMA integrity_check", [], |row| row.get(0))
-        .map_err(|error| format!("cannot run integrity_check on {}: {error}", path.display()))?;
+        .map_err(|source| sqlite(path, "run integrity_check", source))?;
     if integrity != "ok" {
-        return Err(format!(
-            "integrity_check failed for {}: {integrity}",
-            path.display()
-        ));
+        return Err((format!("integrity_check failed for {}: {integrity}", path.display())).into());
     }
     let foreign_key_failures: i64 = connection
         .query_row("SELECT count(*) FROM pragma_foreign_key_check", [], |row| {
             row.get(0)
         })
-        .map_err(|error| {
-            format!(
-                "cannot run foreign_key_check on {}: {error}",
-                path.display()
-            )
-        })?;
+        .map_err(|source| sqlite(path, "run foreign_key_check", source))?;
     if foreign_key_failures != 0 {
-        return Err(format!(
+        return Err((format!(
             "foreign_key_check failed for {} with {foreign_key_failures} row(s)",
             path.display()
-        ));
+        ))
+        .into());
     }
     Ok(())
 }
@@ -129,7 +121,6 @@ pub fn verify_contract(
     source_digest: &[u8],
 ) -> Result<(), DatabaseError> {
     verify_contract_inner(connection, path, kind, context, locale, source_digest)
-        .map_err(|detail| DatabaseError::invariant(path, "verify database contract", detail))
 }
 
 fn verify_contract_inner(
@@ -139,54 +130,44 @@ fn verify_contract_inner(
     context: &BuildContext,
     locale: KnowledgeLocale,
     source_digest: &[u8],
-) -> Result<(), String> {
+) -> Result<(), DatabaseError> {
     verify_inner(connection, path)?;
     let application_id: u32 = connection
         .query_row("PRAGMA application_id", [], |row| row.get(0))
-        .map_err(|error| {
-            format!(
-                "cannot read application_id from {}: {error}",
-                path.display()
-            )
-        })?;
+        .map_err(|source| sqlite(path, "read application_id", source))?;
     let user_version: u32 = connection
         .query_row("PRAGMA user_version", [], |row| row.get(0))
-        .map_err(|error| format!("cannot read user_version from {}: {error}", path.display()))?;
+        .map_err(|source| sqlite(path, "read user_version", source))?;
     if application_id != kind.identity().application_id
         || user_version != kind.identity().schema_version
     {
-        return Err(format!(
-            "SQLite technical identity mismatch for {}",
-            path.display()
-        ));
+        return Err((format!("SQLite technical identity mismatch for {}", path.display())).into());
     }
-    let actual_fingerprint = schema_fingerprint_inner(connection)?;
+    let actual_fingerprint = schema_fingerprint_inner(connection, path)?;
     let expected_fingerprint = canonical_schema_fingerprint(kind)?;
     if actual_fingerprint != expected_fingerprint {
-        return Err(format!(
+        return Err((format!(
             "SQLite physical schema differs from the canonical {} contract for {}",
             match kind {
                 DatabaseKind::System => "system",
                 DatabaseKind::SystemMedia => "system_media",
             },
             path.display()
-        ));
+        ))
+        .into());
     }
     let metadata = connection.query_row(
         "SELECT build_version, builder_version, build_result_schema_version, source_digest_sha256, locale FROM knowledge_build_metadata",
         [],
         |row| Ok((row.get::<_, u64>(0)?, row.get::<_, String>(1)?, row.get::<_, u32>(2)?, row.get::<_, Vec<u8>>(3)?, row.get::<_, String>(4)?)),
-    ).map_err(|error| format!("cannot read build metadata from {}: {error}", path.display()))?;
+    ).map_err(|source| sqlite(path, "read build metadata", source))?;
     if metadata.0 != context.build_version
         || metadata.1 != env!("CARGO_PKG_VERSION")
         || metadata.2 != BUILD_RESULT_SCHEMA_VERSION
         || metadata.3 != source_digest
         || metadata.4 != locale.as_str()
     {
-        return Err(format!(
-            "knowledge_build_metadata mismatch for {}",
-            path.display()
-        ));
+        return Err((format!("knowledge_build_metadata mismatch for {}", path.display())).into());
     }
     let release_rows: u32 = connection
         .query_row(
@@ -194,12 +175,7 @@ fn verify_contract_inner(
             [],
             |row| row.get(0),
         )
-        .map_err(|error| {
-            format!(
-                "cannot count release metadata in {}: {error}",
-                path.display()
-            )
-        })?;
+        .map_err(|source| sqlite(path, "count release metadata", source))?;
     match &context.release {
         None if release_rows == 0 => {}
         Some(expected) if release_rows == 1 => {
@@ -207,7 +183,7 @@ fn verify_contract_inner(
                 "SELECT release_id, generation, revision, locale FROM knowledge_release_metadata",
                 [],
                 |row| Ok((row.get::<_, String>(0)?, row.get::<_, u64>(1)?, row.get::<_, u64>(2)?, row.get::<_, String>(3)?)),
-            ).map_err(|error| format!("cannot read release metadata from {}: {error}", path.display()))?;
+            ).map_err(|source| sqlite(path, "read release metadata", source))?;
             if actual
                 != (
                     expected.release_id.clone(),
@@ -216,53 +192,55 @@ fn verify_contract_inner(
                     locale.to_string(),
                 )
             {
-                return Err(format!(
+                return Err((format!(
                     "knowledge_release_metadata mismatch for {}",
                     path.display()
-                ));
+                ))
+                .into());
             }
         }
         _ => {
-            return Err(format!(
+            return Err((format!(
                 "release metadata cardinality mismatch for {}",
                 path.display()
             ))
+            .into())
         }
     }
     Ok(())
 }
 
-fn canonical_schema_fingerprint(kind: DatabaseKind) -> Result<String, String> {
+fn canonical_schema_fingerprint(kind: DatabaseKind) -> Result<String, DatabaseError> {
+    let canonical_path = Path::new("<canonical schema>");
     let connection = Connection::open_in_memory()
-        .map_err(|error| format!("cannot open canonical schema database: {error}"))?;
+        .map_err(|source| sqlite(canonical_path, "open canonical schema database", source))?;
     connection
         .execute_batch(&format!(
             "PRAGMA foreign_keys=ON;\nPRAGMA user_version={};\n{}",
             kind.identity().schema_version,
             kind.ddl()
         ))
-        .map_err(|error| format!("cannot initialize canonical schema fingerprint: {error}"))?;
-    schema_fingerprint_inner(&connection)
+        .map_err(|source| sqlite(canonical_path, "initialize canonical schema", source))?;
+    schema_fingerprint_inner(&connection, canonical_path)
 }
 
 pub fn schema_fingerprint(connection: &Connection) -> Result<String, DatabaseError> {
     schema_fingerprint_at(connection, Path::new("<open SQLite connection>"))
 }
 
-fn schema_fingerprint_at(connection: &Connection, path: &Path) -> Result<String, DatabaseError> {
-    schema_fingerprint_inner(connection)
-        .map_err(|detail| DatabaseError::invariant(path, "fingerprint schema", detail))
+fn schema_fingerprint_at(connection: &Connection, _path: &Path) -> Result<String, DatabaseError> {
+    schema_fingerprint_inner(connection, _path)
 }
 
-fn schema_fingerprint_inner(connection: &Connection) -> Result<String, String> {
+fn schema_fingerprint_inner(connection: &Connection, path: &Path) -> Result<String, DatabaseError> {
     let user_version: u32 = connection
         .query_row("PRAGMA user_version", [], |row| row.get(0))
-        .map_err(|error| format!("cannot read user_version: {error}"))?;
+        .map_err(|source| sqlite(path, "read schema user_version", source))?;
     let mut statement = connection
         .prepare(
             "SELECT type, name, tbl_name, coalesce(sql, '') FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name",
         )
-        .map_err(|error| format!("cannot prepare schema fingerprint: {error}"))?;
+        .map_err(|source| sqlite(path, "prepare schema fingerprint", source))?;
     let rows = statement
         .query_map([], |row| {
             Ok((
@@ -272,12 +250,12 @@ fn schema_fingerprint_inner(connection: &Connection) -> Result<String, String> {
                 row.get::<_, String>(3)?,
             ))
         })
-        .map_err(|error| format!("cannot query sqlite_schema: {error}"))?;
+        .map_err(|source| sqlite(path, "query sqlite_schema", source))?;
     let mut canonical = format!("user_version={user_version}\n");
     let mut table_names = Vec::new();
     for row in rows {
         let (kind, name, table, sql) =
-            row.map_err(|error| format!("cannot read sqlite_schema: {error}"))?;
+            row.map_err(|source| sqlite(path, "read sqlite_schema", source))?;
         if kind == "table" {
             table_names.push(name.clone());
         }
@@ -287,20 +265,21 @@ fn schema_fingerprint_inner(connection: &Connection) -> Result<String, String> {
         ));
     }
     for table in table_names {
-        append_table_fingerprint(connection, &table, &mut canonical)?;
+        append_table_fingerprint(connection, path, &table, &mut canonical)?;
     }
     Ok(sha256_hex(canonical.as_bytes()))
 }
 
 fn append_table_fingerprint(
     connection: &Connection,
+    path: &Path,
     table: &str,
     canonical: &mut String,
-) -> Result<(), String> {
+) -> Result<(), DatabaseError> {
     let quoted = table.replace('\'', "''");
     let mut columns = connection
         .prepare(&format!("PRAGMA table_info('{quoted}')"))
-        .map_err(|error| format!("cannot inspect columns for {table}: {error}"))?;
+        .map_err(|source| sqlite_table(path, table, "inspect columns", source))?;
     for row in columns
         .query_map([], |row| {
             Ok((
@@ -312,16 +291,16 @@ fn append_table_fingerprint(
                 row.get::<_, i64>(5)?,
             ))
         })
-        .map_err(|error| format!("cannot query columns for {table}: {error}"))?
+        .map_err(|source| sqlite_table(path, table, "query columns", source))?
     {
         canonical.push_str(&format!(
             "column:{table}:{:?}\n",
-            row.map_err(|error| error.to_string())?
+            row.map_err(|source| sqlite_table(path, table, "read columns", source))?
         ));
     }
     let mut foreign_keys = connection
         .prepare(&format!("PRAGMA foreign_key_list('{quoted}')"))
-        .map_err(|error| format!("cannot inspect foreign keys for {table}: {error}"))?;
+        .map_err(|source| sqlite_table(path, table, "inspect foreign keys", source))?;
     for row in foreign_keys
         .query_map([], |row| {
             Ok((
@@ -335,16 +314,16 @@ fn append_table_fingerprint(
                 row.get::<_, String>(7)?,
             ))
         })
-        .map_err(|error| format!("cannot query foreign keys for {table}: {error}"))?
+        .map_err(|source| sqlite_table(path, table, "query foreign keys", source))?
     {
         canonical.push_str(&format!(
             "foreign-key:{table}:{:?}\n",
-            row.map_err(|error| error.to_string())?
+            row.map_err(|source| sqlite_table(path, table, "read foreign keys", source))?
         ));
     }
     let mut indexes = connection
         .prepare(&format!("PRAGMA index_list('{quoted}')"))
-        .map_err(|error| format!("cannot inspect indexes for {table}: {error}"))?;
+        .map_err(|source| sqlite_table(path, table, "inspect indexes", source))?;
     for row in indexes
         .query_map([], |row| {
             Ok((
@@ -355,14 +334,36 @@ fn append_table_fingerprint(
                 row.get::<_, i64>(4)?,
             ))
         })
-        .map_err(|error| format!("cannot query indexes for {table}: {error}"))?
+        .map_err(|source| sqlite_table(path, table, "query indexes", source))?
     {
         canonical.push_str(&format!(
             "index:{table}:{:?}\n",
-            row.map_err(|error| error.to_string())?
+            row.map_err(|source| sqlite_table(path, table, "read indexes", source))?
         ));
     }
     Ok(())
+}
+
+fn sqlite(path: &Path, operation: &'static str, source: rusqlite::Error) -> DatabaseError {
+    DatabaseError::Sqlite {
+        database: path.to_path_buf(),
+        operation,
+        source: Box::new(source),
+    }
+}
+
+fn sqlite_table(
+    path: &Path,
+    table: &str,
+    operation: &'static str,
+    source: rusqlite::Error,
+) -> DatabaseError {
+    DatabaseError::Table {
+        database: path.to_path_buf(),
+        table: table.to_string(),
+        operation,
+        source: Box::new(source),
+    }
 }
 
 #[cfg(test)]

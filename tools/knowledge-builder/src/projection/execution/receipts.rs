@@ -26,16 +26,15 @@ impl PendingReceipt {
         obligations: BTreeSet<ProjectionObligation>,
         event: ProjectionEvent,
         observed_count: usize,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, crate::ContractError> {
         if obligations.is_empty() {
-            return Err(format!(
-                "pending operation has no obligations: {operation:?}"
-            ));
+            return Err((format!("pending operation has no obligations: {operation:?}")).into());
         }
         if observed_count != 1 {
-            return Err(format!(
+            return Err((format!(
                 "projection operation {operation:?} observed {observed_count} effects instead of 1"
-            ));
+            ))
+            .into());
         }
         Ok(Self {
             operation,
@@ -67,9 +66,9 @@ pub(crate) struct ConfirmedReceipt {
 pub(crate) struct ConfirmedReceiptBatch(Vec<ConfirmedReceipt>);
 
 impl ConfirmedReceiptBatch {
-    pub(super) fn confirm(pending: Vec<PendingReceipt>) -> Result<Self, String> {
+    pub(super) fn confirm(pending: Vec<PendingReceipt>) -> Result<Self, crate::ContractError> {
         if pending.is_empty() {
-            return Err("a confirmed receipt batch cannot be empty".to_string());
+            return Err(("a confirmed receipt batch cannot be empty".to_string()).into());
         }
         Ok(Self(
             pending.into_iter().map(PendingReceipt::confirm).collect(),
@@ -83,9 +82,11 @@ impl ConfirmedReceiptBatch {
 
 #[cfg(test)]
 impl ConfirmedReceiptBatch {
-    pub(crate) fn from_test_receipts(receipts: Vec<ConfirmedReceipt>) -> Result<Self, String> {
+    pub(crate) fn from_test_receipts(
+        receipts: Vec<ConfirmedReceipt>,
+    ) -> Result<Self, crate::ContractError> {
         if receipts.is_empty() {
-            return Err("a confirmed receipt batch cannot be empty".to_string());
+            return Err(("a confirmed receipt batch cannot be empty".to_string()).into());
         }
         Ok(Self(receipts))
     }

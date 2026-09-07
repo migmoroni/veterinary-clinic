@@ -1,4 +1,4 @@
-//! Assigns each independently inventoried obligation to one explicit operation identity.
+//! Assigns each contract-declared obligation to one explicit operation identity.
 
 use crate::projection::coverage::{
     CompilationOperationId, ProjectionObligation, ProjectionOperationId, ProjectionTarget,
@@ -12,9 +12,11 @@ pub(super) struct ObligationOwnership {
 }
 
 impl ObligationOwnership {
-    pub(super) fn from_expected(expected: &BTreeSet<ProjectionObligation>) -> Result<Self, String> {
+    pub(super) fn from_declared(
+        declared: &BTreeSet<ProjectionObligation>,
+    ) -> Result<Self, crate::ContractError> {
         let mut result = Self::default();
-        for obligation in expected {
+        for obligation in declared {
             let owner = owner_for(obligation)?;
             result
                 .by_owner
@@ -28,25 +30,29 @@ impl ObligationOwnership {
     pub(super) fn claim(
         &mut self,
         owner: &ProjectionOperationId,
-    ) -> Result<BTreeSet<ProjectionObligation>, String> {
-        self.by_owner
+    ) -> Result<BTreeSet<ProjectionObligation>, crate::ContractError> {
+        Ok(self
+            .by_owner
             .remove(owner)
-            .ok_or_else(|| format!("operation has no declared obligation owner: {owner:?}"))
+            .ok_or_else(|| format!("operation has no declared obligation owner: {owner:?}"))?)
     }
 
-    pub(super) fn finish(self) -> Result<(), String> {
+    pub(super) fn finish(self) -> Result<(), crate::ContractError> {
         if self.by_owner.is_empty() {
             Ok(())
         } else {
             Err(format!(
                 "{} projection owner(s) have no operation",
                 self.by_owner.len()
-            ))
+            )
+            .into())
         }
     }
 }
 
-fn owner_for(obligation: &ProjectionObligation) -> Result<ProjectionOperationId, String> {
+fn owner_for(
+    obligation: &ProjectionObligation,
+) -> Result<ProjectionOperationId, crate::ContractError> {
     let owner = match &obligation.target {
         ProjectionTarget::CanonicalValidation {
             entity, validation, ..

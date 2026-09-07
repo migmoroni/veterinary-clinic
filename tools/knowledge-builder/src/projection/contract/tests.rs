@@ -11,6 +11,107 @@ use crate::{
 };
 use std::collections::{BTreeMap, BTreeSet};
 
+fn minimal_plan_parts() -> (BTreeSet<ProjectionObligation>, ProjectionContract) {
+    let fixture = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
+    let source = crate::validate(fixture).unwrap();
+    let context = crate::BuildContext {
+        schema_version: 1,
+        build_version: 1,
+        release: None,
+    };
+    let expected =
+        crate::projection::inventory::expected_obligations(&source, KnowledgeLocale::EnUs, false)
+            .unwrap();
+    let contract = ProjectionContract::build(&source, KnowledgeLocale::EnUs, &context).unwrap();
+    (expected, contract)
+}
+
+fn assert_plan_rejects(expected: BTreeSet<ProjectionObligation>, contract: ProjectionContract) {
+    assert!(matches!(
+        LocaleProjectionPlan::new(expected, contract),
+        Err(crate::ContractError::Invariant {
+            operation: "expected and owned coverage",
+            ..
+        })
+    ));
+}
+
+#[test]
+fn independent_inventory_and_operations_reject_every_coverage_dimension() {
+    let (expected, contract) = minimal_plan_parts();
+    LocaleProjectionPlan::new(expected.clone(), contract.clone()).unwrap();
+
+    let original = expected.iter().next().unwrap().clone();
+    let mut wrong_target = expected.clone();
+    wrong_target.remove(&original);
+    let mut changed = original.clone();
+    changed.target = ProjectionTarget::CasObject {
+        locale: KnowledgeLocale::EnUs,
+        content_hash: "wrong-target".to_string(),
+    };
+    wrong_target.insert(changed);
+    assert_plan_rejects(wrong_target, contract.clone());
+
+    let mut omitted_source = expected.clone();
+    omitted_source.remove(&original);
+    assert_plan_rejects(omitted_source, contract.clone());
+
+    let mut additional_source = expected.clone();
+    let mut changed = original.clone();
+    changed.source = SourceToken::Field {
+        entity: EntityIdentity::new("condition", "additional"),
+        path: "additional".to_string(),
+    };
+    additional_source.insert(changed);
+    assert_plan_rejects(additional_source, contract.clone());
+
+    let mut wrong_class = expected.clone();
+    wrong_class.remove(&original);
+    let mut changed = original.clone();
+    changed.class = ObligationClass::Cas;
+    wrong_class.insert(changed);
+    assert_plan_rejects(wrong_class, contract.clone());
+
+    let mut incomplete_owner = contract.clone();
+    incomplete_owner.compilation[0].obligations.pop_first();
+    assert_plan_rejects(expected.clone(), incomplete_owner);
+
+    let mut additional_operation = contract.clone();
+    let mut changed = original.clone();
+    changed.source = SourceToken::Field {
+        entity: EntityIdentity::new("condition", "operation-extra"),
+        path: "operationExtra".to_string(),
+    };
+    additional_operation.compilation[0]
+        .obligations
+        .insert(changed);
+    assert_plan_rejects(expected.clone(), additional_operation);
+
+    let search = expected
+        .iter()
+        .find(|item| matches!(item.target, ProjectionTarget::SearchTerm { .. }))
+        .unwrap()
+        .clone();
+    let mut divergent_search = expected.clone();
+    divergent_search.remove(&search);
+    let mut changed = search;
+    if let ProjectionTarget::SearchTerm { provenance, .. } = &mut changed.target {
+        *provenance = "divergent".to_string();
+    }
+    divergent_search.insert(changed);
+    assert_plan_rejects(divergent_search, contract.clone());
+
+    let mut expected_without_operation = expected;
+    let owned_only = contract.compilation[0]
+        .obligations
+        .iter()
+        .next()
+        .unwrap()
+        .clone();
+    expected_without_operation.remove(&owned_only);
+    assert_plan_rejects(expected_without_operation, contract);
+}
+
 fn product_row() -> SystemRow {
     SystemRow::Product {
         id: "id".to_string(),
@@ -265,7 +366,6 @@ fn duplicate_operation_identity_is_rejected() {
         system: vec![],
         system_media: vec![],
         cas: vec![],
-        expected_obligations: obligations,
         source_facts: ProjectionSourceFacts {
             entities_by_type: BTreeMap::new(),
             relation_count: 0,
@@ -276,5 +376,6 @@ fn duplicate_operation_identity_is_rejected() {
     assert!(contract
         .validate()
         .unwrap_err()
+        .to_string()
         .contains("duplicate projection operation identity"));
 }

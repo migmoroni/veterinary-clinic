@@ -40,7 +40,11 @@ pub(crate) fn write_system_media(
                 ProjectionEvent::SqliteRow(operation.event.clone()),
                 affected,
             )
-            .map_err(|detail| DatabaseError::invariant(&path, "confirm media receipt", detail))?,
+            .map_err(|source| DatabaseError::Contract {
+                database: path.clone(),
+                operation: "confirm media receipt",
+                source: Box::new(source),
+            })?,
         );
     }
     transaction
@@ -59,7 +63,9 @@ pub(crate) fn write_system_media(
             .count(),
         !operations.is_empty(),
     )?;
-    ConfirmedReceiptBatch::confirm(pending).map_err(|detail| {
-        DatabaseError::invariant(path, "confirm system_media receipt batch", detail)
+    ConfirmedReceiptBatch::confirm(pending).map_err(|source| DatabaseError::Contract {
+        database: path,
+        operation: "confirm system_media receipt batch",
+        source: Box::new(source),
     })
 }

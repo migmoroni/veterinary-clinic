@@ -1,7 +1,9 @@
 //! Proves finalized-version reuse and rejection of divergent build context.
 
 use crate::support::*;
-use knowledge_builder::{build, validate, BuildContext, BuildOptions};
+use knowledge_builder::{
+    validate, BuildContext, BuildOptions, KnowledgeBuilderError, VerificationError,
+};
 use rusqlite::Connection;
 use std::{fs, path::Path};
 
@@ -11,7 +13,7 @@ fn minimal_fixture_builds_and_tampered_version_is_not_reused() {
     let validated = validate(&fixture).expect("minimal fixture must validate");
     assert_eq!(validated.entity_count(), 27);
     let output = TestDirectory::new("minimal-fixture");
-    let result = build(&BuildOptions {
+    let result = fresh_build(&BuildOptions {
         source: fixture.clone(),
         output: output.path().to_path_buf(),
         context: context_path(),
@@ -95,10 +97,23 @@ fn minimal_fixture_builds_and_tampered_version_is_not_reused() {
 
     let result_path = output.path().join("versions/1/build-result.json");
     let canonical_result = fs::read(&result_path).unwrap();
+    fs::write(&result_path, b"{").unwrap();
+    let error = verify_reuse(&BuildOptions {
+        source: fixture.clone(),
+        output: output.path().to_path_buf(),
+        context: context_path(),
+    })
+    .unwrap_err();
+    assert!(matches!(
+        error,
+        KnowledgeBuilderError::Verification(VerificationError::Json { .. })
+    ));
+
+    fs::write(&result_path, &canonical_result).unwrap();
     let mut value: serde_json::Value = serde_json::from_slice(&canonical_result).unwrap();
     value["unexpectedField"] = serde_json::Value::Bool(true);
     fs::write(&result_path, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
-    let error = build(&BuildOptions {
+    let error = verify_reuse(&BuildOptions {
         source: fixture.clone(),
         output: output.path().to_path_buf(),
         context: context_path(),
@@ -108,7 +123,7 @@ fn minimal_fixture_builds_and_tampered_version_is_not_reused() {
 
     fs::write(&result_path, canonical_result).unwrap();
     fs::write(output.path().join("versions/1/unexpected.txt"), b"tampered").unwrap();
-    let error = build(&BuildOptions {
+    let error = verify_reuse(&BuildOptions {
         source: fixture,
         output: output.path().to_path_buf(),
         context: context_path(),
@@ -121,7 +136,7 @@ fn minimal_fixture_builds_and_tampered_version_is_not_reused() {
 fn divergent_context_cannot_overwrite_finalized_version() {
     let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
     let output = TestDirectory::new("divergent-version");
-    build(&BuildOptions {
+    fresh_build(&BuildOptions {
         source: fixture.clone(),
         output: output.path().to_path_buf(),
         context: context_path(),
@@ -138,7 +153,7 @@ fn divergent_context_cannot_overwrite_finalized_version() {
         }),
     };
     fs::write(&divergent_context, serde_json::to_vec(&context).unwrap()).unwrap();
-    let error = build(&BuildOptions {
+    let error = verify_reuse(&BuildOptions {
         source: fixture.clone(),
         output: output.path().to_path_buf(),
         context: divergent_context.clone(),
@@ -156,7 +171,7 @@ fn divergent_context_cannot_overwrite_finalized_version() {
         serde_json::to_vec(&public_context).unwrap(),
     )
     .unwrap();
-    let public = build(&BuildOptions {
+    let public = fresh_build(&BuildOptions {
         source: fixture,
         output: output.path().to_path_buf(),
         context: divergent_context,

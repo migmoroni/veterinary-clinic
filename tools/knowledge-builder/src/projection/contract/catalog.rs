@@ -1,11 +1,12 @@
 //! Projects catalog entities and their semantic relationships into system rows.
 
 use super::{
-    helpers::{
-        content_json, identity, json, localized_list, localized_text, optional_localized_text,
-        push_main, push_system, taxonomy_relations,
-    },
     ownership::ObligationOwnership,
+    taxonomy::taxonomy_relations,
+    values::{
+        content_json, identity, json, localized_list, localized_text, optional_localized_text,
+        push_main, push_system,
+    },
     SystemProjectionOperation, SystemRow,
 };
 use crate::{
@@ -19,7 +20,7 @@ pub(super) fn project_catalog(
     locale: KnowledgeLocale,
     claims: &mut ObligationOwnership,
     operations: &mut Vec<SystemProjectionOperation>,
-) -> Result<(), String> {
+) -> Result<(), crate::ContractError> {
     project_life(source, locale, claims, operations)?;
     for entry in &source.entities {
         let entity = identity(&entry.source.entity);
@@ -378,7 +379,7 @@ fn project_life(
     locale: KnowledgeLocale,
     claims: &mut ObligationOwnership,
     operations: &mut Vec<SystemProjectionOperation>,
-) -> Result<(), String> {
+) -> Result<(), crate::ContractError> {
     let mut entries = source
         .entities
         .iter()

@@ -209,34 +209,51 @@ pub fn read_context(path: &Path) -> Result<BuildContext, BuildContextError> {
     Ok(context)
 }
 
-pub fn canonical_json<T: Serialize>(value: &T) -> Result<Vec<u8>, String> {
-    let mut bytes = serde_json::to_vec_pretty(value)
-        .map_err(|error| format!("cannot serialize deterministic JSON: {error}"))?;
+pub fn canonical_json<T: Serialize>(value: &T) -> Result<Vec<u8>, serde_json::Error> {
+    let mut bytes = serde_json::to_vec_pretty(value)?;
     bytes.push(b'\n');
     Ok(bytes)
 }
 
-pub fn write_json(path: &Path, value: &impl Serialize) -> Result<Vec<u8>, String> {
-    let bytes = canonical_json(value)?;
-    fs::write(path, &bytes)
-        .map_err(|error| format!("cannot write report {}: {error}", path.display()))?;
+pub fn write_json(path: &Path, value: &impl Serialize) -> Result<Vec<u8>, crate::PublicationError> {
+    let bytes = canonical_json(value).map_err(|source| crate::PublicationError::Json {
+        path: path.to_path_buf(),
+        operation: "encode deterministic JSON",
+        source,
+    })?;
+    fs::write(path, &bytes).map_err(|source| crate::PublicationError::Io {
+        path: path.to_path_buf(),
+        operation: "write JSON artifact",
+        source,
+    })?;
     Ok(bytes)
 }
 
-pub fn normalized_relative_path(path: &Path) -> Result<String, String> {
+pub fn normalized_relative_path(path: &Path) -> Result<String, crate::ContractError> {
     let mut result = Vec::new();
     for component in path.components() {
         match component {
-            std::path::Component::Normal(value) => result.push(
-                value
-                    .to_str()
-                    .ok_or_else(|| "artifact path is not UTF-8".to_string())?,
-            ),
-            _ => return Err("artifact path must be normalized and relative".to_string()),
+            std::path::Component::Normal(value) => {
+                result.push(value.to_str().ok_or_else(|| {
+                    crate::ContractError::invariant(
+                        "normalize artifact path",
+                        "artifact path is not UTF-8",
+                    )
+                })?)
+            }
+            _ => {
+                return Err(crate::ContractError::invariant(
+                    "normalize artifact path",
+                    "artifact path must be normalized and relative",
+                ))
+            }
         }
     }
     if result.is_empty() {
-        return Err("artifact path must not be empty".to_string());
+        return Err(crate::ContractError::invariant(
+            "normalize artifact path",
+            "artifact path must not be empty",
+        ));
     }
     Ok(result.join("/"))
 }
@@ -253,6 +270,18 @@ fn is_uuid(value: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::error::Error;
+
+    fn temporary_context(label: &str) -> std::path::PathBuf {
+        std::env::temp_dir().join(format!(
+            "knowledge-builder-context-{label}-{}-{}.json",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ))
+    }
 
     #[test]
     fn rejects_non_positive_build_version() {
@@ -263,5 +292,32 @@ mod tests {
         }))
         .unwrap();
         assert_eq!(context.build_version, 0);
+    }
+
+    #[test]
+    fn context_io_and_json_failures_preserve_their_concrete_sources() {
+        let missing = temporary_context("missing");
+        let error = read_context(&missing).unwrap_err();
+        assert!(matches!(error, BuildContextError::Read { .. }));
+        assert!(error.source().is_some());
+        assert_eq!(error.path(), missing);
+
+        let invalid = temporary_context("invalid");
+        fs::write(&invalid, b"{").unwrap();
+        let error = read_context(&invalid).unwrap_err();
+        assert!(matches!(error, BuildContextError::Decode { .. }));
+        assert!(error.source().is_some());
+        assert_eq!(error.path(), invalid);
+        fs::remove_file(invalid).unwrap();
+    }
+
+    #[test]
+    fn report_publication_failure_preserves_path_operation_and_io_source() {
+        let directory = std::env::temp_dir();
+        let error = write_json(&directory, &serde_json::json!({"ok": true})).unwrap_err();
+        assert!(matches!(error, crate::PublicationError::Io { .. }));
+        assert_eq!(error.path(), directory);
+        assert_eq!(error.operation(), "write JSON artifact");
+        assert!(error.source().is_some());
     }
 }
