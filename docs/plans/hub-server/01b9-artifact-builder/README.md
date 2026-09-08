@@ -24,9 +24,10 @@ CAS, verificação estrutural ou publicação.
 ## Pré-Requisito
 
 A
-[Parte 1B.8.6: atributos diretos de produto](../01b8-knowledge-builder-maintainability/06-direct-product-attributes.md)
+[Parte 1B.8.6: atributos diretos e aliases de produto](../01b8-knowledge-builder-maintainability/06-direct-product-attributes.md)
 está concluída e o contrato veterinário usa somente os atributos diretos
-`applicableLifeStages`, `vaccineProfile` e `therapeuticSpectrum`.
+`applicableLifeStages` e `therapeuticSpectrum`. Descritores vacinais pertencem
+aos aliases localizados do produto.
 
 ## Disposição Final
 

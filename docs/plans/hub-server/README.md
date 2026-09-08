@@ -31,7 +31,7 @@ pertencem a outro servidor.
 16. [Parte 1B.8.3: verificação integral decomposta](./01b8-knowledge-builder-maintainability/03-artifact-verification.md)
 17. [Parte 1B.8.4: erros estruturados e fronteiras](./01b8-knowledge-builder-maintainability/04-structured-errors-boundaries.md)
 18. [Parte 1B.8.5: topologia de testes e guia de manutenção](./01b8-knowledge-builder-maintainability/05-test-topology-maintenance-guide.md)
-19. [Parte 1B.8.6: atributos diretos de produto](./01b8-knowledge-builder-maintainability/06-direct-product-attributes.md)
+19. [Parte 1B.8.6: atributos diretos e aliases de produto](./01b8-knowledge-builder-maintainability/06-direct-product-attributes.md)
 20. [Parte 1B.9.1: contrato neutro do `artifact-builder`](./01b9-artifact-builder/01-neutral-contract.md)
 21. [Parte 1B.9.2: motor genérico de artefatos](./01b9-artifact-builder/02-generic-engine.md)
 22. [Parte 1B.9.3: adaptador veterinário](./01b9-artifact-builder/03-veterinary-adapter.md)
@@ -79,7 +79,7 @@ flowchart LR
     P1B83["Parte 1B.8.3<br/>verificação"]
     P1B84["Parte 1B.8.4<br/>erros + fronteiras"]
     P1B85["Parte 1B.8.5<br/>testes + manutenção"]
-    P1B86["Parte 1B.8.6<br/>atributos de produto"]
+    P1B86["Parte 1B.8.6<br/>atributos + aliases"]
     P1B91["Parte 1B.9.1<br/>contrato neutro"]
     P1B92["Parte 1B.9.2<br/>motor genérico"]
     P1B93["Parte 1B.9.3<br/>adaptador veterinário"]
@@ -148,8 +148,8 @@ autoria e mantém os demais diretórios livres de significado implícito. A Part
 inventário, ownership e recibos confirmados, a Parte 1B.8.3 decompõe a
 verificação integral, a Parte 1B.8.4 estrutura erros e fronteiras, a Parte
 1B.8.5 organiza testes e o guia de manutenção e a Parte 1B.8.6 representa
-estágios de vida, perfil vacinal e espectro terapêutico como atributos diretos
-de produto. As Partes 1B.9.1 a 1B.9.4
+estágios de vida e espectro terapêutico como atributos diretos de produto,
+mantendo descritores vacinais nos aliases localizados. As Partes 1B.9.1 a 1B.9.4
 estabelecem a crate genérica `artifact-builder`, concentram nela SQLite, CAS,
 verificação e publicação, e mantêm `knowledge-builder` como adaptador do domínio
 veterinário. A Parte 1C faz os apps consumirem os artefatos locais. A Parte 3 faz
@@ -231,11 +231,11 @@ provider externo.
 - Produtos referenciam princípios ativos por IDs de entidades
   `active_ingredient`. Combinações farmacológicas preservam uma relação por
   substância, e a navegação do catálogo usa essas entidades relacionadas.
-- Alvos usam o vocabulário compartilhado `product-targets`. Estágios de vida,
-  perfil vacinal e espectro terapêutico usam respectivamente
-  `product.applicableLifeStages`, `product.vaccineProfile` e
+- Alvos usam o vocabulário compartilhado `product-targets`. Estágios de vida e
+  espectro terapêutico usam respectivamente `product.applicableLifeStages` e
   `product.therapeuticSpectrum` como atributos fechados, projetados diretamente
-  em `product_catalog_items`.
+  em `product_catalog_items`. Descritores vacinais como `V10` e `polivalente`
+  são texto puro nos aliases localizados do produto.
   `classificationTermKeys` não recebe conceitos criados apenas para busca.
 - A busca de produtos deriva termos das entidades, relações e taxonomias
   canônicas. O contrato de conhecimento não contém `searchConcept.*`.

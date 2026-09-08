@@ -1,30 +1,33 @@
-# Parte 1B.8.6: Atributos Diretos De Produto
+# Parte 1B.8.6: Atributos Diretos E Aliases De Produto
 
 ## Objetivo
 
-Representar estágio de vida aplicável, perfil vacinal e espectro terapêutico
-como atributos tipados do próprio produto. Esses conceitos não possuem
-identidade independente, hierarquia reutilizável ou relações próprias e,
-portanto, não integram o sistema universal de taxonomias.
+Representar estágio de vida aplicável e espectro terapêutico como atributos
+tipados do próprio produto. Descritores vacinais como `V10`, `polivalente` e
+`tríplice felina` pertencem aos aliases localizados do produto, em texto puro.
+Nenhum desses conceitos integra o sistema universal de taxonomias.
 
 ```text
 product._entity.json
 ├── applicableLifeStages[]
-├── vaccineProfile
-└── therapeuticSpectrum
+├── therapeuticSpectrum
+└── localizedContent.aliases[]
         |
         v
 product_catalog_items
 ├── applicable_life_stages_json
-├── vaccine_multiplicity
-├── vaccine_valence
 └── therapeutic_spectrum
+
+localizedContent.aliases[]
+        |
+        v
+aliases_json + entity_search_terms
 ```
 
 Ao final, `data/knowledge`, schemas, contratos Rust, projeção, verificação,
 busca, auditoria, fixtures, testes e documentação reconhecem somente os campos
-diretos. Não existem taxonomias, term keys, relações ou caminhos alternativos
-para esses três conceitos.
+vigentes. Não existem taxonomias, term keys, relações ou caminhos alternativos
+para esses conceitos. Descritores vacinais existem somente nos aliases.
 
 ## Pré-Requisitos
 
@@ -70,10 +73,13 @@ Esta parte não altera:
   `applicableTaxonIds`.
 - Doenças, patógenos e parasitas alvo pertencem exclusivamente a
   `targetTermKeys`.
-- Valores fechados não carregam labels localizados no conhecimento. A UI
-  resolve sua apresentação por i18n.
+- Valores fechados dos atributos estruturados não carregam labels localizados
+  no conhecimento. A UI resolve sua apresentação por i18n.
+- Descritores vacinais são strings explícitas em `localizedContent.aliases`.
+  Eles não possuem códigos semânticos, chaves, enum, objeto próprio ou projeção
+  estrutural.
 - Termos textuais úteis para busca pertencem ao nome e aos aliases localizados
-  do produto; os atributos diretos continuam disponíveis como filtros
+  do produto. Os atributos diretos continuam disponíveis como filtros
   estruturados.
 - Não existem leitura dupla, aliases para os campos removidos, conversor
   persistente, migration ou fallback.
@@ -89,16 +95,19 @@ Um produto pode declarar:
 ```json
 {
   "applicableLifeStages": ["young"],
-  "vaccineProfile": {
-    "multiplicity": "multivalent",
-    "valence": 8
-  },
-  "therapeuticSpectrum": "broad"
+  "therapeuticSpectrum": "broad",
+  "localizedContent": {
+    "aliases": {
+      "pt-BR": ["V10", "V 10", "polivalente"]
+    }
+  }
 }
 ```
 
-Os três campos são opcionais. Quando presentes, obedecem aos contratos abaixo
-e são rejeitados se contiverem propriedades ou valores adicionais.
+O recorte de `localizedContent` ilustra a propriedade dos termos; o manifesto
+completo mantém os seis locales exigidos pelo contrato vigente. Os dois
+atributos estruturados são opcionais. Quando presentes, obedecem aos contratos
+abaixo.
 
 ### 1.2 `applicableLifeStages`
 
@@ -132,27 +141,38 @@ O estágio não embute espécie. O par semântico é formado pelo estágio e pel
 IDs já presentes em `applicableTaxonIds`. O valor `puppy` da autoria existente
 é expresso como `young` em produtos aplicáveis a `canis-lupus-familiaris`.
 
-### 1.3 `vaccineProfile`
+### 1.3 Descritores Vacinais Em Aliases
 
-`vaccineProfile` possui:
+Cada descrição usada para apresentar ou localizar uma vacina é armazenada como
+string no array `localizedContent.aliases` do próprio produto e do respectivo
+locale. Exemplos:
 
-| Campo | Obrigatório | Contrato |
-| --- | --- | --- |
-| `multiplicity` | sim | `monovalent` ou `multivalent` |
-| `valence` | não | inteiro positivo que registra a valência declarada do perfil |
+```json
+{
+  "localizedContent": {
+    "aliases": {
+      "pt-BR": ["V10", "V 10", "polivalente"],
+      "pt-PT": ["V10", "V 10", "polivalente"],
+      "gn-PY": ["V10", "V 10", "polivalente"],
+      "en-US": ["V10", "V 10", "polyvalent"],
+      "es-ES": ["V10", "V 10", "polivalente"],
+      "fr-FR": ["V10", "V 10", "polyvalent"]
+    }
+  }
+}
+```
 
-Regras de coerência:
+- não criar um campo estrutural próprio para esses descritores;
+- não armazenar chaves como `canine.v10` ou `feline.trivalent` no produto;
+- não inferir aliases pela quantidade de alvos ou pelo nome do produto;
+- não repetir termos gerais de espécie, pois `applicableTaxonIds` possui essa
+  responsabilidade;
+- preservar somente aliases verdadeiros daquele produto, sem preencher uma
+  lista padronizada automaticamente.
 
-- `monovalent` aceita `valence` ausente ou igual a `1`;
-- `multivalent` aceita `valence` ausente ou maior ou igual a `2`;
-- a valência não é calculada pela quantidade de `targetTermKeys`;
-- o objeto só é aceito em produtos cujo `typeTermKey` pertence ao ramo
-  `medication.biologicalAndImmunological.vaccine`;
-- o objeto não repete espécie, nome localizado, sigla comercial ou alvos.
-
-Uma vacina cujo perfil é conhecido apenas como multivalente declara somente
-`multiplicity`. Códigos como `V8` e `V10`, quando relevantes à busca, permanecem
-no nome ou nos aliases localizados do produto.
+Os aliases usam a validação comum de texto localizado, são persistidos em
+`aliases_json` e entram em `entity_search_terms` pelo fluxo comum. O builder não
+possui regra vacinal específica para interpretá-los.
 
 ### 1.4 `therapeuticSpectrum`
 
@@ -195,33 +215,30 @@ therapeuticScopeTermKeys
 
 Aplicar aos fatos atualmente declarados a seguinte normalização explícita:
 
-| Termo da fonte | Atributo direto |
+| Termo da fonte | Representação no produto |
 | --- | --- |
 | `puppy` | `applicableLifeStages: ["young"]` |
 | `broadSpectrum` | `therapeuticSpectrum: "broad"` |
-| `canine.multivalent` sem valência conhecida | `vaccineProfile.multiplicity: "multivalent"` |
-| `canine.v8` | `multiplicity: "multivalent"`, `valence: 8` |
-| `canine.v10` | `multiplicity: "multivalent"`, `valence: 10` |
-| `feline.trivalent` | `multiplicity: "multivalent"`, `valence: 3` |
-| `feline.tetravalent` | `multiplicity: "multivalent"`, `valence: 4` |
-| `feline.pentavalent` | `multiplicity: "multivalent"`, `valence: 5` |
+| termo vacinal referenciado | label e aliases do termo fundidos em `localizedContent.aliases.<locale>` |
 
-Quando um produto contém o termo geral e uma valência específica, produzir um
-único `vaccineProfile`. Não copiar os prefixos `canine` ou `feline`; os táxons
-canônicos do produto já expressam essa informação.
+Para cada produto, copiar somente os textos localizados dos termos vacinais que
+ele referencia e deduplicá-los com os aliases já declarados. Não copiar chaves
+taxonômicas nem termos ancestrais não referenciados; os táxons canônicos do
+produto já expressam a aplicabilidade por espécie.
 
 Não completar produtos sem esses fatos e não deduzir valores ausentes. Dados
 novos são adicionados diretamente aos produtos em edições próprias da fonte.
 
 ### 2.3 Conteúdo Localizado E Busca
 
-Remover as traduções pertencentes exclusivamente às três taxonomias eliminadas.
-Não criar `localizedContent` dentro dos atributos diretos.
+Distribuir os labels e aliases vacinais pertinentes nos aliases localizados dos
+produtos que os utilizam. Em seguida, remover as traduções pertencentes às três
+taxonomias eliminadas. Não criar `localizedContent` dentro dos atributos
+diretos.
 
-Preservar nomes e aliases que pertencem de fato ao produto. Quando uma sigla
-como `V8`, `V 8` ou um termo localizado precisa localizar um produto, ela deve
-estar em `localizedContent.aliases` do próprio produto, sem duplicação e sem ser
-gerada a partir da taxonomia removida.
+Preservar nomes e aliases que pertencem de fato ao produto. Siglas como `V8` e
+`V 8`, assim como descrições como `polivalente`, são texto puro e seguem a
+validação, persistência e indexação já aplicadas a qualquer alias de produto.
 
 ## 3. Schema E Modelo Da Fonte
 
@@ -230,7 +247,6 @@ Alterar `tools/knowledge-builder/schemas/source/product.schema.json` para:
 - remover os três campos terminados em `TermKeys`;
 - declarar `applicableLifeStages` como array opcional, com `minItems: 1`,
   `maxItems: 3`, itens únicos e enum fechado de estágios;
-- declarar `vaccineProfile` como objeto fechado;
 - declarar `therapeuticSpectrum` como enum opcional;
 - manter `additionalProperties: false`.
 
@@ -242,9 +258,9 @@ Manter `SOURCE_ENTITY_SCHEMA_VERSION = 1`. O repositório possui uma única font
 canônica ainda não publicada, todos os produtos são atualizados em conjunto e
 nenhum formato alternativo é aceito.
 
-Atualizar o digest semântico para incluir os três atributos diretos em sua forma
-canônica. A remoção dos manifestos de taxonomia e a alteração de qualquer valor
-direto devem mudar `sourceDigestSha256`.
+Atualizar o digest semântico para incluir os dois atributos diretos em sua forma
+canônica. A remoção dos manifestos de taxonomia, a alteração de qualquer valor
+direto e a alteração dos aliases localizados devem mudar `sourceDigestSha256`.
 
 ## 4. Contrato De Taxonomias
 
@@ -275,17 +291,12 @@ Adicionar a `product_catalog_items`:
 
 ```sql
 applicable_life_stages_json TEXT NOT NULL DEFAULT '[]',
-vaccine_multiplicity TEXT,
-vaccine_valence INTEGER,
 therapeutic_spectrum TEXT
 ```
 
 O DDL deve garantir:
 
 - JSON válido e do tipo array para `applicable_life_stages_json`;
-- `vaccine_multiplicity` nulo, `monovalent` ou `multivalent`;
-- `vaccine_valence` nulo ou inteiro positivo;
-- coerência entre multiplicidade e valência;
 - `therapeutic_spectrum` nulo, `broad` ou `narrow`.
 
 O builder valida os itens e a ordem de `applicable_life_stages_json` antes da
@@ -298,7 +309,7 @@ correspondentes. Não criar migration.
 
 ### 5.2 Row E Persistência
 
-Adicionar os quatro valores à row tipada de produto e atualizar, como um único
+Adicionar os dois valores à row tipada de produto e atualizar, como um único
 contrato:
 
 - descritor de colunas e cobertura;
@@ -308,8 +319,9 @@ contrato:
 - equivalência semântica e detecção de adulteração;
 - fingerprints e contagens derivados do DDL.
 
-Os três atributos não produzem rows em `entity_taxonomy_terms`. As dez
-taxonomias restantes continuam sendo projetadas pelo caminho universal.
+Os dois atributos não produzem rows em `entity_taxonomy_terms`. Descritores
+vacinais já integram `aliases_json` e `entity_search_terms` como aliases comuns.
+As dez taxonomias restantes continuam sendo projetadas pelo caminho universal.
 
 ## 6. Validação E Pesquisa
 
@@ -318,11 +330,10 @@ taxonomias restantes continuam sendo projetadas pelo caminho universal.
 Validar antes de projetar:
 
 - domínio fechado, unicidade e ordem dos estágios;
-- forma fechada e coerência de `vaccineProfile`;
-- compatibilidade de `vaccineProfile` com o tipo vacina;
 - compatibilidade de `therapeuticSpectrum` com o ramo de medicamentos;
 - ausência dos três propósitos removidos no registro taxonômico;
-- ausência das três chaves removidas em qualquer produto.
+- ausência das três chaves removidas em qualquer produto;
+- validade, localização e deduplicação dos aliases vacinais como texto comum.
 
 Os erros informam caminho do `_entity.json`, campo e valor recusado. Não
 normalizar silenciosamente entrada inválida.
@@ -330,13 +341,14 @@ normalizar silenciosamente entrada inválida.
 ### 6.2 Busca E Filtros
 
 Remover a expansão de labels e aliases das três taxonomias na formação de
-`entity_search_terms`. Não transformar enums técnicos em texto localizado por
-uma tabela interna do builder.
+`entity_search_terms`. Os descritores vacinais chegam ao índice exclusivamente
+pelo fluxo já usado para `localizedContent.aliases`. Não transformar esses
+textos em enums nem manter uma tabela interna no builder.
 
-O banco oferece os campos diretos para filtros estruturados. A pesquisa textual
-continua usando nome, aliases e relações canônicas. Caso um perfil ou estágio
-precise participar da pesquisa por texto, o valor localizado deve estar nos
-aliases do produto e seguir o caminho comum de indexação.
+O banco oferece estágios de vida e espectro terapêutico para filtros
+estruturados. A pesquisa textual continua usando nome, aliases e relações
+canônicas. Descritores vacinais participam da pesquisa somente por estarem nos
+aliases do produto.
 
 ## 7. Auditoria E Inventários
 
@@ -344,8 +356,9 @@ Atualizar `scripts/audit-knowledge.mjs` para:
 
 - tratar `data/knowledge` como sua única fonte de fatos canônicos, sem derivar
   valores esperados de defaults, catálogos ou i18n dos apps e packages;
-- reconhecer os três campos diretos no contrato de produto;
-- validar enums, cardinalidade, ordem e coerência;
+- reconhecer os dois atributos diretos no contrato de produto;
+- validar seus enums, cardinalidade e ordem;
+- tratar descritores vacinais somente como aliases localizados comuns;
 - deixar de resolver ou contar referências aos três propósitos removidos;
 - deixar de projetar seus labels como categorias de busca taxonômica;
 - calcular as contagens de atributos diretos a partir de `data/knowledge`;
@@ -361,7 +374,8 @@ Atualizar `data/knowledge/README.md` e `tools/knowledge-builder/README.md` para
 documentar:
 
 - as dez taxonomias canônicas;
-- os atributos diretos de produto;
+- os dois atributos diretos de produto;
+- descritores vacinais em aliases localizados;
 - suas colunas em `product_catalog_items`;
 - a distinção entre filtro estruturado e termo textual de busca;
 - o schema técnico 5 de `system`.
@@ -374,14 +388,12 @@ Toda documentação descreve somente o estado vigente após a implementação.
 
 Cobrir:
 
-- cada valor válido dos três contratos;
+- cada valor válido dos dois atributos diretos;
 - campos ausentes;
 - arrays válidos com um, dois e três estágios;
 - array vazio, com mais de três itens, duplicado, fora de ordem ou com estágio
   desconhecido;
-- `vaccineProfile` com propriedade extra, multiplicidade inválida e combinações
-  incoerentes de valência;
-- perfil vacinal em produto não vacinal;
+- aliases vacinais localizados, deduplicados e indexados como texto comum;
 - espectro terapêutico inválido ou em produto não medicamentoso;
 - recusa das três taxonomias removidas;
 - digest diferente quando qualquer atributo direto muda;
@@ -392,23 +404,25 @@ Cobrir:
 Atualizar a fixture mínima para conter produtos que exercitem:
 
 - aplicabilidade direta a um, dois e três estágios de vida;
-- vacina multivalente com valência conhecida;
-- vacina multivalente sem valência informada;
+- vacina com aliases localizados como `V10` e `polivalente`;
+- vacina sem descritor vacinal adicional;
 - espectro terapêutico direto;
-- ausência dos três atributos.
+- ausência dos dois atributos diretos.
 
 Comprovar nos seis bancos `system`:
 
 - dez registros em `taxonomy_registry`;
 - ausência dos três propósitos e de suas associações;
 - valores diretos idênticos em todos os locales;
+- descritores vacinais presentes em `aliases_json` e `entity_search_terms` no
+  locale correto;
 - schema técnico 5;
 - busca textual sem termos provenientes das taxonomias removidas;
 - `foreign_key_check` e `integrity_check` aprovados.
 
-Adicionar casos de adulteração para cada nova coluna e comprovar que o
-verificador integral recusa a saída. Manter determinismo byte a byte entre dois
-builds independentes.
+Adicionar casos de adulteração para cada uma das duas novas colunas e comprovar
+que o verificador integral recusa a saída. Manter determinismo byte a byte entre
+dois builds independentes.
 
 ### 8.3 Ausência Estrutural
 
@@ -477,12 +491,14 @@ de considerar esta parte concluída.
 
 ## Critérios De Aceite
 
-- Os três conceitos existem somente como atributos diretos opcionais de
-  produto.
+- Estágios de vida e espectro terapêutico existem somente como atributos
+  diretos opcionais de produto.
+- Descritores vacinais existem somente como texto puro nos aliases localizados
+  dos produtos correspondentes.
 - As três taxonomias, seus propósitos, relações, traduções e term keys não
   existem no estado final.
 - `CANONICAL_TAXONOMIES` contém exatamente dez especificações.
-- `product_catalog_items` contém e verifica as quatro novas colunas.
+- `product_catalog_items` contém e verifica as duas novas colunas.
 - `system` usa schema técnico 5 e `system_media` permanece em 2.
 - Fonte, auditoria, builder, bancos, busca, verificador, fixtures e READMEs
   descrevem o mesmo contrato.

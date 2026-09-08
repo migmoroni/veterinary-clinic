@@ -98,19 +98,17 @@ Preservar o contrato de produto estabelecido na Parte 1B.8.6:
 ```json
 {
   "applicableLifeStages": ["young"],
-  "vaccineProfile": {
-    "multiplicity": "multivalent",
-    "valence": 8
-  },
   "therapeuticSpectrum": "broad"
 }
 ```
 
 Esses atributos já estão validados e projetados em
-`applicable_life_stages_json`, `vaccine_multiplicity`, `vaccine_valence` e
-`therapeutic_spectrum`. O adaptador os converte para `TableData` sem recriar
-taxonomias, labels próprios, objetos opacos concorrentes ou valores inferidos.
-O schema técnico de `system` permanece em `5`; `system_media` permanece em `2`.
+`applicable_life_stages_json` e `therapeutic_spectrum`. Descritores vacinais
+como `V10` e `polivalente` permanecem como texto puro em
+`localizedContent.aliases` e seguem a projeção comum de aliases. O adaptador
+converte esses dados para `TableData` sem recriar taxonomias, estruturas
+intermediárias, objetos opacos concorrentes ou valores inferidos. O schema
+técnico de `system` permanece em `5`; `system_media` permanece em `2`.
 
 As dez taxonomias canônicas permanecem quando possuem vocabulário compartilhado
 ou hierarquia. A extração da infraestrutura genérica não altera o contrato
@@ -203,7 +201,8 @@ Testes unitários cobrem:
 - Markdown permitido e recusado;
 - resolução de mídia e geração determinística de thumbnail;
 - projeção de cada entidade para rows;
-- atributos diretos de produto válidos, ausentes e inválidos.
+- atributos diretos de produto válidos, ausentes e inválidos;
+- aliases vacinais projetados pelo fluxo comum de aliases.
 
 Testes integrais cobrem:
 
@@ -252,8 +251,8 @@ Depois, executar a skill `$validate-workspace`.
 - Existe uma única implementação de SQLite, CAS, verificação e publicação.
 - A tool não possui ledger, ownership, recibos ou cobertura tripla.
 - A fonte mantém JSON, Markdown e mídia relacionada por links.
-- Estágios de vida, perfil vacinal e espectro terapêutico são atributos diretos
-  e consultáveis de produto.
+- Estágios de vida e espectro terapêutico são atributos diretos e consultáveis
+  de produto; descritores vacinais são aliases localizados comuns.
 - Os seis pares de bancos e o CAS são produzidos corretamente.
 - Testes de domínio ficam na tool e testes de infraestrutura ficam na crate.
 - O build real e a skill `$validate-workspace` passam integralmente.

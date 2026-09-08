@@ -41,9 +41,9 @@ Todas as colunas classificatórias são anuláveis.
   as entidades farmacológicas relacionadas;
 - consumir tipos, classificações de catálogo e alvos por
   `entity_taxonomy_terms`;
-- consumir `applicable_life_stages_json`, `vaccine_multiplicity`,
-  `vaccine_valence` e `therapeutic_spectrum` diretamente de
-  `product_catalog_items`;
+- consumir `applicable_life_stages_json` e `therapeutic_spectrum` diretamente
+  de `product_catalog_items`;
+- consumir descritores vacinais como aliases localizados comuns do produto;
 - consumir a taxonomia e as classificações diretamente de
   `life_reference_items` e a aplicabilidade de produtos e protocolos pelos
   IDs canônicos de qualquer um dos dez níveis de `LifeEntity`;
@@ -503,11 +503,11 @@ As APIs de busca utilizam:
 - campos estruturais pesquisáveis definidos pelo domínio.
 
 Para produtos, os nomes e aliases de princípios ativos e alvos entram pela
-projeção derivada pelo builder. Estágios de vida, perfil vacinal e espectro
-terapêutico são campos estruturados de filtro e não injetam seus códigos
-internos na busca textual. Um termo associado diretamente ao produto participa
-da busca por `localizedContent.aliases`. A busca não lê classificações genéricas
-ou campos `searchConcept`.
+projeção derivada pelo builder. Estágios de vida e espectro terapêutico são
+campos estruturados de filtro e não injetam seus códigos internos na busca
+textual. Descritores vacinais como `V10` e `polivalente` são aliases localizados
+do próprio produto e participam da busca por esse caminho comum. A busca não lê
+classificações genéricas ou campos `searchConcept`.
 
 Para `LifeEntity`, `entity_search_terms` contém somente nome e aliases próprios.
 Quando uma busca solicitar a subárvore de um táxon encontrado, o repository usa
@@ -734,8 +734,9 @@ Cobrir:
   descendentes;
 - produtos resolvendo tipos, classificações e alvos pelo propósito da taxonomia
   associada;
-- produtos lendo estágios de vida, perfil vacinal e espectro terapêutico como
-  atributos diretos opcionais e validados;
+- produtos lendo estágios de vida e espectro terapêutico como atributos diretos
+  opcionais e validados;
+- produtos expondo descritores vacinais pelos aliases localizados comuns;
 - recusa de associação com termo pertencente a outro domínio, propósito ou
   vocabulário;
 - navegação do produto para cada página de princípio ativo relacionado;
