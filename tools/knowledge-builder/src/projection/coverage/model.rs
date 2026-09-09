@@ -94,6 +94,8 @@ pub(crate) enum SystemColumn {
     SizeTermKey,
     StageMetricsJson,
     ApplicableTaxonIdsJson,
+    ApplicableLifeStagesJson,
+    TherapeuticSpectrum,
     ContentJson,
     LifeId,
     PlaceId,
@@ -127,7 +129,7 @@ pub(crate) enum SystemColumn {
 
 impl SystemColumn {
     #[cfg(test)]
-    pub(crate) const ALL: [Self; 59] = [
+    pub(crate) const ALL: [Self; 61] = [
         Self::Id,
         Self::Domain,
         Self::Purpose,
@@ -158,6 +160,8 @@ impl SystemColumn {
         Self::SizeTermKey,
         Self::StageMetricsJson,
         Self::ApplicableTaxonIdsJson,
+        Self::ApplicableLifeStagesJson,
+        Self::TherapeuticSpectrum,
         Self::ContentJson,
         Self::LifeId,
         Self::PlaceId,
@@ -221,6 +225,8 @@ impl SystemColumn {
             Self::SizeTermKey => "size_term_key",
             Self::StageMetricsJson => "stage_metrics_json",
             Self::ApplicableTaxonIdsJson => "applicable_taxon_ids_json",
+            Self::ApplicableLifeStagesJson => "applicable_life_stages_json",
+            Self::TherapeuticSpectrum => "therapeutic_spectrum",
             Self::ContentJson => "content_json",
             Self::LifeId => "life_id",
             Self::PlaceId => "place_id",

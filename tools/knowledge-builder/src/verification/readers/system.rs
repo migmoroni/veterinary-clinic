@@ -75,8 +75,8 @@ pub(super) fn read(
     );
     result.insert(
         SystemTable::ProductCatalogItems,
-        query(connection, database, "SELECT id, name, normalized_name, applicable_taxon_ids_json, aliases_json, manufacturer_id, regions_json, regulatory_identifiers_json, commercial_line, presentation_dosage, target_species_warnings_json, content_json FROM product_catalog_items ORDER BY id", |row| {
-            Ok(SystemRow::Product { id: row.get(0)?, name: row.get(1)?, normalized_name: row.get(2)?, applicable_taxon_ids_json: row.get(3)?, aliases_json: row.get(4)?, manufacturer_id: row.get(5)?, regions_json: row.get(6)?, regulatory_identifiers_json: row.get(7)?, commercial_line: row.get(8)?, presentation_dosage: row.get(9)?, target_species_warnings_json: row.get(10)?, content_json: row.get(11)? })
+        query(connection, database, "SELECT id, name, normalized_name, applicable_taxon_ids_json, applicable_life_stages_json, therapeutic_spectrum, aliases_json, manufacturer_id, regions_json, regulatory_identifiers_json, commercial_line, presentation_dosage, target_species_warnings_json, content_json FROM product_catalog_items ORDER BY id", |row| {
+            Ok(SystemRow::Product { id: row.get(0)?, name: row.get(1)?, normalized_name: row.get(2)?, applicable_taxon_ids_json: row.get(3)?, applicable_life_stages_json: row.get(4)?, therapeutic_spectrum: row.get(5)?, aliases_json: row.get(6)?, manufacturer_id: row.get(7)?, regions_json: row.get(8)?, regulatory_identifiers_json: row.get(9)?, commercial_line: row.get(10)?, presentation_dosage: row.get(11)?, target_species_warnings_json: row.get(12)?, content_json: row.get(13)? })
         })?,
     );
     result.insert(

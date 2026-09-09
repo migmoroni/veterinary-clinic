@@ -29,22 +29,46 @@
     },
     "aliases": {
       "pt-BR": [
-        "RCPCh"
+        "RCPCh",
+        "quádrupla felina",
+        "FVRCP+Ch",
+        "V4",
+        "V 4"
       ],
       "pt-PT": [
-        "RCPCh"
+        "RCPCh",
+        "quádrupla felina",
+        "FVRCP+Ch",
+        "V4",
+        "V 4"
       ],
       "gn-PY": [
-        "RCPCh"
+        "RCPCh",
+        "cuádruple felina",
+        "FVRCP+Ch",
+        "V4",
+        "V 4"
       ],
       "en-US": [
-        "RCPCh"
+        "RCPCh",
+        "feline four-way vaccine",
+        "FVRCP+Ch",
+        "V4",
+        "V 4"
       ],
       "es-ES": [
-        "RCPCh"
+        "RCPCh",
+        "cuádruple felina",
+        "FVRCP+Ch",
+        "V4",
+        "V 4"
       ],
       "fr-FR": [
-        "RCPCh"
+        "RCPCh",
+        "vaccin tétravalent félin",
+        "FVRCP+Ch",
+        "V4",
+        "V 4"
       ]
     }
   },
@@ -54,9 +78,6 @@
     "disease.felineCalicivirosis",
     "disease.felinePanleukopenia",
     "disease.felineChlamydiosis"
-  ],
-  "vaccineProfileTermKeys": [
-    "feline.tetravalent"
   ],
   "applicableTaxonIds": [
     "felis-catus"

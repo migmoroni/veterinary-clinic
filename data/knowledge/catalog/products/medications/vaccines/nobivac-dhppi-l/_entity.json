@@ -29,22 +29,46 @@
     },
     "aliases": {
       "pt-BR": [
-        "DHPPI+L"
+        "DHPPI+L",
+        "V8",
+        "V 8",
+        "polivalente",
+        "múltipla canina"
       ],
       "pt-PT": [
-        "DHPPI+L"
+        "DHPPI+L",
+        "V8",
+        "V 8",
+        "polivalente",
+        "múltipla canina"
       ],
       "gn-PY": [
-        "DHPPI+L"
+        "DHPPI+L",
+        "V8",
+        "V 8",
+        "polivalente",
+        "vacuna múltiple canina"
       ],
       "en-US": [
-        "DHPPI+L"
+        "DHPPI+L",
+        "V8",
+        "V 8",
+        "polyvalent",
+        "canine combination vaccine"
       ],
       "es-ES": [
-        "DHPPI+L"
+        "DHPPI+L",
+        "V8",
+        "V 8",
+        "polivalente",
+        "vacuna múltiple canina"
       ],
       "fr-FR": [
-        "DHPPI+L"
+        "DHPPI+L",
+        "V8",
+        "V 8",
+        "polyvalent",
+        "vaccin combiné canin"
       ]
     }
   },
@@ -56,10 +80,6 @@
     "disease.canineParvovirosis",
     "pathogen.canineParvovirus",
     "disease.canineLeptospirosis"
-  ],
-  "vaccineProfileTermKeys": [
-    "canine.v8",
-    "canine.multivalent"
   ],
   "applicableTaxonIds": [
     "canis-lupus-familiaris"

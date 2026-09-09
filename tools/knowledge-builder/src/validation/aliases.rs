@@ -12,7 +12,7 @@ pub(super) fn validate_alias_ownership(
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     for locale in LOCALES {
-        let mut owners = BTreeMap::<String, String>::new();
+        let mut owners = BTreeMap::<String, (&str, String)>::new();
         for entry in entries {
             let Some(content) = entry.entity.localized_content() else {
                 continue;
@@ -22,9 +22,14 @@ pub(super) fn validate_alias_ownership(
             };
             for alias in aliases {
                 let normalized = normalize_search_text(alias);
-                let identity = format!("{}:{}", entry.entity.entity_type(), entry.entity.id());
-                if let Some(previous) = owners.insert(normalized.clone(), identity.clone()) {
-                    if previous != identity {
+                let entity_type = entry.entity.entity_type();
+                let identity = format!("{entity_type}:{}", entry.entity.id());
+                if let Some((previous_type, previous)) =
+                    owners.insert(normalized.clone(), (entity_type, identity.clone()))
+                {
+                    if previous != identity
+                        && !(previous_type == "product" && entity_type == "product")
+                    {
                         diagnostics.push(Diagnostic::entity(
                             entry,
                             "localizedContent.aliases",
@@ -44,7 +49,7 @@ pub(super) fn validate_alias_ownership(
             })
             .map(normalize_search_text)
             .collect::<BTreeSet<_>>();
-        for (alias, owner) in owners {
+        for (alias, (_, owner)) in owners {
             if taxonomy_values.contains(&alias) {
                 if let Some(entry) = entries.iter().find(|entry| {
                     format!("{}:{}", entry.entity.entity_type(), entry.entity.id()) == owner

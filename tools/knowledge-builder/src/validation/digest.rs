@@ -127,12 +127,6 @@ pub(super) fn relation_count(entities: &[ValidatedEntity]) -> usize {
                     + value.applicable_taxon_ids.len()
                     + value.active_ingredient_ids.len()
                     + value.target_term_keys.as_ref().map_or(0, Vec::len)
-                    + value.vaccine_profile_term_keys.as_ref().map_or(0, Vec::len)
-                    + value.life_stage_term_keys.as_ref().map_or(0, Vec::len)
-                    + value
-                        .therapeutic_scope_term_keys
-                        .as_ref()
-                        .map_or(0, Vec::len)
             }
             CanonicalEntity::Manufacturer(value) => 1 + value.classification_term_keys.len(),
             CanonicalEntity::ActiveIngredient(value) => 1 + value.classification_term_keys.len(),

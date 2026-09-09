@@ -179,7 +179,7 @@ aplicabilidade.
 
 ## Vocabulários Controlados
 
-Existem exatamente 13 pares canônicos de domínio e propósito. Doze pertencem
+Existem exatamente dez pares canônicos de domínio e propósito. Nove pertencem
 aos catálogos e um classifica vida:
 
 ```text
@@ -196,7 +196,8 @@ corretos.
 ## Demais Entidades
 
 - `product`: tipo, classificações, `applicableTaxonIds`, regiões, fabricante,
-  princípios ativos, relações terapêuticas, identificadores, conteúdo e mídia;
+  princípios ativos, alvos terapêuticos, `applicableLifeStages`,
+  `therapeuticSpectrum`, identificadores, conteúdo e mídia;
 - `manufacturer`: tipo, classificações, regiões, website, conteúdo e mídia;
 - `active_ingredient`: tipo, classificações, nomenclatura, ATC Vet e conteúdo;
 - `condition`: tipo, classificações, regiões e conteúdo;
@@ -208,6 +209,14 @@ corretos.
 IDs de produto, fabricante, princípio ativo, condição e protocolo são UUIDv4
 minúsculos. Fatos desconhecidos usam `null`, `[]` ou omissão permitida; não são
 criados termos artificiais.
+
+`applicableLifeStages` aceita combinações ordenadas de `newborn`, `young` e
+`adult`. `therapeuticSpectrum` aceita `broad` ou `narrow` somente em produtos do
+ramo `medication`. Ambos são atributos estruturados opcionais do produto e não
+taxonomias. Descritores vacinais como `V10`, `polivalente` e `tríplice felina`
+vivem exclusivamente em `localizedContent.aliases` do produto correspondente.
+Esses aliases participam da busca textual comum; os atributos diretos servem a
+filtros estruturados.
 
 ## Markdown E Mídia
 

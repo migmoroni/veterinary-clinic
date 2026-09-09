@@ -4,11 +4,27 @@
   "id": "fixture-product-type",
   "domain": "product",
   "purpose": "type",
-  "terms": [{
-    "key": "default", "parentKey": null, "order": 0,
-    "localizedContent": { "label": {
-      "pt-BR": "Padrão", "pt-PT": "Padrão", "gn-PY": "Teko",
-      "en-US": "Default", "es-ES": "Predeterminado", "fr-FR": "Défaut"
-    } }
-  }]
+  "terms": [
+    {
+      "key": "default", "parentKey": null, "order": 0,
+      "localizedContent": { "label": {
+        "pt-BR": "Padrão", "pt-PT": "Padrão", "gn-PY": "Teko",
+        "en-US": "Default", "es-ES": "Predeterminado", "fr-FR": "Défaut"
+      } }
+    },
+    {
+      "key": "medication", "parentKey": null, "order": 1,
+      "localizedContent": { "label": {
+        "pt-BR": "Medicamento", "pt-PT": "Medicamento", "gn-PY": "Pohã",
+        "en-US": "Medication", "es-ES": "Medicamento", "fr-FR": "Médicament"
+      } }
+    },
+    {
+      "key": "medication.vaccine", "parentKey": "medication", "order": 2,
+      "localizedContent": { "label": {
+        "pt-BR": "Vacina", "pt-PT": "Vacina", "gn-PY": "Vacuna",
+        "en-US": "Vaccine", "es-ES": "Vacuna", "fr-FR": "Vaccin"
+      } }
+    }
+  ]
 }

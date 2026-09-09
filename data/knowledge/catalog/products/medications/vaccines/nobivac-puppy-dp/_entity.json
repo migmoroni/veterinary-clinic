@@ -54,8 +54,8 @@
     "disease.canineParvovirosis",
     "pathogen.canineParvovirus"
   ],
-  "lifeStageTermKeys": [
-    "puppy"
+  "applicableLifeStages": [
+    "young"
   ],
   "applicableTaxonIds": [
     "canis-lupus-familiaris"

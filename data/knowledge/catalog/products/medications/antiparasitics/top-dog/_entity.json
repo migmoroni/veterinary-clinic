@@ -40,9 +40,7 @@
   "targetTermKeys": [
     "parasite.endoparasite"
   ],
-  "therapeuticScopeTermKeys": [
-    "broadSpectrum"
-  ],
+  "therapeuticSpectrum": "broad",
   "applicableTaxonIds": [
     "canis-lupus-familiaris"
   ]

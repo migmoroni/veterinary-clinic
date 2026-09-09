@@ -47,9 +47,8 @@ pub(super) fn add_entity_obligations(
                 active_ingredient_ids,
                 regulatory_identifiers,
                 target_term_keys,
-                vaccine_profile_term_keys,
-                life_stage_term_keys,
-                therapeutic_scope_term_keys,
+                applicable_life_stages,
+                therapeutic_spectrum,
                 localized_content,
                 sections,
                 content_path,
@@ -149,33 +148,30 @@ pub(super) fn add_entity_obligations(
                 regulatory_identifiers.gtin_ean.as_ref(),
                 main.column(SystemColumn::RegulatoryIdentifiersJson),
             )?;
-            for (purpose, field_name, values) in [
-                ("target", "targetTermKeys", target_term_keys.as_deref()),
-                (
-                    "vaccine_profile",
-                    "vaccineProfileTermKeys",
-                    vaccine_profile_term_keys.as_deref(),
-                ),
-                (
-                    "life_stage",
-                    "lifeStageTermKeys",
-                    life_stage_term_keys.as_deref(),
-                ),
-                (
-                    "therapeutic_scope",
-                    "therapeuticScopeTermKeys",
-                    therapeutic_scope_term_keys.as_deref(),
-                ),
-            ] {
-                let taxonomy = taxonomy_id(source, "product", purpose)?;
-                relations(
+            let target_taxonomy = taxonomy_id(source, "product", "target")?;
+            relations(
+                expected,
+                &entity,
+                "targetTermKeys",
+                target_term_keys.as_deref().unwrap_or(&[]),
+                |_, key| taxonomy_row(&entity, target_taxonomy, key),
+            )?;
+            if let Some(stages) = applicable_life_stages {
+                fields(
                     expected,
                     &entity,
-                    field_name,
-                    values.unwrap_or(&[]),
-                    |_, key| taxonomy_row(&entity, taxonomy, key),
+                    "applicableLifeStages",
+                    stages,
+                    main.column(SystemColumn::ApplicableLifeStagesJson),
                 )?;
             }
+            optional_fields(
+                expected,
+                &entity,
+                "therapeuticSpectrum",
+                therapeutic_spectrum.as_ref(),
+                main.column(SystemColumn::TherapeuticSpectrum),
+            )?;
             localized(expected, &entity, localized_content, locale, main.clone())?;
             structural_media(expected, entry, locale, media.as_ref())?;
         }

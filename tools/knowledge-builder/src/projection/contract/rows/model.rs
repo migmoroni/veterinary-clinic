@@ -85,6 +85,8 @@ pub(crate) enum SystemRow {
         name: String,
         normalized_name: String,
         applicable_taxon_ids_json: String,
+        applicable_life_stages_json: String,
+        therapeutic_spectrum: Option<String>,
         aliases_json: String,
         manufacturer_id: String,
         regions_json: String,

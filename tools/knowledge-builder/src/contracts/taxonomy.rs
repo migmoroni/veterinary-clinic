@@ -14,7 +14,7 @@ pub(crate) struct TaxonomySpec {
     pub cardinality: TaxonomyCardinality,
 }
 
-pub(crate) const CANONICAL_TAXONOMIES: [TaxonomySpec; 13] = [
+pub(crate) const CANONICAL_TAXONOMIES: [TaxonomySpec; 10] = [
     TaxonomySpec {
         domain: "life",
         purpose: "size",
@@ -63,21 +63,6 @@ pub(crate) const CANONICAL_TAXONOMIES: [TaxonomySpec; 13] = [
     TaxonomySpec {
         domain: "product",
         purpose: "target",
-        cardinality: TaxonomyCardinality::ZeroOrMore,
-    },
-    TaxonomySpec {
-        domain: "product",
-        purpose: "vaccine_profile",
-        cardinality: TaxonomyCardinality::ZeroOrMore,
-    },
-    TaxonomySpec {
-        domain: "product",
-        purpose: "life_stage",
-        cardinality: TaxonomyCardinality::ZeroOrMore,
-    },
-    TaxonomySpec {
-        domain: "product",
-        purpose: "therapeutic_scope",
         cardinality: TaxonomyCardinality::ZeroOrMore,
     },
 ];

@@ -252,6 +252,14 @@ fn semantically_tampered_database_is_rejected_after_checksums_are_refreshed() {
             "UPDATE product_catalog_items SET applicable_taxon_ids_json = json_array(json_extract(applicable_taxon_ids_json, '$[1]'), json_extract(applicable_taxon_ids_json, '$[0]')) WHERE rowid = (SELECT rowid FROM product_catalog_items WHERE json_array_length(applicable_taxon_ids_json) = 2 LIMIT 1)",
         ),
         (
+            "applicable-life-stages",
+            "UPDATE product_catalog_items SET applicable_life_stages_json = '[\"adult\"]' WHERE json_array_length(applicable_life_stages_json) > 0",
+        ),
+        (
+            "therapeutic-spectrum",
+            "UPDATE product_catalog_items SET therapeutic_spectrum = 'narrow' WHERE therapeutic_spectrum = 'broad'",
+        ),
+        (
             "relation-order",
             "UPDATE product_active_ingredients SET sort_order = sort_order + 10000 WHERE rowid = (SELECT rowid FROM product_active_ingredients LIMIT 1)",
         ),

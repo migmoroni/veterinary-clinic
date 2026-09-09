@@ -100,32 +100,13 @@ fn search_candidates(
                     locale,
                     "classification",
                 )?;
-                for (purpose, keys, provenance) in [
-                    ("target", product.target_term_keys.as_deref(), "target"),
-                    (
-                        "vaccine_profile",
-                        product.vaccine_profile_term_keys.as_deref(),
-                        "vaccineProfile",
-                    ),
-                    (
-                        "life_stage",
-                        product.life_stage_term_keys.as_deref(),
-                        "lifeStage",
-                    ),
-                    (
-                        "therapeutic_scope",
-                        product.therapeutic_scope_term_keys.as_deref(),
-                        "therapeuticScope",
-                    ),
-                ] {
-                    append_taxonomy_values(
-                        &mut values,
-                        taxonomy_for(source, "product", purpose)?,
-                        keys.unwrap_or(&[]),
-                        locale,
-                        provenance,
-                    )?;
-                }
+                append_taxonomy_values(
+                    &mut values,
+                    taxonomy_for(source, "product", "target")?,
+                    product.target_term_keys.as_deref().unwrap_or(&[]),
+                    locale,
+                    "target",
+                )?;
             }
             CanonicalEntity::Manufacturer(value) => append_entity_taxonomies(
                 &mut values,

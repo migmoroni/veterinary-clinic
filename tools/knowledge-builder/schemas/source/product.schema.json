@@ -8,7 +8,8 @@
     "manufacturerId": { "$ref": "common.schema.json#/$defs/uuidV4" }, "activeIngredientIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/uuidV4" } },
     "regulatoryIdentifiers": { "$ref": "common.schema.json#/$defs/regulatoryIdentifiers" }, "localizedContent": { "$ref": "common.schema.json#/$defs/localizedContent" },
     "sections": { "$ref": "common.schema.json#/$defs/sections" }, "contentPath": { "$ref": "common.schema.json#/$defs/contentPath" }, "media": { "$ref": "common.schema.json#/$defs/media" },
-    "targetTermKeys": { "$ref": "common.schema.json#/$defs/nonEmptyStringArray" }, "vaccineProfileTermKeys": { "$ref": "common.schema.json#/$defs/nonEmptyStringArray" },
-    "lifeStageTermKeys": { "$ref": "common.schema.json#/$defs/nonEmptyStringArray" }, "therapeuticScopeTermKeys": { "$ref": "common.schema.json#/$defs/nonEmptyStringArray" }
+    "targetTermKeys": { "$ref": "common.schema.json#/$defs/nonEmptyStringArray" },
+    "applicableLifeStages": { "type": "array", "minItems": 1, "maxItems": 3, "uniqueItems": true, "items": { "enum": ["newborn", "young", "adult"] } },
+    "therapeuticSpectrum": { "enum": ["broad", "narrow"] }
   }
 }

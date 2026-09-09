@@ -29,22 +29,46 @@
     },
     "aliases": {
       "pt-BR": [
-        "HCPCh+FeLV"
+        "HCPCh+FeLV",
+        "quíntupla felina",
+        "FVRCP+Ch+FeLV",
+        "V5",
+        "V 5"
       ],
       "pt-PT": [
-        "HCPCh+FeLV"
+        "HCPCh+FeLV",
+        "quíntupla felina",
+        "FVRCP+Ch+FeLV",
+        "V5",
+        "V 5"
       ],
       "gn-PY": [
-        "HCPCh+FeLV"
+        "HCPCh+FeLV",
+        "quíntuple felina",
+        "FVRCP+Ch+FeLV",
+        "V5",
+        "V 5"
       ],
       "en-US": [
-        "HCPCh+FeLV"
+        "HCPCh+FeLV",
+        "feline five-way vaccine",
+        "FVRCP+Ch+FeLV",
+        "V5",
+        "V 5"
       ],
       "es-ES": [
-        "HCPCh+FeLV"
+        "HCPCh+FeLV",
+        "quíntuple felina",
+        "FVRCP+Ch+FeLV",
+        "V5",
+        "V 5"
       ],
       "fr-FR": [
-        "HCPCh+FeLV"
+        "HCPCh+FeLV",
+        "vaccin pentavalent félin",
+        "FVRCP+Ch+FeLV",
+        "V5",
+        "V 5"
       ]
     }
   },
@@ -56,9 +80,6 @@
     "disease.felineCalicivirosis",
     "disease.felinePanleukopenia",
     "disease.felineChlamydiosis"
-  ],
-  "vaccineProfileTermKeys": [
-    "feline.pentavalent"
   ],
   "applicableTaxonIds": [
     "felis-catus"

@@ -105,17 +105,6 @@ fn taxonomy_matrix_is_closed_unique_and_typed() {
         ("product", "type", TaxonomyCardinality::ExactlyOne),
         ("product", "classification", TaxonomyCardinality::ZeroOrMore),
         ("product", "target", TaxonomyCardinality::ZeroOrMore),
-        (
-            "product",
-            "vaccine_profile",
-            TaxonomyCardinality::ZeroOrMore,
-        ),
-        ("product", "life_stage", TaxonomyCardinality::ZeroOrMore),
-        (
-            "product",
-            "therapeutic_scope",
-            TaxonomyCardinality::ZeroOrMore,
-        ),
     ];
     assert_eq!(
         CANONICAL_TAXONOMIES.map(|spec| (spec.domain, spec.purpose, spec.cardinality)),
@@ -152,7 +141,7 @@ fn taxonomy_matrix_is_closed_unique_and_typed() {
             .iter()
             .filter(|spec| spec.cardinality == TaxonomyCardinality::ZeroOrMore)
             .count(),
-        8
+        5
     );
     for domain in taxonomy_domains().filter(|domain| *domain != "life") {
         let exactly_one = CANONICAL_TAXONOMIES

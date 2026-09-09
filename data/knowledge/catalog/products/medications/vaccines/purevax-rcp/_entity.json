@@ -29,22 +29,46 @@
     },
     "aliases": {
       "pt-BR": [
-        "RCP"
+        "RCP",
+        "tríplice felina",
+        "FVRCP",
+        "V3",
+        "V 3"
       ],
       "pt-PT": [
-        "RCP"
+        "RCP",
+        "tríplice felina",
+        "FVRCP",
+        "V3",
+        "V 3"
       ],
       "gn-PY": [
-        "RCP"
+        "RCP",
+        "triple felina",
+        "FVRCP",
+        "V3",
+        "V 3"
       ],
       "en-US": [
-        "RCP"
+        "RCP",
+        "feline three-way vaccine",
+        "FVRCP",
+        "V3",
+        "V 3"
       ],
       "es-ES": [
-        "RCP"
+        "RCP",
+        "triple felina",
+        "FVRCP",
+        "V3",
+        "V 3"
       ],
       "fr-FR": [
-        "RCP"
+        "RCP",
+        "vaccin trivalent félin",
+        "FVRCP",
+        "V3",
+        "V 3"
       ]
     }
   },
@@ -53,9 +77,6 @@
     "disease.felineRhinotracheitis",
     "disease.felineCalicivirosis",
     "disease.felinePanleukopenia"
-  ],
-  "vaccineProfileTermKeys": [
-    "feline.trivalent"
   ],
   "applicableTaxonIds": [
     "felis-catus"

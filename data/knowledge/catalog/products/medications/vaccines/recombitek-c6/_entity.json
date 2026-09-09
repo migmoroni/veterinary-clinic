@@ -29,30 +29,50 @@
     },
     "aliases": {
       "pt-BR": [
-        "C6"
+        "C6",
+        "V10",
+        "V 10",
+        "polivalente",
+        "múltipla canina"
       ],
       "pt-PT": [
-        "C6"
+        "C6",
+        "V10",
+        "V 10",
+        "polivalente",
+        "múltipla canina"
       ],
       "gn-PY": [
-        "C6"
+        "C6",
+        "V10",
+        "V 10",
+        "polivalente",
+        "vacuna múltiple canina"
       ],
       "en-US": [
-        "C6"
+        "C6",
+        "V10",
+        "V 10",
+        "polyvalent",
+        "canine combination vaccine"
       ],
       "es-ES": [
-        "C6"
+        "C6",
+        "V10",
+        "V 10",
+        "polivalente",
+        "vacuna múltiple canina"
       ],
       "fr-FR": [
-        "C6"
+        "C6",
+        "V10",
+        "V 10",
+        "polyvalent",
+        "vaccin combiné canin"
       ]
     }
   },
   "sections": [],
-  "vaccineProfileTermKeys": [
-    "canine.v10",
-    "canine.multivalent"
-  ],
   "applicableTaxonIds": [
     "canis-lupus-familiaris"
   ]

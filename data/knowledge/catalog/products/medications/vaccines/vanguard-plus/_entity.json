@@ -28,19 +28,45 @@
       "fr-FR": "Vanguard Plus"
     },
     "aliases": {
-      "pt-BR": [],
-      "pt-PT": [],
-      "gn-PY": [],
-      "en-US": [],
-      "es-ES": [],
-      "fr-FR": []
+      "pt-BR": [
+        "V10",
+        "V 10",
+        "polivalente",
+        "múltipla canina"
+      ],
+      "pt-PT": [
+        "V10",
+        "V 10",
+        "polivalente",
+        "múltipla canina"
+      ],
+      "gn-PY": [
+        "V10",
+        "V 10",
+        "polivalente",
+        "vacuna múltiple canina"
+      ],
+      "en-US": [
+        "V10",
+        "V 10",
+        "polyvalent",
+        "canine combination vaccine"
+      ],
+      "es-ES": [
+        "V10",
+        "V 10",
+        "polivalente",
+        "vacuna múltiple canina"
+      ],
+      "fr-FR": [
+        "V10",
+        "V 10",
+        "polyvalent",
+        "vaccin combiné canin"
+      ]
     }
   },
   "sections": [],
-  "vaccineProfileTermKeys": [
-    "canine.v10",
-    "canine.multivalent"
-  ],
   "applicableTaxonIds": [
     "canis-lupus-familiaris"
   ]

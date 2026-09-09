@@ -200,9 +200,8 @@ pub(super) fn project_catalog(
                     active_ingredient_ids,
                     regulatory_identifiers,
                     target_term_keys,
-                    vaccine_profile_term_keys,
-                    life_stage_term_keys,
-                    therapeutic_scope_term_keys,
+                    applicable_life_stages,
+                    therapeutic_spectrum,
                     localized_content,
                     sections,
                     content_path,
@@ -235,6 +234,11 @@ pub(super) fn project_catalog(
                         normalized_name: normalize_identity_key(&name),
                         name,
                         applicable_taxon_ids_json: json(applicable_taxon_ids)?,
+                        applicable_life_stages_json: json(
+                            &applicable_life_stages.as_deref().unwrap_or_default(),
+                        )?,
+                        therapeutic_spectrum: therapeutic_spectrum
+                            .map(|value| value.as_str().to_string()),
                         aliases_json: json(
                             &localized_list(localized_content, "aliases", locale)
                                 .unwrap_or_default(),
@@ -270,15 +274,6 @@ pub(super) fn project_catalog(
                         ("type", std::slice::from_ref(type_term_key)),
                         ("classification", classification_term_keys),
                         ("target", target_term_keys.as_deref().unwrap_or(&[])),
-                        (
-                            "vaccine_profile",
-                            vaccine_profile_term_keys.as_deref().unwrap_or(&[]),
-                        ),
-                        ("life_stage", life_stage_term_keys.as_deref().unwrap_or(&[])),
-                        (
-                            "therapeutic_scope",
-                            therapeutic_scope_term_keys.as_deref().unwrap_or(&[]),
-                        ),
                     ],
                 )?;
                 for (sort_order, ingredient_id) in active_ingredient_ids.iter().enumerate() {

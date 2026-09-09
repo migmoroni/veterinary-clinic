@@ -29,22 +29,46 @@
     },
     "aliases": {
       "pt-BR": [
-        "DAPPi+CV+L4"
+        "DAPPi+CV+L4",
+        "V10",
+        "V 10",
+        "polivalente",
+        "múltipla canina"
       ],
       "pt-PT": [
-        "DAPPi+CV+L4"
+        "DAPPi+CV+L4",
+        "V10",
+        "V 10",
+        "polivalente",
+        "múltipla canina"
       ],
       "gn-PY": [
-        "DAPPi+CV+L4"
+        "DAPPi+CV+L4",
+        "V10",
+        "V 10",
+        "polivalente",
+        "vacuna múltiple canina"
       ],
       "en-US": [
-        "DAPPi+CV+L4"
+        "DAPPi+CV+L4",
+        "V10",
+        "V 10",
+        "polyvalent",
+        "canine combination vaccine"
       ],
       "es-ES": [
-        "DAPPi+CV+L4"
+        "DAPPi+CV+L4",
+        "V10",
+        "V 10",
+        "polivalente",
+        "vacuna múltiple canina"
       ],
       "fr-FR": [
-        "DAPPi+CV+L4"
+        "DAPPi+CV+L4",
+        "V10",
+        "V 10",
+        "polyvalent",
+        "vaccin combiné canin"
       ]
     }
   },
@@ -58,10 +82,6 @@
     "disease.canineParvovirosis",
     "pathogen.canineParvovirus",
     "disease.canineLeptospirosis"
-  ],
-  "vaccineProfileTermKeys": [
-    "canine.v10",
-    "canine.multivalent"
   ],
   "applicableTaxonIds": [
     "canis-lupus-familiaris"

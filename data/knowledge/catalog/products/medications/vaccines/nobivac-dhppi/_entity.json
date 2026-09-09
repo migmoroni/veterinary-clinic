@@ -29,22 +29,34 @@
     },
     "aliases": {
       "pt-BR": [
-        "DHPPi"
+        "DHPPi",
+        "polivalente",
+        "múltipla canina"
       ],
       "pt-PT": [
-        "DHPPi"
+        "DHPPi",
+        "polivalente",
+        "múltipla canina"
       ],
       "gn-PY": [
-        "DHPPi"
+        "DHPPi",
+        "polivalente",
+        "vacuna múltiple canina"
       ],
       "en-US": [
-        "DHPPi"
+        "DHPPi",
+        "polyvalent",
+        "canine combination vaccine"
       ],
       "es-ES": [
-        "DHPPi"
+        "DHPPi",
+        "polivalente",
+        "vacuna múltiple canina"
       ],
       "fr-FR": [
-        "DHPPi"
+        "DHPPi",
+        "polyvalent",
+        "vaccin combiné canin"
       ]
     }
   },
@@ -55,9 +67,6 @@
     "disease.canineParainfluenza",
     "disease.canineParvovirosis",
     "pathogen.canineParvovirus"
-  ],
-  "vaccineProfileTermKeys": [
-    "canine.multivalent"
   ],
   "applicableTaxonIds": [
     "canis-lupus-familiaris"

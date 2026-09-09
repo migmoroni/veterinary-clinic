@@ -229,7 +229,7 @@ sob `_media` e o caminho compilado `media/<caminho>`. A chave pública resultant
 Cada JSON é validado contra seu schema embutido antes de entrar no modelo Rust.
 Depois disso, o validator verifica IDs, referências, taxonomias, aliases,
 locales, seções, arquivos declarados, limites e cobertura da árvore de autoria.
-Uma fonte válida declara exatamente os 13 pares canônicos de domínio e propósito;
+Uma fonte válida declara exatamente os dez pares canônicos de domínio e propósito;
 taxonomias ausentes, adicionais ou com proprietário duplicado são recusadas
 mesmo quando nenhuma entidade referencia o vocabulário afetado.
 
@@ -368,7 +368,7 @@ flowchart LR
                 MFR["manufacturer_catalog_items<br/>PK id<br/>name · regions_json · content_json"]
                 ING["active_ingredient_catalog_items<br/>PK id<br/>name · nomenclature · content_json"]
                 COND["condition_catalog_items<br/>PK id<br/>name · regions_json · content_json"]
-                PROD["product_catalog_items<br/>PK id<br/>manufacturer_id · applicable_taxon_ids_json"]
+                PROD["product_catalog_items<br/>PK id<br/>manufacturer_id · applicable_taxon_ids_json<br/>applicable_life_stages_json · therapeutic_spectrum"]
             end
 
             subgraph RELATIONS["Relações semânticas"]
@@ -457,11 +457,22 @@ polimórficos, atravessarem bancos diferentes ou apontarem para arquivos CAS.
 Colunas `*_json` guardam atributos compostos do próprio registro; elas não
 representam tabelas ou relacionamentos ocultos.
 
-As 13 taxonomias canônicas usam `taxonomy_registry` e `taxonomy_terms`.
+As dez taxonomias canônicas usam `taxonomy_registry` e `taxonomy_terms`.
 Fabricantes, princípios ativos, condições e produtos materializam relações N:N
 em `entity_taxonomy_terms`. `life:size` é `ZeroOrOne` e ocupa exclusivamente
 `life_reference_items.size_term_key`; identidade taxonômica, origens e métricas
 de vida usam suas colunas e tabelas fechadas, sem relações duplicadas.
+
+Estágios de vida aplicáveis e espectro terapêutico são atributos opcionais do
+próprio produto, persistidos respectivamente em
+`product_catalog_items.applicable_life_stages_json` e
+`product_catalog_items.therapeutic_spectrum`. Descritores vacinais são aliases
+localizados comuns: aparecem em `aliases_json` e em `entity_search_terms`, sem
+registro ou relação taxonômica. Assim, os atributos diretos atendem filtros
+estruturados e os nomes e aliases atendem a pesquisa textual.
+
+O banco `system` usa schema técnico 5. `system_media` permanece no schema
+técnico 2.
 
 `idx_entity_taxonomy_filter(taxonomy_id, term_key, entity_type, entity_id)`
 atende filtros e facetas que partem de um termo.
@@ -576,7 +587,7 @@ modelo de autoria. O diretório separa:
 - `locale.rs`: tipo e ordem fechada dos seis locales;
 - `source_layout.rs`: nomes reservados, caminhos autorais e namespace compilado
   de mídia;
-- `taxonomy.rs`: matriz única dos 13 pares e suas cardinalidades;
+- `taxonomy.rs`: matriz única dos dez pares e suas cardinalidades;
 - `version.rs`: versões dos documentos serializados e dos bancos;
 - `tests.rs`: equivalência com JSON Schemas e DDLs declarativos.
 

@@ -183,6 +183,8 @@ impl SystemRow {
                     C::Name,
                     C::NormalizedName,
                     C::ApplicableTaxonIdsJson,
+                    C::ApplicableLifeStagesJson,
+                    C::TherapeuticSpectrum,
                     C::AliasesJson,
                     C::ManufacturerId,
                     C::RegionsJson,

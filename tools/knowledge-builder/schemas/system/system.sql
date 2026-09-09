@@ -152,6 +152,8 @@ CREATE TABLE product_catalog_items (
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
     normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) > 0),
     applicable_taxon_ids_json TEXT NOT NULL CHECK(json_valid(applicable_taxon_ids_json) AND json_type(applicable_taxon_ids_json) = 'array' AND json_array_length(applicable_taxon_ids_json) > 0),
+    applicable_life_stages_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(applicable_life_stages_json) AND json_type(applicable_life_stages_json) = 'array'),
+    therapeutic_spectrum TEXT CHECK(therapeutic_spectrum IS NULL OR therapeutic_spectrum IN ('broad','narrow')),
     aliases_json TEXT NOT NULL CHECK(json_valid(aliases_json) AND json_type(aliases_json) = 'array'),
     manufacturer_id TEXT NOT NULL,
     regions_json TEXT NOT NULL CHECK(json_valid(regions_json) AND json_type(regions_json) = 'array'),

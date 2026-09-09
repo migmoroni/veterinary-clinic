@@ -1,62 +1,94 @@
 {
-  "schemaVersion": 1,
-  "locales": ["pt-BR", "pt-PT", "gn-PY", "en-US", "es-ES", "fr-FR"],
-  "scope": {
-    "included": ["system", "system_media", "CAS/system"],
-    "excluded": ["user/main", "user/media", "user/logs", "CAS/user"],
-    "runtimeIntegrationChanged": false
-  },
-  "entitiesByType": {
-    "active_ingredient": 17,
-    "condition": 1,
-    "geo_place": 84,
-    "life": 419,
-    "manufacturer": 12,
-    "product": 62,
-    "taxonomy": 13,
-    "treatment_protocol": 3
-  },
-  "life": {
-    "levels": {
-      "domain": 1,
-      "kingdom": 1,
-      "phylum": 1,
-      "class": 1,
-      "order": 1,
-      "family": 2,
-      "genus": 2,
-      "species": 2,
-      "breed": 408,
-      "variety": 0
-    },
-    "classifications": {
-      "entitiesWithClassifications": 408,
-      "originPlaceIds": 408,
-      "bodyMetrics": 408,
-      "size": 408,
-      "stageMetrics": 0
-    }
-  },
-  "applicability": {
-    "products": 62,
-    "productTaxonReferences": 78,
-    "treatmentProtocols": 3,
-    "protocolTaxonReferences": 3
-  },
-  "taxonomies": {
-    "registryEntries": 13,
-    "terms": 585,
-    "lifeSizeCardinality": "ZeroOrOne",
-    "genericSearchTerms": 0
-  },
-  "editorial": {
-    "entities": 17,
-    "documents": 102,
-    "documentsPerLocale": 17,
-    "sections": 77
-  },
-  "media": {
-    "sourceAssets": 0,
-    "canonicalAssets": 0
-  }
+	"schemaVersion": 1,
+	"locales": [
+		"pt-BR",
+		"pt-PT",
+		"gn-PY",
+		"en-US",
+		"es-ES",
+		"fr-FR"
+	],
+	"scope": {
+		"included": [
+			"system",
+			"system_media",
+			"CAS/system"
+		],
+		"excluded": [
+			"user/main",
+			"user/media",
+			"user/logs",
+			"CAS/user"
+		],
+		"runtimeIntegrationChanged": false
+	},
+	"entitiesByType": {
+		"active_ingredient": 17,
+		"condition": 1,
+		"geo_place": 84,
+		"life": 419,
+		"manufacturer": 12,
+		"product": 62,
+		"taxonomy": 10,
+		"treatment_protocol": 3
+	},
+	"life": {
+		"levels": {
+			"domain": 1,
+			"kingdom": 1,
+			"phylum": 1,
+			"class": 1,
+			"order": 1,
+			"family": 2,
+			"genus": 2,
+			"species": 2,
+			"breed": 408,
+			"variety": 0
+		},
+		"classifications": {
+			"entitiesWithClassifications": 408,
+			"originPlaceIds": 408,
+			"bodyMetrics": 408,
+			"size": 408,
+			"stageMetrics": 0
+		}
+	},
+	"applicability": {
+		"products": 62,
+		"productTaxonReferences": 78,
+		"treatmentProtocols": 3,
+		"protocolTaxonReferences": 3
+	},
+	"productAttributes": {
+		"productsWithLifeStages": 1,
+		"lifeStageValues": {
+			"newborn": 0,
+			"young": 1,
+			"adult": 0
+		},
+		"productsWithTherapeuticSpectrum": 9,
+		"therapeuticSpectrumValues": {
+			"broad": 9,
+			"narrow": 0
+		}
+	},
+	"taxonomies": {
+		"registryEntries": 10,
+		"terms": 575,
+		"lifeSizeCardinality": "ZeroOrOne",
+		"genericSearchTerms": 0
+	},
+	"relations": {
+		"productTarget": 132
+	},
+	"editorial": {
+		"entities": 17,
+		"documents": 102,
+		"documentsPerLocale": 17,
+		"sections": 77
+	},
+	"media": {
+		"sourceAssets": 0,
+		"canonicalAssets": 0
+	}
 }

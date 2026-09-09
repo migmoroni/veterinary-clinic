@@ -28,12 +28,42 @@
       "fr-FR": "Nobivac Tricat Trio"
     },
     "aliases": {
-      "pt-BR": [],
-      "pt-PT": [],
-      "gn-PY": [],
-      "en-US": [],
-      "es-ES": [],
-      "fr-FR": []
+      "pt-BR": [
+        "tríplice felina",
+        "FVRCP",
+        "V3",
+        "V 3"
+      ],
+      "pt-PT": [
+        "tríplice felina",
+        "FVRCP",
+        "V3",
+        "V 3"
+      ],
+      "gn-PY": [
+        "triple felina",
+        "FVRCP",
+        "V3",
+        "V 3"
+      ],
+      "en-US": [
+        "feline three-way vaccine",
+        "FVRCP",
+        "V3",
+        "V 3"
+      ],
+      "es-ES": [
+        "triple felina",
+        "FVRCP",
+        "V3",
+        "V 3"
+      ],
+      "fr-FR": [
+        "vaccin trivalent félin",
+        "FVRCP",
+        "V3",
+        "V 3"
+      ]
     }
   },
   "sections": [],
@@ -41,9 +71,6 @@
     "disease.felineRhinotracheitis",
     "disease.felineCalicivirosis",
     "disease.felinePanleukopenia"
-  ],
-  "vaccineProfileTermKeys": [
-    "feline.trivalent"
   ],
   "applicableTaxonIds": [
     "felis-catus"

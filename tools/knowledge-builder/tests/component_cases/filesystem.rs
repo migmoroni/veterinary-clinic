@@ -235,3 +235,90 @@ fn active_ingredient_denominations_follow_the_declared_closed_policy() {
     let error = validate(copy.path()).unwrap_err().to_string();
     assert!(error.contains(&format!("missing denomination_{declared}")));
 }
+
+#[test]
+fn product_direct_attributes_are_closed_ordered_and_semantically_scoped() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
+    let invalid_stages = [
+        ("empty", serde_json::json!([])),
+        (
+            "too-many",
+            serde_json::json!(["newborn", "young", "adult", "adult"]),
+        ),
+        ("duplicate", serde_json::json!(["young", "young"])),
+        ("unknown", serde_json::json!(["senior"])),
+        ("out-of-order", serde_json::json!(["adult", "newborn"])),
+    ];
+    for (label, stages) in invalid_stages {
+        let copy = TestDirectory::new(&format!("invalid-product-stages-{label}"));
+        copy_tree(&fixture, copy.path());
+        let manifest =
+            find_manifest_by_id(copy.path(), "44444444-4444-4444-8444-444444444444").unwrap();
+        let mut product: serde_json::Value =
+            serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
+        product["applicableLifeStages"] = stages;
+        fs::write(&manifest, serde_json::to_vec_pretty(&product).unwrap()).unwrap();
+        assert!(validate(copy.path()).is_err(), "{label} must be rejected");
+    }
+
+    for (label, spectrum) in [("unknown", "wide"), ("non-medication", "broad")] {
+        let copy = TestDirectory::new(&format!("invalid-product-spectrum-{label}"));
+        copy_tree(&fixture, copy.path());
+        let manifest =
+            find_manifest_by_id(copy.path(), "22222222-2222-4222-8222-222222222222").unwrap();
+        let mut product: serde_json::Value =
+            serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
+        product["therapeuticSpectrum"] = serde_json::json!(spectrum);
+        fs::write(&manifest, serde_json::to_vec_pretty(&product).unwrap()).unwrap();
+        let error = validate(copy.path()).unwrap_err().to_string();
+        assert!(
+            error.contains("schema violation") || error.contains("incompatible with product type"),
+            "unexpected {label} error: {error}"
+        );
+    }
+
+    let removed_taxonomy = TestDirectory::new("removed-product-taxonomy");
+    copy_tree(&fixture, removed_taxonomy.path());
+    let taxonomy = find_manifest_by_id(removed_taxonomy.path(), "fixture-product-target").unwrap();
+    let mut value: serde_json::Value =
+        serde_json::from_slice(&fs::read(&taxonomy).unwrap()).unwrap();
+    value["purpose"] = serde_json::json!("vaccine_profile");
+    fs::write(&taxonomy, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+    assert!(validate(removed_taxonomy.path())
+        .unwrap_err()
+        .to_string()
+        .contains("unsupported taxonomy domain and purpose"));
+}
+
+#[test]
+fn product_direct_attributes_participate_in_the_logical_digest() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
+    let original = validate(&fixture).unwrap();
+
+    for (label, field, replacement) in [
+        (
+            "life-stage-digest",
+            "applicableLifeStages",
+            serde_json::json!(["newborn", "adult"]),
+        ),
+        (
+            "spectrum-digest",
+            "therapeuticSpectrum",
+            serde_json::json!("narrow"),
+        ),
+    ] {
+        let copy = TestDirectory::new(label);
+        copy_tree(&fixture, copy.path());
+        let manifest =
+            find_manifest_by_id(copy.path(), "44444444-4444-4444-8444-444444444444").unwrap();
+        let mut product: serde_json::Value =
+            serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
+        product[field] = replacement;
+        fs::write(&manifest, serde_json::to_vec_pretty(&product).unwrap()).unwrap();
+        let changed = validate(copy.path()).unwrap();
+        assert_ne!(
+            original.source_digest_sha256(),
+            changed.source_digest_sha256()
+        );
+    }
+}

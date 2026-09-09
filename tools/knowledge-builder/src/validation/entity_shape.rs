@@ -67,21 +67,33 @@ pub(super) fn validate_entity_shape(entry: &SourceEntry, diagnostics: &mut Vec<D
                 false,
                 diagnostics,
             );
-            for (field, values) in [
-                ("targetTermKeys", value.target_term_keys.as_ref()),
-                (
-                    "vaccineProfileTermKeys",
-                    value.vaccine_profile_term_keys.as_ref(),
-                ),
-                ("lifeStageTermKeys", value.life_stage_term_keys.as_ref()),
-                (
-                    "therapeuticScopeTermKeys",
-                    value.therapeutic_scope_term_keys.as_ref(),
-                ),
-            ] {
-                if let Some(values) = values {
-                    validate_unique_texts(entry, field, values, true, diagnostics);
+            if let Some(values) = &value.target_term_keys {
+                validate_unique_texts(entry, "targetTermKeys", values, true, diagnostics);
+            }
+            if let Some(stages) = &value.applicable_life_stages {
+                for pair in stages.windows(2) {
+                    if pair[0].order() >= pair[1].order() {
+                        diagnostics.push(Diagnostic::entity(
+                            entry,
+                            "applicableLifeStages",
+                            "stages must follow canonical newborn, young, adult order",
+                        ));
+                        break;
+                    }
                 }
+            }
+            if value.therapeutic_spectrum.is_some()
+                && value.type_term_key != "medication"
+                && !value.type_term_key.starts_with("medication.")
+            {
+                diagnostics.push(Diagnostic::entity(
+                    entry,
+                    "therapeuticSpectrum",
+                    format!(
+                        "therapeutic spectrum is incompatible with product type {}",
+                        value.type_term_key
+                    ),
+                ));
             }
         }
         CanonicalEntity::Manufacturer(value) => {

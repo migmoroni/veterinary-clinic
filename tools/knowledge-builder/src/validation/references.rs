@@ -51,38 +51,15 @@ pub(super) fn validate_references(
                         diagnostics,
                     );
                 }
-                for (purpose, field, values) in [
-                    (
-                        "target",
-                        "targetTermKeys",
-                        value.target_term_keys.as_deref(),
-                    ),
-                    (
-                        "vaccine_profile",
-                        "vaccineProfileTermKeys",
-                        value.vaccine_profile_term_keys.as_deref(),
-                    ),
-                    (
-                        "life_stage",
-                        "lifeStageTermKeys",
-                        value.life_stage_term_keys.as_deref(),
-                    ),
-                    (
-                        "therapeutic_scope",
-                        "therapeuticScopeTermKeys",
-                        value.therapeutic_scope_term_keys.as_deref(),
-                    ),
-                ] {
-                    require_terms(
-                        entry,
-                        taxonomies,
-                        "product",
-                        purpose,
-                        values.unwrap_or(&[]),
-                        field,
-                        diagnostics,
-                    );
-                }
+                require_terms(
+                    entry,
+                    taxonomies,
+                    "product",
+                    "target",
+                    value.target_term_keys.as_deref().unwrap_or(&[]),
+                    "targetTermKeys",
+                    diagnostics,
+                );
             }
             CanonicalEntity::Manufacturer(value) => {
                 require_term(

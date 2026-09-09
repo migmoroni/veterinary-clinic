@@ -94,6 +94,8 @@ pub(crate) fn representative_row(case: SystemRowCase) -> SystemRow {
             name: "Product One".to_string(),
             normalized_name: "product one".to_string(),
             applicable_taxon_ids_json: r#"["eukaryota"]"#.to_string(),
+            applicable_life_stages_json: r#"["newborn","young","adult"]"#.to_string(),
+            therapeutic_spectrum: Some("broad".to_string()),
             aliases_json: "[]".to_string(),
             manufacturer_id: "manufacturer-one".to_string(),
             regions_json: r#"["BR"]"#.to_string(),

@@ -126,6 +126,40 @@ pub struct StructuralMedia {
     pub gallery: Vec<String>,
 }
 
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ApplicableLifeStage {
+    Newborn,
+    Young,
+    Adult,
+}
+
+impl ApplicableLifeStage {
+    pub(crate) const fn order(self) -> usize {
+        match self {
+            Self::Newborn => 0,
+            Self::Young => 1,
+            Self::Adult => 2,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum TherapeuticSpectrum {
+    Broad,
+    Narrow,
+}
+
+impl TherapeuticSpectrum {
+    pub(crate) const fn as_str(self) -> &'static str {
+        match self {
+            Self::Broad => "broad",
+            Self::Narrow => "narrow",
+        }
+    }
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ProductEntity {
@@ -147,12 +181,10 @@ pub struct ProductEntity {
     pub regulatory_identifiers: RegulatoryIdentifiers,
     #[serde(rename = "targetTermKeys")]
     pub target_term_keys: Option<Vec<String>>,
-    #[serde(rename = "vaccineProfileTermKeys")]
-    pub vaccine_profile_term_keys: Option<Vec<String>>,
-    #[serde(rename = "lifeStageTermKeys")]
-    pub life_stage_term_keys: Option<Vec<String>>,
-    #[serde(rename = "therapeuticScopeTermKeys")]
-    pub therapeutic_scope_term_keys: Option<Vec<String>>,
+    #[serde(rename = "applicableLifeStages")]
+    pub applicable_life_stages: Option<Vec<ApplicableLifeStage>>,
+    #[serde(rename = "therapeuticSpectrum")]
+    pub therapeutic_spectrum: Option<TherapeuticSpectrum>,
     #[serde(rename = "localizedContent")]
     pub localized_content: LocalizedContent,
     pub sections: Vec<SectionDeclaration>,

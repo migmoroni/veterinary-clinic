@@ -11,7 +11,7 @@ use std::{fs, path::Path};
 fn minimal_fixture_builds_and_tampered_version_is_not_reused() {
     let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
     let validated = validate(&fixture).expect("minimal fixture must validate");
-    assert_eq!(validated.entity_count(), 27);
+    assert_eq!(validated.entity_count(), 28);
     let output = TestDirectory::new("minimal-fixture");
     let result = fresh_build(&BuildOptions {
         source: fixture.clone(),
@@ -55,6 +55,38 @@ fn minimal_fixture_builds_and_tampered_version_is_not_reused() {
             .unwrap(),
         1
     );
+    for expected_length in [1, 2, 3] {
+        assert_eq!(
+            database
+                .query_row(
+                    "SELECT count(*) FROM product_catalog_items WHERE json_array_length(applicable_life_stages_json) = ?1",
+                    [expected_length],
+                    |row| row.get::<_, usize>(0),
+                )
+                .unwrap(),
+            1
+        );
+    }
+    assert_eq!(
+        database
+            .query_row(
+                "SELECT count(*) FROM product_catalog_items WHERE therapeutic_spectrum IN ('broad','narrow')",
+                [],
+                |row| row.get::<_, usize>(0),
+            )
+            .unwrap(),
+        2
+    );
+    assert_eq!(
+        database
+            .query_row(
+                "SELECT count(*) FROM product_catalog_items product JOIN json_each(product.aliases_json) alias WHERE product.id = '33333333-3333-4333-8333-333333333331' AND alias.value IN ('V10','polivalente') AND EXISTS (SELECT 1 FROM entity_search_terms search WHERE search.entity_type = 'product' AND search.entity_id = product.id AND search.provenance = 'entity.alias' AND search.normalized_value = lower(alias.value))",
+                [],
+                |row| row.get::<_, usize>(0),
+            )
+            .unwrap(),
+        2
+    );
     assert_eq!(
         database
             .query_row("SELECT count(*) FROM life_origin_places", [], |row| row
@@ -82,7 +114,7 @@ fn minimal_fixture_builds_and_tampered_version_is_not_reused() {
                 |row| row.get::<_, usize>(0),
             )
             .unwrap(),
-        1
+        5
     );
     assert_eq!(
         database

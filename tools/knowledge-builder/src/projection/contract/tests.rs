@@ -118,6 +118,8 @@ fn product_row() -> SystemRow {
         name: "Name".to_string(),
         normalized_name: "name".to_string(),
         applicable_taxon_ids_json: "[]".to_string(),
+        applicable_life_stages_json: "[]".to_string(),
+        therapeutic_spectrum: None,
         aliases_json: "[]".to_string(),
         manufacturer_id: "manufacturer".to_string(),
         regions_json: "[]".to_string(),

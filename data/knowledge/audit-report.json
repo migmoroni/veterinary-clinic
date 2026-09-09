@@ -1,40 +1,42 @@
 {
-  "schemaVersion": 1,
-  "status": "PASS",
-  "entityCount": 611,
-  "entitiesByType": {
-    "active_ingredient": 17,
-    "condition": 1,
-    "geo_place": 84,
-    "life": 419,
-    "manufacturer": 12,
-    "product": 62,
-    "taxonomy": 13,
-    "treatment_protocol": 3
-  },
-  "life": {
-    "completeTaxonomyPrefixes": 419,
-    "resolvedTaxonomyPositions": 419,
-    "entitiesWithoutClassifications": 11,
-    "entitiesWithOrigin": 408,
-    "entitiesWithSize": 408,
-    "entitiesWithStageMetrics": 0
-  },
-  "applicability": {
-    "productsWithResolvedTargets": 62,
-    "protocolsWithResolvedTargets": 3,
-    "redundantAncestorDescendantPairs": 0
-  },
-  "taxonomy": {
-    "registryEntries": 13,
-    "terms": 585,
-    "genericSearchTerms": 0
-  },
-  "editorial": {
-    "entities": 17,
-    "documents": 102,
-    "sections": 77
-  },
-  "mediaFiles": 0,
-  "failures": []
+	"schemaVersion": 1,
+	"status": "PASS",
+	"entityCount": 608,
+	"entitiesByType": {
+		"active_ingredient": 17,
+		"condition": 1,
+		"geo_place": 84,
+		"life": 419,
+		"manufacturer": 12,
+		"product": 62,
+		"taxonomy": 10,
+		"treatment_protocol": 3
+	},
+	"productAttributes": {
+		"productsWithLifeStages": 1,
+		"lifeStageValues": {
+			"newborn": 0,
+			"young": 1,
+			"adult": 0
+		},
+		"productsWithTherapeuticSpectrum": 9,
+		"therapeuticSpectrumValues": {
+			"broad": 9,
+			"narrow": 0
+		}
+	},
+	"taxonomy": {
+		"registryEntries": 10,
+		"terms": 575,
+		"productTargetReferences": 132,
+		"genericSearchTerms": 0
+	},
+	"editorial": {
+		"entities": 17,
+		"documents": 102,
+		"documentsPerLocale": 17,
+		"sections": 77
+	},
+	"mediaFiles": 0,
+	"failures": []
 }

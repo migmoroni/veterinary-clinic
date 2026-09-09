@@ -61,7 +61,7 @@ fn validates_and_builds_all_locales_deterministically() {
     .unwrap();
     assert_eq!(report["schemaVersion"], 5);
     assert_eq!(first.builder_version, "0.5.0");
-    assert_eq!(first.system_schema_version, 4);
+    assert_eq!(first.system_schema_version, 5);
     assert_eq!(first.system_media_schema_version, 2);
     let expected_system_tables = [
         "active_ingredient_catalog_items",
@@ -116,7 +116,7 @@ fn validates_and_builds_all_locales_deterministically() {
         let user_version: u32 = database
             .query_row("PRAGMA user_version", [], |row| row.get(0))
             .unwrap();
-        assert_eq!(user_version, 4);
+        assert_eq!(user_version, 5);
         let table_count: usize = database
             .query_row(
                 "SELECT count(*) FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
@@ -130,7 +130,7 @@ fn validates_and_builds_all_locales_deterministically() {
                 row.get(0)
             })
             .unwrap();
-        assert_eq!(taxonomy_count, 13);
+        assert_eq!(taxonomy_count, 10);
         let taxonomies_with_terms: usize = database
             .query_row(
                 "SELECT count(DISTINCT taxonomy_id) FROM taxonomy_terms",
@@ -138,7 +138,15 @@ fn validates_and_builds_all_locales_deterministically() {
                 |row| row.get(0),
             )
             .unwrap();
-        assert_eq!(taxonomies_with_terms, 13);
+        assert_eq!(taxonomies_with_terms, 10);
+        let removed_taxonomy_purposes: usize = database
+            .query_row(
+                "SELECT count(*) FROM taxonomy_registry WHERE purpose IN ('vaccine_profile','life_stage','therapeutic_scope')",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(removed_taxonomy_purposes, 0);
         let forbidden_table_count: usize = database
             .query_row(
                 "SELECT count(*) FROM sqlite_schema WHERE type = 'table' AND name IN ('product_target_terms','product_vaccine_profile_terms','product_life_stage_terms','product_therapeutic_scope_terms','product_targets','product_vaccine_profiles','product_life_stages','product_therapeutic_scopes')",
@@ -147,6 +155,46 @@ fn validates_and_builds_all_locales_deterministically() {
             )
             .unwrap();
         assert_eq!(forbidden_table_count, 0);
+        let direct_attribute_columns: usize = database
+            .query_row(
+                "SELECT count(*) FROM pragma_table_info('product_catalog_items') WHERE name IN ('applicable_life_stages_json','therapeutic_spectrum')",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(direct_attribute_columns, 2);
+        let invalid_direct_attributes: usize = database
+            .query_row(
+                "SELECT count(*) FROM product_catalog_items WHERE json_type(applicable_life_stages_json) <> 'array' OR therapeutic_spectrum NOT IN ('broad','narrow')",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(invalid_direct_attributes, 0);
+        let direct_attribute_rows: (usize, usize) = database
+            .query_row(
+                "SELECT sum(json_array_length(applicable_life_stages_json) > 0), sum(therapeutic_spectrum IS NOT NULL) FROM product_catalog_items",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!(direct_attribute_rows, (1, 9));
+        let vaccine_aliases_are_searchable: usize = database
+            .query_row(
+                "SELECT count(*) FROM product_catalog_items product JOIN json_each(product.aliases_json) alias WHERE alias.value = 'V10' AND EXISTS (SELECT 1 FROM entity_search_terms search WHERE search.entity_type = 'product' AND search.entity_id = product.id AND search.provenance = 'entity.alias' AND search.normalized_value = 'v10')",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert!(vaccine_aliases_are_searchable > 0);
+        let removed_search_provenance: usize = database
+            .query_row(
+                "SELECT count(*) FROM entity_search_terms WHERE provenance IN ('vaccineProfile.label','vaccineProfile.alias','lifeStage.label','lifeStage.alias','therapeuticScope.label','therapeuticScope.alias')",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(removed_search_provenance, 0);
         for (table, column) in [
             ("manufacturer_catalog_items", "type_term_key"),
             ("active_ingredient_catalog_items", "type_term_key"),

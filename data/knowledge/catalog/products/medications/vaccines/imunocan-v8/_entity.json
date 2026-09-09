@@ -28,12 +28,42 @@
       "fr-FR": "Imunocan V8"
     },
     "aliases": {
-      "pt-BR": [],
-      "pt-PT": [],
-      "gn-PY": [],
-      "en-US": [],
-      "es-ES": [],
-      "fr-FR": []
+      "pt-BR": [
+        "V8",
+        "V 8",
+        "polivalente",
+        "múltipla canina"
+      ],
+      "pt-PT": [
+        "V8",
+        "V 8",
+        "polivalente",
+        "múltipla canina"
+      ],
+      "gn-PY": [
+        "V8",
+        "V 8",
+        "polivalente",
+        "vacuna múltiple canina"
+      ],
+      "en-US": [
+        "V8",
+        "V 8",
+        "polyvalent",
+        "canine combination vaccine"
+      ],
+      "es-ES": [
+        "V8",
+        "V 8",
+        "polivalente",
+        "vacuna múltiple canina"
+      ],
+      "fr-FR": [
+        "V8",
+        "V 8",
+        "polyvalent",
+        "vaccin combiné canin"
+      ]
     }
   },
   "sections": [],
@@ -47,10 +77,6 @@
     "disease.canineCoronavirusInfection",
     "pathogen.canineCoronavirus",
     "disease.canineLeptospirosis"
-  ],
-  "vaccineProfileTermKeys": [
-    "canine.v8",
-    "canine.multivalent"
   ],
   "applicableTaxonIds": [
     "canis-lupus-familiaris"
