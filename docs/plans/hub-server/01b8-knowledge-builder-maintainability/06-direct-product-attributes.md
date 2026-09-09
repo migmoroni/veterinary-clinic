@@ -509,4 +509,4 @@ de considerar esta parte concluída.
 ## Próxima Parte
 
 Após cumprir todos os critérios, seguir para a
-[Parte 1B.9: `artifact-builder` e adaptador de conhecimento](../01b9-artifact-builder/README.md).
+[Parte 1B.8.7: autoria taxonômica hierárquica](./07-hierarchical-taxonomy-authoring.md).

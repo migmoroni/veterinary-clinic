@@ -108,11 +108,13 @@ como `V10` e `polivalente` permanecem como texto puro em
 `localizedContent.aliases` e seguem a projeção comum de aliases. O adaptador
 converte esses dados para `TableData` sem recriar taxonomias, estruturas
 intermediárias, objetos opacos concorrentes ou valores inferidos. O schema
-técnico de `system` permanece em `5`; `system_media` permanece em `2`.
+técnico de `system` permanece em `6`; `system_media` permanece em `2`.
 
 As dez taxonomias canônicas permanecem quando possuem vocabulário compartilhado
-ou hierarquia. A extração da infraestrutura genérica não altera o contrato
-semântico fechado nesta etapa.
+ou hierarquia. Seus manifestos contêm raízes em `terms` e descendentes em
+`children`; o adaptador deriva `parent_term_key` e a ordem local entre irmãos
+antes de entregar as rows ao motor genérico. A extração da infraestrutura não
+altera esse contrato semântico.
 
 ## 5. Compilação Do Domínio
 
@@ -166,7 +168,7 @@ O metadata do perfil possui schema fechado equivalente a:
 ```json
 {
   "sourceDigestSha256": "<sha256>",
-  "systemSchemaVersion": 5,
+  "systemSchemaVersion": 6,
   "systemMediaSchemaVersion": 2,
   "release": null
 }
@@ -240,7 +242,7 @@ Depois, executar a skill `$validate-workspace`.
 - criar uma CLI genérica para `artifact-builder`;
 - publicar a crate no crates.io;
 - introduzir outros backends;
-- reorganizar taxonomias sem contrato explícito nesta parte;
+- alterar a autoria hierárquica ou a semântica de ordem das taxonomias;
 - criar migrations ou conversores de dados;
 - consultar Hub, GitHub ou rede.
 
@@ -251,6 +253,8 @@ Depois, executar a skill `$validate-workspace`.
 - Existe uma única implementação de SQLite, CAS, verificação e publicação.
 - A tool não possui ledger, ownership, recibos ou cobertura tripla.
 - A fonte mantém JSON, Markdown e mídia relacionada por links.
+- Taxonomias mantêm raízes e filhos ordenados na fonte, com pai e ordem local
+  derivados antes da criação de `TableData`.
 - Estágios de vida e espectro terapêutico são atributos diretos e consultáveis
   de produto; descritores vacinais são aliases localizados comuns.
 - Os seis pares de bancos e o CAS são produzidos corretamente.

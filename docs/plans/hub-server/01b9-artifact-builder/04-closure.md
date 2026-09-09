@@ -71,6 +71,7 @@ O README de `tools/knowledge-builder` explica:
 
 - formato de `data/knowledge`;
 - schemas e regras do domínio;
+- autoria de taxonomias por `terms` e `children`, com ordem local entre irmãos;
 - compilação para o contrato neutro;
 - DDLs veterinários;
 - comandos `validate` e `build`;

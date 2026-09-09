@@ -25,7 +25,7 @@ A [Parte 1B.9.4](./01b9-artifact-builder/04-closure.md) está concluída. O
 `knowledge-builder` compila o domínio veterinário e delega SQLite, CAS,
 verificação e publicação à crate `artifact-builder`. O fluxo gera uma
 `build_version` válida com os seis pares de bancos e o CAS compartilhado. Os
-artefatos usam schema 5 de `system` e projetam os dez níveis taxonômicos em
+artefatos usam schema 6 de `system` e projetam os dez níveis taxonômicos em
 `life_reference_items`. Toda linha possui domínio; as posições seguintes formam
 um prefixo contínuo até o nível da própria entidade e as inferiores são nulas.
 Todas as colunas classificatórias são anuláveis.
@@ -41,6 +41,8 @@ Todas as colunas classificatórias são anuláveis.
   as entidades farmacológicas relacionadas;
 - consumir tipos, classificações de catálogo e alvos por
   `entity_taxonomy_terms`;
+- reconstruir as florestas de `taxonomy_terms` por `parent_term_key` e ordenar
+  cada grupo de irmãos por `sort_order`;
 - consumir `applicable_life_stages_json` e `therapeutic_spectrum` diretamente
   de `product_catalog_items`;
 - consumir descritores vacinais como aliases localizados comuns do produto;
@@ -722,6 +724,10 @@ Cobrir:
   e variedade usando os campos indexados de `life_reference_items`;
 - fabricantes, princípios ativos, condições e produtos resolvendo suas
   classificações N:N exclusivamente por `entity_taxonomy_terms`;
+- taxonomias reconstruindo raízes e descendentes por `parent_term_key`, com
+  `sort_order` reiniciado e respeitado dentro de cada grupo de irmãos;
+- termos sob pais diferentes podendo compartilhar o mesmo `sort_order` sem
+  colisão ou mistura de ramos;
 - cada entidade de vida resolvendo somente as classificações e medidas presentes,
   sem preencher campos ausentes por inferência;
 - perfil corporal recompondo `bodyMetrics.size` de `size_term_key` e

@@ -32,16 +32,17 @@ pertencem a outro servidor.
 17. [Parte 1B.8.4: erros estruturados e fronteiras](./01b8-knowledge-builder-maintainability/04-structured-errors-boundaries.md)
 18. [Parte 1B.8.5: topologia de testes e guia de manutenção](./01b8-knowledge-builder-maintainability/05-test-topology-maintenance-guide.md)
 19. [Parte 1B.8.6: atributos diretos e aliases de produto](./01b8-knowledge-builder-maintainability/06-direct-product-attributes.md)
-20. [Parte 1B.9.1: contrato neutro do `artifact-builder`](./01b9-artifact-builder/01-neutral-contract.md)
-21. [Parte 1B.9.2: motor genérico de artefatos](./01b9-artifact-builder/02-generic-engine.md)
-22. [Parte 1B.9.3: adaptador veterinário](./01b9-artifact-builder/03-veterinary-adapter.md)
-23. [Parte 1B.9.4: fechamento e documentação](./01b9-artifact-builder/04-closure.md)
-24. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
-25. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
-26. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
-27. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
-28. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
-29. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
+20. [Parte 1B.8.7: autoria taxonômica hierárquica](./01b8-knowledge-builder-maintainability/07-hierarchical-taxonomy-authoring.md)
+21. [Parte 1B.9.1: contrato neutro do `artifact-builder`](./01b9-artifact-builder/01-neutral-contract.md)
+22. [Parte 1B.9.2: motor genérico de artefatos](./01b9-artifact-builder/02-generic-engine.md)
+23. [Parte 1B.9.3: adaptador veterinário](./01b9-artifact-builder/03-veterinary-adapter.md)
+24. [Parte 1B.9.4: fechamento e documentação](./01b9-artifact-builder/04-closure.md)
+25. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
+26. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
+27. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
+28. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
+29. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
+30. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
 
 ## Referências Futuras Não Sequenciais
 
@@ -52,7 +53,7 @@ de implementação. Sua presença não autoriza execução nem alteração do co
 vigente sem uma solicitação explícita.
 
 A pré-fase, as subpartes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3, 1B.4, 1B.5,
-1B.6, 1B.7, 1B.7A, 1B.7B, 1B.8.1 a 1B.8.6, 1B.9.1 a 1B.9.4, 1C e as partes
+1B.6, 1B.7, 1B.7A, 1B.7B, 1B.8.1 a 1B.8.7, 1B.9.1 a 1B.9.4, 1C e as partes
 seguintes são executadas em ordem. Cada documento termina com testes e critérios
 de aceite próprios.
 
@@ -80,6 +81,7 @@ flowchart LR
     P1B84["Parte 1B.8.4<br/>erros + fronteiras"]
     P1B85["Parte 1B.8.5<br/>testes + manutenção"]
     P1B86["Parte 1B.8.6<br/>atributos + aliases"]
+    P1B87["Parte 1B.8.7<br/>árvores taxonômicas"]
     P1B91["Parte 1B.9.1<br/>contrato neutro"]
     P1B92["Parte 1B.9.2<br/>motor genérico"]
     P1B93["Parte 1B.9.3<br/>adaptador veterinário"]
@@ -91,7 +93,7 @@ flowchart LR
     P5["Parte 5<br/>updater Tauri local"]
     P6["Parte 6<br/>GitHub + CI/CD"]
 
-    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1B7 --> P1B7A --> P1B7B --> P1B81 --> P1B82 --> P1B83 --> P1B84 --> P1B85 --> P1B86 --> P1B91 --> P1B92 --> P1B93 --> P1B94 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
+    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1B7 --> P1B7A --> P1B7B --> P1B81 --> P1B82 --> P1B83 --> P1B84 --> P1B85 --> P1B86 --> P1B87 --> P1B91 --> P1B92 --> P1B93 --> P1B94 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
 ```
 
 As mudanças de origem dos artefatos são deliberadas:
@@ -149,7 +151,9 @@ inventário, ownership e recibos confirmados, a Parte 1B.8.3 decompõe a
 verificação integral, a Parte 1B.8.4 estrutura erros e fronteiras, a Parte
 1B.8.5 organiza testes e o guia de manutenção e a Parte 1B.8.6 representa
 estágios de vida e espectro terapêutico como atributos diretos de produto,
-mantendo descritores vacinais nos aliases localizados. As Partes 1B.9.1 a 1B.9.4
+mantendo descritores vacinais nos aliases localizados. A Parte 1B.8.7 representa
+as taxonomias como florestas ordenadas e projeta a posição local entre irmãos.
+As Partes 1B.9.1 a 1B.9.4
 estabelecem a crate genérica `artifact-builder`, concentram nela SQLite, CAS,
 verificação e publicação, e mantêm `knowledge-builder` como adaptador do domínio
 veterinário. A Parte 1C faz os apps consumirem os artefatos locais. A Parte 3 faz
@@ -228,6 +232,11 @@ provider externo.
   ativos, condições e produtos usam
   `entity_taxonomy_terms` como única relação taxonômica indexada. Domínio e
   propósito pertencem ao registro da taxonomia e não são repetidos na relação.
+- Cada manifesto de taxonomia declara raízes em `terms` e descendentes em
+  `children`. A ordem dos arrays define somente a posição entre irmãos. O
+  builder deriva `parent_term_key` e o `sort_order` local gravados em
+  `taxonomy_terms`; `entity_taxonomy_terms.sort_order` conserva sua semântica
+  própria de ordenação das associações da entidade.
 - Produtos referenciam princípios ativos por IDs de entidades
   `active_ingredient`. Combinações farmacológicas preservam uma relação por
   substância, e a navegação do catálogo usa essas entidades relacionadas.

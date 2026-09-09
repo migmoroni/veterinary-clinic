@@ -9,7 +9,7 @@ por `knowledge-builder`.
 
 ## Pré-Requisito
 
-A [Parte 1B.8.6](../01b8-knowledge-builder-maintainability/06-direct-product-attributes.md)
+A [Parte 1B.8.7](../01b8-knowledge-builder-maintainability/07-hierarchical-taxonomy-authoring.md)
 está concluída e o workspace está saudável.
 
 ## 1. Workspace E Package
