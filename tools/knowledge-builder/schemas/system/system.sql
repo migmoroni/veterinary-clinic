@@ -54,52 +54,10 @@ CREATE TABLE geo_places (
 
 CREATE TABLE life_reference_items (
     id TEXT PRIMARY KEY CHECK(length(trim(id)) > 0),
-    domain_id TEXT NOT NULL CHECK(length(trim(domain_id)) > 0),
-    kingdom_id TEXT CHECK(kingdom_id IS NULL OR length(trim(kingdom_id)) > 0),
-    phylum_id TEXT CHECK(phylum_id IS NULL OR length(trim(phylum_id)) > 0),
-    class_id TEXT CHECK(class_id IS NULL OR length(trim(class_id)) > 0),
-    order_id TEXT CHECK(order_id IS NULL OR length(trim(order_id)) > 0),
-    family_id TEXT CHECK(family_id IS NULL OR length(trim(family_id)) > 0),
-    genus_id TEXT CHECK(genus_id IS NULL OR length(trim(genus_id)) > 0),
-    species_id TEXT CHECK(species_id IS NULL OR length(trim(species_id)) > 0),
-    breed_id TEXT CHECK(breed_id IS NULL OR length(trim(breed_id)) > 0),
-    variety_id TEXT CHECK(variety_id IS NULL OR length(trim(variety_id)) > 0),
     size_term_key TEXT CHECK(size_term_key IS NULL OR length(trim(size_term_key)) > 0),
-    name TEXT NOT NULL CHECK(length(trim(name)) > 0),
-    normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) > 0),
     aliases_json TEXT NOT NULL CHECK(json_valid(aliases_json) AND json_type(aliases_json) = 'array'),
     stage_metrics_json TEXT CHECK(stage_metrics_json IS NULL OR (json_valid(stage_metrics_json) AND json_type(stage_metrics_json) = 'object')),
-    content_json TEXT NOT NULL CHECK(json_valid(content_json)),
-    FOREIGN KEY(domain_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
-    FOREIGN KEY(kingdom_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
-    FOREIGN KEY(phylum_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
-    FOREIGN KEY(class_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
-    FOREIGN KEY(order_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
-    FOREIGN KEY(family_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
-    FOREIGN KEY(genus_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
-    FOREIGN KEY(species_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
-    FOREIGN KEY(breed_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
-    FOREIGN KEY(variety_id) REFERENCES life_reference_items(id) ON DELETE RESTRICT,
-    CHECK(kingdom_id IS NOT NULL OR phylum_id IS NULL),
-    CHECK(phylum_id IS NOT NULL OR class_id IS NULL),
-    CHECK(class_id IS NOT NULL OR order_id IS NULL),
-    CHECK(order_id IS NOT NULL OR family_id IS NULL),
-    CHECK(family_id IS NOT NULL OR genus_id IS NULL),
-    CHECK(genus_id IS NOT NULL OR species_id IS NULL),
-    CHECK(species_id IS NOT NULL OR breed_id IS NULL),
-    CHECK(breed_id IS NOT NULL OR variety_id IS NULL),
-    CHECK(CASE
-        WHEN kingdom_id IS NULL THEN id = domain_id
-        WHEN phylum_id IS NULL THEN id = kingdom_id
-        WHEN class_id IS NULL THEN id = phylum_id
-        WHEN order_id IS NULL THEN id = class_id
-        WHEN family_id IS NULL THEN id = order_id
-        WHEN genus_id IS NULL THEN id = family_id
-        WHEN species_id IS NULL THEN id = genus_id
-        WHEN breed_id IS NULL THEN id = species_id
-        WHEN variety_id IS NULL THEN id = breed_id
-        ELSE id = variety_id
-    END)
+    content_json TEXT NOT NULL CHECK(json_valid(content_json))
 );
 
 CREATE TABLE life_origin_places (
@@ -151,7 +109,7 @@ CREATE TABLE product_catalog_items (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
     normalized_name TEXT NOT NULL CHECK(length(trim(normalized_name)) > 0),
-    applicable_taxon_ids_json TEXT NOT NULL CHECK(json_valid(applicable_taxon_ids_json) AND json_type(applicable_taxon_ids_json) = 'array' AND json_array_length(applicable_taxon_ids_json) > 0),
+    applicable_taxon_term_keys_json TEXT NOT NULL CHECK(json_valid(applicable_taxon_term_keys_json) AND json_type(applicable_taxon_term_keys_json) = 'array' AND json_array_length(applicable_taxon_term_keys_json) > 0),
     applicable_life_stages_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(applicable_life_stages_json) AND json_type(applicable_life_stages_json) = 'array'),
     therapeutic_spectrum TEXT CHECK(therapeutic_spectrum IS NULL OR therapeutic_spectrum IN ('broad','narrow')),
     aliases_json TEXT NOT NULL CHECK(json_valid(aliases_json) AND json_type(aliases_json) = 'array'),
@@ -167,7 +125,7 @@ CREATE TABLE product_catalog_items (
 );
 
 CREATE TABLE entity_taxonomy_terms (
-    entity_type TEXT NOT NULL CHECK(entity_type IN ('manufacturer','active_ingredient','condition','product')),
+    entity_type TEXT NOT NULL CHECK(entity_type IN ('life','manufacturer','active_ingredient','condition','product')),
     entity_id TEXT NOT NULL CHECK(length(trim(entity_id)) > 0),
     taxonomy_id TEXT NOT NULL,
     term_key TEXT NOT NULL CHECK(length(trim(term_key)) > 0),
@@ -190,7 +148,7 @@ CREATE TABLE product_active_ingredients (
 CREATE TABLE treatment_protocols (
     id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('vaccine','antiparasitic')),
     name TEXT NOT NULL CHECK(length(trim(name)) > 0), normalized_name TEXT NOT NULL,
-    applicable_taxon_ids_json TEXT NOT NULL CHECK(json_valid(applicable_taxon_ids_json) AND json_type(applicable_taxon_ids_json) = 'array' AND json_array_length(applicable_taxon_ids_json) > 0), observation TEXT
+    applicable_taxon_term_keys_json TEXT NOT NULL CHECK(json_valid(applicable_taxon_term_keys_json) AND json_type(applicable_taxon_term_keys_json) = 'array' AND json_array_length(applicable_taxon_term_keys_json) > 0), observation TEXT
 );
 
 CREATE TABLE treatment_protocol_items (
@@ -228,20 +186,13 @@ CREATE INDEX idx_taxonomy_terms_label ON taxonomy_terms(taxonomy_id, normalized_
 CREATE UNIQUE INDEX idx_taxonomy_terms_root_order ON taxonomy_terms(taxonomy_id, sort_order) WHERE parent_term_key IS NULL;
 CREATE UNIQUE INDEX idx_taxonomy_terms_child_order ON taxonomy_terms(taxonomy_id, parent_term_key, sort_order) WHERE parent_term_key IS NOT NULL;
 CREATE INDEX idx_geo_places_parent ON geo_places(parent_place_id);
-CREATE INDEX idx_life_taxonomy ON life_reference_items(domain_id, kingdom_id, phylum_id, class_id, order_id, family_id, genus_id, species_id, breed_id, variety_id, normalized_name, id);
-CREATE INDEX idx_life_kingdom_items ON life_reference_items(kingdom_id, phylum_id, class_id, normalized_name, id);
-CREATE INDEX idx_life_phylum_items ON life_reference_items(phylum_id, class_id, order_id, normalized_name, id);
-CREATE INDEX idx_life_class_items ON life_reference_items(class_id, order_id, family_id, normalized_name, id);
-CREATE INDEX idx_life_order_items ON life_reference_items(order_id, family_id, genus_id, normalized_name, id);
-CREATE INDEX idx_life_family_items ON life_reference_items(family_id, genus_id, species_id, normalized_name, id);
-CREATE INDEX idx_life_genus_items ON life_reference_items(genus_id, species_id, breed_id, normalized_name, id);
-CREATE INDEX idx_life_species_items ON life_reference_items(species_id, breed_id, variety_id, normalized_name, id);
-CREATE INDEX idx_life_breed_items ON life_reference_items(breed_id, variety_id, normalized_name, id);
 CREATE INDEX idx_life_size ON life_reference_items(size_term_key, id);
 CREATE INDEX idx_life_origin_place ON life_origin_places(place_id, life_id);
 CREATE INDEX idx_product_manufacturer ON product_catalog_items(manufacturer_id);
 CREATE INDEX idx_product_active_ingredient ON product_active_ingredients(active_ingredient_id, product_id);
 CREATE INDEX idx_entity_taxonomy_filter ON entity_taxonomy_terms(taxonomy_id, term_key, entity_type, entity_id);
 CREATE INDEX idx_entity_taxonomy_entity ON entity_taxonomy_terms(entity_type, entity_id, taxonomy_id, sort_order);
+CREATE INDEX idx_entity_taxonomy_life_type ON entity_taxonomy_terms(entity_type, entity_id, taxonomy_id, term_key);
+CREATE UNIQUE INDEX idx_life_type_profile ON entity_taxonomy_terms(taxonomy_id, term_key) WHERE entity_type = 'life' AND taxonomy_id = 'life-types';
 CREATE INDEX idx_search_normalized ON entity_search_terms(normalized_value, entity_type, entity_id);
 CREATE INDEX idx_entity_media_key ON entity_media_references(media_key, entity_type, entity_id);

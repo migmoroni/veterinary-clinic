@@ -10,8 +10,8 @@ pub(super) fn validate_applicability(
 ) {
     for entry in entries {
         let values = match &entry.entity {
-            CanonicalEntity::Product(value) => Some(&value.applicable_taxon_ids),
-            CanonicalEntity::TreatmentProtocol(value) => Some(&value.applicable_taxon_ids),
+            CanonicalEntity::Product(value) => Some(&value.applicable_taxon_term_keys),
+            CanonicalEntity::TreatmentProtocol(value) => Some(&value.applicable_taxon_term_keys),
             _ => None,
         };
         let Some(values) = values else {
@@ -20,34 +20,25 @@ pub(super) fn validate_applicability(
         if !sorted(values) {
             diagnostics.push(Diagnostic::entity(
                 entry,
-                "applicableTaxonIds",
-                "applicableTaxonIds must be strictly sorted",
+                "applicableTaxonTermKeys",
+                "applicableTaxonTermKeys must be strictly sorted",
             ));
         }
-        for id in values {
-            if !life.contains_key(id.as_str()) {
+        for key in values {
+            if !life.terms.contains_key(key.as_str()) {
                 diagnostics.push(Diagnostic::entity(
                     entry,
-                    "applicableTaxonIds",
-                    format!("unresolved life id {id}"),
+                    "applicableTaxonTermKeys",
+                    format!("unresolved life:type term {key}"),
                 ));
             }
         }
         for (index, left) in values.iter().enumerate() {
             for right in &values[index + 1..] {
-                let redundant = [left, right].iter().any(|ancestor| {
-                    let descendant = if *ancestor == left { right } else { left };
-                    life.get(descendant.as_str()).is_some_and(|(_, entity)| {
-                        entity
-                            .taxonomy
-                            .positions()
-                            .contains(&Some(ancestor.as_str()))
-                    })
-                });
-                if redundant {
+                if life.is_ancestor(left, right) || life.is_ancestor(right, left) {
                     diagnostics.push(Diagnostic::entity(
                         entry,
-                        "applicableTaxonIds",
+                        "applicableTaxonTermKeys",
                         format!("redundant ancestor and descendant targets {left} and {right}"),
                     ));
                 }

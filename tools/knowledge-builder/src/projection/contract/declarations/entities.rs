@@ -39,7 +39,7 @@ pub(super) fn add_entity_obligations(
                 id,
                 type_term_key,
                 classification_term_keys,
-                applicable_taxon_ids,
+                applicable_taxon_term_keys,
                 regions,
                 manufacturer_id,
                 active_ingredient_ids,
@@ -87,9 +87,9 @@ pub(super) fn add_entity_obligations(
             relations(
                 expected,
                 &entity,
-                "applicableTaxonIds",
-                applicable_taxon_ids,
-                |_, _| main.column(SystemColumn::ApplicableTaxonIdsJson),
+                "applicableTaxonTermKeys",
+                applicable_taxon_term_keys,
+                |_, _| main.column(SystemColumn::ApplicableTaxonTermKeysJson),
             )?;
             fields(
                 expected,
@@ -378,7 +378,7 @@ pub(super) fn add_entity_obligations(
             let crate::source::LifeEntity {
                 schema_version,
                 id,
-                taxonomy,
+                type_term_key,
                 classifications,
                 localized_content,
                 sections,
@@ -401,36 +401,14 @@ pub(super) fn add_entity_obligations(
                 main.column(SystemColumn::Id),
                 ObligationClass::Authoring,
             )?;
-            for (index, value) in taxonomy.positions().iter().enumerate() {
-                if value.is_some() {
-                    field(
-                        expected,
-                        &entity,
-                        &format!(
-                            "taxonomy.{}",
-                            [
-                                "domain", "kingdom", "phylum", "class", "order", "family", "genus",
-                                "species", "breed", "variety"
-                            ][index]
-                        ),
-                        main.column(
-                            [
-                                SystemColumn::DomainId,
-                                SystemColumn::KingdomId,
-                                SystemColumn::PhylumId,
-                                SystemColumn::ClassId,
-                                SystemColumn::OrderId,
-                                SystemColumn::FamilyId,
-                                SystemColumn::GenusId,
-                                SystemColumn::SpeciesId,
-                                SystemColumn::BreedId,
-                                SystemColumn::VarietyId,
-                            ][index],
-                        ),
-                        ObligationClass::Relation,
-                    )?;
-                }
-            }
+            let type_taxonomy = taxonomy_id(source, "life", "type")?;
+            relations(
+                expected,
+                &entity,
+                "typeTermKey",
+                std::slice::from_ref(type_term_key),
+                |_, key| taxonomy_row(&entity, type_taxonomy, key),
+            )?;
             if let Some(classifications) = classifications {
                 if let Some(origins) = &classifications.origin_place_ids {
                     relations(
@@ -538,7 +516,7 @@ pub(super) fn add_entity_obligations(
                 schema_version,
                 id,
                 kind,
-                applicable_taxon_ids,
+                applicable_taxon_term_keys,
                 product_ids,
                 doses,
                 localized_content,
@@ -568,9 +546,9 @@ pub(super) fn add_entity_obligations(
             relations(
                 expected,
                 &entity,
-                "applicableTaxonIds",
-                applicable_taxon_ids,
-                |_, _| main.column(SystemColumn::ApplicableTaxonIdsJson),
+                "applicableTaxonTermKeys",
+                applicable_taxon_term_keys,
+                |_, _| main.column(SystemColumn::ApplicableTaxonTermKeysJson),
             )?;
             relations(expected, &entity, "productIds", product_ids, |_, id| {
                 table_row(

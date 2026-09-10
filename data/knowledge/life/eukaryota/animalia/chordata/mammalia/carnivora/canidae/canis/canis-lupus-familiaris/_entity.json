@@ -1,28 +1,9 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "canis-lupus-familiaris",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": null,
-    "variety": null
-  },
+  "id": "872001ce-fd37-4d7f-ad1f-3f588d9639fb",
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris",
   "localizedContent": {
-    "name": {
-      "pt-BR": "Cão doméstico",
-      "pt-PT": "Cão doméstico",
-      "gn-PY": "Jaguarã",
-      "en-US": "Domestic dog",
-      "es-ES": "Perro doméstico",
-      "fr-FR": "Chien domestique"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],

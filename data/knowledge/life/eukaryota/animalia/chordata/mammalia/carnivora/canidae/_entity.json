@@ -1,28 +1,9 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "canidae",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": null,
-    "species": null,
-    "breed": null,
-    "variety": null
-  },
+  "id": "c59aedd2-20b0-4895-a79c-7c46063bb8c6",
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae",
   "localizedContent": {
-    "name": {
-      "pt-BR": "Canídeos",
-      "pt-PT": "Canídeos",
-      "gn-PY": "Canidae",
-      "en-US": "Canids",
-      "es-ES": "Cánidos",
-      "fr-FR": "Canidés"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],

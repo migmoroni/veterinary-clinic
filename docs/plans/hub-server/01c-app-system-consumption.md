@@ -25,10 +25,10 @@ A [Parte 1B.9.4](./01b9-artifact-builder/04-closure.md) está concluída. O
 `knowledge-builder` compila o domínio veterinário e delega SQLite, CAS,
 verificação e publicação à crate `artifact-builder`. O fluxo gera uma
 `build_version` válida com os seis pares de bancos e o CAS compartilhado. Os
-artefatos usam schema `7` de `system`. `life:hierarchy` está projetada em
-`taxonomy_terms` como única adjacency list da vida, e cada row de
-`life_reference_items` referencia o termo de mesmo ID e informa o rank derivado
-da profundidade. Todas as classificações de vida são opcionais.
+artefatos usam schema `7` de `system`. `life:type` está projetada em
+`taxonomy_terms` como única adjacency list da vida; labels pertencem aos termos,
+e páginas opcionais em `life_reference_items` se associam por
+`entity_taxonomy_terms`. Todas as classificações de vida são opcionais.
 
 ## Escopo
 
@@ -47,8 +47,8 @@ da profundidade. Todas as classificações de vida são opcionais.
   de `product_catalog_items`;
 - consumir descritores vacinais como aliases localizados comuns do produto;
 - consumir entidades e classificações diretamente de `life_reference_items`, a
-  hierarquia por `life:hierarchy` em `taxonomy_terms` e a aplicabilidade de
-  produtos e protocolos pelos IDs canônicos de qualquer um dos dez ranks;
+  hierarquia por `life:type` em `taxonomy_terms` e a aplicabilidade de produtos
+  e protocolos pelas chaves de termos de qualquer um dos dez ranks;
 - resolver cada alvo de aplicabilidade para a própria entidade e seus
   descendentes pela árvore taxonômica explícita;
 - expor conteúdo e navegação entre pai, filhos e descendentes nos dez níveis
@@ -426,11 +426,12 @@ de interface resolve o título padronizado pelo i18n associado à `sectionKey`,
 enquanto o corpo vem integralmente resolvido pelo banco ativo.
 
 Para entidades de vida, `taxonomy` expõe domínio, reino, filo, classe, ordem,
-família, gênero, espécie, raça e variedade em posições nomeadas. Cada posição não
-nula é recomposta por uma consulta recursiva sobre `life:hierarchy`, unindo
-`taxonomy_terms` a `life_reference_items` para resolver ID, rank e nome. O
-repository não deriva nenhum nível do caminho editorial. `level` corresponde ao
-rank da própria entidade e `parentId` vem do termo pai; o domínio não possui
+família, gênero, espécie, raça e variedade em posições nomeadas. Cada posição
+não nula é recomposta por uma consulta recursiva sobre `life:type`; o label e o
+rank vêm de `taxonomy_terms`, e a página opcional é resolvida por
+`entity_taxonomy_terms`. O repository não deriva nenhum nível do caminho
+editorial, do UUID da entidade ou da chave do termo. `level` corresponde ao rank
+do termo da própria entidade e `parentId` vem do termo pai; o domínio não possui
 `parentId`.
 
 `bodyMetrics` expõe `size` e `stageMetrics` independentemente quando presentes.
@@ -512,10 +513,11 @@ textual. Descritores vacinais como `V10` e `polivalente` são aliases localizado
 do próprio produto e participam da busca por esse caminho comum. A busca não lê
 classificações genéricas ou campos `searchConcept`.
 
-Para `LifeEntity`, `entity_search_terms` contém somente nome e aliases próprios.
-Quando uma busca solicitar a subárvore de um táxon encontrado, o repository usa
-uma consulta recursiva sobre `life:hierarchy`; ele não depende de termos
-ancestrais duplicados nas entidades descendentes.
+Para `LifeEntity`, `entity_search_terms` combina o label de `life:type` e os
+aliases próprios, com proveniências distintas. Quando uma busca solicitar a
+subárvore de um táxon encontrado, o repository usa uma consulta recursiva sobre
+`life:type`; ele não depende de termos ancestrais duplicados nas entidades
+descendentes.
 
 Quando o corpo das seções participar de uma busca, o repository usa o texto ou o
 índice FTS derivado pelo builder. A busca não interpreta nem percorre
@@ -720,7 +722,8 @@ Cobrir:
 - produtos resolvendo seus princípios ativos pela relação N:N, na ordem
   declarada;
 - entidades dos dez ranks expondo sua cadeia pela consulta recursiva de
-  `life:hierarchy` em `taxonomy_terms`;
+  `life:type` em `taxonomy_terms` e sua associação por
+  `entity_taxonomy_terms`;
 - filtros por domínio, reino, filo, classe, ordem, família, gênero, espécie, raça
   e variedade usando rank, ancestralidade e descendência da árvore indexada;
 - fabricantes, princípios ativos, condições e produtos resolvendo suas
@@ -736,8 +739,8 @@ Cobrir:
   estágios, períodos e intervalos de `weight` e `measure`;
 - pet sem raça definida consumindo diretamente o conteúdo da entidade de
   espécie, sem criar raça genérica;
-- produtos e protocolos resolvendo os IDs de qualquer nível presentes em
-  `applicable_taxon_ids_json` e aplicando-os à própria entidade e a seus
+- produtos e protocolos resolvendo as chaves de qualquer rank presentes em
+  `applicable_taxon_term_keys_json` e aplicando-as ao próprio termo e a seus
   descendentes;
 - produtos resolvendo tipos, classificações e alvos pelo propósito da taxonomia
   associada;

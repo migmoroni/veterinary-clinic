@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "airedale-terrier",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "airedale-terrier",
-    "variety": null
-  },
+  "id": "0129b917-beb5-4c67-ae20-397dc1a4f627",
   "classifications": {
     "originPlaceIds": [
       "england"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Airedale Terrier",
-      "pt-PT": "Airedale Terrier",
-      "gn-PY": "Airedale Terrier",
-      "en-US": "Airedale Terrier",
-      "es-ES": "Airedale Terrier",
-      "fr-FR": "Airedale Terrier"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.airedaleTerrier"
 }

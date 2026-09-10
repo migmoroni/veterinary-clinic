@@ -194,7 +194,7 @@ pub(super) fn project_catalog(
                     id,
                     type_term_key,
                     classification_term_keys,
-                    applicable_taxon_ids,
+                    applicable_taxon_term_keys,
                     regions,
                     manufacturer_id,
                     active_ingredient_ids,
@@ -233,7 +233,7 @@ pub(super) fn project_catalog(
                         id: id.clone(),
                         normalized_name: normalize_identity_key(&name),
                         name,
-                        applicable_taxon_ids_json: json(applicable_taxon_ids)?,
+                        applicable_taxon_term_keys_json: json(applicable_taxon_term_keys)?,
                         applicable_life_stages_json: json(
                             &applicable_life_stages.as_deref().unwrap_or_default(),
                         )?,
@@ -297,7 +297,7 @@ pub(super) fn project_catalog(
                     schema_version,
                     id,
                     kind,
-                    applicable_taxon_ids,
+                    applicable_taxon_term_keys,
                     product_ids,
                     doses,
                     localized_content,
@@ -314,7 +314,7 @@ pub(super) fn project_catalog(
                         kind: kind.clone(),
                         normalized_name: normalize_identity_key(&name),
                         name,
-                        applicable_taxon_ids_json: json(applicable_taxon_ids)?,
+                        applicable_taxon_term_keys_json: json(applicable_taxon_term_keys)?,
                         observation: optional_localized_text(
                             localized_content,
                             "observation",
@@ -379,21 +379,17 @@ fn project_life(
         .entities
         .iter()
         .filter_map(|entry| match &entry.source.entity {
-            CanonicalEntity::Life(value) => {
-                Some((value.taxonomy.level(), value.id.as_str(), entry, value))
-            }
+            CanonicalEntity::Life(value) => Some((value.id.as_str(), entry, value)),
             _ => None,
         })
         .collect::<Vec<_>>();
-    entries.sort_by(|left, right| (left.0, left.1).cmp(&(right.0, right.1)));
-    for (_, _, entry, value) in entries {
+    entries.sort_by(|left, right| left.0.cmp(right.0));
+    for (_, entry, value) in entries {
         let entity = identity(&entry.source.entity);
-        let positions = value.taxonomy.positions();
         let body = value
             .classifications
             .as_ref()
             .and_then(|classifications| classifications.body_metrics.as_ref());
-        let name = localized_text(&value.localized_content, "name", locale)?.to_string();
         push_main(
             operations,
             claims,
@@ -401,19 +397,7 @@ fn project_life(
             SystemTable::LifeReferenceItems,
             SystemRow::Life {
                 id: value.id.clone(),
-                domain_id: positions[0].expect("life domain is required").to_string(),
-                kingdom_id: positions[1].map(str::to_string),
-                phylum_id: positions[2].map(str::to_string),
-                class_id: positions[3].map(str::to_string),
-                order_id: positions[4].map(str::to_string),
-                family_id: positions[5].map(str::to_string),
-                genus_id: positions[6].map(str::to_string),
-                species_id: positions[7].map(str::to_string),
-                breed_id: positions[8].map(str::to_string),
-                variety_id: positions[9].map(str::to_string),
                 size_term_key: body.and_then(|metrics| metrics.size.clone()),
-                normalized_name: normalize_identity_key(&name),
-                name,
                 aliases_json: json(
                     &localized_list(&value.localized_content, "aliases", locale)
                         .unwrap_or_default(),
@@ -424,6 +408,13 @@ fn project_life(
                     .transpose()?,
                 content_json: content_json(entry, locale)?,
             },
+        )?;
+        taxonomy_relations(
+            source,
+            operations,
+            claims,
+            &entity,
+            &[("type", std::slice::from_ref(&value.type_term_key))],
         )?;
         if let Some(origins) = value
             .classifications

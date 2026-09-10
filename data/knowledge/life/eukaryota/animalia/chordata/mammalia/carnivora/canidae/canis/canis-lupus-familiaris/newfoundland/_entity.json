@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "newfoundland",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "newfoundland",
-    "variety": null
-  },
+  "id": "e85ce79d-9e94-445e-b708-2fd43f8c5d07",
   "classifications": {
     "originPlaceIds": [
       "ca"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Terra Nova",
-      "pt-PT": "Terra Nova",
-      "gn-PY": "Terranova",
-      "en-US": "Newfoundland",
-      "es-ES": "Terranova",
-      "fr-FR": "Terre-Neuve"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.newfoundland"
 }

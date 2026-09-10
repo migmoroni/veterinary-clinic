@@ -4,6 +4,14 @@ use crate::support::*;
 use knowledge_builder::validate;
 use std::{fs, path::Path};
 
+const FIXTURE_DOG: &str =
+    "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris";
+const FIXTURE_POODLE: &str =
+    "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.poodle";
+const FIXTURE_TOY: &str =
+    "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.poodle.poodleToy";
+const FIXTURE_STRUCTURAL_ONLY: &str = "structuralOnly";
+
 #[test]
 fn minimal_fixture_rejects_missing_and_duplicate_taxonomy_owners() {
     let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
@@ -208,7 +216,7 @@ fn validation_rejects_schema_reference_locale_and_markdown_violations() {
         .contains("schema violation"));
 
     life = serde_json::from_slice(&original_life).unwrap();
-    life["localizedContent"]["name"]
+    life["localizedContent"]["aliases"]
         .as_object_mut()
         .unwrap()
         .remove("fr-FR");
@@ -267,34 +275,46 @@ fn validation_rejects_schema_reference_locale_and_markdown_violations() {
 #[test]
 fn life_contract_rejects_taxonomy_metrics_and_redundant_applicability() {
     let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
-    let cases = [
-        (
-            "wrong-own-id",
-            "poodle",
-            serde_json::json!("other-poodle"),
-            vec!["taxonomy", "breed"],
-        ),
-        (
-            "missing-ancestor",
-            "poodle",
-            serde_json::json!("missing-family"),
-            vec!["taxonomy", "family"],
-        ),
-    ];
-    for (label, id, replacement, path) in cases {
+    for (label, replacement) in [
+        ("missing-life-type", serde_json::json!("missing-type")),
+        ("cross-rank-life-type", serde_json::json!("default")),
+    ] {
         let copy = TestDirectory::new(label);
         copy_tree(&fixture, copy.path());
-        let manifest = find_manifest_by_id(copy.path(), id).unwrap();
+        let manifest = find_manifest_containing(
+            copy.path(),
+            &format!("\"typeTermKey\": \"{FIXTURE_POODLE}\""),
+        )
+        .unwrap();
         let mut value: serde_json::Value =
             serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
-        value[path[0]][path[1]] = replacement;
+        value["typeTermKey"] = replacement;
         fs::write(&manifest, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
         assert!(validate(copy.path()).is_err(), "{label} must be rejected");
     }
 
+    let forbidden_name = TestDirectory::new("life-name-is-forbidden");
+    copy_tree(&fixture, forbidden_name.path());
+    let manifest = find_manifest_by_type(forbidden_name.path(), "life").unwrap();
+    let mut value: serde_json::Value =
+        serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
+    value["localizedContent"]["name"] = serde_json::json!({
+        "pt-BR": "Nome", "pt-PT": "Nome", "gn-PY": "Téra", "en-US": "Name",
+        "es-ES": "Nombre", "fr-FR": "Nom"
+    });
+    fs::write(&manifest, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+    assert!(validate(forbidden_name.path())
+        .unwrap_err()
+        .to_string()
+        .contains("schema violation"));
+
     let periods = TestDirectory::new("invalid-life-periods");
     copy_tree(&fixture, periods.path());
-    let manifest = find_manifest_by_id(periods.path(), "poodle-toy").unwrap();
+    let manifest = find_manifest_containing(
+        periods.path(),
+        &format!("\"typeTermKey\": \"{FIXTURE_TOY}\""),
+    )
+    .unwrap();
     let mut value: serde_json::Value =
         serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
     value["classifications"]["bodyMetrics"]["stageMetrics"]["male"]["young"]["period"] =
@@ -310,12 +330,129 @@ fn life_contract_rejects_taxonomy_metrics_and_redundant_applicability() {
     let product = find_manifest_by_type(applicability.path(), "product").unwrap();
     let mut value: serde_json::Value =
         serde_json::from_slice(&fs::read(&product).unwrap()).unwrap();
-    value["applicableTaxonIds"] = serde_json::json!(["canis-lupus-familiaris", "poodle"]);
+    value["applicableTaxonTermKeys"] = serde_json::json!([FIXTURE_DOG, FIXTURE_POODLE]);
     fs::write(&product, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
     assert!(validate(applicability.path())
         .unwrap_err()
         .to_string()
         .contains("redundant ancestor and descendant"));
+}
+
+#[test]
+fn life_type_owns_hierarchy_labels_and_optional_entity_associations() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
+    let source = validate(&fixture).expect("hierarchical life fixture must validate");
+    assert_eq!(
+        source.life_term_rank("eukaryota"),
+        Some(knowledge_builder::LifeRank::Domain)
+    );
+    assert_eq!(
+        source.life_term_rank(FIXTURE_TOY),
+        Some(knowledge_builder::LifeRank::Variety)
+    );
+    assert_eq!(source.life_children(FIXTURE_POODLE), vec![FIXTURE_TOY]);
+    assert_eq!(
+        source.life_ancestors(FIXTURE_TOY).first(),
+        Some(&"eukaryota")
+    );
+    assert_eq!(
+        source.life_descendants(FIXTURE_DOG),
+        vec![FIXTURE_POODLE, FIXTURE_TOY]
+    );
+    for term_key in source.life_ancestors(FIXTURE_TOY) {
+        assert!(
+            source.life_entity_for_term(term_key).is_some(),
+            "the fixture must preserve the existing profile for {term_key}"
+        );
+    }
+    assert!(source
+        .life_entity_for_term(FIXTURE_STRUCTURAL_ONLY)
+        .is_none());
+    let toy = source.life_entity_for_term(FIXTURE_TOY).unwrap();
+    assert_ne!(toy.id, toy.type_term_key);
+    assert_eq!(
+        source.life_taxon_label(FIXTURE_TOY, knowledge_builder::KnowledgeLocale::EnUs),
+        Some("poodle-toy")
+    );
+    assert_eq!(
+        source.life_entity_aliases(&toy.id, knowledge_builder::KnowledgeLocale::EnUs),
+        Some(&["Toy Poodle".to_string()][..])
+    );
+
+    let duplicate = TestDirectory::new("duplicate-life-profile");
+    copy_tree(&fixture, duplicate.path());
+    let poodle = find_manifest_containing(
+        duplicate.path(),
+        &format!("\"typeTermKey\": \"{FIXTURE_POODLE}\""),
+    )
+    .unwrap();
+    let mut value: serde_json::Value = serde_json::from_slice(&fs::read(&poodle).unwrap()).unwrap();
+    value["typeTermKey"] = serde_json::json!(FIXTURE_TOY);
+    fs::write(&poodle, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+    assert!(validate(duplicate.path())
+        .unwrap_err()
+        .to_string()
+        .contains("already associated"));
+
+    let term_alias = TestDirectory::new("life-type-term-alias");
+    copy_tree(&fixture, term_alias.path());
+    let taxonomy = find_manifest_containing(term_alias.path(), "\"id\": \"life-types\"").unwrap();
+    let mut value: serde_json::Value =
+        serde_json::from_slice(&fs::read(&taxonomy).unwrap()).unwrap();
+    value["terms"][0]["localizedContent"]["aliases"] = serde_json::json!({
+        "pt-BR": [], "pt-PT": [], "gn-PY": [], "en-US": ["Alias"], "es-ES": [], "fr-FR": []
+    });
+    fs::write(&taxonomy, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+    assert!(validate(term_alias.path())
+        .unwrap_err()
+        .to_string()
+        .contains("unsupported localized field"));
+
+    let too_deep = TestDirectory::new("life-type-too-deep");
+    copy_tree(&fixture, too_deep.path());
+    let taxonomy = find_manifest_containing(too_deep.path(), "\"id\": \"life-types\"").unwrap();
+    let mut value: serde_json::Value =
+        serde_json::from_slice(&fs::read(&taxonomy).unwrap()).unwrap();
+    let localized_content = value["terms"][0]["localizedContent"].clone();
+    let mut term = &mut value["terms"][0];
+    for _ in 0..9 {
+        term = &mut term["children"][0];
+    }
+    term["children"] = serde_json::json!([{
+        "key": "eleventh-rank",
+        "localizedContent": localized_content
+    }]);
+    fs::write(&taxonomy, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+    assert!(validate(too_deep.path())
+        .unwrap_err()
+        .to_string()
+        .contains("depth must not exceed variety (9)"));
+
+    let baseline_digest = source.source_digest_sha256().to_string();
+    for (label, mutate_alias) in [
+        ("life-type-reference-digest", false),
+        ("life-alias-digest", true),
+    ] {
+        let changed = TestDirectory::new(label);
+        copy_tree(&fixture, changed.path());
+        let manifest = find_manifest_containing(
+            changed.path(),
+            &format!("\"typeTermKey\": \"{FIXTURE_TOY}\""),
+        )
+        .unwrap();
+        let mut value: serde_json::Value =
+            serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
+        if mutate_alias {
+            value["localizedContent"]["aliases"]["en-US"] = serde_json::json!(["Miniature Poodle"]);
+        } else {
+            value["typeTermKey"] = serde_json::json!(FIXTURE_STRUCTURAL_ONLY);
+        }
+        fs::write(&manifest, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+        assert_ne!(
+            validate(changed.path()).unwrap().source_digest_sha256(),
+            baseline_digest
+        );
+    }
 }
 
 #[test]

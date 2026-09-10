@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "irish-terrier",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "irish-terrier",
-    "variety": null
-  },
+  "id": "5459fc77-3fed-4019-b15e-dbcde46b3745",
   "classifications": {
     "originPlaceIds": [
       "ie"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Terrier Irlandês",
-      "pt-PT": "Terrier Irlandês",
-      "gn-PY": "Terrier irlandés",
-      "en-US": "Irish Terrier",
-      "es-ES": "Terrier irlandés",
-      "fr-FR": "Terrier irlandais"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.irishTerrier"
 }

@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "bloodhound",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "bloodhound",
-    "variety": null
-  },
+  "id": "51b0d0d6-a6d2-48b0-902d-5b286be4e75f",
   "classifications": {
     "originPlaceIds": [
       "be"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Bloodhound",
-      "pt-PT": "Bloodhound",
-      "gn-PY": "Bloodhound",
-      "en-US": "Bloodhound",
-      "es-ES": "Bloodhound",
-      "fr-FR": "Chien de Saint-Hubert"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.bloodhound"
 }

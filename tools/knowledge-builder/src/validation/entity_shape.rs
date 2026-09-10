@@ -31,6 +31,7 @@ pub(super) fn validate_entity_shape(entry: &SourceEntry, diagnostics: &mut Vec<D
             | CanonicalEntity::Manufacturer(_)
             | CanonicalEntity::ActiveIngredient(_)
             | CanonicalEntity::Condition(_)
+            | CanonicalEntity::Life(_)
             | CanonicalEntity::TreatmentProtocol(_)
     ) && !is_uuid_v4(entry.entity.id())
     {
@@ -54,8 +55,8 @@ pub(super) fn validate_entity_shape(entry: &SourceEntry, diagnostics: &mut Vec<D
             );
             validate_unique_texts(
                 entry,
-                "applicableTaxonIds",
-                &value.applicable_taxon_ids,
+                "applicableTaxonTermKeys",
+                &value.applicable_taxon_term_keys,
                 true,
                 diagnostics,
             );
@@ -207,8 +208,8 @@ pub(super) fn validate_entity_shape(entry: &SourceEntry, diagnostics: &mut Vec<D
             }
             validate_unique_texts(
                 entry,
-                "applicableTaxonIds",
-                &value.applicable_taxon_ids,
+                "applicableTaxonTermKeys",
+                &value.applicable_taxon_term_keys,
                 true,
                 diagnostics,
             );

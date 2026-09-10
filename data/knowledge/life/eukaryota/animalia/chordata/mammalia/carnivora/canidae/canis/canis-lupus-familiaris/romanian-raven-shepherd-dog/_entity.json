@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "romanian-raven-shepherd-dog",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "romanian-raven-shepherd-dog",
-    "variety": null
-  },
+  "id": "dfbf4c44-b9b5-4657-b721-ad83f4ce83d0",
   "classifications": {
     "originPlaceIds": [
       "ro"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Pastor Romeno Raven",
-      "pt-PT": "Pastor Romeno Raven",
-      "gn-PY": "Pastor rumano raven",
-      "en-US": "Romanian Raven Shepherd Dog",
-      "es-ES": "Pastor rumano raven",
-      "fr-FR": "Berger roumain corbeau"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.romanianRavenShepherdDog"
 }

@@ -1,28 +1,9 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "carnivora",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": null,
-    "genus": null,
-    "species": null,
-    "breed": null,
-    "variety": null
-  },
+  "id": "a609c6d7-6de6-4a7e-8816-6c90f03c35ae",
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora",
   "localizedContent": {
-    "name": {
-      "pt-BR": "carnivora",
-      "pt-PT": "carnivora",
-      "gn-PY": "carnivora",
-      "en-US": "carnivora",
-      "es-ES": "carnivora",
-      "fr-FR": "carnivora"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],

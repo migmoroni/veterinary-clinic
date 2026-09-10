@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "hokkaido",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "hokkaido",
-    "variety": null
-  },
+  "id": "8f973275-ed52-447f-acf4-9c0af36c3b51",
   "classifications": {
     "originPlaceIds": [
       "jp"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Hokkaido",
-      "pt-PT": "Hokkaido",
-      "gn-PY": "Hokkaido",
-      "en-US": "Hokkaido",
-      "es-ES": "Hokkaido",
-      "fr-FR": "Hokkaïdo"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.hokkaido"
 }

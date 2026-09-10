@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "dalmatian",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "dalmatian",
-    "variety": null
-  },
+  "id": "7dc3be58-f393-4596-a817-23b928592d6f",
   "classifications": {
     "originPlaceIds": [
       "hr"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Dálmata",
-      "pt-PT": "Dálmata",
-      "gn-PY": "Dálmata",
-      "en-US": "Dalmatian",
-      "es-ES": "Dálmata",
-      "fr-FR": "Dalmatien"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.dalmatian"
 }

@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "tibetan-terrier",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "tibetan-terrier",
-    "variety": null
-  },
+  "id": "f586adc1-2524-4145-b1c2-a498c2bf1c3b",
   "classifications": {
     "originPlaceIds": [
       "tibet"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Terrier Tibetano",
-      "pt-PT": "Terrier Tibetano",
-      "gn-PY": "Terrier tibetano",
-      "en-US": "Tibetan Terrier",
-      "es-ES": "Terrier tibetano",
-      "fr-FR": "Terrier du Tibet"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.tibetanTerrier"
 }

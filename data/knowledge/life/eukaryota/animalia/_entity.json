@@ -1,28 +1,9 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "animalia",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": null,
-    "class": null,
-    "order": null,
-    "family": null,
-    "genus": null,
-    "species": null,
-    "breed": null,
-    "variety": null
-  },
+  "id": "b4f19af0-1cb9-4c11-b9d8-f09de5024fa0",
+  "typeTermKey": "eukaryota.animalia",
   "localizedContent": {
-    "name": {
-      "pt-BR": "Animais",
-      "pt-PT": "Animais",
-      "gn-PY": "Mymba",
-      "en-US": "Animals",
-      "es-ES": "Animales",
-      "fr-FR": "Animaux"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],

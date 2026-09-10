@@ -22,6 +22,7 @@ pub(super) fn validate_taxonomy(
     }
     let mut keys = BTreeSet::new();
     let mut term_count = 0usize;
+    let life_type = taxonomy.domain == "life" && taxonomy.purpose == "type";
     for visit in taxonomy.walk_terms() {
         let term = visit.term;
         term_count += 1;
@@ -44,11 +45,18 @@ pub(super) fn validate_taxonomy(
             entry,
             &term.localized_content,
             &["label"],
-            &["aliases"],
+            if life_type { &[] } else { &["aliases"] },
             &["label"],
             &format!("{}.localizedContent", visit.source_path),
             diagnostics,
         );
+        if life_type && crate::source::LifeRank::from_depth(visit.depth).is_none() {
+            diagnostics.push(Diagnostic::entity(
+                entry,
+                &key_path,
+                "life:type depth must not exceed variety (9)",
+            ));
+        }
         if term
             .localized_content
             .get("aliases")
@@ -70,6 +78,13 @@ pub(super) fn validate_taxonomy(
             entry,
             "terms",
             "taxonomy must not contain more than 10000 terms",
+        ));
+    }
+    if life_type && taxonomy.id != "life-types" {
+        diagnostics.push(Diagnostic::entity(
+            entry,
+            "id",
+            "life:type taxonomy id must be life-types",
         ));
     }
 }

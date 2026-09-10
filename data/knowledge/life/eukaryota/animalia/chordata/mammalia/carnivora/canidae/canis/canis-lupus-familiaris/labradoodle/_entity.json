@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "labradoodle",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "labradoodle",
-    "variety": null
-  },
+  "id": "265543d6-f0f9-4a7c-83b1-0a4ec6aa828d",
   "classifications": {
     "originPlaceIds": [
       "au"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Labradoodle",
-      "pt-PT": "Labradoodle",
-      "gn-PY": "Labradoodle",
-      "en-US": "Labradoodle",
-      "es-ES": "Labradoodle",
-      "fr-FR": "Labradoodle"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.labradoodle"
 }

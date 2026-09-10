@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "rampur-greyhound",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "rampur-greyhound",
-    "variety": null
-  },
+  "id": "8ad9bc40-d1de-4874-a4aa-d52c701157e0",
   "classifications": {
     "originPlaceIds": [
       "in"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Rampur Greyhound",
-      "pt-PT": "Rampur Greyhound",
-      "gn-PY": "Rampur Greyhound",
-      "en-US": "Rampur Greyhound",
-      "es-ES": "Rampur Greyhound",
-      "fr-FR": "Lévrier de Rampur"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.rampurGreyhound"
 }

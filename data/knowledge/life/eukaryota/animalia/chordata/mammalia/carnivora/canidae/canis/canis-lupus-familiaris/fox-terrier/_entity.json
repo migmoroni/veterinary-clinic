@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "fox-terrier",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "fox-terrier",
-    "variety": null
-  },
+  "id": "aabb04f4-c931-4bf5-9be8-0a24efcb54c0",
   "classifications": {
     "originPlaceIds": [
       "england"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Fox Terrier",
-      "pt-PT": "Fox Terrier",
-      "gn-PY": "Fox Terrier",
-      "en-US": "Fox Terrier",
-      "es-ES": "Fox Terrier",
-      "fr-FR": "Fox-terrier"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.foxTerrier"
 }

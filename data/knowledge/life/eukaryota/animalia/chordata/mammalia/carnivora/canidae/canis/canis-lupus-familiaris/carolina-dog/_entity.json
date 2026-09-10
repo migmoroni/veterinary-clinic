@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "carolina-dog",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "carolina-dog",
-    "variety": null
-  },
+  "id": "35e883b4-a2eb-41da-bab8-60f7a73386d6",
   "classifications": {
     "originPlaceIds": [
       "us"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Carolina Dog",
-      "pt-PT": "Carolina Dog",
-      "gn-PY": "Carolina Dog",
-      "en-US": "Carolina Dog",
-      "es-ES": "Carolina Dog",
-      "fr-FR": "Chien de Caroline"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.carolinaDog"
 }

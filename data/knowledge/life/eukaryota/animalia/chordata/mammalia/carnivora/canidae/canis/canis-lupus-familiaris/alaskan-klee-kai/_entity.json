@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "alaskan-klee-kai",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "alaskan-klee-kai",
-    "variety": null
-  },
+  "id": "8a60276d-c60e-4942-93b6-082695e9fe78",
   "classifications": {
     "originPlaceIds": [
       "us"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Alaskan Klee Kai",
-      "pt-PT": "Alaskan Klee Kai",
-      "gn-PY": "Alaskan Klee Kai",
-      "en-US": "Alaskan Klee Kai",
-      "es-ES": "Alaskan Klee Kai",
-      "fr-FR": "Alaskan Klee Kai"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.alaskanKleeKai"
 }

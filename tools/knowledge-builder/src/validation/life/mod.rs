@@ -11,7 +11,7 @@ pub(super) fn validate_life_contracts(
     taxonomies: &TaxonomyTermIndexes,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let life = taxonomy::validate_life_taxonomy(entries, diagnostics);
+    let life = taxonomy::validate_life_taxonomy(entries, taxonomies, diagnostics);
     classifications::validate_life_classifications(&life, taxonomies, diagnostics);
     applicability::validate_applicability(entries, &life, diagnostics);
 }

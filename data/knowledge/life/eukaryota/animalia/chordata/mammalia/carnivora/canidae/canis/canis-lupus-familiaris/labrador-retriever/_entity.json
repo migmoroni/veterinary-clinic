@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "labrador-retriever",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "labrador-retriever",
-    "variety": null
-  },
+  "id": "7a9b4c14-136c-4e1f-be76-fa5cfc6b6794",
   "classifications": {
     "originPlaceIds": [
       "ca"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Labrador Retriever",
-      "pt-PT": "Labrador Retriever",
-      "gn-PY": "Labrador Retriever",
-      "en-US": "Labrador Retriever",
-      "es-ES": "Labrador Retriever",
-      "fr-FR": "Labrador Retriever"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.labradorRetriever"
 }

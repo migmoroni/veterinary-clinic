@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "west-highland-white-terrier",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "west-highland-white-terrier",
-    "variety": null
-  },
+  "id": "dc3b42e2-de4c-4974-997e-745285a8a50c",
   "classifications": {
     "originPlaceIds": [
       "scotland"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "West Highland White Terrier",
-      "pt-PT": "West Highland White Terrier",
-      "gn-PY": "West Highland White Terrier",
-      "en-US": "West Highland White Terrier",
-      "es-ES": "West Highland White Terrier",
-      "fr-FR": "West Highland White Terrier"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.westHighlandWhiteTerrier"
 }

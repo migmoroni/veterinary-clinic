@@ -1,28 +1,9 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "chordata",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": null,
-    "order": null,
-    "family": null,
-    "genus": null,
-    "species": null,
-    "breed": null,
-    "variety": null
-  },
+  "id": "d75590c0-93ad-4a5f-8d97-a321b2a4c40f",
+  "typeTermKey": "eukaryota.animalia.chordata",
   "localizedContent": {
-    "name": {
-      "pt-BR": "chordata",
-      "pt-PT": "chordata",
-      "gn-PY": "chordata",
-      "en-US": "chordata",
-      "es-ES": "chordata",
-      "fr-FR": "chordata"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],

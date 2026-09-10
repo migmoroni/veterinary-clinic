@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "golden-retriever",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "golden-retriever",
-    "variety": null
-  },
+  "id": "e81cc05c-82f8-4a25-92b3-01236f828982",
   "classifications": {
     "originPlaceIds": [
       "scotland"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Golden Retriever",
-      "pt-PT": "Golden Retriever",
-      "gn-PY": "Golden Retriever",
-      "en-US": "Golden Retriever",
-      "es-ES": "Golden Retriever",
-      "fr-FR": "Golden Retriever"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.goldenRetriever"
 }

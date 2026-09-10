@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "giant-schnauzer",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "giant-schnauzer",
-    "variety": null
-  },
+  "id": "52078e88-7f74-4cc5-85a4-6414e91b02e4",
   "classifications": {
     "originPlaceIds": [
       "de"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Schnauzer Gigante",
-      "pt-PT": "Schnauzer Gigante",
-      "gn-PY": "Schnauzer gigante",
-      "en-US": "Giant Schnauzer",
-      "es-ES": "Schnauzer gigante",
-      "fr-FR": "Schnauzer géant"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.giantSchnauzer"
 }

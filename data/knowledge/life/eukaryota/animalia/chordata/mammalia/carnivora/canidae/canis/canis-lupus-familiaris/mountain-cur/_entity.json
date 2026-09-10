@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "mountain-cur",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "mountain-cur",
-    "variety": null
-  },
+  "id": "d91ad0b8-7cc2-41a1-80bb-b9b75526e50d",
   "classifications": {
     "originPlaceIds": [
       "us"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Mountain Cur",
-      "pt-PT": "Mountain Cur",
-      "gn-PY": "Mountain Cur",
-      "en-US": "Mountain Cur",
-      "es-ES": "Mountain Cur",
-      "fr-FR": "Mountain Cur"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.mountainCur"
 }

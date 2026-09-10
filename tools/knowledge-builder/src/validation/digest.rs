@@ -125,7 +125,7 @@ pub(super) fn relation_count(entities: &[ValidatedEntity]) -> usize {
         .map(|entry| match &entry.source.entity {
             CanonicalEntity::Product(value) => {
                 2 + value.classification_term_keys.len()
-                    + value.applicable_taxon_ids.len()
+                    + value.applicable_taxon_term_keys.len()
                     + value.active_ingredient_ids.len()
                     + value.target_term_keys.as_ref().map_or(0, Vec::len)
             }
@@ -133,12 +133,11 @@ pub(super) fn relation_count(entities: &[ValidatedEntity]) -> usize {
             CanonicalEntity::ActiveIngredient(value) => 1 + value.classification_term_keys.len(),
             CanonicalEntity::Condition(value) => 1 + value.classification_term_keys.len(),
             CanonicalEntity::Life(value) => {
-                value.taxonomy.positions().iter().flatten().count()
-                    + value
-                        .classifications
-                        .as_ref()
-                        .and_then(|classifications| classifications.origin_place_ids.as_ref())
-                        .map_or(0, Vec::len)
+                1 + value
+                    .classifications
+                    .as_ref()
+                    .and_then(|classifications| classifications.origin_place_ids.as_ref())
+                    .map_or(0, Vec::len)
                     + usize::from(
                         value
                             .classifications
@@ -154,7 +153,7 @@ pub(super) fn relation_count(entities: &[ValidatedEntity]) -> usize {
                 .filter(|visit| visit.parent_key.is_some())
                 .count(),
             CanonicalEntity::TreatmentProtocol(value) => {
-                value.product_ids.len() + value.applicable_taxon_ids.len()
+                value.product_ids.len() + value.applicable_taxon_term_keys.len()
             }
         })
         .sum()

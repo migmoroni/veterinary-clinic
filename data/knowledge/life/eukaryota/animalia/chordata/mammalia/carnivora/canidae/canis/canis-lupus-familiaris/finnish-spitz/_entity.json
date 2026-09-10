@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "finnish-spitz",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "finnish-spitz",
-    "variety": null
-  },
+  "id": "0becebe1-6d36-4e45-9aa8-2434fee67d03",
   "classifications": {
     "originPlaceIds": [
       "fi"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Spitz Finlandês",
-      "pt-PT": "Spitz Finlandês",
-      "gn-PY": "Spitz finlandés",
-      "en-US": "Finnish Spitz",
-      "es-ES": "Spitz finlandés",
-      "fr-FR": "Spitz finlandais"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.finnishSpitz"
 }

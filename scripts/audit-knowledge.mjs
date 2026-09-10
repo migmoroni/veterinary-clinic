@@ -17,6 +17,7 @@ const forbiddenProductFields = [
 ];
 const removedPurposes = new Set(['vaccine_profile', 'life_stage', 'therapeutic_scope']);
 const canonicalTaxonomies = new Set([
+	'life:type',
 	'life:size',
 	'manufacturer:type',
 	'manufacturer:classification',
@@ -110,8 +111,8 @@ const byIdentity = new Map(entries.map((entry) => [`${entry.manifest.entityType}
 const taxonomies = new Map((byType.taxonomy ?? []).map((entry) => [`${entry.manifest.domain}:${entry.manifest.purpose}`, entry.manifest]));
 const taxonomyIndexes = new Map();
 
-record(taxonomies.size === 10, `expected 10 canonical taxonomies, found ${taxonomies.size}`);
-record(same([...taxonomies.keys()].sort(), [...canonicalTaxonomies].sort()), 'taxonomy domain/purpose matrix differs from the canonical ten pairs');
+record(taxonomies.size === 11, `expected 11 canonical taxonomies, found ${taxonomies.size}`);
+record(same([...taxonomies.keys()].sort(), [...canonicalTaxonomies].sort()), 'taxonomy domain/purpose matrix differs from the canonical eleven pairs');
 
 let taxonomyTermCount = 0;
 let taxonomyHierarchyRelations = 0;
@@ -120,21 +121,27 @@ for (const { relative, manifest } of byType.taxonomy ?? []) {
 	record(Array.isArray(manifest.terms), `${relative}: terms must be an array`);
 	const keys = new Set();
 	const index = new Map();
+	const lifeType = manifest.domain === 'life' && manifest.purpose === 'type';
+	if (lifeType) record(manifest.id === 'life-types', `${relative}: life:type id must be life-types`);
 	function visit(terms, parentKey, ownerPath, depth) {
 		for (const [position, term] of terms.entries()) {
 			const sourcePath = `${ownerPath}.${position}`;
 			taxonomyTermCount += 1;
 			if (parentKey !== null) taxonomyHierarchyRelations += 1;
-			record(depth <= 32, `${relative}: ${sourcePath}.key exceeds the maximum taxonomy depth of 32`);
+			record(depth < 32, `${relative}: ${sourcePath}.key exceeds the maximum taxonomy depth of 32`);
+			if (lifeType) record(depth <= 9, `${relative}: ${sourcePath}.key exceeds life rank variety`);
 			record(isText(term.key), `${relative}: ${sourcePath}.key is invalid`);
 			record(!keys.has(term.key), `${relative}: duplicate term key ${term.key} at ${sourcePath}.key`);
 			keys.add(term.key);
-			index.set(term.key, term);
+			index.set(term.key, { term, parentKey, depth, siblingOrder: position });
 			record(!Object.hasOwn(term, 'parentKey'), `${relative}: ${sourcePath}.parentKey is forbidden`);
 			record(!Object.hasOwn(term, 'order'), `${relative}: ${sourcePath}.order is forbidden`);
 			record(localizedValuesAreValid(term.localizedContent?.label, false), `${relative}: ${sourcePath}.localizedContent.label must contain the six locales`);
 			if (term.localizedContent?.aliases !== undefined) {
 				record(localizedValuesAreValid(term.localizedContent.aliases, true), `${relative}: ${sourcePath}.localizedContent.aliases is invalid`);
+			}
+			if (lifeType) {
+				record(same(Object.keys(term.localizedContent ?? {}), ['label']), `${relative}: ${sourcePath}.localizedContent accepts only label for life:type`);
 			}
 			if (term.children !== undefined) {
 				record(Array.isArray(term.children) && term.children.length > 0, `${relative}: ${sourcePath}.children must be a non-empty array when present`);
@@ -142,13 +149,22 @@ for (const { relative, manifest } of byType.taxonomy ?? []) {
 			}
 		}
 	}
-	visit(manifest.terms ?? [], null, 'terms', 1);
+	visit(manifest.terms ?? [], null, 'terms', 0);
 	record(keys.size <= 10_000, `${relative}: taxonomy contains more than 10000 terms`);
 	taxonomyIndexes.set(`${manifest.domain}:${manifest.purpose}`, index);
 }
 
 function taxonomyHas(domain, purpose, key) {
 	return taxonomyIndexes.get(`${domain}:${purpose}`)?.has(key) === true;
+}
+
+function isTaxonomyAncestor(index, ancestor, descendant) {
+	let current = index.get(descendant)?.parentKey;
+	while (current !== null && current !== undefined) {
+		if (current === ancestor) return true;
+		current = index.get(current)?.parentKey;
+	}
+	return false;
 }
 
 let productTaxonReferences = 0;
@@ -158,6 +174,8 @@ const stageCounts = Object.fromEntries(lifeStageOrder.map((stage) => [stage, 0])
 const spectrumCounts = { broad: 0, narrow: 0 };
 let productsWithLifeStages = 0;
 let productsWithTherapeuticSpectrum = 0;
+const lifeTypeIndex = taxonomyIndexes.get('life:type') ?? new Map();
+const lifeEntityTerms = new Map();
 
 for (const { relative, manifest } of entries) {
 	const serialized = JSON.stringify(manifest);
@@ -171,15 +189,29 @@ for (const { relative, manifest } of entries) {
 	if (manifest.typeTermKey !== undefined) {
 		record(taxonomyHas(manifest.entityType, 'type', manifest.typeTermKey), `${relative}: unresolved typeTermKey ${manifest.typeTermKey}`);
 	}
+	if (manifest.entityType === 'life') {
+		record(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(manifest.id), `${relative}: life id must be a lowercase UUIDv4`);
+		record(isText(manifest.typeTermKey), `${relative}: typeTermKey is required`);
+		record(!Object.hasOwn(manifest, 'taxonomy'), `${relative}: taxonomy is forbidden in LifeEntity`);
+		record(same(Object.keys(manifest.localizedContent ?? {}), ['aliases']), `${relative}: LifeEntity localizedContent accepts only aliases`);
+		const previous = lifeEntityTerms.get(manifest.typeTermKey);
+		record(previous === undefined, `${relative}: typeTermKey ${manifest.typeTermKey} is already associated with ${previous}`);
+		lifeEntityTerms.set(manifest.typeTermKey, manifest.id);
+	}
 	for (const key of manifest.classificationTermKeys ?? []) {
 		record(taxonomyHas(manifest.entityType, 'classification', key), `${relative}: unresolved classificationTermKeys value ${key}`);
 	}
 	if (manifest.entityType === 'product') {
 		record(byIdentity.has(`manufacturer:${manifest.manufacturerId}`), `${relative}: unresolved manufacturerId ${manifest.manufacturerId}`);
 		for (const id of manifest.activeIngredientIds ?? []) record(byIdentity.has(`active_ingredient:${id}`), `${relative}: unresolved activeIngredientIds value ${id}`);
-		for (const id of manifest.applicableTaxonIds ?? []) {
+		for (const id of manifest.applicableTaxonTermKeys ?? []) {
 			productTaxonReferences += 1;
-			record(byIdentity.has(`life:${id}`), `${relative}: unresolved applicableTaxonIds value ${id}`);
+			record(lifeTypeIndex.has(id), `${relative}: unresolved applicableTaxonTermKeys value ${id}`);
+		}
+		const targets = manifest.applicableTaxonTermKeys ?? [];
+		record(same([...targets].sort(), targets), `${relative}: applicableTaxonTermKeys must be strictly sorted`);
+		for (let left = 0; left < targets.length; left += 1) for (let right = left + 1; right < targets.length; right += 1) {
+			record(!isTaxonomyAncestor(lifeTypeIndex, targets[left], targets[right]) && !isTaxonomyAncestor(lifeTypeIndex, targets[right], targets[left]), `${relative}: redundant applicable taxon terms ${targets[left]} and ${targets[right]}`);
 		}
 		for (const key of manifest.targetTermKeys ?? []) {
 			productTargetReferences += 1;
@@ -202,9 +234,14 @@ for (const { relative, manifest } of entries) {
 		}
 	}
 	if (manifest.entityType === 'treatment_protocol') {
-		for (const id of manifest.applicableTaxonIds ?? []) {
+		const targets = manifest.applicableTaxonTermKeys ?? [];
+		record(same([...targets].sort(), targets), `${relative}: applicableTaxonTermKeys must be strictly sorted`);
+		for (const id of manifest.applicableTaxonTermKeys ?? []) {
 			protocolTaxonReferences += 1;
-			record(byIdentity.has(`life:${id}`), `${relative}: unresolved applicableTaxonIds value ${id}`);
+			record(lifeTypeIndex.has(id), `${relative}: unresolved applicableTaxonTermKeys value ${id}`);
+		}
+		for (let left = 0; left < targets.length; left += 1) for (let right = left + 1; right < targets.length; right += 1) {
+			record(!isTaxonomyAncestor(lifeTypeIndex, targets[left], targets[right]) && !isTaxonomyAncestor(lifeTypeIndex, targets[right], targets[left]), `${relative}: redundant applicable taxon terms ${targets[left]} and ${targets[right]}`);
 		}
 		for (const id of manifest.productIds ?? []) record(byIdentity.has(`product:${id}`), `${relative}: unresolved productIds value ${id}`);
 	}
@@ -214,7 +251,8 @@ const markdownFiles = tree.files.filter((file) => file.endsWith('.md') && file !
 const editorialEntities = entries.filter(({ manifest }) => (manifest.sections ?? []).length > 0);
 const sectionCount = editorialEntities.reduce((count, { manifest }) => count + manifest.sections.length, 0);
 const mediaFiles = tree.files.filter((file) => file.includes(`${path.sep}_media${path.sep}`));
-const lifeLevels = Object.fromEntries(['domain', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species', 'breed', 'variety'].map((level) => [level, (byType.life ?? []).filter(({ manifest }) => manifest.taxonomy?.[level] === manifest.id).length]));
+const lifeRanks = ['domain', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species', 'breed', 'variety'];
+const lifeLevels = Object.fromEntries(lifeRanks.map((rank, depth) => [rank, [...lifeTypeIndex.values()].filter((term) => term.depth === depth).length]));
 const lifeWithClassifications = (byType.life ?? []).filter(({ manifest }) => manifest.classifications !== undefined);
 
 const inventory = {
@@ -227,7 +265,10 @@ const inventory = {
 	},
 	entitiesByType: Object.fromEntries(Object.entries(byType).map(([type, values]) => [type, values.length]).sort()),
 	life: {
-		levels: lifeLevels,
+		termsByRank: lifeLevels,
+		termsWithEntity: lifeEntityTerms.size,
+		termsWithoutEntity: lifeTypeIndex.size - lifeEntityTerms.size,
+		entityTypeRelations: lifeEntityTerms.size,
 		classifications: {
 			entitiesWithClassifications: lifeWithClassifications.length,
 			originPlaceIds: lifeWithClassifications.reduce((count, { manifest }) => count + (manifest.classifications?.originPlaceIds?.length ?? 0), 0),

@@ -2,7 +2,7 @@
 
 use super::{CompiledDocument, KnowledgeLocale, MediaAsset, SourceEntry, TaxonomyEntity};
 use crate::markdown::CompiledMediaReference;
-use crate::source::TaxonomyTerm;
+use crate::source::{CanonicalEntity, LifeEntity, LifeRank, LocalizedValue, TaxonomyTerm};
 use serde::Serialize;
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -177,5 +177,99 @@ impl ValidatedSource {
 
     pub fn source_digest_sha256(&self) -> &str {
         &self.source_digest_sha256
+    }
+
+    pub fn life_term_rank(&self, term_key: &str) -> Option<LifeRank> {
+        self.taxonomy_term("life", "type", term_key)
+            .and_then(|term| LifeRank::from_depth(term.depth))
+    }
+
+    pub fn life_type_of_entity(&self, entity_id: &str) -> Option<(&LifeEntity, LifeRank)> {
+        self.entities
+            .iter()
+            .find_map(|entry| match &entry.source.entity {
+                CanonicalEntity::Life(entity) if entity.id == entity_id => self
+                    .life_term_rank(&entity.type_term_key)
+                    .map(|rank| (&**entity, rank)),
+                _ => None,
+            })
+    }
+
+    pub fn life_entity_for_term(&self, term_key: &str) -> Option<&LifeEntity> {
+        self.entities
+            .iter()
+            .find_map(|entry| match &entry.source.entity {
+                CanonicalEntity::Life(entity) if entity.type_term_key == term_key => {
+                    Some(&**entity)
+                }
+                _ => None,
+            })
+    }
+
+    pub fn life_parent(&self, term_key: &str) -> Option<&str> {
+        self.taxonomy_term("life", "type", term_key)
+            .and_then(|term| term.parent_key.as_deref())
+    }
+
+    pub fn life_children(&self, term_key: &str) -> Vec<&str> {
+        let Some(terms) = self
+            .taxonomy_terms
+            .get(&("life".to_string(), "type".to_string()))
+        else {
+            return Vec::new();
+        };
+        let mut children = terms
+            .iter()
+            .filter(|(_, term)| term.parent_key.as_deref() == Some(term_key))
+            .map(|(key, term)| (term.sibling_order, key.as_str()))
+            .collect::<Vec<_>>();
+        children.sort_unstable();
+        children.into_iter().map(|(_, key)| key).collect()
+    }
+
+    pub fn life_ancestors(&self, term_key: &str) -> Vec<&str> {
+        let mut result = Vec::new();
+        let mut current = self.life_parent(term_key);
+        while let Some(key) = current {
+            result.push(key);
+            current = self.life_parent(key);
+        }
+        result.reverse();
+        result
+    }
+
+    pub fn life_descendants(&self, term_key: &str) -> Vec<&str> {
+        let mut result = Vec::new();
+        let mut pending = self.life_children(term_key);
+        pending.reverse();
+        while let Some(key) = pending.pop() {
+            result.push(key);
+            let mut children = self.life_children(key);
+            children.reverse();
+            pending.extend(children);
+        }
+        result
+    }
+
+    pub fn life_is_ancestor(&self, ancestor: &str, descendant: &str) -> bool {
+        self.life_ancestors(descendant).contains(&ancestor)
+    }
+
+    pub fn life_taxon_label(&self, term_key: &str, locale: KnowledgeLocale) -> Option<&str> {
+        self.taxonomy_term("life", "type", term_key)
+            .and_then(|term| term.term.localized_content.get("label"))
+            .and_then(|value| value.text(locale))
+    }
+
+    pub fn life_entity_aliases(
+        &self,
+        entity_id: &str,
+        locale: KnowledgeLocale,
+    ) -> Option<&[String]> {
+        let (entity, _) = self.life_type_of_entity(entity_id)?;
+        match entity.localized_content.get("aliases")? {
+            LocalizedValue::List(value) => Some(value.get(locale)),
+            LocalizedValue::Text(_) => None,
+        }
     }
 }

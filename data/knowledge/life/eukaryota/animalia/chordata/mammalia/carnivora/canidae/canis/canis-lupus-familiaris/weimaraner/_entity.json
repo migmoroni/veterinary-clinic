@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "weimaraner",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "weimaraner",
-    "variety": null
-  },
+  "id": "e9e53d30-8e21-42c5-9194-357c19ab5be8",
   "classifications": {
     "originPlaceIds": [
       "de"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Weimaraner",
-      "pt-PT": "Weimaraner",
-      "gn-PY": "Weimaraner",
-      "en-US": "Weimaraner",
-      "es-ES": "Weimaraner",
-      "fr-FR": "Braque de Weimar"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.weimaraner"
 }

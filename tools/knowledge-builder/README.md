@@ -363,12 +363,12 @@ flowchart LR
 
             subgraph CATALOG["Entidades localizadas"]
                 GEO["geo_places<br/>PK id<br/>parent_place_id · name · coordinates"]
-                LIFE["life_reference_items<br/>PK id<br/>10 colunas taxonômicas · size · stage metrics"]
+                LIFE["life_reference_items<br/>PK id<br/>size · aliases · stage metrics · content"]
                 LOP["life_origin_places<br/>PK life_id + place_id<br/>sort_order"]
                 MFR["manufacturer_catalog_items<br/>PK id<br/>name · regions_json · content_json"]
                 ING["active_ingredient_catalog_items<br/>PK id<br/>name · nomenclature · content_json"]
                 COND["condition_catalog_items<br/>PK id<br/>name · regions_json · content_json"]
-                PROD["product_catalog_items<br/>PK id<br/>manufacturer_id · applicable_taxon_ids_json<br/>applicable_life_stages_json · therapeutic_spectrum"]
+                PROD["product_catalog_items<br/>PK id<br/>manufacturer_id · applicable_taxon_term_keys_json<br/>applicable_life_stages_json · therapeutic_spectrum"]
             end
 
             subgraph RELATIONS["Relações semânticas"]
@@ -377,7 +377,7 @@ flowchart LR
             end
 
             subgraph PROTOCOLS["Protocolos de tratamento"]
-                TP["treatment_protocols<br/>PK id<br/>kind · name · applicable_taxon_ids_json"]
+                TP["treatment_protocols<br/>PK id<br/>kind · name · applicable_taxon_term_keys_json"]
                 TPI["treatment_protocol_items<br/>PK protocol_id + product_id<br/>sort_order"]
                 TPD["treatment_protocol_doses<br/>PK protocol_id + dose_id<br/>validity · sort_order"]
             end
@@ -406,7 +406,6 @@ flowchart LR
     TT -->|"FK parent term"| TT
 
     GEO -->|"FK parent_place_id"| GEO
-    LIFE -->|"FKs da cadeia"| LIFE
     LIFE -->|"FK life_id"| LOP
     GEO -->|"FK place_id"| LOP
     MFR -->|"FK manufacturer_id"| PROD
@@ -426,7 +425,7 @@ flowchart LR
     PROD -.->|"identidade lógica"| ENTITY_ID
     GEO -.->|"identidade lógica"| ENTITY_ID
     TP -.->|"identidade lógica"| ENTITY_ID
-    ENTITY_ID -.->|"4 tipos de catálogo; sem FK"| ETT
+    ENTITY_ID -.->|"5 tipos de catálogo; sem FK"| ETT
     ENTITY_ID -.->|"entidades localizadas; sem FK"| EST
     ENTITY_ID -.->|"5 tipos com mídia; sem FK"| EMR
 
@@ -457,17 +456,19 @@ polimórficos, atravessarem bancos diferentes ou apontarem para arquivos CAS.
 Colunas `*_json` guardam atributos compostos do próprio registro; elas não
 representam tabelas ou relacionamentos ocultos.
 
-As dez taxonomias canônicas usam `taxonomy_registry` e `taxonomy_terms`. Na
+As onze taxonomias canônicas usam `taxonomy_registry` e `taxonomy_terms`. Na
 autoria, cada taxonomia é uma floresta ordenada: `terms` contém raízes e
 `children` contém filhos. A chave é uma identidade opaca, simples ou composta;
 seus segmentos não implicam ancestralidade. O builder percorre a árvore em
 pré-ordem e achata cada nó em `taxonomy_terms`, derivando
 `parent_term_key` exclusivamente do aninhamento e `sort_order` da posição entre
 irmãos.
-Fabricantes, princípios ativos, condições e produtos materializam relações N:N
-em `entity_taxonomy_terms`. `life:size` é `ZeroOrOne` e ocupa exclusivamente
-`life_reference_items.size_term_key`; identidade taxonômica, origens e métricas
-de vida usam suas colunas e tabelas fechadas, sem relações duplicadas.
+`life:type` usa a mesma árvore hierárquica comum e associa cada `LifeEntity` a
+exatamente um termo por `typeTermKey` em `entity_taxonomy_terms`. O nome fica em
+`taxonomy_terms.label`; aliases ficam em `life_reference_items.aliases_json`.
+Um termo pode existir sem perfil, e ID da entidade e chave do termo são
+independentes. `life:size` continua `ZeroOrOne` em
+`life_reference_items.size_term_key`.
 
 Estágios de vida aplicáveis e espectro terapêutico são atributos opcionais do
 próprio produto, persistidos respectivamente em
@@ -477,7 +478,7 @@ localizados comuns: aparecem em `aliases_json` e em `entity_search_terms`, sem
 registro ou relação taxonômica. Assim, os atributos diretos atendem filtros
 estruturados e os nomes e aliases atendem a pesquisa textual.
 
-O banco `system` usa schema técnico 6. `system_media` permanece no schema
+O banco `system` usa schema técnico 7. `system_media` permanece no schema
 técnico 2.
 
 Raízes são lidas com `parent_term_key IS NULL ORDER BY sort_order, term_key`.
@@ -492,6 +493,10 @@ atende filtros e facetas que partem de um termo.
 atende a leitura ordenada de todas as taxonomias de uma entidade. Labels e
 Aliases associados também alimentam `entity_search_terms`, o read model textual
 da busca, distinto da relação taxonômica.
+
+Para vida, `idx_life_type_profile` garante no máximo um perfil por termo. CTEs
+recursivas sobre `taxonomy_terms` resolvem ancestrais, descendentes,
+aplicabilidade e listagens por rank; a profundidade é convertida por `LifeRank`.
 
 `build-result.json`
 
@@ -514,7 +519,7 @@ declarados pela versão.
 `veterinary_clinic_system.db`
 
 Catálogo localizado de entidades, taxonomias, relações, protocolos, busca e
-referências estruturais de mídia. O schema atual possui versão técnica 6.
+referências estruturais de mídia. O schema atual possui versão técnica 7.
 
 `veterinary_clinic_system_media.db`
 
@@ -558,7 +563,9 @@ let result = build(&BuildOptions {
 - `cli::run` devolve `CliError`, separando parsing/usage de falhas do builder;
 - `BuildContext`, `ReleaseContext`, `KnowledgeLocale` e `LOCALES` também são
   públicos;
-- `LifeEntity` é o contrato público único da hierarquia biológica.
+- `LifeEntity` e `LifeRank` representam o perfil e o rank resolvido da taxonomia
+  biológica; `ValidatedSource` oferece navegação por pai, filhos, ancestrais e
+  descendentes, além da resolução de labels, aliases e associação opcional.
 
 ## Erros E Código De Saída
 
@@ -599,7 +606,7 @@ modelo de autoria. O diretório separa:
 - `locale.rs`: tipo e ordem fechada dos seis locales;
 - `source_layout.rs`: nomes reservados, caminhos autorais e namespace compilado
   de mídia;
-- `taxonomy.rs`: matriz única dos dez pares e suas cardinalidades;
+- `taxonomy.rs`: matriz única dos onze pares e suas cardinalidades;
 - `version.rs`: versões dos documentos serializados e dos bancos;
 - `tests.rs`: equivalência com JSON Schemas e DDLs declarativos.
 

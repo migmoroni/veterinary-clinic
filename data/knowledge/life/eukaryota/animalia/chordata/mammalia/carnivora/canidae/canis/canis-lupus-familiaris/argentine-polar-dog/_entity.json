@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "argentine-polar-dog",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "argentine-polar-dog",
-    "variety": null
-  },
+  "id": "958dc918-3f2b-4d93-9386-0e14aa20ccb0",
   "classifications": {
     "originPlaceIds": [
       "ar"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Cão Polar Argentino",
-      "pt-PT": "Cão Polar Argentino",
-      "gn-PY": "Perro polar argentino",
-      "en-US": "Argentine Polar Dog",
-      "es-ES": "Perro polar argentino",
-      "fr-FR": "Chien polaire argentin"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.argentinePolarDog"
 }

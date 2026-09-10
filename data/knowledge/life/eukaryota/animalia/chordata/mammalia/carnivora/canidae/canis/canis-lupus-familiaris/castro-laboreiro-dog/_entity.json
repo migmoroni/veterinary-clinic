@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "castro-laboreiro-dog",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "castro-laboreiro-dog",
-    "variety": null
-  },
+  "id": "504f9c8e-ae91-4592-aaa3-ef69311f2d98",
   "classifications": {
     "originPlaceIds": [
       "pt"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Cão de Castro Laboreiro",
-      "pt-PT": "Cão de Castro Laboreiro",
-      "gn-PY": "Perro de Castro Laboreiro",
-      "en-US": "Castro Laboreiro Dog",
-      "es-ES": "Perro de Castro Laboreiro",
-      "fr-FR": "Chien de Castro Laboreiro"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.castroLaboreiroDog"
 }

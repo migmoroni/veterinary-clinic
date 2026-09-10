@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "bohemian-shepherd",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "bohemian-shepherd",
-    "variety": null
-  },
+  "id": "abcfe6da-29cf-463e-8516-a7eb4bc70926",
   "classifications": {
     "originPlaceIds": [
       "cz"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Pastor da Boêmia",
-      "pt-PT": "Pastor da Boêmia",
-      "gn-PY": "Pastor bohemio",
-      "en-US": "Bohemian Shepherd",
-      "es-ES": "Pastor bohemio",
-      "fr-FR": "Berger de Bohême"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.bohemianShepherd"
 }

@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "plott-hound",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "plott-hound",
-    "variety": null
-  },
+  "id": "ba1903a2-57cf-4e98-a29c-893c5bb08fdc",
   "classifications": {
     "originPlaceIds": [
       "us"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Plott Hound",
-      "pt-PT": "Plott Hound",
-      "gn-PY": "Plott Hound",
-      "en-US": "Plott Hound",
-      "es-ES": "Plott Hound",
-      "fr-FR": "Plott Hound"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.plottHound"
 }

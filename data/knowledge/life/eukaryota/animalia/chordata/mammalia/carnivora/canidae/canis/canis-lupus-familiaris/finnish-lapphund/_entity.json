@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "finnish-lapphund",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "finnish-lapphund",
-    "variety": null
-  },
+  "id": "a4d2e71a-5b85-4b95-a1b4-96bd7ee50d02",
   "classifications": {
     "originPlaceIds": [
       "fi"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Lapphund Finlandês",
-      "pt-PT": "Lapphund Finlandês",
-      "gn-PY": "Lapphund finlandés",
-      "en-US": "Finnish Lapphund",
-      "es-ES": "Lapphund finlandés",
-      "fr-FR": "Chien finnois de Laponie"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.finnishLapphund"
 }

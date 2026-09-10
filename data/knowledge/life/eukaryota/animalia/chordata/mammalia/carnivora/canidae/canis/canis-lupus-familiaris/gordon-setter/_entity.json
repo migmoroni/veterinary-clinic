@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "gordon-setter",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "gordon-setter",
-    "variety": null
-  },
+  "id": "6f1426b1-8305-4e61-9e4f-b7400e4753e7",
   "classifications": {
     "originPlaceIds": [
       "scotland"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Setter Gordon",
-      "pt-PT": "Setter Gordon",
-      "gn-PY": "Setter Gordon",
-      "en-US": "Gordon Setter",
-      "es-ES": "Setter Gordon",
-      "fr-FR": "Setter Gordon"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.gordonSetter"
 }

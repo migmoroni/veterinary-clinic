@@ -1,28 +1,9 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "mammalia",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": null,
-    "family": null,
-    "genus": null,
-    "species": null,
-    "breed": null,
-    "variety": null
-  },
+  "id": "d508a1be-2ed3-4f20-a1ab-e9494e6b9355",
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia",
   "localizedContent": {
-    "name": {
-      "pt-BR": "Mamíferos",
-      "pt-PT": "Mamíferos",
-      "gn-PY": "Mammalia",
-      "en-US": "Mammals",
-      "es-ES": "Mamíferos",
-      "fr-FR": "Mammifères"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],

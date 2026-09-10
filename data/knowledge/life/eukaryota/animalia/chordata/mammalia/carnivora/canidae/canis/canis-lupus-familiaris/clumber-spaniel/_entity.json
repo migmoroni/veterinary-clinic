@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "clumber-spaniel",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "clumber-spaniel",
-    "variety": null
-  },
+  "id": "a554699e-efa1-4fd5-a6c2-8aaeaa5fc00b",
   "classifications": {
     "originPlaceIds": [
       "england"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Clumber Spaniel",
-      "pt-PT": "Clumber Spaniel",
-      "gn-PY": "Clumber Spaniel",
-      "en-US": "Clumber Spaniel",
-      "es-ES": "Clumber Spaniel",
-      "fr-FR": "Clumber Spaniel"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.clumberSpaniel"
 }

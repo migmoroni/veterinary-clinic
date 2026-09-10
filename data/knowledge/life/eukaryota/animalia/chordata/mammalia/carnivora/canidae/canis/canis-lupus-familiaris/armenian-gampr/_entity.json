@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "armenian-gampr",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "armenian-gampr",
-    "variety": null
-  },
+  "id": "6dfebe72-224f-4b09-9347-83008ce571bc",
   "classifications": {
     "originPlaceIds": [
       "am"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Gampr Armênio",
-      "pt-PT": "Gampr Armênio",
-      "gn-PY": "Gampr armenio",
-      "en-US": "Armenian Gampr",
-      "es-ES": "Gampr armenio",
-      "fr-FR": "Gampr arménien"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.armenianGampr"
 }

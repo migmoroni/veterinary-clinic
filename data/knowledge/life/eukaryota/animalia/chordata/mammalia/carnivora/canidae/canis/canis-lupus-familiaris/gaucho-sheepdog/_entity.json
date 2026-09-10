@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "gaucho-sheepdog",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "gaucho-sheepdog",
-    "variety": null
-  },
+  "id": "00fc6afa-509d-458d-af0e-f2db9e9ebf6e",
   "classifications": {
     "originPlaceIds": [
       "br"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Ovelheiro Gaúcho",
-      "pt-PT": "Ovelheiro Gaúcho",
-      "gn-PY": "Ovejero gaucho",
-      "en-US": "Gaucho Sheepdog",
-      "es-ES": "Ovejero gaucho",
-      "fr-FR": "Berger gaucho"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.gauchoSheepdog"
 }

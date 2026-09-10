@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"status": "PASS",
-	"entityCount": 608,
+	"entityCount": 609,
 	"entitiesByType": {
 		"active_ingredient": 17,
 		"condition": 1,
@@ -9,7 +9,7 @@
 		"life": 419,
 		"manufacturer": 12,
 		"product": 62,
-		"taxonomy": 10,
+		"taxonomy": 11,
 		"treatment_protocol": 3
 	},
 	"productAttributes": {
@@ -26,9 +26,9 @@
 		}
 	},
 	"taxonomy": {
-		"registryEntries": 10,
-		"terms": 575,
-		"hierarchyRelations": 472,
+		"registryEntries": 11,
+		"terms": 994,
+		"hierarchyRelations": 890,
 		"productTargetReferences": 132,
 		"genericSearchTerms": 0
 	},

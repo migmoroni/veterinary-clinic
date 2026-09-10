@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "shikoku",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "shikoku",
-    "variety": null
-  },
+  "id": "36281111-b15e-43d1-9e06-3bb31246bcb2",
   "classifications": {
     "originPlaceIds": [
       "jp"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Shikoku",
-      "pt-PT": "Shikoku",
-      "gn-PY": "Shikoku",
-      "en-US": "Shikoku",
-      "es-ES": "Shikoku",
-      "fr-FR": "Shikoku"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.shikoku"
 }

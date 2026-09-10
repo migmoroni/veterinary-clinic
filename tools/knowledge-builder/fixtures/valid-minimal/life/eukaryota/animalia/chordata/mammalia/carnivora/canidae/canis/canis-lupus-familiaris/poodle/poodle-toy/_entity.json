@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "poodle-toy",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "poodle",
-    "variety": "poodle-toy"
-  },
+  "id": "e7beac51-c7c5-431b-9e66-75660a473dfe",
   "classifications": {
     "originPlaceIds": [
       "fixture-place"
@@ -162,22 +150,17 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "poodle-toy",
-      "pt-PT": "poodle-toy",
-      "gn-PY": "poodle-toy",
-      "en-US": "poodle-toy",
-      "es-ES": "poodle-toy",
-      "fr-FR": "poodle-toy"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
       "gn-PY": [],
-      "en-US": [],
+      "en-US": [
+        "Toy Poodle"
+      ],
       "es-ES": [],
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.poodle.poodleToy"
 }

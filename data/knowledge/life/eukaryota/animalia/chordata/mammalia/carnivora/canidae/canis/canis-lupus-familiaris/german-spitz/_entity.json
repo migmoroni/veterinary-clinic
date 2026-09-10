@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "german-spitz",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "german-spitz",
-    "variety": null
-  },
+  "id": "40bfb74a-9f78-4b39-84ae-a22959d3d5d9",
   "classifications": {
     "originPlaceIds": [
       "de"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Spitz Alemão",
-      "pt-PT": "Spitz alemão",
-      "gn-PY": "Spitz alemán",
-      "en-US": "German Spitz",
-      "es-ES": "Spitz alemán",
-      "fr-FR": "Spitz allemand"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.germanSpitz"
 }

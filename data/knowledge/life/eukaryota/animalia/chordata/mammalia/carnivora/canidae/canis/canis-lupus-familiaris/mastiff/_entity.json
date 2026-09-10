@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "mastiff",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "mastiff",
-    "variety": null
-  },
+  "id": "3083df3f-1cb9-429b-8710-33c9fe1ab5b0",
   "classifications": {
     "originPlaceIds": [
       "england"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Mastiff",
-      "pt-PT": "Mastiff",
-      "gn-PY": "Mastiff",
-      "en-US": "Mastiff",
-      "es-ES": "Mastiff",
-      "fr-FR": "Mastiff"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.mastiff"
 }

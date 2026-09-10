@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "croatian-sheepdog",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "croatian-sheepdog",
-    "variety": null
-  },
+  "id": "9d48474e-fe0c-4a4b-af76-5a52929ee5f3",
   "classifications": {
     "originPlaceIds": [
       "hr"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Pastor Croata",
-      "pt-PT": "Pastor Croata",
-      "gn-PY": "Pastor croata",
-      "en-US": "Croatian Sheepdog",
-      "es-ES": "Pastor croata",
-      "fr-FR": "Berger croate"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.croatianSheepdog"
 }

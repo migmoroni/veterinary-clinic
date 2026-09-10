@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "original-fila-brasileiro",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "original-fila-brasileiro",
-    "variety": null
-  },
+  "id": "4d99ca8e-5af6-4e9a-bb30-b9155a104601",
   "classifications": {
     "originPlaceIds": [
       "br"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Fila Brasileiro Original",
-      "pt-PT": "Fila Brasileiro Original",
-      "gn-PY": "Fila brasileño original",
-      "en-US": "Original Fila Brasileiro",
-      "es-ES": "Fila brasileño original",
-      "fr-FR": "Fila Brasileiro d'origine"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.originalFilaBrasileiro"
 }

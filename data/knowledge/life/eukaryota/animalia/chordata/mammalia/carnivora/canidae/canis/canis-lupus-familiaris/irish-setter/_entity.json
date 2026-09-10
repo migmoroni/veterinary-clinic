@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "irish-setter",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "irish-setter",
-    "variety": null
-  },
+  "id": "0a51a515-40c8-4a4d-a0ba-bad5de6b8549",
   "classifications": {
     "originPlaceIds": [
       "ie"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Setter Irlandês",
-      "pt-PT": "Setter irlandês",
-      "gn-PY": "Setter irlandés",
-      "en-US": "Irish Setter",
-      "es-ES": "Setter irlandés",
-      "fr-FR": "Setter irlandais"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.irishSetter"
 }

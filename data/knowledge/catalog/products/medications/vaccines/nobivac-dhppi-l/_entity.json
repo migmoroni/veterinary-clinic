@@ -81,7 +81,7 @@
     "pathogen.canineParvovirus",
     "disease.canineLeptospirosis"
   ],
-  "applicableTaxonIds": [
-    "canis-lupus-familiaris"
+  "applicableTaxonTermKeys": [
+    "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris"
   ]
 }

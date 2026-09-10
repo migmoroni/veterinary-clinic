@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "boxer",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "boxer",
-    "variety": null
-  },
+  "id": "e15a19fe-5d2c-47bf-8cbd-d2cb3f86bb22",
   "classifications": {
     "originPlaceIds": [
       "de"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Boxer",
-      "pt-PT": "Boxer",
-      "gn-PY": "Boxer",
-      "en-US": "Boxer",
-      "es-ES": "Boxer",
-      "fr-FR": "Boxer"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.boxer"
 }

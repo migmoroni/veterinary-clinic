@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "norwegian-forest-cat",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "felidae",
-    "genus": "felis",
-    "species": "felis-catus",
-    "breed": "norwegian-forest-cat",
-    "variety": null
-  },
+  "id": "bff5c0c4-e8fc-4b75-b95c-a96a3e23922a",
   "classifications": {
     "originPlaceIds": [
       "no"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Gato Norueguês da Floresta",
-      "pt-PT": "Gato norueguês da floresta",
-      "gn-PY": "Bosque de Noruega",
-      "en-US": "Norwegian Forest Cat",
-      "es-ES": "Bosque de Noruega",
-      "fr-FR": "Chat des forêts norvégiennes"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.felidae.felis.felisCatus.norwegianForestCat"
 }

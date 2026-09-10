@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "boerboel",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "boerboel",
-    "variety": null
-  },
+  "id": "4ece8356-73e3-4f43-a6f8-74dfc1bceacd",
   "classifications": {
     "originPlaceIds": [
       "za"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Boerboel",
-      "pt-PT": "Boerboel",
-      "gn-PY": "Boerboel",
-      "en-US": "Boerboel",
-      "es-ES": "Boerboel",
-      "fr-FR": "Boerboel"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.boerboel"
 }

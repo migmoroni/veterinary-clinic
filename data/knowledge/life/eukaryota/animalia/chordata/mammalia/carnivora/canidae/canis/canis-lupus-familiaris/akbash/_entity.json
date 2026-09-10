@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "akbash",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "akbash",
-    "variety": null
-  },
+  "id": "917578ad-c37e-4aa9-8cfb-1e0d9095a9da",
   "classifications": {
     "originPlaceIds": [
       "tr"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Akbash",
-      "pt-PT": "Akbash",
-      "gn-PY": "Akbash",
-      "en-US": "Akbash",
-      "es-ES": "Akbash",
-      "fr-FR": "Akbash"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.akbash"
 }

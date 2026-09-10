@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "afghan-hound",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "afghan-hound",
-    "variety": null
-  },
+  "id": "7a88b949-e26e-458d-896a-f68177e29d0f",
   "classifications": {
     "originPlaceIds": [
       "af"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Galgo Afegão",
-      "pt-PT": "Galgo afegão",
-      "gn-PY": "Lebrel afgano",
-      "en-US": "Afghan Hound",
-      "es-ES": "Lebrel afgano",
-      "fr-FR": "Lévrier afghan"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.afghanHound"
 }

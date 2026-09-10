@@ -1,28 +1,9 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "chordata",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": null,
-    "order": null,
-    "family": null,
-    "genus": null,
-    "species": null,
-    "breed": null,
-    "variety": null
-  },
+  "id": "3a4e7d47-44c1-4cb0-8a14-85fc1247d78b",
+  "typeTermKey": "eukaryota.animalia.chordata",
   "localizedContent": {
-    "name": {
-      "pt-BR": "Cordados",
-      "pt-PT": "Cordados",
-      "gn-PY": "Chordata",
-      "en-US": "Chordates",
-      "es-ES": "Cordados",
-      "fr-FR": "Chordés"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],

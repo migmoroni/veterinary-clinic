@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "prague-ratter",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "prague-ratter",
-    "variety": null
-  },
+  "id": "8955a3b3-bee7-438f-abae-51d800148aca",
   "classifications": {
     "originPlaceIds": [
       "cz"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Ratonero de Praga",
-      "pt-PT": "Ratonero de Praga",
-      "gn-PY": "Ratonero de Praga",
-      "en-US": "Prague Ratter",
-      "es-ES": "Ratonero de Praga",
-      "fr-FR": "Ratier de Prague"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.pragueRatter"
 }

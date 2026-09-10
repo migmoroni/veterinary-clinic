@@ -61,7 +61,7 @@ fn validates_and_builds_all_locales_deterministically() {
     .unwrap();
     assert_eq!(report["schemaVersion"], 5);
     assert_eq!(first.builder_version, "0.5.0");
-    assert_eq!(first.system_schema_version, 6);
+    assert_eq!(first.system_schema_version, 7);
     assert_eq!(first.system_media_schema_version, 2);
     let expected_system_tables = [
         "active_ingredient_catalog_items",
@@ -116,7 +116,7 @@ fn validates_and_builds_all_locales_deterministically() {
         let user_version: u32 = database
             .query_row("PRAGMA user_version", [], |row| row.get(0))
             .unwrap();
-        assert_eq!(user_version, 6);
+        assert_eq!(user_version, 7);
         let table_count: usize = database
             .query_row(
                 "SELECT count(*) FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
@@ -130,7 +130,7 @@ fn validates_and_builds_all_locales_deterministically() {
                 row.get(0)
             })
             .unwrap();
-        assert_eq!(taxonomy_count, 10);
+        assert_eq!(taxonomy_count, 11);
         let taxonomies_with_terms: usize = database
             .query_row(
                 "SELECT count(DISTINCT taxonomy_id) FROM taxonomy_terms",
@@ -138,7 +138,7 @@ fn validates_and_builds_all_locales_deterministically() {
                 |row| row.get(0),
             )
             .unwrap();
-        assert_eq!(taxonomies_with_terms, 10);
+        assert_eq!(taxonomies_with_terms, 11);
         let removed_taxonomy_purposes: usize = database
             .query_row(
                 "SELECT count(*) FROM taxonomy_registry WHERE purpose IN ('vaccine_profile','life_stage','therapeutic_scope')",
@@ -201,6 +201,12 @@ fn validates_and_builds_all_locales_deterministically() {
             ("condition_catalog_items", "type_term_key"),
             ("product_catalog_items", "type_term_key"),
             ("entity_taxonomy_terms", "relation_kind"),
+            ("life_reference_items", "name"),
+            ("life_reference_items", "normalized_name"),
+            ("life_reference_items", "domain_id"),
+            ("life_reference_items", "species_id"),
+            ("life_reference_items", "breed_id"),
+            ("life_reference_items", "variety_id"),
         ] {
             let present: usize = database
                 .query_row(
@@ -227,6 +233,14 @@ fn validates_and_builds_all_locales_deterministically() {
             (
                 "idx_entity_taxonomy_entity",
                 "CREATE INDEX idx_entity_taxonomy_entity ON entity_taxonomy_terms(entity_type, entity_id, taxonomy_id, sort_order)",
+            ),
+            (
+                "idx_entity_taxonomy_life_type",
+                "CREATE INDEX idx_entity_taxonomy_life_type ON entity_taxonomy_terms(entity_type, entity_id, taxonomy_id, term_key)",
+            ),
+            (
+                "idx_life_type_profile",
+                "CREATE UNIQUE INDEX idx_life_type_profile ON entity_taxonomy_terms(taxonomy_id, term_key) WHERE entity_type = 'life' AND taxonomy_id = 'life-types'",
             ),
         ] {
             let sql: String = database
@@ -264,10 +278,10 @@ fn validates_and_builds_all_locales_deterministically() {
                 |row| row.get(0),
             )
             .unwrap();
-        assert_eq!(taxonomized_types, 4);
+        assert_eq!(taxonomized_types, 5);
         let invalid_required_cardinality: usize = database
             .query_row(
-                "WITH taxonomized(entity_type, entity_id, required_purpose) AS (SELECT 'manufacturer', id, 'type' FROM manufacturer_catalog_items UNION ALL SELECT 'active_ingredient', id, 'type' FROM active_ingredient_catalog_items UNION ALL SELECT 'condition', id, 'type' FROM condition_catalog_items UNION ALL SELECT 'product', id, 'type' FROM product_catalog_items) SELECT count(*) FROM taxonomized entity WHERE (SELECT count(*) FROM entity_taxonomy_terms relation JOIN taxonomy_registry taxonomy ON taxonomy.id = relation.taxonomy_id WHERE relation.entity_type = entity.entity_type AND relation.entity_id = entity.entity_id AND taxonomy.domain = entity.entity_type AND taxonomy.purpose = entity.required_purpose) <> 1",
+                "WITH taxonomized(entity_type, entity_id, required_purpose) AS (SELECT 'life', id, 'type' FROM life_reference_items UNION ALL SELECT 'manufacturer', id, 'type' FROM manufacturer_catalog_items UNION ALL SELECT 'active_ingredient', id, 'type' FROM active_ingredient_catalog_items UNION ALL SELECT 'condition', id, 'type' FROM condition_catalog_items UNION ALL SELECT 'product', id, 'type' FROM product_catalog_items) SELECT count(*) FROM taxonomized entity WHERE (SELECT count(*) FROM entity_taxonomy_terms relation JOIN taxonomy_registry taxonomy ON taxonomy.id = relation.taxonomy_id WHERE relation.entity_type = entity.entity_type AND relation.entity_id = entity.entity_id AND taxonomy.domain = entity.entity_type AND taxonomy.purpose = entity.required_purpose) <> 1",
                 [],
                 |row| row.get(0),
             )

@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "silken-windhound",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "silken-windhound",
-    "variety": null
-  },
+  "id": "e0c3a6c8-dd18-480a-8cee-aad08e3b184a",
   "classifications": {
     "originPlaceIds": [
       "us"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Silken Windhound",
-      "pt-PT": "Silken Windhound",
-      "gn-PY": "Silken Windhound",
-      "en-US": "Silken Windhound",
-      "es-ES": "Silken Windhound",
-      "fr-FR": "Silken Windhound"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.silkenWindhound"
 }

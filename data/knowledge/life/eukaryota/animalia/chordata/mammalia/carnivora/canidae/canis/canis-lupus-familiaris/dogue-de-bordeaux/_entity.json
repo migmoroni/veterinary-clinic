@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "dogue-de-bordeaux",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "dogue-de-bordeaux",
-    "variety": null
-  },
+  "id": "42a66a75-fb9f-4b5c-9c34-ae04056cfaf9",
   "classifications": {
     "originPlaceIds": [
       "fr"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Dogue de Bordeaux",
-      "pt-PT": "Dogue de Bordeaux",
-      "gn-PY": "Dogo de Burdeos",
-      "en-US": "Dogue de Bordeaux",
-      "es-ES": "Dogo de Burdeos",
-      "fr-FR": "Dogue de Bordeaux"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.dogueDeBordeaux"
 }

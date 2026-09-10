@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "russo-european-laika",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "russo-european-laika",
-    "variety": null
-  },
+  "id": "0fb6d3d1-1784-4b6d-b2c8-60c8c267b56f",
   "classifications": {
     "originPlaceIds": [
       "ru"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Laika Russo-Europeu",
-      "pt-PT": "Laika Russo-Europeu",
-      "gn-PY": "Laika ruso-europeo",
-      "en-US": "Russo-European Laika",
-      "es-ES": "Laika ruso-europeo",
-      "fr-FR": "Laïka russo-européen"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.russoEuropeanLaika"
 }

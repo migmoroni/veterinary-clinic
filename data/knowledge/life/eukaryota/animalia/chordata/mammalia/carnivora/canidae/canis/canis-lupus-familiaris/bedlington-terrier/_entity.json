@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "bedlington-terrier",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "bedlington-terrier",
-    "variety": null
-  },
+  "id": "bf3727da-3e00-483d-845b-7b2df957aef7",
   "classifications": {
     "originPlaceIds": [
       "england"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Bedlington Terrier",
-      "pt-PT": "Bedlington Terrier",
-      "gn-PY": "Bedlington Terrier",
-      "en-US": "Bedlington Terrier",
-      "es-ES": "Bedlington Terrier",
-      "fr-FR": "Bedlington Terrier"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.bedlingtonTerrier"
 }

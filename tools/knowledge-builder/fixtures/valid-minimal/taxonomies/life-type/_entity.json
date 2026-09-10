@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "entityType": "taxonomy",
+  "id": "life-types",
+  "domain": "life",
+  "purpose": "type",
+  "terms": [
+    {
+      "key": "eukaryota",
+      "localizedContent": {
+        "label": {
+          "pt-BR": "eukaryota",
+          "pt-PT": "eukaryota",
+          "gn-PY": "eukaryota",
+          "en-US": "eukaryota",
+          "es-ES": "eukaryota",
+          "fr-FR": "eukaryota"
+        }
+      },
+      "children": [
+        {
+          "key": "eukaryota.animalia",
+          "localizedContent": {
+            "label": {
+              "pt-BR": "animalia",
+              "pt-PT": "animalia",
+              "gn-PY": "animalia",
+              "en-US": "animalia",
+              "es-ES": "animalia",
+              "fr-FR": "animalia"
+            }
+          },
+          "children": [
+            {
+              "key": "eukaryota.animalia.chordata",
+              "localizedContent": {
+                "label": {
+                  "pt-BR": "chordata",
+                  "pt-PT": "chordata",
+                  "gn-PY": "chordata",
+                  "en-US": "chordata",
+                  "es-ES": "chordata",
+                  "fr-FR": "chordata"
+                }
+              },
+              "children": [
+                {
+                  "key": "eukaryota.animalia.chordata.mammalia",
+                  "localizedContent": {
+                    "label": {
+                      "pt-BR": "mammalia",
+                      "pt-PT": "mammalia",
+                      "gn-PY": "mammalia",
+                      "en-US": "mammalia",
+                      "es-ES": "mammalia",
+                      "fr-FR": "mammalia"
+                    }
+                  },
+                  "children": [
+                    {
+                      "key": "eukaryota.animalia.chordata.mammalia.carnivora",
+                      "localizedContent": {
+                        "label": {
+                          "pt-BR": "carnivora",
+                          "pt-PT": "carnivora",
+                          "gn-PY": "carnivora",
+                          "en-US": "carnivora",
+                          "es-ES": "carnivora",
+                          "fr-FR": "carnivora"
+                        }
+                      },
+                      "children": [
+                        {
+                          "key": "eukaryota.animalia.chordata.mammalia.carnivora.canidae",
+                          "localizedContent": {
+                            "label": {
+                              "pt-BR": "canidae",
+                              "pt-PT": "canidae",
+                              "gn-PY": "canidae",
+                              "en-US": "canidae",
+                              "es-ES": "canidae",
+                              "fr-FR": "canidae"
+                            }
+                          },
+                          "children": [
+                            {
+                              "key": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis",
+                              "localizedContent": {
+                                "label": {
+                                  "pt-BR": "canis",
+                                  "pt-PT": "canis",
+                                  "gn-PY": "canis",
+                                  "en-US": "canis",
+                                  "es-ES": "canis",
+                                  "fr-FR": "canis"
+                                }
+                              },
+                              "children": [
+                                {
+                                  "key": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris",
+                                  "localizedContent": {
+                                    "label": {
+                                      "pt-BR": "canis-lupus-familiaris",
+                                      "pt-PT": "canis-lupus-familiaris",
+                                      "gn-PY": "canis-lupus-familiaris",
+                                      "en-US": "canis-lupus-familiaris",
+                                      "es-ES": "canis-lupus-familiaris",
+                                      "fr-FR": "canis-lupus-familiaris"
+                                    }
+                                  },
+                                  "children": [
+                                    {
+                                      "key": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.poodle",
+                                      "localizedContent": {
+                                        "label": {
+                                          "pt-BR": "poodle",
+                                          "pt-PT": "poodle",
+                                          "gn-PY": "poodle",
+                                          "en-US": "poodle",
+                                          "es-ES": "poodle",
+                                          "fr-FR": "poodle"
+                                        }
+                                      },
+                                      "children": [
+                                        {
+                                          "key": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.poodle.poodleToy",
+                                          "localizedContent": {
+                                            "label": {
+                                              "pt-BR": "poodle-toy",
+                                              "pt-PT": "poodle-toy",
+                                              "gn-PY": "poodle-toy",
+                                              "en-US": "poodle-toy",
+                                              "es-ES": "poodle-toy",
+                                              "fr-FR": "poodle-toy"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "structuralOnly",
+      "localizedContent": {
+        "label": {
+          "pt-BR": "Somente estrutural",
+          "pt-PT": "Apenas estrutural",
+          "gn-PY": "Estructural año",
+          "en-US": "Structural only",
+          "es-ES": "Solo estructural",
+          "fr-FR": "Structurel uniquement"
+        }
+      }
+    }
+  ]
+}

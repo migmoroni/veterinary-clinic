@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "czechoslovakian-wolfdog",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "czechoslovakian-wolfdog",
-    "variety": null
-  },
+  "id": "3e3f0514-7c86-461d-aeaa-2b1ad45424e2",
   "classifications": {
     "originPlaceIds": [
       "cz"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Cão-lobo Checoslovaco",
-      "pt-PT": "Cão-lobo Checoslovaco",
-      "gn-PY": "Perro lobo checoslovaco",
-      "en-US": "Czechoslovakian Wolfdog",
-      "es-ES": "Perro lobo checoslovaco",
-      "fr-FR": "Chien-loup tchécoslovaque"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.czechoslovakianWolfdog"
 }

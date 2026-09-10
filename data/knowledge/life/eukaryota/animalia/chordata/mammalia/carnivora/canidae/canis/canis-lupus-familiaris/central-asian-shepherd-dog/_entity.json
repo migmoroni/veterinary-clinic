@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "central-asian-shepherd-dog",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "central-asian-shepherd-dog",
-    "variety": null
-  },
+  "id": "f1be531d-1eb4-4b3b-8149-ade29bf6a785",
   "classifications": {
     "originPlaceIds": [
       "central-asia"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Pastor da Ásia Central",
-      "pt-PT": "Pastor da Ásia Central",
-      "gn-PY": "Pastor de Asia Central",
-      "en-US": "Central Asian Shepherd Dog",
-      "es-ES": "Pastor de Asia Central",
-      "fr-FR": "Berger d'Asie centrale"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.centralAsianShepherdDog"
 }

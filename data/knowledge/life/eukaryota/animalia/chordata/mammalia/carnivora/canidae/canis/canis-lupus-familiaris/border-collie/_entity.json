@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "border-collie",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "border-collie",
-    "variety": null
-  },
+  "id": "26a99fc4-e22e-4cda-bf84-4b2382a1ebbb",
   "classifications": {
     "originPlaceIds": [
       "scotland"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Border Collie",
-      "pt-PT": "Border Collie",
-      "gn-PY": "Border Collie",
-      "en-US": "Border Collie",
-      "es-ES": "Border Collie",
-      "fr-FR": "Border Collie"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.borderCollie"
 }

@@ -4,7 +4,8 @@ As fixtures são autocontidas e exercitam contratos do compilador sem copiar o
 catálogo canônico:
 
 - `valid-minimal/`: fonte mínima que passa por validação e projeção, com as dez
-  taxonomias, cadeia `LifeEntity` completa nos dez níveis, classificações
+  taxonomias, árvore `life:type` completa nos dez ranks, páginas `LifeEntity`
+  opcionais com identidade independente, classificações
   ausentes e independentes, métricas por sexo e estágio, uma variedade,
   aplicabilidade de produto e protocolo e uma localidade resolvida;
 - `valid-markdown/`: CommonMark permitido e formas semanticamente equivalentes;

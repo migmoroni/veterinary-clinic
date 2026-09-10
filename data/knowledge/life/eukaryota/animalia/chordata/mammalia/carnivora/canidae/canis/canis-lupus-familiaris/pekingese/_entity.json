@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "pekingese",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "pekingese",
-    "variety": null
-  },
+  "id": "86e8b5f9-2270-4348-91b0-f2929d90a5d8",
   "classifications": {
     "originPlaceIds": [
       "cn"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Pequinês",
-      "pt-PT": "Pequinês",
-      "gn-PY": "Pequinés",
-      "en-US": "Pekingese",
-      "es-ES": "Pequinés",
-      "fr-FR": "Pékinois"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.pekingese"
 }

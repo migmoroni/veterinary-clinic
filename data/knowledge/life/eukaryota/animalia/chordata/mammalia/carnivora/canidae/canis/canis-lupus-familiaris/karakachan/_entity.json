@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "karakachan",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "karakachan",
-    "variety": null
-  },
+  "id": "671995d5-6ac8-4c96-96b3-f917039add4f",
   "classifications": {
     "originPlaceIds": [
       "bg"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Karakachan",
-      "pt-PT": "Karakachan",
-      "gn-PY": "Karakachan",
-      "en-US": "Karakachan",
-      "es-ES": "Karakachan",
-      "fr-FR": "Karakachan"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.karakachan"
 }

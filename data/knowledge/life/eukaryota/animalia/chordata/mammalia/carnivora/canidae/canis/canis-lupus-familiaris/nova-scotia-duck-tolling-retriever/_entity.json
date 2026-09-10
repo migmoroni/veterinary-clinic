@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "nova-scotia-duck-tolling-retriever",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "nova-scotia-duck-tolling-retriever",
-    "variety": null
-  },
+  "id": "71dcb0d1-27b4-4022-8a3b-1e3c860ca88b",
   "classifications": {
     "originPlaceIds": [
       "ca"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Nova Scotia Duck Tolling Retriever",
-      "pt-PT": "Nova Scotia Duck Tolling Retriever",
-      "gn-PY": "Nova Scotia Duck Tolling Retriever",
-      "en-US": "Nova Scotia Duck Tolling Retriever",
-      "es-ES": "Nova Scotia Duck Tolling Retriever",
-      "fr-FR": "Retriever de la Nouvelle-Écosse"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.novaScotiaDuckTollingRetriever"
 }

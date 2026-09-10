@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "caramelo",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "caramelo",
-    "variety": null
-  },
+  "id": "c6153e79-8da8-430e-bb25-fdf78f14b8fc",
   "classifications": {
     "originPlaceIds": [
       "br"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Caramelo",
-      "pt-PT": "Caramelo",
-      "gn-PY": "Caramelo",
-      "en-US": "Caramelo",
-      "es-ES": "Caramelo",
-      "fr-FR": "Caramelo"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.caramelo"
 }

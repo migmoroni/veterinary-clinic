@@ -1,28 +1,9 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "felis",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "felidae",
-    "genus": "felis",
-    "species": null,
-    "breed": null,
-    "variety": null
-  },
+  "id": "afb96b28-05ae-4da1-9b8c-1e2f266389ac",
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.felidae.felis",
   "localizedContent": {
-    "name": {
-      "pt-BR": "Felis",
-      "pt-PT": "Felis",
-      "gn-PY": "Felis",
-      "en-US": "Felis",
-      "es-ES": "Felis",
-      "fr-FR": "Felis"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],

@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "ibizan-hound",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "ibizan-hound",
-    "variety": null
-  },
+  "id": "3b253d55-616c-4147-b3d0-728a671b2193",
   "classifications": {
     "originPlaceIds": [
       "es"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Podenco Ibicenco",
-      "pt-PT": "Podenco Ibicenco",
-      "gn-PY": "Podenco ibicenco",
-      "en-US": "Ibizan Hound",
-      "es-ES": "Podenco ibicenco",
-      "fr-FR": "Podenco d'Ibiza"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.ibizanHound"
 }

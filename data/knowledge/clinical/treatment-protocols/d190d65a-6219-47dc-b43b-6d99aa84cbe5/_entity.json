@@ -85,7 +85,7 @@
       "fr-FR": "4 doses"
     }
   },
-  "applicableTaxonIds": [
-    "canis-lupus-familiaris"
+  "applicableTaxonTermKeys": [
+    "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris"
   ]
 }

@@ -83,6 +83,7 @@ fn source_layout_namespace_is_closed_and_distinct_from_compiled_media() {
 #[test]
 fn taxonomy_matrix_is_closed_unique_and_typed() {
     let expected = [
+        ("life", "type", TaxonomyCardinality::ExactlyOne),
         ("life", "size", TaxonomyCardinality::ZeroOrOne),
         ("manufacturer", "type", TaxonomyCardinality::ExactlyOne),
         (
@@ -127,7 +128,7 @@ fn taxonomy_matrix_is_closed_unique_and_typed() {
             .iter()
             .filter(|spec| spec.cardinality == TaxonomyCardinality::ExactlyOne)
             .count(),
-        4
+        5
     );
     assert_eq!(
         CANONICAL_TAXONOMIES
@@ -153,6 +154,10 @@ fn taxonomy_matrix_is_closed_unique_and_typed() {
         assert_eq!(exactly_one.len(), 1);
         assert!(taxonomy_spec(domain, exactly_one[0].purpose).is_some());
     }
+    assert_eq!(
+        taxonomy_spec("life", "type").map(|spec| spec.cardinality),
+        Some(TaxonomyCardinality::ExactlyOne)
+    );
     assert_eq!(
         taxonomy_spec("life", "size").map(|spec| spec.cardinality),
         Some(TaxonomyCardinality::ZeroOrOne)
@@ -389,5 +394,5 @@ fn life_contract_has_no_parallel_breed_or_species_storage() {
     assert!(!ddl.contains("breed_origin_places"));
     assert!(!ddl.contains("species_json"));
     assert!(ddl.contains("life_reference_items"));
-    assert!(ddl.contains("applicable_taxon_ids_json"));
+    assert!(ddl.contains("applicable_taxon_term_keys_json"));
 }

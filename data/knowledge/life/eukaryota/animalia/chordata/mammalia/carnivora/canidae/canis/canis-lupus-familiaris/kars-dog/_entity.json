@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "kars-dog",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "kars-dog",
-    "variety": null
-  },
+  "id": "7649504b-e3e5-46d8-be32-e40595abb303",
   "classifications": {
     "originPlaceIds": [
       "tr"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Cão de Kars",
-      "pt-PT": "Cão de Kars",
-      "gn-PY": "Perro de Kars",
-      "en-US": "Kars Dog",
-      "es-ES": "Perro de Kars",
-      "fr-FR": "Chien de Kars"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.karsDog"
 }

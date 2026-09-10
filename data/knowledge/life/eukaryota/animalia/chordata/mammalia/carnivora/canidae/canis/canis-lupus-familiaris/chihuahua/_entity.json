@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "chihuahua",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "chihuahua",
-    "variety": null
-  },
+  "id": "abd1470f-3fc8-41cf-a39b-21e8ca8d224c",
   "classifications": {
     "originPlaceIds": [
       "mx"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Chihuahua",
-      "pt-PT": "Chihuahua",
-      "gn-PY": "Chihuahua",
-      "en-US": "Chihuahua",
-      "es-ES": "Chihuahua",
-      "fr-FR": "Chihuahua"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.chihuahua"
 }

@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "patagonian-sheepdog",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "patagonian-sheepdog",
-    "variety": null
-  },
+  "id": "5f41c110-6c3c-4b1a-b3d0-bb748b398034",
   "classifications": {
     "originPlaceIds": [
       "cl"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Ovelheiro Patagônico",
-      "pt-PT": "Ovelheiro Patagônico",
-      "gn-PY": "Ovejero patagónico",
-      "en-US": "Patagonian Sheepdog",
-      "es-ES": "Ovejero patagónico",
-      "fr-FR": "Berger de Patagonie"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.patagonianSheepdog"
 }

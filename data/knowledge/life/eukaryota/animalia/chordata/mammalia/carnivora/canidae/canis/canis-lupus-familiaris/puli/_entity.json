@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "puli",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "puli",
-    "variety": null
-  },
+  "id": "9b40ddda-0e8f-4967-b43e-4d078c8b61ef",
   "classifications": {
     "originPlaceIds": [
       "hu"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Puli",
-      "pt-PT": "Puli",
-      "gn-PY": "Puli",
-      "en-US": "Puli",
-      "es-ES": "Puli",
-      "fr-FR": "Puli"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.puli"
 }

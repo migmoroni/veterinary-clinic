@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "american-cocker-spaniel",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "american-cocker-spaniel",
-    "variety": null
-  },
+  "id": "496bbc65-9029-419b-b886-6be55926ca02",
   "classifications": {
     "originPlaceIds": [
       "us"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Cocker Spaniel Americano",
-      "pt-PT": "Cocker Spaniel Americano",
-      "gn-PY": "Cocker Spaniel americano",
-      "en-US": "American Cocker Spaniel",
-      "es-ES": "Cocker Spaniel americano",
-      "fr-FR": "Cocker Spaniel américain"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.americanCockerSpaniel"
 }

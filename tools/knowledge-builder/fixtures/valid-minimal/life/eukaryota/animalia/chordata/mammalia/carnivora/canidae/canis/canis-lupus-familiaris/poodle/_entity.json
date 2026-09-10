@@ -1,33 +1,13 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "poodle",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "poodle",
-    "variety": null
-  },
+  "id": "2a9ac070-d6a8-4f62-9a07-a311ae276154",
   "classifications": {
     "bodyMetrics": {
       "size": "default"
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "poodle",
-      "pt-PT": "poodle",
-      "gn-PY": "poodle",
-      "en-US": "poodle",
-      "es-ES": "poodle",
-      "fr-FR": "poodle"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -37,5 +17,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.poodle"
 }

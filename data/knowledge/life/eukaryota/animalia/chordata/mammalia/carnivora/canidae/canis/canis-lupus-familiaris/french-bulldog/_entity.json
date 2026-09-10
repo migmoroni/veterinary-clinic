@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "french-bulldog",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "french-bulldog",
-    "variety": null
-  },
+  "id": "4b2f0fb8-0101-4fde-9358-97e2543b4d0e",
   "classifications": {
     "originPlaceIds": [
       "fr"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Bulldog Francês",
-      "pt-PT": "Bulldog francês",
-      "gn-PY": "Bulldog francés",
-      "en-US": "French Bulldog",
-      "es-ES": "Bulldog francés",
-      "fr-FR": "Bouledogue français"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.frenchBulldog"
 }

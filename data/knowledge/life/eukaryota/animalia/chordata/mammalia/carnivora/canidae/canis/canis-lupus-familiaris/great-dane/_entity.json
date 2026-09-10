@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "great-dane",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "great-dane",
-    "variety": null
-  },
+  "id": "e9d6bd5e-c0a7-4469-8cb8-0e78d783134f",
   "classifications": {
     "originPlaceIds": [
       "de"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Dogue Alemão",
-      "pt-PT": "Dogue alemão",
-      "gn-PY": "Gran Danés",
-      "en-US": "Great Dane",
-      "es-ES": "Gran Danés",
-      "fr-FR": "Dogue allemand"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.greatDane"
 }

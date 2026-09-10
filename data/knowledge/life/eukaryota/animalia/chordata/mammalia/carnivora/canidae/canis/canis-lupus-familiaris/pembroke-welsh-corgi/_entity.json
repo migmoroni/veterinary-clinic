@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "pembroke-welsh-corgi",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "pembroke-welsh-corgi",
-    "variety": null
-  },
+  "id": "e173499a-fe3d-4f38-aaea-a480dfe4cd12",
   "classifications": {
     "originPlaceIds": [
       "wales"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Welsh Corgi Pembroke",
-      "pt-PT": "Welsh Corgi Pembroke",
-      "gn-PY": "Welsh Corgi Pembroke",
-      "en-US": "Pembroke Welsh Corgi",
-      "es-ES": "Welsh Corgi Pembroke",
-      "fr-FR": "Welsh Corgi Pembroke"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.pembrokeWelshCorgi"
 }

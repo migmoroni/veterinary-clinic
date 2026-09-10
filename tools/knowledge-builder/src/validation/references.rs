@@ -122,6 +122,15 @@ pub(super) fn validate_references(
                 );
             }
             CanonicalEntity::Life(value) => {
+                require_term(
+                    entry,
+                    taxonomies,
+                    "life",
+                    "type",
+                    &value.type_term_key,
+                    "typeTermKey",
+                    diagnostics,
+                );
                 if let Some(origins) = value
                     .classifications
                     .as_ref()

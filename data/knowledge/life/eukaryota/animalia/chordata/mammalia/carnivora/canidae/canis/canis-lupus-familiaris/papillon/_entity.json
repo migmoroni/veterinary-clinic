@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "papillon",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "papillon",
-    "variety": null
-  },
+  "id": "3fa8bf3f-ffd5-47cb-ae0c-d781740e8bef",
   "classifications": {
     "originPlaceIds": [
       "fr"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Papillon",
-      "pt-PT": "Papillon",
-      "gn-PY": "Papillon",
-      "en-US": "Papillon",
-      "es-ES": "Papillon",
-      "fr-FR": "Épagneul nain continental (Papillon)"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.papillon"
 }

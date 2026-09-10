@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "miniature-american-shepherd",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "miniature-american-shepherd",
-    "variety": null
-  },
+  "id": "b8af59fd-ada8-4c0f-aa7f-d65e427c050d",
   "classifications": {
     "originPlaceIds": [
       "us"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Pastor Americano Miniatura",
-      "pt-PT": "Pastor Americano Miniatura",
-      "gn-PY": "Pastor americano miniatura",
-      "en-US": "Miniature American Shepherd",
-      "es-ES": "Pastor americano miniatura",
-      "fr-FR": "Berger américain miniature"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.miniatureAmericanShepherd"
 }

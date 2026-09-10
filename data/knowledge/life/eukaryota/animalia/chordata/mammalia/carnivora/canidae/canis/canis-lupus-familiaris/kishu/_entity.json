@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "kishu",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "kishu",
-    "variety": null
-  },
+  "id": "4b71e506-4256-45f4-8474-2650402e60b7",
   "classifications": {
     "originPlaceIds": [
       "jp"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Kishu",
-      "pt-PT": "Kishu",
-      "gn-PY": "Kishu",
-      "en-US": "Kishu",
-      "es-ES": "Kishu",
-      "fr-FR": "Kishu"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.kishu"
 }

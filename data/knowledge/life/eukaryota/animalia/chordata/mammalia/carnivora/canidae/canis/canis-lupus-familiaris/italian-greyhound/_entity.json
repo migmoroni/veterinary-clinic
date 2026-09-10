@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "italian-greyhound",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "italian-greyhound",
-    "variety": null
-  },
+  "id": "89305aa1-ba6a-41ac-96b1-f381b3ea50fe",
   "classifications": {
     "originPlaceIds": [
       "it"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Galgo Italiano",
-      "pt-PT": "Galgo italiano",
-      "gn-PY": "Galgo italiano",
-      "en-US": "Italian Greyhound",
-      "es-ES": "Galgo italiano",
-      "fr-FR": "Petit lévrier italien"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.italianGreyhound"
 }

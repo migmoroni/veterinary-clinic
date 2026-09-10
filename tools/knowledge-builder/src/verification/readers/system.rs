@@ -45,8 +45,8 @@ pub(super) fn read(
     );
     result.insert(
         SystemTable::LifeReferenceItems,
-        query(connection, database, "SELECT id, domain_id, kingdom_id, phylum_id, class_id, order_id, family_id, genus_id, species_id, breed_id, variety_id, size_term_key, name, normalized_name, aliases_json, stage_metrics_json, content_json FROM life_reference_items ORDER BY id", |row| {
-            Ok(SystemRow::Life { id: row.get(0)?, domain_id: row.get(1)?, kingdom_id: row.get(2)?, phylum_id: row.get(3)?, class_id: row.get(4)?, order_id: row.get(5)?, family_id: row.get(6)?, genus_id: row.get(7)?, species_id: row.get(8)?, breed_id: row.get(9)?, variety_id: row.get(10)?, size_term_key: row.get(11)?, name: row.get(12)?, normalized_name: row.get(13)?, aliases_json: row.get(14)?, stage_metrics_json: row.get(15)?, content_json: row.get(16)? })
+        query(connection, database, "SELECT id, size_term_key, aliases_json, stage_metrics_json, content_json FROM life_reference_items ORDER BY id", |row| {
+            Ok(SystemRow::Life { id: row.get(0)?, size_term_key: row.get(1)?, aliases_json: row.get(2)?, stage_metrics_json: row.get(3)?, content_json: row.get(4)? })
         })?,
     );
     result.insert(
@@ -75,8 +75,8 @@ pub(super) fn read(
     );
     result.insert(
         SystemTable::ProductCatalogItems,
-        query(connection, database, "SELECT id, name, normalized_name, applicable_taxon_ids_json, applicable_life_stages_json, therapeutic_spectrum, aliases_json, manufacturer_id, regions_json, regulatory_identifiers_json, commercial_line, presentation_dosage, target_species_warnings_json, content_json FROM product_catalog_items ORDER BY id", |row| {
-            Ok(SystemRow::Product { id: row.get(0)?, name: row.get(1)?, normalized_name: row.get(2)?, applicable_taxon_ids_json: row.get(3)?, applicable_life_stages_json: row.get(4)?, therapeutic_spectrum: row.get(5)?, aliases_json: row.get(6)?, manufacturer_id: row.get(7)?, regions_json: row.get(8)?, regulatory_identifiers_json: row.get(9)?, commercial_line: row.get(10)?, presentation_dosage: row.get(11)?, target_species_warnings_json: row.get(12)?, content_json: row.get(13)? })
+        query(connection, database, "SELECT id, name, normalized_name, applicable_taxon_term_keys_json, applicable_life_stages_json, therapeutic_spectrum, aliases_json, manufacturer_id, regions_json, regulatory_identifiers_json, commercial_line, presentation_dosage, target_species_warnings_json, content_json FROM product_catalog_items ORDER BY id", |row| {
+            Ok(SystemRow::Product { id: row.get(0)?, name: row.get(1)?, normalized_name: row.get(2)?, applicable_taxon_term_keys_json: row.get(3)?, applicable_life_stages_json: row.get(4)?, therapeutic_spectrum: row.get(5)?, aliases_json: row.get(6)?, manufacturer_id: row.get(7)?, regions_json: row.get(8)?, regulatory_identifiers_json: row.get(9)?, commercial_line: row.get(10)?, presentation_dosage: row.get(11)?, target_species_warnings_json: row.get(12)?, content_json: row.get(13)? })
         })?,
     );
     result.insert(
@@ -93,8 +93,8 @@ pub(super) fn read(
     );
     result.insert(
         SystemTable::TreatmentProtocols,
-        query(connection, database, "SELECT id, kind, name, normalized_name, applicable_taxon_ids_json, observation FROM treatment_protocols ORDER BY id", |row| {
-            Ok(SystemRow::TreatmentProtocol { id: row.get(0)?, kind: row.get(1)?, name: row.get(2)?, normalized_name: row.get(3)?, applicable_taxon_ids_json: row.get(4)?, observation: row.get(5)? })
+        query(connection, database, "SELECT id, kind, name, normalized_name, applicable_taxon_term_keys_json, observation FROM treatment_protocols ORDER BY id", |row| {
+            Ok(SystemRow::TreatmentProtocol { id: row.get(0)?, kind: row.get(1)?, name: row.get(2)?, normalized_name: row.get(3)?, applicable_taxon_term_keys_json: row.get(4)?, observation: row.get(5)? })
         })?,
     );
     result.insert(

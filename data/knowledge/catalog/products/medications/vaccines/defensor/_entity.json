@@ -40,8 +40,8 @@
   "targetTermKeys": [
     "disease.rabies"
   ],
-  "applicableTaxonIds": [
-    "canis-lupus-familiaris",
-    "felis-catus"
+  "applicableTaxonTermKeys": [
+    "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris",
+    "eukaryota.animalia.chordata.mammalia.carnivora.felidae.felis.felisCatus"
   ]
 }

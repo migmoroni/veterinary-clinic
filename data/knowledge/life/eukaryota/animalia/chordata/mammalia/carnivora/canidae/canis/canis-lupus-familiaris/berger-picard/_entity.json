@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "berger-picard",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "berger-picard",
-    "variety": null
-  },
+  "id": "4226f037-056a-4f1d-9059-21dbacc5da35",
   "classifications": {
     "originPlaceIds": [
       "fr"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Berger Picard",
-      "pt-PT": "Berger Picard",
-      "gn-PY": "Berger Picard",
-      "en-US": "Berger Picard",
-      "es-ES": "Berger Picard",
-      "fr-FR": "Berger picard"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.bergerPicard"
 }

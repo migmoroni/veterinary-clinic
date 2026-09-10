@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "shar-pei",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "shar-pei",
-    "variety": null
-  },
+  "id": "e7243fcf-2c44-4acf-a80e-b57ed30fd2fe",
   "classifications": {
     "originPlaceIds": [
       "cn"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Shar Pei",
-      "pt-PT": "Shar Pei",
-      "gn-PY": "Shar Pei",
-      "en-US": "Shar Pei",
-      "es-ES": "Shar Pei",
-      "fr-FR": "Shar Peï"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.sharPei"
 }

@@ -17,9 +17,10 @@ data/knowledge/
 ├── clinical/treatment-protocols/
 ├── geo/places/
 └── life/
-    ├── taxonomies/sizes/_entity.json
+    ├── taxonomies/
+    │   ├── types/_entity.json
+    │   └── sizes/_entity.json
     └── eukaryota/
-        ├── _entity.json
         └── animalia/.../<taxon>/_entity.json
 ```
 
@@ -67,36 +68,22 @@ extenso vive nos seis documentos declarados por `contentPath`.
 
 ## Entidade Canônica De Vida
 
-`LifeEntity` representa qualquer domínio, reino, filo, classe, ordem, família,
-gênero, espécie, raça ou variedade. O papel clínico do organismo pertence ao
-contrato que referencia seu ID, não à entidade de vida.
+`LifeEntity` é o perfil de conhecimento opcional de um táxon. Sua identidade é
+um UUIDv4 próprio e `typeTermKey` é a única associação com o termo de
+`life:type`. O nome público pertence ao label do termo; aliases, classificações,
+seções, conteúdo e mídia pertencem à entidade.
 
 ```json
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "poodle",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "poodle",
-    "variety": null
-  },
+  "id": "b614e691-9116-4e2f-855f-fb2f1bfe210a",
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.poodle",
   "classifications": {
     "originPlaceIds": ["fr"],
     "bodyMetrics": { "size": "medium" }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Poodle", "pt-PT": "Poodle", "gn-PY": "Caniche",
-      "en-US": "Poodle", "es-ES": "Caniche", "fr-FR": "Caniche"
-    },
     "aliases": {
       "pt-BR": [], "pt-PT": [], "gn-PY": [],
       "en-US": [], "es-ES": [], "fr-FR": []
@@ -106,24 +93,23 @@ contrato que referencia seu ID, não à entidade de vida.
 }
 ```
 
-### Identidade Taxonômica
+### Taxonomia De Tipos
 
-As posições são fechadas e ordenadas:
+`life:type`, com ID `life-types`, é uma floresta ordenada no contrato comum de
+`terms` e `children`. A profundidade determina o rank fechado:
 
 ```text
 domain -> kingdom -> phylum -> class -> order -> family -> genus -> species -> breed -> variety
 ```
 
-- `domain` nunca é nulo;
-- as posições não nulas formam um prefixo contínuo;
-- o `id` ocupa a última posição não nula;
-- posições inferiores à entidade são `null`;
-- cada ancestral resolve um `LifeEntity` do nível correspondente e declara o
-  mesmo prefixo;
-- cada descendente repete explicitamente toda a cadeia superior.
+- raízes possuem rank `domain` e a profundidade máxima é `variety` (9);
+- cada termo possui `key` e `localizedContent.label`, sem aliases;
+- `children` contém somente filhos diretos e sua posição define a ordem entre irmãos;
+- um termo pode existir sem `LifeEntity`, mas cada termo admite no máximo uma;
+- IDs de entidades e chaves taxonômicas são identidades independentes.
 
-O caminho editorial não participa dessa resolução. Não existem `parentKey`,
-listas de espécies, aliases taxonômicos ou inferência por nome de pasta.
+O builder deriva pai, rank e ordem exclusivamente da árvore. Chaves, nomes e
+diretórios não participam dessa derivação.
 
 ### Classificações Opcionais
 
@@ -163,31 +149,31 @@ vivo, medidas ou ambos. Intervalos são finitos, positivos e ordenados;
 
 ## Aplicabilidade De Produtos E Protocolos
 
-Produtos e protocolos usam exclusivamente `applicableTaxonIds`:
+Produtos e protocolos usam exclusivamente `applicableTaxonTermKeys`:
 
 ```json
-{ "applicableTaxonIds": ["canis-lupus-familiaris"] }
+{ "applicableTaxonTermKeys": ["eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris"] }
 ```
 
-Cada ID resolve qualquer um dos dez níveis e alcança a própria entidade e todos
-os descendentes. Um array não pode conter simultaneamente um ancestral e seu
-descendente. A expansão usa as colunas taxonômicas compiladas e não materializa
-cópias dos descendentes.
+Cada chave resolve um termo de qualquer rank e alcança o próprio termo e todos
+os descendentes, mesmo quando não existe entidade associada. Um array não pode
+conter simultaneamente um ancestral e seu descendente. A expansão percorre
+`taxonomy_terms` e não materializa cópias dos descendentes.
 
 `targetSpeciesWarnings` permanece conteúdo clínico localizado e não define
 aplicabilidade.
 
 ## Vocabulários Controlados
 
-Existem exatamente dez pares canônicos de domínio e propósito. Nove pertencem
-aos catálogos e um classifica vida:
+Existem exatamente onze pares canônicos de domínio e propósito. Vida possui:
 
 ```text
+life:type -> ExactlyOne por LifeEntity
 life:size -> ZeroOrOne
 ```
 
-Os dez níveis biológicos obtêm nomes, aliases, conteúdo e ancestralidade dos
-próprios `LifeEntity`. Eles não são termos de uma taxonomia paralela.
+Os nomes e a hierarquia biológica pertencem a `life:type`; aliases e conteúdo
+permanecem nos perfis `LifeEntity`.
 
 Taxonomias compartilhadas são florestas ordenadas. `terms` contém as raízes e
 cada termo declara `key`, `localizedContent` e, quando possui descendentes,
@@ -206,14 +192,14 @@ Depois, execute `pnpm knowledge:audit`, `pnpm knowledge:validate` e os testes do
 
 ## Demais Entidades
 
-- `product`: tipo, classificações, `applicableTaxonIds`, regiões, fabricante,
+- `product`: tipo, classificações, `applicableTaxonTermKeys`, regiões, fabricante,
   princípios ativos, alvos terapêuticos, `applicableLifeStages`,
   `therapeuticSpectrum`, identificadores, conteúdo e mídia;
 - `manufacturer`: tipo, classificações, regiões, website, conteúdo e mídia;
 - `active_ingredient`: tipo, classificações, nomenclatura, ATC Vet e conteúdo;
 - `condition`: tipo, classificações, regiões e conteúdo;
 - `geo_place`: tipo, códigos de país, pai, centroide e nome localizado;
-- `treatment_protocol`: tipo clínico, `applicableTaxonIds`, produtos, doses e
+- `treatment_protocol`: tipo clínico, `applicableTaxonTermKeys`, produtos, doses e
   conteúdo localizado;
 - `taxonomy`: proprietário fechado de um vocabulário compartilhado.
 

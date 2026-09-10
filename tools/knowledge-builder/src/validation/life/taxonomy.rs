@@ -1,79 +1,83 @@
-//! Validates the closed ten-level taxonomy and resolves every explicit ancestry edge.
+//! Resolves life entities through the canonical hierarchical `life:type` taxonomy.
 
-use super::super::{CanonicalEntity, Diagnostic, LifeEntity, SourceEntry};
+use super::super::{
+    CanonicalEntity, Diagnostic, IndexedTaxonomyTerm, LifeEntity, SourceEntry, TaxonomyTermIndexes,
+};
+use crate::source::LifeRank;
 use std::collections::BTreeMap;
 
-pub(super) type LifeIndex<'a> = BTreeMap<&'a str, (&'a SourceEntry, &'a LifeEntity)>;
+pub(super) struct LifeIndex<'a> {
+    pub(super) terms: BTreeMap<String, IndexedTaxonomyTerm>,
+    pub(super) entities_by_term: BTreeMap<&'a str, (&'a SourceEntry, &'a LifeEntity)>,
+}
+
+impl LifeIndex<'_> {
+    pub(super) fn values(&self) -> impl Iterator<Item = &(&SourceEntry, &LifeEntity)> {
+        self.entities_by_term.values()
+    }
+
+    pub(super) fn is_ancestor(&self, ancestor: &str, descendant: &str) -> bool {
+        let mut current = self
+            .terms
+            .get(descendant)
+            .and_then(|term| term.parent_key.as_deref());
+        while let Some(key) = current {
+            if key == ancestor {
+                return true;
+            }
+            current = self
+                .terms
+                .get(key)
+                .and_then(|term| term.parent_key.as_deref());
+        }
+        false
+    }
+}
 
 pub(super) fn validate_life_taxonomy<'a>(
     entries: &'a [SourceEntry],
+    taxonomies: &'a TaxonomyTermIndexes,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> LifeIndex<'a> {
-    let life = entries
-        .iter()
-        .filter_map(|entry| match &entry.entity {
-            CanonicalEntity::Life(value) => Some((value.id.as_str(), (entry, &**value))),
-            _ => None,
-        })
-        .collect::<LifeIndex<'_>>();
+    let terms = taxonomies
+        .get(&("life".to_string(), "type".to_string()))
+        .cloned()
+        .unwrap_or_default();
+    let mut entities_by_term = BTreeMap::new();
 
-    for (entry, entity) in life.values() {
-        let positions = entity.taxonomy.positions();
-        let level = entity.taxonomy.level();
-        if positions[..=level]
-            .iter()
-            .any(|position| position.is_none())
+    for entry in entries {
+        let CanonicalEntity::Life(entity) = &entry.entity else {
+            continue;
+        };
+        let Some(term) = terms.get(&entity.type_term_key) else {
+            diagnostics.push(Diagnostic::entity(
+                entry,
+                "typeTermKey",
+                format!("unresolved life:type term {}", entity.type_term_key),
+            ));
+            continue;
+        };
+        if let Some((previous, _)) =
+            entities_by_term.insert(entity.type_term_key.as_str(), (entry, &**entity))
         {
             diagnostics.push(Diagnostic::entity(
                 entry,
-                "taxonomy",
-                "taxonomy positions must form one continuous prefix",
-            ));
-            continue;
-        }
-        if positions[level] != Some(entity.id.as_str()) {
-            diagnostics.push(Diagnostic::entity(
-                entry,
-                "taxonomy",
-                "id must equal the last non-null taxonomy position",
+                "typeTermKey",
+                format!(
+                    "life:type term {} is already associated with life entity {}",
+                    entity.type_term_key,
+                    previous.entity.id()
+                ),
             ));
         }
-        for (position, referenced_id) in positions[..=level].iter().enumerate() {
-            let Some(referenced_id) = referenced_id else {
-                continue;
-            };
-            let Some((_, referenced)) = life.get(referenced_id) else {
-                diagnostics.push(Diagnostic::entity(
-                    entry,
-                    format!("taxonomy.{}", level_name(position)),
-                    format!("unresolved life id {referenced_id}"),
-                ));
-                continue;
-            };
-            if referenced.taxonomy.level() != position {
-                diagnostics.push(Diagnostic::entity(
-                    entry,
-                    format!("taxonomy.{}", level_name(position)),
-                    format!("life id {referenced_id} belongs to a different taxonomy level"),
-                ));
-                continue;
-            }
-            let referenced_positions = referenced.taxonomy.positions();
-            if referenced_positions[..=position] != positions[..=position] {
-                diagnostics.push(Diagnostic::entity(
-                    entry,
-                    format!("taxonomy.{}", level_name(position)),
-                    format!("life id {referenced_id} declares a divergent ancestry"),
-                ));
-            }
-        }
+        debug_assert_eq!(
+            LifeRank::from_depth(term.depth).map(LifeRank::depth),
+            Some(term.depth)
+        );
     }
-    life
-}
 
-pub(super) const fn level_name(level: usize) -> &'static str {
-    [
-        "domain", "kingdom", "phylum", "class", "order", "family", "genus", "species", "breed",
-        "variety",
-    ][level]
+    LifeIndex {
+        terms,
+        entities_by_term,
+    }
 }

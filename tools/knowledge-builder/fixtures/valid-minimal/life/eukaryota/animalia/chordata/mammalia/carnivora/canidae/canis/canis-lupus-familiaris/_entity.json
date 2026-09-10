@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "canis-lupus-familiaris",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": null,
-    "variety": null
-  },
+  "id": "90a23e9a-392e-4938-a75f-9a530e3011e5",
   "classifications": {
     "bodyMetrics": {
       "stageMetrics": {
@@ -158,14 +146,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "canis-lupus-familiaris",
-      "pt-PT": "canis-lupus-familiaris",
-      "gn-PY": "canis-lupus-familiaris",
-      "en-US": "canis-lupus-familiaris",
-      "es-ES": "canis-lupus-familiaris",
-      "fr-FR": "canis-lupus-familiaris"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -175,5 +155,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris"
 }

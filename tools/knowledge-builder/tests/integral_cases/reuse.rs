@@ -7,11 +7,23 @@ use knowledge_builder::{
 use rusqlite::Connection;
 use std::{fs, path::Path};
 
+const FIXTURE_DOG: &str =
+    "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris";
+const FIXTURE_TOY: &str =
+    "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.poodle.poodleToy";
+
 #[test]
 fn minimal_fixture_builds_and_tampered_version_is_not_reused() {
     let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
     let validated = validate(&fixture).expect("minimal fixture must validate");
-    assert_eq!(validated.entity_count(), 28);
+    assert_eq!(validated.entity_count(), 29);
+    assert_eq!(
+        validated.life_term_rank(FIXTURE_TOY),
+        Some(knowledge_builder::LifeRank::Variety)
+    );
+    assert_eq!(validated.life_ancestors(FIXTURE_TOY).len(), 9);
+    assert!(validated.life_is_ancestor(FIXTURE_DOG, FIXTURE_TOY));
+    assert!(validated.life_entity_for_term("structuralOnly").is_none());
     let output = TestDirectory::new("minimal-fixture");
     let result = fresh_build(&BuildOptions {
         source: fixture.clone(),
@@ -31,24 +43,78 @@ fn minimal_fixture_builds_and_tampered_version_is_not_reused() {
             .unwrap(),
         10
     );
-    let projected_taxonomy = database
+    let projected_life = database
         .query_row(
-            "SELECT domain_id, kingdom_id, phylum_id, class_id, order_id, family_id, genus_id, species_id, breed_id, variety_id, size_term_key FROM life_reference_items WHERE id = 'poodle-toy'",
+            &format!("SELECT life.size_term_key, term.label, life.aliases_json FROM life_reference_items life JOIN entity_taxonomy_terms relation ON relation.entity_type = 'life' AND relation.entity_id = life.id AND relation.taxonomy_id = 'life-types' JOIN taxonomy_terms term ON term.taxonomy_id = relation.taxonomy_id AND term.term_key = relation.term_key WHERE relation.term_key = '{FIXTURE_TOY}'"),
             [],
-            |row| {
-                (0..11)
-                    .map(|index| row.get::<_, Option<String>>(index))
-                    .collect::<Result<Vec<_>, _>>()
-            },
+            |row| Ok((row.get::<_, Option<String>>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?)),
         )
         .unwrap();
-    assert_eq!(projected_taxonomy[0].as_deref(), Some("eukaryota"));
-    assert_eq!(projected_taxonomy[9].as_deref(), Some("poodle-toy"));
-    assert_eq!(projected_taxonomy[10].as_deref(), Some("default"));
+    assert_eq!(projected_life.0.as_deref(), Some("default"));
+    assert_eq!(projected_life.1, "poodle-toy");
+    assert_eq!(projected_life.2, "[]");
+    let toy_id: String = database
+        .query_row(
+            &format!("SELECT entity_id FROM entity_taxonomy_terms WHERE entity_type = 'life' AND taxonomy_id = 'life-types' AND term_key = '{FIXTURE_TOY}'"),
+            [],
+            |row| row.get(0),
+        )
+        .unwrap();
+    let canonical_profile: (String, String, String, usize) = database
+        .query_row(
+            knowledge_builder::life_queries::ENTITY_WITH_TYPE,
+            [&toy_id],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+        )
+        .unwrap();
+    assert_eq!(
+        canonical_profile,
+        (
+            toy_id.clone(),
+            FIXTURE_TOY.to_string(),
+            "poodle-toy".to_string(),
+            9
+        )
+    );
+    let query_plan = database
+        .prepare(&format!(
+            "EXPLAIN QUERY PLAN {}",
+            knowledge_builder::life_queries::APPLICABLE_DESCENDANTS
+        ))
+        .unwrap()
+        .query_map([format!("[\"{FIXTURE_DOG}\"]")], |row| {
+            row.get::<_, String>(3)
+        })
+        .unwrap()
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap()
+        .join(" ");
+    assert!(
+        query_plan.contains("idx_taxonomy_terms_child_order"),
+        "unexpected applicability query plan: {query_plan}"
+    );
+    let en_database =
+        Connection::open(output.path().join(&result.locales["en-US"].system.path)).unwrap();
+    let life_search: Vec<(String, String)> = en_database
+        .prepare(
+            "SELECT value, provenance FROM entity_search_terms WHERE entity_type = 'life' AND entity_id = ?1 ORDER BY sort_order",
+        )
+        .unwrap()
+        .query_map([&toy_id], |row| Ok((row.get(0)?, row.get(1)?)))
+        .unwrap()
+        .collect::<Result<_, _>>()
+        .unwrap();
+    assert_eq!(
+        life_search,
+        vec![
+            ("Toy Poodle".to_string(), "entity.alias".to_string()),
+            ("poodle-toy".to_string(), "type.label".to_string()),
+        ]
+    );
     assert_eq!(
         database
             .query_row(
-                "SELECT count(*) FROM life_reference_items WHERE breed_id = 'poodle' AND variety_id IS NOT NULL",
+                "SELECT count(*) FROM taxonomy_terms term LEFT JOIN entity_taxonomy_terms relation ON relation.taxonomy_id = term.taxonomy_id AND relation.term_key = term.term_key AND relation.entity_type = 'life' WHERE term.taxonomy_id = 'life-types' AND relation.entity_id IS NULL",
                 [],
                 |row| row.get::<_, usize>(0),
             )
@@ -99,17 +165,17 @@ fn minimal_fixture_builds_and_tampered_version_is_not_reused() {
     assert_eq!(
         database
             .query_row(
-                "SELECT count(*) FROM life_reference_items WHERE species_id = 'canis-lupus-familiaris' AND id <> 'canis-lupus-familiaris'",
+                &format!("WITH RECURSIVE ancestors(term_key, parent_term_key, depth) AS (SELECT term_key, parent_term_key, 0 FROM taxonomy_terms WHERE taxonomy_id = 'life-types' AND term_key = '{FIXTURE_TOY}' UNION ALL SELECT parent.term_key, parent.parent_term_key, child.depth + 1 FROM taxonomy_terms parent JOIN ancestors child ON child.parent_term_key = parent.term_key WHERE parent.taxonomy_id = 'life-types') SELECT count(*) FROM ancestors"),
                 [],
                 |row| row.get::<_, usize>(0),
             )
             .unwrap(),
-        2
+        10
     );
     assert_eq!(
         database
             .query_row(
-                "SELECT count(*) FROM product_catalog_items product JOIN life_reference_items target ON target.id = 'poodle-toy' WHERE EXISTS (SELECT 1 FROM json_each(product.applicable_taxon_ids_json) applicable WHERE applicable.value IN (target.domain_id,target.kingdom_id,target.phylum_id,target.class_id,target.order_id,target.family_id,target.genus_id,target.species_id,target.breed_id,target.variety_id))",
+                &format!("WITH RECURSIVE applicable(product_id, term_key) AS (SELECT product.id, authored.value FROM product_catalog_items product JOIN json_each(product.applicable_taxon_term_keys_json) authored UNION SELECT applicable.product_id, child.term_key FROM applicable JOIN taxonomy_terms child ON child.taxonomy_id = 'life-types' AND child.parent_term_key = applicable.term_key) SELECT count(DISTINCT product_id) FROM applicable WHERE term_key = '{FIXTURE_TOY}'"),
                 [],
                 |row| row.get::<_, usize>(0),
             )
@@ -119,7 +185,7 @@ fn minimal_fixture_builds_and_tampered_version_is_not_reused() {
     assert_eq!(
         database
             .query_row(
-                "SELECT count(*) FROM treatment_protocols protocol JOIN life_reference_items target ON target.id = 'poodle-toy' WHERE EXISTS (SELECT 1 FROM json_each(protocol.applicable_taxon_ids_json) applicable WHERE applicable.value IN (target.domain_id,target.kingdom_id,target.phylum_id,target.class_id,target.order_id,target.family_id,target.genus_id,target.species_id,target.breed_id,target.variety_id))",
+                &format!("WITH RECURSIVE applicable(protocol_id, term_key) AS (SELECT protocol.id, authored.value FROM treatment_protocols protocol JOIN json_each(protocol.applicable_taxon_term_keys_json) authored UNION SELECT applicable.protocol_id, child.term_key FROM applicable JOIN taxonomy_terms child ON child.taxonomy_id = 'life-types' AND child.parent_term_key = applicable.term_key) SELECT count(DISTINCT protocol_id) FROM applicable WHERE term_key = '{FIXTURE_TOY}'"),
                 [],
                 |row| row.get::<_, usize>(0),
             )

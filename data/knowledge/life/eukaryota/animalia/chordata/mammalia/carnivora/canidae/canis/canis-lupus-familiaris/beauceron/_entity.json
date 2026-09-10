@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "beauceron",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "beauceron",
-    "variety": null
-  },
+  "id": "e99a08e7-39db-45cb-b353-0c632de41880",
   "classifications": {
     "originPlaceIds": [
       "fr"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Beauceron",
-      "pt-PT": "Beauceron",
-      "gn-PY": "Beauceron",
-      "en-US": "Beauceron",
-      "es-ES": "Beauceron",
-      "fr-FR": "Beauceron"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.beauceron"
 }

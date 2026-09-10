@@ -17,6 +17,7 @@ mod validation;
 mod verification;
 
 pub mod cli;
+pub mod life_queries;
 
 pub use cli::{CliArgumentError, CliError};
 pub use contracts::locale::{KnowledgeLocale, LOCALES};
@@ -27,7 +28,7 @@ pub use errors::{
 pub use report::{BuildContext, BuildResult, ReleaseContext};
 pub use source::{
     LifeBodyMetricStage, LifeBodyMetrics, LifeClassifications, LifeEntity, LifeMeasures,
-    LifePeriodUnit, LifeSexBodyMetrics, LifeStageMetrics, LifeTaxonomy, LifeWeightMetrics,
+    LifePeriodUnit, LifeRank, LifeSexBodyMetrics, LifeStageMetrics, LifeWeightMetrics,
 };
 pub use validation::{Diagnostic, ValidatedSource, ValidationError};
 

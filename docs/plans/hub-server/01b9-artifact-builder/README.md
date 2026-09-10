@@ -28,8 +28,10 @@ A
 está concluída. O contrato veterinário usa os atributos diretos
 `applicableLifeStages` e `therapeuticSpectrum`, mantém descritores vacinais nos
 aliases localizados do produto e representa taxonomias como florestas ordenadas
-de termos. `life:hierarchy` é a única fonte da ancestralidade das entidades de
-vida e seus termos resolvem conteúdo pelas `LifeEntity` correspondentes.
+de termos. `life:type` é a única fonte de nomes e ancestralidade da vida;
+`LifeEntity` possui identidade independente, guarda aliases e fatos próprios e
+se associa a exatamente um termo por `typeTermKey`. Termos estruturais não
+precisam possuir entidade correspondente.
 
 ## Disposição Final
 

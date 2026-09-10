@@ -170,8 +170,8 @@ pub struct ProductEntity {
     pub type_term_key: String,
     #[serde(rename = "classificationTermKeys")]
     pub classification_term_keys: Vec<String>,
-    #[serde(rename = "applicableTaxonIds")]
-    pub applicable_taxon_ids: Vec<String>,
+    #[serde(rename = "applicableTaxonTermKeys")]
+    pub applicable_taxon_term_keys: Vec<String>,
     pub regions: Vec<String>,
     #[serde(rename = "manufacturerId")]
     pub manufacturer_id: String,
@@ -254,43 +254,60 @@ pub struct ConditionEntity {
     pub media: Option<StructuralMedia>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct LifeTaxonomy {
-    pub domain: String,
-    pub kingdom: Option<String>,
-    pub phylum: Option<String>,
-    #[serde(rename = "class")]
-    pub class_id: Option<String>,
-    pub order: Option<String>,
-    pub family: Option<String>,
-    pub genus: Option<String>,
-    pub species: Option<String>,
-    pub breed: Option<String>,
-    pub variety: Option<String>,
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LifeRank {
+    Domain,
+    Kingdom,
+    Phylum,
+    Class,
+    Order,
+    Family,
+    Genus,
+    Species,
+    Breed,
+    Variety,
 }
 
-impl LifeTaxonomy {
-    pub(crate) fn positions(&self) -> [Option<&str>; 10] {
-        [
-            Some(self.domain.as_str()),
-            self.kingdom.as_deref(),
-            self.phylum.as_deref(),
-            self.class_id.as_deref(),
-            self.order.as_deref(),
-            self.family.as_deref(),
-            self.genus.as_deref(),
-            self.species.as_deref(),
-            self.breed.as_deref(),
-            self.variety.as_deref(),
-        ]
+impl LifeRank {
+    pub const ALL: [Self; 10] = [
+        Self::Domain,
+        Self::Kingdom,
+        Self::Phylum,
+        Self::Class,
+        Self::Order,
+        Self::Family,
+        Self::Genus,
+        Self::Species,
+        Self::Breed,
+        Self::Variety,
+    ];
+
+    pub const fn from_depth(depth: usize) -> Option<Self> {
+        if depth < Self::ALL.len() {
+            Some(Self::ALL[depth])
+        } else {
+            None
+        }
     }
 
-    pub(crate) fn level(&self) -> usize {
-        self.positions()
-            .iter()
-            .rposition(Option::is_some)
-            .unwrap_or(0)
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Domain => "domain",
+            Self::Kingdom => "kingdom",
+            Self::Phylum => "phylum",
+            Self::Class => "class",
+            Self::Order => "order",
+            Self::Family => "family",
+            Self::Genus => "genus",
+            Self::Species => "species",
+            Self::Breed => "breed",
+            Self::Variety => "variety",
+        }
+    }
+
+    pub const fn depth(self) -> usize {
+        self as usize
     }
 }
 
@@ -366,7 +383,8 @@ pub struct LifeEntity {
     #[serde(rename = "schemaVersion")]
     pub schema_version: u32,
     pub id: String,
-    pub taxonomy: LifeTaxonomy,
+    #[serde(rename = "typeTermKey")]
+    pub type_term_key: String,
     pub classifications: Option<LifeClassifications>,
     #[serde(rename = "localizedContent")]
     pub localized_content: LocalizedContent,
@@ -412,8 +430,8 @@ pub struct TreatmentProtocolEntity {
     pub schema_version: u32,
     pub id: String,
     pub kind: String,
-    #[serde(rename = "applicableTaxonIds")]
-    pub applicable_taxon_ids: Vec<String>,
+    #[serde(rename = "applicableTaxonTermKeys")]
+    pub applicable_taxon_term_keys: Vec<String>,
     #[serde(rename = "productIds")]
     pub product_ids: Vec<String>,
     pub doses: Vec<ProtocolDose>,

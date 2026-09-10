@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "welsh-terrier",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "welsh-terrier",
-    "variety": null
-  },
+  "id": "f4d755f8-4f61-4187-9d27-8b02dd4702c4",
   "classifications": {
     "originPlaceIds": [
       "wales"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Welsh Terrier",
-      "pt-PT": "Welsh Terrier",
-      "gn-PY": "Welsh Terrier",
-      "en-US": "Welsh Terrier",
-      "es-ES": "Welsh Terrier",
-      "fr-FR": "Welsh Terrier"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.welshTerrier"
 }

@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "portuguese-podengo",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "portuguese-podengo",
-    "variety": null
-  },
+  "id": "c515464c-b9f8-4264-83d5-d065b9ceea38",
   "classifications": {
     "originPlaceIds": [
       "pt"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Podengo Português",
-      "pt-PT": "Podengo Português",
-      "gn-PY": "Podengo portugués",
-      "en-US": "Portuguese Podengo",
-      "es-ES": "Podengo portugués",
-      "fr-FR": "Podengo portugais"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.portuguesePodengo"
 }

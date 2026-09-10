@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "mixed-breed",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "mixed-breed",
-    "variety": null
-  },
+  "id": "4279b512-3292-4f70-8ccc-33bd10fa5e35",
   "classifications": {
     "originPlaceIds": [
       "varied"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Sem raça definida",
-      "pt-PT": "Sem raça definida",
-      "gn-PY": "Rása jehe’a",
-      "en-US": "Mixed breed",
-      "es-ES": "Mestizo",
-      "fr-FR": "Croisé"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -62,5 +42,6 @@
       "sectionNumber": 5
     }
   ],
-  "contentPath": "./_content"
+  "contentPath": "./_content",
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.mixedBreed"
 }

@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "olde-english-bulldogge",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "olde-english-bulldogge",
-    "variety": null
-  },
+  "id": "b49268f1-19f2-4302-942f-bd59ab55b066",
   "classifications": {
     "originPlaceIds": [
       "us"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Olde English Bulldogge",
-      "pt-PT": "Olde English Bulldogge",
-      "gn-PY": "Olde English Bulldogge",
-      "en-US": "Olde English Bulldogge",
-      "es-ES": "Olde English Bulldogge",
-      "fr-FR": "Olde English Bulldogge"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.oldeEnglishBulldogge"
 }

@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "tarsus-catalburun",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "tarsus-catalburun",
-    "variety": null
-  },
+  "id": "f6923a59-9bf2-4b48-9610-7374c124804f",
   "classifications": {
     "originPlaceIds": [
       "tr"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Tarsus Çatalburun",
-      "pt-PT": "Tarsus Çatalburun",
-      "gn-PY": "Tarsus Çatalburun",
-      "en-US": "Tarsus Catalburun",
-      "es-ES": "Tarsus Çatalburun",
-      "fr-FR": "Catalburun de Tarse"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.tarsusCatalburun"
 }

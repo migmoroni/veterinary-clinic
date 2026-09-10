@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "stabyhoun",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "stabyhoun",
-    "variety": null
-  },
+  "id": "ba2d9903-abbc-4b66-b1cb-9ebdd2d9381e",
   "classifications": {
     "originPlaceIds": [
       "nl"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Stabyhoun",
-      "pt-PT": "Stabyhoun",
-      "gn-PY": "Stabyhoun",
-      "en-US": "Stabyhoun",
-      "es-ES": "Stabyhoun",
-      "fr-FR": "Stabyhoun"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.stabyhoun"
 }

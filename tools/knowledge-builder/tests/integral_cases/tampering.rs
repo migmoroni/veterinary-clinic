@@ -240,16 +240,16 @@ fn semantically_tampered_database_is_rejected_after_checksums_are_refreshed() {
             "UPDATE product_catalog_items SET normalized_name = normalized_name || '-adulterado' WHERE rowid = (SELECT rowid FROM product_catalog_items LIMIT 1)",
         ),
         (
-            "life-taxonomy",
-            "UPDATE life_reference_items SET family_id = 'felidae' WHERE id = 'poodle'",
+            "life-type-relation",
+            "UPDATE entity_taxonomy_terms SET entity_id = '00000000-0000-4000-8000-000000000000' WHERE rowid = (SELECT rowid FROM entity_taxonomy_terms WHERE entity_type = 'life' AND taxonomy_id = 'life-types' LIMIT 1)",
         ),
         (
             "applicable-taxon",
-            "UPDATE product_catalog_items SET applicable_taxon_ids_json = '[\"eukaryota\"]' WHERE rowid = (SELECT rowid FROM product_catalog_items LIMIT 1)",
+            "UPDATE product_catalog_items SET applicable_taxon_term_keys_json = '[\"eukaryota\"]' WHERE rowid = (SELECT rowid FROM product_catalog_items LIMIT 1)",
         ),
         (
             "applicable-taxon-order",
-            "UPDATE product_catalog_items SET applicable_taxon_ids_json = json_array(json_extract(applicable_taxon_ids_json, '$[1]'), json_extract(applicable_taxon_ids_json, '$[0]')) WHERE rowid = (SELECT rowid FROM product_catalog_items WHERE json_array_length(applicable_taxon_ids_json) = 2 LIMIT 1)",
+            "UPDATE product_catalog_items SET applicable_taxon_term_keys_json = json_array(json_extract(applicable_taxon_term_keys_json, '$[1]'), json_extract(applicable_taxon_term_keys_json, '$[0]')) WHERE rowid = (SELECT rowid FROM product_catalog_items WHERE json_array_length(applicable_taxon_term_keys_json) = 2 LIMIT 1)",
         ),
         (
             "applicable-life-stages",

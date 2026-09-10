@@ -27,13 +27,21 @@ pub(super) fn validate_localized_schema(entry: &SourceEntry, diagnostics: &mut V
         ),
         CanonicalEntity::Manufacturer(_)
         | CanonicalEntity::Condition(_)
-        | CanonicalEntity::Life(_)
         | CanonicalEntity::GeoPlace(_) => validate_localized_content(
             entry,
             content,
             &["name", "aliases"],
             &[],
             &["name"],
+            "localizedContent",
+            diagnostics,
+        ),
+        CanonicalEntity::Life(_) => validate_localized_content(
+            entry,
+            content,
+            &["aliases"],
+            &[],
+            &[],
             "localizedContent",
             diagnostics,
         ),

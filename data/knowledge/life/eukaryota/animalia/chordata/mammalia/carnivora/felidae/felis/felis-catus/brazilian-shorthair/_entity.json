@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "brazilian-shorthair",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "felidae",
-    "genus": "felis",
-    "species": "felis-catus",
-    "breed": "brazilian-shorthair",
-    "variety": null
-  },
+  "id": "952d00fd-7970-4b79-9299-5d4510efed77",
   "classifications": {
     "originPlaceIds": [
       "br"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Pelo Curto Brasileiro",
-      "pt-PT": "Pelo curto brasileiro",
-      "gn-PY": "Pelo corto brasileño",
-      "en-US": "Brazilian Shorthair",
-      "es-ES": "Pelo corto brasileño",
-      "fr-FR": "Brazilian Shorthair"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.felidae.felis.felisCatus.brazilianShorthair"
 }

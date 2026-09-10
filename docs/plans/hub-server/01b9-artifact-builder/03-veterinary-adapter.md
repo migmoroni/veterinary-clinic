@@ -113,10 +113,11 @@ técnico de `system` é `7`; `system_media` permanece em `2`.
 As onze taxonomias canônicas permanecem quando possuem vocabulário compartilhado
 ou hierarquia. Seus manifestos contêm raízes em `terms` e descendentes em
 `children`; o adaptador deriva `parent_term_key` e a ordem local entre irmãos
-antes de entregar as rows ao motor genérico. Em `life:hierarchy`, cada termo
-resolve nome e aliases pela `LifeEntity` de mesmo ID, o rank deriva da
-profundidade e nenhuma relação é criada em `entity_taxonomy_terms`. A extração
-da infraestrutura não altera esse contrato semântico.
+antes de entregar as rows ao motor genérico. Em `life:type`, cada termo possui
+seu label, o rank deriva da profundidade e uma `LifeEntity` opcional se associa
+ao termo por `entity_taxonomy_terms`, preservando identidade independente e
+aliases próprios. A extração da infraestrutura não altera esse contrato
+semântico.
 
 ## 5. Compilação Do Domínio
 

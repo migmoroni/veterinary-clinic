@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "kerry-blue-terrier",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "kerry-blue-terrier",
-    "variety": null
-  },
+  "id": "fc97149f-6f59-46a7-ab57-99baecc8f64e",
   "classifications": {
     "originPlaceIds": [
       "ie"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Kerry Blue Terrier",
-      "pt-PT": "Kerry Blue Terrier",
-      "gn-PY": "Kerry Blue Terrier",
-      "en-US": "Kerry Blue Terrier",
-      "es-ES": "Kerry Blue Terrier",
-      "fr-FR": "Kerry Blue Terrier"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.kerryBlueTerrier"
 }

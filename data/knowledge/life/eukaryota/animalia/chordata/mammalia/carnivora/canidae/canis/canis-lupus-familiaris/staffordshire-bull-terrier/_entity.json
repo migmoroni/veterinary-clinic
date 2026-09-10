@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "staffordshire-bull-terrier",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "staffordshire-bull-terrier",
-    "variety": null
-  },
+  "id": "2889da47-2be1-43b1-8316-9761d2c64363",
   "classifications": {
     "originPlaceIds": [
       "england"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Staffordshire Bull Terrier",
-      "pt-PT": "Staffordshire Bull Terrier",
-      "gn-PY": "Staffordshire Bull Terrier",
-      "en-US": "Staffordshire Bull Terrier",
-      "es-ES": "Staffordshire Bull Terrier",
-      "fr-FR": "Staffordshire Bull Terrier"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.staffordshireBullTerrier"
 }

@@ -14,7 +14,12 @@ pub(crate) struct TaxonomySpec {
     pub cardinality: TaxonomyCardinality,
 }
 
-pub(crate) const CANONICAL_TAXONOMIES: [TaxonomySpec; 10] = [
+pub(crate) const CANONICAL_TAXONOMIES: [TaxonomySpec; 11] = [
+    TaxonomySpec {
+        domain: "life",
+        purpose: "type",
+        cardinality: TaxonomyCardinality::ExactlyOne,
+    },
     TaxonomySpec {
         domain: "life",
         purpose: "size",

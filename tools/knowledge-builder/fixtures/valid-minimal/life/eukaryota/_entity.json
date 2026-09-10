@@ -1,28 +1,9 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "eukaryota",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": null,
-    "phylum": null,
-    "class": null,
-    "order": null,
-    "family": null,
-    "genus": null,
-    "species": null,
-    "breed": null,
-    "variety": null
-  },
+  "id": "105e57f0-7e43-484e-a2bf-9ed1e8fd5753",
+  "typeTermKey": "eukaryota",
   "localizedContent": {
-    "name": {
-      "pt-BR": "eukaryota",
-      "pt-PT": "eukaryota",
-      "gn-PY": "eukaryota",
-      "en-US": "eukaryota",
-      "es-ES": "eukaryota",
-      "fr-FR": "eukaryota"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],

@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "german-wirehaired-pointer",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "german-wirehaired-pointer",
-    "variety": null
-  },
+  "id": "8c590057-66e8-4037-9c83-49916a49d7e3",
   "classifications": {
     "originPlaceIds": [
       "de"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Pointer Alemão de Pelo Duro",
-      "pt-PT": "Pointer Alemão de Pelo Duro",
-      "gn-PY": "Braco alemán de pelo duro",
-      "en-US": "German Wirehaired Pointer",
-      "es-ES": "Braco alemán de pelo duro",
-      "fr-FR": "Braque allemand à poil dur"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.germanWirehairedPointer"
 }

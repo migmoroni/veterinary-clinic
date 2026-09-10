@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "sacred-birman",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "felidae",
-    "genus": "felis",
-    "species": "felis-catus",
-    "breed": "sacred-birman",
-    "variety": null
-  },
+  "id": "c0aab201-5161-4b79-9817-ae1a6b03f743",
   "classifications": {
     "originPlaceIds": [
       "mm"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Sagrado da Birmânia",
-      "pt-PT": "Sagrado da Birmânia",
-      "gn-PY": "Sagrado de Birmania",
-      "en-US": "Sacred Birman",
-      "es-ES": "Sagrado de Birmania",
-      "fr-FR": "Sacré de Birmanie"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.felidae.felis.felisCatus.sacredBirman"
 }

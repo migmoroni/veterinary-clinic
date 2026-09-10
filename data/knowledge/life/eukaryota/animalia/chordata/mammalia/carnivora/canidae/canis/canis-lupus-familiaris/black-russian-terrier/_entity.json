@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "black-russian-terrier",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "black-russian-terrier",
-    "variety": null
-  },
+  "id": "0681122d-7989-4927-8044-b787a7da3256",
   "classifications": {
     "originPlaceIds": [
       "ru"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Terrier Preto Russo",
-      "pt-PT": "Terrier preto russo",
-      "gn-PY": "Terrier ruso negro",
-      "en-US": "Black Russian Terrier",
-      "es-ES": "Terrier ruso negro",
-      "fr-FR": "Terrier noir russe"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.blackRussianTerrier"
 }

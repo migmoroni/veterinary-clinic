@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "pastor-da-mantiqueira",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "pastor-da-mantiqueira",
-    "variety": null
-  },
+  "id": "556e4105-4ee0-4a00-8817-99549296f9e6",
   "classifications": {
     "originPlaceIds": [
       "br"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Pastor da Mantiqueira",
-      "pt-PT": "Pastor da Mantiqueira",
-      "gn-PY": "Pastor de Mantiqueira",
-      "en-US": "Mantiqueira Shepherd",
-      "es-ES": "Pastor de Mantiqueira",
-      "fr-FR": "Berger de la Mantiqueira"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.pastorDaMantiqueira"
 }

@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "gran-mastin-de-borinquen",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "gran-mastin-de-borinquen",
-    "variety": null
-  },
+  "id": "41322f78-f704-4bfa-950f-8f0a8e99434d",
   "classifications": {
     "originPlaceIds": [
       "pr"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Gran Mastín de Borinquen",
-      "pt-PT": "Gran Mastín de Borinquen",
-      "gn-PY": "Gran mastín de Borinquen",
-      "en-US": "Gran Mastin de Borinquen",
-      "es-ES": "Gran mastín de Borinquen",
-      "fr-FR": "Gran Mastín de Borinquen"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.granMastinDeBorinquen"
 }

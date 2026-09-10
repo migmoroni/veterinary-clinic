@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "campeiro-bulldog",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "campeiro-bulldog",
-    "variety": null
-  },
+  "id": "8c7cd95f-c230-4a22-bbd6-932bc2c1173c",
   "classifications": {
     "originPlaceIds": [
       "br"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Buldogue Campeiro",
-      "pt-PT": "Buldogue Campeiro",
-      "gn-PY": "Bulldog campeiro",
-      "en-US": "Campeiro Bulldog",
-      "es-ES": "Bulldog campeiro",
-      "fr-FR": "Bouledogue Campeiro"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.campeiroBulldog"
 }

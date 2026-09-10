@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "balinese",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "felidae",
-    "genus": "felis",
-    "species": "felis-catus",
-    "breed": "balinese",
-    "variety": null
-  },
+  "id": "0f920c04-ad9c-4179-bba6-65352d4b5040",
   "classifications": {
     "originPlaceIds": [
       "us"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Balinês",
-      "pt-PT": "Balinês",
-      "gn-PY": "Balinés",
-      "en-US": "Balinese",
-      "es-ES": "Balinés",
-      "fr-FR": "Balinais"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.felidae.felis.felisCatus.balinese"
 }

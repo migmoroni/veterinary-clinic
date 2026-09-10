@@ -155,8 +155,9 @@ verificação integral, a Parte 1B.8.4 estrutura erros e fronteiras, a Parte
 estágios de vida e espectro terapêutico como atributos diretos de produto,
 mantendo descritores vacinais nos aliases localizados. A Parte 1B.8.7 representa
 as taxonomias como florestas ordenadas e projeta a posição local entre irmãos.
-A Parte 1B.8.8 representa a ancestralidade das entidades de vida na taxonomia
-`life:hierarchy`, apoiada pelo conteúdo das próprias `LifeEntity`. As Partes
+A Parte 1B.8.8 representa a ancestralidade da vida na taxonomia `life:type`,
+com labels nos termos e páginas de conhecimento opcionais associadas por
+`LifeEntity.typeTermKey`. As Partes
 1B.9.1 a 1B.9.4
 estabelecem a crate genérica `artifact-builder`, concentram nela SQLite, CAS,
 verificação e publicação, e mantêm `knowledge-builder` como adaptador do domínio
@@ -180,20 +181,21 @@ provider externo.
   materialização SQLite, CAS, verificação estrutural e publicação atômica.
 - `tools/knowledge-builder/` é o binário Rust que valida e compila
   `data/knowledge` para o contrato de `artifact-builder`.
-- A taxonomia `life:hierarchy` declara a floresta ordenada de domínio, reino,
-  filo, classe, ordem, família, gênero, espécie, raça e variedade. A profundidade
-  determina o rank, cada chave resolve uma `LifeEntity` com o mesmo ID e cada
-  entidade aparece uma única vez na árvore. O conjunto pode crescer por ramos
-  completos sem exigir a representação de toda a vida conhecida.
-- Cada `LifeEntity` mantém identidade, conteúdo localizado e classificações, sem
-  repetir ancestralidade, rank, pai ou ordem. `classifications` concentra origem
+- A taxonomia `life:type` declara a floresta ordenada de domínio, reino, filo,
+  classe, ordem, família, gênero, espécie, raça e variedade. A profundidade
+  determina o rank e seus termos possuem os nomes localizados. Um termo pode ter
+  zero ou uma `LifeEntity`, e cada entidade referencia exatamente um termo por
+  `typeTermKey`; identidade da entidade e chave taxonômica são independentes.
+- Cada `LifeEntity` mantém UUIDv4, aliases, conteúdo e classificações próprios,
+  sem repetir nome, ancestralidade, rank, pai ou ordem. `classifications` concentra origem
   e `bodyMetrics`. `bodyMetrics.size`
   representa o porte geral, enquanto `bodyMetrics.stageMetrics` organiza peso
   vivo, altura e comprimento por sexo e estágio. O objeto e cada parte interna
   são opcionais nos dez níveis. Nenhum desses valores é inferido pela disposição
   das pastas ou por outra entidade.
-- Produtos e protocolos declaram aplicabilidade pelos IDs canônicos de qualquer
-  um dos dez níveis. Cada alvo alcança a própria entidade e seus descendentes.
+- Produtos e protocolos declaram aplicabilidade pelas chaves de termos de
+  qualquer um dos dez ranks. Cada alvo alcança o próprio termo e seus
+  descendentes, mesmo quando um deles não possui `LifeEntity`.
 - O contrato neutro recebe variantes, DDLs, tabelas, rows e objetos CAS já
   compilados. Conceitos veterinários permanecem fora da crate genérica.
 - `knowledge-builder` percorre a fonte validada e produz diretamente o plano de
@@ -232,14 +234,13 @@ provider externo.
   taxonômicas completas. `LifeEntity` referencia somente
   `bodyMetrics.size` como taxonomia classificatória. Nas taxonomias de conteúdo
   embutido, labels e aliases gerais pertencem ao termo e não são repetidos nas
-  entidades relacionadas. Em `life:hierarchy`, esses valores pertencem à
-  `LifeEntity` correspondente.
+  entidades relacionadas. Em `life:type`, labels pertencem aos termos e aliases
+  pertencem à `LifeEntity` opcional correspondente.
 - Toda taxonomia é projetada em `taxonomy_registry` e `taxonomy_terms`.
-  `life:hierarchy` usa `taxonomy_terms.parent_term_key` como sua única adjacency
-  list e reutiliza nomes e aliases das entidades correspondentes.
-  `life_reference_items` referencia o termo de mesma identidade e armazena o
-  rank derivado da profundidade; fabricantes, princípios ativos, condições e
-  produtos usam
+  `life:type` usa `taxonomy_terms.parent_term_key` como sua única adjacency
+  list. `LifeEntity.typeTermKey` é projetado em `entity_taxonomy_terms`, enquanto
+  `life_reference_items` armazena somente fatos próprios da entidade;
+  fabricantes, princípios ativos, condições e produtos também usam
   `entity_taxonomy_terms` como única relação taxonômica indexada. Domínio e
   propósito pertencem ao registro da taxonomia e não são repetidos na relação.
 - Cada manifesto de taxonomia declara raízes em `terms` e descendentes em
@@ -258,10 +259,10 @@ provider externo.
   `classificationTermKeys` não recebe conceitos criados apenas para busca.
 - A busca de produtos deriva termos das entidades, relações e taxonomias
   canônicas. O contrato de conhecimento não contém `searchConcept.*`.
-- A busca de `LifeEntity` projeta somente nome e aliases próprios. Consultas por
-  ancestralidade e subárvore percorrem `life:hierarchy` em `taxonomy_terms` e
-  unem seus nós a `life_reference_items`, sem duplicar termos ancestrais nos
-  descendentes.
+- A busca de `LifeEntity` combina o label do termo `life:type` com os aliases da
+  entidade, preservando proveniências distintas. Consultas por ancestralidade e
+  subárvore percorrem `life:type` em `taxonomy_terms` e associam páginas
+  opcionais por `entity_taxonomy_terms`, sem duplicar ancestrais nos descendentes.
 - `_entity.json` declara `contentPath: "./_content"` e associa cada `sectionNumber` a
   uma `sectionKey` padronizada. Headings iniciados por `# <n>` delimitam as
   seções no documento localizado. Qualquer texto editorial depois do número é

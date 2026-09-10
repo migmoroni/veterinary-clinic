@@ -134,7 +134,15 @@ pub(crate) fn search_candidates(
                 &value.classification_term_keys,
                 locale,
             )?,
-            CanonicalEntity::Life(_) => {}
+            CanonicalEntity::Life(value) => {
+                let term = source
+                    .taxonomy_term("life", "type", &value.type_term_key)
+                    .ok_or_else(|| format!("unresolved life:type term {}", value.type_term_key))?;
+                values.push((
+                    localized_text(&term.term.localized_content, "label", locale)?.to_string(),
+                    "type.label".to_string(),
+                ));
+            }
             CanonicalEntity::GeoPlace(_) | CanonicalEntity::TreatmentProtocol(_) => {}
             CanonicalEntity::Taxonomy(_) => unreachable!(),
         }

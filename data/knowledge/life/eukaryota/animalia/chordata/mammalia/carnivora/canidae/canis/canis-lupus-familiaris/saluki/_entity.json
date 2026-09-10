@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "saluki",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "saluki",
-    "variety": null
-  },
+  "id": "552ff187-d47a-410a-8c46-ea118dd70339",
   "classifications": {
     "originPlaceIds": [
       "middle-east"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Saluki",
-      "pt-PT": "Saluki",
-      "gn-PY": "Saluki",
-      "en-US": "Saluki",
-      "es-ES": "Saluki",
-      "fr-FR": "Sloughi (Saluki)"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.saluki"
 }

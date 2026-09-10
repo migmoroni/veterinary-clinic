@@ -29,11 +29,11 @@
 		"life": 419,
 		"manufacturer": 12,
 		"product": 62,
-		"taxonomy": 10,
+		"taxonomy": 11,
 		"treatment_protocol": 3
 	},
 	"life": {
-		"levels": {
+		"termsByRank": {
 			"domain": 1,
 			"kingdom": 1,
 			"phylum": 1,
@@ -45,6 +45,9 @@
 			"breed": 408,
 			"variety": 0
 		},
+		"termsWithEntity": 419,
+		"termsWithoutEntity": 0,
+		"entityTypeRelations": 419,
 		"classifications": {
 			"entitiesWithClassifications": 408,
 			"originPlaceIds": 408,
@@ -73,13 +76,13 @@
 		}
 	},
 	"taxonomies": {
-		"registryEntries": 10,
-		"terms": 575,
+		"registryEntries": 11,
+		"terms": 994,
 		"lifeSizeCardinality": "ZeroOrOne",
 		"genericSearchTerms": 0
 	},
 	"relations": {
-		"taxonomyHierarchy": 472,
+		"taxonomyHierarchy": 890,
 		"productTarget": 132
 	},
 	"editorial": {

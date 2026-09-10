@@ -1,19 +1,7 @@
 {
   "schemaVersion": 1,
   "entityType": "life",
-  "id": "bucovina-shepherd-dog",
-  "taxonomy": {
-    "domain": "eukaryota",
-    "kingdom": "animalia",
-    "phylum": "chordata",
-    "class": "mammalia",
-    "order": "carnivora",
-    "family": "canidae",
-    "genus": "canis",
-    "species": "canis-lupus-familiaris",
-    "breed": "bucovina-shepherd-dog",
-    "variety": null
-  },
+  "id": "ebba5767-51d9-4836-9e8d-4e0888814ef1",
   "classifications": {
     "originPlaceIds": [
       "ro"
@@ -23,14 +11,6 @@
     }
   },
   "localizedContent": {
-    "name": {
-      "pt-BR": "Pastor da Bucovina",
-      "pt-PT": "Pastor da Bucovina",
-      "gn-PY": "Pastor de Bucovina",
-      "en-US": "Bucovina Shepherd Dog",
-      "es-ES": "Pastor de Bucovina",
-      "fr-FR": "Berger roumain de Bucovine"
-    },
     "aliases": {
       "pt-BR": [],
       "pt-PT": [],
@@ -40,5 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": []
+  "sections": [],
+  "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.bucovinaShepherdDog"
 }
