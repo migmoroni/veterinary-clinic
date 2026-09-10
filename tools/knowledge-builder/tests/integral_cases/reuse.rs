@@ -76,6 +76,89 @@ fn minimal_fixture_builds_and_tampered_version_is_not_reused() {
             9
         )
     );
+    let ancestors = database
+        .prepare(knowledge_builder::life_queries::ANCESTORS)
+        .unwrap()
+        .query_map([FIXTURE_TOY], |row| row.get::<_, String>(0))
+        .unwrap()
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
+    assert_eq!(
+        ancestors,
+        vec![
+            "eukaryota",
+            "eukaryota.animalia",
+            "eukaryota.animalia.chordata",
+            "eukaryota.animalia.chordata.mammalia",
+            "eukaryota.animalia.chordata.mammalia.carnivora",
+            "eukaryota.animalia.chordata.mammalia.carnivora.canidae",
+            "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis",
+            FIXTURE_DOG,
+            "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.poodle",
+        ]
+    );
+    let applicable_descendants = database
+        .prepare(knowledge_builder::life_queries::APPLICABLE_DESCENDANTS)
+        .unwrap()
+        .query_map([format!("[\"{FIXTURE_DOG}\"]")], |row| {
+            row.get::<_, String>(0)
+        })
+        .unwrap()
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
+    assert_eq!(
+        applicable_descendants,
+        vec![
+            FIXTURE_DOG,
+            "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.poodle",
+            FIXTURE_TOY,
+        ]
+    );
+    let entity_for_term: (String, Option<String>) = database
+        .query_row(
+            knowledge_builder::life_queries::ENTITY_FOR_TERM,
+            [FIXTURE_TOY],
+            |row| Ok((row.get("id")?, row.get("size_term_key")?)),
+        )
+        .unwrap();
+    assert_eq!(
+        entity_for_term,
+        (toy_id.clone(), Some("default".to_string()))
+    );
+    assert!(matches!(
+        database.query_row(
+            knowledge_builder::life_queries::ENTITY_FOR_TERM,
+            ["structuralOnly"],
+            |_| Ok(())
+        ),
+        Err(rusqlite::Error::QueryReturnedNoRows)
+    ));
+    let varieties = database
+        .prepare(knowledge_builder::life_queries::TERMS_BY_RANK)
+        .unwrap()
+        .query_map([9], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, Option<String>>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, usize>(3)?,
+            ))
+        })
+        .unwrap()
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
+    assert_eq!(
+        varieties,
+        vec![(
+            FIXTURE_TOY.to_string(),
+            Some(
+                "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.poodle"
+                    .to_string()
+            ),
+            "poodle-toy".to_string(),
+            0,
+        )]
+    );
     let query_plan = database
         .prepare(&format!(
             "EXPLAIN QUERY PLAN {}",

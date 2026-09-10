@@ -410,8 +410,6 @@ taxonomy
 classification
 relations
 originPlaces
-level
-parentId
 media
 ```
 
@@ -430,9 +428,29 @@ família, gênero, espécie, raça e variedade em posições nomeadas. Cada posi
 não nula é recomposta por uma consulta recursiva sobre `life:type`; o label e o
 rank vêm de `taxonomy_terms`, e a página opcional é resolvida por
 `entity_taxonomy_terms`. O repository não deriva nenhum nível do caminho
-editorial, do UUID da entidade ou da chave do termo. `level` corresponde ao rank
-do termo da própria entidade e `parentId` vem do termo pai; o domínio não possui
-`parentId`.
+editorial, do UUID da entidade ou da chave do termo.
+
+Cada posição preenchida de `taxonomy` possui o seguinte contrato:
+
+```text
+termKey
+entityId?
+label
+rank
+parentTermKey?
+```
+
+`termKey` identifica o nó taxonômico e `parentTermKey` identifica sua relação
+hierárquica. `entityId` é opcional porque um termo pode existir sem possuir uma
+página editorial em `life_reference_items`. Quando presente, `entityId` é o UUID
+da entidade relacionada e nunca substitui a chave do termo. A raiz possui
+`parentTermKey` nulo.
+
+O DTO da própria entidade expõe `id`, `typeTermKey`, `rank`, `parentTermKey` e
+`parentEntityId?`. `id` é o UUID do perfil; `typeTermKey` aponta para o termo que
+o classifica; `parentEntityId` somente é preenchido quando o termo pai também
+possui uma entidade relacionada. A navegação estrutural usa `parentTermKey` e
+não depende da existência de `parentEntityId`.
 
 `bodyMetrics` expõe `size` e `stageMetrics` independentemente quando presentes.
 O repository recompõe esse objeto a partir de `size_term_key` e

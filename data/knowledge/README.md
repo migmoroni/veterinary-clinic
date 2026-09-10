@@ -236,3 +236,23 @@ objeto em `CAS/system`; thumbnails são JPEG determinísticos e nenhum arquivo d
 vigente. [`audit-report.json`](./audit-report.json) registra o resultado da
 auditoria canônica. Ambos descrevem somente o estado atual e são conferidos em
 conjunto com `knowledge-builder validate` e os testes integrais.
+
+As contagens de `inventory.json` são derivadas de `data/knowledge` e não são
+editadas manualmente. Após alterar os dados canônicos, atualize o arquivo com:
+
+```bash
+node scripts/audit-knowledge.mjs --write-inventory
+```
+
+Em seguida, execute `pnpm knowledge:audit`. Esse comando calcula novamente o
+inventário em memória, compara o resultado com o arquivo versionado e falha se
+existir qualquer divergência, sem modificar `inventory.json`.
+
+O relatório de auditoria pode ser atualizado explicitamente com:
+
+```bash
+node scripts/audit-knowledge.mjs --write-report
+```
+
+Os arquivos gerados devem ser versionados junto das alterações correspondentes
+em `data/knowledge`.
