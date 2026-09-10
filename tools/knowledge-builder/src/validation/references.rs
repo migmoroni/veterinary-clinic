@@ -1,11 +1,11 @@
 //! Validates semantic references between canonical entities and taxonomy terms.
 
-use super::{CanonicalEntity, Diagnostic, SourceEntry, TaxonomyEntity};
-use std::collections::{BTreeMap, BTreeSet};
+use super::{CanonicalEntity, Diagnostic, SourceEntry, TaxonomyTermIndexes};
+use std::collections::BTreeSet;
 
 pub(super) fn validate_references(
     entries: &[SourceEntry],
-    taxonomies: &BTreeMap<(String, String), TaxonomyEntity>,
+    taxonomies: &TaxonomyTermIndexes,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     let identities = entries
@@ -163,7 +163,7 @@ pub(super) fn validate_references(
 
 fn require_term(
     entry: &SourceEntry,
-    taxonomies: &BTreeMap<(String, String), TaxonomyEntity>,
+    taxonomies: &TaxonomyTermIndexes,
     domain: &str,
     purpose: &str,
     key: &str,
@@ -171,7 +171,7 @@ fn require_term(
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     let taxonomy = taxonomies.get(&(domain.to_string(), purpose.to_string()));
-    if !taxonomy.is_some_and(|value| value.terms.iter().any(|term| term.key == key)) {
+    if !taxonomy.is_some_and(|terms| terms.contains_key(key)) {
         diagnostics.push(Diagnostic::entity(
             entry,
             field,
@@ -182,7 +182,7 @@ fn require_term(
 
 fn require_terms(
     entry: &SourceEntry,
-    taxonomies: &BTreeMap<(String, String), TaxonomyEntity>,
+    taxonomies: &TaxonomyTermIndexes,
     domain: &str,
     purpose: &str,
     keys: &[String],

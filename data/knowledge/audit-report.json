@@ -28,6 +28,7 @@
 	"taxonomy": {
 		"registryEntries": 10,
 		"terms": 575,
+		"hierarchyRelations": 472,
 		"productTargetReferences": 132,
 		"genericSearchTerms": 0
 	},

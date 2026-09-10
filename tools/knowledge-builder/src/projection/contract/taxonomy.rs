@@ -72,13 +72,18 @@ pub(super) fn project_taxonomies(
             taxonomy.id.clone(),
             Some(identity(&entry.source.entity)),
         )?;
-        for term in &taxonomy.terms {
+        for visit in taxonomy.walk_terms() {
             let crate::source::TaxonomyTerm {
                 key,
-                parent_key,
-                order,
                 localized_content,
-            } = term;
+                ..
+            } = visit.term;
+            let indexed = source
+                .taxonomy_term(&taxonomy.domain, &taxonomy.purpose, key)
+                .ok_or_else(|| format!("missing validated taxonomy term {key}"))?;
+            debug_assert_eq!(indexed.depth, visit.depth);
+            debug_assert_eq!(indexed.source_path, visit.source_path);
+            debug_assert_eq!(indexed.owner_path, visit.owner_path());
             let label = localized_text(localized_content, "label", locale)?.to_string();
             let row_id = format!("{}/{}", taxonomy.id, key);
             push_system(
@@ -87,14 +92,13 @@ pub(super) fn project_taxonomies(
                 SystemRow::TaxonomyTerm {
                     taxonomy_id: taxonomy.id.clone(),
                     term_key: key.clone(),
-                    parent_term_key: parent_key.clone(),
+                    parent_term_key: indexed.parent_key.clone(),
                     normalized_label: normalize_search_text(&label),
                     label,
                     aliases_json: json(
                         &localized_list(localized_content, "aliases", locale).unwrap_or_default(),
                     )?,
-                    sort_order: usize::try_from(*order)
-                        .map_err(|_| "taxonomy sort order exceeds usize".to_string())?,
+                    sort_order: indexed.sibling_order,
                 },
                 SystemTable::TaxonomyTerms,
                 row_id.clone(),

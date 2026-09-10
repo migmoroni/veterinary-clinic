@@ -7,7 +7,7 @@ use super::{
 };
 use crate::{
     contracts::locale::KnowledgeLocale,
-    source::{CanonicalEntity, LocalizedContent, LocalizedValue, TaxonomyEntity},
+    source::{CanonicalEntity, LocalizedContent, LocalizedValue},
     validation::ValidatedSource,
 };
 use std::collections::{BTreeMap, BTreeSet};
@@ -88,21 +88,27 @@ fn search_candidates(
                 }
                 append_taxonomy_values(
                     &mut values,
-                    taxonomy_for(source, "product", "type")?,
+                    source,
+                    "product",
+                    "type",
                     std::slice::from_ref(&product.type_term_key),
                     locale,
                     "type",
                 )?;
                 append_taxonomy_values(
                     &mut values,
-                    taxonomy_for(source, "product", "classification")?,
+                    source,
+                    "product",
+                    "classification",
                     &product.classification_term_keys,
                     locale,
                     "classification",
                 )?;
                 append_taxonomy_values(
                     &mut values,
-                    taxonomy_for(source, "product", "target")?,
+                    source,
+                    "product",
+                    "target",
                     product.target_term_keys.as_deref().unwrap_or(&[]),
                     locale,
                     "target",
@@ -210,17 +216,6 @@ pub(super) fn add_search_obligations(
     Ok(())
 }
 
-fn taxonomy_for<'a>(
-    source: &'a ValidatedSource,
-    domain: &str,
-    purpose: &str,
-) -> Result<&'a TaxonomyEntity, crate::ContractError> {
-    Ok(source
-        .taxonomies
-        .get(&(domain.to_string(), purpose.to_string()))
-        .ok_or_else(|| format!("missing taxonomy {domain}:{purpose}"))?)
-}
-
 fn append_entity_taxonomies(
     values: &mut Vec<(String, String)>,
     source: &ValidatedSource,
@@ -231,14 +226,18 @@ fn append_entity_taxonomies(
 ) -> Result<(), crate::ContractError> {
     append_taxonomy_values(
         values,
-        taxonomy_for(source, domain, "type")?,
+        source,
+        domain,
+        "type",
         std::slice::from_ref(type_key),
         locale,
         "type",
     )?;
     append_taxonomy_values(
         values,
-        taxonomy_for(source, domain, "classification")?,
+        source,
+        domain,
+        "classification",
         classifications,
         locale,
         "classification",
@@ -266,16 +265,17 @@ fn append_named_relation(
 
 fn append_taxonomy_values(
     values: &mut Vec<(String, String)>,
-    taxonomy: &TaxonomyEntity,
+    source: &ValidatedSource,
+    domain: &str,
+    purpose: &str,
     keys: &[String],
     locale: KnowledgeLocale,
     prefix: &str,
 ) -> Result<(), crate::ContractError> {
     for key in keys {
-        let term = taxonomy
-            .terms
-            .iter()
-            .find(|term| &term.key == key)
+        let term = source
+            .taxonomy_term(domain, purpose, key)
+            .map(|indexed| &indexed.term)
             .ok_or_else(|| format!("unresolved taxonomy term {key}"))?;
         values.push((
             localized_text(&term.localized_content, "label", locale)?.to_string(),

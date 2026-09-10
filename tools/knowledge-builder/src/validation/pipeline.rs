@@ -84,11 +84,11 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
         validate_entity_shape(entry, &mut diagnostics);
     }
 
-    let taxonomies = collect_taxonomies(&entries, &mut diagnostics);
+    let (taxonomies, taxonomy_terms) = collect_taxonomies(&entries, &mut diagnostics);
     validate_taxonomy_completeness(&source_root, &taxonomies, &mut diagnostics);
-    life::validate_life_contracts(&entries, &taxonomies, &mut diagnostics);
-    validate_references(&entries, &taxonomies, &mut diagnostics);
-    validate_alias_ownership(&entries, &taxonomies, &mut diagnostics);
+    life::validate_life_contracts(&entries, &taxonomy_terms, &mut diagnostics);
+    validate_references(&entries, &taxonomy_terms, &mut diagnostics);
+    validate_alias_ownership(&entries, &taxonomy_terms, &mut diagnostics);
 
     let mut referenced_markdown = BTreeSet::new();
     let mut media = BTreeMap::new();
@@ -231,6 +231,7 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
     Ok(ValidatedSource {
         entities: validated_entities,
         taxonomies,
+        taxonomy_terms,
         media,
         media_keys_by_locale,
         source_digest_sha256,

@@ -108,13 +108,15 @@ como `V10` e `polivalente` permanecem como texto puro em
 `localizedContent.aliases` e seguem a projeção comum de aliases. O adaptador
 converte esses dados para `TableData` sem recriar taxonomias, estruturas
 intermediárias, objetos opacos concorrentes ou valores inferidos. O schema
-técnico de `system` permanece em `6`; `system_media` permanece em `2`.
+técnico de `system` é `7`; `system_media` permanece em `2`.
 
-As dez taxonomias canônicas permanecem quando possuem vocabulário compartilhado
+As onze taxonomias canônicas permanecem quando possuem vocabulário compartilhado
 ou hierarquia. Seus manifestos contêm raízes em `terms` e descendentes em
 `children`; o adaptador deriva `parent_term_key` e a ordem local entre irmãos
-antes de entregar as rows ao motor genérico. A extração da infraestrutura não
-altera esse contrato semântico.
+antes de entregar as rows ao motor genérico. Em `life:hierarchy`, cada termo
+resolve nome e aliases pela `LifeEntity` de mesmo ID, o rank deriva da
+profundidade e nenhuma relação é criada em `entity_taxonomy_terms`. A extração
+da infraestrutura não altera esse contrato semântico.
 
 ## 5. Compilação Do Domínio
 
@@ -168,7 +170,7 @@ O metadata do perfil possui schema fechado equivalente a:
 ```json
 {
   "sourceDigestSha256": "<sha256>",
-  "systemSchemaVersion": 6,
+  "systemSchemaVersion": 7,
   "systemMediaSchemaVersion": 2,
   "release": null
 }
@@ -212,6 +214,8 @@ Testes integrais cobrem:
 - build completo por meio de `artifact-builder`;
 - conteúdo localizado nos dois bancos;
 - relações N:N e taxonomias preservadas;
+- hierarquia de vida projetada em `taxonomy_terms`, com bijeção para
+  `life_reference_items` e conteúdo obtido das entidades correspondentes;
 - mídia original, thumbnail e CAS;
 - determinismo do resultado;
 - adulterações representativas de banco, manifest e CAS;

@@ -17,7 +17,9 @@ mod taxonomy;
 mod tests;
 
 pub use model::{Diagnostic, ValidatedSource, ValidationError};
-pub(crate) use model::{ValidatedEntity, ValidatedMediaReference};
+pub(crate) use model::{
+    IndexedTaxonomyTerm, TaxonomyTermIndexes, ValidatedEntity, ValidatedMediaReference,
+};
 pub use pipeline::validate_source;
 
 use self::{

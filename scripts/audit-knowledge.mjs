@@ -108,33 +108,47 @@ for (const file of entityFiles) {
 const byType = Object.groupBy(entries, ({ manifest }) => manifest.entityType);
 const byIdentity = new Map(entries.map((entry) => [`${entry.manifest.entityType}:${entry.manifest.id}`, entry]));
 const taxonomies = new Map((byType.taxonomy ?? []).map((entry) => [`${entry.manifest.domain}:${entry.manifest.purpose}`, entry.manifest]));
+const taxonomyIndexes = new Map();
 
 record(taxonomies.size === 10, `expected 10 canonical taxonomies, found ${taxonomies.size}`);
 record(same([...taxonomies.keys()].sort(), [...canonicalTaxonomies].sort()), 'taxonomy domain/purpose matrix differs from the canonical ten pairs');
 
 let taxonomyTermCount = 0;
+let taxonomyHierarchyRelations = 0;
 for (const { relative, manifest } of byType.taxonomy ?? []) {
 	record(!removedPurposes.has(manifest.purpose), `${relative}: removed taxonomy purpose ${manifest.purpose} is forbidden`);
 	record(Array.isArray(manifest.terms), `${relative}: terms must be an array`);
 	const keys = new Set();
-	for (const [index, term] of (manifest.terms ?? []).entries()) {
-		taxonomyTermCount += 1;
-		record(isText(term.key), `${relative}: term ${index} has an invalid key`);
-		record(!keys.has(term.key), `${relative}: duplicate term key ${term.key}`);
-		keys.add(term.key);
-		record(term.order === index, `${relative}: term ${term.key} order must equal ${index}`);
-		record(localizedValuesAreValid(term.localizedContent?.label, false), `${relative}: term ${term.key} label must contain the six locales`);
-		if (term.localizedContent?.aliases !== undefined) {
-			record(localizedValuesAreValid(term.localizedContent.aliases, true), `${relative}: term ${term.key} aliases are invalid`);
+	const index = new Map();
+	function visit(terms, parentKey, ownerPath, depth) {
+		for (const [position, term] of terms.entries()) {
+			const sourcePath = `${ownerPath}.${position}`;
+			taxonomyTermCount += 1;
+			if (parentKey !== null) taxonomyHierarchyRelations += 1;
+			record(depth <= 32, `${relative}: ${sourcePath}.key exceeds the maximum taxonomy depth of 32`);
+			record(isText(term.key), `${relative}: ${sourcePath}.key is invalid`);
+			record(!keys.has(term.key), `${relative}: duplicate term key ${term.key} at ${sourcePath}.key`);
+			keys.add(term.key);
+			index.set(term.key, term);
+			record(!Object.hasOwn(term, 'parentKey'), `${relative}: ${sourcePath}.parentKey is forbidden`);
+			record(!Object.hasOwn(term, 'order'), `${relative}: ${sourcePath}.order is forbidden`);
+			record(localizedValuesAreValid(term.localizedContent?.label, false), `${relative}: ${sourcePath}.localizedContent.label must contain the six locales`);
+			if (term.localizedContent?.aliases !== undefined) {
+				record(localizedValuesAreValid(term.localizedContent.aliases, true), `${relative}: ${sourcePath}.localizedContent.aliases is invalid`);
+			}
+			if (term.children !== undefined) {
+				record(Array.isArray(term.children) && term.children.length > 0, `${relative}: ${sourcePath}.children must be a non-empty array when present`);
+				if (Array.isArray(term.children)) visit(term.children, term.key, `${sourcePath}.children`, depth + 1);
+			}
 		}
 	}
-	for (const term of manifest.terms ?? []) {
-		record(term.parentKey === null || keys.has(term.parentKey), `${relative}: unresolved parent ${term.parentKey} for ${term.key}`);
-	}
+	visit(manifest.terms ?? [], null, 'terms', 1);
+	record(keys.size <= 10_000, `${relative}: taxonomy contains more than 10000 terms`);
+	taxonomyIndexes.set(`${manifest.domain}:${manifest.purpose}`, index);
 }
 
 function taxonomyHas(domain, purpose, key) {
-	return taxonomies.get(`${domain}:${purpose}`)?.terms.some((term) => term.key === key) === true;
+	return taxonomyIndexes.get(`${domain}:${purpose}`)?.has(key) === true;
 }
 
 let productTaxonReferences = 0;
@@ -240,7 +254,10 @@ const inventory = {
 		lifeSizeCardinality: 'ZeroOrOne',
 		genericSearchTerms: 0
 	},
-	relations: { productTarget: productTargetReferences },
+	relations: {
+		taxonomyHierarchy: taxonomyHierarchyRelations,
+		productTarget: productTargetReferences
+	},
 	editorial: {
 		entities: editorialEntities.length,
 		documents: markdownFiles.length,
@@ -267,6 +284,7 @@ const report = {
 	taxonomy: {
 		registryEntries: taxonomies.size,
 		terms: taxonomyTermCount,
+		hierarchyRelations: taxonomyHierarchyRelations,
 		productTargetReferences,
 		genericSearchTerms: 0
 	},

@@ -2,24 +2,22 @@
 
 use super::{sorted, taxonomy::LifeIndex};
 use crate::{
-    source::{LifeBodyMetricStage, LifeSexBodyMetrics, SourceEntry, TaxonomyEntity},
-    validation::Diagnostic,
+    source::{LifeBodyMetricStage, LifeSexBodyMetrics, SourceEntry},
+    validation::{Diagnostic, TaxonomyTermIndexes},
 };
-use std::collections::{BTreeMap, BTreeSet};
 
 pub(super) fn validate_life_classifications(
     life: &LifeIndex<'_>,
-    taxonomies: &BTreeMap<(String, String), TaxonomyEntity>,
+    taxonomies: &TaxonomyTermIndexes,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     let size_terms = taxonomies
         .get(&("life".to_string(), "size".to_string()))
-        .map(|taxonomy| {
-            taxonomy
-                .terms
-                .iter()
-                .map(|term| term.key.as_str())
-                .collect::<BTreeSet<_>>()
+        .map(|terms| {
+            terms
+                .keys()
+                .map(String::as_str)
+                .collect::<std::collections::BTreeSet<_>>()
         })
         .unwrap_or_default();
     for (entry, entity) in life.values() {

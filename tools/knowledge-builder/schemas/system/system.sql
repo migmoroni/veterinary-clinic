@@ -33,9 +33,9 @@ CREATE TABLE taxonomy_terms (
     aliases_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(aliases_json) AND json_type(aliases_json) = 'array'),
     sort_order INTEGER NOT NULL CHECK(sort_order >= 0),
     PRIMARY KEY(taxonomy_id, term_key),
-    UNIQUE(taxonomy_id, sort_order),
     FOREIGN KEY(taxonomy_id) REFERENCES taxonomy_registry(id) ON DELETE CASCADE,
-    FOREIGN KEY(taxonomy_id, parent_term_key) REFERENCES taxonomy_terms(taxonomy_id, term_key)
+    FOREIGN KEY(taxonomy_id, parent_term_key) REFERENCES taxonomy_terms(taxonomy_id, term_key),
+    CHECK(parent_term_key IS NULL OR parent_term_key <> term_key)
 );
 
 CREATE TABLE geo_places (
@@ -225,6 +225,8 @@ CREATE TABLE entity_media_references (
 );
 
 CREATE INDEX idx_taxonomy_terms_label ON taxonomy_terms(taxonomy_id, normalized_label);
+CREATE UNIQUE INDEX idx_taxonomy_terms_root_order ON taxonomy_terms(taxonomy_id, sort_order) WHERE parent_term_key IS NULL;
+CREATE UNIQUE INDEX idx_taxonomy_terms_child_order ON taxonomy_terms(taxonomy_id, parent_term_key, sort_order) WHERE parent_term_key IS NOT NULL;
 CREATE INDEX idx_geo_places_parent ON geo_places(parent_place_id);
 CREATE INDEX idx_life_taxonomy ON life_reference_items(domain_id, kingdom_id, phylum_id, class_id, order_id, family_id, genus_id, species_id, breed_id, variety_id, normalized_name, id);
 CREATE INDEX idx_life_kingdom_items ON life_reference_items(kingdom_id, phylum_id, class_id, normalized_name, id);

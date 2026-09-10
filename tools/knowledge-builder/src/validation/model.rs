@@ -2,6 +2,7 @@
 
 use super::{CompiledDocument, KnowledgeLocale, MediaAsset, SourceEntry, TaxonomyEntity};
 use crate::markdown::CompiledMediaReference;
+use crate::source::TaxonomyTerm;
 use serde::Serialize;
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -125,9 +126,23 @@ pub(crate) struct ValidatedMediaReference {
 }
 
 #[derive(Clone, Debug)]
+pub(crate) struct IndexedTaxonomyTerm {
+    pub(crate) term: TaxonomyTerm,
+    pub(crate) parent_key: Option<String>,
+    pub(crate) sibling_order: usize,
+    pub(crate) depth: usize,
+    pub(crate) source_path: String,
+    pub(crate) owner_path: String,
+}
+
+pub(crate) type TaxonomyTermIndexes =
+    BTreeMap<(String, String), BTreeMap<String, IndexedTaxonomyTerm>>;
+
+#[derive(Clone, Debug)]
 pub struct ValidatedSource {
     pub(crate) entities: Vec<ValidatedEntity>,
     pub(crate) taxonomies: BTreeMap<(String, String), TaxonomyEntity>,
+    pub(crate) taxonomy_terms: TaxonomyTermIndexes,
     pub(crate) media: BTreeMap<String, MediaAsset>,
     pub(crate) media_keys_by_locale: BTreeMap<KnowledgeLocale, BTreeSet<String>>,
     pub(crate) source_digest_sha256: String,
@@ -137,6 +152,17 @@ pub struct ValidatedSource {
 }
 
 impl ValidatedSource {
+    pub(crate) fn taxonomy_term(
+        &self,
+        domain: &str,
+        purpose: &str,
+        key: &str,
+    ) -> Option<&IndexedTaxonomyTerm> {
+        self.taxonomy_terms
+            .get(&(domain.to_string(), purpose.to_string()))
+            .and_then(|terms| terms.get(key))
+    }
+
     pub fn entity_count(&self) -> usize {
         self.entities.len()
     }

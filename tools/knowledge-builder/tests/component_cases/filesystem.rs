@@ -35,6 +35,115 @@ fn minimal_fixture_rejects_missing_and_duplicate_taxonomy_owners() {
 }
 
 #[test]
+fn hierarchical_taxonomies_use_structure_without_interpreting_keys() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
+    let baseline = validate(&fixture).unwrap();
+    let valid = TestDirectory::new("opaque-hierarchical-taxonomy");
+    copy_tree(&fixture, valid.path());
+    let manifest = find_manifest_by_id(valid.path(), "fixture-product-classification").unwrap();
+    let mut taxonomy: serde_json::Value =
+        serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
+    let localized = taxonomy["terms"][0]["localizedContent"].clone();
+    taxonomy["terms"]
+        .as_array_mut()
+        .unwrap()
+        .push(serde_json::json!({
+            "key": "administrationRoute.epidural",
+            "localizedContent": localized.clone(),
+            "children": [{
+                "key": "opaqueChildWithoutParentPrefix",
+                "localizedContent": localized
+            }]
+        }));
+    fs::write(&manifest, serde_json::to_vec_pretty(&taxonomy).unwrap()).unwrap();
+    let validated = validate(valid.path()).expect("compound roots and opaque child keys are valid");
+    assert_eq!(validated.relation_count(), baseline.relation_count() + 1);
+
+    let reordered = TestDirectory::new("reordered-taxonomy-siblings");
+    copy_tree(&fixture, reordered.path());
+    let manifest = find_manifest_by_id(reordered.path(), "fixture-product-type").unwrap();
+    let mut taxonomy: serde_json::Value =
+        serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
+    taxonomy["terms"].as_array_mut().unwrap().swap(0, 1);
+    fs::write(&manifest, serde_json::to_vec_pretty(&taxonomy).unwrap()).unwrap();
+    assert_ne!(
+        validate(reordered.path()).unwrap().source_digest_sha256(),
+        baseline.source_digest_sha256()
+    );
+
+    let moved = TestDirectory::new("moved-taxonomy-identity");
+    copy_tree(&fixture, moved.path());
+    let manifest = find_manifest_by_id(moved.path(), "fixture-product-type").unwrap();
+    let mut taxonomy: serde_json::Value =
+        serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
+    let child = taxonomy["terms"][1]["children"]
+        .as_array_mut()
+        .unwrap()
+        .remove(0);
+    taxonomy["terms"][1]
+        .as_object_mut()
+        .unwrap()
+        .remove("children");
+    taxonomy["terms"][0]["children"] = serde_json::json!([child]);
+    fs::write(&manifest, serde_json::to_vec_pretty(&taxonomy).unwrap()).unwrap();
+    let moved_source = validate(moved.path()).expect("moving a key does not rename it");
+    assert_ne!(
+        moved_source.source_digest_sha256(),
+        baseline.source_digest_sha256()
+    );
+}
+
+#[test]
+fn hierarchical_taxonomy_schema_and_deep_diagnostics_are_strict() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
+    for (label, mutate) in [
+        ("empty-children", "empty"),
+        ("deep-parent-key", "parentKey"),
+        ("deep-order", "order"),
+    ] {
+        let copy = TestDirectory::new(&format!("invalid-taxonomy-{label}"));
+        copy_tree(&fixture, copy.path());
+        let manifest = find_manifest_by_id(copy.path(), "fixture-product-type").unwrap();
+        let mut taxonomy: serde_json::Value =
+            serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
+        match mutate {
+            "empty" => taxonomy["terms"][1]["children"] = serde_json::json!([]),
+            "parentKey" => {
+                taxonomy["terms"][1]["children"][0]["parentKey"] = serde_json::json!("medication")
+            }
+            "order" => taxonomy["terms"][1]["children"][0]["order"] = serde_json::json!(0),
+            _ => unreachable!(),
+        }
+        fs::write(&manifest, serde_json::to_vec_pretty(&taxonomy).unwrap()).unwrap();
+        assert!(
+            validate(copy.path())
+                .unwrap_err()
+                .to_string()
+                .contains("schema violation"),
+            "{label} must be rejected"
+        );
+    }
+
+    let duplicate = TestDirectory::new("duplicate-deep-taxonomy-key");
+    copy_tree(&fixture, duplicate.path());
+    let manifest = find_manifest_by_id(duplicate.path(), "fixture-product-type").unwrap();
+    let mut taxonomy: serde_json::Value =
+        serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
+    let term = taxonomy["terms"][0].clone();
+    taxonomy["terms"][1]["children"]
+        .as_array_mut()
+        .unwrap()
+        .push(term);
+    fs::write(&manifest, serde_json::to_vec_pretty(&taxonomy).unwrap()).unwrap();
+    let error = validate(duplicate.path()).unwrap_err().to_string();
+    assert!(
+        error.contains("terms.1.children.1.key"),
+        "unexpected error: {error}"
+    );
+    assert!(error.contains("duplicate term key default"));
+}
+
+#[test]
 fn logical_digest_is_independent_of_editorial_directory() {
     let original = validate(source_root()).expect("canonical source must validate");
     let moved_copy = TestDirectory::new("moved-source");

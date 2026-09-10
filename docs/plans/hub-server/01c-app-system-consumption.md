@@ -25,10 +25,10 @@ A [Parte 1B.9.4](./01b9-artifact-builder/04-closure.md) está concluída. O
 `knowledge-builder` compila o domínio veterinário e delega SQLite, CAS,
 verificação e publicação à crate `artifact-builder`. O fluxo gera uma
 `build_version` válida com os seis pares de bancos e o CAS compartilhado. Os
-artefatos usam schema 6 de `system` e projetam os dez níveis taxonômicos em
-`life_reference_items`. Toda linha possui domínio; as posições seguintes formam
-um prefixo contínuo até o nível da própria entidade e as inferiores são nulas.
-Todas as colunas classificatórias são anuláveis.
+artefatos usam schema `7` de `system`. `life:hierarchy` está projetada em
+`taxonomy_terms` como única adjacency list da vida, e cada row de
+`life_reference_items` referencia o termo de mesmo ID e informa o rank derivado
+da profundidade. Todas as classificações de vida são opcionais.
 
 ## Escopo
 
@@ -46,11 +46,11 @@ Todas as colunas classificatórias são anuláveis.
 - consumir `applicable_life_stages_json` e `therapeutic_spectrum` diretamente
   de `product_catalog_items`;
 - consumir descritores vacinais como aliases localizados comuns do produto;
-- consumir a taxonomia e as classificações diretamente de
-  `life_reference_items` e a aplicabilidade de produtos e protocolos pelos
-  IDs canônicos de qualquer um dos dez níveis de `LifeEntity`;
+- consumir entidades e classificações diretamente de `life_reference_items`, a
+  hierarquia por `life:hierarchy` em `taxonomy_terms` e a aplicabilidade de
+  produtos e protocolos pelos IDs canônicos de qualquer um dos dez ranks;
 - resolver cada alvo de aplicabilidade para a própria entidade e seus
-  descendentes pela cadeia taxonômica explícita;
+  descendentes pela árvore taxonômica explícita;
 - expor conteúdo e navegação entre pai, filhos e descendentes nos dez níveis
   taxonômicos;
 - consumir `LifeEntity` sem embutir papel clínico na taxonomia; módulos donos
@@ -427,9 +427,10 @@ enquanto o corpo vem integralmente resolvido pelo banco ativo.
 
 Para entidades de vida, `taxonomy` expõe domínio, reino, filo, classe, ordem,
 família, gênero, espécie, raça e variedade em posições nomeadas. Cada posição não
-nula resolve ID e nome por `life_reference_items`. O repository não deriva nenhum
-nível do caminho editorial. `level` corresponde à última posição não nula e
-`parentId` corresponde à posição imediatamente anterior; o domínio não possui
+nula é recomposta por uma consulta recursiva sobre `life:hierarchy`, unindo
+`taxonomy_terms` a `life_reference_items` para resolver ID, rank e nome. O
+repository não deriva nenhum nível do caminho editorial. `level` corresponde ao
+rank da própria entidade e `parentId` vem do termo pai; o domínio não possui
 `parentId`.
 
 `bodyMetrics` expõe `size` e `stageMetrics` independentemente quando presentes.
@@ -513,8 +514,8 @@ classificações genéricas ou campos `searchConcept`.
 
 Para `LifeEntity`, `entity_search_terms` contém somente nome e aliases próprios.
 Quando uma busca solicitar a subárvore de um táxon encontrado, o repository usa
-a coluna taxonômica correspondente de `life_reference_items`; ele não depende de
-termos ancestrais duplicados nas entidades descendentes.
+uma consulta recursiva sobre `life:hierarchy`; ele não depende de termos
+ancestrais duplicados nas entidades descendentes.
 
 Quando o corpo das seções participar de uma busca, o repository usa o texto ou o
 índice FTS derivado pelo builder. A busca não interpreta nem percorre
@@ -718,10 +719,10 @@ Cobrir:
 - nomes, aliases, descrições e taxonomias corretos por locale;
 - produtos resolvendo seus princípios ativos pela relação N:N, na ordem
   declarada;
-- entidades dos dez níveis expondo sua cadeia pelos campos autorreferenciados de
-  `life_reference_items`;
+- entidades dos dez ranks expondo sua cadeia pela consulta recursiva de
+  `life:hierarchy` em `taxonomy_terms`;
 - filtros por domínio, reino, filo, classe, ordem, família, gênero, espécie, raça
-  e variedade usando os campos indexados de `life_reference_items`;
+  e variedade usando rank, ancestralidade e descendência da árvore indexada;
 - fabricantes, princípios ativos, condições e produtos resolvendo suas
   classificações N:N exclusivamente por `entity_taxonomy_terms`;
 - taxonomias reconstruindo raízes e descendentes por `parent_term_key`, com

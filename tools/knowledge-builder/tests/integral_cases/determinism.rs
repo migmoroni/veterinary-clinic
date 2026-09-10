@@ -61,7 +61,7 @@ fn validates_and_builds_all_locales_deterministically() {
     .unwrap();
     assert_eq!(report["schemaVersion"], 5);
     assert_eq!(first.builder_version, "0.5.0");
-    assert_eq!(first.system_schema_version, 5);
+    assert_eq!(first.system_schema_version, 6);
     assert_eq!(first.system_media_schema_version, 2);
     let expected_system_tables = [
         "active_ingredient_catalog_items",
@@ -116,7 +116,7 @@ fn validates_and_builds_all_locales_deterministically() {
         let user_version: u32 = database
             .query_row("PRAGMA user_version", [], |row| row.get(0))
             .unwrap();
-        assert_eq!(user_version, 5);
+        assert_eq!(user_version, 6);
         let table_count: usize = database
             .query_row(
                 "SELECT count(*) FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
@@ -213,6 +213,14 @@ fn validates_and_builds_all_locales_deterministically() {
         }
         for (name, expected_sql) in [
             (
+                "idx_taxonomy_terms_root_order",
+                "CREATE UNIQUE INDEX idx_taxonomy_terms_root_order ON taxonomy_terms(taxonomy_id, sort_order) WHERE parent_term_key IS NULL",
+            ),
+            (
+                "idx_taxonomy_terms_child_order",
+                "CREATE UNIQUE INDEX idx_taxonomy_terms_child_order ON taxonomy_terms(taxonomy_id, parent_term_key, sort_order) WHERE parent_term_key IS NOT NULL",
+            ),
+            (
                 "idx_entity_taxonomy_filter",
                 "CREATE INDEX idx_entity_taxonomy_filter ON entity_taxonomy_terms(taxonomy_id, term_key, entity_type, entity_id)",
             ),
@@ -230,6 +238,25 @@ fn validates_and_builds_all_locales_deterministically() {
                 .unwrap();
             assert_eq!(sql, expected_sql);
         }
+        let vaccine: (Option<String>, usize) = database
+            .query_row(
+                "SELECT parent_term_key, sort_order FROM taxonomy_terms WHERE taxonomy_id = 'product-types' AND term_key = 'medication.biologicalAndImmunological.vaccine'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!(
+            vaccine,
+            (Some("medication.biologicalAndImmunological".to_string()), 3)
+        );
+        let invalid_sibling_sequences: usize = database
+            .query_row(
+                "SELECT count(*) FROM (SELECT taxonomy_id, parent_term_key, count(*) AS row_count, min(sort_order) AS first_order, max(sort_order) AS last_order FROM taxonomy_terms GROUP BY taxonomy_id, parent_term_key HAVING first_order <> 0 OR last_order <> row_count - 1)",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(invalid_sibling_sequences, 0);
         let taxonomized_types: usize = database
             .query_row(
                 "SELECT count(DISTINCT entity_type) FROM entity_taxonomy_terms",

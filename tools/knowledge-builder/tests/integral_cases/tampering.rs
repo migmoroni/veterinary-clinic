@@ -288,6 +288,22 @@ fn semantically_tampered_database_is_rejected_after_checksums_are_refreshed() {
             "UPDATE taxonomy_terms SET label = label || ' adulterado' WHERE rowid = (SELECT rowid FROM taxonomy_terms LIMIT 1)",
         ),
         (
+            "taxonomy-cross-vocabulary-parent",
+            "UPDATE taxonomy_terms SET parent_term_key = (SELECT candidate.term_key FROM taxonomy_terms candidate WHERE candidate.taxonomy_id <> taxonomy_terms.taxonomy_id LIMIT 1), sort_order = 0 WHERE rowid = (SELECT rowid FROM taxonomy_terms WHERE parent_term_key IS NOT NULL LIMIT 1)",
+        ),
+        (
+            "taxonomy-sibling-order-gap",
+            "UPDATE taxonomy_terms SET sort_order = sort_order + 10000 WHERE rowid = (SELECT rowid FROM taxonomy_terms WHERE parent_term_key IS NOT NULL LIMIT 1)",
+        ),
+        (
+            "taxonomy-cycle",
+            "WITH cycle AS (SELECT parent.rowid AS parent_rowid, child.term_key AS child_key FROM taxonomy_terms parent JOIN taxonomy_terms child ON child.taxonomy_id = parent.taxonomy_id AND child.parent_term_key = parent.term_key WHERE parent.parent_term_key IS NOT NULL AND NOT EXISTS (SELECT 1 FROM taxonomy_terms existing WHERE existing.taxonomy_id = child.taxonomy_id AND existing.parent_term_key = child.term_key) LIMIT 1) UPDATE taxonomy_terms SET parent_term_key = (SELECT child_key FROM cycle), sort_order = 0 WHERE rowid = (SELECT parent_rowid FROM cycle)",
+        ),
+        (
+            "taxonomy-root-branch-removal",
+            "WITH RECURSIVE branch(taxonomy_id, term_key) AS (SELECT taxonomy_id, term_key FROM (SELECT taxonomy_id, term_key FROM taxonomy_terms WHERE parent_term_key IS NULL ORDER BY taxonomy_id, sort_order LIMIT 1) UNION ALL SELECT child.taxonomy_id, child.term_key FROM taxonomy_terms child JOIN branch parent ON parent.taxonomy_id = child.taxonomy_id AND child.parent_term_key = parent.term_key) DELETE FROM taxonomy_terms WHERE (taxonomy_id, term_key) IN (SELECT taxonomy_id, term_key FROM branch)",
+        ),
+        (
             "search-provenance",
             "UPDATE entity_search_terms SET provenance = provenance || '.adulterado' WHERE rowid = (SELECT rowid FROM entity_search_terms LIMIT 1)",
         ),
@@ -326,6 +342,7 @@ fn semantically_tampered_database_is_rejected_after_checksums_are_refreshed() {
         fs::write(&checksum_path, &canonical_checksums).unwrap();
         fs::write(&system_path, &canonical_system).unwrap();
         let database = Connection::open(&system_path).unwrap();
+        database.execute_batch("PRAGMA foreign_keys = OFF").unwrap();
         let affected = database.execute(sql, []).unwrap();
         assert!(affected > 0, "mutation {label} must affect a row");
         drop(database);
@@ -336,6 +353,22 @@ fn semantically_tampered_database_is_rejected_after_checksums_are_refreshed() {
                 error,
                 KnowledgeBuilderError::Verification(VerificationError::Invalid { .. })
             ));
+        } else if matches!(
+            label,
+            "taxonomy-cross-vocabulary-parent"
+                | "taxonomy-sibling-order-gap"
+                | "taxonomy-cycle"
+                | "taxonomy-root-branch-removal"
+        ) {
+            assert!(
+                matches!(
+                    error,
+                    KnowledgeBuilderError::Verification(
+                        VerificationError::Database { .. } | VerificationError::Invalid { .. }
+                    )
+                ),
+                "unexpected {label} error: {error}"
+            );
         } else {
             assert!(matches!(
                 error,

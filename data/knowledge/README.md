@@ -189,9 +189,20 @@ life:size -> ZeroOrOne
 Os dez níveis biológicos obtêm nomes, aliases, conteúdo e ancestralidade dos
 próprios `LifeEntity`. Eles não são termos de uma taxonomia paralela.
 
-Taxonomias compartilhadas usam termos ordenados com `key`, `parentKey`, `order`
-e `localizedContent`. Cada referência precisa resolver no domínio e propósito
-corretos.
+Taxonomias compartilhadas são florestas ordenadas. `terms` contém as raízes e
+cada termo declara `key`, `localizedContent` e, quando possui descendentes,
+`children`. Folhas omitem `children`; a posição em cada array define a ordem
+somente entre irmãos.
+
+`key` é uma identidade canônica opaca e pode ser simples ou composta, como
+`administrationRoute.epidural`. Seus segmentos não criam ancestrais nem
+determinam a posição na árvore. Referências usam a chave integral e precisam
+resolver no domínio e propósito corretos.
+
+Para adicionar uma raiz, inclua o termo em `terms`. Para adicionar um filho ou
+um novo nível, inclua-o em `children` do pai estrutural sem alterar sua chave.
+Depois, execute `pnpm knowledge:audit`, `pnpm knowledge:validate` e os testes do
+`knowledge-builder`.
 
 ## Demais Entidades
 

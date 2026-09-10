@@ -4,12 +4,11 @@ mod applicability;
 mod classifications;
 mod taxonomy;
 
-use super::{Diagnostic, SourceEntry, TaxonomyEntity};
-use std::collections::BTreeMap;
+use super::{Diagnostic, SourceEntry, TaxonomyTermIndexes};
 
 pub(super) fn validate_life_contracts(
     entries: &[SourceEntry],
-    taxonomies: &BTreeMap<(String, String), TaxonomyEntity>,
+    taxonomies: &TaxonomyTermIndexes,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     let life = taxonomy::validate_life_taxonomy(entries, diagnostics);

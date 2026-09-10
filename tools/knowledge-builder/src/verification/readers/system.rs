@@ -5,7 +5,7 @@ use crate::{
     projection::coverage::{RowIdentity, SystemTable},
 };
 use rusqlite::{Connection, Row};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 pub(crate) type SystemRows = BTreeMap<SystemTable, BTreeMap<RowIdentity, SystemRow>>;
@@ -33,7 +33,7 @@ pub(super) fn read(
     );
     result.insert(
         SystemTable::TaxonomyTerms,
-        query(connection, database, "SELECT taxonomy_id, term_key, parent_term_key, label, normalized_label, aliases_json, sort_order FROM taxonomy_terms ORDER BY taxonomy_id, sort_order", |row| {
+        query(connection, database, "SELECT taxonomy_id, term_key, parent_term_key, label, normalized_label, aliases_json, sort_order FROM taxonomy_terms ORDER BY taxonomy_id, COALESCE(parent_term_key, ''), sort_order, term_key", |row| {
             Ok(SystemRow::TaxonomyTerm { taxonomy_id: row.get(0)?, term_key: row.get(1)?, parent_term_key: row.get(2)?, label: row.get(3)?, normalized_label: row.get(4)?, aliases_json: row.get(5)?, sort_order: row.get(6)? })
         })?,
     );
@@ -129,6 +129,7 @@ pub(super) fn verify(
     contract: &ProjectionContract,
     database: &Path,
 ) -> Result<(), crate::DatabaseError> {
+    verify_taxonomy_forests(observed, database)?;
     let mut expected = SystemTable::SYSTEM_PROJECTABLE
         .into_iter()
         .map(|table| (table, BTreeMap::new()))
@@ -162,6 +163,128 @@ pub(super) fn verify(
         ));
     }
     Ok(())
+}
+
+fn verify_taxonomy_forests(
+    observed: &SystemRows,
+    database: &Path,
+) -> Result<(), crate::DatabaseError> {
+    let registries = observed
+        .get(&SystemTable::TaxonomyRegistry)
+        .expect("taxonomy registry rows are always read")
+        .values()
+        .filter_map(|row| match row {
+            SystemRow::TaxonomyRegistry { id, .. } => Some(id.as_str()),
+            _ => None,
+        })
+        .collect::<BTreeSet<_>>();
+    let rows = observed
+        .get(&SystemTable::TaxonomyTerms)
+        .expect("taxonomy term rows are always read");
+    let mut nodes = BTreeMap::<(String, String), Option<String>>::new();
+    let mut sibling_groups = BTreeMap::<(String, Option<String>), Vec<(usize, String)>>::new();
+    for row in rows.values() {
+        let SystemRow::TaxonomyTerm {
+            taxonomy_id,
+            term_key,
+            parent_term_key,
+            sort_order,
+            ..
+        } = row
+        else {
+            continue;
+        };
+        if !registries.contains(taxonomy_id.as_str()) {
+            return taxonomy_error(
+                database,
+                format!("term {term_key} has unknown taxonomy {taxonomy_id}"),
+            );
+        }
+        if parent_term_key.as_ref() == Some(term_key) {
+            return taxonomy_error(
+                database,
+                format!("term {taxonomy_id}:{term_key} references itself"),
+            );
+        }
+        nodes.insert(
+            (taxonomy_id.clone(), term_key.clone()),
+            parent_term_key.clone(),
+        );
+        sibling_groups
+            .entry((taxonomy_id.clone(), parent_term_key.clone()))
+            .or_default()
+            .push((*sort_order, term_key.clone()));
+    }
+    for ((taxonomy_id, term_key), parent) in &nodes {
+        if let Some(parent) = parent {
+            if !nodes.contains_key(&(taxonomy_id.clone(), parent.clone())) {
+                return taxonomy_error(
+                    database,
+                    format!("term {taxonomy_id}:{term_key} has unresolved parent {parent}"),
+                );
+            }
+        }
+    }
+    for ((taxonomy_id, parent), siblings) in &mut sibling_groups {
+        siblings.sort();
+        if siblings
+            .iter()
+            .enumerate()
+            .any(|(expected, (actual, _))| expected != *actual)
+        {
+            return taxonomy_error(
+                database,
+                format!("taxonomy {taxonomy_id} has non-contiguous sibling order under {parent:?}"),
+            );
+        }
+    }
+    for taxonomy_id in registries {
+        let roots = sibling_groups
+            .get(&(taxonomy_id.to_string(), None))
+            .ok_or_else(|| {
+                crate::DatabaseError::invariant(
+                    database,
+                    "verify taxonomy forest",
+                    format!("taxonomy {taxonomy_id} has no roots"),
+                )
+            })?;
+        let mut pending = roots
+            .iter()
+            .rev()
+            .map(|(_, key)| key.clone())
+            .collect::<Vec<_>>();
+        let mut visited = BTreeSet::new();
+        while let Some(term_key) = pending.pop() {
+            if !visited.insert(term_key.clone()) {
+                return taxonomy_error(
+                    database,
+                    format!("taxonomy {taxonomy_id} visits term {term_key} more than once"),
+                );
+            }
+            if let Some(children) = sibling_groups.get(&(taxonomy_id.to_string(), Some(term_key))) {
+                pending.extend(children.iter().rev().map(|(_, key)| key.clone()));
+            }
+        }
+        let expected = nodes
+            .keys()
+            .filter(|(candidate, _)| candidate == taxonomy_id)
+            .count();
+        if visited.len() != expected {
+            return taxonomy_error(
+                database,
+                format!("taxonomy {taxonomy_id} contains unreachable terms or a cycle"),
+            );
+        }
+    }
+    Ok(())
+}
+
+fn taxonomy_error(database: &Path, detail: String) -> Result<(), crate::DatabaseError> {
+    Err(crate::DatabaseError::invariant(
+        database,
+        "verify taxonomy forest",
+        detail,
+    ))
 }
 
 fn query<F>(
@@ -239,5 +362,94 @@ mod tests {
                 Some(&expected)
             );
         }
+    }
+
+    fn taxonomy_rows(terms: Vec<SystemRow>) -> SystemRows {
+        let registry = SystemRow::TaxonomyRegistry {
+            id: "taxonomy".to_string(),
+            domain: "product".to_string(),
+            purpose: "type".to_string(),
+        };
+        let mut rows = BTreeMap::new();
+        rows.insert(
+            SystemTable::TaxonomyRegistry,
+            BTreeMap::from([(registry.descriptor().identity, registry)]),
+        );
+        rows.insert(
+            SystemTable::TaxonomyTerms,
+            terms
+                .into_iter()
+                .map(|row| (row.descriptor().identity, row))
+                .collect(),
+        );
+        rows
+    }
+
+    fn term(key: &str, parent: Option<&str>, order: usize) -> SystemRow {
+        SystemRow::TaxonomyTerm {
+            taxonomy_id: "taxonomy".to_string(),
+            term_key: key.to_string(),
+            parent_term_key: parent.map(str::to_string),
+            label: key.to_string(),
+            normalized_label: key.to_lowercase(),
+            aliases_json: "[]".to_string(),
+            sort_order: order,
+        }
+    }
+
+    #[test]
+    fn taxonomy_forest_verifier_accepts_local_order_and_opaque_keys() {
+        let rows = taxonomy_rows(vec![
+            term("namespace.compoundRoot", None, 0),
+            term("secondRoot", None, 1),
+            term("childWithoutPrefix", Some("namespace.compoundRoot"), 0),
+            term("other.child", Some("secondRoot"), 0),
+        ]);
+        verify_taxonomy_forests(&rows, Path::new("<taxonomy>")).unwrap();
+    }
+
+    #[test]
+    fn taxonomy_forest_verifier_rejects_broken_structure() {
+        let cases = [
+            vec![term("root", None, 1)],
+            vec![term("root", None, 0), term("child", Some("missing"), 0)],
+            vec![term("root", None, 0), term("root.two", None, 0)],
+            vec![term("root", None, 0), term("self", Some("self"), 0)],
+            vec![
+                term("root", None, 0),
+                term("cycle-a", Some("cycle-b"), 0),
+                term("cycle-b", Some("cycle-a"), 0),
+            ],
+        ];
+        for terms in cases {
+            assert!(
+                verify_taxonomy_forests(&taxonomy_rows(terms), Path::new("<taxonomy>")).is_err()
+            );
+        }
+    }
+
+    #[test]
+    fn taxonomy_ddl_enforces_sibling_order_but_allows_other_parent_groups() {
+        let connection = Connection::open_in_memory().unwrap();
+        connection.execute_batch(SYSTEM_DDL).unwrap();
+        connection
+            .execute(
+                "INSERT INTO taxonomy_registry (id, domain, purpose) VALUES ('taxonomy', 'product', 'type')",
+                [],
+            )
+            .unwrap();
+        let insert = |key: &str, parent: Option<&str>, order: usize| {
+            connection.execute(
+                "INSERT INTO taxonomy_terms (taxonomy_id, term_key, parent_term_key, label, normalized_label, aliases_json, sort_order) VALUES ('taxonomy', ?1, ?2, ?1, ?1, '[]', ?3)",
+                rusqlite::params![key, parent, order],
+            )
+        };
+        insert("root-a", None, 0).unwrap();
+        insert("root-b", None, 1).unwrap();
+        insert("child-a", Some("root-a"), 0).unwrap();
+        insert("child-b", Some("root-b"), 0).unwrap();
+        assert!(insert("duplicate-root-order", None, 1).is_err());
+        assert!(insert("duplicate-child-order", Some("root-a"), 0).is_err());
+        assert!(insert("self", Some("self"), 0).is_err());
     }
 }

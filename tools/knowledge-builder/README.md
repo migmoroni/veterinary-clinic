@@ -457,7 +457,13 @@ polimórficos, atravessarem bancos diferentes ou apontarem para arquivos CAS.
 Colunas `*_json` guardam atributos compostos do próprio registro; elas não
 representam tabelas ou relacionamentos ocultos.
 
-As dez taxonomias canônicas usam `taxonomy_registry` e `taxonomy_terms`.
+As dez taxonomias canônicas usam `taxonomy_registry` e `taxonomy_terms`. Na
+autoria, cada taxonomia é uma floresta ordenada: `terms` contém raízes e
+`children` contém filhos. A chave é uma identidade opaca, simples ou composta;
+seus segmentos não implicam ancestralidade. O builder percorre a árvore em
+pré-ordem e achata cada nó em `taxonomy_terms`, derivando
+`parent_term_key` exclusivamente do aninhamento e `sort_order` da posição entre
+irmãos.
 Fabricantes, princípios ativos, condições e produtos materializam relações N:N
 em `entity_taxonomy_terms`. `life:size` é `ZeroOrOne` e ocupa exclusivamente
 `life_reference_items.size_term_key`; identidade taxonômica, origens e métricas
@@ -471,8 +477,14 @@ localizados comuns: aparecem em `aliases_json` e em `entity_search_terms`, sem
 registro ou relação taxonômica. Assim, os atributos diretos atendem filtros
 estruturados e os nomes e aliases atendem a pesquisa textual.
 
-O banco `system` usa schema técnico 5. `system_media` permanece no schema
+O banco `system` usa schema técnico 6. `system_media` permanece no schema
 técnico 2.
+
+Raízes são lidas com `parent_term_key IS NULL ORDER BY sort_order, term_key`.
+Filhos diretos são lidos com `parent_term_key = ? ORDER BY sort_order,
+term_key`. Índices únicos parciais impedem posições repetidas dentro do grupo
+de raízes ou dos filhos de um mesmo pai e permitem reutilizar a posição sob
+pais diferentes.
 
 `idx_entity_taxonomy_filter(taxonomy_id, term_key, entity_type, entity_id)`
 atende filtros e facetas que partem de um termo.
@@ -502,7 +514,7 @@ declarados pela versão.
 `veterinary_clinic_system.db`
 
 Catálogo localizado de entidades, taxonomias, relações, protocolos, busca e
-referências estruturais de mídia. O schema atual possui versão técnica 4.
+referências estruturais de mídia. O schema atual possui versão técnica 6.
 
 `veterinary_clinic_system_media.db`
 

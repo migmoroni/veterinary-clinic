@@ -33,16 +33,17 @@ pertencem a outro servidor.
 18. [Parte 1B.8.5: topologia de testes e guia de manutenção](./01b8-knowledge-builder-maintainability/05-test-topology-maintenance-guide.md)
 19. [Parte 1B.8.6: atributos diretos e aliases de produto](./01b8-knowledge-builder-maintainability/06-direct-product-attributes.md)
 20. [Parte 1B.8.7: autoria taxonômica hierárquica](./01b8-knowledge-builder-maintainability/07-hierarchical-taxonomy-authoring.md)
-21. [Parte 1B.9.1: contrato neutro do `artifact-builder`](./01b9-artifact-builder/01-neutral-contract.md)
-22. [Parte 1B.9.2: motor genérico de artefatos](./01b9-artifact-builder/02-generic-engine.md)
-23. [Parte 1B.9.3: adaptador veterinário](./01b9-artifact-builder/03-veterinary-adapter.md)
-24. [Parte 1B.9.4: fechamento e documentação](./01b9-artifact-builder/04-closure.md)
-25. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
-26. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
-27. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
-28. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
-29. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
-30. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
+21. [Parte 1B.8.8: taxonomia hierárquica da vida](./01b8-knowledge-builder-maintainability/08-life-hierarchy-taxonomy.md)
+22. [Parte 1B.9.1: contrato neutro do `artifact-builder`](./01b9-artifact-builder/01-neutral-contract.md)
+23. [Parte 1B.9.2: motor genérico de artefatos](./01b9-artifact-builder/02-generic-engine.md)
+24. [Parte 1B.9.3: adaptador veterinário](./01b9-artifact-builder/03-veterinary-adapter.md)
+25. [Parte 1B.9.4: fechamento e documentação](./01b9-artifact-builder/04-closure.md)
+26. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
+27. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
+28. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
+29. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
+30. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
+31. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
 
 ## Referências Futuras Não Sequenciais
 
@@ -53,7 +54,7 @@ de implementação. Sua presença não autoriza execução nem alteração do co
 vigente sem uma solicitação explícita.
 
 A pré-fase, as subpartes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3, 1B.4, 1B.5,
-1B.6, 1B.7, 1B.7A, 1B.7B, 1B.8.1 a 1B.8.7, 1B.9.1 a 1B.9.4, 1C e as partes
+1B.6, 1B.7, 1B.7A, 1B.7B, 1B.8.1 a 1B.8.8, 1B.9.1 a 1B.9.4, 1C e as partes
 seguintes são executadas em ordem. Cada documento termina com testes e critérios
 de aceite próprios.
 
@@ -82,6 +83,7 @@ flowchart LR
     P1B85["Parte 1B.8.5<br/>testes + manutenção"]
     P1B86["Parte 1B.8.6<br/>atributos + aliases"]
     P1B87["Parte 1B.8.7<br/>árvores taxonômicas"]
+    P1B88["Parte 1B.8.8<br/>hierarquia de vida"]
     P1B91["Parte 1B.9.1<br/>contrato neutro"]
     P1B92["Parte 1B.9.2<br/>motor genérico"]
     P1B93["Parte 1B.9.3<br/>adaptador veterinário"]
@@ -93,7 +95,7 @@ flowchart LR
     P5["Parte 5<br/>updater Tauri local"]
     P6["Parte 6<br/>GitHub + CI/CD"]
 
-    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1B7 --> P1B7A --> P1B7B --> P1B81 --> P1B82 --> P1B83 --> P1B84 --> P1B85 --> P1B86 --> P1B87 --> P1B91 --> P1B92 --> P1B93 --> P1B94 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
+    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1B7 --> P1B7A --> P1B7B --> P1B81 --> P1B82 --> P1B83 --> P1B84 --> P1B85 --> P1B86 --> P1B87 --> P1B88 --> P1B91 --> P1B92 --> P1B93 --> P1B94 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
 ```
 
 As mudanças de origem dos artefatos são deliberadas:
@@ -153,7 +155,9 @@ verificação integral, a Parte 1B.8.4 estrutura erros e fronteiras, a Parte
 estágios de vida e espectro terapêutico como atributos diretos de produto,
 mantendo descritores vacinais nos aliases localizados. A Parte 1B.8.7 representa
 as taxonomias como florestas ordenadas e projeta a posição local entre irmãos.
-As Partes 1B.9.1 a 1B.9.4
+A Parte 1B.8.8 representa a ancestralidade das entidades de vida na taxonomia
+`life:hierarchy`, apoiada pelo conteúdo das próprias `LifeEntity`. As Partes
+1B.9.1 a 1B.9.4
 estabelecem a crate genérica `artifact-builder`, concentram nela SQLite, CAS,
 verificação e publicação, e mantêm `knowledge-builder` como adaptador do domínio
 veterinário. A Parte 1C faz os apps consumirem os artefatos locais. A Parte 3 faz
@@ -176,12 +180,14 @@ provider externo.
   materialização SQLite, CAS, verificação estrutural e publicação atômica.
 - `tools/knowledge-builder/` é o binário Rust que valida e compila
   `data/knowledge` para o contrato de `artifact-builder`.
-- Cada `LifeEntity` declara `domain`, `kingdom`, `phylum`, `class`, `order`,
-  `family`, `genus`, `species`, `breed` e `variety`. As posições não nulas formam
-  um prefixo contínuo, o `id` ocupa a posição da própria entidade e os níveis
-  inferiores são nulos. Todos os dez níveis são identidades de entidades de
-  vida.
-  `classifications` concentra origem e `bodyMetrics`. `bodyMetrics.size`
+- A taxonomia `life:hierarchy` declara a floresta ordenada de domínio, reino,
+  filo, classe, ordem, família, gênero, espécie, raça e variedade. A profundidade
+  determina o rank, cada chave resolve uma `LifeEntity` com o mesmo ID e cada
+  entidade aparece uma única vez na árvore. O conjunto pode crescer por ramos
+  completos sem exigir a representação de toda a vida conhecida.
+- Cada `LifeEntity` mantém identidade, conteúdo localizado e classificações, sem
+  repetir ancestralidade, rank, pai ou ordem. `classifications` concentra origem
+  e `bodyMetrics`. `bodyMetrics.size`
   representa o porte geral, enquanto `bodyMetrics.stageMetrics` organiza peso
   vivo, altura e comprimento por sexo e estágio. O objeto e cada parte interna
   são opcionais nos dez níveis. Nenhum desses valores é inferido pela disposição
@@ -224,12 +230,16 @@ provider externo.
   schema do objeto proprietário.
 - Entidades de catálogo referenciam seus tipos e classificações por chaves
   taxonômicas completas. `LifeEntity` referencia somente
-  `bodyMetrics.size` como taxonomia classificatória. Labels e aliases gerais
-  pertencem ao termo da taxonomia e não são repetidos nas entidades relacionadas.
-- Toda taxonomia classificatória é projetada em `taxonomy_registry` e
-  `taxonomy_terms`. As identidades dos dez níveis de vida usam as colunas
-  autorreferenciadas de `life_reference_items`; fabricantes, princípios
-  ativos, condições e produtos usam
+  `bodyMetrics.size` como taxonomia classificatória. Nas taxonomias de conteúdo
+  embutido, labels e aliases gerais pertencem ao termo e não são repetidos nas
+  entidades relacionadas. Em `life:hierarchy`, esses valores pertencem à
+  `LifeEntity` correspondente.
+- Toda taxonomia é projetada em `taxonomy_registry` e `taxonomy_terms`.
+  `life:hierarchy` usa `taxonomy_terms.parent_term_key` como sua única adjacency
+  list e reutiliza nomes e aliases das entidades correspondentes.
+  `life_reference_items` referencia o termo de mesma identidade e armazena o
+  rank derivado da profundidade; fabricantes, princípios ativos, condições e
+  produtos usam
   `entity_taxonomy_terms` como única relação taxonômica indexada. Domínio e
   propósito pertencem ao registro da taxonomia e não são repetidos na relação.
 - Cada manifesto de taxonomia declara raízes em `terms` e descendentes em
@@ -249,8 +259,9 @@ provider externo.
 - A busca de produtos deriva termos das entidades, relações e taxonomias
   canônicas. O contrato de conhecimento não contém `searchConcept.*`.
 - A busca de `LifeEntity` projeta somente nome e aliases próprios. Consultas por
-  ancestralidade e subárvore usam as colunas taxonômicas de
-  `life_reference_items`, sem duplicar termos ancestrais nos descendentes.
+  ancestralidade e subárvore percorrem `life:hierarchy` em `taxonomy_terms` e
+  unem seus nós a `life_reference_items`, sem duplicar termos ancestrais nos
+  descendentes.
 - `_entity.json` declara `contentPath: "./_content"` e associa cada `sectionNumber` a
   uma `sectionKey` padronizada. Headings iniciados por `# <n>` delimitam as
   seções no documento localizado. Qualquer texto editorial depois do número é

@@ -89,7 +89,8 @@ pub(super) fn localized_fragment_counts(
                 }
                 match &entry.source.entity {
                     CanonicalEntity::Taxonomy(taxonomy) => {
-                        for term in &taxonomy.terms {
+                        for visit in taxonomy.walk_terms() {
+                            let term = visit.term;
                             count += term
                                 .localized_content
                                 .values()
@@ -149,9 +150,8 @@ pub(super) fn relation_count(entities: &[ValidatedEntity]) -> usize {
             }
             CanonicalEntity::GeoPlace(value) => usize::from(value.parent_place_id.is_some()),
             CanonicalEntity::Taxonomy(value) => value
-                .terms
-                .iter()
-                .filter(|term| term.parent_key.is_some())
+                .walk_terms()
+                .filter(|visit| visit.parent_key.is_some())
                 .count(),
             CanonicalEntity::TreatmentProtocol(value) => {
                 value.product_ids.len() + value.applicable_taxon_ids.len()

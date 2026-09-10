@@ -625,7 +625,7 @@ pub(super) fn add_entity_obligations(
                 id,
                 domain,
                 purpose,
-                terms,
+                terms: _,
             } = value;
             let _ = (schema_version, id, domain, purpose);
             field(
@@ -656,7 +656,8 @@ pub(super) fn add_entity_obligations(
                 main.column(SystemColumn::Purpose),
                 ObligationClass::Authoring,
             )?;
-            for (position, term) in terms.iter().enumerate() {
+            for visit in value.walk_terms() {
+                let term = visit.term;
                 let row = table_row(
                     DatabaseKind::System,
                     SystemTable::TaxonomyTerms,
@@ -665,33 +666,41 @@ pub(super) fn add_entity_obligations(
                 field(
                     expected,
                     &entity,
-                    &format!("terms.{position}.key"),
+                    &format!("{}.key", visit.source_path),
                     row.column(SystemColumn::TermKey),
                     ObligationClass::Authoring,
                 )?;
-                if term.parent_key.is_some() {
-                    field(
+                let relation = SourceToken::Relation {
+                    entity: entity.clone(),
+                    field: visit.owner_path().to_string(),
+                    position: visit.sibling_order,
+                    related: term.key.clone(),
+                };
+                insert_obligation(
+                    expected,
+                    row.column(SystemColumn::SortOrder),
+                    relation.clone(),
+                    if visit.parent_key.is_some() {
+                        ObligationClass::Relation
+                    } else {
+                        ObligationClass::Authoring
+                    },
+                )?;
+                if visit.parent_key.is_some() {
+                    insert_obligation(
                         expected,
-                        &entity,
-                        &format!("terms.{position}.parentKey"),
                         row.column(SystemColumn::ParentTermKey),
+                        relation,
                         ObligationClass::Relation,
                     )?;
                 }
-                field(
-                    expected,
-                    &entity,
-                    &format!("terms.{position}.order"),
-                    row.column(SystemColumn::SortOrder),
-                    ObligationClass::Authoring,
-                )?;
                 localized_with_prefix(
                     expected,
                     &entity,
                     &term.localized_content,
                     locale,
                     row,
-                    &format!("terms.{position}.localizedContent"),
+                    &format!("{}.localizedContent", visit.source_path),
                 )?;
             }
         }

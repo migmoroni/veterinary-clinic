@@ -425,11 +425,10 @@ pub struct TreatmentProtocolEntity {
 #[serde(deny_unknown_fields)]
 pub struct TaxonomyTerm {
     pub key: String,
-    #[serde(rename = "parentKey")]
-    pub parent_key: Option<String>,
-    pub order: u32,
     #[serde(rename = "localizedContent")]
     pub localized_content: LocalizedContent,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub children: Vec<TaxonomyTerm>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -441,6 +440,67 @@ pub struct TaxonomyEntity {
     pub domain: String,
     pub purpose: String,
     pub terms: Vec<TaxonomyTerm>,
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct TaxonomyTermVisit<'a> {
+    pub(crate) term: &'a TaxonomyTerm,
+    pub(crate) parent_key: Option<&'a str>,
+    pub(crate) sibling_order: usize,
+    pub(crate) depth: usize,
+    pub(crate) source_path: String,
+    owner_path: String,
+}
+
+impl TaxonomyTermVisit<'_> {
+    pub(crate) fn owner_path(&self) -> &str {
+        &self.owner_path
+    }
+}
+
+pub(crate) struct TaxonomyTermIter<'a> {
+    pending: Vec<TaxonomyTermVisit<'a>>,
+}
+
+impl<'a> Iterator for TaxonomyTermIter<'a> {
+    type Item = TaxonomyTermVisit<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let visit = self.pending.pop()?;
+        for (sibling_order, child) in visit.term.children.iter().enumerate().rev() {
+            let source_path = format!("{}.children.{sibling_order}", visit.source_path);
+            self.pending.push(TaxonomyTermVisit {
+                term: child,
+                parent_key: Some(&visit.term.key),
+                sibling_order,
+                depth: visit.depth + 1,
+                owner_path: format!("{}.children", visit.source_path),
+                source_path,
+            });
+        }
+        Some(visit)
+    }
+}
+
+impl TaxonomyEntity {
+    pub(crate) fn walk_terms(&self) -> TaxonomyTermIter<'_> {
+        TaxonomyTermIter {
+            pending: self
+                .terms
+                .iter()
+                .enumerate()
+                .rev()
+                .map(|(sibling_order, term)| TaxonomyTermVisit {
+                    term,
+                    parent_key: None,
+                    sibling_order,
+                    depth: 0,
+                    source_path: format!("terms.{sibling_order}"),
+                    owner_path: "terms".to_string(),
+                })
+                .collect(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

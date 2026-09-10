@@ -2,13 +2,13 @@
 
 use super::{
     normalize_search_text, CanonicalEntity, Diagnostic, KnowledgeLocale, LocalizedContent,
-    SourceEntry, TaxonomyEntity, LOCALES,
+    SourceEntry, TaxonomyTermIndexes, LOCALES,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
 pub(super) fn validate_alias_ownership(
     entries: &[SourceEntry],
-    taxonomies: &BTreeMap<(String, String), TaxonomyEntity>,
+    taxonomies: &TaxonomyTermIndexes,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     for locale in LOCALES {
@@ -41,9 +41,11 @@ pub(super) fn validate_alias_ownership(
         }
         let taxonomy_values = taxonomies
             .values()
-            .flat_map(|taxonomy| taxonomy.terms.iter())
-            .flat_map(|term| {
-                term.localized_content
+            .flat_map(|taxonomy| taxonomy.values())
+            .flat_map(|indexed| {
+                indexed
+                    .term
+                    .localized_content
                     .values()
                     .flat_map(move |value| value.values(locale))
             })

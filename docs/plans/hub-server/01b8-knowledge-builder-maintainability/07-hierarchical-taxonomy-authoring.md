@@ -80,17 +80,20 @@ Esta parte não altera:
 - `children` é o array ordenado dos filhos diretos de um termo.
 - A posição no array é a única fonte da ordem entre irmãos.
 - Folhas omitem `children`; um array `children` presente nunca é vazio.
-- Cada `key` é uma identidade completa e única dentro da taxonomia.
-- Uma chave raiz possui um único segmento.
-- A chave de um filho direto é formada pela chave completa do pai, um ponto e
-  exatamente um novo segmento.
+- Cada `key` é uma identidade canônica opaca, completa e única dentro da
+  taxonomia.
+- Uma chave raiz pode ser simples ou composta por segmentos separados por
+  ponto.
+- Os segmentos de `key` não determinam ancestralidade, profundidade ou posição
+  na árvore.
+- A chave de um filho não precisa possuir a chave do pai como prefixo.
 - O aninhamento é a única fonte de `parent_term_key`.
 - A ordem de irmãos é a única fonte de `taxonomy_terms.sort_order`.
 - Reordenar irmãos altera o digest da fonte e a ordem projetada.
 - Inserir ou reordenar termos em um ramo não altera o `sort_order` de ramos
   pertencentes a outro pai.
-- Diretórios, labels, aliases e ordenação alfabética não definem hierarquia nem
-  ordem.
+- Chaves, diretórios, labels, aliases e ordenação alfabética não definem
+  hierarquia nem ordem.
 - Todas as referências externas continuam usando somente a `key` completa.
 - O formato achatado não é aceito em paralelo ao formato hierárquico.
 - Não existem conversor persistente, fallback, migration ou leitura dupla.
@@ -159,25 +162,33 @@ O JSON Schema define um `$defs.taxonomyTerm` recursivo com:
 atualizada em conjunto e não existe release pública, manter
 `SOURCE_ENTITY_SCHEMA_VERSION = 1` e aceitar somente o contrato desta parte.
 
-### 1.3 Chaves E Hierarquia
+### 1.3 Identidade E Hierarquia
 
-Preservar chaves completas, como:
+Preservar cada `key` como identidade canônica integral. O contrato sintático
+vigente permite chaves simples e compostas, por exemplo:
 
 ```text
 disease
 disease.geneticAndDevelopmental
 disease.geneticAndDevelopmental.congenitalMalformation
+administrationRoute.epidural
+regulatory.brazil.prescriptionOnly
 ```
 
-Validar cada segmento pelo contrato de chave vigente. Para uma relação direta
-`pai -> filho`:
+O ponto pertence à identidade textual e pode atuar como namespace. Ele não
+declara uma relação taxonômica. Portanto, uma chave composta em `terms` continua
+sendo raiz e não exige que seus prefixos existam como termos. Por exemplo,
+`administrationRoute.epidural` não exige a criação de
+`administrationRoute`, e `regulatory.brazil.prescriptionOnly` não exige a
+criação de `regulatory` ou `regulatory.brazil`.
 
-```text
-child.key = parent.key + "." + directSegment
-```
+Validar a `key` integral pelo contrato vigente e sua unicidade dentro da
+taxonomia, sem decompor segmentos para inferir nós ou relações. Um termo é raiz
+porque está em `terms`; um termo é filho porque está no `children` do pai. Essa
+regra também permite reorganizar uma árvore sem alterar a identidade dos termos.
 
-O sufixo direto não contém ponto. Portanto, um nó não pode saltar níveis nem ser
-aninhado sob um pai incompatível com sua identidade.
+O builder não cria ancestrais implícitos, não move termos com base em prefixos e
+não exige correspondência lexical entre as chaves de pai e filho.
 
 ### 1.4 Limites Estruturais
 
@@ -225,6 +236,12 @@ Para cada manifesto:
 
 Taxonomias sem relações hierárquicas continuam válidas como uma lista de raízes
 ordenadas. Elas também omitem `parentKey`, `order` e `children`.
+
+Termos de raiz com chaves compostas permanecem em `terms`. Isso inclui os termos
+de namespace `administrationRoute.*` em `product:classification` e
+`regulatory.*` em `activeIngredient:classification`. Não criar termos
+ancestrais, não renomear essas chaves e não alterar suas referências para
+forçar correspondência entre identidade e estrutura.
 
 Aplicar o mesmo contrato às dez taxonomias de:
 
@@ -291,6 +308,11 @@ Atualizar para a visão hierárquica normalizada:
 - digest lógico da fonte;
 - formação dos termos de pesquisa relacionados;
 - inventário e contrato de projeção.
+
+Em `validation/taxonomy.rs`, validar a sintaxe integral e a unicidade de `key`,
+mas remover qualquer regra baseada em `contains('.')`, `split('.')`,
+`strip_prefix(parent)` ou operação equivalente. A validação do parentesco usa o
+pai fornecido pela travessia, sem comparar a grafia das duas chaves.
 
 Incrementar `SOURCE_DIGEST_SCHEMA_VERSION` de `2` para `3`. O modelo lógico do
 digest contém a árvore e sua ordem sem reintroduzir `parentKey` ou `order`.
@@ -434,7 +456,6 @@ comprovar:
 - ausência de ciclos;
 - visita de cada `term_key` exatamente uma vez;
 - `sort_order` contíguo de `0` a `n - 1` em cada grupo de irmãos;
-- coerência entre chave completa e pai direto;
 - equivalência de labels, aliases, pai e ordem com o contrato compilado.
 
 A releitura SQL usa uma ordenação total e determinística para formar seu modelo
@@ -448,7 +469,7 @@ Atualizar os testes de adulteração para recusar:
 - ordem duplicada entre raízes;
 - ordem duplicada entre filhos do mesmo pai;
 - lacuna na sequência de irmãos;
-- chave incompatível com o pai;
+- inserção de ancestral ou termo ausente no contrato compilado;
 - remoção de uma raiz ou de um ramo;
 - alteração de label ou aliases em qualquer profundidade.
 
@@ -458,10 +479,11 @@ Refatorar `scripts/audit-knowledge.mjs` para usar uma travessia recursiva que:
 
 - conta todos os termos, não apenas raízes;
 - mantém um `Map` por chave para resolução eficiente;
-- valida chaves globais únicas;
-- valida a relação direta entre chave de pai e filho;
+- valida chaves únicas dentro de cada taxonomia;
 - valida profundidade e limite total;
 - valida conteúdo localizado em todos os níveis;
+- deriva relações somente de `terms` e `children`, sem interpretar segmentos da
+  chave;
 - calcula relações hierárquicas pelo número de nós não raiz;
 - implementa `taxonomyHas(domain, purpose, key)` sobre o índice completo;
 - recusa `parentKey`, `order` e `children: []`;
@@ -511,8 +533,9 @@ Cobrir:
 - recusa de `children: []`;
 - recusa de `parentKey` e `order` em qualquer profundidade;
 - chave duplicada em ramos distintos;
-- raiz com chave composta;
-- filho com prefixo incorreto ou salto de nível;
+- aceitação de raízes com chaves simples e compostas;
+- ausência de ancestral implícito para uma raiz com chave composta;
+- aceitação de filho cuja chave não codifica a chave do pai;
 - profundidade acima do limite;
 - total de termos acima do limite;
 - locale, label ou aliases inválidos em nó profundo;
@@ -526,6 +549,7 @@ Comprovar por expectativas literais:
 - pai derivado para cada nó;
 - `siblingOrder` reiniciado em cada grupo;
 - caminho JSON de cada visita;
+- identidade preservada ao mover um termo entre pais sem renomear sua `key`;
 - índice contendo raízes e descendentes;
 - resolução de referências para termos profundos;
 - recusa de referência inexistente ou pertencente a outro vocabulário;
@@ -559,7 +583,8 @@ documentar:
 
 - taxonomia como floresta ordenada de raízes e filhos;
 - `children` como estrutura autoral;
-- chaves completas e referências por identidade;
+- chaves opacas, simples ou compostas, e referências por identidade;
+- ausência de ancestralidade implícita nos segmentos de `key`;
 - ordem local entre irmãos;
 - projeção achatada em `taxonomy_terms`;
 - consultas de raízes e filhos;
@@ -622,6 +647,10 @@ geral da implementação.
 - Os dez `_entity.json` canônicos representam raízes e filhos por aninhamento.
 - Nenhum manifesto taxonômico contém `parentKey` ou `order`.
 - Folhas omitem `children` e nós intermediários possuem arrays não vazios.
+- Raízes aceitam chaves simples ou compostas sem criação de ancestrais
+  implícitos.
+- Identidade e hierarquia permanecem independentes: `key` identifica o termo e
+  o aninhamento determina seu pai.
 - Uma única travessia Rust fornece pai, ordem entre irmãos, profundidade e
   caminho de origem aos subsistemas do builder.
 - Todas as referências encontram termos em qualquer profundidade pelo índice
@@ -641,4 +670,4 @@ geral da implementação.
 ## Próxima Parte
 
 Após cumprir todos os critérios, seguir para a
-[Parte 1B.9: `artifact-builder` e adaptador de conhecimento](../01b9-artifact-builder/README.md).
+[Parte 1B.8.8: taxonomia hierárquica da vida](./08-life-hierarchy-taxonomy.md).

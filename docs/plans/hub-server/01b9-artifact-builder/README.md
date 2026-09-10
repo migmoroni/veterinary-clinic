@@ -24,11 +24,12 @@ CAS, verificação estrutural ou publicação.
 ## Pré-Requisito
 
 A
-[Parte 1B.8.7: autoria taxonômica hierárquica](../01b8-knowledge-builder-maintainability/07-hierarchical-taxonomy-authoring.md)
+[Parte 1B.8.8: taxonomia hierárquica da vida](../01b8-knowledge-builder-maintainability/08-life-hierarchy-taxonomy.md)
 está concluída. O contrato veterinário usa os atributos diretos
 `applicableLifeStages` e `therapeuticSpectrum`, mantém descritores vacinais nos
 aliases localizados do produto e representa taxonomias como florestas ordenadas
-de termos.
+de termos. `life:hierarchy` é a única fonte da ancestralidade das entidades de
+vida e seus termos resolvem conteúdo pelas `LifeEntity` correspondentes.
 
 ## Disposição Final
 
