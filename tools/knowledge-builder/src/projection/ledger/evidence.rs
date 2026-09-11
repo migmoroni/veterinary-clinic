@@ -71,6 +71,16 @@ enum EvidenceSource {
         locale: String,
         section_key: String,
     },
+    SectionStandardReference {
+        entity_type: String,
+        id: String,
+        standard_key: String,
+    },
+    SectionStandardDefinition {
+        standard_key: String,
+        section_key: String,
+        section_number: u32,
+    },
     StructuralMediaReference {
         entity_type: String,
         id: String,
@@ -237,6 +247,23 @@ impl From<&SourceToken> for EvidenceSource {
                 id: entity.id.clone(),
                 locale: locale.to_string(),
                 section_key: section_key.clone(),
+            },
+            SourceToken::SectionStandardReference {
+                entity,
+                standard_key,
+            } => Self::SectionStandardReference {
+                entity_type: entity.entity_type.clone(),
+                id: entity.id.clone(),
+                standard_key: standard_key.clone(),
+            },
+            SourceToken::SectionStandardDefinition {
+                standard_key,
+                section_key,
+                section_number,
+            } => Self::SectionStandardDefinition {
+                standard_key: standard_key.clone(),
+                section_key: section_key.clone(),
+                section_number: *section_number,
             },
             SourceToken::StructuralMediaReference {
                 entity,

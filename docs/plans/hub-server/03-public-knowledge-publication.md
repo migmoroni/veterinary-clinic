@@ -77,9 +77,9 @@ Todo diretório de entidade segue o mesmo envelope físico:
 ```
 
 Os campos `entityType` e `id` formam a identidade usada pelos bancos e relações.
-O `_entity.json` declara um único `contentPath` e associa cada `sectionNumber` a
-uma `sectionKey`; o builder não infere semântica pelo rótulo editorial do heading
-nem pelo nome das pastas.
+O `_entity.json` editorial declara uma única `sectionStandardKey`. O mapa
+ordenado de `sectionKeys` pertence a `data/knowledge/_standards/sections.json`;
+o builder não infere padrão pelo tipo, pelo heading nem pelo nome das pastas.
 
 `_entity.json` contém os campos estruturais compartilhados, as relações, os
 valores localizados simples e a composição do conteúdo Markdown:
@@ -112,20 +112,14 @@ valores localizados simples e a composição do conteúdo Markdown:
       "fr-FR": []
     }
   },
-  "contentPath": "./_content",
-  "sections": [
-    {
-      "sectionKey": "about",
-      "sectionNumber": 1
-    }
-  ],
+  "sectionStandardKey": "life.profile",
   "cover": "./_media/cover.webp"
 }
 ```
 
 Cada arquivo Markdown contém todas as seções editoriais do locale, sem front
-matter. Headings de nível `#` começam por `# <sectionNumber>` e delimitam as
-seções declaradas no manifesto. Um ponto e texto editorial depois do número são
+matter. Headings de nível `#` começam por `# <n>` e delimitam as
+seções conforme a posição no padrão resolvido. Um ponto e texto editorial depois do número são
 opcionais e descartados integralmente. Headings inferiores permanecem no corpo
 da seção corrente:
 
@@ -139,8 +133,9 @@ Conteúdo localizado da seção.
 ![Texto alternativo](../_media/detail.webp "Legenda opcional")
 ```
 
-Cada domínio possui um schema estrito de `_entity.json`, formatos esperados para
-os campos localizados e um conjunto fechado de `sectionKey`. Nomes, aliases,
+Cada domínio possui um schema estrito de `_entity.json` e formatos esperados para
+os campos localizados. Os conjuntos ordenados de `sectionKey` pertencem ao
+registro fechado de padrões. Nomes, aliases,
 descrições simples e outros valores localizados ficam diretamente em
 `localizedContent`, sempre no JSON do objeto proprietário. Labels e aliases
 gerais de tipos, classificações e portes pertencem ao `localizedContent` do termo
@@ -185,8 +180,9 @@ A validação exige exatamente os seis locales em cada campo de
 `localizedContent`, inclusive nos termos taxonômicos, e um documento Markdown por
 locale em cada entidade com seções. O processo recusa ID duplicado, referência
 inexistente, chave taxonômica parcial ou de outro domínio, locale desconhecido,
-mapa localizado incompleto, front matter, arquivo não declarado, `sectionKey`
-inválida, `sectionNumber` ausente, repetido, descontínuo ou fora de ordem, seção
+mapa localizado incompleto, front matter, arquivo não declarado, padrão de seção
+ausente, incompatível ou sem consumidor, número delimitador ausente, repetido,
+descontínuo ou fora de ordem, seção
 ausente ou adicional, conteúdo antes da primeira seção, AST incompatível, HTML
 bruto, nó fora da allowlist, protocolo não permitido, caminho absoluto, remoto
 ou que resolva fora da entidade e mídia não referenciada. A projeção de cada
@@ -922,7 +918,8 @@ Cobrir:
 - decomposição de combinações farmacológicas em relações individuais;
 - ausência de chaves ou termos `searchConcept.*`;
 - presença de um Markdown por locale em cada entidade com seções;
-- associação de cada `sectionNumber` a uma `sectionKey` no manifesto;
+- resolução de `sectionStandardKey` no registro único e associação posicional
+  de cada número a uma `sectionKey` do padrão;
 - delimitação das seções por headings iniciados por `# <n>`, analisados via AST;
 - descarte do heading delimitador e ausência de `sectionNumber` e texto editorial
   na saída;

@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"standards": [
+		{
+			"key": "catalog.activeIngredient.monograph",
+			"entityType": "active_ingredient",
+			"sectionKeys": ["about", "uses", "safety", "references"]
+		},
+		{
+			"key": "catalog.condition.monograph",
+			"entityType": "condition",
+			"sectionKeys": ["about", "clinicalSigns", "diagnosis", "management", "prevention", "references"]
+		},
+		{
+			"key": "catalog.manufacturer.profile",
+			"entityType": "manufacturer",
+			"sectionKeys": ["about", "portfolio", "support", "references"]
+		},
+		{
+			"key": "catalog.product.monograph",
+			"entityType": "product",
+			"sectionKeys": ["about", "presentations", "indications", "administration", "interactions", "pharmacology", "studies", "videos", "distributors", "references"]
+		},
+		{
+			"key": "life.profile",
+			"entityType": "life",
+			"sectionKeys": ["characteristics", "morphology", "behavior", "diseases", "references"]
+		}
+	]
+}

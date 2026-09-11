@@ -30,16 +30,7 @@
       "propertyNames": { "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
       "additionalProperties": { "oneOf": [{ "$ref": "#/$defs/localizedText" }, { "$ref": "#/$defs/localizedList" }] }
     },
-    "section": {
-      "type": "object", "additionalProperties": false,
-      "required": ["sectionKey", "sectionNumber"],
-      "properties": {
-        "sectionKey": { "$ref": "#/$defs/key" },
-        "sectionNumber": { "type": "integer", "minimum": 1, "maximum": 999 }
-      }
-    },
-    "sections": { "type": "array", "uniqueItems": true, "maxItems": 64, "items": { "$ref": "#/$defs/section" } },
-    "contentPath": { "const": "./_content" },
+    "sectionStandardKey": { "$ref": "#/$defs/key" },
     "structuralMediaPath": { "type": "string", "minLength": 10, "maxLength": 512, "pattern": "^\\./_media/(?!\\.\\.?(?:/|$))[^/\\u0000\\\\]+(?:/(?!\\.\\.?(?:/|$))[^/\\u0000\\\\]+)*$" },
     "centroid": {
       "type": "object", "additionalProperties": false, "required": ["latitude", "longitude"],

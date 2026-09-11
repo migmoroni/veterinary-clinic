@@ -4,6 +4,8 @@ import path from 'node:path';
 const root = process.cwd();
 const knowledgeRoot = path.join(root, 'data', 'knowledge');
 const locales = ['pt-BR', 'pt-PT', 'gn-PY', 'en-US', 'es-ES', 'fr-FR'];
+const sectionStandardsPath = path.join(knowledgeRoot, '_standards', 'sections.json');
+const editorialEntityTypes = new Set(['active_ingredient', 'condition', 'life', 'manufacturer', 'product']);
 const lifeStageOrder = ['newborn', 'young', 'adult'];
 const forbiddenDirectories = new Set([
 	['product', 'vaccine', 'profiles'].join('-'),
@@ -47,6 +49,10 @@ function isText(value) {
 	return typeof value === 'string' && value.length > 0 && value === value.trim() && !/[\r\n\u0000-\u001f\u007f]/u.test(value);
 }
 
+function isKey(value) {
+	return typeof value === 'string' && value.length >= 1 && value.length <= 160 && /^[a-z0-9][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$/u.test(value);
+}
+
 function localizedValuesAreValid(value, list) {
 	if (!isObject(value) || !same(Object.keys(value), locales)) return false;
 	return locales.every((locale) => {
@@ -86,6 +92,27 @@ async function readJson(file) {
 
 const tree = await walk(knowledgeRoot);
 record(tree.special.length === 0, `special files or symlinks are forbidden: ${tree.special.map((file) => path.relative(root, file)).join(', ')}`);
+const standardsDirectories = tree.directories.filter((directory) => path.basename(directory) === '_standards');
+record(same(standardsDirectories, [path.dirname(sectionStandardsPath)]), '_standards must exist exactly once at the knowledge root');
+const standardsFiles = tree.files.filter((file) => file.includes(`${path.sep}_standards${path.sep}`));
+record(same(standardsFiles, [sectionStandardsPath]), '_standards must contain only sections.json');
+const sectionStandardsDocument = await readJson(sectionStandardsPath);
+record(sectionStandardsDocument?.schemaVersion === 1, 'section standards schemaVersion must be 1');
+record(isObject(sectionStandardsDocument) && same(Object.keys(sectionStandardsDocument), ['schemaVersion', 'standards']), 'section standards document has unsupported properties or order');
+record(Array.isArray(sectionStandardsDocument?.standards) && sectionStandardsDocument.standards.length > 0, 'section standards must be a non-empty array');
+const sectionStandards = new Map();
+for (const [index, standard] of (sectionStandardsDocument?.standards ?? []).entries()) {
+	const owner = `data/knowledge/_standards/sections.json: standards.${index}`;
+	record(isObject(standard) && same(Object.keys(standard), ['key', 'entityType', 'sectionKeys']), `${owner} has unsupported properties or order`);
+	record(isKey(standard.key), `${owner}.key is invalid`);
+	record(editorialEntityTypes.has(standard.entityType), `${owner}.entityType is not authorized`);
+	record(Array.isArray(standard.sectionKeys) && standard.sectionKeys.length >= 1 && standard.sectionKeys.length <= 64, `${owner}.sectionKeys must contain 1 to 64 values`);
+	record(Array.isArray(standard.sectionKeys) && standard.sectionKeys.every(isKey), `${owner}.sectionKeys contains an invalid key`);
+	record(Array.isArray(standard.sectionKeys) && new Set(standard.sectionKeys).size === standard.sectionKeys.length, `${owner}.sectionKeys contains duplicates`);
+	record(!sectionStandards.has(standard.key), `${owner}.key duplicates ${standard.key}`);
+	sectionStandards.set(standard.key, standard);
+}
+record([...sectionStandards.keys()].every((key, index, keys) => index === 0 || keys[index - 1] < key), 'section standards must be strictly ordered by key');
 for (const directory of tree.directories) {
 	record(!forbiddenDirectories.has(path.basename(directory)), `${path.relative(root, directory)}: removed taxonomy directory is forbidden`);
 }
@@ -180,6 +207,24 @@ const lifeEntityTerms = new Map();
 for (const { relative, manifest } of entries) {
 	const serialized = JSON.stringify(manifest);
 	for (const field of forbiddenProductFields) record(!serialized.includes(`\"${field}\"`), `${relative}: removed field ${field} is forbidden`);
+	record(!Object.hasOwn(manifest, 'sections'), `${relative}: sections is forbidden`);
+	record(!Object.hasOwn(manifest, 'sectionNumber'), `${relative}: sectionNumber is forbidden`);
+	record(!Object.hasOwn(manifest, 'contentPath'), `${relative}: contentPath is forbidden`);
+	const standardKey = manifest.sectionStandardKey;
+	const contentDirectory = path.join(path.dirname(path.join(root, relative)), '_content');
+	const hasContent = tree.directories.includes(contentDirectory);
+	if (standardKey === undefined) {
+		record(!hasContent, `${relative}: _content requires sectionStandardKey`);
+	} else {
+		record(editorialEntityTypes.has(manifest.entityType), `${relative}: sectionStandardKey is not allowed for ${manifest.entityType}`);
+		const standard = sectionStandards.get(standardKey);
+		record(standard !== undefined, `${relative}: unresolved sectionStandardKey ${standardKey}`);
+		record(standard?.entityType === manifest.entityType, `${relative}: sectionStandardKey ${standardKey} has another entityType`);
+		record(hasContent, `${relative}: sectionStandardKey requires sibling _content`);
+		const actual = tree.files.filter((file) => path.dirname(file) === contentDirectory).map((file) => path.basename(file)).sort();
+		const expected = locales.map((locale) => `${locale}.md`).sort();
+		record(same(actual, expected), `${relative}: _content must contain exactly the six locale documents`);
+	}
 	if (manifest.localizedContent) {
 		for (const [field, value] of Object.entries(manifest.localizedContent)) {
 			const list = field === 'aliases' || field === 'targetSpeciesWarnings';
@@ -248,15 +293,18 @@ for (const { relative, manifest } of entries) {
 }
 
 const markdownFiles = tree.files.filter((file) => file.endsWith('.md') && file !== path.join(knowledgeRoot, 'README.md'));
-const editorialEntities = entries.filter(({ manifest }) => (manifest.sections ?? []).length > 0);
-const sectionCount = editorialEntities.reduce((count, { manifest }) => count + manifest.sections.length, 0);
+const editorialEntities = entries.filter(({ manifest }) => manifest.sectionStandardKey !== undefined);
+const standardReferences = editorialEntities.length;
+const consumedStandards = new Set(editorialEntities.map(({ manifest }) => manifest.sectionStandardKey));
+for (const key of sectionStandards.keys()) record(consumedStandards.has(key), `section standard ${key} has no consuming entity`);
+const sectionCount = editorialEntities.reduce((count, { manifest }) => count + (sectionStandards.get(manifest.sectionStandardKey)?.sectionKeys.length ?? 0), 0);
 const mediaFiles = tree.files.filter((file) => file.includes(`${path.sep}_media${path.sep}`));
 const lifeRanks = ['domain', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species', 'breed', 'variety'];
 const lifeLevels = Object.fromEntries(lifeRanks.map((rank, depth) => [rank, [...lifeTypeIndex.values()].filter((term) => term.depth === depth).length]));
 const lifeWithClassifications = (byType.life ?? []).filter(({ manifest }) => manifest.classifications !== undefined);
 
 const inventory = {
-	schemaVersion: 1,
+	schemaVersion: 2,
 	locales,
 	scope: {
 		included: ['system', 'system_media', 'CAS/system'],
@@ -300,6 +348,8 @@ const inventory = {
 		productTarget: productTargetReferences
 	},
 	editorial: {
+		sectionStandards: sectionStandards.size,
+		standardReferences,
 		entities: editorialEntities.length,
 		documents: markdownFiles.length,
 		documentsPerLocale: markdownFiles.length / locales.length,
@@ -317,7 +367,7 @@ if (process.argv.includes('--write-inventory')) {
 }
 
 const report = {
-	schemaVersion: 1,
+	schemaVersion: 2,
 	status: failures.length === 0 ? 'PASS' : 'FAIL',
 	entityCount: entries.length,
 	entitiesByType: inventory.entitiesByType,

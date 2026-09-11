@@ -266,10 +266,10 @@ provider externo.
   entidade, preservando proveniências distintas. Consultas por ancestralidade e
   subárvore percorrem `life:type` em `taxonomy_terms` e associam páginas
   opcionais por `entity_taxonomy_terms`, sem duplicar ancestrais nos descendentes.
-- `_entity.json` declara `contentPath: "./_content"` e associa cada `sectionNumber` a
-  uma `sectionKey` padronizada. Headings iniciados por `# <n>` delimitam as
-  seções no documento localizado. Qualquer texto editorial depois do número é
-  descartado, e o builder não deduz semântica dele ou do nome das pastas.
+- `_standards/sections.json` possui os mapas editoriais ordenados. Uma entidade
+  com conteúdo declara somente `sectionStandardKey`; `_content` é seu diretório
+  irmão fixo. A posição de cada `sectionKey` no padrão determina o número usado
+  pelos headings `# <n>`. O texto editorial depois do número é descartado.
 - Os JSONs não contêm nomes de tabelas ou colunas. `entityType` seleciona um Data
   Mapper explícito, e o DDL do builder é a fonte de verdade da projeção
   relacional.

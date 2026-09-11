@@ -4,7 +4,7 @@
 use crate::{
     media::{percent_encode_media_key, resolve_markdown_image, MediaAsset},
     normalization::normalize_text,
-    source::SectionDeclaration,
+    source::ResolvedSection,
 };
 use comrak::{
     format_commonmark,
@@ -54,7 +54,7 @@ pub fn compile_document(
     entity_directory: &Path,
     entity_type: &str,
     entity_id: &str,
-    declarations: &[SectionDeclaration],
+    declarations: &[ResolvedSection],
 ) -> Result<CompiledEditorial, String> {
     let bytes = fs::read(path)
         .map_err(|error| format!("{}: cannot read Markdown: {error}", path.display()))?;
@@ -134,7 +134,7 @@ fn compile_source(
     entity_directory: &Path,
     entity_type: &str,
     entity_id: &str,
-    declarations: &[SectionDeclaration],
+    declarations: &[ResolvedSection],
     source: &str,
 ) -> Result<CompiledEditorial, String> {
     let arena = Arena::new();
@@ -457,5 +457,67 @@ mod tests {
         let options = Options::default();
         let root = parse_document(&arena, "<script>alert(1)</script>", &options);
         assert!(validate_and_normalize_ast(Path::new("test.md"), root).is_err());
+    }
+
+    #[test]
+    fn resolved_sections_drive_position_and_discard_delimiter_titles() {
+        let declarations = [
+            ResolvedSection {
+                section_key: "about".to_string(),
+                section_number: 1,
+            },
+            ResolvedSection {
+                section_key: "references".to_string(),
+                section_number: 2,
+            },
+        ];
+        let compiled = compile_source(
+            Path::new("document.md"),
+            Path::new("."),
+            "condition",
+            "37ef9309-c8fd-42ac-99a5-050b195d747f",
+            &declarations,
+            "# 1 Any title\n\nBody.\n\n# 2\n\nRefs.\n",
+        )
+        .unwrap();
+        assert_eq!(compiled.document.sections[0].section_key, "about");
+        assert_eq!(compiled.document.sections[0].compiled_markdown, "Body.");
+        assert_eq!(compiled.document.sections[1].section_key, "references");
+        assert_eq!(compiled.document.sections[1].compiled_markdown, "Refs.");
+        let json = serde_json::to_value(&compiled.document).unwrap();
+        assert_eq!(json["schemaVersion"], 1);
+        assert!(json["sections"][0].get("sectionNumber").is_none());
+    }
+
+    #[test]
+    fn resolved_sections_reject_every_non_exact_delimiter_sequence() {
+        let declarations = [
+            ResolvedSection {
+                section_key: "first".to_string(),
+                section_number: 1,
+            },
+            ResolvedSection {
+                section_key: "second".to_string(),
+                section_number: 2,
+            },
+        ];
+        for source in [
+            "before\n\n# 1\n\na\n\n# 2\n\nb",
+            "# 2\n\na\n\n# 1\n\nb",
+            "# 1\n\na\n\n# 1\n\nb",
+            "# 1\n\na",
+            "# 1\n\na\n\n# 3\n\nb",
+            "# 1\n\na\n\n# 2\n\nb\n\n# 3\n\nc",
+        ] {
+            assert!(compile_source(
+                Path::new("invalid.md"),
+                Path::new("."),
+                "condition",
+                "37ef9309-c8fd-42ac-99a5-050b195d747f",
+                &declarations,
+                source,
+            )
+            .is_err());
+        }
     }
 }

@@ -4,7 +4,6 @@ use super::{
     is_simple_text, CanonicalEntity, Diagnostic, LocalizedContent, LocalizedValue, SourceEntry,
     LOCALES,
 };
-use crate::contracts::source_layout::{CONTENT_DIRECTORY_NAME, CONTENT_PATH};
 use std::collections::BTreeSet;
 
 pub(super) fn validate_localized_schema(entry: &SourceEntry, diagnostics: &mut Vec<Diagnostic>) {
@@ -147,101 +146,6 @@ pub(super) fn validate_localized_content(
                     ));
                 }
             }
-        }
-    }
-}
-
-pub(super) fn validate_sections(entry: &SourceEntry, diagnostics: &mut Vec<Diagnostic>) {
-    let sections = entry.entity.sections();
-    if sections.is_empty() {
-        if entry.entity.content_path().is_some() {
-            diagnostics.push(Diagnostic::entity(
-                entry,
-                "contentPath",
-                "contentPath must be omitted without sections",
-            ));
-        }
-        if entry
-            .entity_directory
-            .join(CONTENT_DIRECTORY_NAME)
-            .try_exists()
-            .unwrap_or(false)
-        {
-            diagnostics.push(Diagnostic::entity(
-                entry,
-                "_content",
-                format!("{CONTENT_DIRECTORY_NAME} must be absent when sections are empty"),
-            ));
-        }
-        return;
-    }
-    if entry.entity.content_path().is_none() {
-        diagnostics.push(Diagnostic::entity(
-            entry,
-            "contentPath",
-            "contentPath is required for entities with sections",
-        ));
-    } else if entry.entity.content_path() != Some(CONTENT_PATH) {
-        diagnostics.push(Diagnostic::entity(
-            entry,
-            "contentPath",
-            format!("contentPath must be exactly {CONTENT_PATH}"),
-        ));
-    }
-    let allowed: &[&str] = match entry.entity {
-        CanonicalEntity::Product(_) => &[
-            "about",
-            "presentations",
-            "indications",
-            "administration",
-            "interactions",
-            "pharmacology",
-            "studies",
-            "videos",
-            "distributors",
-            "references",
-        ],
-        CanonicalEntity::Manufacturer(_) => &["about", "portfolio", "support", "references"],
-        CanonicalEntity::ActiveIngredient(_) => &["about", "uses", "safety", "references"],
-        CanonicalEntity::Condition(_) => &[
-            "about",
-            "clinicalSigns",
-            "diagnosis",
-            "management",
-            "prevention",
-            "references",
-        ],
-        CanonicalEntity::Life(_) => &[
-            "characteristics",
-            "morphology",
-            "behavior",
-            "diseases",
-            "references",
-        ],
-        _ => &[],
-    };
-    let mut keys = BTreeSet::new();
-    for (index, section) in sections.iter().enumerate() {
-        if section.section_number != u32::try_from(index + 1).unwrap_or(u32::MAX) {
-            diagnostics.push(Diagnostic::entity(
-                entry,
-                "sections",
-                "sectionNumber must be contiguous and ordered",
-            ));
-        }
-        if !allowed.contains(&section.section_key.as_str()) {
-            diagnostics.push(Diagnostic::entity(
-                entry,
-                "sections",
-                format!("unsupported sectionKey {}", section.section_key),
-            ));
-        }
-        if !keys.insert(&section.section_key) {
-            diagnostics.push(Diagnostic::entity(
-                entry,
-                "sections",
-                format!("duplicate sectionKey {}", section.section_key),
-            ));
         }
     }
 }

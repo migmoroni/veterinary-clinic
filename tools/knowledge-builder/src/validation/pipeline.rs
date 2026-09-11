@@ -2,11 +2,12 @@
 
 use super::{
     collect_taxonomies, compile_document, deserialize_entity, discover_files, exact_content_files,
-    localized_fragment_counts, logical_digest, relation_count, resolve_content_directory,
-    resolve_structural_media, validate_alias_ownership, validate_entity_shape,
-    validate_file_coverage, validate_references, validate_taxonomy_completeness, Diagnostic,
-    SourceEntry, ValidatedEntity, ValidatedMediaReference, ValidatedSource, ValidationError,
-    ENTITY_MANIFEST_FILENAME, LOCALES,
+    load_section_standards, localized_fragment_counts, logical_digest, relation_count,
+    resolve_content_directory, resolve_sections, resolve_structural_media, section_standards_path,
+    validate_alias_ownership, validate_entity_shape, validate_file_coverage, validate_references,
+    validate_section_standard_consumers, validate_taxonomy_completeness, Diagnostic, SourceEntry,
+    ValidatedEntity, ValidatedMediaReference, ValidatedSource, ValidationError,
+    CONTENT_DIRECTORY_NAME, ENTITY_MANIFEST_FILENAME, LOCALES,
 };
 use crate::validation::life;
 use std::{
@@ -39,6 +40,11 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
             diagnostics.push(Diagnostic::source(&source_root, error));
             return Err(ValidationError { diagnostics });
         }
+    };
+    let Some((section_standards_document, section_standards)) =
+        load_section_standards(&source_root, &files, &mut diagnostics)
+    else {
+        return Err(ValidationError { diagnostics });
     };
     let entity_paths = files
         .iter()
@@ -89,6 +95,12 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
     life::validate_life_contracts(&entries, &taxonomy_terms, &mut diagnostics);
     validate_references(&entries, &taxonomy_terms, &mut diagnostics);
     validate_alias_ownership(&entries, &taxonomy_terms, &mut diagnostics);
+    validate_section_standard_consumers(
+        &entries,
+        &section_standards,
+        &section_standards_path(&source_root),
+        &mut diagnostics,
+    );
 
     let mut referenced_markdown = BTreeSet::new();
     let mut media = BTreeMap::new();
@@ -98,6 +110,7 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
         .collect::<BTreeMap<_, _>>();
     let mut validated_entities = Vec::with_capacity(entries.len());
     for entry in entries {
+        let resolved_sections = resolve_sections(&entry, &section_standards, &mut diagnostics);
         let mut editorial = BTreeMap::new();
         let mut markdown_media = BTreeMap::new();
         let mut structural_media = Vec::new();
@@ -150,7 +163,7 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
                 }
             }
         }
-        if !entry.entity.sections().is_empty() {
+        if entry.entity.section_standard_key().is_some() && !resolved_sections.is_empty() {
             let content_directory = resolve_content_directory(&entry);
             match content_directory.and_then(|directory| exact_content_files(&directory)) {
                 Ok(paths) => {
@@ -161,7 +174,7 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
                             &entry.entity_directory,
                             entry.entity.entity_type(),
                             entry.entity.id(),
-                            entry.entity.sections(),
+                            &resolved_sections,
                         ) {
                             Ok(compiled) => {
                                 for asset in compiled.media {
@@ -193,11 +206,26 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
                         }
                     }
                 }
-                Err(error) => diagnostics.push(Diagnostic::entity(&entry, "contentPath", error)),
+                Err(error) => {
+                    diagnostics.push(Diagnostic::entity(&entry, "sectionStandardKey", error))
+                }
             }
+        } else if entry.entity.section_standard_key().is_none()
+            && entry
+                .entity_directory
+                .join(CONTENT_DIRECTORY_NAME)
+                .try_exists()
+                .unwrap_or(false)
+        {
+            diagnostics.push(Diagnostic::entity(
+                &entry,
+                "sectionStandardKey",
+                format!("{CONTENT_DIRECTORY_NAME} requires a sectionStandardKey"),
+            ));
         }
         validated_entities.push(ValidatedEntity {
             source: entry,
+            resolved_sections,
             editorial,
             structural_media,
             markdown_media,
@@ -218,10 +246,13 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
     let relation_count = relation_count(&validated_entities);
     let localized_fragments_by_locale = localized_fragment_counts(&validated_entities);
     let source_digest_sha256 =
-        logical_digest(&validated_entities, &media).map_err(|message| ValidationError {
-            diagnostics: vec![Diagnostic::source(&source_root, message)],
-        })?;
-    let source_files = validated_entities.len()
+        logical_digest(&section_standards_document, &validated_entities, &media).map_err(
+            |message| ValidationError {
+                diagnostics: vec![Diagnostic::source(&source_root, message)],
+            },
+        )?;
+    let source_files = 1
+        + validated_entities.len()
         + referenced_markdown.len()
         + media
             .values()
@@ -232,6 +263,7 @@ pub fn validate_source(source_root: &Path) -> Result<ValidatedSource, Validation
         entities: validated_entities,
         taxonomies,
         taxonomy_terms,
+        section_standards,
         media,
         media_keys_by_locale,
         source_digest_sha256,

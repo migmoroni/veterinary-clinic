@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 1,
+	"schemaVersion": 2,
 	"locales": [
 		"pt-BR",
 		"pt-PT",
@@ -86,6 +86,8 @@
 		"productTarget": 132
 	},
 	"editorial": {
+		"sectionStandards": 5,
+		"standardReferences": 17,
 		"entities": 17,
 		"documents": 102,
 		"documentsPerLocale": 17,

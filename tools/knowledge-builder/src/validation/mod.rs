@@ -11,6 +11,7 @@ mod model;
 mod pipeline;
 mod primitives;
 mod references;
+mod standards;
 mod taxonomy;
 
 #[cfg(test)]
@@ -29,22 +30,26 @@ use self::{
     filesystem::{
         discover_files, exact_content_files, resolve_content_directory, validate_file_coverage,
     },
-    localized::{validate_localized_content, validate_localized_schema, validate_sections},
+    localized::{validate_localized_content, validate_localized_schema},
     primitives::{is_simple_text, is_uuid_v4, validate_unique_texts},
     references::validate_references,
+    standards::{
+        canonical_path as section_standards_path, load_section_standards, resolve_sections,
+        validate_consumers as validate_section_standard_consumers,
+    },
     taxonomy::{collect_taxonomies, validate_taxonomy_completeness},
 };
 use crate::{
     contracts::{
         locale::{KnowledgeLocale, LOCALES},
-        source_layout::ENTITY_MANIFEST_FILENAME,
+        source_layout::{CONTENT_DIRECTORY_NAME, ENTITY_MANIFEST_FILENAME},
     },
     markdown::{compile_document, CompiledDocument},
     media::{resolve_structural_media, sha256_hex, MediaAsset},
     normalization::normalize_search_text,
     source::{
         deserialize_entity, source_schema_fingerprint_input, CanonicalEntity, LifeEntity,
-        LocalizedContent, LocalizedValue, SourceEntry, TaxonomyEntity,
+        LocalizedContent, LocalizedValue, SectionStandardsDocument, SourceEntry, TaxonomyEntity,
     },
 };
 use serde_json::Value;

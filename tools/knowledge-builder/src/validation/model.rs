@@ -2,7 +2,10 @@
 
 use super::{CompiledDocument, KnowledgeLocale, MediaAsset, SourceEntry, TaxonomyEntity};
 use crate::markdown::CompiledMediaReference;
-use crate::source::{CanonicalEntity, LifeEntity, LifeRank, LocalizedValue, TaxonomyTerm};
+use crate::source::{
+    CanonicalEntity, LifeEntity, LifeRank, LocalizedValue, ResolvedSection, SectionStandard,
+    TaxonomyTerm,
+};
 use serde::Serialize;
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -68,7 +71,7 @@ impl Diagnostic {
                 entry.entity.entity_type(),
                 entry.entity.id()
             )),
-            field: Some("sections".to_string()),
+            field: Some("sectionStandardKey".to_string()),
             locale: Some(locale.to_string()),
             section: None,
             message: message.into(),
@@ -113,6 +116,7 @@ impl std::error::Error for ValidationError {}
 #[derive(Clone, Debug)]
 pub(crate) struct ValidatedEntity {
     pub source: SourceEntry,
+    pub resolved_sections: Vec<ResolvedSection>,
     pub editorial: BTreeMap<KnowledgeLocale, CompiledDocument>,
     pub structural_media: Vec<ValidatedMediaReference>,
     pub markdown_media: BTreeMap<KnowledgeLocale, Vec<CompiledMediaReference>>,
@@ -143,6 +147,7 @@ pub struct ValidatedSource {
     pub(crate) entities: Vec<ValidatedEntity>,
     pub(crate) taxonomies: BTreeMap<(String, String), TaxonomyEntity>,
     pub(crate) taxonomy_terms: TaxonomyTermIndexes,
+    pub(crate) section_standards: BTreeMap<String, SectionStandard>,
     pub(crate) media: BTreeMap<String, MediaAsset>,
     pub(crate) media_keys_by_locale: BTreeMap<KnowledgeLocale, BTreeSet<String>>,
     pub(crate) source_digest_sha256: String,
@@ -152,6 +157,13 @@ pub struct ValidatedSource {
 }
 
 impl ValidatedSource {
+    pub fn section_standard(&self, key: &str) -> Option<&SectionStandard> {
+        self.section_standards.get(key)
+    }
+
+    pub fn section_standard_count(&self) -> usize {
+        self.section_standards.len()
+    }
     pub(crate) fn taxonomy_term(
         &self,
         domain: &str,

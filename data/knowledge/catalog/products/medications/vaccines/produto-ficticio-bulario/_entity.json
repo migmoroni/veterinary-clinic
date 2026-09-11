@@ -104,49 +104,7 @@
       ]
     }
   },
-  "sections": [
-    {
-      "sectionKey": "about",
-      "sectionNumber": 1
-    },
-    {
-      "sectionKey": "presentations",
-      "sectionNumber": 2
-    },
-    {
-      "sectionKey": "indications",
-      "sectionNumber": 3
-    },
-    {
-      "sectionKey": "administration",
-      "sectionNumber": 4
-    },
-    {
-      "sectionKey": "interactions",
-      "sectionNumber": 5
-    },
-    {
-      "sectionKey": "pharmacology",
-      "sectionNumber": 6
-    },
-    {
-      "sectionKey": "studies",
-      "sectionNumber": 7
-    },
-    {
-      "sectionKey": "videos",
-      "sectionNumber": 8
-    },
-    {
-      "sectionKey": "distributors",
-      "sectionNumber": 9
-    },
-    {
-      "sectionKey": "references",
-      "sectionNumber": 10
-    }
-  ],
-  "contentPath": "./_content",
+  "sectionStandardKey": "catalog.product.monograph",
   "applicableTaxonTermKeys": [
     "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris",
     "eukaryota.animalia.chordata.mammalia.carnivora.felidae.felis.felisCatus"

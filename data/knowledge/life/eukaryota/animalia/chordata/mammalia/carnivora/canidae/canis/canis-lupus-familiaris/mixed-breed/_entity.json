@@ -20,28 +20,6 @@
       "fr-FR": []
     }
   },
-  "sections": [
-    {
-      "sectionKey": "characteristics",
-      "sectionNumber": 1
-    },
-    {
-      "sectionKey": "morphology",
-      "sectionNumber": 2
-    },
-    {
-      "sectionKey": "behavior",
-      "sectionNumber": 3
-    },
-    {
-      "sectionKey": "diseases",
-      "sectionNumber": 4
-    },
-    {
-      "sectionKey": "references",
-      "sectionNumber": 5
-    }
-  ],
-  "contentPath": "./_content",
+  "sectionStandardKey": "life.profile",
   "typeTermKey": "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.mixedBreed"
 }

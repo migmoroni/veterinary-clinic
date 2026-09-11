@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "standards": [
+    {
+      "key": "fixture.manufacturer.profile",
+      "entityType": "manufacturer",
+      "sectionKeys": ["about"]
+    }
+  ]
+}

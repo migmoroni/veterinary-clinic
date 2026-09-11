@@ -8,6 +8,7 @@ somente os artefatos finalizados pelo `knowledge-builder`.
 
 ```text
 data/knowledge/
+├── _standards/sections.json
 ├── catalog/
 │   ├── active-ingredients/
 │   ├── conditions/
@@ -31,11 +32,13 @@ sem alterar o manifesto não modifica seu digest lógico.
 
 ### Namespace Técnico Reservado
 
-Somente três nomes iniciados por `_` possuem significado para o builder:
+Somente quatro nomes iniciados por `_` possuem significado para o builder:
 
 ```text
-<diretórios editoriais livres>/
-└── <entidade>/
+data/knowledge/
+├── _standards/
+│   └── sections.json
+└── <diretórios editoriais livres>/<entidade>/
     ├── _entity.json
     ├── _content/
     │   ├── pt-BR.md
@@ -48,7 +51,8 @@ Somente três nomes iniciados por `_` possuem significado para o builder:
         └── <subdiretórios e arquivos editoriais>
 ```
 
-`_content` e `_media` são recursos exclusivos da entidade cujo `_entity.json`
+`_standards` existe somente na raiz e contém exclusivamente o registro
+`sections.json`. `_content` e `_media` são recursos exclusivos da entidade cujo `_entity.json`
 é irmão direto. Qualquer outro nome iniciado por `_`, recurso reservado sem
 manifesto proprietário, symlink, arquivo especial ou arquivo técnico fora
 desse envelope é recusado. Diretórios sem `_` continuam livres para organização
@@ -64,7 +68,8 @@ pt-BR · pt-PT · gn-PY · en-US · es-ES · fr-FR
 
 Não existe fallback. Textos simples são não vazios, aparados e sem Markdown.
 Listas preservam a ordem autoral e não contêm duplicatas. Conteúdo editorial
-extenso vive nos seis documentos declarados por `contentPath`.
+extenso vive nos seis documentos do `_content` fixo de uma entidade que declara
+`sectionStandardKey`.
 
 ## Entidade Canônica De Vida
 
@@ -88,8 +93,7 @@ seções, conteúdo e mídia pertencem à entidade.
       "pt-BR": [], "pt-PT": [], "gn-PY": [],
       "en-US": [], "es-ES": [], "fr-FR": []
     }
-  },
-  "sections": []
+  }
 }
 ```
 
@@ -217,10 +221,17 @@ filtros estruturados.
 
 ## Markdown E Mídia
 
-Entidades com seções declaram `contentPath: "./_content"` e possuem exatamente
-um documento por locale em `_content`. Entidades sem seções omitem o campo e
-não possuem esse diretório. HTML bruto, links inseguros e arquivos não
-declarados são recusados.
+Os cinco mapas editoriais canônicos vivem somente em
+[`_standards/sections.json`](./_standards/sections.json). Cada padrão associa
+uma chave estável e um `entityType` a uma lista ordenada e não vazia de
+`sectionKeys`; a posição determina o número começando em 1. O registro não é
+uma entidade e não produz row no banco.
+
+Entidades editoriais declaram apenas `sectionStandardKey` e possuem exatamente
+um documento por locale no `_content` irmão do manifesto. Entidades sem essa
+referência não possuem `_content`. Os campos autorais `sections`,
+`sectionNumber` e `contentPath` não existem. HTML bruto, links inseguros e
+arquivos não declarados são recusados.
 
 Toda mídia editorial vive em `_media`. `media.cover` e `media.gallery` usam
 `./_media/<caminho>`, enquanto imagens Markdown usam

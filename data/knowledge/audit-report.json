@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 1,
+	"schemaVersion": 2,
 	"status": "PASS",
 	"entityCount": 609,
 	"entitiesByType": {
@@ -33,6 +33,8 @@
 		"genericSearchTerms": 0
 	},
 	"editorial": {
+		"sectionStandards": 5,
+		"standardReferences": 17,
 		"entities": 17,
 		"documents": 102,
 		"documentsPerLocale": 17,

@@ -96,7 +96,9 @@ não dispara geração implicitamente.
 
 ### `data/knowledge`
 
-- contém entidades, localizações e referências de mídia;
+- contém entidades, localizações, referências de mídia e padrões editoriais de
+  autoria; os padrões já chegam resolvidos em `content_json.sections` nos
+  artefatos;
 - não é importado por código do app;
 - não é servido diretamente ao runtime;
 - não contém TypeScript executável.

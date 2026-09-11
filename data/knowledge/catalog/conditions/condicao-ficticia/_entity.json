@@ -52,31 +52,5 @@
 			]
 		}
 	},
-	"sections": [
-		{
-			"sectionKey": "about",
-			"sectionNumber": 1
-		},
-		{
-			"sectionKey": "clinicalSigns",
-			"sectionNumber": 2
-		},
-		{
-			"sectionKey": "diagnosis",
-			"sectionNumber": 3
-		},
-		{
-			"sectionKey": "management",
-			"sectionNumber": 4
-		},
-		{
-			"sectionKey": "prevention",
-			"sectionNumber": 5
-		},
-		{
-			"sectionKey": "references",
-			"sectionNumber": 6
-		}
-	],
-	"contentPath": "./_content"
+	"sectionStandardKey": "catalog.condition.monograph"
 }

@@ -4,7 +4,8 @@ use super::{
     Diagnostic, KnowledgeLocale, MediaAsset, SourceEntry, ENTITY_MANIFEST_FILENAME, LOCALES,
 };
 use crate::contracts::source_layout::{
-    CONTENT_DIRECTORY_NAME, CONTENT_PATH, MEDIA_DIRECTORY_NAME, ROOT_TECHNICAL_FILES,
+    CONTENT_DIRECTORY_NAME, MEDIA_DIRECTORY_NAME, ROOT_TECHNICAL_FILES, SECTION_STANDARDS_FILENAME,
+    STANDARDS_DIRECTORY_NAME,
 };
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -16,6 +17,7 @@ use std::{
 enum ReservedArea {
     Content,
     Media,
+    Standards,
     Invalid,
 }
 
@@ -53,6 +55,18 @@ pub(super) fn discover_files(
                 let is_media_subdirectory =
                     matches!(area, Some(ReservedArea::Media)) && !name.starts_with('_');
                 let next_area = match name.as_str() {
+                    STANDARDS_DIRECTORY_NAME if directory == root && area.is_none() => {
+                        Some(ReservedArea::Standards)
+                    }
+                    STANDARDS_DIRECTORY_NAME => {
+                        diagnostics.push(Diagnostic::source(
+                            &path,
+                            format!(
+                                "{STANDARDS_DIRECTORY_NAME} is allowed only at the source root"
+                            ),
+                        ));
+                        Some(ReservedArea::Invalid)
+                    }
                     CONTENT_DIRECTORY_NAME => {
                         validate_reserved_directory(
                             directory,
@@ -72,6 +86,15 @@ pub(super) fn discover_files(
                             diagnostics,
                         );
                         Some(ReservedArea::Media)
+                    }
+                    _ if matches!(area, Some(ReservedArea::Standards)) => {
+                        diagnostics.push(Diagnostic::source(
+                            &path,
+                            format!(
+                                "subdirectories are forbidden inside {STANDARDS_DIRECTORY_NAME}"
+                            ),
+                        ));
+                        Some(ReservedArea::Invalid)
                     }
                     _ if name.starts_with('_') => {
                         diagnostics.push(Diagnostic::source(
@@ -149,6 +172,13 @@ pub(super) fn discover_files(
                         files.push(path);
                         contains_media_file = true;
                     }
+                    Some(ReservedArea::Standards) if name == SECTION_STANDARDS_FILENAME => {
+                        files.push(path);
+                    }
+                    Some(ReservedArea::Standards) => diagnostics.push(Diagnostic::source(
+                        &path,
+                        format!("unsupported file inside {STANDARDS_DIRECTORY_NAME}: {name}"),
+                    )),
                     Some(ReservedArea::Invalid) => diagnostics.push(Diagnostic::source(
                         &path,
                         "files are forbidden inside an unknown reserved directory",
@@ -240,26 +270,19 @@ pub(super) fn exact_content_files(
 }
 
 pub(super) fn resolve_content_directory(entry: &SourceEntry) -> Result<PathBuf, String> {
-    let content_path = entry
-        .entity
-        .content_path()
-        .ok_or_else(|| "contentPath is required".to_string())?;
-    if content_path != CONTENT_PATH {
-        return Err(format!("contentPath must be exactly {CONTENT_PATH}"));
-    }
     let candidate = entry.entity_directory.join(CONTENT_DIRECTORY_NAME);
     let entity_root = fs::canonicalize(&entry.entity_directory)
         .map_err(|error| format!("cannot resolve entity directory: {error}"))?;
     let resolved = fs::canonicalize(&candidate)
-        .map_err(|error| format!("cannot resolve contentPath {content_path}: {error}"))?;
+        .map_err(|error| format!("cannot resolve {CONTENT_DIRECTORY_NAME}: {error}"))?;
     let metadata = fs::symlink_metadata(&candidate)
-        .map_err(|error| format!("cannot inspect contentPath {content_path}: {error}"))?;
+        .map_err(|error| format!("cannot inspect {CONTENT_DIRECTORY_NAME}: {error}"))?;
     if metadata.file_type().is_symlink()
         || !metadata.is_dir()
         || resolved != entity_root.join(CONTENT_DIRECTORY_NAME)
     {
         return Err(format!(
-            "contentPath must resolve to the direct, non-symlink {CONTENT_DIRECTORY_NAME} directory"
+            "{CONTENT_DIRECTORY_NAME} must be the direct, non-symlink editorial directory"
         ));
     }
     Ok(resolved)

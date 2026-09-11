@@ -12,6 +12,298 @@ const FIXTURE_TOY: &str =
     "eukaryota.animalia.chordata.mammalia.carnivora.canidae.canis.canisLupusFamiliaris.poodle.poodleToy";
 const FIXTURE_STRUCTURAL_ONLY: &str = "structuralOnly";
 
+fn standards_path(root: &Path) -> std::path::PathBuf {
+    root.join("_standards/sections.json")
+}
+
+fn read_json(path: &Path) -> serde_json::Value {
+    serde_json::from_slice(&fs::read(path).unwrap()).unwrap()
+}
+
+fn write_json(path: &Path, value: &serde_json::Value) {
+    fs::write(path, serde_json::to_vec_pretty(value).unwrap()).unwrap();
+}
+
+fn add_editorial_content(manifest: &Path, sections: usize) {
+    let directory = manifest.parent().unwrap().join(CONTENT_DIRECTORY_NAME);
+    fs::create_dir(&directory).unwrap();
+    let markdown = (1..=sections)
+        .map(|number| format!("# {number}\n\nSection {number}.\n"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    for locale in knowledge_builder::LOCALES {
+        fs::write(directory.join(format!("{locale}.md")), &markdown).unwrap();
+    }
+}
+
+type InvalidStandardCase = (&'static str, fn(&Path), &'static str);
+
+#[test]
+fn section_standards_are_closed_resolved_and_digest_relevant() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
+    let baseline = validate(&fixture).unwrap();
+    assert_eq!(baseline.section_standard_count(), 1);
+    assert_eq!(
+        baseline
+            .section_standard("fixture.manufacturer.profile")
+            .unwrap()
+            .section_keys,
+        ["about"]
+    );
+
+    let invalid_cases: [InvalidStandardCase; 5] = [
+        (
+            "unordered-standards",
+            |root: &Path| {
+                let path = standards_path(root);
+                let mut value = read_json(&path);
+                let original = value["standards"][0].clone();
+                value["standards"].as_array_mut().unwrap().insert(
+                    0,
+                    serde_json::json!({"key":"z.profile","entityType":"product","sectionKeys":["about"]}),
+                );
+                value["standards"].as_array_mut().unwrap().push(original);
+                write_json(&path, &value);
+            },
+            "strictly ordered",
+        ),
+        (
+            "duplicate-standard-key",
+            |root: &Path| {
+                let path = standards_path(root);
+                let mut value = read_json(&path);
+                let duplicate = value["standards"][0].clone();
+                value["standards"].as_array_mut().unwrap().push(duplicate);
+                write_json(&path, &value);
+            },
+            "duplicate section standard key",
+        ),
+        (
+            "unknown-standard-reference",
+            |root: &Path| {
+                let manifest = find_manifest_by_type(root, "manufacturer").unwrap();
+                let mut value = read_json(&manifest);
+                value["sectionStandardKey"] = serde_json::json!("missing.profile");
+                write_json(&manifest, &value);
+            },
+            "unknown section standard",
+        ),
+        (
+            "wrong-standard-type",
+            |root: &Path| {
+                let path = standards_path(root);
+                let mut value = read_json(&path);
+                value["standards"][0]["entityType"] = serde_json::json!("product");
+                write_json(&path, &value);
+            },
+            "belongs to entityType product",
+        ),
+        (
+            "standard-without-consumer",
+            |root: &Path| {
+                let path = standards_path(root);
+                let mut value = read_json(&path);
+                value["standards"].as_array_mut().unwrap().push(
+                    serde_json::json!({"key":"unused.profile","entityType":"product","sectionKeys":["about"]}),
+                );
+                write_json(&path, &value);
+            },
+            "has no consuming entity",
+        ),
+    ];
+    for (label, mutate, expected) in invalid_cases {
+        let copy = TestDirectory::new(label);
+        copy_tree(&fixture, copy.path());
+        mutate(copy.path());
+        let error = validate(copy.path()).unwrap_err().to_string();
+        assert!(
+            error.contains(expected),
+            "unexpected {label} error: {error}"
+        );
+    }
+
+    let missing = TestDirectory::new("missing-section-standards");
+    copy_tree(&fixture, missing.path());
+    fs::remove_file(standards_path(missing.path())).unwrap();
+    assert!(validate(missing.path())
+        .unwrap_err()
+        .to_string()
+        .contains("registry is required"));
+
+    let malformed = TestDirectory::new("malformed-section-standards");
+    copy_tree(&fixture, malformed.path());
+    fs::write(standards_path(malformed.path()), b"{").unwrap();
+    assert!(validate(malformed.path())
+        .unwrap_err()
+        .to_string()
+        .contains("invalid JSON"));
+
+    let extra = TestDirectory::new("additional-section-standards-file");
+    copy_tree(&fixture, extra.path());
+    fs::write(extra.path().join("_standards/extra.json"), b"{}").unwrap();
+    assert!(validate(extra.path())
+        .unwrap_err()
+        .to_string()
+        .contains("unsupported file inside _standards"));
+
+    let misplaced = TestDirectory::new("misplaced-section-standards");
+    copy_tree(&fixture, misplaced.path());
+    let owner = find_manifest_by_type(misplaced.path(), "product").unwrap();
+    let nested = owner.parent().unwrap().join("_standards");
+    fs::create_dir(&nested).unwrap();
+    fs::copy(
+        standards_path(misplaced.path()),
+        nested.join("sections.json"),
+    )
+    .unwrap();
+    assert!(validate(misplaced.path())
+        .unwrap_err()
+        .to_string()
+        .contains("allowed only at the source root"));
+
+    let invalid_documents = [
+        serde_json::json!({"schemaVersion":1,"standards":[],"extra":true}),
+        serde_json::json!({"schemaVersion":1,"standards":[{"key":"fixture.manufacturer.profile","entityType":"manufacturer","sectionKeys":[],"extra":true}]}),
+        serde_json::json!({"schemaVersion":1,"standards":[{"key":"fixture.manufacturer.profile","entityType":"taxonomy","sectionKeys":["about"]}]}),
+        serde_json::json!({"schemaVersion":1,"standards":[{"key":"fixture.manufacturer.profile","entityType":"manufacturer","sectionKeys":[]}]}),
+        serde_json::json!({"schemaVersion":1,"standards":[{"key":"fixture.manufacturer.profile","entityType":"manufacturer","sectionKeys":["about","about"]}]}),
+        serde_json::json!({"schemaVersion":1,"standards":[{"key":" invalid ","entityType":"manufacturer","sectionKeys":["about"]}]}),
+        serde_json::json!({"schemaVersion":1,"standards":[{"key":"fixture.manufacturer.profile","entityType":"manufacturer","sectionKeys":(0..65).map(|number| format!("section{number}")).collect::<Vec<_>>()}]}),
+    ];
+    for (index, document) in invalid_documents.into_iter().enumerate() {
+        let copy = TestDirectory::new(&format!("invalid-standard-schema-{index}"));
+        copy_tree(&fixture, copy.path());
+        write_json(&standards_path(copy.path()), &document);
+        assert!(validate(copy.path())
+            .unwrap_err()
+            .to_string()
+            .contains("schema violation"));
+    }
+
+    for (label, field, value) in [
+        ("legacy-sections", "sections", serde_json::json!([])),
+        (
+            "legacy-content-path",
+            "contentPath",
+            serde_json::json!("./_content"),
+        ),
+        (
+            "legacy-section-number",
+            "sectionNumber",
+            serde_json::json!(1),
+        ),
+    ] {
+        let copy = TestDirectory::new(label);
+        copy_tree(&fixture, copy.path());
+        let manifest = find_manifest_by_type(copy.path(), "manufacturer").unwrap();
+        let mut entity = read_json(&manifest);
+        entity[field] = value;
+        write_json(&manifest, &entity);
+        assert!(validate(copy.path())
+            .unwrap_err()
+            .to_string()
+            .contains("schema violation"));
+    }
+
+    let missing_content = TestDirectory::new("standard-reference-without-content");
+    copy_tree(&fixture, missing_content.path());
+    let manifest = find_manifest_by_type(missing_content.path(), "manufacturer").unwrap();
+    fs::remove_dir_all(manifest.parent().unwrap().join(CONTENT_DIRECTORY_NAME)).unwrap();
+    assert!(validate(missing_content.path())
+        .unwrap_err()
+        .to_string()
+        .contains("cannot resolve _content"));
+
+    let orphan_content = TestDirectory::new("content-without-standard-reference");
+    copy_tree(&fixture, orphan_content.path());
+    let manifest = find_manifest_by_type(orphan_content.path(), "manufacturer").unwrap();
+    let mut entity = read_json(&manifest);
+    entity.as_object_mut().unwrap().remove("sectionStandardKey");
+    write_json(&manifest, &entity);
+    let error = validate(orphan_content.path()).unwrap_err().to_string();
+    assert!(error.contains("_content requires a sectionStandardKey"));
+
+    let changed = TestDirectory::new("changed-section-standard");
+    copy_tree(&fixture, changed.path());
+    let registry = standards_path(changed.path());
+    let mut standards = read_json(&registry);
+    standards["standards"][0]["key"] = serde_json::json!("fixture.manufacturer.summary");
+    write_json(&registry, &standards);
+    let manifest = find_manifest_by_type(changed.path(), "manufacturer").unwrap();
+    let mut entity = read_json(&manifest);
+    entity["sectionStandardKey"] = serde_json::json!("fixture.manufacturer.summary");
+    write_json(&manifest, &entity);
+    assert_ne!(
+        baseline.source_digest_sha256(),
+        validate(changed.path()).unwrap().source_digest_sha256()
+    );
+
+    let composition = TestDirectory::new("changed-section-standard-composition");
+    copy_tree(&fixture, composition.path());
+    let registry = standards_path(composition.path());
+    let mut standards = read_json(&registry);
+    standards["standards"][0]["sectionKeys"] = serde_json::json!(["about", "references"]);
+    write_json(&registry, &standards);
+    let manifest = find_manifest_by_type(composition.path(), "manufacturer").unwrap();
+    let content = manifest.parent().unwrap().join(CONTENT_DIRECTORY_NAME);
+    for locale in knowledge_builder::LOCALES {
+        let document = content.join(format!("{locale}.md"));
+        let markdown = fs::read_to_string(&document).unwrap();
+        fs::write(&document, format!("{markdown}\n# 2\n\nReferences.\n")).unwrap();
+    }
+    let composition_digest = validate(composition.path())
+        .unwrap()
+        .source_digest_sha256()
+        .to_string();
+    assert_ne!(baseline.source_digest_sha256(), composition_digest);
+
+    let reordered = TestDirectory::new("changed-section-standard-order");
+    copy_tree(composition.path(), reordered.path());
+    let registry = standards_path(reordered.path());
+    let mut standards = read_json(&registry);
+    standards["standards"][0]["sectionKeys"] = serde_json::json!(["references", "about"]);
+    write_json(&registry, &standards);
+    assert_ne!(
+        composition_digest,
+        validate(reordered.path()).unwrap().source_digest_sha256()
+    );
+
+    let multiple = TestDirectory::new("shared-and-distinct-section-standards");
+    copy_tree(&fixture, multiple.path());
+    let registry = standards_path(multiple.path());
+    let mut standards = read_json(&registry);
+    standards["standards"].as_array_mut().unwrap().extend([
+        serde_json::json!({"key":"fixture.product.a","entityType":"product","sectionKeys":["about"]}),
+        serde_json::json!({"key":"fixture.product.b","entityType":"product","sectionKeys":["about","references"]}),
+    ]);
+    write_json(&registry, &standards);
+    for (id, key, sections) in [
+        (
+            "22222222-2222-4222-8222-222222222222",
+            "fixture.product.a",
+            1,
+        ),
+        (
+            "33333333-3333-4333-8333-333333333331",
+            "fixture.product.a",
+            1,
+        ),
+        (
+            "33333333-3333-4333-8333-333333333332",
+            "fixture.product.b",
+            2,
+        ),
+    ] {
+        let manifest = find_manifest_by_id(multiple.path(), id).unwrap();
+        let mut entity = read_json(&manifest);
+        entity["sectionStandardKey"] = serde_json::json!(key);
+        write_json(&manifest, &entity);
+        add_editorial_content(&manifest, sections);
+    }
+    let validated = validate(multiple.path()).unwrap();
+    assert_eq!(validated.section_standard_count(), 3);
+}
+
 #[test]
 fn minimal_fixture_rejects_missing_and_duplicate_taxonomy_owners() {
     let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-minimal");
@@ -179,12 +471,8 @@ fn logical_digest_is_independent_of_editorial_directory() {
         entity_directory.join("localized-editorial"),
     )
     .unwrap();
-    let mut value: serde_json::Value =
-        serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
-    value["contentPath"] = serde_json::Value::String("./localized-editorial".to_string());
-    fs::write(&manifest, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
     let error = validate(editorial_copy.path()).unwrap_err().to_string();
-    assert!(error.contains("contentPath") || error.contains("unrecognized source file"));
+    assert!(error.contains("_content") || error.contains("unrecognized source file"));
 
     let unicode_copy = TestDirectory::new("decomposed-unicode");
     copy_tree(&source_root(), unicode_copy.path());
@@ -252,13 +540,10 @@ fn validation_rejects_schema_reference_locale_and_markdown_violations() {
     fs::write(&taxonomy_manifest, original_taxonomy).unwrap();
 
     let editorial_manifest = find_manifest_with_content(copy.path()).unwrap();
-    let editorial: serde_json::Value =
-        serde_json::from_slice(&fs::read(&editorial_manifest).unwrap()).unwrap();
-    let content_path = editorial["contentPath"].as_str().unwrap();
     let document = editorial_manifest
         .parent()
         .unwrap()
-        .join(content_path)
+        .join(CONTENT_DIRECTORY_NAME)
         .join("pt-BR.md");
     let original_document = fs::read_to_string(&document).unwrap();
     fs::write(

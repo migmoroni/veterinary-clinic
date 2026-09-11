@@ -186,7 +186,8 @@ A fonte pode conter:
 - taxonomias e relações semânticas;
 - protocolos e doses;
 - conteúdo localizado simples;
-- documentos Markdown declarados por `contentPath`;
+- registro único de padrões editoriais em `_standards/sections.json`;
+- documentos Markdown ativados por `sectionStandardKey`;
 - mídia local pertencente à entidade.
 
 Não existe fallback de idioma. Todo campo localizado presente obedece ao
@@ -197,6 +198,9 @@ conjunto fechado dos seis locales e à política específica do tipo da entidade
 O namespace técnico é fechado e sensível a maiúsculas e minúsculas:
 
 ```text
+_standards/
+└── sections.json
+
 <entidade>/
 ├── _entity.json
 ├── _content/
@@ -206,8 +210,10 @@ O namespace técnico é fechado e sensível a maiúsculas e minúsculas:
 ```
 
 - `_entity.json` é o único nome descoberto como manifesto;
-- `_content` contém exatamente os seis documentos canônicos e exige
-  `contentPath: "./_content"`;
+- `_standards` existe somente na raiz, contém apenas `sections.json` e não é
+  uma entidade;
+- `_content` contém exatamente os seis documentos canônicos e exige que a
+  entidade declare um `sectionStandardKey` compatível com seu `entityType`;
 - `_media` contém somente arquivos referenciados pela entidade proprietária;
 - ambos os diretórios reservados são filhos diretos do diretório da entidade;
 - nomes desconhecidos iniciados por `_`, recursos órfãos, subdiretórios em
@@ -226,10 +232,13 @@ sob `_media` e o caminho compilado `media/<caminho>`. A chave pública resultant
 
 ### 1. Leitura E Validação
 
-Cada JSON é validado contra seu schema embutido antes de entrar no modelo Rust.
-Depois disso, o validator verifica IDs, referências, taxonomias, aliases,
-locales, seções, arquivos declarados, limites e cobertura da árvore de autoria.
-Uma fonte válida declara exatamente os dez pares canônicos de domínio e propósito;
+O registro fixo de padrões é validado antes das entidades e transformado em um
+índice imutável. Cada JSON de entidade é validado contra seu schema embutido;
+depois disso, o validator resolve `sectionStandardKey`, deriva números pela
+posição das `sectionKeys` e verifica IDs, referências, taxonomias, aliases,
+locales, arquivos declarados, limites e cobertura da árvore de autoria. O
+digest v5 inclui o registro, as referências e os documentos compilados. Uma
+fonte válida declara exatamente os onze pares canônicos de domínio e propósito;
 taxonomias ausentes, adicionais ou com proprietário duplicado são recusadas
 mesmo quando nenhuma entidade referencia o vocabulário afetado.
 
@@ -565,7 +574,8 @@ let result = build(&BuildOptions {
   públicos;
 - `LifeEntity` e `LifeRank` representam o perfil e o rank resolvido da taxonomia
   biológica; `ValidatedSource` oferece navegação por pai, filhos, ancestrais e
-  descendentes, além da resolução de labels, aliases e associação opcional.
+  descendentes, além da resolução de labels, aliases, associação opcional e
+  consulta dos padrões editoriais validados.
 
 ## Erros E Código De Saída
 

@@ -34,11 +34,10 @@ pub(super) fn project_catalog(
                     regions,
                     website,
                     localized_content,
-                    sections,
-                    content_path,
+                    section_standard_key,
                     media,
                 } = value;
-                let _ = (schema_version, sections, content_path, media);
+                let _ = (schema_version, section_standard_key, media);
                 let name = localized_text(localized_content, "name", locale)?.to_string();
                 push_main(
                     operations,
@@ -79,8 +78,7 @@ pub(super) fn project_catalog(
                     nomenclature,
                     atc_vet_code,
                     localized_content,
-                    sections,
-                    content_path,
+                    section_standard_key,
                     media,
                 } = value;
                 let crate::source::Nomenclature {
@@ -90,8 +88,7 @@ pub(super) fn project_catalog(
                 } = nomenclature;
                 let _ = (
                     schema_version,
-                    sections,
-                    content_path,
+                    section_standard_key,
                     media,
                     scientific_name,
                     cas_number,
@@ -153,11 +150,10 @@ pub(super) fn project_catalog(
                     classification_term_keys,
                     regions,
                     localized_content,
-                    sections,
-                    content_path,
+                    section_standard_key,
                     media,
                 } = value;
-                let _ = (schema_version, sections, content_path, media);
+                let _ = (schema_version, section_standard_key, media);
                 let name = localized_text(localized_content, "name", locale)?.to_string();
                 push_main(
                     operations,
@@ -203,8 +199,7 @@ pub(super) fn project_catalog(
                     applicable_life_stages,
                     therapeutic_spectrum,
                     localized_content,
-                    sections,
-                    content_path,
+                    section_standard_key,
                     media,
                 } = value;
                 let crate::source::RegulatoryIdentifiers {
@@ -215,8 +210,7 @@ pub(super) fn project_catalog(
                 } = regulatory_identifiers;
                 let _ = (
                     schema_version,
-                    sections,
-                    content_path,
+                    section_standard_key,
                     media,
                     brazil_mapa,
                     united_states_nada,

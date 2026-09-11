@@ -350,6 +350,15 @@ pub(crate) enum SourceToken {
         locale: KnowledgeLocale,
         section_key: String,
     },
+    SectionStandardReference {
+        entity: EntityIdentity,
+        standard_key: String,
+    },
+    SectionStandardDefinition {
+        standard_key: String,
+        section_key: String,
+        section_number: u32,
+    },
     StructuralMediaReference {
         entity: EntityIdentity,
         locale: KnowledgeLocale,

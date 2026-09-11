@@ -3,7 +3,8 @@
 pub(crate) const ENTITY_MANIFEST_FILENAME: &str = "_entity.json";
 pub(crate) const CONTENT_DIRECTORY_NAME: &str = "_content";
 pub(crate) const MEDIA_DIRECTORY_NAME: &str = "_media";
-pub(crate) const CONTENT_PATH: &str = "./_content";
+pub(crate) const STANDARDS_DIRECTORY_NAME: &str = "_standards";
+pub(crate) const SECTION_STANDARDS_FILENAME: &str = "sections.json";
 pub(crate) const STRUCTURAL_MEDIA_PREFIX: &str = "./_media/";
 pub(crate) const MARKDOWN_MEDIA_PREFIX: &str = "../_media/";
 pub(crate) const COMPILED_MEDIA_NAMESPACE: &str = "media";

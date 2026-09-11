@@ -80,10 +80,25 @@ pub type LocalizedContent = BTreeMap<String, LocalizedValue>;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct SectionDeclaration {
-    #[serde(rename = "sectionKey")]
+pub struct SectionStandardsDocument {
+    #[serde(rename = "schemaVersion")]
+    pub schema_version: u32,
+    pub standards: Vec<SectionStandard>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct SectionStandard {
+    pub key: String,
+    #[serde(rename = "entityType")]
+    pub entity_type: String,
+    #[serde(rename = "sectionKeys")]
+    pub section_keys: Vec<String>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ResolvedSection {
     pub section_key: String,
-    #[serde(rename = "sectionNumber")]
     pub section_number: u32,
 }
 
@@ -187,9 +202,8 @@ pub struct ProductEntity {
     pub therapeutic_spectrum: Option<TherapeuticSpectrum>,
     #[serde(rename = "localizedContent")]
     pub localized_content: LocalizedContent,
-    pub sections: Vec<SectionDeclaration>,
-    #[serde(rename = "contentPath")]
-    pub content_path: Option<String>,
+    #[serde(rename = "sectionStandardKey")]
+    pub section_standard_key: Option<String>,
     pub media: Option<StructuralMedia>,
 }
 
@@ -207,9 +221,8 @@ pub struct ManufacturerEntity {
     pub website: Option<String>,
     #[serde(rename = "localizedContent")]
     pub localized_content: LocalizedContent,
-    pub sections: Vec<SectionDeclaration>,
-    #[serde(rename = "contentPath")]
-    pub content_path: Option<String>,
+    #[serde(rename = "sectionStandardKey")]
+    pub section_standard_key: Option<String>,
     pub media: Option<StructuralMedia>,
 }
 
@@ -229,9 +242,8 @@ pub struct ActiveIngredientEntity {
     pub atc_vet_code: Option<String>,
     #[serde(rename = "localizedContent")]
     pub localized_content: LocalizedContent,
-    pub sections: Vec<SectionDeclaration>,
-    #[serde(rename = "contentPath")]
-    pub content_path: Option<String>,
+    #[serde(rename = "sectionStandardKey")]
+    pub section_standard_key: Option<String>,
     pub media: Option<StructuralMedia>,
 }
 
@@ -248,9 +260,8 @@ pub struct ConditionEntity {
     pub regions: Vec<String>,
     #[serde(rename = "localizedContent")]
     pub localized_content: LocalizedContent,
-    pub sections: Vec<SectionDeclaration>,
-    #[serde(rename = "contentPath")]
-    pub content_path: Option<String>,
+    #[serde(rename = "sectionStandardKey")]
+    pub section_standard_key: Option<String>,
     pub media: Option<StructuralMedia>,
 }
 
@@ -388,9 +399,8 @@ pub struct LifeEntity {
     pub classifications: Option<LifeClassifications>,
     #[serde(rename = "localizedContent")]
     pub localized_content: LocalizedContent,
-    pub sections: Vec<SectionDeclaration>,
-    #[serde(rename = "contentPath")]
-    pub content_path: Option<String>,
+    #[serde(rename = "sectionStandardKey")]
+    pub section_standard_key: Option<String>,
     pub media: Option<StructuralMedia>,
 }
 
@@ -595,24 +605,13 @@ impl CanonicalEntity {
         }
     }
 
-    pub fn sections(&self) -> &[SectionDeclaration] {
+    pub fn section_standard_key(&self) -> Option<&str> {
         match self {
-            Self::Life(value) => &value.sections,
-            Self::Product(value) => &value.sections,
-            Self::Manufacturer(value) => &value.sections,
-            Self::ActiveIngredient(value) => &value.sections,
-            Self::Condition(value) => &value.sections,
-            Self::GeoPlace(_) | Self::Taxonomy(_) | Self::TreatmentProtocol(_) => &[],
-        }
-    }
-
-    pub fn content_path(&self) -> Option<&str> {
-        match self {
-            Self::Life(value) => value.content_path.as_deref(),
-            Self::Product(value) => value.content_path.as_deref(),
-            Self::Manufacturer(value) => value.content_path.as_deref(),
-            Self::ActiveIngredient(value) => value.content_path.as_deref(),
-            Self::Condition(value) => value.content_path.as_deref(),
+            Self::Life(value) => value.section_standard_key.as_deref(),
+            Self::Product(value) => value.section_standard_key.as_deref(),
+            Self::Manufacturer(value) => value.section_standard_key.as_deref(),
+            Self::ActiveIngredient(value) => value.section_standard_key.as_deref(),
+            Self::Condition(value) => value.section_standard_key.as_deref(),
             Self::GeoPlace(_) | Self::Taxonomy(_) | Self::TreatmentProtocol(_) => None,
         }
     }
@@ -656,5 +655,19 @@ pub fn source_schema_fingerprint_input() -> &'static [&'static str] {
         include_str!("../../schemas/source/product.schema.json"),
         include_str!("../../schemas/source/taxonomy.schema.json"),
         include_str!("../../schemas/source/treatment_protocol.schema.json"),
+        include_str!("../../schemas/source/section-standards.schema.json"),
     ]
+}
+
+pub fn deserialize_section_standards(
+    path: &Path,
+    bytes: &[u8],
+) -> Result<SectionStandardsDocument, String> {
+    let mut raw: Value = serde_json::from_slice(bytes)
+        .map_err(|error| format!("{}: invalid JSON: {error}", path.display()))?;
+    crate::schemas::validate_section_standards(&raw)
+        .map_err(|error| format!("{}: {error}", path.display()))?;
+    normalize_json_strings(&mut raw);
+    serde_json::from_value(raw)
+        .map_err(|error| format!("{}: schema violation: {error}", path.display()))
 }

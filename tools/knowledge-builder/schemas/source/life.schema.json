@@ -3,7 +3,7 @@
   "title": "Canonical life entity",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "entityType", "id", "typeTermKey", "localizedContent", "sections"],
+  "required": ["schemaVersion", "entityType", "id", "typeTermKey", "localizedContent"],
   "properties": {
     "schemaVersion": { "const": 1 },
     "entityType": { "const": "life" },
@@ -34,8 +34,7 @@
       "type": "object", "additionalProperties": false, "required": ["aliases"],
       "properties": { "aliases": { "$ref": "common.schema.json#/$defs/localizedList" } }
     },
-    "sections": { "$ref": "common.schema.json#/$defs/sections" },
-    "contentPath": { "$ref": "common.schema.json#/$defs/contentPath" },
+    "sectionStandardKey": { "$ref": "common.schema.json#/$defs/sectionStandardKey" },
     "media": { "$ref": "common.schema.json#/$defs/media" }
   },
   "$defs": {

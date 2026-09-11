@@ -296,6 +296,10 @@ modelo lógico usado no digest contém:
 Incrementar `SOURCE_DIGEST_SCHEMA_VERSION` de `4` para `5`, pois a composição
 lógica das declarações editoriais passa a incluir o registro compartilhado.
 
+Incrementar `PROJECTION_EVIDENCE_SCHEMA_VERSION` de `1` para `2`, pois o DTO
+canônico de evidências passa a representar referências e definições de padrões
+editoriais com variantes próprias.
+
 Manter:
 
 ```text

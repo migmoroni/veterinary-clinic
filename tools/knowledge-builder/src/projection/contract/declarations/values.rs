@@ -15,9 +15,8 @@ pub(super) fn common_authoring(
     expected: &mut ExpectedInventory,
     entity: &EntityIdentity,
     locale: KnowledgeLocale,
-    sections: &[crate::source::SectionDeclaration],
-    content_path: Option<&str>,
-    main: &OperationDisposition,
+    section_standard_key: Option<&str>,
+    sections: &[crate::source::ResolvedSection],
 ) -> Result<(), crate::ContractError> {
     field(
         expected,
@@ -26,17 +25,25 @@ pub(super) fn common_authoring(
         canonical_validation_target(entity, locale, "schema_version"),
         ObligationClass::Authoring,
     )?;
-    if sections.is_empty() {
-        field(
-            expected,
-            entity,
-            "sections",
-            main.column(SystemColumn::ContentJson),
-            ObligationClass::Authoring,
-        )?;
-    }
+    let Some(standard_key) = section_standard_key else {
+        return Ok(());
+    };
+    insert_obligation(
+        expected,
+        OperationDisposition {
+            target: ProjectionTarget::CompiledDocument {
+                entity: entity.clone(),
+                locale,
+            },
+        },
+        SourceToken::SectionStandardReference {
+            entity: entity.clone(),
+            standard_key: standard_key.to_string(),
+        },
+        ObligationClass::Authoring,
+    )?;
     for section in sections {
-        let crate::source::SectionDeclaration {
+        let crate::source::ResolvedSection {
             section_key,
             section_number,
         } = section;
@@ -47,31 +54,13 @@ pub(super) fn common_authoring(
                 section_key: section_key.clone(),
             },
         };
-        field(
+        insert_obligation(
             expected,
-            entity,
-            &format!("sections.{section_number}.sectionKey"),
             target.clone(),
-            ObligationClass::Authoring,
-        )?;
-        field(
-            expected,
-            entity,
-            &format!("sections.{section_number}.sectionNumber"),
-            target,
-            ObligationClass::Authoring,
-        )?;
-    }
-    if content_path.is_some() {
-        field(
-            expected,
-            entity,
-            "contentPath",
-            OperationDisposition {
-                target: ProjectionTarget::CompiledDocument {
-                    entity: entity.clone(),
-                    locale,
-                },
+            SourceToken::SectionStandardDefinition {
+                standard_key: standard_key.to_string(),
+                section_key: section_key.clone(),
+                section_number: *section_number,
             },
             ObligationClass::Authoring,
         )?;

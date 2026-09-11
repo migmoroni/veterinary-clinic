@@ -2,8 +2,8 @@
 
 use super::taxonomy::validate_taxonomy;
 use super::{
-    is_uuid_v4, validate_localized_content, validate_localized_schema, validate_sections,
-    validate_unique_texts, CanonicalEntity, Diagnostic, SourceEntry,
+    is_uuid_v4, validate_localized_content, validate_localized_schema, validate_unique_texts,
+    CanonicalEntity, Diagnostic, SourceEntry,
 };
 use std::collections::BTreeSet;
 
@@ -42,7 +42,6 @@ pub(super) fn validate_entity_shape(entry: &SourceEntry, diagnostics: &mut Vec<D
         ));
     }
     validate_localized_schema(entry, diagnostics);
-    validate_sections(entry, diagnostics);
 
     match &entry.entity {
         CanonicalEntity::Product(value) => {

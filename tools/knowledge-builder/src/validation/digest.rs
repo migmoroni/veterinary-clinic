@@ -2,29 +2,20 @@
 
 use super::{
     sha256_hex, source_schema_fingerprint_input, CanonicalEntity, KnowledgeLocale, MediaAsset,
-    ValidatedEntity, Value, LOCALES,
+    SectionStandardsDocument, ValidatedEntity, Value, LOCALES,
 };
 use std::collections::BTreeMap;
 
 pub(super) fn logical_digest(
+    section_standards: &SectionStandardsDocument,
     entities: &[ValidatedEntity],
     media: &BTreeMap<String, MediaAsset>,
 ) -> Result<String, String> {
     let mut logical_entities = Vec::with_capacity(entities.len());
     let mut editorial = BTreeMap::new();
     for entry in entities {
-        let mut value =
+        let value =
             serde_json::to_value(&entry.source.entity).map_err(|error| error.to_string())?;
-        if let Some(object) = value.as_object_mut() {
-            object.remove("contentPath");
-            if let Some(sections) = object.get_mut("sections").and_then(Value::as_array_mut) {
-                for section in sections {
-                    section
-                        .as_object_mut()
-                        .map(|section| section.remove("sectionNumber"));
-                }
-            }
-        }
         logical_entities.push(value);
         if !entry.editorial.is_empty() {
             editorial.insert(
@@ -64,6 +55,7 @@ pub(super) fn logical_digest(
     let model = serde_json::json!({
         "schemaVersion": crate::contracts::version::SOURCE_DIGEST_SCHEMA_VERSION,
         "sourceSchemas": schemas,
+        "sectionStandards": section_standards,
         "entities": logical_entities,
         "editorial": editorial,
         "media": media,

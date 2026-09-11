@@ -30,23 +30,5 @@
 			"fr-FR": []
 		}
 	},
-	"sections": [
-		{
-			"sectionKey": "about",
-			"sectionNumber": 1
-		},
-		{
-			"sectionKey": "portfolio",
-			"sectionNumber": 2
-		},
-		{
-			"sectionKey": "support",
-			"sectionNumber": 3
-		},
-		{
-			"sectionKey": "references",
-			"sectionNumber": 4
-		}
-	],
-	"contentPath": "./_content"
+	"sectionStandardKey": "catalog.manufacturer.profile"
 }

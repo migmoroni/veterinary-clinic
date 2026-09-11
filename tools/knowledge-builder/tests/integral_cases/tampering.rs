@@ -419,7 +419,7 @@ fn structural_and_markdown_media_share_cas_and_real_jpeg_thumbnail() {
     });
     fs::write(&manifest, serde_json::to_vec_pretty(&entity).unwrap()).unwrap();
     let pt_br = entity_directory
-        .join(entity["contentPath"].as_str().unwrap())
+        .join(CONTENT_DIRECTORY_NAME)
         .join("pt-BR.md");
     let markdown = fs::read_to_string(&pt_br).unwrap();
     fs::write(

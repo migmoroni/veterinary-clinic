@@ -259,7 +259,11 @@ fn obligation_locale(obligation: &ProjectionObligation) -> Option<KnowledgeLocal
         | SourceToken::MediaAsset { locale, .. }
         | SourceToken::CasObject { locale, .. }
         | SourceToken::BuildMetadata { locale, .. } => Some(*locale),
-        SourceToken::Entity(_) | SourceToken::Field { .. } | SourceToken::Relation { .. } => {
+        SourceToken::Entity(_)
+        | SourceToken::Field { .. }
+        | SourceToken::Relation { .. }
+        | SourceToken::SectionStandardReference { .. }
+        | SourceToken::SectionStandardDefinition { .. } => {
             projection_target_locale(&obligation.target)
         }
     }

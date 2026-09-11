@@ -231,7 +231,7 @@ pub fn find_manifest_with_content(root: &Path) -> Option<PathBuf> {
         } else if entry.file_name() == ENTITY_MANIFEST_FILENAME {
             let value: serde_json::Value =
                 serde_json::from_slice(&fs::read(entry.path()).ok()?).ok()?;
-            if value.get("contentPath").is_some() {
+            if value.get("sectionStandardKey").is_some() {
                 return Some(entry.path());
             }
         }

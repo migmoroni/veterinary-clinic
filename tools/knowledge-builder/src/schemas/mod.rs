@@ -7,6 +7,7 @@ use serde_json::Value;
 use std::path::Path;
 
 const COMMON: &str = include_str!("../../schemas/source/common.schema.json");
+const SECTION_STANDARDS: &str = include_str!("../../schemas/source/section-standards.schema.json");
 
 fn source_schema(entity_type: &str) -> Option<&'static str> {
     match entity_type {
@@ -97,6 +98,14 @@ pub(crate) fn validate_source_value(path: &Path, value: &Value) -> Result<(), St
         .map_err(|error| format!("{}: {error}", path.display()))
 }
 
+pub(crate) fn validate_section_standards(value: &Value) -> Result<(), String> {
+    let schema = inline_common(parse_schema(
+        "section-standards.schema.json",
+        SECTION_STANDARDS,
+    )?)?;
+    validate_value("section-standards.schema.json", schema, value)
+}
+
 pub(crate) fn validate_content<T: Serialize>(value: &T) -> Result<(), String> {
     validate_serialized(
         "content-document.schema.json",
@@ -134,6 +143,11 @@ mod tests {
     #[test]
     fn all_embedded_schemas_compile_without_retrieval() {
         compile("common", &parse_schema("common", COMMON).unwrap()).unwrap();
+        compile(
+            "section-standards",
+            &inline_common(parse_schema("section-standards", SECTION_STANDARDS).unwrap()).unwrap(),
+        )
+        .unwrap();
         for entity_type in [
             "active_ingredient",
             "life",

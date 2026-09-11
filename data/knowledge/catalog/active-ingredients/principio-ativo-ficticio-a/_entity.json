@@ -82,23 +82,5 @@
 			"fr-FR": "Fictioxamina"
 		}
 	},
-	"sections": [
-		{
-			"sectionKey": "about",
-			"sectionNumber": 1
-		},
-		{
-			"sectionKey": "uses",
-			"sectionNumber": 2
-		},
-		{
-			"sectionKey": "safety",
-			"sectionNumber": 3
-		},
-		{
-			"sectionKey": "references",
-			"sectionNumber": 4
-		}
-	],
-	"contentPath": "./_content"
+	"sectionStandardKey": "catalog.activeIngredient.monograph"
 }

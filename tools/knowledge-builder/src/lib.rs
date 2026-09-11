@@ -29,6 +29,7 @@ pub use report::{BuildContext, BuildResult, ReleaseContext};
 pub use source::{
     LifeBodyMetricStage, LifeBodyMetrics, LifeClassifications, LifeEntity, LifeMeasures,
     LifePeriodUnit, LifeRank, LifeSexBodyMetrics, LifeStageMetrics, LifeWeightMetrics,
+    SectionStandard, SectionStandardsDocument,
 };
 pub use validation::{Diagnostic, ValidatedSource, ValidationError};
 
@@ -106,7 +107,7 @@ mod fixture_registry_tests {
                     assert!(report::read_context(&fixture.join("public-context.json")).is_ok());
                 }
                 "invalid-markdown" => {
-                    let declarations = [source::SectionDeclaration {
+                    let declarations = [source::ResolvedSection {
                         section_key: "about".to_string(),
                         section_number: 1,
                     }];
@@ -153,7 +154,7 @@ mod fixture_registry_tests {
                 }
                 "invalid-schema" => assert!(validation::validate_source(&fixture).is_err()),
                 "valid-markdown" => {
-                    let declarations = [source::SectionDeclaration {
+                    let declarations = [source::ResolvedSection {
                         section_key: "about".to_string(),
                         section_number: 1,
                     }];

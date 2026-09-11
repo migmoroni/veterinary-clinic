@@ -8,8 +8,9 @@ use super::{
     database::{SYSTEM_DATABASE, SYSTEM_MEDIA_DATABASE},
     locale::{KnowledgeLocale, LOCALES},
     source_layout::{
-        COMPILED_MEDIA_NAMESPACE, CONTENT_DIRECTORY_NAME, CONTENT_PATH, ENTITY_MANIFEST_FILENAME,
-        MARKDOWN_MEDIA_PREFIX, MEDIA_DIRECTORY_NAME, STRUCTURAL_MEDIA_PREFIX,
+        COMPILED_MEDIA_NAMESPACE, CONTENT_DIRECTORY_NAME, ENTITY_MANIFEST_FILENAME,
+        MARKDOWN_MEDIA_PREFIX, MEDIA_DIRECTORY_NAME, SECTION_STANDARDS_FILENAME,
+        STANDARDS_DIRECTORY_NAME, STRUCTURAL_MEDIA_PREFIX,
     },
     taxonomy::{taxonomy_domains, taxonomy_spec, TaxonomyCardinality, CANONICAL_TAXONOMIES},
     version::*,
@@ -69,12 +70,15 @@ fn source_layout_namespace_is_closed_and_distinct_from_compiled_media() {
     assert_eq!(ENTITY_MANIFEST_FILENAME, "_entity.json");
     assert_eq!(CONTENT_DIRECTORY_NAME, "_content");
     assert_eq!(MEDIA_DIRECTORY_NAME, "_media");
-    assert_eq!(CONTENT_PATH, "./_content");
+    assert_eq!(STANDARDS_DIRECTORY_NAME, "_standards");
+    assert_eq!(SECTION_STANDARDS_FILENAME, "sections.json");
     assert_eq!(STRUCTURAL_MEDIA_PREFIX, "./_media/");
     assert_eq!(MARKDOWN_MEDIA_PREFIX, "../_media/");
     assert_eq!(COMPILED_MEDIA_NAMESPACE, "media");
     let common = schema(include_str!("../../schemas/source/common.schema.json"));
-    assert_eq!(common["$defs"]["contentPath"]["const"], CONTENT_PATH);
+    assert!(common["$defs"].get("sectionStandardKey").is_some());
+    assert!(common["$defs"].get("sections").is_none());
+    assert!(common["$defs"].get("contentPath").is_none());
     assert!(common["$defs"]["structuralMediaPath"]["pattern"]
         .as_str()
         .is_some_and(|pattern| pattern.contains("_media")));
@@ -197,6 +201,12 @@ fn public_schema_versions_match_rust_contracts() {
             SOURCE_ENTITY_SCHEMA_VERSION
         );
     }
+    assert_eq!(
+        schema(include_str!(
+            "../../schemas/source/section-standards.schema.json"
+        ))["properties"]["schemaVersion"]["const"],
+        SECTION_STANDARDS_SCHEMA_VERSION
+    );
     assert_eq!(
         schema(include_str!(
             "../../schemas/system/content-document.schema.json"
@@ -328,6 +338,10 @@ fn producers_and_verifiers_consume_central_versions_and_artifact_identities() {
         (
             include_str!("../validation/digest.rs"),
             &["SOURCE_DIGEST_SCHEMA_VERSION"][..],
+        ),
+        (
+            include_str!("../validation/standards.rs"),
+            &["SECTION_STANDARDS_SCHEMA_VERSION"][..],
         ),
         (
             include_str!("../markdown/mod.rs"),

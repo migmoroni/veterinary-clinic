@@ -48,8 +48,7 @@ pub(super) fn add_entity_obligations(
                 applicable_life_stages,
                 therapeutic_spectrum,
                 localized_content,
-                sections,
-                content_path,
+                section_standard_key,
                 media,
             } = value;
             let _ = (schema_version, id, manufacturer_id);
@@ -57,9 +56,8 @@ pub(super) fn add_entity_obligations(
                 expected,
                 &entity,
                 locale,
-                sections,
-                content_path.as_deref(),
-                &main,
+                section_standard_key.as_deref(),
+                &entry.resolved_sections,
             )?;
             field(
                 expected,
@@ -182,8 +180,7 @@ pub(super) fn add_entity_obligations(
                 regions,
                 website,
                 localized_content,
-                sections,
-                content_path,
+                section_standard_key,
                 media,
             } = value;
             let _ = (schema_version, id);
@@ -191,9 +188,8 @@ pub(super) fn add_entity_obligations(
                 expected,
                 &entity,
                 locale,
-                sections,
-                content_path.as_deref(),
-                &main,
+                section_standard_key.as_deref(),
+                &entry.resolved_sections,
             )?;
             field(
                 expected,
@@ -245,8 +241,7 @@ pub(super) fn add_entity_obligations(
                 nomenclature,
                 atc_vet_code,
                 localized_content,
-                sections,
-                content_path,
+                section_standard_key,
                 media,
             } = value;
             let _ = (schema_version, id);
@@ -254,9 +249,8 @@ pub(super) fn add_entity_obligations(
                 expected,
                 &entity,
                 locale,
-                sections,
-                content_path.as_deref(),
-                &main,
+                section_standard_key.as_deref(),
+                &entry.resolved_sections,
             )?;
             field(
                 expected,
@@ -328,8 +322,7 @@ pub(super) fn add_entity_obligations(
                 classification_term_keys,
                 regions,
                 localized_content,
-                sections,
-                content_path,
+                section_standard_key,
                 media,
             } = value;
             let _ = (schema_version, id);
@@ -337,9 +330,8 @@ pub(super) fn add_entity_obligations(
                 expected,
                 &entity,
                 locale,
-                sections,
-                content_path.as_deref(),
-                &main,
+                section_standard_key.as_deref(),
+                &entry.resolved_sections,
             )?;
             field(
                 expected,
@@ -381,8 +373,7 @@ pub(super) fn add_entity_obligations(
                 type_term_key,
                 classifications,
                 localized_content,
-                sections,
-                content_path,
+                section_standard_key,
                 media,
             } = &**value;
             let _ = (schema_version, id);
@@ -390,9 +381,8 @@ pub(super) fn add_entity_obligations(
                 expected,
                 &entity,
                 locale,
-                sections,
-                content_path.as_deref(),
-                &main,
+                section_standard_key.as_deref(),
+                &entry.resolved_sections,
             )?;
             field(
                 expected,
