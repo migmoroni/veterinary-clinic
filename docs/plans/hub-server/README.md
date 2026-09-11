@@ -34,16 +34,17 @@ pertencem a outro servidor.
 19. [Parte 1B.8.6: atributos diretos e aliases de produto](./01b8-knowledge-builder-maintainability/06-direct-product-attributes.md)
 20. [Parte 1B.8.7: autoria taxonômica hierárquica](./01b8-knowledge-builder-maintainability/07-hierarchical-taxonomy-authoring.md)
 21. [Parte 1B.8.8: taxonomia hierárquica da vida](./01b8-knowledge-builder-maintainability/08-life-hierarchy-taxonomy.md)
-22. [Parte 1B.9.1: contrato neutro do `artifact-builder`](./01b9-artifact-builder/01-neutral-contract.md)
-23. [Parte 1B.9.2: motor genérico de artefatos](./01b9-artifact-builder/02-generic-engine.md)
-24. [Parte 1B.9.3: adaptador veterinário](./01b9-artifact-builder/03-veterinary-adapter.md)
-25. [Parte 1B.9.4: fechamento e documentação](./01b9-artifact-builder/04-closure.md)
-26. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
-27. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
-28. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
-29. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
-30. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
-31. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
+22. [Parte 1B.8.9: padrões editoriais de seções](./01b8-knowledge-builder-maintainability/09-editorial-section-standards.md)
+23. [Parte 1B.9.1: contrato neutro do `artifact-builder`](./01b9-artifact-builder/01-neutral-contract.md)
+24. [Parte 1B.9.2: motor genérico de artefatos](./01b9-artifact-builder/02-generic-engine.md)
+25. [Parte 1B.9.3: adaptador veterinário](./01b9-artifact-builder/03-veterinary-adapter.md)
+26. [Parte 1B.9.4: fechamento e documentação](./01b9-artifact-builder/04-closure.md)
+27. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
+28. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
+29. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
+30. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
+31. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
+32. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
 
 ## Referências Futuras Não Sequenciais
 
@@ -157,7 +158,9 @@ mantendo descritores vacinais nos aliases localizados. A Parte 1B.8.7 representa
 as taxonomias como florestas ordenadas e projeta a posição local entre irmãos.
 A Parte 1B.8.8 representa a ancestralidade da vida na taxonomia `life:type`,
 com labels nos termos e páginas de conhecimento opcionais associadas por
-`LifeEntity.typeTermKey`. As Partes
+`LifeEntity.typeTermKey`. A Parte 1B.8.9 centraliza os mapas editoriais no
+registro reservado de padrões e mantém nas entidades somente a referência por
+`sectionStandardKey`. As Partes
 1B.9.1 a 1B.9.4
 estabelecem a crate genérica `artifact-builder`, concentram nela SQLite, CAS,
 verificação e publicação, e mantêm `knowledge-builder` como adaptador do domínio

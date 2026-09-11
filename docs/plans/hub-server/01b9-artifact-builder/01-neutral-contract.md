@@ -9,7 +9,7 @@ por `knowledge-builder`.
 
 ## Pré-Requisito
 
-A [Parte 1B.8.8](../01b8-knowledge-builder-maintainability/08-life-hierarchy-taxonomy.md)
+A [Parte 1B.8.9](../01b8-knowledge-builder-maintainability/09-editorial-section-standards.md)
 está concluída e o workspace está saudável.
 
 ## 1. Workspace E Package

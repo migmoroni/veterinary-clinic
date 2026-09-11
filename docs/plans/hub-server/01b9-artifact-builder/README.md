@@ -24,8 +24,10 @@ CAS, verificação estrutural ou publicação.
 ## Pré-Requisito
 
 A
-[Parte 1B.8.8: taxonomia hierárquica da vida](../01b8-knowledge-builder-maintainability/08-life-hierarchy-taxonomy.md)
-está concluída. O contrato veterinário usa os atributos diretos
+[Parte 1B.8.9: padrões editoriais de seções](../01b8-knowledge-builder-maintainability/09-editorial-section-standards.md)
+está concluída. Entidades editoriais referenciam os mapas canônicos de
+`data/knowledge/_standards/sections.json` por `sectionStandardKey`. O contrato
+veterinário usa os atributos diretos
 `applicableLifeStages` e `therapeuticSpectrum`, mantém descritores vacinais nos
 aliases localizados do produto e representa taxonomias como florestas ordenadas
 de termos. `life:type` é a única fonte de nomes e ancestralidade da vida;

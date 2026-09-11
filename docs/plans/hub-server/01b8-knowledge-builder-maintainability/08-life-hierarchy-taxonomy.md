@@ -868,4 +868,4 @@ geral da implementação.
 ## Próxima Parte
 
 Após cumprir todos os critérios, seguir para a
-[Parte 1B.9: `artifact-builder` e adaptador de conhecimento](../01b9-artifact-builder/README.md).
+[Parte 1B.8.9: padrões editoriais de seções](./09-editorial-section-standards.md).
