@@ -35,16 +35,12 @@ pertencem a outro servidor.
 20. [Parte 1B.8.7: autoria taxonômica hierárquica](./01b8-knowledge-builder-maintainability/07-hierarchical-taxonomy-authoring.md)
 21. [Parte 1B.8.8: taxonomia hierárquica da vida](./01b8-knowledge-builder-maintainability/08-life-hierarchy-taxonomy.md)
 22. [Parte 1B.8.9: padrões editoriais de seções](./01b8-knowledge-builder-maintainability/09-editorial-section-standards.md)
-23. [Parte 1B.9.1: contrato neutro do `artifact-builder`](./01b9-artifact-builder/01-neutral-contract.md)
-24. [Parte 1B.9.2: motor genérico de artefatos](./01b9-artifact-builder/02-generic-engine.md)
-25. [Parte 1B.9.3: adaptador veterinário](./01b9-artifact-builder/03-veterinary-adapter.md)
-26. [Parte 1B.9.4: fechamento e documentação](./01b9-artifact-builder/04-closure.md)
-27. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
-28. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
-29. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
-30. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
-31. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
-32. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
+23. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
+24. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
+25. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
+26. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
+27. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
+28. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
 
 ## Referências Futuras Não Sequenciais
 
@@ -55,7 +51,7 @@ de implementação. Sua presença não autoriza execução nem alteração do co
 vigente sem uma solicitação explícita.
 
 A pré-fase, as subpartes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3, 1B.4, 1B.5,
-1B.6, 1B.7, 1B.7A, 1B.7B, 1B.8.1 a 1B.8.8, 1B.9.1 a 1B.9.4, 1C e as partes
+1B.6, 1B.7, 1B.7A, 1B.7B, 1B.8.1 a 1B.8.9, 1C e as partes
 seguintes são executadas em ordem. Cada documento termina com testes e critérios
 de aceite próprios.
 
@@ -85,10 +81,7 @@ flowchart LR
     P1B86["Parte 1B.8.6<br/>atributos + aliases"]
     P1B87["Parte 1B.8.7<br/>árvores taxonômicas"]
     P1B88["Parte 1B.8.8<br/>hierarquia de vida"]
-    P1B91["Parte 1B.9.1<br/>contrato neutro"]
-    P1B92["Parte 1B.9.2<br/>motor genérico"]
-    P1B93["Parte 1B.9.3<br/>adaptador veterinário"]
-    P1B94["Parte 1B.9.4<br/>fechamento"]
+    P1B89["Parte 1B.8.9<br/>padrões editoriais"]
     P1C["Parte 1C<br/>consumo local"]
     P2["Parte 2<br/>base Rails + contratos"]
     P3["Parte 3<br/>Rails orquestra builder + releases"]
@@ -96,25 +89,23 @@ flowchart LR
     P5["Parte 5<br/>updater Tauri local"]
     P6["Parte 6<br/>GitHub + CI/CD"]
 
-    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1B7 --> P1B7A --> P1B7B --> P1B81 --> P1B82 --> P1B83 --> P1B84 --> P1B85 --> P1B86 --> P1B87 --> P1B88 --> P1B91 --> P1B92 --> P1B93 --> P1B94 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
+    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1B7 --> P1B7A --> P1B7B --> P1B81 --> P1B82 --> P1B83 --> P1B84 --> P1B85 --> P1B86 --> P1B87 --> P1B88 --> P1B89 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
 ```
 
 As mudanças de origem dos artefatos são deliberadas:
 
 ```mermaid
 flowchart TB
-    subgraph S1["Partes 1A a 1B.9.4 e 1C"]
+    subgraph S1["Partes 1A a 1C"]
         D1["data/knowledge<br/>fonte canônica"] --> G1["knowledge-builder Rust"]
-        G1 --> AB1["artifact-builder Rust"]
-        AB1 --> B1["build/knowledge-artifacts"]
+        G1 --> B1["build/knowledge-artifacts"]
         B1 --> A1["Apps em desenvolvimento e build"]
     end
 
     subgraph S2["Partes 3 e 4"]
         D2["data/knowledge"] --> G2["knowledge-builder Rust"]
         R2["Rails: jobs, releases e manifest"] --> G2
-        G2 --> AB2["artifact-builder Rust"]
-        AB2 --> R2
+        G2 --> R2
         R2 --> H2["API do hub-server"]
         H2 --> A2["Apps"]
     end
@@ -160,12 +151,10 @@ A Parte 1B.8.8 representa a ancestralidade da vida na taxonomia `life:type`,
 com labels nos termos e páginas de conhecimento opcionais associadas por
 `LifeEntity.typeTermKey`. A Parte 1B.8.9 centraliza os mapas editoriais no
 registro reservado de padrões e mantém nas entidades somente a referência por
-`sectionStandardKey`. As Partes
-1B.9.1 a 1B.9.4
-estabelecem a crate genérica `artifact-builder`, concentram nela SQLite, CAS,
-verificação e publicação, e mantêm `knowledge-builder` como adaptador do domínio
-veterinário. A Parte 1C faz os apps consumirem os artefatos locais. A Parte 3 faz
-o `hub-server` invocar a mesma ferramenta e
+`sectionStandardKey`. O `knowledge-builder` concentra a compilação do domínio,
+a materialização SQLite e CAS, a verificação integral e a publicação atômica da
+saída local. A Parte 1C faz os apps consumirem esses artefatos. A Parte 3 faz o
+`hub-server` invocar a mesma ferramenta e
 assumir releases, assinatura e publicação. A Parte 4 substitui a aquisição local
 pelo contrato de distribuição do Hub. A Parte 6 acrescenta o GitHub como
 provider externo.
@@ -180,10 +169,9 @@ provider externo.
   `workspace:*`.
 - As partes do Hub usam somente comandos pnpm; não mantêm lockfiles ou comandos
   concorrentes de outro gerenciador.
-- `packages/artifact-builder/` é uma library crate neutra responsável por
-  materialização SQLite, CAS, verificação estrutural e publicação atômica.
 - `tools/knowledge-builder/` é o binário Rust que valida e compila
-  `data/knowledge` para o contrato de `artifact-builder`.
+  `data/knowledge`, materializa os bancos SQLite e o CAS, verifica toda a saída e
+  publica uma `build_version` local de maneira atômica.
 - A taxonomia `life:type` declara a floresta ordenada de domínio, reino, filo,
   classe, ordem, família, gênero, espécie, raça e variedade. A profundidade
   determina o rank e seus termos possuem os nomes localizados. Um termo pode ter
@@ -199,12 +187,13 @@ provider externo.
 - Produtos e protocolos declaram aplicabilidade pelas chaves de termos de
   qualquer um dos dez ranks. Cada alvo alcança o próprio termo e seus
   descendentes, mesmo quando um deles não possui `LifeEntity`.
-- O contrato neutro recebe variantes, DDLs, tabelas, rows e objetos CAS já
-  compilados. Conceitos veterinários permanecem fora da crate genérica.
-- `knowledge-builder` percorre a fonte validada e produz diretamente o plano de
-  artefatos. Ele não possui ledger, ownership, recibos ou writers SQLite.
-- Um único verificador genérico comprova schema, rows, integridade, checksums,
-  CAS e árvore de saída antes da publicação.
+- `knowledge-builder` percorre a fonte validada por duas visões independentes:
+  o inventário produz `expected`, e o contrato tipado produz operações e
+  `owned`. Writers, recibos confirmados e ledger comprovam `observed` somente
+  após a materialização dos efeitos.
+- O verificador integral do builder relê bancos, relatórios, mídia e CAS sem
+  reutilizar os writers e comprova schema, rows, integridade, checksums,
+  evidências e árvore de saída antes da publicação.
 - `data/knowledge/` na raiz é a única fonte de autoria dos dados públicos. O
   diretório não pertence ao app, ao Rails nem a um package de código.
 - `geo/` é um domínio de conhecimento compartilhado. Localizações usam
@@ -340,10 +329,9 @@ provider externo.
 
 ```mermaid
 flowchart LR
-    DATA["Dados públicos canônicos"] --> BUILDER["tools/knowledge-builder<br/>adaptador veterinário"]
-    BUILDER --> ARTIFACTS["packages/artifact-builder<br/>SQLite, CAS e publicação"]
+    DATA["Dados públicos canônicos"] --> BUILDER["tools/knowledge-builder<br/>compilação, SQLite, CAS e verificação"]
     HUB["apps/hub-server<br/>jobs, releases, manifests e APIs"] --> BUILDER
-    ARTIFACTS --> HUB
+    BUILDER --> HUB
     HUB --> APP["apps/*<br/>consumo, validação e instalação"]
     HUB --> PROVIDERS["Providers externos<br/>réplicas e entrega de bytes"]
     PROVIDERS --> APP
@@ -359,10 +347,8 @@ apps/hub-server/
   orquestração, publicação, manifests e APIs
 
 tools/knowledge-builder/
-  validação e compilação veterinária para o contrato neutro
-
-packages/artifact-builder/
-  materialização SQLite, CAS, verificação e publicação atômica
+  validação e compilação veterinária, materialização SQLite e CAS,
+  verificação integral e publicação atômica
 
 apps/vet-app/
   consumo, validação, instalação e atualização
@@ -428,7 +414,6 @@ KnowledgeRelease
   previous_release_id
   build_version
   builder_version
-  artifact_builder_version
   build_result_schema_version
   build_result_checksum_sha256
   source_digest_sha256
@@ -467,12 +452,11 @@ KnowledgeArtifactSource
 `previous_release_id` é nulo no bootstrap e obrigatório no delta.
 O par `generation`, `revision` é globalmente único e não depende de canal.
 
-`build_version`, `builder_version`, `artifact_builder_version`,
-`build_result_schema_version`, `build_result_checksum_sha256` e
-`source_digest_sha256` registram a proveniência da compilação. Retry do mesmo
-draft conserva esses valores quando repete a mesma entrada, o mesmo perfil e o
-mesmo motor; qualquer mudança exige descartar o resultado preparado e executar
-outra compilação antes da validação.
+`build_version`, `builder_version`, `build_result_schema_version`,
+`build_result_checksum_sha256` e `source_digest_sha256` registram a proveniência
+da compilação. Retry do mesmo draft conserva esses valores quando repete a mesma
+fonte, o mesmo contexto e a mesma versão do builder; qualquer mudança exige
+descartar o resultado preparado e executar outra compilação antes da validação.
 
 `system_schema_version` e `system_media_schema_version` permanecem separados da
 versão de conhecimento. Cada `KnowledgeArtifact` representa um conteúdo.
@@ -951,17 +935,16 @@ descobrir uma revisão incrementando URLs que não estejam declaradas.
 18. Implementar e validar a Parte 1B.8.4.
 19. Implementar e validar a Parte 1B.8.5.
 20. Implementar e validar a Parte 1B.8.6.
-21. Implementar e validar a Parte 1B.9.1.
-22. Implementar e validar a Parte 1B.9.2.
-23. Implementar e validar a Parte 1B.9.3.
-24. Implementar e validar a Parte 1B.9.4.
-25. Implementar e validar a Parte 1C.
-26. Implementar e validar a Parte 2.
-27. Implementar e validar a Parte 3.
-28. Implementar e validar a Parte 4.
-29. Implementar e validar a Parte 5.
-30. Mover o projeto para o repositório dedicado.
-31. Implementar e validar a Parte 6.
+21. Implementar e validar a Parte 1B.8.7.
+22. Implementar e validar a Parte 1B.8.8.
+23. Implementar e validar a Parte 1B.8.9.
+24. Implementar e validar a Parte 1C.
+25. Implementar e validar a Parte 2.
+26. Implementar e validar a Parte 3.
+27. Implementar e validar a Parte 4.
+28. Implementar e validar a Parte 5.
+29. Mover o projeto para o repositório dedicado.
+30. Implementar e validar a Parte 6.
 
 ## Expansões Previstas
 

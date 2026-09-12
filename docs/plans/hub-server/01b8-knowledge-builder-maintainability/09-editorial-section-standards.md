@@ -31,7 +31,6 @@ usada pelos bancos `system`.
   saudáveis.
 - O contrato compilado usa uma lista plana de objetos com `sectionKey` e
   `compiledMarkdown`.
-- A crate `artifact-builder` não integra este escopo.
 
 ## Escopo
 
@@ -437,7 +436,6 @@ Atualizar:
 - `tools/knowledge-builder/README.md` com carregamento, validação, compilação e
   digest dos padrões;
 - o índice `docs/plans/hub-server/README.md`;
-- a Parte 1B.9 para receber padrões já resolvidos no adaptador veterinário;
 - a Parte 1C somente onde precisar distinguir autoria de conteúdo compilado;
 - a Parte 3 para descrever a mesma fonte canônica.
 
@@ -494,7 +492,7 @@ geral da implementação.
 - alterar DDL ou versão dos bancos;
 - modificar conteúdo editorial dos Markdown;
 - criar migration, conversor persistente ou suporte ao formato substituído;
-- implementar `artifact-builder` ou alterar consumidores do app.
+- alterar consumidores do app.
 
 ## Critérios De Aceite
 
@@ -517,4 +515,4 @@ geral da implementação.
 ## Próxima Parte
 
 Após cumprir todos os critérios, seguir para a
-[Parte 1B.9: `artifact-builder` e adaptador de conhecimento](../01b9-artifact-builder/README.md).
+[Parte 1C: consumo local dos artefatos `system`](../01c-app-system-consumption.md).

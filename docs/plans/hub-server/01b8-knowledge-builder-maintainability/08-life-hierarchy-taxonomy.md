@@ -48,7 +48,6 @@ o nome localizado no domínio de vida. Os aliases permanecem em
   derivados pelo builder.
 - Auditoria, validação, testes e build integral do `knowledge-builder` estão
   verdes antes da implementação.
-- A crate `artifact-builder` não integra este escopo.
 
 ## Escopo
 
@@ -786,7 +785,6 @@ Atualizar `data/knowledge/README.md` e `tools/knowledge-builder/README.md` com:
 
 Alinhar os planos posteriores:
 
-- Parte 1B.9 recebe este contrato no adaptador;
 - Parte 1C consulta nomes e hierarquia pelas tabelas taxonômicas;
 - o índice do Hub descreve a associação de entidades de vida por tipo.
 
@@ -840,7 +838,6 @@ geral da implementação.
 - derivar hierarquia de diretórios ou segmentos de chave;
 - criar closure table, nested sets ou materialized path;
 - alterar bancos ou CAS do ramo `user`;
-- implementar `artifact-builder`;
 - alterar apps ou publicar artefatos;
 - criar migrations ou rotinas de adoção.
 

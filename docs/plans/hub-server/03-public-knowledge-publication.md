@@ -191,10 +191,10 @@ relações não localizáveis nos seis bancos.
 
 ## Fronteira Com A Preparação Local
 
-O `knowledge-builder` Rust da Parte 1B.9 compila o domínio e usa
-`artifact-builder` para produzir o estado integral candidato, composto pelos
-seis pares de bancos finais, pela união CAS referenciada e por
-`build-result.json`. O Rails reserva primeiro a identidade da release em estado
+O `knowledge-builder` Rust produz o estado integral candidato, composto pelos
+seis pares de bancos finais, pela união CAS referenciada,
+`projection-report.json`, `checksums.sha256` e `build-result.json`. O Rails
+reserva primeiro a identidade da release em estado
 `draft`, fornece essa identidade em `build-context.json` e transforma o resultado
 validado em uma release publicável:
 
@@ -228,10 +228,11 @@ Nesta parte:
   `apps/hub-server/tmp/knowledge-builds/<job-id>/`;
 - aplicar timeout, limite de recursos, lock de geração e ambiente mínimo;
 - recusar código de saída diferente de zero;
-- validar `schemaVersion`, `engine.version`, `profile.name`, `profile.version`,
-  `profile.metadata.sourceDigestSha256`, as seis variantes de locale, identidade
-  da release, versões e fingerprints de schema, checksums, digests e o profile
-  metadata declarado por `build-result.json`;
+- validar `schemaVersion`, `builderVersion`, `buildVersion`,
+  `sourceDigestSha256`, as seis entradas de `locales`, identidade da release,
+  versões e fingerprints de schema, relatório de projeção, arquivo de checksums
+  e descritores do conjunto CAS declarados por `build-result.json`, além dos
+  objetos CAS enumerados em `checksums.sha256`;
 - exigir que todos os artefatos e objetos CAS declarados sejam íntegros e que o
   resultado esteja completo para os seis locales;
 - resolver somente caminhos relativos normalizados dentro do staging e validar
@@ -895,10 +896,11 @@ Cobrir:
 - contexto público com `releaseId`, geração e revisão coerentes com o draft;
 - predecessor do draft coerente com a cadeia global;
 - recusa de `build-result.json` ausente, malformado ou incompatível;
-- recusa de versão do motor, versão do perfil, `sourceDigestSha256`, checksum ou
+- recusa de `builderVersion`, `buildVersion`, `sourceDigestSha256`, checksum ou
   locale divergente;
 - recusa de fingerprint de schema divergente;
-- recusa de profile metadata ausente, inválido ou divergente;
+- recusa de contexto de release, relatório de projeção ou arquivo de checksums
+  ausente, inválido ou divergente;
 - recusa de caminho absoluto, com `..` ou fora do staging;
 - recusa de relatório ou banco cuja identidade pública diverge do draft;
 - ausência de alteração nos bancos depois da saída do builder;
@@ -978,8 +980,9 @@ Cobrir:
 - `tools/knowledge-builder` é o único compilador dos artefatos públicos.
 - O Rails invoca a CLI Rust e valida integralmente `build-result.json` antes de
   registrar os artefatos.
-- O Rails valida o profile metadata, os checksums e todos os artefatos declarados
-  por `build-result.json`.
+- O Rails valida identidade do builder e da release, digest da fonte, relatório
+  de projeção, checksums, artefatos descritos por `build-result.json` e objetos
+  CAS enumerados em `checksums.sha256`.
 - Toda release pública reserva sua identidade antes do build e os doze bancos
   registram exatamente essa identidade e seus respectivos locales.
 - O ambiente executável do Hub contém uma versão explícita do builder.

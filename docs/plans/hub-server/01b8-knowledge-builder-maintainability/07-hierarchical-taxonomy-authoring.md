@@ -43,7 +43,6 @@ table.
 - `data/knowledge` passa por auditoria, validação e build integral.
 - As dez taxonomias canônicas e suas referências estão consistentes antes da
   primeira edição desta parte.
-- A crate `artifact-builder` não integra este escopo.
 
 ## Escopo
 
@@ -291,8 +290,8 @@ Construir durante a validação um índice fechado por chave para cada taxonomia
 Esse índice oferece consulta por identidade sem varrer recursivamente a árvore
 a cada referência e conserva os metadados derivados necessários à compilação.
 
-O índice e a travessia pertencem ao domínio de `knowledge-builder`. Eles não
-entram no futuro contrato neutro de `artifact-builder`.
+O índice e a travessia pertencem ao domínio de `knowledge-builder` e permanecem
+internos ao compilador.
 
 ### 3.3 Consumidores Internos
 
@@ -639,7 +638,6 @@ geral da implementação.
 - alterar a hierarquia própria de `LifeEntity`;
 - alterar `entity_taxonomy_terms.sort_order` ou outros campos de ordem;
 - criar migrations, scripts de adoção ou suporte ao formato substituído;
-- implementar `artifact-builder`;
 - alterar consumo nos apps ou publicar artefatos.
 
 ## Critérios De Aceite

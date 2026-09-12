@@ -34,8 +34,6 @@ para esses conceitos. Descritores vacinais existem somente nos aliases.
 - A [Parte 1B.8.5](./05-test-topology-maintenance-guide.md) está concluída.
 - `data/knowledge` passa em `knowledge-builder validate`.
 - O build integral atual passa antes da primeira edição desta parte.
-- A crate `artifact-builder` ainda não entra no escopo; esta parte fecha o
-  contrato veterinário que ela recebe nas etapas seguintes.
 
 ## Escopo
 
@@ -59,7 +57,6 @@ Esta parte não altera:
 - `applicableTaxonIds` ou a taxonomia de vida;
 - produtos, mídia ou bancos do ramo `user`;
 - consumo do banco nos apps;
-- a arquitetura da futura crate `artifact-builder`;
 - contratos de distribuição do Hub.
 
 ## Invariantes
@@ -482,7 +479,6 @@ de considerar esta parte concluída.
 ## Fora Do Escopo
 
 - alterar rotas, repositories ou componentes dos apps;
-- introduzir a crate `artifact-builder`;
 - criar migrations, scripts de adoção ou suporte ao formato removido;
 - completar conteúdo ausente por inferência;
 - criar novas taxonomias de produto;
