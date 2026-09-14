@@ -5,9 +5,13 @@ pub(crate) const CONTENT_DIRECTORY_NAME: &str = "_content";
 pub(crate) const MEDIA_DIRECTORY_NAME: &str = "_media";
 pub(crate) const STANDARDS_DIRECTORY_NAME: &str = "_standards";
 pub(crate) const SECTION_STANDARDS_FILENAME: &str = "sections.json";
+pub(crate) const AUTHORING_DOCUMENTATION_FILENAME: &str = "README.md";
 pub(crate) const STRUCTURAL_MEDIA_PREFIX: &str = "./_media/";
 pub(crate) const MARKDOWN_MEDIA_PREFIX: &str = "../_media/";
 pub(crate) const COMPILED_MEDIA_NAMESPACE: &str = "media";
 
-pub(crate) const ROOT_TECHNICAL_FILES: [&str; 3] =
-    ["README.md", "inventory.json", "audit-report.json"];
+pub(crate) const ROOT_TECHNICAL_FILES: [&str; 3] = [
+    AUTHORING_DOCUMENTATION_FILENAME,
+    "inventory.json",
+    "audit-report.json",
+];

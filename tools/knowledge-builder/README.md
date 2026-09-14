@@ -216,6 +216,8 @@ data/knowledge/
 - `_content` exige os seis documentos quando a entidade declara
   `sectionStandardKey`;
 - `_media` contém somente arquivos referenciados pela entidade proprietária;
+- `README.md` é documentação autoral não semântica permitida fora dos
+  diretórios reservados;
 - nomes reservados desconhecidos, recursos órfãos, symlinks e arquivos especiais
   são recusados;
 - pastas sem `_` são organização editorial e podem ser movidas sem alterar a

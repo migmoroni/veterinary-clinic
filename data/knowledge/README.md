@@ -73,6 +73,11 @@ manifesto proprietário, symlink, arquivo especial ou arquivo técnico fora
 desse envelope é recusado. Diretórios sem `_` continuam livres para organização
 editorial e não produzem identidade ou relações.
 
+`README.md` pode documentar qualquer diretório editorial não reservado. Ele não
+participa do digest, do inventário nem da projeção. Outros arquivos livres
+continuam proibidos; dentro de `_standards`, `_content` e `_media`, aplicam-se
+exclusivamente as regras desses namespaces.
+
 ## Locales
 
 Todo mapa localizado possui exatamente, nesta ordem:

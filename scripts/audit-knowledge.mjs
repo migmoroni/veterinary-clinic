@@ -292,7 +292,7 @@ for (const { relative, manifest } of entries) {
 	}
 }
 
-const markdownFiles = tree.files.filter((file) => file.endsWith('.md') && file !== path.join(knowledgeRoot, 'README.md'));
+const markdownFiles = tree.files.filter((file) => file.endsWith('.md') && path.basename(file) !== 'README.md');
 const editorialEntities = entries.filter(({ manifest }) => manifest.sectionStandardKey !== undefined);
 const standardReferences = editorialEntities.length;
 const consumedStandards = new Set(editorialEntities.map(({ manifest }) => manifest.sectionStandardKey));

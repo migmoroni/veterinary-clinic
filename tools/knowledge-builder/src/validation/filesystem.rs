@@ -4,8 +4,8 @@ use super::{
     Diagnostic, KnowledgeLocale, MediaAsset, SourceEntry, ENTITY_MANIFEST_FILENAME, LOCALES,
 };
 use crate::contracts::source_layout::{
-    CONTENT_DIRECTORY_NAME, MEDIA_DIRECTORY_NAME, ROOT_TECHNICAL_FILES, SECTION_STANDARDS_FILENAME,
-    STANDARDS_DIRECTORY_NAME,
+    AUTHORING_DOCUMENTATION_FILENAME, CONTENT_DIRECTORY_NAME, MEDIA_DIRECTORY_NAME,
+    ROOT_TECHNICAL_FILES, SECTION_STANDARDS_FILENAME, STANDARDS_DIRECTORY_NAME,
 };
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -186,6 +186,7 @@ pub(super) fn discover_files(
                     None if directory == root && ROOT_TECHNICAL_FILES.contains(&name.as_str()) => {
                         files.push(path);
                     }
+                    None if name == AUTHORING_DOCUMENTATION_FILENAME => {}
                     None => diagnostics.push(Diagnostic::source(
                         &path,
                         format!("unrecognized source file {name}"),
@@ -348,6 +349,15 @@ mod tests {
         let entity = root.join("domain/arbitrary/editorial/depth");
         fs::create_dir_all(&entity).unwrap();
         fs::write(entity.join(ENTITY_MANIFEST_FILENAME), b"{}").unwrap();
+        fs::write(entity.join(AUTHORING_DOCUMENTATION_FILENAME), b"docs").unwrap();
+        fs::write(
+            entity
+                .parent()
+                .unwrap()
+                .join(AUTHORING_DOCUMENTATION_FILENAME),
+            b"docs",
+        )
+        .unwrap();
         let mut diagnostics = Vec::new();
         let files = discover_files(&root, &mut diagnostics).unwrap();
         assert!(diagnostics.is_empty());

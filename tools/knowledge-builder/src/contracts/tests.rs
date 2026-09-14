@@ -8,9 +8,9 @@ use super::{
     database::{SYSTEM_DATABASE, SYSTEM_MEDIA_DATABASE},
     locale::{KnowledgeLocale, LOCALES},
     source_layout::{
-        COMPILED_MEDIA_NAMESPACE, CONTENT_DIRECTORY_NAME, ENTITY_MANIFEST_FILENAME,
-        MARKDOWN_MEDIA_PREFIX, MEDIA_DIRECTORY_NAME, SECTION_STANDARDS_FILENAME,
-        STANDARDS_DIRECTORY_NAME, STRUCTURAL_MEDIA_PREFIX,
+        AUTHORING_DOCUMENTATION_FILENAME, COMPILED_MEDIA_NAMESPACE, CONTENT_DIRECTORY_NAME,
+        ENTITY_MANIFEST_FILENAME, MARKDOWN_MEDIA_PREFIX, MEDIA_DIRECTORY_NAME,
+        SECTION_STANDARDS_FILENAME, STANDARDS_DIRECTORY_NAME, STRUCTURAL_MEDIA_PREFIX,
     },
     taxonomy::{taxonomy_domains, taxonomy_spec, TaxonomyCardinality, CANONICAL_TAXONOMIES},
     version::*,
@@ -72,6 +72,7 @@ fn source_layout_namespace_is_closed_and_distinct_from_compiled_media() {
     assert_eq!(MEDIA_DIRECTORY_NAME, "_media");
     assert_eq!(STANDARDS_DIRECTORY_NAME, "_standards");
     assert_eq!(SECTION_STANDARDS_FILENAME, "sections.json");
+    assert_eq!(AUTHORING_DOCUMENTATION_FILENAME, "README.md");
     assert_eq!(STRUCTURAL_MEDIA_PREFIX, "./_media/");
     assert_eq!(MARKDOWN_MEDIA_PREFIX, "../_media/");
     assert_eq!(COMPILED_MEDIA_NAMESPACE, "media");
