@@ -218,8 +218,9 @@ provider externo.
   dessas fronteiras pertence ao app, ao Rails ou a um package de runtime.
 - `biomedical/` reúne `life`, `conditions`, `active-ingredients` e suas
   taxonomias. `catalog/` reúne `products`, `manufacturers` e suas taxonomias.
-  Esses caminhos organizam propriedade editorial e não substituem os contratos
-  explícitos de cada `_entity.json`.
+  Cada coleção separa os vocabulários em `taxonomies/` e os dados autorais em
+  `editorial/`. Esses caminhos organizam propriedade editorial e não substituem
+  os contratos explícitos de cada `_entity.json`.
 - `geo/` é um domínio de conhecimento compartilhado. Localizações usam
   `entityType: "geo_place"`; raças e outros domínios apenas referenciam seus IDs
   conforme o papel exercido pela relação.

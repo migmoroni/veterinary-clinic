@@ -49,15 +49,15 @@ Os dados fonte ficam organizados por domínio e diretório de entidade:
 
 ```text
 data/knowledge/
+├── _standards/
+│   └── sections.json
+├── biomedical/
+│   ├── active-ingredients/{taxonomies,editorial}/
+│   ├── conditions/{taxonomies,editorial}/
+│   └── life/{taxonomies,editorial}/
 ├── catalog/
-│   ├── products/
-│   ├── manufacturers/
-│   ├── active-ingredients/
-│   ├── conditions/
-│   └── taxonomies/
-├── animals/
-│   ├── breeds/
-│   └── taxonomies/
+│   ├── manufacturers/{taxonomies,editorial}/
+│   └── products/{taxonomies,editorial}/
 ├── geo/
 │   └── places/
 └── clinical/

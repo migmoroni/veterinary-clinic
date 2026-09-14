@@ -345,7 +345,7 @@ mod tests {
     #[test]
     fn discovers_only_the_reserved_manifest_at_arbitrary_depth() {
         let root = root("deep-manifest");
-        let entity = root.join("catalog/arbitrary/editorial/depth");
+        let entity = root.join("domain/arbitrary/editorial/depth");
         fs::create_dir_all(&entity).unwrap();
         fs::write(entity.join(ENTITY_MANIFEST_FILENAME), b"{}").unwrap();
         let mut diagnostics = Vec::new();

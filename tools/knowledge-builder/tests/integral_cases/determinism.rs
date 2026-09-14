@@ -28,7 +28,7 @@ fn normalize_search(value: &str) -> String {
 }
 
 #[test]
-fn validates_and_builds_all_locales_deterministically() {
+fn validates_and_builds_all_locales_deterministically_across_editorial_layouts() {
     let validated = validate(source_root()).expect("canonical source must validate");
     assert!(validated.entity_count() > 0);
     assert!(validated.relation_count() > 0);
@@ -43,9 +43,18 @@ fn validates_and_builds_all_locales_deterministically() {
     assert_eq!(first.locales.len(), LOCALES.len());
     assert_eq!(first.source_digest_sha256, validated.source_digest_sha256());
 
+    let second_source = TestDirectory::new("relocated-source");
+    copy_tree(&source_root(), second_source.path());
+    let manifest = find_manifest_by_type(second_source.path(), "manufacturer")
+        .expect("copied source contains a manufacturer");
+    let entity_directory = manifest.parent().unwrap();
+    let relocated = second_source.path().join("arbitrary/editorial/entity");
+    fs::create_dir_all(relocated.parent().unwrap()).unwrap();
+    fs::rename(entity_directory, &relocated).unwrap();
+
     let second_output = TestDirectory::new("second-build");
     let second = fresh_build(&BuildOptions {
-        source: source_root(),
+        source: second_source.path().to_path_buf(),
         output: second_output.path().to_path_buf(),
         context: context_path(),
     })
@@ -54,6 +63,10 @@ fn validates_and_builds_all_locales_deterministically() {
     assert_eq!(
         fs::read(first_output.path().join(&first.checksum_file)).unwrap(),
         fs::read(second_output.path().join(&second.checksum_file)).unwrap()
+    );
+    assert_eq!(
+        fs::read(first_output.path().join("versions/1/build-result.json")).unwrap(),
+        fs::read(second_output.path().join("versions/1/build-result.json")).unwrap()
     );
     let report: serde_json::Value = serde_json::from_slice(
         &fs::read(first_output.path().join(&first.projection.report_path)).unwrap(),

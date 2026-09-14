@@ -465,7 +465,7 @@ genérico de providers nesta parte.
 ```text
 knowledge-media publish \
   --source data/knowledge \
-  --entity catalog/products/<diretório>/_entity.json \
+  --entity catalog/products/editorial/<diretório>/_entity.json \
   --asset-key cover \
   --file <arquivo-local>
 ```

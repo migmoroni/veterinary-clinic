@@ -28,6 +28,8 @@ Ao concluir esta parte:
   taxonomias proprietárias;
 - `catalog/` reúne somente `products`, `manufacturers` e suas taxonomias
   proprietárias;
+- cada coleção separa `taxonomies/` de `editorial/`, e todas as entidades
+  autorais vivem sob `editorial/`;
 - `clinical/`, `geo/` e `_standards/` conservam suas responsabilidades;
 - cada diretório de entidade é transportado integralmente, incluindo
   `_entity.json`, `_content` e `_media` quando presentes;
@@ -132,30 +134,33 @@ data/knowledge/
 │   │   │   │   └── _entity.json
 │   │   │   └── types/
 │   │   │       └── _entity.json
-│   │   └── <active-ingredient>/
-│   │       ├── _entity.json
-│   │       ├── _content/
-│   │       └── _media/
+│   │   └── editorial/
+│   │       └── <active-ingredient>/
+│   │           ├── _entity.json
+│   │           ├── _content/
+│   │           └── _media/
 │   ├── conditions/
 │   │   ├── taxonomies/
 │   │   │   ├── classifications/
 │   │   │   │   └── _entity.json
 │   │   │   └── types/
 │   │   │       └── _entity.json
-│   │   └── <condition>/
-│   │       ├── _entity.json
-│   │       ├── _content/
-│   │       └── _media/
+│   │   └── editorial/
+│   │       └── <condition>/
+│   │           ├── _entity.json
+│   │           ├── _content/
+│   │           └── _media/
 │   └── life/
 │       ├── taxonomies/
 │       │   ├── sizes/
 │       │   │   └── _entity.json
 │       │   └── types/
 │       │       └── _entity.json
-│       └── <organização-editorial>/<life-entity>/
-│           ├── _entity.json
-│           ├── _content/
-│           └── _media/
+│       └── editorial/
+│           └── <organização-editorial>/<life-entity>/
+│               ├── _entity.json
+│               ├── _content/
+│               └── _media/
 ├── catalog/
 │   ├── manufacturers/
 │   │   ├── taxonomies/
@@ -163,10 +168,11 @@ data/knowledge/
 │   │   │   │   └── _entity.json
 │   │   │   └── types/
 │   │   │       └── _entity.json
-│   │   └── <manufacturer>/
-│   │       ├── _entity.json
-│   │       ├── _content/
-│   │       └── _media/
+│   │   └── editorial/
+│   │       └── <manufacturer>/
+│   │           ├── _entity.json
+│   │           ├── _content/
+│   │           └── _media/
 │   └── products/
 │       ├── taxonomies/
 │       │   ├── classifications/
@@ -175,10 +181,11 @@ data/knowledge/
 │       │   │   └── _entity.json
 │       │   └── types/
 │       │       └── _entity.json
-│       └── <organização-editorial>/<product>/
-│           ├── _entity.json
-│           ├── _content/
-│           └── _media/
+│       └── editorial/
+│           └── <organização-editorial>/<product>/
+│               ├── _entity.json
+│               ├── _content/
+│               └── _media/
 ├── clinical/
 │   └── treatment-protocols/
 ├── geo/
@@ -192,25 +199,38 @@ Os exemplos de `_content` e `_media` indicam recursos opcionais permitidos pelo
 contrato da entidade. A implementação não cria diretórios vazios para completar
 o desenho.
 
-`biomedical`, `catalog`, os diretórios de coleção e `taxonomies` são apenas
-organizacionais. Eles não recebem `_entity.json` próprio.
+`biomedical`, `catalog`, os diretórios de coleção, `taxonomies` e `editorial`
+são apenas organizacionais. Eles não recebem `_entity.json` próprio.
+
+Em cada coleção:
+
+- `taxonomies/` contém os manifestos dos vocabulários controlados daquele tipo
+  de entidade;
+- `editorial/` contém a árvore livre de entidades, seus documentos localizados
+  e suas mídias;
+- subpastas abaixo de `editorial/` podem ser reorganizadas sem alterar a
+  identidade ou a projeção dos itens.
 
 ## Mapa De Movimentação
 
 | Origem | Destino |
 |---|---|
-| `life/` | `biomedical/life/` |
-| `catalog/active-ingredients/` | `biomedical/active-ingredients/` |
-| `catalog/conditions/` | `biomedical/conditions/` |
+| `life/taxonomies/sizes/` | `biomedical/life/taxonomies/sizes/` |
+| `life/taxonomies/types/` | `biomedical/life/taxonomies/types/` |
+| Árvore de entidades sob `life/`, sem `taxonomies/` | `biomedical/life/editorial/`, preservando a subárvore |
+| Entidades sob `catalog/active-ingredients/` | `biomedical/active-ingredients/editorial/`, preservando a subárvore |
+| Entidades sob `catalog/conditions/` | `biomedical/conditions/editorial/`, preservando a subárvore |
 | `catalog/taxonomies/active-ingredient-classifications/` | `biomedical/active-ingredients/taxonomies/classifications/` |
 | `catalog/taxonomies/active-ingredient-types/` | `biomedical/active-ingredients/taxonomies/types/` |
 | `catalog/taxonomies/condition-classifications/` | `biomedical/conditions/taxonomies/classifications/` |
 | `catalog/taxonomies/condition-types/` | `biomedical/conditions/taxonomies/types/` |
 | `catalog/taxonomies/manufacturer-classifications/` | `catalog/manufacturers/taxonomies/classifications/` |
 | `catalog/taxonomies/manufacturer-types/` | `catalog/manufacturers/taxonomies/types/` |
+| Entidades sob `catalog/manufacturers/` | `catalog/manufacturers/editorial/`, preservando a subárvore |
 | `catalog/taxonomies/product-classifications/` | `catalog/products/taxonomies/classifications/` |
 | `catalog/taxonomies/product-targets/` | `catalog/products/taxonomies/targets/` |
 | `catalog/taxonomies/product-types/` | `catalog/products/taxonomies/types/` |
+| Árvore de entidades sob `catalog/products/` | `catalog/products/editorial/`, preservando a subárvore |
 
 O diretório `catalog/taxonomies/` deixa de existir quando todas as taxonomias
 estão junto de seus proprietários editoriais. Os manifestos movidos conservam
@@ -220,6 +240,8 @@ integralmente `id`, `domain`, `purpose`, `terms` e `localizedContent`.
 
 - A posição no filesystem nunca define `entityType`, ID, taxonomia, relação,
   rank, pai, ordem, locale ou tabela de destino.
+- Cada coleção de `biomedical` e `catalog` separa vocabulários em
+  `taxonomies/` e dados autorais em `editorial/`.
 - O builder descobre `_entity.json` recursivamente em qualquer diretório
   editorial permitido.
 - Entidades são ordenadas por `(entityType, id)` antes do digest e da projeção.
@@ -384,6 +406,8 @@ projectors, schemas ou persistência que já operam por contratos lógicos.
 - [ ] `biomedical` contém `active-ingredients`, `conditions`, `life` e suas
       taxonomias.
 - [ ] `catalog` contém `manufacturers`, `products` e suas taxonomias.
+- [ ] Cada uma das cinco coleções possui `taxonomies/` e `editorial/`, sem
+      entidades diretamente na raiz da coleção.
 - [ ] `catalog/taxonomies` não existe.
 - [ ] Nenhum diretório meramente organizacional possui `_entity.json`.
 - [ ] Todos os arquivos de cada entidade permanecem juntos.
@@ -398,4 +422,3 @@ projectors, schemas ou persistência que já operam por contratos lógicos.
 - [ ] Nenhuma migration, camada paralela, fallback ou cópia da fonte é criada.
 - [ ] A documentação ativa usa somente a disposição final.
 - [ ] Testes específicos e `$validate-workspace` passam integralmente.
-

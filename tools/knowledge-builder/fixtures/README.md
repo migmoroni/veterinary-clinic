@@ -3,8 +3,9 @@
 As fixtures são autocontidas e exercitam contratos do compilador sem copiar o
 catálogo canônico:
 
-- `valid-minimal/`: fonte mínima que passa por validação e projeção, com as dez
-  taxonomias, árvore `life:type` completa nos dez ranks, páginas `LifeEntity`
+- `valid-minimal/`: fonte mínima no layout canônico de domínios que passa por
+  validação e projeção, com as onze taxonomias, árvore `life:type` completa
+  nos dez ranks, páginas `LifeEntity`
   opcionais com identidade independente, classificações
   ausentes e independentes, métricas por sexo e estágio, uma variedade,
   aplicabilidade de produto e protocolo e uma localidade resolvida;

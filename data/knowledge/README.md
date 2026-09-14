@@ -9,21 +9,36 @@ somente os artefatos finalizados pelo `knowledge-builder`.
 ```text
 data/knowledge/
 ├── _standards/sections.json
-├── catalog/
+├── biomedical/
 │   ├── active-ingredients/
+│   │   ├── taxonomies/{classifications,types}/
+│   │   └── editorial/<active-ingredient>/
 │   ├── conditions/
+│   │   ├── taxonomies/{classifications,types}/
+│   │   └── editorial/<condition>/
+│   └── life/
+│       ├── taxonomies/{sizes,types}/
+│       └── editorial/eukaryota/animalia/.../<taxon>/
+├── catalog/
 │   ├── manufacturers/
-│   ├── products/
-│   └── taxonomies/
+│   │   ├── taxonomies/{classifications,types}/
+│   │   └── editorial/<manufacturer>/
+│   └── products/
+│       ├── taxonomies/{classifications,targets,types}/
+│       └── editorial/<organização>/<product>/
 ├── clinical/treatment-protocols/
-├── geo/places/
-└── life/
-    ├── taxonomies/
-    │   ├── types/_entity.json
-    │   └── sizes/_entity.json
-    └── eukaryota/
-        └── animalia/.../<taxon>/_entity.json
+└── geo/places/
 ```
+
+`biomedical` reúne ciência, saúde e farmacologia independentes de itens
+comerciais: organismos, condições e princípios ativos. `catalog` reúne
+produtos e fabricantes. `clinical` organiza a aplicação clínica reutilizável,
+`geo` oferece localidades compartilhadas e `_standards` mantém os contratos
+editoriais transversais.
+
+Cada coleção de `biomedical` e `catalog` separa seus vocabulários controlados
+em `taxonomies/` e suas entidades autorais em `editorial/`. Esses diretórios
+organizam propriedade editorial e não recebem manifesto próprio.
 
 O scanner descobre recursivamente cada `_entity.json`. Um diretório possui
 manifesto somente quando representa uma entidade real; sua profundidade não

@@ -185,6 +185,13 @@ A fonte contém entidades de catálogo e vida, localidades geográficas,
 taxonomias, relações semânticas, protocolos, conteúdo localizado, padrões
 editoriais, documentos Markdown e mídia pertencente às entidades.
 
+Na organização canônica, `biomedical` contém `active-ingredients`, `conditions`
+e `life`; `catalog` contém `manufacturers` e `products`. Cada uma dessas cinco
+coleções separa vocabulários em `taxonomies/` e entidades em `editorial/`.
+`clinical`, `geo` e `_standards` permanecem domínios transversais. Essa
+disposição organiza a autoria; tipo, identidade, relações e projeção continuam
+determinados exclusivamente pelos manifestos.
+
 O namespace técnico reservado é:
 
 ```text

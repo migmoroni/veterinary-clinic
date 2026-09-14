@@ -310,7 +310,7 @@ fn minimal_fixture_rejects_missing_and_duplicate_taxonomy_owners() {
 
     let missing = TestDirectory::new("minimal-missing-taxonomy");
     copy_tree(&fixture, missing.path());
-    fs::remove_dir_all(missing.path().join("taxonomies/product-target")).unwrap();
+    fs::remove_dir_all(missing.path().join("catalog/products/taxonomies/target")).unwrap();
     let error = validate(missing.path()).unwrap_err().to_string();
     assert!(error.contains("missing canonical taxonomy product:target"));
 
@@ -318,12 +318,14 @@ fn minimal_fixture_rejects_missing_and_duplicate_taxonomy_owners() {
     copy_tree(&fixture, duplicate.path());
     let original = duplicate
         .path()
-        .join("taxonomies/product-target")
+        .join("catalog/products/taxonomies/target")
         .join(ENTITY_MANIFEST_FILENAME);
     let mut taxonomy: serde_json::Value =
         serde_json::from_slice(&fs::read(&original).unwrap()).unwrap();
     taxonomy["id"] = serde_json::Value::String("fixture-product-target-duplicate".to_string());
-    let duplicate_directory = duplicate.path().join("taxonomies/product-target-duplicate");
+    let duplicate_directory = duplicate
+        .path()
+        .join("catalog/products/taxonomies/target-duplicate");
     fs::create_dir_all(&duplicate_directory).unwrap();
     fs::write(
         duplicate_directory.join(ENTITY_MANIFEST_FILENAME),
