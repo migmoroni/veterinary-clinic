@@ -9,8 +9,10 @@ o `CAS/system` compartilhado.
 Esta parte conclui a separação entre autoria, compilação e consumo:
 
 ```text
-data/knowledge       autoria de conteúdo
-knowledge-builder    validação e compilação
+data/knowledge       autoria de conteúdo e descritores de mídia
+R2 editorial         bytes fonte por SHA-256
+knowledge-media      sincronização para cache verificado
+knowledge-builder    validação e compilação offline
 apps e packages      leitura dos artefatos
 ```
 
@@ -22,11 +24,14 @@ saída preparada.
 ## Pré-requisito
 
 A
-[Parte 1B.8.9](./01b8-knowledge-builder-maintainability/09-editorial-section-standards.md)
-está concluída. O `knowledge-builder` valida e compila o domínio veterinário,
-materializa SQLite e CAS, verifica integralmente a saída e publica uma
-`build_version` válida com os seis pares de bancos e o CAS compartilhado. Os
-artefatos usam schema `7` de `system` e schema `2` de `system_media`.
+[Parte 1B.8.11](./01b8-knowledge-builder-maintainability/11-r2-canonical-media.md)
+está concluída.
+`tools/knowledge-media` sincroniza do R2 para o cache local os objetos declarados
+em `data/knowledge`, e o `knowledge-builder` valida e compila o domínio
+veterinário sem acesso à rede, materializa SQLite e CAS, verifica integralmente
+a saída e publica uma `build_version` válida com os seis pares de bancos e o CAS
+compartilhado. Os artefatos usam schema `7` de `system` e schema `2` de
+`system_media`.
 `life:type` está projetada em
 `taxonomy_terms` como única adjacency list da vida; labels pertencem aos termos,
 e páginas opcionais em `life_reference_items` se associam por
@@ -72,6 +77,8 @@ e páginas opcionais em `life_reference_items` se associam por
 - preparar os builds empacotáveis por lista de locales;
 - manter o i18n de interface;
 - preservar a API pública de negócio quando ela continuar semanticamente válida.
+- impedir qualquer acesso do app, de `core-local` ou do `engine` ao bucket R2
+  editorial e ao cache de autoria.
 
 Esta parte usa artefatos integrais em `build/knowledge-artifacts`. Aquisição por
 manifest, instalação de releases, bootstraps e deltas pertencem à Parte 4.
@@ -80,7 +87,10 @@ manifest, instalação de releases, bootstraps e deltas pertencem à Parte 4.
 
 ```mermaid
 flowchart LR
-    DATA["data/knowledge"] --> BUILDER["knowledge-builder Rust"]
+    DATA["data/knowledge<br/>descritores"] --> BUILDER["knowledge-builder Rust<br/>offline"]
+    R2["R2 editorial"] --> SYNC["knowledge-media sync"]
+    SYNC --> CACHE["cache local verificado"]
+    CACHE --> BUILDER
     BUILDER --> OUTPUT["build/knowledge-artifacts"]
     OUTPUT --> PREPARE["Validar e instalar<br/>locale selecionado"]
     PREPARE --> ACTIVE["app_database_dir + vault/system"]
@@ -97,16 +107,27 @@ não dispara geração implicitamente.
 
 ### `data/knowledge`
 
-- contém entidades, localizações, referências de mídia e padrões editoriais de
-  autoria; os padrões já chegam resolvidos em `content_json.sections` nos
-  artefatos;
+- contém entidades, localizações, descritores e referências de mídia por
+  `assetKey` e padrões editoriais de autoria; os padrões já chegam resolvidos
+  em `content_json.sections` nos artefatos;
+- não contém os bytes das mídias editoriais nem configuração do R2;
 - não é importado por código do app;
 - não é servido diretamente ao runtime;
 - não contém TypeScript executável.
 
+### `tools/knowledge-media` E R2 Editorial
+
+- guardam e sincronizam exclusivamente os bytes fonte descritos em
+  `data/knowledge`;
+- hidratam o cache usado na produção local dos artefatos;
+- não participam do runtime nem da instalação executada pelo app;
+- não expõem credenciais ou localização de autoria aos artefatos compilados.
+
 ### `tools/knowledge-builder`
 
 - valida e compila a fonte veterinária;
+- lê mídias exclusivamente do cache content-addressed informado na CLI;
+- não acessa R2 ou qualquer outra rede;
 - materializa os bancos públicos e objetos CAS;
 - verifica integridade, checksums, rows, evidências e árvore de saída;
 - publica versões locais de maneira atômica e relata o conjunto produzido;

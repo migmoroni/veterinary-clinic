@@ -35,12 +35,14 @@ pertencem a outro servidor.
 20. [Parte 1B.8.7: autoria taxonômica hierárquica](./01b8-knowledge-builder-maintainability/07-hierarchical-taxonomy-authoring.md)
 21. [Parte 1B.8.8: taxonomia hierárquica da vida](./01b8-knowledge-builder-maintainability/08-life-hierarchy-taxonomy.md)
 22. [Parte 1B.8.9: padrões editoriais de seções](./01b8-knowledge-builder-maintainability/09-editorial-section-standards.md)
-23. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
-24. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
-25. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
-26. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
-27. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
-28. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
+23. [Parte 1B.8.10: organização canônica por domínios](./01b8-knowledge-builder-maintainability/10-knowledge-domain-layout.md)
+24. [Parte 1B.8.11: mídias canônicas no Cloudflare R2](./01b8-knowledge-builder-maintainability/11-r2-canonical-media.md)
+25. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
+26. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
+27. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
+28. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
+29. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
+30. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
 
 ## Referências Futuras Não Sequenciais
 
@@ -51,7 +53,7 @@ de implementação. Sua presença não autoriza execução nem alteração do co
 vigente sem uma solicitação explícita.
 
 A pré-fase, as subpartes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3, 1B.4, 1B.5,
-1B.6, 1B.7, 1B.7A, 1B.7B, 1B.8.1 a 1B.8.9, 1C e as partes
+1B.6, 1B.7, 1B.7A, 1B.7B, 1B.8.1 a 1B.8.11, 1C e as partes
 seguintes são executadas em ordem. Cada documento termina com testes e critérios
 de aceite próprios.
 
@@ -82,6 +84,8 @@ flowchart LR
     P1B87["Parte 1B.8.7<br/>árvores taxonômicas"]
     P1B88["Parte 1B.8.8<br/>hierarquia de vida"]
     P1B89["Parte 1B.8.9<br/>padrões editoriais"]
+    P1B810["Parte 1B.8.10<br/>organização por domínios"]
+    P1B811["Parte 1B.8.11<br/>mídias canônicas no R2"]
     P1C["Parte 1C<br/>consumo local"]
     P2["Parte 2<br/>base Rails + contratos"]
     P3["Parte 3<br/>Rails orquestra builder + releases"]
@@ -89,7 +93,7 @@ flowchart LR
     P5["Parte 5<br/>updater Tauri local"]
     P6["Parte 6<br/>GitHub + CI/CD"]
 
-    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1B7 --> P1B7A --> P1B7B --> P1B81 --> P1B82 --> P1B83 --> P1B84 --> P1B85 --> P1B86 --> P1B87 --> P1B88 --> P1B89 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
+    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1B7 --> P1B7A --> P1B7B --> P1B81 --> P1B82 --> P1B83 --> P1B84 --> P1B85 --> P1B86 --> P1B87 --> P1B88 --> P1B89 --> P1B810 --> P1B811 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
 ```
 
 As mudanças de origem dos artefatos são deliberadas:
@@ -97,16 +101,21 @@ As mudanças de origem dos artefatos são deliberadas:
 ```mermaid
 flowchart TB
     subgraph S1["Partes 1A a 1C"]
-        D1["data/knowledge<br/>fonte canônica"] --> G1["knowledge-builder Rust"]
+        D1["data/knowledge<br/>metadados canônicos"] --> G1["knowledge-builder Rust"]
+        R21["R2 editorial<br/>bytes por SHA-256"] --> M1["knowledge-media sync"]
+        M1 --> C1["cache local verificado"]
+        C1 --> G1
         G1 --> B1["build/knowledge-artifacts"]
         B1 --> A1["Apps em desenvolvimento e build"]
     end
 
     subgraph S2["Partes 3 e 4"]
         D2["data/knowledge"] --> G2["knowledge-builder Rust"]
-        R2["Rails: jobs, releases e manifest"] --> G2
-        G2 --> R2
-        R2 --> H2["API do hub-server"]
+        R22["R2 editorial"] --> M2["knowledge-media sync"]
+        M2 --> G2
+        HUB2["Rails: jobs, releases e manifest"] --> G2
+        G2 --> HUB2
+        HUB2 --> H2["API do hub-server"]
         H2 --> A2["Apps"]
     end
 
@@ -137,9 +146,9 @@ entidade pode manter classificações opcionais de origem, porte e métricas
 corporais.
 O mesmo contrato representa organismos que podem ser pacientes e organismos
 etiológicos associados a condições clínicas; o papel pertence ao domínio
-consumidor. Os diretórios servem somente à organização editorial. A Parte
-1B.7B reserva `_entity.json`, `_content` e `_media` para a infraestrutura de
-autoria e mantém os demais diretórios livres de significado implícito. A Parte
+consumidor. Os diretórios servem somente à organização editorial. O contrato
+final reserva `_entity.json` e `_content` para a infraestrutura de autoria e
+mantém os demais diretórios livres de significado implícito. A Parte
 1B.8.1 consolida rows e persistência, a Parte 1B.8.2 separa
 inventário, ownership e recibos confirmados, a Parte 1B.8.3 decompõe a
 verificação integral, a Parte 1B.8.4 estrutura erros e fronteiras, a Parte
@@ -151,10 +160,15 @@ A Parte 1B.8.8 representa a ancestralidade da vida na taxonomia `life:type`,
 com labels nos termos e páginas de conhecimento opcionais associadas por
 `LifeEntity.typeTermKey`. A Parte 1B.8.9 centraliza os mapas editoriais no
 registro reservado de padrões e mantém nas entidades somente a referência por
-`sectionStandardKey`. O `knowledge-builder` concentra a compilação do domínio,
-a materialização SQLite e CAS, a verificação integral e a publicação atômica da
-saída local. A Parte 1C faz os apps consumirem esses artefatos. A Parte 3 faz o
-`hub-server` invocar a mesma ferramenta e
+`sectionStandardKey`. A Parte 1B.8.10 organiza a fonte em `biomedical`,
+`catalog`, `clinical` e `geo`, mantendo os diretórios como propriedade editorial
+e os manifestos como fonte da semântica. A Parte 1B.8.11 mantém os descritores
+de mídia em `data/knowledge`, armazena os bytes canônicos no Cloudflare R2 e
+hidrata um cache local verificado por meio de `tools/knowledge-media`. O
+`knowledge-builder` concentra a compilação offline do domínio, a materialização
+SQLite e CAS, a verificação integral e a publicação atômica da saída local. A
+Parte 1C faz os apps consumirem esses artefatos. A Parte 3 faz o `hub-server`
+invocar as mesmas ferramentas e
 assumir releases, assinatura e publicação. A Parte 4 substitui a aquisição local
 pelo contrato de distribuição do Hub. A Parte 6 acrescenta o GitHub como
 provider externo.
@@ -171,7 +185,11 @@ provider externo.
   concorrentes de outro gerenciador.
 - `tools/knowledge-builder/` é o binário Rust que valida e compila
   `data/knowledge`, materializa os bancos SQLite e o CAS, verifica toda a saída e
-  publica uma `build_version` local de maneira atômica.
+  publica uma `build_version` local de maneira atômica. Ele recebe um cache de
+  mídia explícito e não acessa a rede.
+- `tools/knowledge-media/` é a fronteira Rust de rede que publica os bytes
+  editoriais no R2, sincroniza os hashes declarados para o cache local e valida
+  esse cache antes da compilação.
 - A taxonomia `life:type` declara a floresta ordenada de domínio, reino, filo,
   classe, ordem, família, gênero, espécie, raça e variedade. A profundidade
   determina o rank e seus termos possuem os nomes localizados. Um termo pode ter
@@ -194,8 +212,14 @@ provider externo.
 - O verificador integral do builder relê bancos, relatórios, mídia e CAS sem
   reutilizar os writers e comprova schema, rows, integridade, checksums,
   evidências e árvore de saída antes da publicação.
-- `data/knowledge/` na raiz é a única fonte de autoria dos dados públicos. O
-  diretório não pertence ao app, ao Rails nem a um package de código.
+- `data/knowledge/` na raiz é a única fonte de autoria das identidades,
+  estruturas, relações, conteúdos e referências dos dados públicos. O bucket
+  R2 editorial conserva exclusivamente os bytes descritos por SHA-256. Nenhuma
+  dessas fronteiras pertence ao app, ao Rails ou a um package de runtime.
+- `biomedical/` reúne `life`, `conditions`, `active-ingredients` e suas
+  taxonomias. `catalog/` reúne `products`, `manufacturers` e suas taxonomias.
+  Esses caminhos organizam propriedade editorial e não substituem os contratos
+  explícitos de cada `_entity.json`.
 - `geo/` é um domínio de conhecimento compartilhado. Localizações usam
   `entityType: "geo_place"`; raças e outros domínios apenas referenciam seus IDs
   conforme o papel exercido pela relação.
@@ -213,12 +237,14 @@ provider externo.
 - A source `hub_server` de prioridade 1 é o caminho padrão para descoberta do
   manifest e entrega dos pacotes.
 - GitHub Releases é o primeiro provider externo de artefatos versionados.
-- Cloudflare R2, GitLab e IPFS ficam previstos no contrato e desativados até suas
-  fases próprias.
+- Cloudflare R2 como armazenamento editorial dos bytes fonte entra na Parte
+  1B.8.11. Cloudflare R2 como provider de artefatos publicados, GitLab e IPFS
+  permanecem desativados até suas fases próprias.
 - Os dados fonte de conhecimento são organizados por domínio e entidade. Cada
   entidade possui `_entity.json` para estrutura, composição, relações e todo
   conteúdo localizado simples, `_content/` com um documento Markdown por locale
-  para as seções editoriais e `_media/` com os bytes editoriais referenciados.
+  para as seções editoriais e descritores de mídia por `assetKey`. Os bytes
+  editoriais ficam no bucket R2 de autoria, endereçados por SHA-256.
 - `localizedContent` contém diretamente mapas dos seis locales. Ele não contém
   caminhos de arquivos; campos escalares e listas possuem tipos definidos pelo
   schema do objeto proprietário.
@@ -286,9 +312,11 @@ provider externo.
   o resultado deterministicamente e projeta somente a representação compilada
   segura. O digest da fonte usa o modelo semântico canônico, sem depender de
   caminhos editoriais de conteúdo.
-- Mídias de autoria usam nomes e caminhos relativos legíveis. O builder deriva
-  uma `media_key`, calcula o SHA-256, reescreve as referências Markdown para o
-  contrato interno e registra `media_key -> contentHash` em `system_media`.
+- Mídias de autoria usam `assetKey` estável no `_entity.json` e no Markdown.
+  Cada descritor registra SHA-256, tipo MIME e tamanho. O sincronizador obtém os
+  bytes do R2 para um cache verificado, e o builder deriva a `media_key`,
+  reescreve as referências Markdown para o contrato interno e registra
+  `media_key -> contentHash` em `system_media`.
 - Cada locale possui seu próprio `system_media.db`, que indexa somente as mídias
   exigidas por aquele conjunto localizado.
 - `CAS/system` contém objetos imutáveis endereçados por SHA-256.
@@ -329,8 +357,12 @@ provider externo.
 
 ```mermaid
 flowchart LR
-    DATA["Dados públicos canônicos"] --> BUILDER["tools/knowledge-builder<br/>compilação, SQLite, CAS e verificação"]
+    DATA["Metadados públicos canônicos"] --> BUILDER["tools/knowledge-builder<br/>compilação, SQLite, CAS e verificação"]
+    R2SOURCE["R2 editorial<br/>bytes por SHA-256"] --> MEDIA["tools/knowledge-media<br/>publicação e sincronização"]
+    MEDIA --> CACHE["cache local verificado"]
+    CACHE --> BUILDER
     HUB["apps/hub-server<br/>jobs, releases, manifests e APIs"] --> BUILDER
+    HUB --> MEDIA
     BUILDER --> HUB
     HUB --> APP["apps/*<br/>consumo, validação e instalação"]
     HUB --> PROVIDERS["Providers externos<br/>réplicas e entrega de bytes"]
@@ -341,13 +373,19 @@ flowchart LR
 
 ```text
 data/knowledge/
-  autoria dos dados públicos canônicos
+  autoria dos dados públicos canônicos e descritores de mídia
+
+Cloudflare R2 editorial/
+  bytes fonte imutáveis identificados por SHA-256
+
+tools/knowledge-media/
+  publicação no R2, sincronização e verificação do cache local
 
 apps/hub-server/
   orquestração, publicação, manifests e APIs
 
 tools/knowledge-builder/
-  validação e compilação veterinária, materialização SQLite e CAS,
+  validação e compilação veterinária offline, materialização SQLite e CAS,
   verificação integral e publicação atômica
 
 apps/vet-app/
@@ -938,31 +976,34 @@ descobrir uma revisão incrementando URLs que não estejam declaradas.
 21. Implementar e validar a Parte 1B.8.7.
 22. Implementar e validar a Parte 1B.8.8.
 23. Implementar e validar a Parte 1B.8.9.
-24. Implementar e validar a Parte 1C.
-25. Implementar e validar a Parte 2.
-26. Implementar e validar a Parte 3.
-27. Implementar e validar a Parte 4.
-28. Implementar e validar a Parte 5.
-29. Mover o projeto para o repositório dedicado.
-30. Implementar e validar a Parte 6.
+24. Implementar e validar a Parte 1B.8.10.
+25. Implementar e validar a Parte 1B.8.11.
+26. Implementar e validar a Parte 1C.
+27. Implementar e validar a Parte 2.
+28. Implementar e validar a Parte 3.
+29. Implementar e validar a Parte 4.
+30. Implementar e validar a Parte 5.
+31. Mover o projeto para o repositório dedicado.
+32. Implementar e validar a Parte 6.
 
 ## Expansões Previstas
 
-- **Cloudflare R2:** armazenamento de objetos por hash, cache imutável, upload
-  incremental e fallback HTTP.
+- **Cloudflare R2 para distribuição:** armazenamento e entrega dos artefatos
+  publicados, incluindo objetos CAS, com source própria no manifest.
 - **GitLab:** espelhamento do repositório, CI, releases e fallback de artefatos.
 - **IPFS:** CID em `system_media`, publicação de objetos e validação final pelo
   SHA-256 local antes da gravação.
 
-As sources dessas expansões permanecem no contrato com `enabled: false` até que
-tenham implementação, publicação e testes próprios.
+As sources de distribuição dessas expansões permanecem no contrato com
+`enabled: false` até que tenham implementação, publicação e testes próprios. O
+bucket R2 editorial da Parte 1B.8.11 não integra essas sources.
 
 ## Fora De Escopo
 
 - front-end web separado;
 - painel administrativo visual;
 - site público do projeto;
-- implementação de Cloudflare R2, GitLab ou IPFS;
+- implementação de Cloudflare R2 como provider de distribuição, GitLab ou IPFS;
 - servidor SaaS fechado;
 - dados privados de usuários;
 - sincronização privada;

@@ -14,8 +14,12 @@ com `CAS/system` compartilhado. Esta parte depende da
 
 ```mermaid
 flowchart LR
-    SOURCE["data/knowledge<br/>entidades canônicas"] --> JOB["Job Rails"]
-    JOB --> BUILDER["knowledge-builder Rust"]
+    SOURCE["data/knowledge<br/>entidades e descritores"] --> JOB["Job Rails"]
+    R2SOURCE["R2 editorial<br/>bytes por SHA-256"] --> SYNC["knowledge-media sync"]
+    JOB --> SYNC
+    SYNC --> CACHE["cache verificado"]
+    CACHE --> BUILDER["knowledge-builder Rust<br/>offline"]
+    JOB --> BUILDER
     BUILDER --> CANDIDATE["12 bancos + CAS<br/>build-result.json"]
     CANDIDATE -.-> WORKSPACE["Exportação até a Parte 4<br/>build/knowledge-artifacts"]
     CANDIDATE --> RELEASE["Rails: bootstrap ou delta<br/>por locale"]
@@ -65,15 +69,13 @@ Todo diretório de entidade segue o mesmo envelope físico:
 ```text
 <entity>/
 ├── _entity.json
-├── _content/
-│   ├── pt-BR.md
-│   ├── pt-PT.md
-│   ├── gn-PY.md
-│   ├── en-US.md
-│   ├── es-ES.md
-│   └── fr-FR.md
-└── _media/
-    └── <arquivo-editorial>.<extensão>
+└── _content/
+    ├── pt-BR.md
+    ├── pt-PT.md
+    ├── gn-PY.md
+    ├── en-US.md
+    ├── es-ES.md
+    └── fr-FR.md
 ```
 
 Os campos `entityType` e `id` formam a identidade usada pelos bancos e relações.
@@ -113,7 +115,21 @@ valores localizados simples e a composição do conteúdo Markdown:
     }
   },
   "sectionStandardKey": "life.profile",
-  "cover": "./_media/cover.webp"
+  "media": {
+    "assets": {
+      "cover": {
+        "contentHashSha256": "<sha256-hex>",
+        "contentType": "image/jpeg",
+        "sizeBytes": 245821
+      },
+      "detail": {
+        "contentHashSha256": "<sha256-hex>",
+        "contentType": "image/jpeg",
+        "sizeBytes": 317204
+      }
+    },
+    "cover": "cover"
+  }
 }
 ```
 
@@ -130,7 +146,7 @@ Conteúdo localizado da seção.
 
 ## Características
 
-![Texto alternativo](../_media/detail.webp "Legenda opcional")
+![Texto alternativo](knowledge-media://source/detail "Legenda opcional")
 ```
 
 Cada domínio possui um schema estrito de `_entity.json` e formatos esperados para
@@ -152,13 +168,14 @@ Produtos referenciam princípios ativos por IDs de entidades
 terapêuticos usam taxonomias próprias. A busca deriva seus termos dessas relações
 e não publica conceitos genéricos de busca como classificações de produto.
 
-O builder resolve caminhos relativos dentro da entidade, analisa Markdown por
-AST, aplica a allowlist, normaliza o AST deterministicamente e constrói o modelo
-semântico canônico. Em seguida calcula SHA-256, deriva uma `media_key` de
-`entityType`, `id` e caminho relativo, grava `media_key -> contentHash` no
-`system_media` aplicável e materializa o objeto no `CAS/system`. O conteúdo
-compilado seguro recebe referências `knowledge-media://asset/<media-key>`; a
-fonte de autoria nunca contém essa URI.
+O job sincroniza os hashes declarados para um cache local verificado. O builder
+analisa Markdown por AST, aplica a allowlist, normaliza o AST deterministicamente
+e constrói o modelo semântico canônico sem acessar a rede. Em seguida deriva uma
+`media_key` de `entityType`, `id` e `assetKey`, grava
+`media_key -> contentHash` no `system_media` aplicável e materializa o objeto no
+`CAS/system`. O conteúdo compilado seguro recebe referências
+`knowledge-media://asset/<media-key>`; a fonte de autoria usa somente
+`knowledge-media://source/<assetKey>`.
 
 Para cada entidade e locale, o builder separa o documento pelos headings
 numerados e compõe todas as seções em um único `content_json` versionado. A ordem
@@ -167,9 +184,9 @@ e o Markdown normalizado. Pacotes publicados
 transportam esse documento dentro do banco `system`; não são criadas tabelas,
 linhas ou artefatos independentes por seção.
 
-Alterar os bytes preservando o caminho editorial mantém a `media_key` e produz
-outro objeto CAS imutável. Renomear a mídia exige atualizar as referências e
-produz outra chave técnica. Bytes idênticos continuam deduplicados pelo hash.
+Alterar os bytes preservando `assetKey` mantém a `media_key` e produz outro
+objeto CAS imutável. Renomear `assetKey` exige atualizar as referências e produz
+outra chave técnica. Bytes idênticos continuam deduplicados pelo hash.
 
 Na saída física do builder, cada objeto usa a disposição
 `CAS/system/<2-hex>/<2-hex>/<hash>.bin`. O Hub localiza os objetos pelo relatório
@@ -180,12 +197,12 @@ A validação exige exatamente os seis locales em cada campo de
 `localizedContent`, inclusive nos termos taxonômicos, e um documento Markdown por
 locale em cada entidade com seções. O processo recusa ID duplicado, referência
 inexistente, chave taxonômica parcial ou de outro domínio, locale desconhecido,
-mapa localizado incompleto, front matter, arquivo não declarado, padrão de seção
+mapa localizado incompleto, front matter, asset não declarado, padrão de seção
 ausente, incompatível ou sem consumidor, número delimitador ausente, repetido,
 descontínuo ou fora de ordem, seção
 ausente ou adicional, conteúdo antes da primeira seção, AST incompatível, HTML
-bruto, nó fora da allowlist, protocolo não permitido, caminho absoluto, remoto
-ou que resolva fora da entidade e mídia não referenciada. A projeção de cada
+bruto, nó fora da allowlist, protocolo não permitido, URI de mídia inválida,
+descritor divergente dos bytes do cache e mídia não referenciada. A projeção de cada
 locale combina o manifesto com seu documento e produz o mesmo conjunto de IDs e
 relações não localizáveis nos seis bancos.
 
@@ -207,8 +224,12 @@ A fronteira operacional é:
 
 ```mermaid
 flowchart LR
-    DATA["data/knowledge"] --> BUILDER["tools/knowledge-builder"]
-    JOB["Solid Queue job"] --> BUILDER
+    DATA["data/knowledge"] --> BUILDER["tools/knowledge-builder<br/>offline"]
+    R2SOURCE["R2 editorial"] --> SYNC["tools/knowledge-media sync"]
+    JOB["Solid Queue job"] --> SYNC
+    SYNC --> CACHE["cache verificado do job"]
+    CACHE --> BUILDER
+    JOB --> BUILDER
     BUILDER --> RESULT["Staging + build-result.json"]
     RESULT --> SERVICES["Services Rails de release"]
     SERVICES --> RELEASES["Releases publicáveis"]
@@ -219,9 +240,15 @@ Nesta parte:
 - usar `data/knowledge/` como fonte canônica configurada para o job;
 - incluir ou montar essa fonte como diretório somente leitura no ambiente do
   Hub;
+- incluir `tools/knowledge-media` e `tools/knowledge-builder` no ambiente do Hub;
+- fornecer a `knowledge-media` um token R2 de somente leitura, limitado ao
+  bucket editorial;
+- sincronizar os hashes declarados para um cache exclusivo do job antes da
+  compilação;
 - compilar o `knowledge-builder` e incluí-lo no ambiente do Hub por build
   multi-stage;
-- executar o binário em job assíncrono com argumentos separados, sem shell;
+- executar os dois binários em job assíncrono com argumentos separados, sem
+  shell, e sem repassar credenciais ao processo do builder;
 - reservar sob lock o `releaseId`, `generation`, `revision` e predecessor antes
   de montar `build-context.json`;
 - usar um diretório exclusivo por job em
@@ -253,9 +280,11 @@ O diretório `tmp/` é staging descartável e nunca armazena uma release publica
 O armazenamento persistente do Hub conserva pacotes, bancos necessários à cadeia
 de patches e objetos CAS conforme a política de retenção.
 
-Ao concluir esta parte, existe uma única fonte canônica em `data/knowledge/` e um
-único compilador em `tools/knowledge-builder/`. O app ainda mantém o consumo local
-estabelecido na Parte 1C até a refatoração de aquisição da Parte 4.
+Ao concluir esta parte, `data/knowledge/` conserva os dados e descritores
+canônicos, o R2 editorial conserva os bytes correspondentes e
+`tools/knowledge-builder/` permanece como único compilador. O app mantém o
+consumo local estabelecido na Parte 1C até a refatoração de aquisição da Parte
+4.
 
 `buildVersion` identifica a execução e o namespace de saída do builder. Ela é
 interna, não entra no manifest público e não determina `generation` ou
@@ -265,6 +294,7 @@ invocação e o builder apenas a materializa nos bancos.
 ## Comandos Operacionais
 
 ```text
+rails knowledge:media_sync
 rails knowledge:validate
 rails knowledge:build
 rails knowledge:build_database_patches
@@ -276,8 +306,10 @@ rails knowledge:promote_channel
 rails knowledge:replicate_manifests
 ```
 
-`knowledge:validate` e `knowledge:build` invocam respectivamente `validate` e
-`build` na CLI Rust. `knowledge:publish_release` orquestra build, validação,
+`knowledge:media_sync` hidrata e verifica o cache do job pelo R2 editorial.
+`knowledge:validate` e `knowledge:build` exigem esse cache e invocam
+respectivamente `validate` e `build` na CLI offline do builder.
+`knowledge:publish_release` orquestra sincronização, build, validação,
 empacotamento e publicação do conteúdo imutável. `knowledge:promote_channel` cria
 o próximo snapshot assinado e troca o ponteiro do canal. Uma execução repetida
 com a mesma entrada, versão do builder e configuração produz os mesmos artefatos
@@ -285,12 +317,13 @@ e reutiliza objetos CAS existentes.
 `knowledge:replicate_manifests` retoma cópias pendentes sem alterar o snapshot, a
 sequência ou a release do canal.
 
-`knowledge:prepare_workspace` invoca o mesmo binário Rust com `data/knowledge` e
-o destino `build/knowledge-artifacts` consumido pelo app ao final da Parte 1C e usa
-um contexto com `release: null`. Essa tarefa mantém o desenvolvimento e os builds
-executáveis durante esta parte sem duplicar compilador ou dados fonte. Ela não
-publica release, não cria outra identidade pública e é retirada na Parte 4,
-quando o app passa a consumir a API. O `knowledge-builder` permanece.
+`knowledge:prepare_workspace` sincroniza o cache e invoca o builder com
+`data/knowledge`, o cache verificado e o destino `build/knowledge-artifacts`
+consumido pelo app ao final da Parte 1C. O contexto usa `release: null`. Essa
+tarefa mantém o desenvolvimento e os builds executáveis durante esta parte sem
+duplicar compilador ou dados fonte. Ela não publica release, não cria outra
+identidade pública e é retirada na Parte 4, quando o app passa a consumir a API.
+O `knowledge-builder` permanece.
 
 Os comandos de build e publicação operam sobre o conjunto completo de seis
 locales. Não existe publicação parcial de um locale sob uma versão global.
@@ -987,13 +1020,14 @@ Cobrir:
   registram exatamente essa identidade e seus respectivos locales.
 - O ambiente executável do Hub contém uma versão explícita do builder.
 - Ruby não implementa DDL, seeds, projeção de locale nem montagem do CAS.
-- Os catálogos publicados possuem `data/knowledge/` como única fonte de autoria.
+- Os catálogos publicados possuem `data/knowledge/` como fonte canônica dos
+  dados e descritores e o bucket R2 editorial como fonte dos bytes verificados.
 - O Hub consegue usar o builder para materializar a saída local necessária ao app
   até a Parte 4.
 - Os dados fonte são organizados por domínio e diretório de entidade, com
   `localizedContent` inline no `_entity.json`, referências taxonômicas por chaves
   canônicas completas, um documento Markdown por locale e mídias referenciadas
-  por caminhos relativos.
+  por `assetKey` e descritas por SHA-256, tipo MIME e tamanho.
 - Toda versão coordena os seis pares de bancos e o `CAS/system` compartilhado.
 - A versão usa geração e revisão inteiras.
 - Os doze bancos registram a mesma versão global e seus respectivos locales.

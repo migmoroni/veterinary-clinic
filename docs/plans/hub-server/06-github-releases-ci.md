@@ -70,8 +70,9 @@ por hash. O download individual de `CAS/system` continua pela source
 existir um mecanismo explícito, imutável e testado para objetos individuais.
 
 GitHub distribui cada release de conhecimento como seis assets, um por locale,
-sem depender de milhares de arquivos individuais. Cloudflare R2 e IPFS são os
-providers previstos para distribuição direta por conteúdo.
+sem depender de milhares de arquivos individuais. Cloudflare R2 como provider
+de artefatos publicados e IPFS são os providers previstos para distribuição
+direta por conteúdo. O bucket R2 editorial não participa desse contrato.
 
 O `hub-server` mantém um armazenamento persistente para sua cópia de
 `CAS/system`. Durante a validação de uma release, ele baixa os seis pacotes pela
@@ -208,7 +209,8 @@ Depois da publicação do provider:
 - GitHub Pages fica como fallback de descoberta do manifest;
 - GitHub Releases pode ser fallback ou destino do redirect controlado para
   pacotes;
-- Cloudflare R2, GitLab e IPFS permanecem `enabled: false`;
+- Cloudflare R2 como provider de distribuição, GitLab e IPFS permanecem
+  `enabled: false`;
 - GitHub para objeto CAS individual permanece `enabled: false` nesta parte.
 
 O `hub-server` pode entregar o pacote localmente ou redirecionar para GitHub
@@ -282,9 +284,10 @@ Cobrir:
 - O updater recebe um manifest válido gerado pelo `hub-server`.
 - O app obtém cada release por uma delivery source publicada e verificada.
 - O download individual CAS continua funcional pela source `hub_server`.
-- Cloudflare R2, GitLab e IPFS permanecem previstos e desativados.
+- Cloudflare R2 como provider de distribuição, GitLab e IPFS permanecem
+  previstos e desativados.
 
 ## Expansões
 
-As expansões de Cloudflare R2, GitLab e IPFS estão descritas no
+As expansões de Cloudflare R2 para distribuição, GitLab e IPFS estão descritas no
 [índice arquitetural](./README.md) e entram em planos próprios.
