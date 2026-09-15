@@ -79,11 +79,17 @@ pnpm tauri:dev:new
 ## Common Checks
 
 ```sh
-pnpm check
-pnpm test:run
-pnpm build
-cargo check --workspace
+pnpm validate
+pnpm validate:fast
+pnpm validate:web
+pnpm validate:rust
+pnpm validate:knowledge
+pnpm validate:json
 ```
+
+The declarative profile lives in `.validation/config.json`. The reusable Rust
+executor is documented in
+[`tools/workspace-validator/README.md`](tools/workspace-validator/README.md).
 
 Desktop bundles:
 

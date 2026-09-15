@@ -1,0 +1,42 @@
+{
+  "$schema": "../tools/workspace-validator/schemas/config.schema.json",
+  "schemaVersion": 1,
+  "workspaceRoot": "..",
+  "defaultSuite": "general",
+  "outputLimitBytes": 1048576,
+  "repository": {
+    "provider": "git",
+    "toolId": "git",
+    "detectMutations": true
+  },
+  "tools": [
+    { "id": "git", "program": "git", "requiresTools": [], "versionArgs": ["--version"], "versionParser": "firstSemver" },
+    { "id": "node", "program": "node", "requiresTools": [], "versionArgs": ["--version"], "versionParser": "firstSemver", "versionRequirement": ">=22.0.0" },
+    { "id": "pnpm", "program": "pnpm", "requiresTools": ["node"], "versionArgs": ["--version"], "versionParser": "firstSemver", "versionRequirement": ">=11.22.0" },
+    { "id": "cargo", "program": "cargo", "requiresTools": [], "versionArgs": ["--version"], "versionParser": "firstSemver" },
+    { "id": "rustc", "program": "rustc", "requiresTools": [], "versionArgs": ["--version"], "versionParser": "firstSemver" },
+    { "id": "rustfmt", "program": "rustfmt", "requiresTools": ["cargo", "rustc"], "versionArgs": ["--version"], "versionParser": "firstSemver" },
+    { "id": "clippy", "program": "cargo", "requiresTools": ["cargo", "rustc"], "versionArgs": ["clippy", "--version"], "versionParser": "firstSemver" }
+  ],
+  "checks": [
+    { "id": "repository.diff", "label": "Whitespace e conflitos no diff", "toolId": "git", "args": ["diff", "--check"], "workingDirectory": ".", "requiresTools": [], "dependsOn": [], "timeoutSeconds": 120 },
+    { "id": "web.check", "label": "Análise estática Svelte", "toolId": "pnpm", "args": ["check"], "workingDirectory": ".", "requiresTools": [], "dependsOn": [], "timeoutSeconds": 900 },
+    { "id": "web.test", "label": "Testes unitários Vitest", "toolId": "pnpm", "args": ["test:run"], "workingDirectory": ".", "requiresTools": [], "dependsOn": [], "timeoutSeconds": 900 },
+    { "id": "web.build", "label": "Build Vite", "toolId": "pnpm", "args": ["build"], "workingDirectory": ".", "requiresTools": [], "dependsOn": [], "timeoutSeconds": 900 },
+    { "id": "rust.format", "label": "Formatação Rust", "toolId": "cargo", "args": ["fmt", "--all", "--", "--check"], "workingDirectory": ".", "requiresTools": ["rustc", "rustfmt"], "dependsOn": [], "timeoutSeconds": 300 },
+    { "id": "rust.check", "label": "Compilação Rust", "toolId": "cargo", "args": ["check", "--workspace", "--all-targets"], "workingDirectory": ".", "requiresTools": ["rustc"], "dependsOn": [], "timeoutSeconds": 1800 },
+    { "id": "rust.clippy", "label": "Lint Clippy", "toolId": "cargo", "args": ["clippy", "--workspace", "--all-targets", "--", "-D", "warnings"], "workingDirectory": ".", "requiresTools": ["rustc", "clippy"], "dependsOn": [], "timeoutSeconds": 1800 },
+    { "id": "rust.test", "label": "Testes Rust", "toolId": "cargo", "args": ["test", "--workspace", "--all-targets"], "workingDirectory": ".", "requiresTools": ["rustc"], "dependsOn": [], "timeoutSeconds": 3600 },
+    { "id": "knowledge.audit", "label": "Auditoria editorial do conhecimento", "toolId": "pnpm", "args": ["knowledge:audit"], "workingDirectory": ".", "requiresTools": [], "dependsOn": [], "timeoutSeconds": 900 },
+    { "id": "knowledge.validate", "label": "Validação do domínio de conhecimento", "toolId": "pnpm", "args": ["knowledge:validate"], "workingDirectory": ".", "requiresTools": ["cargo", "rustc"], "dependsOn": [], "timeoutSeconds": 1800 },
+    { "id": "knowledge.clippy", "label": "Lint Clippy do Knowledge Builder", "toolId": "cargo", "args": ["clippy", "-p", "knowledge-builder", "--all-targets", "--", "-D", "warnings"], "workingDirectory": ".", "requiresTools": ["rustc", "clippy"], "dependsOn": [], "timeoutSeconds": 1800 },
+    { "id": "knowledge.test", "label": "Testes do Knowledge Builder", "toolId": "cargo", "args": ["test", "-p", "knowledge-builder", "--all-targets"], "workingDirectory": ".", "requiresTools": ["rustc"], "dependsOn": [], "timeoutSeconds": 3600 }
+  ],
+  "suites": [
+    { "id": "general", "label": "Validação geral", "checks": ["repository.diff", "web.check", "web.test", "web.build", "rust.format", "rust.check", "rust.clippy", "rust.test"] },
+    { "id": "fast", "label": "Validação rápida", "checks": ["repository.diff", "web.check", "rust.format", "rust.check"] },
+    { "id": "web", "label": "Validação web", "checks": ["repository.diff", "web.check", "web.test", "web.build"] },
+    { "id": "rust", "label": "Validação Rust", "checks": ["repository.diff", "rust.format", "rust.check", "rust.clippy", "rust.test"] },
+    { "id": "knowledge", "label": "Validação do conhecimento", "checks": ["repository.diff", "knowledge.audit", "knowledge.validate", "rust.format", "knowledge.clippy", "knowledge.test"] }
+  ]
+}

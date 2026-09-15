@@ -1,142 +1,73 @@
 ---
 name: validate-workspace
-description: Executa e relata as validações gerais do workspace veterinary-clinic, incluindo ambiente Node e pnpm, Svelte, testes unitários Vitest, build Vite, formatação, compilação, Clippy e testes Rust, além da integridade do diff. Use como gate final de toda implementação proveniente de plano e quando o usuário pedir validação geral, suíte completa de testes, verificação após refatoração ou confirmação de que o workspace está saudável. Não use para iniciar servidores ou empacotar Tauri; dependências e correções exigem orientação livre do usuário.
+description: Executa e relata o gate geral declarativo do workspace veterinary-clinic por meio do workspace-validator, incluindo pré-requisitos, checks e integridade Git. Use como gate final de toda implementação proveniente de plano e quando o usuário pedir validação geral, suíte completa de testes, verificação após refatoração ou confirmação de que o workspace está saudável. Não use para iniciar servidores ou empacotar Tauri; dependências e correções exigem orientação livre do usuário.
 ---
 
 # Validar O Workspace
 
-Executar primeiro uma auditoria somente de leitura do estado atual do
-repositório. Seguir o `AGENTS.md` da raiz durante todo o processo. Instalações e
-correções só podem começar nos checkpoints de decisão definidos abaixo.
+Executar uma auditoria somente de leitura a partir da raiz e seguir o
+`AGENTS.md`. A composição do gate pertence exclusivamente a
+`.validation/config.json`.
 
-## Preparar A Execução
+## Executar O Gate
 
-1. Trabalhar a partir da raiz do repositório.
-2. Registrar `git status --short` antes das validações sem limpar, restaurar ou
-   alterar mudanças existentes.
-3. Conferir as versões disponíveis com:
+1. Registrar `git status --short`, sem limpar nem restaurar mudanças.
+2. Executar `pnpm validate:json` uma única vez.
+3. Interpretar o documento JSON, incluindo `tools`, `checks`, `repository` e
+   `summary`.
+4. Apresentar `FAIL`, `BLOCKED` e `SKIPPED` antes dos resultados `PASS`.
+5. Declarar sucesso somente quando `summary.result` for `pass`.
 
-   ```text
-   node --version
-   pnpm --version
-   cargo --version
-   rustc --version
-   ```
+Não duplicar nem executar manualmente a lista de checks do perfil. O validator
+preserva a ordem, continua checks independentes, limita saídas e compara o
+estado Git anterior e posterior. Não executar em paralelo comandos que
+compartilhem saídas do workspace.
 
-4. Exigir Node.js `>=22.0.0` e pnpm `>=11.22.0`, conforme o contrato do
-   workspace.
-5. Quando Node ou pnpm não estiver no `PATH`, usar uma instalação 22.x já
-   disponível pelo gerenciador local indicado por `.nvmrc`.
+Se o próprio pnpm, Cargo ou workspace-validator não iniciar, classificar o
+bootstrap como `BLOCKED`, identificar o item ausente e seguir o checkpoint de
+dependências. Quando o usuário solicitar uma categoria, usar o script da suíte
+correspondente ou `workspace-validator check`; declarar o escopo executado.
 
-### Dependência Ou Ferramenta Ausente
+## Dependência Ou Ferramenta Ausente
 
-Não instalar nem baixar runtimes, packages, crates, ferramentas ou outras
-dependências por iniciativa própria. Quando uma ausência impedir uma validação:
+Não instalar nem baixar runtimes, packages, crates ou ferramentas por iniciativa
+própria. Para cada ausência:
 
-1. identificar exatamente o item ausente, a versão ou faixa exigida, a origem e
-   o comando necessário;
-2. explicar quais validações estão bloqueadas e quais arquivos podem ser
-   alterados pela instalação;
-3. perguntar em mensagem comum e aberta como o usuário deseja prosseguir;
-4. aguardar uma resposta em texto livre antes de instalar.
+1. informar item, versão/faixa, origem, comando necessário, validações
+   bloqueadas e arquivos que a instalação pode alterar;
+2. perguntar em mensagem comum e aberta como o usuário deseja prosseguir;
+3. aguardar resposta em texto livre antes de instalar.
 
-Não reduzir essa pergunta a botão, enquete ou escolha binária de “sim” e “não”. A
-resposta pode autorizar, negar, limitar a instalação, alterar o comando ou
-informar que o usuário fará ou já fez a ação manualmente. Se a plataforma exigir
-uma aprovação técnica adicional para executar o comando já autorizado, solicitar
-essa aprovação somente depois da resposta livre.
+Não reduzir a pergunta a botão ou escolha binária. Se a plataforma exigir uma
+aprovação técnica, solicitá-la somente após a autorização livre. Se o usuário
+negar ou agir manualmente, continuar o que for independente e manter apenas o
+que ainda for impossível como `BLOCKED`.
 
-Quando o usuário negar ou optar por agir manualmente, continuar todas as
-validações independentes. Marcar como `BLOCKED` apenas as que permanecerem
-impossíveis. Se ele informar que resolveu a ausência, verificar novamente o
-ambiente e retomar as validações afetadas.
+## Preservar O Repositório
 
-## Executar A Suíte
-
-Executar os comandos separadamente e em sequência. Não paralelizar comandos que
-usem `.svelte-kit`, saídas Vite ou o diretório Cargo `target`.
-
-```text
-git diff --check
-pnpm check
-pnpm test:run
-pnpm build
-cargo fmt --all -- --check
-cargo check --workspace --all-targets
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace --all-targets
-```
-
-Tratar cada comando como uma validação independente:
-
-- continuar coletando resultados depois de uma falha quando o próximo comando
-  ainda puder produzir um diagnóstico útil;
-- marcar como `BLOCKED` somente quando faltar uma ferramenta ou pré-condição;
-- marcar como `SKIPPED` somente quando o usuário limitar explicitamente o escopo
-  ou quando uma falha tornar aquela validação tecnicamente inexequível;
-- nunca representar `BLOCKED` ou `SKIPPED` como aprovação;
-- não executar `pnpm install`, atualizações ou acesso à rede sem passar pelo
-  checkpoint de dependência ausente;
-- não iniciar servidores de desenvolvimento nem comandos de empacotamento Tauri;
-- não adicionar linters ou outras ferramentas que o workspace não configure.
-
-Se o usuário solicitar apenas uma categoria, executar o subconjunto
-correspondente e declarar claramente as validações omitidas. Sem limitação
-explícita, executar a suíte completa.
-
-## Preservar O Repositório Durante A Auditoria
-
-Não corrigir código, formatar arquivos, atualizar snapshots ou aceitar mudanças
-automaticamente. Usar modos de verificação, como `cargo fmt --check`.
-
-Ao final, comparar `git status --short` com o estado inicial. Relatar qualquer
-arquivo rastreado criado ou alterado pelas ferramentas e não o remover sem
-solicitação explícita.
+Durante a auditoria, não corrigir código, formatar arquivos, atualizar
+snapshots, instalar dependências ou aceitar mudanças. Não iniciar servidores,
+empacotar Tauri nem remover arquivos criados pelos subprocessos. Relatar as
+diferenças registradas em `repository`.
 
 ## Decidir Sobre Correções
 
-Concluir primeiro todas as validações independentes. Se houver `FAIL`, apresentar
-os erros agrupados por causa provável, indicar quais parecem relacionados à
-implementação avaliada e perguntar em uma única mensagem aberta como o usuário
-deseja tratá-los.
+Depois de coletar todos os diagnósticos, agrupar falhas por causa provável,
+indicar sua relação com a implementação e perguntar, em uma única mensagem
+aberta, como o usuário deseja tratá-las. A resposta pode autorizar tudo, limitar
+arquivos, selecionar erros, negar mudanças ou reservar ações manuais.
 
-Não usar botão, enquete ou pergunta limitada a “posso corrigir?”. A pergunta deve
-aceitar uma orientação livre, permitindo ao usuário autorizar tudo, negar,
-selecionar erros, restringir arquivos, definir outra abordagem ou informar que
-fará parte do trabalho manualmente.
+Após autorização:
 
-Não modificar código antes dessa resposta. Depois dela:
-
-- aplicar somente as correções e limites autorizados;
-- não tocar em falhas preexistentes ou fora do escopo sem autorização expressa;
-- se a correção exigir uma dependência, passar também pelo checkpoint de
-  instalação;
-- executar novamente as validações diretamente afetadas;
-- ao final das correções, executar outra vez a suíte geral completa;
-- se a correção for negada, concluir o relatório com as falhas pendentes sem
-  insistir nem tratar a execução como aprovada.
+- aplicar somente as correções permitidas;
+- passar novamente pelo checkpoint caso surja uma dependência;
+- repetir com `workspace-validator check <id>` ou com a suíte especializada os
+  checks afetados;
+- executar `pnpm validate:json` novamente como gate final.
 
 ## Relatar O Resultado
 
-Apresentar primeiro as falhas e bloqueios. Para cada comando, informar um dos
-estados:
-
-```text
-PASS
-FAIL
-BLOCKED
-SKIPPED
-```
-
-Incluir:
-
-- comando executado;
-- estado;
-- resumo objetivo do erro quando houver;
-- arquivo e linha relevantes quando identificáveis;
-- diferença entre o `git status` inicial e final;
-- conclusão geral.
-
-Declarar sucesso geral somente quando todas as validações exigidas terminarem em
-`PASS`. Não despejar logs completos na resposta, salvo solicitação do usuário;
-preservar as linhas necessárias para que ele entenda e reproduza a falha.
+Para cada resultado relevante, informar estado, ID, comando, causa objetiva e
+arquivo/linha quando disponíveis. Incluir versões das ferramentas, totais,
+mutações Git e conclusão geral. Não despejar logs completos, salvo pedido do
+usuário.

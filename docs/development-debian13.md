@@ -119,11 +119,13 @@ pnpm install --frozen-lockfile
 Depois valide que o ambiente esta saudavel:
 
 ```sh
-pnpm check
-pnpm test:run
-pnpm build
-cargo check --workspace
+pnpm validate
 ```
+
+Para executar perfis menores ou obter um relatório estruturado, use
+`pnpm validate:fast`, `pnpm validate:web`, `pnpm validate:rust`,
+`pnpm validate:knowledge` ou `pnpm validate:json`. A composição das suítes fica
+em `.validation/config.json`.
 
 ## Executar em desenvolvimento
 

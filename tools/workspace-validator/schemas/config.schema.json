@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Config",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CheckConfig"
+      }
+    },
+    "defaultSuite": {
+      "type": "string"
+    },
+    "outputLimitBytes": {
+      "type": "integer",
+      "format": "uint",
+      "minimum": 0
+    },
+    "repository": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RepositoryConfig"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "suites": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SuiteConfig"
+      }
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ToolConfig"
+      }
+    },
+    "workspaceRoot": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "workspaceRoot",
+    "defaultSuite",
+    "outputLimitBytes",
+    "tools",
+    "checks",
+    "suites"
+  ],
+  "$defs": {
+    "CheckConfig": {
+      "type": "object",
+      "properties": {
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "requiresTools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "timeoutSeconds": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "toolId": {
+          "type": "string"
+        },
+        "workingDirectory": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "toolId",
+        "args",
+        "workingDirectory",
+        "requiresTools",
+        "dependsOn",
+        "timeoutSeconds"
+      ]
+    },
+    "RepositoryConfig": {
+      "type": "object",
+      "properties": {
+        "detectMutations": {
+          "type": "boolean"
+        },
+        "provider": {
+          "$ref": "#/$defs/RepositoryProvider"
+        },
+        "toolId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "toolId",
+        "detectMutations"
+      ]
+    },
+    "RepositoryProvider": {
+      "type": "string",
+      "enum": [
+        "git"
+      ]
+    },
+    "SuiteConfig": {
+      "type": "object",
+      "properties": {
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "checks"
+      ]
+    },
+    "ToolConfig": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "program": {
+          "type": "string"
+        },
+        "requiresTools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "versionArgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "versionParser": {
+          "$ref": "#/$defs/VersionParser"
+        },
+        "versionRequirement": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "program",
+        "requiresTools",
+        "versionArgs",
+        "versionParser"
+      ]
+    },
+    "VersionParser": {
+      "type": "string",
+      "enum": [
+        "firstSemver"
+      ]
+    }
+  }
+}

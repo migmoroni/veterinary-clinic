@@ -1,0 +1,272 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ValidationReport",
+  "type": "object",
+  "properties": {
+    "checks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CheckResult"
+      }
+    },
+    "durationMs": {
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0
+    },
+    "repository": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RepositoryReport"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "startedAtUnixMs": {
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0
+    },
+    "suite": {
+      "type": "string"
+    },
+    "summary": {
+      "$ref": "#/$defs/Summary"
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ToolResult"
+      }
+    },
+    "workspaceRoot": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "suite",
+    "workspaceRoot",
+    "startedAtUnixMs",
+    "durationMs",
+    "tools",
+    "checks",
+    "summary"
+  ],
+  "$defs": {
+    "CheckResult": {
+      "type": "object",
+      "properties": {
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "durationMs": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "exitCode": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "int32"
+        },
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/Status"
+        },
+        "stderr": {
+          "type": "string"
+        },
+        "stderrTruncated": {
+          "type": "boolean"
+        },
+        "stdout": {
+          "type": "string"
+        },
+        "stdoutTruncated": {
+          "type": "boolean"
+        },
+        "timedOut": {
+          "type": "boolean"
+        },
+        "timeoutSeconds": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "workingDirectory": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "argv",
+        "workingDirectory",
+        "status",
+        "durationMs",
+        "timeoutSeconds",
+        "timedOut",
+        "stdoutTruncated",
+        "stderrTruncated",
+        "stdout",
+        "stderr"
+      ]
+    },
+    "OverallResult": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "fail",
+        "blocked"
+      ]
+    },
+    "RepositoryReport": {
+      "type": "object",
+      "properties": {
+        "after": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "before": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "changed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "introduced": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "before",
+        "after",
+        "introduced",
+        "removed",
+        "changed"
+      ]
+    },
+    "Status": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "fail",
+        "blocked",
+        "skipped"
+      ]
+    },
+    "Summary": {
+      "type": "object",
+      "properties": {
+        "blocked": {
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        },
+        "fail": {
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        },
+        "pass": {
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        },
+        "result": {
+          "$ref": "#/$defs/OverallResult"
+        },
+        "skipped": {
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "pass",
+        "fail",
+        "blocked",
+        "skipped",
+        "result"
+      ]
+    },
+    "ToolResult": {
+      "type": "object",
+      "properties": {
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "program": {
+          "type": "string"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/Status"
+        },
+        "version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "program",
+        "argv",
+        "status"
+      ]
+    }
+  }
+}
