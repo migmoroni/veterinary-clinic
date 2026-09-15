@@ -6,6 +6,13 @@ a shell, respects dependency DAGs and timeouts, and emits human or versioned
 JSON reports. It never installs dependencies, fixes files, starts servers, or
 cleans subprocess output.
 
+Human validation runs display a multi-line execution view with overall suite
+progress, completed phases and checks, status, duration, and a spinner for the
+active operation. The transient view is written to stderr and is automatically
+hidden when stderr is not an interactive terminal. It is replaced by the stable
+line-oriented final report. JSON mode emits no progress and reserves stdout for
+its single JSON document.
+
 ## Build and run
 
 ```sh

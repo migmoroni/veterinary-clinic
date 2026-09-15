@@ -148,7 +148,13 @@ fn execute_run(
             )
         },
     )?;
-    let outcome = runner::run(loaded, name, checks, cancelled);
+    let outcome = match format {
+        Format::Human => {
+            let mut progress = report::terminal::TerminalProgress::new();
+            runner::run_with_progress(loaded, name, checks, cancelled, &mut progress)
+        }
+        Format::Json => runner::run(loaded, name, checks, cancelled),
+    };
     let rendered = match format {
         Format::Human => report::human(&outcome.report),
         Format::Json => report::json(&outcome.report)

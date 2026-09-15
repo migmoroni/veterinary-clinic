@@ -4,7 +4,9 @@ use crate::{
     model::{
         CheckResult, RepositoryReport, Status, Summary, ValidationReport, REPORT_SCHEMA_VERSION,
     },
-    prerequisites, process, repository,
+    prerequisites, process,
+    progress::{ProgressPhase, ProgressReporter, SilentProgress},
+    repository,
 };
 use std::{
     collections::BTreeMap,
@@ -50,12 +52,30 @@ pub fn run(
     check_ids: Vec<String>,
     cancelled: Arc<AtomicBool>,
 ) -> RunOutcome {
+    run_with_progress(loaded, suite, check_ids, cancelled, &mut SilentProgress)
+}
+
+pub fn run_with_progress(
+    loaded: &LoadedConfig,
+    suite: String,
+    check_ids: Vec<String>,
+    cancelled: Arc<AtomicBool>,
+    progress: &mut impl ProgressReporter,
+) -> RunOutcome {
     let started = Instant::now();
     let started_at_unix_ms = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_millis() as u64;
+    progress.validation_started(&suite, &loaded.workspace_root, check_ids.len());
+    progress.phase_started(ProgressPhase::Prerequisites);
     let tools = prerequisites::check_tools(loaded, &check_ids, &cancelled);
+    let prerequisites_status = if tools.iter().all(|tool| tool.status == Status::Pass) {
+        Status::Pass
+    } else {
+        Status::Blocked
+    };
+    progress.phase_finished(ProgressPhase::Prerequisites, prerequisites_status);
     let tool_status: BTreeMap<_, _> = tools
         .iter()
         .map(|tool| (tool.id.clone(), tool.status))
@@ -66,14 +86,24 @@ pub fn run(
         .as_ref()
         .is_some_and(|repository| tool_status.get(&repository.tool_id) == Some(&Status::Pass));
     let before = if loaded.config.repository.is_some() && repository_tool_ready {
-        repository::snapshot(loaded, &cancelled)
+        progress.phase_started(ProgressPhase::InitialRepositorySnapshot);
+        let snapshot = repository::snapshot(loaded, &cancelled);
+        let status = if snapshot.is_ok() {
+            Status::Pass
+        } else {
+            Status::Blocked
+        };
+        progress.phase_finished(ProgressPhase::InitialRepositorySnapshot, status);
+        snapshot
     } else {
         Err("repository tool is unavailable".into())
     };
     let mut statuses = BTreeMap::new();
     let mut checks = Vec::new();
-    for id in &check_ids {
+    for (index, id) in check_ids.iter().enumerate() {
         let check = &loaded.checks[id];
+        let position = index + 1;
+        progress.check_started(position, check_ids.len(), check);
         let cwd = resolve_working_directory(loaded, check);
         let argv = std::iter::once(loaded.tools[&check.tool_id].program.clone())
             .chain(check.args.clone())
@@ -145,12 +175,14 @@ pub fn run(
                 reason,
             }
         };
+        progress.check_finished(position, check_ids.len(), &result);
         statuses.insert(id.clone(), result.status);
         checks.push(result);
     }
     let mut repository_report = None;
     if loaded.config.repository.is_some() {
         let after = if repository_tool_ready {
+            progress.phase_started(ProgressPhase::FinalRepositorySnapshot);
             repository::snapshot(loaded, &cancelled)
         } else {
             Err("repository tool is unavailable".into())
@@ -182,7 +214,7 @@ pub fn run(
             }
             (Err(reason), _) | (_, Err(reason)) => (Status::Blocked, Some(reason.clone())),
         };
-        checks.push(CheckResult {
+        let result = CheckResult {
             id: "repository.integrity".into(),
             label: "Integridade do repositório".into(),
             argv: vec![
@@ -208,10 +240,14 @@ pub fn run(
             stdout: String::new(),
             stderr: String::new(),
             reason,
-        });
+        };
+        if repository_tool_ready {
+            progress.phase_finished(ProgressPhase::FinalRepositorySnapshot, result.status);
+        }
+        checks.push(result);
     }
     let summary = Summary::from_checks(&checks);
-    RunOutcome {
+    let outcome = RunOutcome {
         interrupted: cancelled.load(Ordering::SeqCst),
         report: ValidationReport {
             schema_version: REPORT_SCHEMA_VERSION,
@@ -224,7 +260,9 @@ pub fn run(
             repository: repository_report,
             summary,
         },
-    }
+    };
+    progress.validation_finished();
+    outcome
 }
 
 fn blocked_result(

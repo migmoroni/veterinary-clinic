@@ -1,15 +1,22 @@
-use crate::model::{Status, ValidationReport};
+use super::format_duration;
+use crate::model::{OverallResult, Status, ValidationReport};
 use std::fmt::Write;
 
 pub fn render(report: &ValidationReport) -> String {
     let mut output = String::new();
-    let _ = writeln!(output, "Suite: {}", report.suite);
-    let _ = writeln!(output, "Workspace: {}", report.workspace_root);
-    let _ = writeln!(output, "Tools:");
+    let _ = writeln!(output, "Workspace Validator");
+    let _ = writeln!(output, "Suite:      {}", report.suite);
+    let _ = writeln!(output, "Workspace:  {}", report.workspace_root);
+    let _ = writeln!(
+        output,
+        "Duration:   {}",
+        format_duration(report.duration_ms)
+    );
+    let _ = writeln!(output, "\nTools");
     for tool in &report.tools {
         let _ = writeln!(
             output,
-            "  {:<7} {}{}",
+            "  {:<7} {:<16}{}",
             status(tool.status),
             tool.id,
             tool.version
@@ -21,21 +28,26 @@ pub fn render(report: &ValidationReport) -> String {
             let _ = writeln!(output, "          {reason}");
         }
     }
-    let _ = writeln!(output, "Checks:");
+    let _ = writeln!(output, "\nChecks");
     for desired in [Status::Fail, Status::Blocked, Status::Skipped, Status::Pass] {
         for check in report.checks.iter().filter(|check| check.status == desired) {
             let _ = writeln!(
                 output,
-                "  {:<7} {} ({} ms)",
+                "  {:<7} {} [{}] ({})",
                 status(check.status),
+                check.label,
                 check.id,
-                check.duration_ms
+                format_duration(check.duration_ms)
             );
-            let _ = writeln!(output, "          {}", shell_free_command(&check.argv));
-            if let Some(reason) = &check.reason {
-                let _ = writeln!(output, "          {reason}");
-            }
             if check.status != Status::Pass {
+                let _ = writeln!(
+                    output,
+                    "          Command: {}",
+                    shell_free_command(&check.argv)
+                );
+                if let Some(reason) = &check.reason {
+                    let _ = writeln!(output, "          Reason: {reason}");
+                }
                 excerpt(&mut output, "stdout", &check.stdout, check.stdout_truncated);
                 excerpt(&mut output, "stderr", &check.stderr, check.stderr_truncated);
             }
@@ -46,7 +58,7 @@ pub fn render(report: &ValidationReport) -> String {
             && repository.removed.is_empty()
             && repository.changed.is_empty())
         {
-            let _ = writeln!(output, "Repository changes:");
+            let _ = writeln!(output, "\nRepository changes");
             for entry in &repository.introduced {
                 let _ = writeln!(output, "  + {entry}");
             }
@@ -59,11 +71,14 @@ pub fn render(report: &ValidationReport) -> String {
         }
     }
     let summary = &report.summary;
+    let _ = writeln!(output, "\nSummary");
     let _ = writeln!(
         output,
-        "Summary: PASS {} | FAIL {} | BLOCKED {} | SKIPPED {} | {:?}",
-        summary.pass, summary.fail, summary.blocked, summary.skipped, summary.result
+        "  PASS {} | FAIL {} | BLOCKED {} | SKIPPED {}",
+        summary.pass, summary.fail, summary.blocked, summary.skipped
     );
+    let _ = writeln!(output, "  Result: {}", result(summary.result));
+    output.pop();
     output
 }
 
@@ -73,6 +88,14 @@ fn status(status: Status) -> &'static str {
         Status::Fail => "FAIL",
         Status::Blocked => "BLOCKED",
         Status::Skipped => "SKIPPED",
+    }
+}
+
+fn result(result: OverallResult) -> &'static str {
+    match result {
+        OverallResult::Pass => "PASS",
+        OverallResult::Fail => "FAIL",
+        OverallResult::Blocked => "BLOCKED",
     }
 }
 

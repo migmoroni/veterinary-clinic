@@ -30,6 +30,7 @@ fn runs_portably_and_discovers_configuration_from_a_child_directory() {
         "{}",
         String::from_utf8_lossy(&output.stderr)
     );
+    assert!(output.stderr.is_empty());
     let report: Value = serde_json::from_slice(&output.stdout).unwrap();
     assert_eq!(report["summary"]["result"], "pass");
     assert_eq!(report["checks"][0]["id"], "portable.check");

@@ -9,6 +9,7 @@ publish = false
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
 ctrlc = "3.5"
+indicatif = "0.18"
 schemars = { version = "1.2", features = ["derive"] }
 semver = "1.0"
 serde = { version = "1.0", features = ["derive"] }

@@ -14,9 +14,56 @@ use std::{
 use tempfile::TempDir;
 use workspace_validator::{
     config,
-    model::{OverallResult, Status},
+    model::{CheckConfig, CheckResult, OverallResult, Status},
+    progress::{ProgressPhase, ProgressReporter},
     runner,
 };
+
+#[derive(Debug, Eq, PartialEq)]
+enum Event {
+    ValidationStarted(usize),
+    PhaseStarted(ProgressPhase),
+    PhaseFinished(ProgressPhase, Status),
+    CheckStarted(usize, usize, String),
+    CheckFinished(usize, usize, Status),
+    ValidationFinished,
+}
+
+#[derive(Default)]
+struct RecordingProgress(Vec<Event>);
+
+impl ProgressReporter for RecordingProgress {
+    fn validation_started(
+        &mut self,
+        _suite: &str,
+        _workspace: &std::path::Path,
+        check_count: usize,
+    ) {
+        self.0.push(Event::ValidationStarted(check_count));
+    }
+
+    fn phase_started(&mut self, phase: ProgressPhase) {
+        self.0.push(Event::PhaseStarted(phase));
+    }
+
+    fn phase_finished(&mut self, phase: ProgressPhase, status: Status) {
+        self.0.push(Event::PhaseFinished(phase, status));
+    }
+
+    fn check_started(&mut self, position: usize, total: usize, check: &CheckConfig) {
+        self.0
+            .push(Event::CheckStarted(position, total, check.id.clone()));
+    }
+
+    fn check_finished(&mut self, position: usize, total: usize, result: &CheckResult) {
+        self.0
+            .push(Event::CheckFinished(position, total, result.status));
+    }
+
+    fn validation_finished(&mut self) {
+        self.0.push(Event::ValidationFinished);
+    }
+}
 
 #[test]
 fn continues_independent_checks_and_preserves_failure_precedence() {
@@ -44,11 +91,13 @@ fn continues_independent_checks_and_preserves_failure_precedence() {
     fs::write(&config_path, serde_json::to_vec(&value).unwrap()).unwrap();
     let loaded = config::load(Some(&config_path), temp.path()).unwrap();
     let (_, checks) = runner::suite_checks(&loaded, None).unwrap();
-    let outcome = runner::run(
+    let mut progress = RecordingProgress::default();
+    let outcome = runner::run_with_progress(
         &loaded,
         "all".into(),
         checks,
         Arc::new(AtomicBool::new(false)),
+        &mut progress,
     );
     let statuses: Vec<_> = outcome
         .report
@@ -62,6 +111,23 @@ fn continues_independent_checks_and_preserves_failure_precedence() {
     );
     assert_eq!(outcome.report.summary.result, OverallResult::Fail);
     assert_eq!(outcome.report.summary.exit_code(), 1);
+    assert_eq!(
+        progress.0,
+        [
+            Event::ValidationStarted(4),
+            Event::PhaseStarted(ProgressPhase::Prerequisites),
+            Event::PhaseFinished(ProgressPhase::Prerequisites, Status::Blocked),
+            Event::CheckStarted(1, 4, "first.fail".into()),
+            Event::CheckFinished(1, 4, Status::Fail),
+            Event::CheckStarted(2, 4, "dependent".into()),
+            Event::CheckFinished(2, 4, Status::Skipped),
+            Event::CheckStarted(3, 4, "independent".into()),
+            Event::CheckFinished(3, 4, Status::Pass),
+            Event::CheckStarted(4, 4, "blocked".into()),
+            Event::CheckFinished(4, 4, Status::Blocked),
+            Event::ValidationFinished,
+        ]
+    );
 }
 
 #[test]
