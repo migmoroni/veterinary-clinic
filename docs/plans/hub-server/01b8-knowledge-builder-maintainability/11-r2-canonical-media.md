@@ -45,6 +45,10 @@ Ao concluir esta parte:
 - A
   [Parte 1B.8.10](./10-knowledge-domain-layout.md)
   está concluída.
+- A
+  [pré-fase transversal do `workspace-validator`](../../workspace-validator.md)
+  está concluída, e `pnpm validate` executa o gate geral definido em
+  `.validation/config.json`.
 - `tools/knowledge-builder` gera e verifica os seis pares `system` e
   `system_media` e o `CAS/system` compartilhado.
 - O usuário confirma a criação do bucket e fornece as credenciais somente no

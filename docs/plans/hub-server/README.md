@@ -36,13 +36,14 @@ pertencem a outro servidor.
 21. [Parte 1B.8.8: taxonomia hierárquica da vida](./01b8-knowledge-builder-maintainability/08-life-hierarchy-taxonomy.md)
 22. [Parte 1B.8.9: padrões editoriais de seções](./01b8-knowledge-builder-maintainability/09-editorial-section-standards.md)
 23. [Parte 1B.8.10: organização canônica por domínios](./01b8-knowledge-builder-maintainability/10-knowledge-domain-layout.md)
-24. [Parte 1B.8.11: mídias canônicas no Cloudflare R2](./01b8-knowledge-builder-maintainability/11-r2-canonical-media.md)
-25. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
-26. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
-27. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
-28. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
-29. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
-30. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
+24. [Pré-fase transversal: `workspace-validator`](../workspace-validator.md)
+25. [Parte 1B.8.11: mídias canônicas no Cloudflare R2](./01b8-knowledge-builder-maintainability/11-r2-canonical-media.md)
+26. [Parte 1C: consumo local dos artefatos `system`](./01c-app-system-consumption.md)
+27. [Parte 2: base Rails e contratos públicos](./02-rails-api-contracts.md)
+28. [Parte 3: dados públicos e publicação](./03-public-knowledge-publication.md)
+29. [Parte 4: consumo dos artefatos nos apps](./04-app-artifact-consumption.md)
+30. [Parte 5: updater Tauri com ambiente local](./05-tauri-updater-local.md)
+31. [Parte 6: repositório dedicado e GitHub Releases](./06-github-releases-ci.md)
 
 ## Referências Futuras Não Sequenciais
 
@@ -52,10 +53,11 @@ Essas referências preservam possibilidades de evolução e não integram a orde
 de implementação. Sua presença não autoriza execução nem alteração do contrato
 vigente sem uma solicitação explícita.
 
-A pré-fase, as subpartes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3, 1B.4, 1B.5,
-1B.6, 1B.7, 1B.7A, 1B.7B, 1B.8.1 a 1B.8.11, 1C e as partes
-seguintes são executadas em ordem. Cada documento termina com testes e critérios
-de aceite próprios.
+A pré-fase 0, as subpartes 1A, 1A.1, 1A.2, 1B, 1B.1, 1B.2, 1B.3, 1B.4,
+1B.5, 1B.6, 1B.7, 1B.7A, 1B.7B e 1B.8.1 a 1B.8.10, a pré-fase transversal do
+`workspace-validator`, a Parte 1B.8.11, a Parte 1C e as partes seguintes são
+executadas em ordem. Cada documento termina com testes e critérios de aceite
+próprios.
 
 ## Evolução Do Fluxo
 
@@ -85,6 +87,7 @@ flowchart LR
     P1B88["Parte 1B.8.8<br/>hierarquia de vida"]
     P1B89["Parte 1B.8.9<br/>padrões editoriais"]
     P1B810["Parte 1B.8.10<br/>organização por domínios"]
+    WV["Pré-fase transversal<br/>workspace-validator"]
     P1B811["Parte 1B.8.11<br/>mídias canônicas no R2"]
     P1C["Parte 1C<br/>consumo local"]
     P2["Parte 2<br/>base Rails + contratos"]
@@ -93,7 +96,7 @@ flowchart LR
     P5["Parte 5<br/>updater Tauri local"]
     P6["Parte 6<br/>GitHub + CI/CD"]
 
-    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1B7 --> P1B7A --> P1B7B --> P1B81 --> P1B82 --> P1B83 --> P1B84 --> P1B85 --> P1B86 --> P1B87 --> P1B88 --> P1B89 --> P1B810 --> P1B811 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
+    P0 --> P1A --> P1A1 --> P1A2 --> P1B --> P1B1 --> P1B2 --> P1B3 --> P1B4 --> P1B5 --> P1B6 --> P1B7 --> P1B7A --> P1B7B --> P1B81 --> P1B82 --> P1B83 --> P1B84 --> P1B85 --> P1B86 --> P1B87 --> P1B88 --> P1B89 --> P1B810 --> WV --> P1B811 --> P1C --> P2 --> P3 --> P4 --> P5 --> P6
 ```
 
 As mudanças de origem dos artefatos são deliberadas:
@@ -162,9 +165,12 @@ com labels nos termos e páginas de conhecimento opcionais associadas por
 registro reservado de padrões e mantém nas entidades somente a referência por
 `sectionStandardKey`. A Parte 1B.8.10 organiza a fonte em `biomedical`,
 `catalog`, `clinical` e `geo`, mantendo os diretórios como propriedade editorial
-e os manifestos como fonte da semântica. A Parte 1B.8.11 mantém os descritores
-de mídia em `data/knowledge`, armazena os bytes canônicos no Cloudflare R2 e
-hidrata um cache local verificado por meio de `tools/knowledge-media`. O
+e os manifestos como fonte da semântica. A pré-fase transversal estabelece
+`tools/workspace-validator`, seu perfil declarativo em `.validation` e a mesma
+execução auditável para uso manual, agentes e CI. A Parte 1B.8.11 mantém os
+descritores de mídia em `data/knowledge`, armazena os bytes canônicos no
+Cloudflare R2 e hidrata um cache local verificado por meio de
+`tools/knowledge-media`. O
 `knowledge-builder` concentra a compilação offline do domínio, a materialização
 SQLite e CAS, a verificação integral e a publicação atômica da saída local. A
 Parte 1C faz os apps consumirem esses artefatos. A Parte 3 faz o `hub-server`
@@ -183,6 +189,10 @@ provider externo.
   `workspace:*`.
 - As partes do Hub usam somente comandos pnpm; não mantêm lockfiles ou comandos
   concorrentes de outro gerenciador.
+- `tools/workspace-validator/` executa pipelines declarativos de validação sem
+  conhecer o produto. `.validation/config.json` contém o perfil deste workspace,
+  e os scripts pnpm oferecem a entrada manual sem adicionar outro command
+  runner.
 - `tools/knowledge-builder/` é o binário Rust que valida e compila
   `data/knowledge`, materializa os bancos SQLite e o CAS, verifica toda a saída e
   publica uma `build_version` local de maneira atômica. Ele recebe um cache de
@@ -978,14 +988,15 @@ descobrir uma revisão incrementando URLs que não estejam declaradas.
 22. Implementar e validar a Parte 1B.8.8.
 23. Implementar e validar a Parte 1B.8.9.
 24. Implementar e validar a Parte 1B.8.10.
-25. Implementar e validar a Parte 1B.8.11.
-26. Implementar e validar a Parte 1C.
-27. Implementar e validar a Parte 2.
-28. Implementar e validar a Parte 3.
-29. Implementar e validar a Parte 4.
-30. Implementar e validar a Parte 5.
-31. Mover o projeto para o repositório dedicado.
-32. Implementar e validar a Parte 6.
+25. Implementar e validar a pré-fase transversal do `workspace-validator`.
+26. Implementar e validar a Parte 1B.8.11.
+27. Implementar e validar a Parte 1C.
+28. Implementar e validar a Parte 2.
+29. Implementar e validar a Parte 3.
+30. Implementar e validar a Parte 4.
+31. Implementar e validar a Parte 5.
+32. Mover o projeto para o repositório dedicado.
+33. Implementar e validar a Parte 6.
 
 ## Expansões Previstas
 

@@ -40,7 +40,8 @@ Ao concluir esta parte:
 - o digest lógico da fonte e os artefatos compilados permanecem idênticos para
   a mesma entrada semântica e o mesmo contexto de build;
 - a documentação de autoria e os planos seguintes usam a disposição final;
-- a Parte 1B.8.11 inicia sobre essa organização consolidada.
+- a pré-fase transversal do `workspace-validator` inicia sobre essa organização
+  consolidada e antecede a Parte 1B.8.11.
 
 ## Pré-Requisitos
 
