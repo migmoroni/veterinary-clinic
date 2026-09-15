@@ -101,7 +101,7 @@ Dependências previstas do crate:
 - `semver`, para requisitos de versão;
 - `thiserror`, para erros estruturados;
 - `schemars`, para os schemas JSON derivados dos contratos Rust;
-- `wait-timeout`, para limites de execução dos subprocessos;
+- `sha2`, para a identidade de conteúdo dos caminhos visíveis pelo Git;
 - `ctrlc`, para interrupção coordenada do executor e do subprocesso ativo;
 - `tempfile` como dependência de desenvolvimento para testes isolados.
 
@@ -175,6 +175,9 @@ tools/workspace-validator/
 │   ├── prerequisites.rs
 │   ├── process.rs
 │   ├── repository.rs
+│   ├── repository/
+│   │   ├── fingerprint.rs
+│   │   └── status.rs
 │   ├── runner.rs
 │   └── report/
 │       ├── mod.rs
@@ -478,9 +481,18 @@ com causa estruturada. Uma ferramenta ausente identificada no preflight é
 
 ### Estado Do Git
 
-O provider `git` executa `git status --porcelain=v1 -z` antes e depois da suíte.
-A árvore pode começar com alterações. Somente a diferença introduzida durante a
-validação reprova `repository.integrity`.
+O provider `git` executa
+`git status --porcelain=v1 -z --untracked-files=all` antes e depois da suíte. A
+árvore pode começar com alterações. Cada entrada recebe uma identidade interna
+que combina estado porcelain, metadados do índice e fingerprint SHA-256 do
+conteúdo presente na worktree. Alterar novamente um arquivo rastreado ou não
+rastreado que já estava sujo reprova `repository.integrity`.
+
+Registros `rename` e `copy` do formato `-z` são lidos como pares e permanecem
+uma única entrada lógica. O relatório apresenta caminhos e estados legíveis,
+sem expor fingerprints. Se a captura necessária ao snapshot ultrapassar
+`outputLimitBytes`, `repository.integrity` fica em `BLOCKED`; nunca comparar uma
+cauda truncada como se representasse o estado integral.
 
 `repository` é opcional no contrato genérico. Quando presente, `toolId`
 referencia uma ferramenta declarada e o provider usa seu programa resolvido. O
@@ -511,6 +523,7 @@ não pode ser declarado como check pelo consumidor.
 - não interpretar pipes, redirecionamentos, curingas ou operadores de shell;
 - consumir stdout e stderr concorrentemente para evitar bloqueio de pipes;
 - limitar a captura por stream e registrar quando houver truncamento;
+- recusar snapshots de repositório truncados;
 - preservar o trecho final da saída, onde compiladores normalmente apresentam
   a causa e o resumo;
 - nunca imprimir variáveis de ambiente ou configuração alheia ao relatório;
@@ -681,6 +694,10 @@ Usar fixtures temporárias para comprovar:
 - diretório de trabalho e argv preservados literalmente;
 - rejeição de tentativa de escapar do workspace;
 - árvore Git inicialmente suja permanecendo aceita quando não muda;
+- conteúdo de arquivo já sujo sendo alterado e detectado sem depender de mudança
+  no código de status;
+- pares de rename/copy sendo interpretados integralmente;
+- snapshot Git truncado produzindo `BLOCKED`;
 - alteração introduzida por check reprovando `repository.integrity`;
 - relatório JSON válido mesmo quando o processo termina com falha;
 - descoberta da configuração a partir de subdiretório;
@@ -757,7 +774,8 @@ checkpoints de autorização do repositório.
 - Ferramenta ausente bloqueia somente os checks que a exigem.
 - Dependências entre checks formam um DAG validado antes da execução.
 - Uma árvore inicialmente suja não falha apenas por estar suja.
-- Mudança visível pelo Git introduzida durante a suíte é relatada e reprovada.
+- Mudança visível pelo Git introduzida durante a suíte, inclusive dentro de um
+  caminho que já estava sujo, é relatada e reprovada.
 - O validator não corrige, instala, atualiza, remove ou restaura arquivos.
 - O crate não importa nenhum módulo do produto e passa contra fixtures isoladas.
 - `.validation/config.json` concentra todos os comandos específicos deste

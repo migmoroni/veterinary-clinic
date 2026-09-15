@@ -165,8 +165,8 @@ pub fn run(
                     .is_some_and(|repo| repo.detect_mutations)
                     && !(introduced.is_empty() && removed.is_empty() && changed.is_empty());
                 repository_report = Some(RepositoryReport {
-                    before: before.clone(),
-                    after: after.clone(),
+                    before: before.entries().to_vec(),
+                    after: after.entries().to_vec(),
                     introduced,
                     removed,
                     changed,
@@ -195,6 +195,7 @@ pub fn run(
                 "status".into(),
                 "--porcelain=v1".into(),
                 "-z".into(),
+                "--untracked-files=all".into(),
             ],
             working_directory: loaded.workspace_root.display().to_string(),
             status,

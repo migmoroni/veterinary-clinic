@@ -170,4 +170,28 @@ mod tests {
         );
         assert!(output.timed_out);
     }
+
+    #[test]
+    fn captures_large_stdout_and_stderr_without_deadlock() {
+        let cancelled = Arc::new(AtomicBool::new(false));
+        let output = run(
+            "/bin/sh",
+            &[
+                "-c".into(),
+                "i=0; while [ \"$i\" -lt 2000 ]; do printf 'stdout-%04d\\n' \"$i\"; printf 'stderr-%04d\\n' \"$i\" >&2; i=$((i+1)); done".into(),
+            ],
+            std::path::Path::new("/tmp"),
+            Duration::from_secs(5),
+            4096,
+            &cancelled,
+        );
+
+        assert_eq!(output.exit_code, Some(0));
+        assert!(output.stdout_truncated);
+        assert!(output.stderr_truncated);
+        assert!(output.stdout.len() <= 4096);
+        assert!(output.stderr.len() <= 4096);
+        assert!(output.stdout.ends_with("stdout-1999\n"));
+        assert!(output.stderr.ends_with("stderr-1999\n"));
+    }
 }

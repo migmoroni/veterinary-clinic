@@ -17,12 +17,14 @@
       }
     },
     "defaultSuite": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
     },
     "outputLimitBytes": {
       "type": "integer",
       "format": "uint",
-      "minimum": 0
+      "maximum": 16777216,
+      "minimum": 4096
     },
     "repository": {
       "anyOf": [
@@ -37,7 +39,8 @@
     "schemaVersion": {
       "type": "integer",
       "format": "uint32",
-      "minimum": 0
+      "maximum": 1,
+      "minimum": 1
     },
     "suites": {
       "type": "array",
@@ -72,34 +75,43 @@
         "args": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[^\\u0000]*$"
           }
         },
         "dependsOn": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
           }
         },
         "id": {
-          "type": "string"
+          "type": "string",
+          "maxLength": 96,
+          "minLength": 1,
+          "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
         },
         "label": {
-          "type": "string"
+          "type": "string",
+          "pattern": "\\S"
         },
         "requiresTools": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
           }
         },
         "timeoutSeconds": {
           "type": "integer",
           "format": "uint64",
-          "minimum": 0
+          "maximum": 86400,
+          "minimum": 1
         },
         "toolId": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
         },
         "workingDirectory": {
           "type": "string"
@@ -127,7 +139,8 @@
           "$ref": "#/$defs/RepositoryProvider"
         },
         "toolId": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
         }
       },
       "additionalProperties": false,
@@ -149,14 +162,20 @@
         "checks": {
           "type": "array",
           "items": {
-            "type": "string"
-          }
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
+          },
+          "minItems": 1
         },
         "id": {
-          "type": "string"
+          "type": "string",
+          "maxLength": 96,
+          "minLength": 1,
+          "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
         },
         "label": {
-          "type": "string"
+          "type": "string",
+          "pattern": "\\S"
         }
       },
       "additionalProperties": false,
@@ -170,21 +189,28 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "maxLength": 96,
+          "minLength": 1,
+          "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
         },
         "program": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\\u0000]*$"
         },
         "requiresTools": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
           }
         },
         "versionArgs": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[^\\u0000]*$"
           }
         },
         "versionParser": {

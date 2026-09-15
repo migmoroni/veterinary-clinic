@@ -42,10 +42,48 @@ fn rejects_unknown_property_and_workspace_escape() {
 }
 
 #[test]
-fn rejects_cycles_and_invalid_ids() {
+fn rejects_invalid_ids() {
     let temp = TempDir::new().unwrap();
     let mut value = valid_config();
     value["checks"][0]["id"] = json!("Bad");
     value["suites"][0]["checks"] = json!(["Bad"]);
     assert!(config::load(Some(&write(&temp, &value)), temp.path()).is_err());
+}
+
+#[test]
+fn rejects_check_and_tool_cycles() {
+    let temp = TempDir::new().unwrap();
+    let mut checks = valid_config();
+    checks["checks"] = json!([
+        {"id":"check.one", "label":"One", "toolId":"rustc", "args":["--version"], "workingDirectory":".", "requiresTools":[], "dependsOn":["check.two"], "timeoutSeconds":10},
+        {"id":"check.two", "label":"Two", "toolId":"rustc", "args":["--version"], "workingDirectory":".", "requiresTools":[], "dependsOn":["check.one"], "timeoutSeconds":10}
+    ]);
+    checks["suites"][0]["checks"] = json!(["check.one", "check.two"]);
+    assert!(config::load(Some(&write(&temp, &checks)), temp.path()).is_err());
+
+    let mut tools = valid_config();
+    tools["tools"] = json!([
+        {"id":"rustc", "program":"rustc", "requiresTools":["cargo"], "versionArgs":["--version"], "versionParser":"firstSemver"},
+        {"id":"cargo", "program":"cargo", "requiresTools":["rustc"], "versionArgs":["--version"], "versionParser":"firstSemver"}
+    ]);
+    assert!(config::load(Some(&write(&temp, &tools)), temp.path()).is_err());
+}
+
+#[test]
+fn rejects_numeric_bounds_and_duplicate_ids() {
+    let temp = TempDir::new().unwrap();
+    let mut output_limit = valid_config();
+    output_limit["outputLimitBytes"] = json!(0);
+    assert!(config::load(Some(&write(&temp, &output_limit)), temp.path()).is_err());
+
+    let mut timeout = valid_config();
+    timeout["checks"][0]["timeoutSeconds"] = json!(0);
+    assert!(config::load(Some(&write(&temp, &timeout)), temp.path()).is_err());
+
+    let mut duplicate = valid_config();
+    duplicate["checks"] = json!([
+        duplicate["checks"][0].clone(),
+        duplicate["checks"][0].clone()
+    ]);
+    assert!(config::load(Some(&write(&temp, &duplicate)), temp.path()).is_err());
 }

@@ -4,15 +4,19 @@ use std::{collections::BTreeMap, path::PathBuf};
 
 pub const CONFIG_SCHEMA_VERSION: u32 = 1;
 pub const REPORT_SCHEMA_VERSION: u32 = 1;
+const ID_PATTERN: &str = r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$";
 
 #[derive(Clone, Debug, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Config {
     #[serde(rename = "$schema", default)]
     pub schema: Option<String>,
+    #[schemars(range(min = 1, max = 1))]
     pub schema_version: u32,
     pub workspace_root: PathBuf,
+    #[schemars(regex(pattern = ID_PATTERN))]
     pub default_suite: String,
+    #[schemars(range(min = 4096, max = 16_777_216))]
     pub output_limit_bytes: usize,
     #[serde(default)]
     pub repository: Option<RepositoryConfig>,
@@ -25,6 +29,7 @@ pub struct Config {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RepositoryConfig {
     pub provider: RepositoryProvider,
+    #[schemars(regex(pattern = ID_PATTERN))]
     pub tool_id: String,
     pub detect_mutations: bool,
 }
@@ -38,9 +43,13 @@ pub enum RepositoryProvider {
 #[derive(Clone, Debug, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolConfig {
+    #[schemars(length(min = 1, max = 96), regex(pattern = ID_PATTERN))]
     pub id: String,
+    #[schemars(length(min = 1), regex(pattern = r"^[^\u0000]*$"))]
     pub program: String,
+    #[schemars(inner(regex(pattern = ID_PATTERN)))]
     pub requires_tools: Vec<String>,
+    #[schemars(inner(regex(pattern = r"^[^\u0000]*$")))]
     pub version_args: Vec<String>,
     pub version_parser: VersionParser,
     #[serde(default)]
@@ -56,21 +65,31 @@ pub enum VersionParser {
 #[derive(Clone, Debug, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CheckConfig {
+    #[schemars(length(min = 1, max = 96), regex(pattern = ID_PATTERN))]
     pub id: String,
+    #[schemars(regex(pattern = r"\S"))]
     pub label: String,
+    #[schemars(regex(pattern = ID_PATTERN))]
     pub tool_id: String,
+    #[schemars(inner(regex(pattern = r"^[^\u0000]*$")))]
     pub args: Vec<String>,
     pub working_directory: PathBuf,
+    #[schemars(inner(regex(pattern = ID_PATTERN)))]
     pub requires_tools: Vec<String>,
+    #[schemars(inner(regex(pattern = ID_PATTERN)))]
     pub depends_on: Vec<String>,
+    #[schemars(range(min = 1, max = 86_400))]
     pub timeout_seconds: u64,
 }
 
 #[derive(Clone, Debug, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SuiteConfig {
+    #[schemars(length(min = 1, max = 96), regex(pattern = ID_PATTERN))]
     pub id: String,
+    #[schemars(regex(pattern = r"\S"))]
     pub label: String,
+    #[schemars(length(min = 1), inner(regex(pattern = ID_PATTERN)))]
     pub checks: Vec<String>,
 }
 

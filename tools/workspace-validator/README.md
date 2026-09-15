@@ -61,8 +61,11 @@ dependents `SKIPPED`; nonzero exits and timeouts produce `FAIL`. Independent
 checks continue.
 
 An initially dirty Git tree is accepted. When repository mutation detection is
-enabled, only Git-visible changes introduced during validation fail the
-synthetic `repository.integrity` check; nothing is restored automatically.
+enabled, the validator parses porcelain `-z` records, fingerprints the index and
+worktree content of every Git-visible path, and detects changes made inside
+already dirty tracked or untracked files. Rename and copy pairs remain one
+logical entry. A truncated repository snapshot produces `BLOCKED` instead of an
+incomplete comparison. Nothing is restored automatically.
 
 ## Reports and exit codes
 
